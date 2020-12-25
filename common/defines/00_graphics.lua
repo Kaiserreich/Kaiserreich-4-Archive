@@ -401,7 +401,7 @@ NAirGfx = {
 	AIRPLANES_SCENE_DIR_RAND_MIN_ANGLE = 10.0, 		-- World scene Y direction random angle bonus (min value)
 	AIRPLANES_SCENE_DIR_RAND_MAX_ANGLE = 40.0, 		-- World scene Y direction random angle bonus (max value)
 	AIRPLANES_GROUND_COLLISION_OFFSET_Y = -5.0, 		-- Lets the 3d airplanes disappear after going a bit under the ground.
-	AIRPLANES_1_FIGHTER_PATROL_ANIM = 1, 			-- Number of fighters needed for a single instance of this animation 
+	AIRPLANES_1_FIGHTER_PATROL_ANIM = 1, 			-- Number of fighters needed for a single instance of this animation
 	AIRPLANES_3_FIGHTER_PATROL_ANIM = 3, 			-- Number of fighters needed for a single instance of this animation
 	AIRPLANES_1_BOMBER_BOMBING_ANIM = 1, 			-- Number of bombers needed for a single instance of this animation
 	AIRPLANES_3_BOMBER_BOMBING_ANIM = 3, 			-- Number of bombers needed for a single instance of this animation
@@ -544,12 +544,12 @@ NGraphics = {
 	GRADIENT_BORDERS_OUTLINE_CUTOFF_RADARS = 0.973,
 	GRADIENT_BORDERS_OUTLINE_CUTOFF_FACTIONS = 0.973,
 	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_COUNTRY = 0.0, -- 0 to 1 value for override filling when camera zooms in/out. 0 = override disabled
-	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_STATE = 0.4, 
-	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_SUPPLY_AREA = 1.0, 
-	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_STRATEGIC_REGIONS = 1.0, 
-	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_RESISTANCE = 0.0, 
-	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_RADARS = 0.0, 
-	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_FACTIONS = 0.0, 
+	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_STATE = 0.4,
+	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_SUPPLY_AREA = 1.0,
+	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_STRATEGIC_REGIONS = 1.0,
+	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_RESISTANCE = 0.0,
+	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_RADARS = 0.0,
+	GRADIENT_BORDERS_CAMERA_DISTANCE_OVERRIDE_FACTIONS = 0.0,
 	GRADIENT_BORDERS_OPTIMIZATION_RANGE = 30.0, -- smaller value = faster gradient borders but may have artifacts on large provinces (value to balance)
 	GRADIENT_BORDERS_REFRESH_FREQ = 0.12, -- how frequent is gradient borders repainting (optimization for high-speed gameplay)
 	STRATEGIC_AIR_COLOR_BAD = {0.8, 0, 0, 1}, -- rgb
@@ -573,14 +573,14 @@ NGraphics = {
 	COUNTRY_FLAG_TEX_HEIGHT = 52,
 	COUNTRY_FLAG_MEDIUM_TEX_WIDTH = 41,
 	COUNTRY_FLAG_MEDIUM_TEX_HEIGHT = 26,
-	COUNTRY_FLAG_SMALL_TEX_WIDTH = 10,
+	COUNTRY_FLAG_SMALL_TEX_WIDTH = 11,
 	COUNTRY_FLAG_SMALL_TEX_HEIGHT = 7,
-	COUNTRY_FLAG_TEX_MAX_SIZE = 256, -- Tweak dependly on amount of countries. Must be power of 2. No more then 2048.
-	COUNTRY_FLAG_SMALL_TEX_MAX_SIZE = 64, -- Tweak dependly on amount of countries. Must be power of 2. No more then 2048.
-	COUNTRY_FLAG_STRIPE_TEX_MAX_WIDTH = 10,
-	COUNTRY_FLAG_STRIPE_TEX_MAX_HEIGHT = 2048,
+	COUNTRY_FLAG_TEX_MAX_SIZE = 512, -- Tweak dependly on amount of countries. Must be power of 2. No more then 2048.
+	COUNTRY_FLAG_SMALL_TEX_MAX_SIZE = 128, -- Tweak dependly on amount of countries. Must be power of 2. No more then 2048.
+	COUNTRY_FLAG_STRIPE_TEX_MAX_WIDTH = 11,
+	COUNTRY_FLAG_STRIPE_TEX_MAX_HEIGHT = 4096,
 	COUNTRY_FLAG_LARGE_STRIPE_MAX_WIDTH = 41,
-	COUNTRY_FLAG_LARGE_STRIPE_MAX_HEIGHT = 6200,
+	COUNTRY_FLAG_LARGE_STRIPE_MAX_HEIGHT = 12400,
 	VICTORY_POINT_LEVELS = 2,
 	VICTORY_POINT_MAP_ICON_AFTER = {0, 20}, -- After this amount of VP the map icon becomes bigger dot.
 	VICTORY_POINT_MAP_ICON_TEXT_CUTOFF = {100, 250, 500},  -- At what camera distance the VP name text disappears.
@@ -649,8 +649,8 @@ NGraphics = {
 	BRIGHT_THRESHOLD = 0.4,
 	--BRIGHT_THRESHOLD = 0.9, -- night
 	EMISSIVE_BLOOM_STRENGTH = 1.0,
-	MIN_HDR_ADJUSTMENT = 0.5,     --0.18 0.7  är hur mkt den anpassar sig till mörka områden, mindre värde -> mer mörkerseen
-	MAX_HDR_ADJUSTMENT = 1.0,      --0.8 0.8 jätte högt värde så ser du bra trots att du står inuti solen och tittar. 
+	MIN_HDR_ADJUSTMENT = 0.5,	--0.18 0.7  är hur mkt den anpassar sig till mörka områden, mindre värde -> mer mörkerseen
+	MAX_HDR_ADJUSTMENT = 1.0,	--0.8 0.8 jätte högt värde så ser du bra trots att du står inuti solen och tittar.
 	HDR_ADJUSTMENT_SPEED = 15.0, -- 6
 	TONE_MAP_MIDDLE_GREY = 0.5, --0.7
 	TONE_MAP_LUMINANCE_WHITE = 1.0, --
@@ -695,7 +695,7 @@ NGraphics = {
 	
 	-- unit on-map interface modulate colors
 	FRIEND_COLOR  = {0.7, 0.9, 0.7},
-	ENEMY_COLOR   = {1.0, 0.7, 0.7}, 
+	ENEMY_COLOR   = {1.0, 0.7, 0.7},
 	NEUTRAL_COLOR = {1.0, 1.0, 1.0},
 
 	COUNTRY_COLOR_HUE_MODIFIER = 0.0,
@@ -735,8 +735,8 @@ NGraphics = {
 	NATIONAL_FOCUS_SHINE_DISTANCE_SCALE = 0.03,
 	NATIONAL_FOCUS_PULSE_BASE =	10.0,
 	NATIONAL_FOCUS_PULSE_RANDOM = 10.0,
-	POLITICAL_GRID_SMALL_BOX_LIMIT = 6,              	-- Limit for gridbox in political view before it will be replaced with extended gridbox
-	SETUP_SPIRIT_GRID_BOX_LIMIT = 3,					-- Limit for gridbox in game setup before it will be replaced with extended gridbox 
+	POLITICAL_GRID_SMALL_BOX_LIMIT = 6,				-- Limit for gridbox in political view before it will be replaced with extended gridbox
+	SETUP_SPIRIT_GRID_BOX_LIMIT = 3,					-- Limit for gridbox in game setup before it will be replaced with extended gridbox
 	POLITICAL_PULSE_BASE =	10.0,
 	POLITICAL_PULSE_RANDOM = 10.0,
 
@@ -760,7 +760,7 @@ NInterface = {
 	COMBAT_SOME_ARMOR = 0.4,					-- How many % of enemy units have to be unable to pierce the unit in order for the some armor icon to be displayed
 	COMBAT_GOOD_ARMOR = 0.8,					-- How many % of enemy units have to be unable to pierce the unit in order for the good armor icon to be displayed
 	
-	SWITCH_EQUIPMENT_DIALOG_TRESHOLD = 7,       -- Confirm dialog that shows up when you switch equipment for a production line if you lose more than x days of progress.
+	SWITCH_EQUIPMENT_DIALOG_TRESHOLD = 7,	-- Confirm dialog that shows up when you switch equipment for a production line if you lose more than x days of progress.
 	
 	TOOLTIP_SCREEN_LEFT_OFFSET_X = 0,				-- Tooltip offset on x axis from left screen border
 	TOOLTIP_SCREEN_RIGHT_OFFSET_X = 0,				-- Tooltip offset on x axis from right screen border
@@ -843,16 +843,16 @@ NFrontend = {
 
 NSound = {
 	-- The volume of sounds in this category vary with camera altitude.
-	HEIGHT_SOUND_CATEGORY     = "Atmosphere",  -- Name of the sound category
-	HEIGHT_SOUND_MIN_ALTITUDE =  100.0,        -- Below this altitude the minimum volume will be used
-	HEIGHT_SOUND_MAX_ALTITUDE = 2000.0,        -- Above this altitude the maximum volume will be used
-	HEIGHT_SOUND_MIN_VOLUME   =    0.2,
-	HEIGHT_SOUND_MAX_VOLUME   =    1.0,
+	HEIGHT_SOUND_CATEGORY	= "Atmosphere",  -- Name of the sound category
+	HEIGHT_SOUND_MIN_ALTITUDE =  100.0,		-- Below this altitude the minimum volume will be used
+	HEIGHT_SOUND_MAX_ALTITUDE = 2000.0,		-- Above this altitude the maximum volume will be used
+	HEIGHT_SOUND_MIN_VOLUME   =	0.2,
+	HEIGHT_SOUND_MAX_VOLUME   =	1.0,
 
-	BATTLE_SOUND_NAME           = "amb_battle_distant_01",
-	BATTLE_SOUND_INIT_RADIUS    =   9.0,
-	BATTLE_SOUND_FADE_TIME      =    1.0,
-	BATTLE_SOUND_FALLOFF_MUL    =    0.5,
+	BATTLE_SOUND_NAME		= "amb_battle_distant_01",
+	BATTLE_SOUND_INIT_RADIUS	=   9.0,
+	BATTLE_SOUND_FADE_TIME	=	1.0,
+	BATTLE_SOUND_FALLOFF_MUL	=	0.5,
 	BATTLE_SOUND_FALLOFF_EXTRA  =  100.0,
 	BATTLE_SOUND_FALLOFF_HEIGHT = 200.0,
 
