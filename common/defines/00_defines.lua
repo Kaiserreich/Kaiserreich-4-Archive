@@ -7,7 +7,7 @@ NGame = {
 	SAVE_VERSION = 3,
 	LAG_DAYS_FOR_LOWER_SPEED = 10,		-- Days of client lag for decrease of gamespeed
 	LAG_DAYS_FOR_PAUSE = 25,				-- Days of client lag for pause of gamespeed.
-	MAJOR_PARTICIPANTS_FOR_MAJOR_WAR = 3,	-- Minimum number of major countries involved in a war to consider it major enough to not end the game even though the enddate has been reached.
+	MAJOR_PARTICIPANTS_FOR_MAJOR_WAR = 20,	-- Minimum number of major countries involved in a war to consider it major enough to not end the game even though the enddate has been reached.
 },
 
 NDiplomacy = {
