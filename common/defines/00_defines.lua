@@ -114,8 +114,8 @@ NDiplomacy = {
 	AUTONOMY_FREEDOM_FROM_CAPITULATE = 0.5,         -- if overlord capitulate you get this
 	
 	AUTONOMY_LEVEL_CHANGE_PP_COST_BASE = 50.0,		-- Base cost of changing level of autonomy
-	AUTONOMY_LEVEL_CHANGE_PP_ANNEX = 300,			-- Annexation cost
-	AUTONOMY_LEVEL_CHANGE_PP_FREE = 300,			-- Break free cost
+	AUTONOMY_LEVEL_CHANGE_PP_ANNEX = 10000,			-- Annexation cost
+	AUTONOMY_LEVEL_CHANGE_PP_FREE = 10000,			-- Break free cost
 	MAX_SCORE_DIFF_TO_CHANGE_AUTONOMY = 10,			-- The max diff between current freedom score and the cap for next or previous level allowed for changing
 	MASTER_BUILD_AUTONOMY_FACTOR = -0.7,            -- scales autonomy gain from construction by this
 	VICTORY_POINT_WORTH_FACTOR = 10,				-- multiplier when calcualting proince worth (surrender)
