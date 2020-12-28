@@ -1,7 +1,7 @@
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This is alpha version 0.5.4 - 'Birthday Cake'.
+This is alpha version 0.6 - 'Garibaldi's Nightmare'.
 It is NOT save game compatible with any prior version.
-This version is compatible with 1.4.2, it may work with later hot fixes, but it is not guaranteed.
+This version is compatible with 1.5.2, it may work with later hot fixes, but it is not guaranteed.
 
 Manual Installation Instructions
 1) Download the mod
@@ -24,6 +24,6 @@ http://kaiserreich.wikia.com/wiki/Progress_Reports
 
 Please note the only places who have permission to share Kaiserreich are the steam workshop (http://steamcommunity.com/sharedfiles/filedetails/?id=809903394) and the paradox forums (https://forum.paradoxplaza.com/forum/index.php?threads/kaiserreich-info-download.996902/), if you acquired this software from any other source please bring it to the attention of the team.
 
-- The KR4 Team: ~mw~, Ahearne, Akamber, Anbory, Autovonbismarck, BattleSarge, Beelzebub, Blackfalcon501, Cinzya, CrazyZombie, DDago, Denizz, Flamefang, Gibzit, Herkles, Indyclone, Jeankedezeehond, Kaiserbot, Kraken, Medizine, Nijato, OperationsManagementDecisions, PPsyrius, Packard, Raptor Jesus, Rinbro, Rylock, Sea Lion, Skullcrusher, TheBeezKneez, TheBlackWinds, Thomahawk2k, VirtualHummingbird, Wyandotte, Zankoas
+- The KR4 Team: ~mw~, Akamber, Anbory, Autovonbismarck, Beelzebub, Blackfalcon501, Cinzya, CrazyZombie, DDago, Delincious, Denizz, Flamefang, Herkles, Jeankedezeehond, Kaiserbot, Liegnitz, Medizine, Nijato, OperationsManagementDecisions, Packard, PPsyrius, Pietrus, Rinbro, Rylock, Sea Lion, TheBeezKneez, TheBlackWinds, Thomahawk2k, VirtualHummingbird, Wyandotte, Zankoas
 
 P.S. for full credits, see the in game credits at the main menu
