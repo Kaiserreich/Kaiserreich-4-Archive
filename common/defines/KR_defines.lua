@@ -103,7 +103,7 @@ NDefines.NAI.FRONT_UNITS_CAP_FACTOR = 25.0									-- Vanilla is 15.0
 
 NDefines.NAI.RESEARCH_NAVAL_DOCTRINE_NEED_GAIN_FACTOR = 2                       -- Multiplies value based on relative naval industry size / country size.
 NDefines.NAI.RESEARCH_AIR_DOCTRINE_NEED_GAIN_FACTOR = 2                         -- Multiplies value based on relative number of air base / country size.
-NDefines.NAI.RESEARCH_DAYS_BETWEEN_WEIGHT_UPDATE = 1
+--NDefines.NAI.RESEARCH_DAYS_BETWEEN_WEIGHT_UPDATE = 1
 NDefines.NAI.MAX_AHEAD_RESEARCH_PENALTY = 10
 
 NDefines.NAI.RESEARCH_NEW_WEIGHT_FACTOR = 0			                            -- Impact of previously unexplored tech weights. Higher means more random exploration.
