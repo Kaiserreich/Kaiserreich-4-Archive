@@ -41,32 +41,18 @@ NDefines.NGame.TENSION_VOLUNTEER_FORCE_DIVISION = 0						  	-- Vanilla is 0.5
 NDefines.NGame.TENSION_DECAY = 0.1											-- Vanilla is 0.1
 NDefines.NGame.TENSION_SIZE_FACTOR = 0										-- Vanilla is 1.0
 NDefines.NAI.VP_LEVEL_IMPORTANCE_HIGH = 25									-- Vanilla is 100
-
--- Vanilla+ defines values
-
+NDefines.NAI.ORG_UNIT_NORMAL = 0.60											-- Vanilla is 0.35
+NDefines.NAI.STR_UNIT_NORMAL = 0.60											-- Vanilla is 0.4
+NDefines.NAI.ORG_UNIT_WEAK = 0.45											-- Vanilla is 0.15
+NDefines.NAI.STR_UNIT_WEAK = 0.45											-- Vanilla is 0.2
+NDefines.NAI.PLAN_FACTION_STRONG_TO_EXECUTE = 0.65							-- Vanilla is 0.5
+NDefines.NAI.PLAN_FACTION_WEAK_TO_ABORT = 0.5								-- Vanilla is 0.65
 NDefines.NAI.DIPLOMACY_ACCEPT_VOLUNTEERS_BASE = 20							-- Vanilla is 50
 NDefines.NAI.RESEARCH_BONUS_FACTOR = 10.0									-- Vanilla is 0.9
-NDefines.NAI.NAVAL_DOCKYARDS_SHIP_FACTOR = 2.5								-- Vanilla is 1.5
-NDefines.NAI.NAVAL_BASES_SHIP_FACTOR = 1.25									-- Vanilla is 0.75
-NDefines.NAI.NAVAL_STATES_SHIP_FACTOR = 0.25								-- Vanilla is 0.75
-NDefines.NAI.DEPLOY_MIN_TRAINING_PEACE_FACTOR = 1.0							-- Vanilla is 0.95
-NDefines.NAI.DEPLOY_MIN_EQUIPMENT_PEACE_FACTOR = 1.0						-- Vanilla is 0.95 
-NDefines.NAI.DEPLOY_MIN_EQUIPMENT_WAR_FACTOR = 1.0							-- Vanilla is 0.90
 NDefines.NAI.LENDLEASE_FRACTION_OF_PRODUCTION = 0.25						-- Vanilla is 0.5
-NDefines.NAI.RESERVE_TO_COMMITTED_BALANCE = 0.25							-- Vanilla is 0.1
-NDefines.NAI.MAIN_ENEMY_FRONT_IMPORTANCE = 7.5								-- Vanilla is 4.0
-NDefines.NAI.AIR_WING_REINFORCEMENT_LIMIT = 300								-- Vanilla is 150
-NDefines.NAI.UPGRADE_PERCENTAGE_OF_FORCES = 0.65							-- Vanilla is 0.1
-NDefines.NAI.NAVAL_MISSION_MIN_FLEET_SIZE = 5								-- Vanilla is 3
-NDefines.NAI.NAVY_PREFERED_MAX_SIZE = 15									-- Vanilla is 20
+NDefines.NAI.NAVY_PREFERED_MAX_SIZE = 50									-- Vanilla is 20
 NDefines.NAI.MAX_DISTANCE_NALAV_INVASION = 400.0							-- Vanilla is 200
-NDefines.NAI.ENEMY_NAVY_STRENGTH_DONT_BOTHER = 1.25							-- Vanilla is 2.5
-NDefines.NAI.PRODUCTION_MAX_PROGRESS_TTO_SWITCH_NAVAL = 5.0					-- Vanilla is 0.3
-NDefines.NAI.MAX_UNITS_FACTOR_AREA_ORDER = 1.5								-- Vanilla is 1.0
-NDefines.NAI.DESIRED_UNITS_FACTOR_AREA_ORDER = 1.5							-- Vanilla is 1.0
-NDefines.NAI.MAX_UNITS_FACTOR_FRONT_ORDER = 2.0								-- Vanilla is 1.5
-NDefines.NAI.MAX_UNITS_FACTOR_INVASION_ORDER = 1.5							-- Vanilla is 1.0
-NDefines.NAI.FRONT_UNITS_CAP_FACTOR = 25.0									-- Vanilla is 15.0
+NDefines.NAI.ENEMY_NAVY_STRENGTH_DONT_BOTHER = 1.5							-- Vanilla is 2.5
 
 -- This prevents most random volunteer instances
 
