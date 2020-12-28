@@ -1,4 +1,4 @@
-﻿name="Kaiserreich"
+﻿name="Kaiserreich Dev Build"
 path="mod/Kaiserreich/"
 tags={
 	"Alternative History"
@@ -7,4 +7,4 @@ tags={
 	"Gameplay"
 }
 picture="KR.jpg"
-supported_version="1.4.2.*"
+supported_version="1.5.*"
