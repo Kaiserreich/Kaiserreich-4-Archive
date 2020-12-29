@@ -80,7 +80,7 @@ NDefines.NNavy.COMBAT_TORPEDO_CRITICAL_CHANCE = 0.25						-- Vanilla is 0.2
 -- chance for critical hit from torpedo.
 NDefines.NNavy.COMBAT_CHASE_RUNNERS_SPEED_COMPARE_BALANCE = 0.2				-- Vanilla is 0.6
 -- When we chase runners and they are faster then us, then we resign. But if we are faster then them by a very small speed difference, the chase may takes weeks. So this tweak value allows to resign chasing if speed difference is not so big.
-NDefines.NNavy.OMABT_CHASE_RUNNERS_TIMEOUT_HOURS = 36						-- Vanilla is 10
+NDefines.NNavy.COMABT_CHASE_RUNNERS_TIMEOUT_HOURS = 36						-- Vanilla is 10
 -- Stop chasing after timeout
 NDefines.NNavy.COMBAT_CHASE_RESIGNATION_HOURS = 18							-- Vanilla is 8
 -- Before we resign chasing enemy, give them some minimum time so the combat doesn't end instantly.

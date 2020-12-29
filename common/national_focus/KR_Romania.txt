@@ -422,8 +422,11 @@ focus_tree = {
 			factor = 10
 
 			modifier = {
+				factor = 0
+				has_war = yes
+			}
+			modifier = {
 				factor = 1.1
-
 				is_in_faction_with = SER
 			}
 		}
@@ -436,24 +439,31 @@ focus_tree = {
 
 		available = {
 			is_subject = no
-			NOT = { has_war_with = BUL }
+			772 = {
+				owner = { is_valid_war_target = yes }
+			}
 		}
 
 		bypass = {
-			OR = {
-				772 = { is_owned_by = ROOT }
-				NOT = { country_exists = BUL }
-			}
+			772 = { is_owned_by_ROOT_or_subject = yes }
 		}
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus ROM_demand_dobrudzha"
 			add_political_power = 50
 
-			create_wargoal = {
-				target = BUL
-				type = take_state_focus
-				generator = { 772 77 } # Southern & Northern Dobruja
+			every_country = {
+				limit = {
+					is_valid_war_target = yes
+					owns_state = 772
+				}
+				ROOT = {
+					create_wargoal = {
+						target = PREV
+						type = take_state_focus
+						generator = { 772 77 }
+					}
+				}
 			}
 		}
 	}
@@ -477,7 +487,7 @@ focus_tree = {
 		available = {
 			is_subject = no
 			country_exists = BUL
-			NOT = { has_war_with = BUL }
+			BUL = { is_valid_war_target = yes }
 			772 = { is_owned_by = BUL }
 		}
 
@@ -497,23 +507,184 @@ focus_tree = {
 
 		ai_will_do = {
 			factor = 10
-
+			# don't do anything if already at war
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+			# don't attack Austria unless it's vulnerable or other countries are waiting to help
+			modifier = {
+				factor = 0
+				OR = {
+					84 = { owned_by_austria_or_puppet = yes }
+					789 = { owned_by_austria_or_puppet = yes }
+				}
+				AUS = {
+					is_subject = no
+					is_faction_leader = yes
+					surrender_progress < 0.10
+					NOT = {
+						has_war_with = GER
+						has_war_with = RUS
+						has_war_with = HUN
+						has_war_with = POL
+						has_war_with = ITA
+					}
+				}
+				NOT = {
+					POL = { has_country_flag = waiting_to_attack_austria }
+					ITA = { has_country_flag = waiting_to_attack_austria }
+				}
+			}
+			modifier = {
+				factor = 5
+				OR = {
+					84 = { owned_by_austria_or_puppet = yes }
+					789 = { owned_by_austria_or_puppet = yes }
+				}
+				OR = {
+					AUS = { has_war_with = HUN }
+					POL = { has_country_flag = waiting_to_attack_austria }
+					ITA = { has_country_flag = waiting_to_attack_austria }
+				}
+			}
+			# don't attack if it's owned by someone other than Austria, who is not a puppet/faction member and is stronger
+			modifier = {
+				factor = 0
+				NOT = { owns_state = 84 }
+				84 = {
+					owned_by_austria_or_puppet = no
+					owner = {
+						NOT = { is_subject_of = AUS }
+						NOT = { is_in_faction_with = AUS }
+						surrender_progress < 0.10
+						strength_ratio = { tag = ROM ratio > 1.0 }
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				NOT = { owns_state = 789 }
+				789 = {
+					owned_by_austria_or_puppet = no
+					owner = {
+						NOT = { is_subject_of = AUS }
+						NOT = { is_in_faction_with = AUS }
+						surrender_progress < 0.10
+						strength_ratio = { tag = ROM ratio > 1.0 }
+					}
+				}
+			}
+			# don't attack if it's owned by someone other than Austria, who is a puppet of a stronger overlord
+			modifier = {
+				factor = 0
+				NOT = { owns_state = 84 }
+				84 = {
+					owned_by_austria_or_puppet = no
+					owner = {
+						is_subject = yes
+						overlord = {
+							NOT = { tag = AUS }
+							surrender_progress < 0.10
+							strength_ratio = { tag = ROM ratio > 1.0 }
+						}
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				NOT = { owns_state = 789 }
+				789 = {
+					owned_by_austria_or_puppet = no
+					owner = {
+						is_subject = yes
+						overlord = {
+							NOT = { tag = AUS }
+							surrender_progress < 0.10
+							strength_ratio = { tag = ROM ratio > 1.0 }
+						}
+					}
+				}
+			}
+			# don't attack if it's owned by someone other than Austria, who is in a faction with a stronger leader
+			modifier = {
+				factor = 0
+				NOT = { owns_state = 84 }
+				84 = {
+					owned_by_austria_or_puppet = no
+					owner = {
+						is_in_faction = yes
+						is_faction_leader = no
+						any_allied_country = {
+							NOT = { tag = AUS }
+							is_faction_leader = yes
+							surrender_progress < 0.10
+							strength_ratio = { tag = ROM ratio > 1.0 }
+						}
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				NOT = { owns_state = 789 }
+				789 = {
+					owned_by_austria_or_puppet = no
+					owner = {
+						is_in_faction = yes
+						is_faction_leader = no
+						any_allied_country = {
+							NOT = { tag = AUS }
+							is_faction_leader = yes
+							surrender_progress < 0.10
+							strength_ratio = { tag = ROM ratio > 1.0 }
+						}
+					}
+				}
+			}
 			modifier = {
 				factor = 0.5
-
-				strength_ratio = { tag = HUN ratio < 1.0 }
+				OR = {
+					84 = {
+						owner = {
+							strength_ratio = { tag = ROM ratio > 1.0 }
+						}
+					}
+					789 = {
+						owner = {
+							strength_ratio = { tag = ROM ratio > 1.0 }
+						}
+					}
+				}
 			}
-
 			modifier = {
 				factor = 0.5
-
-				HUN = { is_in_faction = yes }
+				OR = {
+					84 = {
+						owner = {
+							is_in_faction = yes
+						}
+					}
+					789 = {
+						owner = {
+							is_in_faction = yes
+						}
+					}
+				}
 			}
-
 			modifier = {
 				factor = 1.5
-
-				HUN = { has_war = yes }
+				OR = {
+					84 = {
+						owner = {
+							has_war = yes
+						}
+					}
+					789 = {
+						owner = {
+							has_war = yes
+						}
+					}
+				}
 			}
 		}
 
@@ -527,57 +698,39 @@ focus_tree = {
 
 		available = {
 			is_subject = no
+			OR = {
+				84 = {
+					owner = { is_valid_war_target = yes }
+				}
+				789 = {
+					owner = { is_valid_war_target = yes }
+				}
+			}
 		}
 
 		bypass = {
-			84 = { is_owned_by = ROM } # Transylvania
-			789 = { is_owned_by = ROM } # East Transylvania
+			84 = { is_owned_by_ROOT_or_subject = yes } # Transylvania
+			789 = { is_owned_by_ROOT_or_subject = yes } # East Transylvania
 		}
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus ROM_demand_transylvania"
-			if = {
+			add_political_power = 100
+			every_country = {
 				limit = {
-					AND = {
-						84 = { is_owned_by = HUN } # Transylvania
-						789 = { is_owned_by = HUN } # East Transylvania
+					is_valid_war_target = yes
+					OR = {
+						owns_state = 84
+						owns_state = 789
 					}
 				}
-				create_wargoal = {
-					target = HUN
-					type = take_state_focus
-					generator = { 76 82 83 84 789 }
-				}
-			}
-			if = {
-				limit = {
-					AND = {
-						84 = { is_owned_by = AUS } # Transylvania
-						789 = { is_owned_by = AUS } # East Transylvania
+				ROOT = {
+					create_wargoal = {
+						target = PREV
+						type = take_state_focus
+						generator = { 76 82 83 84 789 }
 					}
 				}
-				create_wargoal = {
-					target = AUS
-					type = take_state_focus
-					generator = { 76 82 83 84 789 }
-				}
-			}
-			if = {
-				limit = {
-					NOT = {
-						AND = {
-							84 = { is_owned_by = HUN } # Transylvania
-							789 = { is_owned_by = HUN } # East Transylvania
-						}
-					}
-					NOT = {
-						AND = {
-							84 = { is_owned_by = AUS } # Transylvania
-							789 = { is_owned_by = AUS } # East Transylvania
-						}
-					}
-				}
-				add_political_power = 100
 			}
 		}
 	}
