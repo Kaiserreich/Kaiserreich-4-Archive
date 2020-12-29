@@ -8,7 +8,6 @@ NDefines.NDiplomacy.BASE_PEACE_PUPPET_FACTOR = 0							-- Vanilla is 100
 NDefines.NDiplomacy.BASE_PEACE_LIBERATE_FACTOR = 0							-- Vanilla is 100
 NDefines.NDiplomacy.VERY_GOOD_OPINION = 100									-- Vanilla is 50
 NDefines.NDiplomacy.VERY_BAD_OPINION = -100									-- Vanilla is -50
-NDefines.NDiplomacy.VOLUNTEERS_DIVISIONS_REQUIRED = 15 						-- Vanilla is 30 do we change?
 NDefines.NDiplomacy.PEACE_SCORE_PER_PASS = 0.75								-- Vanilla is 0.2
 NDefines.NDiplomacy.FRONT_IS_DANGEROUS = 0									-- Vanilla is -100
 NDefines.NDiplomacy.TENSION_STATE_VALUE = 0									  	-- Vanilla is 2
@@ -47,14 +46,9 @@ NDefines.NAI.ORG_UNIT_WEAK = 0.45											-- Vanilla is 0.15
 NDefines.NAI.STR_UNIT_WEAK = 0.45											-- Vanilla is 0.2
 NDefines.NAI.PLAN_FACTION_STRONG_TO_EXECUTE = 0.65							-- Vanilla is 0.5
 NDefines.NAI.PLAN_FACTION_WEAK_TO_ABORT = 0.5								-- Vanilla is 0.65
-NDefines.NAI.DIPLOMACY_ACCEPT_VOLUNTEERS_BASE = 20							-- Vanilla is 50
 NDefines.NAI.RESEARCH_BONUS_FACTOR = 10.0									-- Vanilla is 0.9
 NDefines.NAI.LENDLEASE_FRACTION_OF_PRODUCTION = 0.25						-- Vanilla is 0.5
 NDefines.NAI.NAVY_PREFERED_MAX_SIZE = 50									-- Vanilla is 20
 NDefines.NAI.MAX_DISTANCE_NALAV_INVASION = 400.0							-- Vanilla is 200
 NDefines.NAI.ENEMY_NAVY_STRENGTH_DONT_BOTHER = 1.5							-- Vanilla is 2.5
-
--- This prevents most random volunteer instances
-
-NDefines.NAI.SEND_VOLUNTEER_EVAL_BASE_DISTANCE = 0.0						-- Vanilla is 175.0
-NDefines.NAI.SEND_VOLUNTEER_EVAL_MAJOER_POWER = 0.0							-- Vanilla is 1.0
+NDefines.NAI.MIN_ANTAGONIZE_FOR_WARGOAL_JUSTIFICATION = 0					-- Vanilla is -100
