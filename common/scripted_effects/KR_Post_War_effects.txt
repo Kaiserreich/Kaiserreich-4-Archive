@@ -883,6 +883,34 @@ germany_capitulates = {
 	if = {
 		limit = {
 			NOT = { country_exists = GEX }
+			AST = {
+				has_capitulated = no
+				OR = {
+					has_war_with = GEA
+					has_war_with = GER
+				}
+			}
+		}
+		every_state = {
+			limit = {
+				OR = {
+					is_owned_by = GER
+					is_owned_by = GEA
+				}
+				is_claimed_by = AST
+				OR = {
+					is_controlled_by = GER
+					is_controlled_by = GEA
+					is_controlled_by = AST
+					controller = { is_in_faction_with = AST }
+				}
+			}
+			AST = { transfer_state = PREV }
+		}
+	}
+	if = {
+		limit = {
+			NOT = { country_exists = GEX }
 			country_exists = SIA
 		}
 		every_state = {
@@ -923,6 +951,25 @@ germany_capitulates = {
 			}
 			SIA = { transfer_state = PREV }
 		}
+	}
+	every_state = {
+		limit = {
+			OR = {
+				is_owned_and_controlled_by = GER
+				is_owned_and_controlled_by = GEA
+			}
+			is_claimed_by = AST
+			country_exists = AST
+			OR = {
+				state = 757 #Kaiser Wilhelmsland
+				state = 737 #Bismark Archipel
+				state = 634 #Salomon Inseln
+				state = 635 #Neuelsass
+				state = 725 #Nawodo
+				state = 734 #Thilenius Inseln
+			}
+		}
+		AST = { transfer_state = PREV }
 	}
 	if = {
 		limit = { GER = { has_war_with = JAP } }
@@ -1037,6 +1084,9 @@ germany_capitulates = {
 				limit = {
 					country_exists = GEA
 					NOT = { country_exists = GEX }
+				}
+				GEA = {
+					every_owned_state = { set_state_flag = GER_capitulation_transfer }
 				}
 				annex_country = { target = GEA }
 			}
@@ -1284,35 +1334,39 @@ change_third_intl_leadership = {
 
 white_peace_with_ROOT = {
 	hidden_effect = {
+		save_event_target_as = peace_country
+		
 		# first check for a faction leader to white peace with
 		if = {
 			limit = {
 				is_in_faction = yes
 				is_faction_leader = no
 			}
+			set_country_flag = KR_war_skip
 			random_country = {
 				limit = {
-					is_in_faction_with = PREV
+					is_in_faction_with = event_target:peace_country
 					is_faction_leader = yes
 					has_war_with = ROOT
 				}
 				white_peace = ROOT
 			}
 		}
-		if = {
+		if = { 
 			limit = {
 				ROOT = {
 					is_in_faction = yes
 					is_faction_leader = no
 				}
 			}
+			set_country_flag = KR_war_skip
 			random_country = {
 				limit = {
 					is_in_faction_with = ROOT
 					is_faction_leader = yes
-					has_war_with = PREV
+					has_war_with = event_target:peace_country
 				}
-				white_peace = PREV
+				white_peace = event_target:peace_country
 			}
 		}
 		
@@ -1322,58 +1376,64 @@ white_peace_with_ROOT = {
 				is_subject = yes
 				overlord = { has_war_with = ROOT }
 			}
+			set_country_flag = KR_war_skip
 			overlord = { white_peace = ROOT }
 		}
 		if = {
 			limit = {
 				ROOT = { is_subject = yes }
 			}
+			set_country_flag = KR_war_skip
 			random_country = {
 				limit = {
 					ROOT = { is_subject_of = PREV }
-					has_war_with = PREV
+					has_war_with = event_target:peace_country
 				}
-				white_peace = PREV
+				white_peace = event_target:peace_country
 			}
 		}
 	}
 
 	if = {
-		limit = { has_war_with = ROOT }
-		white_peace = ROOT
+		limit = { has_country_flag = KR_war_skip }
+		clr_country_flag = KR_war_skip
+		country_event = { id = kr.political.205 hours = 2 }
+		else = {
+			white_peace = ROOT
+		}
 	}
 
 	hidden_effect = {
 		# now double-check to ensure all faction members are peaced out
 		every_country = {
 			limit = {
-				is_in_faction_with = PREV
+				is_in_faction_with = event_target:peace_country
 				has_war_with = ROOT
 			}
-			white_peace = ROOT
+			country_event = { id = kr.political.205 hours = 2 }
 		}
 		every_country = {
 			limit = {
 				is_in_faction_with = ROOT
-				has_war_with = PREV
+				has_war_with = event_target:peace_country
 			}
-			white_peace = PREV
+			country_event = { id = kr.political.206 hours = 2 }
 		}
 		
 		# and double-check to ensure all puppets are peaced out
 		every_country = {
 			limit = {
 				is_subject_of = ROOT
-				has_war_with = PREV
+				has_war_with = event_target:peace_country
 			}
-			white_peace = PREV
+			country_event = { id = kr.political.206 hours = 2 }
 		}		
 		every_country = {
 			limit = {
-				is_subject_of = PREV
+				is_subject_of = event_target:peace_country
 				has_war_with = ROOT
 			}
-			white_peace = ROOT
+			country_event = { id = kr.political.205 hours = 2 }
 		}
 	}
 }
@@ -1386,15 +1446,18 @@ white_peace_with_ROOT = {
 
 white_peace_with_TARGET = {
 	hidden_effect = {
+		save_event_target_as = peace_country
+		
 		# first check for a faction leader to white peace with
 		if = {
 			limit = {
 				is_in_faction = yes
 				is_faction_leader = no
 			}
+			set_country_flag = KR_war_skip
 			random_country = {
 				limit = {
-					is_in_faction_with = PREV
+					is_in_faction_with = event_target:peace_country
 					is_faction_leader = yes
 					has_war_with = event_target:white_peace_receiver
 				}
@@ -1408,13 +1471,14 @@ white_peace_with_TARGET = {
 					is_faction_leader = no
 				}
 			}
+			set_country_flag = KR_war_skip
 			random_country = {
 				limit = {
 					is_in_faction_with = event_target:white_peace_receiver
 					is_faction_leader = yes
-					has_war_with = PREV
+					has_war_with = event_target:peace_country
 				}
-				white_peace = PREV
+				white_peace = event_target:peace_country
 			}
 		}
 		
@@ -1424,58 +1488,64 @@ white_peace_with_TARGET = {
 				is_subject = yes
 				overlord = { has_war_with = event_target:white_peace_receiver }
 			}
+			set_country_flag = KR_war_skip
 			overlord = { white_peace = event_target:white_peace_receiver }
 		}
 		if = {
 			limit = {
 				event_target:white_peace_receiver = { is_subject = yes }
 			}
+			set_country_flag = KR_war_skip
 			random_country = {
 				limit = {
 					event_target:white_peace_receiver = { is_subject_of = PREV }
-					has_war_with = PREV
+					has_war_with = event_target:peace_country
 				}
-				white_peace = PREV
+				white_peace = event_target:peace_country
 			}
 		}
 	}
 
 	if = {
-		limit = { has_war_with = event_target:white_peace_receiver }
-		white_peace = event_target:white_peace_receiver
+		limit = { has_country_flag = KR_war_skip }
+		clr_country_flag = KR_war_skip
+		country_event = { id = kr.political.207 hours = 2 }
+		else = {
+			white_peace = event_target:white_peace_receiver
+		}
 	}
 	
 	hidden_effect = {
 		# now double-check to ensure all faction members are peaced out
 		every_country = {
 			limit = {
-				is_in_faction_with = PREV
+				is_in_faction_with = event_target:peace_country
 				has_war_with = event_target:white_peace_receiver
 			}
-			white_peace = event_target:white_peace_receiver
+			country_event = { id = kr.political.207 hours = 2 }
 		}
 		every_country = {
 			limit = {
 				is_in_faction_with = event_target:white_peace_receiver
-				has_war_with = PREV
+				has_war_with = event_target:peace_country
 			}
-			white_peace = PREV
+			country_event = { id = kr.political.206 hours = 2 }
 		}
 		
 		# and double-check to ensure all puppets are peaced out
 		every_country = {
 			limit = {
 				is_subject_of = event_target:white_peace_receiver
-				has_war_with = PREV
+				has_war_with = event_target:peace_country
 			}
-			white_peace = PREV
+			country_event = { id = kr.political.206 hours = 2 }
 		}		
 		every_country = {
 			limit = {
-				is_subject_of = PREV
+				is_subject_of = event_target:peace_country
 				has_war_with = event_target:white_peace_receiver
 			}
-			white_peace = event_target:white_peace_receiver
+			country_event = { id = kr.political.207 hours = 2 }
 		}
 	}
 }

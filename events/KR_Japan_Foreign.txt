@@ -5426,22 +5426,15 @@ country_event = { # Mongolia surrenders Japan only
 
 	trigger = {
 		tag = JAP
-		NOT = { is_subject = yes }
-		NOT = {
-			has_global_flag = JAP_RUS_PACT
-		}
-		OR = {
-			MON = {
-				exists = no
-			}
-			has_war_with = MON
+		has_war_with = MON
+		is_subject = no
+		NOT = { has_global_flag = JAP_RUS_PACT }
+		MON = {
+			owns_state = 330
+			is_subject = no
 		}
 		330 = {
-			OR = {
-				is_controlled_by = JAP
-				controller = { is_in_faction_with = JAP }
-				controller = { is_subject_of = JAP }
-			}
+			is_controlled_by_ROOT_or_ally = yes
 		}
 	}
 
@@ -5449,39 +5442,39 @@ country_event = { # Mongolia surrenders Japan only
 		days = 3
 	}
 
-	immediate = {
-		TIB = { save_event_target_as = white_peace_receiver }
-	}
-
 	option = { #Yay
 		name = japfor.123.a
 		ai_chance = {
 			factor = 10
 		}
+		
+		if = {
+			limit = {
+				MON = { is_faction_leader = yes }
+			}
+			every_country = {
+				limit = {
+					is_faction_leader = no
+					is_in_faction_with = MON
+					has_war_with = JAP
+				}
+				white_peace = JAP
+			}
+		}
+		
 		annex_country = {
 			target = MON
 		}
-		transfer_state = 330
-		transfer_state = 563
-		transfer_state = 564
-		transfer_state = 329
-		transfer_state = 811
-		transfer_state = 654
-		transfer_state = 621
-		transfer_state = 612
+		
 		set_global_flag = MON_DEFEATED_BY_JAP
-		if = {
-			limit = {
-				has_war_with = TIB
-			}
-			JAP = { white_peace_with_TARGET = yes }
-		}
+		
 		if = {
 			limit = {
 				RUS = {
 					exists = yes
 					NOT = {
 						is_in_faction_with = JAP
+						has_war_with = JAP
 					}
 				}
 				SOV = {
@@ -5490,7 +5483,7 @@ country_event = { # Mongolia surrenders Japan only
 			}
 			RUS = {
 				country_event = {
-					id = japfor.124
+					id = japfor.124 days = 1
 				}
 			}
 		}
@@ -5498,8 +5491,9 @@ country_event = { # Mongolia surrenders Japan only
 			limit = {
 				SOV = {
 					exists = yes
-				NOT = {
+					NOT = {
 						is_in_faction_with = JAP
+						has_war_with = JAP
 					}
 				}
 				RUS = {
@@ -5508,7 +5502,7 @@ country_event = { # Mongolia surrenders Japan only
 			}
 			SOV = {
 				country_event = {
-					id = japfor.124
+					id = japfor.124 days = 1
 				}
 			}
 		}
@@ -5529,33 +5523,68 @@ country_event = { #Mongolia in disarray
 	desc = japfor.124.d
 
 	is_triggered_only = yes
+	
+	trigger = {
+		is_subject = no
+		NOT = {
+			is_in_faction_with = JAP
+			has_war_with = JAP
+		}
+		JAP = {
+			OR = {
+				owns_state = 563 #Chita
+				owns_state = 564 #Verkhneudinsk
+				owns_state = 329 #Tuva
+				owns_state = 811 #Minusinsk
+				owns_state = 654 #Ulala
+			}
+		}
+	}
 
 	option = { #seize it
 		name = japfor.124.a
 		ai_chance = {
 			factor = 90
 		}
-		transfer_state = 563
-		transfer_state = 564
-		transfer_state = 329
-		transfer_state = 811
-		transfer_state = 654
-
-		add_state_core = 563
-		add_state_core = 564
-		add_state_core = 329
-		add_state_core = 811
-		add_state_core = 654
-
-		reverse_add_opinion_modifier = {
-			target = JAP modifier = RUS_took_rail
+		
+		every_state = {
+			limit = {
+				is_owned_by = JAP
+				OR = {
+					state = 563
+					state = 564
+					state = 329
+					state = 811
+					state = 654
+				}
+			}
+			if = {
+				limit = { NOT = { is_core_of = RUS } }
+				add_core_of = RUS
+			}
+			if = {
+				limit = { is_core_of = MON }
+				remove_core_of = MON
+				add_claim_by = MON
+			}
+			ROOT = { transfer_state = PREV }
 		}
-		reverse_add_opinion_modifier = {
-			target = MON modifier = RUS_took_rail
+
+		if = {
+			limit = { country_exists = MON }
+			reverse_add_opinion_modifier = {
+				target = MON modifier = RUS_took_rail
+			}
 		}
-		JAP = {
-			country_event = {
-				id = japfor.125 days = 1
+		if = {
+			limit = { country_exists = JAP }
+			reverse_add_opinion_modifier = {
+				target = JAP modifier = RUS_took_rail
+			}
+			JAP = {
+				country_event = {
+					id = japfor.125 days = 1
+				}
 			}
 		}
 	}
@@ -5566,11 +5595,19 @@ country_event = { #Mongolia in disarray
 			factor = 10
 		}
 		add_political_power = -20
-		reverse_add_opinion_modifier = {
-			target = JAP modifier = RUS_took_rail_no
+		
+		if = {
+			limit = { country_exists = JAP }
+			reverse_add_opinion_modifier = {
+				target = JAP modifier = RUS_took_rail_no
+			}
 		}
-		reverse_add_opinion_modifier = {
-			target = MON modifier = RUS_took_rail_no
+		
+		if = {
+			limit = { country_exists = MON }
+			reverse_add_opinion_modifier = {
+				target = MON modifier = RUS_took_rail_no
+			}
 		}
 	}
 }
@@ -6055,6 +6092,7 @@ country_event = { # Peace offer No.1
 		tag = RUS
 		has_war_with = JAP
 		562 = {
+			is_owned_by = RUS
 			OR = {
 				is_controlled_by = JAP
 				controller = { is_subject_of = JAP }
@@ -6062,6 +6100,7 @@ country_event = { # Peace offer No.1
 			}
 		}
 		574 = {
+			is_owned_by = RUS
 			OR = {
 				is_controlled_by = JAP
 				controller = { is_subject_of = JAP }
@@ -6107,26 +6146,23 @@ country_event = { #Russia's peace offer
 	immediate = {log = "[GetDateText]: [Root.GetName]: event japfor.140"}
 	title = japfor.140.t
 	desc = japfor.140.d
+	
 	is_triggered_only = yes
 
+	trigger = {
+		has_war_with = RUS
+	}
+	
 	option = { #accept
 		name = japfor.140.a
 		ai_chance = {
 			factor = 60
 		}
 		RUS = {
+			white_peace_with_ROOT = yes
 			country_event = {
 				id = japfor.142
 			}
-		}
-		every_country = {
-			limit = {
-				OR = {
-					tag = RUS
-					is_in_faction_with = RUS
-				}
-			}
-			white_peace_with_ROOT = yes
 		}
 		add_political_power = 200
 
@@ -6178,17 +6214,29 @@ country_event = { #Japan accepts peace offer
 					}
 				}
 			}
-		JAP = {
-			transfer_state = 408
-			transfer_state = 657
-			transfer_state = 560
-			transfer_state = 561
-			transfer_state = 574
-			transfer_state = 644
-			transfer_state = 562
-			transfer_state = 637
-			transfer_state = 409
-		}
+			every_state = {
+				limit = {
+					OR = {
+						is_owned_by = RUS
+						owner = { is_subject_of = RUS }
+					}
+					OR = {
+						state = 408
+						state = 657
+						state = 560
+						state = 561
+						state = 574
+						state = 644
+						state = 562
+						state = 637
+						state = 565
+						state = 566
+						state = 567
+						state = 409
+					}
+				}
+				JAP = { transfer_state = PREV }
+			}
 		}
 		if = {
 			limit = {
@@ -6199,31 +6247,50 @@ country_event = { #Japan accepts peace offer
 					}
 				}
 			}
-		JAP = {
-			transfer_state = 657
-			transfer_state = 560
-			transfer_state = 561
-			transfer_state = 574
-			transfer_state = 644
-			transfer_state = 562
-			transfer_state = 637
+			every_state = {
+				limit = {
+					OR = {
+						is_owned_by = RUS
+						owner = { is_subject_of = RUS }
+					}
+					OR = {
+						state = 657
+						state = 560
+						state = 561
+						state = 574
+						state = 644
+						state = 562
+						state = 637
+						state = 565
+						state = 566
+						state = 567
+						state = 575
+					}
+				}
+				TRM = { transfer_state = PREV }
+			}
 		}
-		}
-		end_puppet = MON
-		end_puppet = TAN
 		if = {
 			limit = {
-				OR = {
-					NOT = { country_exists = TRM }
-					TRM = { is_subject_of = JAP }
-					JAP = { is_in_faction_with = TRM }
+				country_exists = MON
+				MON = { is_subject_of = RUS }
+			}
+			end_puppet = MON
+		}
+		if = {
+			limit = {
+				country_exists = TAN
+				TAN = { is_subject_of = RUS }
+			}
+			end_puppet = TAN
+		}
+		
+		hidden_effect = {
+			JAP = {
+				country_event = {
+					id = japfor.143 days = 3
 				}
 			}
-		JAP = {
-			country_event = {
-				id = japfor.143 days = 3
-			}
-		}
 		}
 	}
 }
@@ -6233,52 +6300,70 @@ country_event = { #Victory
 	immediate = {log = "[GetDateText]: [Root.GetName]: event japfor.143"}
 	title = japfor.143.t
 	desc = japfor.143.d
+	
 	is_triggered_only = yes
 
+	trigger = {
+		OR = {
+			NOT = { country_exists = TRM }
+			TRM = { is_subject_of = JAP }
+		}
+		any_owned_state = {
+			OR = {
+				state = 408
+				state = 657
+				state = 560
+				state = 561
+				state = 574
+				state = 644
+				state = 562
+				state = 637
+				state = 565
+				state = 566
+				state = 567
+				state = 409
+			}
+		}
+	}
+	
+	immediate = {
+		if = {
+			limit = { NOT = { country_exists = TRM } }
+			set_country_flag = then_puppet
+		}
+	}
+	
 	option = { #give to transamur
 		name = japfor.143.a
 		ai_chance = {
 			factor = 90
 		}
-		if = {
+		every_owned_state = {
 			limit = {
-				NOT = {
-					country_exists = TRM
+				OR = {
+					state = 408
+					state = 657
+					state = 560
+					state = 561
+					state = 574
+					state = 644
+					state = 562
+					state = 637
+					state = 565
+					state = 566
+					state = 567
+					state = 409
 				}
 			}
-		TRM = {
-			transfer_state = 408
-			transfer_state = 657
-			transfer_state = 560
-			transfer_state = 561
-			transfer_state = 574
-			transfer_state = 644
-			transfer_state = 562
-			transfer_state = 637
-			transfer_state = 409
-		}
-		puppet = TRM
+			TRM = { transfer_state = PREV }
 		}
 		if = {
 			limit = {
-				TRM = {
-					OR = {
-						is_subject_of = ROOT
-						is_in_faction_with = ROOT
-					}
-				}
+				has_country_flag = then_puppet
 			}
-		TRM = {
-			transfer_state = 657
-			transfer_state = 560
-			transfer_state = 561
-			transfer_state = 574
-			transfer_state = 644
-			transfer_state = 562
-			transfer_state = 637
+			clr_country_flag = then_puppet
+			puppet = TRM
 		}
-		}
-
 	}
 
 	option = { #keep it
@@ -6286,6 +6371,7 @@ country_event = { #Victory
 		ai_chance = {
 			factor = 10
 		}
+		clr_country_flag = then_puppet
 		add_political_power = -60
 	}
 }
@@ -6378,7 +6464,12 @@ country_event = { #Russia's peace offer
 	immediate = {log = "[GetDateText]: [Root.GetName]: event japfor.145"}
 	title = japfor.145.t
 	desc = japfor.145.d
+	
 	is_triggered_only = yes
+	
+	trigger = {
+		has_war_with = RUS
+	}
 
 	option = { #accept
 		name = japfor.145.a
@@ -6429,75 +6520,68 @@ country_event = { #Japan accepts peace offer
 
 	option = {
 		name = japfor.142.a
-		JAP = {
-			transfer_state = 583
-			transfer_state = 572
-			transfer_state = 653
-			transfer_state = 580
-			transfer_state = 579
-			transfer_state = 590
-			transfer_state = 588
-			transfer_state = 403
-			transfer_state = 571
-			transfer_state = 570
-			transfer_state = 578
-			transfer_state = 40
-			transfer_state = 569
-			transfer_state = 568
-			transfer_state = 567
-			transfer_state = 566
-			transfer_state = 577
-			transfer_state = 516
-			transfer_state = 576
-			transfer_state = 575
-
-			transfer_state = 565
-			transfer_state = 561
-			transfer_state = 657
-			transfer_state = 560
-			transfer_state = 574
-			transfer_state = 644
-			transfer_state = 562
-			transfer_state = 637
-		}
-		if = {
+		every_owned_state = {
 			limit = {
-				NOT = {
-					any_country = {
-						OR = {
-							tag = JAP
-							is_subject_of = JAP
-							is_in_faction_with = JAP
-						}
-						controls_state = 408
-					}
+				OR = {
+					state = 408
+					state = 409
+					state = 583
+					state = 572
+					state = 653
+					state = 580
+					state = 579
+					state = 590
+					state = 588
+					state = 403
+					state = 571
+					state = 570
+					state = 578
+					state = 40
+					state = 569
+					state = 568
+					state = 567
+					state = 566
+					state = 577
+					state = 516
+					state = 576
+					state = 575
+					state = 565
+					state = 561
+					state = 657
+					state = 560
+					state = 574
+					state = 644
+					state = 562
+					state = 637
 				}
 			}
 			JAP = {
-				transfer_state = 408
-				transfer_state = 409
+				transfer_state = PREV
 			}
 		}
 		if = {
 			limit = {
+				country_exists = MON
 				MON = { is_subject_of = ROOT }
 			}
 			end_puppet = MON
 		}
 		if = {
 			limit = {
+				country_exists = TAN
 				TAN = { is_subject_of = ROOT }
 			}
 			end_puppet = TAN
 		}
 		if = {
 			limit = {
+				country_exists = ALO
 				ALO = { is_subject_of = ROOT }
 			}
 			end_puppet = ALO
 		}
 		country_event = {
-			id = japfor.148 days = 15
+			id = japfor.148
 		}
 	}
 }
@@ -6507,131 +6591,293 @@ country_event = { #Fate of Siberia
 	immediate = {log = "[GetDateText]: [Root.GetName]: event japfor.148"}
 	title = japfor.148.t
 	desc = japfor.148.d
+	
 	is_triggered_only = yes
+	
+	trigger = {
+		OR = {
+			owns_state = 583
+			owns_state = 572
+			owns_state = 653
+			owns_state = 580
+			owns_state = 579
+			owns_state = 590
+			owns_state = 588
+			owns_state = 403
+			owns_state = 571
+			owns_state = 570
+			owns_state = 578
+			owns_state = 40
+			owns_state = 569
+			owns_state = 568
+			owns_state = 567
+			owns_state = 566
+			owns_state = 577
+			owns_state = 516
+			owns_state = 576
+			owns_state = 575
+			owns_state = 565
+			owns_state = 561
+			owns_state = 657
+			owns_state = 560
+			owns_state = 574
+			owns_state = 644
+			owns_state = 562
+			owns_state = 637
+		}
+	}
 
 	option = { #release Siberia
 		trigger = {
 			SIB = {
-				exists = no
+				OR = {
+					exists = no
+					is_subject_of = JAP
+				}
 			}
 		}
 		name = japfor.148.a
 		ai_chance = {
 			factor = 20
 		}
-		SIB = {
-			transfer_state = 583
-			transfer_state = 572
-			transfer_state = 653
-			transfer_state = 580
-			transfer_state = 579
-			transfer_state = 590
-			transfer_state = 588
-			transfer_state = 403
-			transfer_state = 571
-			transfer_state = 570
-			transfer_state = 578
-			transfer_state = 40
-			transfer_state = 569
-			transfer_state = 568
-			transfer_state = 567
-			transfer_state = 566
-			transfer_state = 577
-			transfer_state = 516
-			transfer_state = 576
-			transfer_state = 575
-
-			transfer_state = 565
-			transfer_state = 561
-			transfer_state = 657
-			transfer_state = 560
-			transfer_state = 574
-			transfer_state = 644
-			transfer_state = 562
-			transfer_state = 637
-
-			add_state_core = 583
-			add_state_core = 572
-			add_state_core = 653
-			add_state_core = 580
-			add_state_core = 579
-			add_state_core = 590
-			add_state_core = 588
-			add_state_core = 403
-			add_state_core = 571
-			add_state_core = 570
-			add_state_core = 578
-			add_state_core = 40
-			add_state_core = 569
-			add_state_core = 568
-			add_state_core = 567
-			add_state_core = 566
-			add_state_core = 577
-			add_state_core = 516
-			add_state_core = 576
-			add_state_core = 575
-
-			add_state_core = 565
-			add_state_core = 561
-			add_state_core = 657
-			add_state_core = 560
-			add_state_core = 574
-			add_state_core = 644
-			add_state_core = 562
-			add_state_core = 637
+		every_owned_state = {
+			limit = {
+				NOT = {
+					is_core_of = ROOT
+					is_claimed_by = ROOT
+				}
+				OR = {
+					state = 583
+					state = 572
+					state = 653
+					state = 580
+					state = 579
+					state = 590
+					state = 588
+					state = 403
+					state = 571
+					state = 570
+					state = 578
+					state = 40
+					state = 569
+					state = 568
+					state = 567
+					state = 566
+					state = 577
+					state = 516
+					state = 576
+					state = 575
+					state = 565
+					state = 561
+					state = 657
+					state = 560
+					state = 574
+					state = 644
+					state = 562
+					state = 637
+				}
+			}
+			add_core_of = SIB
+			SIB = { transfer_state = PREV }
 		}
-		puppet = SIB
+		if = {
+			limit = {
+				NOT = { SIB = { is_subject_of = JAP } }
+			}
+			puppet = SIB
+		}
 	}
 
 	option = { #give to transamur
+		name = japfor.148.b
+		ai_chance = {
+			factor = 50
+		}
 		trigger = {
 			TRM = {
-				exists = yes
 				OR = {
+					exists = no
 					is_subject_of = JAP
-					is_in_faction_with = JAP
 				}
 			}
 		}
-		name = japfor.148.b
-		ai_chance = {
-			factor = 75
+		every_owned_state = {
+			limit = {
+				NOT = {
+					is_core_of = ROOT
+					is_claimed_by = ROOT
+				}
+				OR = {
+					state = 583
+					state = 572
+					state = 653
+					state = 580
+					state = 579
+					state = 590
+					state = 588
+					state = 403
+					state = 571
+					state = 570
+					state = 578
+					state = 40
+					state = 569
+					state = 568
+					state = 567
+					state = 566
+					state = 577
+					state = 516
+					state = 576
+					state = 575
+					state = 565
+					state = 561
+					state = 657
+					state = 560
+					state = 574
+					state = 644
+					state = 562
+					state = 637
+				}
+			}
+			if = {
+				limit = { NOT = { is_core_of = TRM } }
+				add_core_of = TRM
+			}
+			TRM = { transfer_state = PREV }
 		}
-		TRM = {
-			transfer_state = 583
-			transfer_state = 572
-			transfer_state = 653
-			transfer_state = 580
-			transfer_state = 579
-			transfer_state = 590
-			transfer_state = 588
-			transfer_state = 403
-			transfer_state = 571
-			transfer_state = 570
-			transfer_state = 578
-			transfer_state = 40
-			transfer_state = 569
-			transfer_state = 568
-			transfer_state = 567
-			transfer_state = 566
-			transfer_state = 577
-			transfer_state = 516
-			transfer_state = 576
-			transfer_state = 575
-
-			transfer_state = 565
-			transfer_state = 561
-			transfer_state = 657
-			transfer_state = 560
-			transfer_state = 574
-			transfer_state = 644
-			transfer_state = 562
-			transfer_state = 637
+		if = {
+			limit = {
+				NOT = { TRM = { is_subject_of = JAP } }
+			}
+			puppet = TRM
+		}
+	}
+	
+	option = { #Divide the lands
+		name = japfor.148.c
+		trigger = {
+			TRM = {
+				OR = {
+					exists = no
+					is_subject_of = JAP
+				}	
+			}
+			SIB = {
+				OR = {
+					exists = no
+					is_subject_of = JAP
+				}
+			}
+			OR = {
+				owns_state = 583
+				owns_state = 572
+				owns_state = 653
+				owns_state = 580
+				owns_state = 579
+				owns_state = 590
+				owns_state = 588
+				owns_state = 403
+				owns_state = 571
+				owns_state = 570
+				owns_state = 578
+				owns_state = 40
+				owns_state = 569
+				owns_state = 568
+				owns_state = 577
+				owns_state = 516
+				owns_state = 576
+			}
+			OR = {
+				owns_state = 408
+				owns_state = 657
+				owns_state = 560
+				owns_state = 561
+				owns_state = 574
+				owns_state = 644
+				owns_state = 562
+				owns_state = 637
+				owns_state = 565
+				owns_state = 566
+				owns_state = 567
+				owns_state = 409
+				owns_state = 575
+			}
+		}
+		ai_chance = {
+			factor = 25
+		}
+		every_owned_state = {
+			limit = {
+				NOT = {
+					is_core_of = ROOT
+					is_claimed_by = ROOT
+				}
+				OR = {
+					state = 583
+					state = 572
+					state = 653
+					state = 580
+					state = 579
+					state = 590
+					state = 588
+					state = 403
+					state = 571
+					state = 570
+					state = 578
+					state = 40
+					state = 569
+					state = 568
+					state = 577
+					state = 516
+					state = 576
+				}
+			}
+			add_core_of = SIB
+			SIB = { transfer_state = PREV }
+		}
+		every_owned_state = {
+			limit = {
+				NOT = {
+					is_core_of = ROOT
+					is_claimed_by = ROOT
+				}
+				OR = {
+					state = 408
+					state = 657
+					state = 560
+					state = 561
+					state = 574
+					state = 644
+					state = 562
+					state = 637
+					state = 565
+					state = 566
+					state = 567
+					state = 409
+					state = 575
+				}
+			}
+			if = {
+				limit = { NOT = { is_core_of = TRM } }
+				add_core_of = TRM
+			}
+			TRM = { transfer_state = PREV }
+		}
+		if = {
+			limit = {
+				NOT = { SIB = { is_subject_of = JAP } }
+			}
+			puppet = SIB
+		}
+		if = {
+			limit = {
+				NOT = { TRM = { is_subject_of = JAP } }
+			}
+			puppet = TRM
 		}
 	}
 
 	option = { #keep
-		name = japfor.148.c
+		name = japfor.148.e
 		ai_chance = {
 			factor = 5
 		}
@@ -6771,15 +7017,7 @@ country_event = { # Transamur surrenders
 		}
 
 		white_peace_with_TARGET = yes
-		every_country = {
-			limit = {
-				OR = {
-					is_in_faction_with = RUS
-					is_subject_of = RUS
-				}
-			}
-			white_peace_with_TARGET = yes
-		}
+		
 		puppet = TRM
 
 	}
@@ -6930,15 +7168,7 @@ country_event = {
 		}
 
 		white_peace_with_TARGET = yes
-		every_country = {
-			limit = {
-				OR = {
-					is_subject_of = RUS
-					is_in_faction_with = RUS
-				}
-			}
-			white_peace_with_TARGET = yes
-		}
+		
 		JAP = {
 			set_country_flag = JAP_ISO
 		}
@@ -7106,15 +7336,8 @@ country_event = { #Defeat of Fengtien
 		}
 
 		white_peace_with_TARGET = yes
-		every_country = {
-			limit = {
-				OR = {
-					is_in_faction_with = MON
-					is_subject_of = MON
-				}
-			}
-			white_peace_with_TARGET = yes
-		}
+		MON = { white_peace_with_TARGET = yes }
+		
 		puppet = FNG
 		MON = {
 			transfer_state = 714
@@ -7240,15 +7463,7 @@ country_event = {
 		}
 
 		MON = { white_peace_with_TARGET = yes }
-		every_country = {
-			limit = {
-				OR = {
-					is_subject_of = MON
-					is_in_faction_with = MON
-				}
-			}
-			white_peace_with_TARGET = yes
-		}
+		
 		JAP = {
 			set_country_flag = JAP_ISO
 		}
@@ -8980,8 +9195,6 @@ country_event = { #The Fading Sun
 			factor = 100
 		}
 		FNG = { white_peace_with_ROOT = yes }
-		every_other_country = { limit = { is_in_faction_with = FNG }
-		white_peace_with_ROOT = yes }
 
 		remove_state_claim = 757
 		remove_state_claim = 737
@@ -9338,7 +9551,6 @@ country_event = { #The Germans demand our oversea territory
 			factor = 25
 		}
 		GER = { white_peace_with_ROOT = yes }
-		every_country = { limit = { is_in_faction_with = GER } white_peace_with_ROOT = yes }
 		clr_country_flag = JAP_Defeated_FNG
 		GER = {
 			transfer_state = 526

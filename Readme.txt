@@ -1,5 +1,5 @@
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This is alpha version 0.6.2 - 'Podcat's Gift'.
+This is alpha version 0.6.3.
 It is NOT save game compatible with any prior version.
 This version is compatible with 1.5.3, it may work with later hot fixes, but it is not guaranteed.
 
