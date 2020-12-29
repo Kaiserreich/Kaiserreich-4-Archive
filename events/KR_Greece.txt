@@ -516,7 +516,7 @@ country_event = {
 	option = {
 		name = gre.17.a
 		set_country_flag = GRE_balkan_war_loss
-		add_stability = 0.20
+		add_stability = -0.20
 		decrease_ruling_party_popularity_by_20 = yes
 	}
 }
@@ -1679,7 +1679,7 @@ country_event = {
 		}
 		add_ideas = {
 			GRE_Georgios_Vorazanis_eco_rso
-			GRE_Loukas_Karliaftis_eco_rso
+			GRE_Loukas_Karliaftis_sec_rso
 		}
 		GRE_become_syndicalist = yes
 		hidden_effect = {
@@ -1728,7 +1728,7 @@ country_event = {
 		add_ideas = {
 			GRE_Nikolaos_Plastiras_for_sde
 			GRE_Alexandros_Svolos_eco_sde
-			GRE_Georgios_Athanasiadis_Novas_eco_sli
+			GRE_Georgios_Athanasiadis_Novas_sec_sli
 		}
 	}
 	option = {
@@ -3095,11 +3095,11 @@ country_event = {
 		add_stability = 0.05
 		hidden_effect = {
 			if = {
-				limit = { has_country_flag = GRE_republic_rig }
-				random_other_country = {
-					limit = { is_ai = yes }
-					country_event = gre.113
+				limit = {
+					has_country_flag = GRE_republic_rig
+					NOT = { has_country_flag = Ioannis_Metaxas_dead }
 				}
+				country_event = { id = gre.113 days = 3 }
 			}
 			random_other_country = {
 				limit = { is_ai = yes }
@@ -3126,10 +3126,7 @@ country_event = {
 		hidden_effect = {
 			if = {
 				limit = { has_country_flag = GRE_monarchy_rig }
-				random_other_country = {
-					limit = { is_ai = yes }
-					country_event = gre.113
-				}
+				country_event = { id = gre.113 days = 3 }
 			}
 		}
 	}
@@ -3140,13 +3137,21 @@ country_event = {
 	id = gre.113
 	immediate = {log = "[GetDateText]: [Root.GetName]: event gre.113"}
 	title = gre.113.t
-	desc = gre.113.d
-	picture = GFX_report_event_GRE_referendum
+	picture = report_event_GRE_crowd2
+	
+	desc = {
+		text = gre.113.d.monarchist
+		trigger = { has_country_flag = GRE_monarchists_win_referendum }
+	}
+	desc = {
+		text = gre.113.d.republican
+		trigger = { has_country_flag = GRE_republicans_win_referendum }
+	}
 
 	is_triggered_only = yes
-
+	
 	option = {
-		name = gre.113.a # Discovered
+		name = gre.113.a # The rigging is discovered!
 		ai_chance = {
 			factor = 25
 			modifier = {
@@ -3206,21 +3211,21 @@ country_event = {
 				}
 			}
 		}
-		GRE = {
-			if = {
-				limit = { has_country_flag = GRE_republic_rig }
-				country_event = { id = gre.114 days = 3 }
-			}
+		if = {
+			limit = { has_country_flag = GRE_republic_rig }
+			country_event = { id = gre.114 hours = 3 }
 			else = {
-				country_event = { id = gre.115 days = 3 }
+				country_event = { id = gre.115 hours = 3 }
 			}
 		}
 	}
 	option = {
-		name = gre.113.b # Not Discovered
+		name = gre.113.b # No evidence is uncovered and the protests die down
 		ai_chance = {
 			factor = 75
 		}
+		add_political_power = -100
+		add_stability = -0.05
 	}
 }
 
@@ -3592,7 +3597,11 @@ country_event = {
 		has_country_flag = GRE_socialists_banned
 		has_democratic_government = yes
 		controls_all_owned_states = yes
-		owns_state = 768 #Thessaly
+		OR = {
+			owns_state = 731 #Central Macedonia
+			owns_state = 1076 #Southern Macedonia
+			owns_state = 768 #Thessaly
+		}
 		NOT = { has_country_flag = GRE_had_civil_war }
 	}
 
@@ -3603,13 +3612,37 @@ country_event = {
 	option = {
 		name = gre.122.a
 		set_country_flag = GRE_had_civil_war
-		start_civil_war = {
-			ideology = syndicalist
-			size = 0.4
-			capital = 768
-			states = { 768 }
-			keep_unit_leaders = { 570 573 575 576 577 578 579 580 581 }
+		
+		if = {
+			limit = { owns_state = 731 }
+			start_civil_war = {
+				ideology = syndicalist
+				size = 0.4
+				capital = 731
+				states = { 731 }
+				keep_unit_leaders = { 570 573 575 576 577 578 579 580 581 }
+			}
 		}
+		else_if = {
+			limit = { owns_state = 1076 }
+			start_civil_war = {
+				ideology = syndicalist
+				size = 0.4
+				capital = 1076
+				states = { 1076 }
+				keep_unit_leaders = { 570 573 575 576 577 578 579 580 581 }
+			}
+		}
+		else = {
+			start_civil_war = {
+				ideology = syndicalist
+				size = 0.4
+				capital = 768
+				states = { 768 }
+				keep_unit_leaders = { 570 573 575 576 577 578 579 580 581 }
+			}
+		}
+		
 		hidden_effect = {
 			add_ideas = has_scripted_peace
 			create_country_leader = {
@@ -3685,11 +3718,14 @@ country_event = {
 		NOT = { controls_state = 768 }
 		OR = {
 			surrender_progress > 0.75
-			47 = {
-				is_owned_by = GRE
-				controller = {
-					NOT = { tag = GRE }
-					original_tag = GRE
+			AND = {
+				surrender_progress > 0.50
+				47 = {
+					is_owned_by = GRE
+					controller = {
+						NOT = { tag = GRE }
+						original_tag = GRE
+					}
 				}
 			}
 		}
@@ -4260,7 +4296,11 @@ country_event = {
 		tag = GRE
 		has_socialist_government = yes
 		controls_all_owned_states = yes
-		owns_state = 768 #Thessaly
+		OR = {
+			owns_state = 731 #Central Macedonia
+			owns_state = 1076 #Southern Macedonia
+			owns_state = 768 #Thessaly
+		}
 		NOT = { has_country_flag = GRE_had_civil_war }
 		NOT = { has_country_flag = Ioannis_Metaxas_dead }
 	}
@@ -4272,13 +4312,37 @@ country_event = {
 	option = {
 		name = gre.158.a
 		set_country_flag = GRE_had_civil_war
-		start_civil_war = {
-			ideology = paternal_autocrat
-			size = 0.5
-			capital = 768
-			states = { 768 }
-			keep_unit_leaders = { 571 572 576 579 580 581 }
+		
+		if = {
+			limit = { owns_state = 731 }
+			start_civil_war = {
+				ideology = paternal_autocrat
+				size = 0.4
+				capital = 731
+				states = { 731 }
+				keep_unit_leaders = { 571 572 576 579 580 581 }
+			}
 		}
+		else_if = {
+			limit = { owns_state = 1076 }
+			start_civil_war = {
+				ideology = paternal_autocrat
+				size = 0.4
+				capital = 1076
+				states = { 1076 }
+				keep_unit_leaders = { 571 572 576 579 580 581 }
+			}
+		}
+		else = {
+			start_civil_war = {
+				ideology = paternal_autocrat
+				size = 0.4
+				capital = 768
+				states = { 768 }
+				keep_unit_leaders = { 571 572 576 579 580 581 }
+			}
+		}
+		
 		hidden_effect = {
 			add_ideas = has_scripted_peace
 			create_country_leader = {
@@ -4355,11 +4419,14 @@ country_event = {
 		NOT = { controls_state = 768 }
 		OR = {
 			surrender_progress > 0.75
-			47 = {
-				is_owned_by = GRE
-				controller = {
-					NOT = { tag = GRE }
-					original_tag = GRE
+			AND = {
+				surrender_progress > 0.50
+				47 = {
+					is_owned_by = GRE
+					controller = {
+						NOT = { tag = GRE }
+						original_tag = GRE
+					}
 				}
 			}
 		}
@@ -5574,6 +5641,39 @@ country_event = {
 	option = {
 		name = gre.255.a
 		add_war_support = 0.10
+	}
+}
+
+# Move the capital to Constantinople?
+country_event = {
+	id = gre.256
+	immediate = {log = "[GetDateText]: [Root.GetName]: event gre.256"}
+	title = gre.256.t
+	desc = gre.256.d
+	picture = GFX_report_event_GRE_athens
+	
+	fire_only_once = yes
+	
+	trigger = {
+		tag = GRE
+		has_war = no
+		owns_state = 773 #Constantinople
+		capital_scope = { state = 47 } #Attica
+	}
+	
+	mean_time_to_happen = {
+		days = 7
+	}
+	
+	option = {
+		name = gre.256.a #Yes, this is the proper capital of our nation
+		add_political_power = 50
+		add_stability = -0.03
+		set_capital = 773
+	}
+	option = {
+		name = gre.256.b #No, we remain in Athens as always
+		add_stability = 0.05
 	}
 }
 
