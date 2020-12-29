@@ -1,7 +1,8 @@
 -- Kaiserreich defines values
 
-NDefines.NGame.END_DATE = "1959.1.1.1"
+NDefines.NGame.END_DATE = "1959.1.1.1"										-- Vanilla 1949.1.1.1
 NDefines.NGame.MAJOR_PARTICIPANTS_FOR_MAJOR_WAR = 20						-- Vanilla is 3
+NDefines.NGame.DECISION_ALERT_TIMEOUT_DAYS = 60								-- Vanilla is 30
 NDefines.NDiplomacy.MAX_OPINION_VALUE = 200									-- Vanilla is 100
 NDefines.NDiplomacy.MIN_OPINION_VALUE = -200								-- Vanilla is -100
 NDefines.NDiplomacy.BASE_PEACE_PUPPET_FACTOR = 0							-- Vanilla is 100
@@ -29,7 +30,9 @@ NDefines.NCountry.MIN_STABILITY = -1.0										-- Vanilla is 0.0
 NDefines.NCountry.POLITICAL_POWER_CAP = 400.0								-- Vanilla is 2000.0
 NDefines.NCountry.STATE_OCCUPATION_COST_MULTIPLIER = 0.25					-- Vanilla is 0.01
 NDefines.NCountry.CAPITULATE_STOCKPILES_RATIO = 0.75						-- Vanilla is 0.5
-NDefines.NPolitics.BASE_POLITICAL_POWER_INCREASE = 1.5						-- Vanilla is 2
+NDefines.NCountry.WAR_SUPPORT_OFFNSIVE_WAR = 0.0							-- Vanilla is -0.2
+NDefines.NCountry.WAR_SUPPORT_DEFENSIVE_WAR = 0.0							-- Vanilla is 0.3
+NDefines.NPolitics.BASE_POLITICAL_POWER_INCREASE = 1.0						-- Vanilla is 2
 NDefines.NBuildings.INFRASTRUCTURE_RESOURCE_BONUS = 0.0                     -- Vanilla is 0.1
 NDefines.NTrade.ALLOW_TRADE_CUT_OFF = 50									-- Vanilla is 0
 NDefines.NWiki.BASE_URL = "http://kaiserreich.wikia.com/wiki/The_Kaiserreich_Wiki"
