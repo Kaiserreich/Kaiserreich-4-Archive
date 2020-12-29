@@ -23,6 +23,7 @@ NDefines.NDiplomacy.TENSION_GENERATE_WARGOAL = 0							-- Vanilla is 1
 NDefines.NDiplomacy.TENSION_VOLUNTEER_FORCE_DIVISION = 0					-- Vanilla is 0.5
 NDefines.NDiplomacy.TENSION_DECAY = 0.1										-- Vanilla is 0.1
 NDefines.NDiplomacy.TENSION_SIZE_FACTOR = 0									-- Vanilla is 1.0
+NDefines.NDiplomacy.VOLUNTEERS_DIVISIONS_REQUIRED = 20						-- Vanilla is 30
 NDefines.NCountry.EVENT_PROCESS_OFFSET = 5									-- Vanilla is 20
 NDefines.NCountry.BASE_STABILITY_WAR_FACTOR = -0.1							-- Vanilla is -0.3
 NDefines.NCountry.BASE_STABILITY_PARTY_POPULARITY_FACTOR = 0.0				-- Vanilla is 0.15
@@ -34,7 +35,7 @@ NDefines.NCountry.WAR_SUPPORT_OFFNSIVE_WAR = 0.0							-- Vanilla is -0.2
 NDefines.NCountry.WAR_SUPPORT_DEFENSIVE_WAR = 0.0							-- Vanilla is 0.3
 NDefines.NPolitics.BASE_POLITICAL_POWER_INCREASE = 1.0						-- Vanilla is 2
 NDefines.NBuildings.INFRASTRUCTURE_RESOURCE_BONUS = 0.0                     -- Vanilla is 0.1
-NDefines.NTrade.ALLOW_TRADE_CUT_OFF = 50									-- Vanilla is 0
+NDefines.NTrade.ALLOW_TRADE_CUT_OFF = 0 									-- Vanilla is 0
 NDefines.NTrade.BASE_TRADE_FACTOR = 100										-- Vanilla is 150
 NDefines.NWiki.BASE_URL = "http://kaiserreich.wikia.com/wiki/The_Kaiserreich_Wiki"
 -- Vanilla is "http://www.hoi4wiki.com/"
@@ -59,6 +60,7 @@ NDefines.NAI.NAVY_PREFERED_MAX_SIZE = 50									-- Vanilla is 20
 NDefines.NAI.MAX_DISTANCE_NALAV_INVASION = 400.0							-- Vanilla is 200
 NDefines.NAI.ENEMY_NAVY_STRENGTH_DONT_BOTHER = 1.5							-- Vanilla is 2.5
 NDefines.NAI.MIN_ANTAGONIZE_FOR_WARGOAL_JUSTIFICATION = 0					-- Vanilla is -100
+
 
 -- Naval rework defines
 
