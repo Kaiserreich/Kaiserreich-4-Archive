@@ -1,4 +1,4 @@
-﻿name = "Kaiserreich Dev Build"
+﻿name = "Kaiserreich"
 path = "mod/Kaiserreich/"
 
 replace_path = "common/abilities"
