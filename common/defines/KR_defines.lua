@@ -43,8 +43,6 @@ NDefines.NGraphics.COUNTRY_FLAG_SMALL_TEX_WIDTH = 11						-- Vanilla is 10
 NDefines.NGraphics.COUNTRY_FLAG_TEX_MAX_SIZE = 512							-- Vanilla is 256
 NDefines.NGraphics.COUNTRY_FLAG_SMALL_TEX_MAX_SIZE = 128					-- Vanilla is 64
 NDefines.NGraphics.COUNTRY_FLAG_STRIPE_TEX_MAX_WIDTH = 11					-- Vanilla is 10
-NDefines.NGraphics.COUNTRY_FLAG_STRIPE_TEX_MAX_HEIGHT = 2048				-- Vanilla is 1024
-NDefines.NGraphics.COUNTRY_FLAG_LARGE_STRIPE_MAX_HEIGHT = 6200				-- Vanilla is 4000
 NDefines.NGraphics.VICTORY_POINT_MAP_ICON_TEXT_CUTOFF = {300, 500, 800}  	-- Vanilla is 100, 250, 500
 NDefines.NGraphics.VICTORY_POINTS_DISTANCE_CUTOFF = {300, 500, 1000} 		-- Vanilla is 300, 500, 1500
 NDefines.NMilitary.DIG_IN_FACTOR = 0.01										-- Vanilla is 0.02
@@ -63,6 +61,7 @@ NDefines.NAI.ENEMY_NAVY_STRENGTH_DONT_BOTHER = 1.5							-- Vanilla is 2.5
 NDefines.NAI.MIN_ANTAGONIZE_FOR_WARGOAL_JUSTIFICATION = 0					-- Vanilla is -100
 NDefines.NAI.FALLBACK_LOSING_FACTOR = 0.25									-- Vanilla is 1.0
 NDefines.NAI.PLAN_MIN_SIZE_FOR_FALLBACK = 500								-- Vanilla is 50
+NDefines.NAI.VARIANT_UPGRADE_MIN_XP = 25									-- Vanilla is 50
 
 -- Naval rework defines
 

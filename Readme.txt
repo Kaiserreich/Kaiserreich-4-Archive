@@ -1,7 +1,6 @@
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This is alpha version 0.8.5 - 'Return of the Kaiser'.
-It is NOT save game compatible with any prior version.
-This version is compatible with 1.5.4, it may work with later hot fixes, but it is not guaranteed.
+This is alpha version 0.8.6.
+This version is compatible with 1.6.2, it may work with later hot fixes, but it is not guaranteed.
 
 Manual Installation Instructions
 1) Download the mod
