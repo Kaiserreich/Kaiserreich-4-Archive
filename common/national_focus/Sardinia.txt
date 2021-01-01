@@ -13,9 +13,10 @@ focus_tree = {
 			tag = SRD
 		}
 	}
-	
+
 	default = no
-	
+	continuous_focus_position = { x = 1400 y = 600 }
+
 #### Sardinian Politics ####
 	focus = {# Decisions and Exile
 		id = SRD_country
@@ -107,10 +108,12 @@ focus_tree = {
 			custom_effect_tooltip = SRD_loyal_ministers
 			hidden_effect = {
 				remove_all_ministers = yes
-				add_ideas = SRD_Filiberto_di_Savoia_Genova_hog_pau
-				add_ideas = SRD_Vittorio_Ambrosio_for_pau
-				add_ideas = SRD_Giovanni_Sechi_eco_pau
-				add_ideas = SRD_Luigi_Arborio_Mella_di_Sant'Elia_sec_pau
+				add_ideas = {
+					SRD_Amadeo_di_Savoia_Aosta_hog_pau
+					SRD_Vittorio_Ambrosio_for_pau
+					SRD_Giovanni_Sechi_eco_pau
+					SRD_Luigi_Arborio_Mella_di_Sant'Elia_sec_pau
+				}
 			}
 		}
 	}
@@ -433,7 +436,7 @@ focus_tree = {
 			}
 			date > 1938.1.1
 		}
-		x = 18
+		x = 17
 		y = 0
 		available_if_capitulated = no
 		cancel_if_invalid = yes
@@ -512,7 +515,7 @@ focus_tree = {
 	}
 	focus = {# French Naval Officers
 		id = SRD_french_naval_officers
-		icon = GFX_TRM_kolchak_cap
+		icon = GFX_NATFRA_conscription
 		cost = 6.00
 		prerequisite = {
 			focus = SRD_unification
@@ -547,7 +550,7 @@ focus_tree = {
 	}
 	focus = {# Canadian Military Officers
 		id = SRD_military_training
-		icon = GFX_focus_secret_rearmament
+		icon = GFX_goal_USA_reconcile_canada
 		cost = 6.00
 		prerequisite = {
 			focus = SRD_unification
@@ -580,11 +583,14 @@ focus_tree = {
 			add_ideas = SRD_canadian_officers
 		}
 	}
-	focus = {# Destroy SRI
-		id = SRD_destroy_sri
-		icon = GFX_goal_broken_red_star
-		cost = 4.00
-		will_lead_to_war_with = SRI
+	focus = {# proclaim Kingdom of Italy
+		id = SRD_kingdom_of_italy
+		icon = GFX_goal_SRD_kingdom_of_italy
+		cost = 6.00
+		available = {
+			has_country_flag = SRD_has_piedmont
+			is_subject = no
+		}
 		prerequisite = {
 			focus = SRD_fortress_sardinia
 		}
@@ -594,96 +600,47 @@ focus_tree = {
 		prerequisite = {
 			focus = SRD_military_training
 		}
-		available = {
-			is_subject = no
-			SRI = { is_valid_war_target = yes }
+		mutually_exclusive = {
+			focus = SRD_sardinia_piedmont
 		}
-		bypass = {
-			OR = {
-				has_war_with = SRI
-				NOT = { country_exists = SRI }
-			}
-		}
+		relative_position_id = SRD_unification
+		x = -2
+		y = 2
 		available_if_capitulated = no
 		cancel_if_invalid = yes
-		relative_position_id = SRD_unification
-		x = 0
-		y = 2
 		ai_will_do = {
-			factor = 30
+			factor = 10
 			modifier = {
-				factor = 0
+				factor = 10
 				OR = {
-					has_war = yes
-					AND = {
-						is_in_faction = yes
-						date < 1940.1.1
-					}
-					# neither of us is in a faction and SRI is stronger
-					AND = {
-						SRI = { is_in_faction = no }
-						is_in_faction = no
-						strength_ratio = { tag = SRI ratio < 1.0 }
-					}
-					# they're in a faction which is not at war
-					SRI = {
-						is_in_faction = yes
-						has_war = no
-					}
-					# they're in a faction which is at war but not with a major and not losing
-					SRI = {
-						is_in_faction = yes
-						has_war = yes
-						NOT = {
-							any_enemy_country = {
-								OR = {
-									tag = GER
-									tag = AUS
-									tag = ITA
-									tag = SIC
-								}
-							}
-							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
-								surrender_progress > 0.20
-							}
-						}
+					owns_state = 162
+					owns_state = 1004
+					owns_state = 159
+				}
+			}
+			modifier = {
+				factor = 0.1
+				SIC = {
+					OR = {
+						has_country_flag = SIC_confed
+						has_country_flag = SIC_empire
 					}
 				}
 			}
 		}
 		completion_reward = {
-			log = "[GetDateText]: [Root.GetName]: Focus SRD_destroy_sri"
-			declare_war_on = { target = SRI type = annex_everything }
-		}
-	}
-	focus = {# proclaim Kingdom of Italy
-		id = SRD_kingdom_of_italy
-		icon = GFX_goal_SRD_kingdom_of_italy
-		cost = 6.00
-		available = {
-			has_country_flag = SRD_has_piedmont
-			is_subject = no
-			NOT = { is_in_faction_with = SIC }
-		}
-		prerequisite = {
-			focus = SRD_destroy_sri
-		}
-		mutually_exclusive = {
-			focus = SRD_sardinia_piedmont
-		}
-		relative_position_id = SRD_unification
-		x = -3
-		y = 3
-		available_if_capitulated = no
-		cancel_if_invalid = yes
-		ai_will_do = {
-			factor = 10
-		}
-		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_kingdom_of_italy"
 			set_cosmetic_tag = SRD_ITA
+			every_country = {
+				limit = {
+					is_italian_tag = yes
+					is_subject_of = SRD
+				}
+				transfer_navy = { target = ROOT }
+				ROOT = {
+					annex_country = { target = PREV transfer_troops = yes }
+				}
+			}
 			every_state = {
 				limit = {
 					is_claim_or_core_of_ROOT = no
@@ -699,323 +656,19 @@ focus_tree = {
 			}
 		}
 	}
-	focus = {# Destroy the Republic
-		id = SRD_destroy_roi
-		icon = GFX_goal_generic_territory_or_war
-		cost = 4.00
-		prerequisite = {
-			focus = SRD_kingdom_of_italy
-		}
-		available = {
-			is_subject = no
-			if = {
-				limit = { country_exists = ITA }
-				ITA = { is_valid_war_target = yes }
-			}
-			else_if = {
-				limit = { country_exists = LOM }
-				LOM = { is_valid_war_target = yes }
-			}
-			else = {
-				VNC = { is_valid_war_target = yes }
-			}
-		}
-		bypass = {
-			OR = {
-				NOT = {
-					country_exists = ITA
-					country_exists = LOM
-					country_exists = VNC
-				}
-				has_war_with = ITA
-				has_war_with = LOM
-				has_war_with = VNC
-			}
-		}
-		available_if_capitulated = no
-		cancel_if_invalid = yes
-		relative_position_id = SRD_unification
-		x = -5
-		y = 4
-		ai_will_do = {
-			factor = 30
-			modifier = {
-				factor = 0
-				country_exists = ITA
-				OR = {
-					has_war = yes
-					strength_ratio = { tag = ITA ratio < 0.75 }
-					# neither of us is in a faction and ITA is stronger
-					AND = {
-						ITA = { is_in_faction = no }
-						is_in_faction = no
-						strength_ratio = { tag = ITA ratio < 1.0 }
-					}
-					# they're in a faction which is not at war
-					ITA = {
-						is_in_faction = yes
-						has_war = no
-					}
-					# they're in a faction which is at war but not with a major and not losing
-					ITA = {
-						is_in_faction = yes
-						has_war = yes
-						NOT = {
-							any_enemy_country = {
-								OR = {
-									tag = GER
-									tag = RUS
-									tag = SOV
-									tag = HUN
-									tag = SER
-								}
-							}
-							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
-								surrender_progress > 0.20
-							}
-						}
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				NOT = { country_exists = ITA }
-				country_exists = LOM
-				OR = {
-					has_war = yes
-					strength_ratio = { tag = LOM ratio < 0.75 }
-					# neither of us is in a faction and LOM is stronger
-					AND = {
-						LOM = { is_in_faction = no }
-						is_in_faction = no
-						strength_ratio = { tag = LOM ratio < 1.0 }
-					}
-					# they're in a faction which is not at war
-					LOM = {
-						is_in_faction = yes
-						has_war = no
-					}
-					# they're in a faction which is at war but not with a major and not losing
-					LOM = {
-						is_in_faction = yes
-						has_war = yes
-						NOT = {
-							any_enemy_country = {
-								OR = {
-									tag = GER
-									tag = RUS
-									tag = SOV
-									tag = HUN
-									tag = SER
-									tag = AUS
-								}
-							}
-							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
-								surrender_progress > 0.20
-							}
-						}
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				NOT = {
-					country_exists = ITA
-					country_exists = LOM
-				}
-				country_exists = VNC
-				OR = {
-					has_war = yes
-					strength_ratio = { tag = VNC ratio < 0.75 }
-					# neither of us is in a faction and VNC is stronger
-					AND = {
-						VNC = { is_in_faction = no }
-						is_in_faction = no
-						strength_ratio = { tag = VNC ratio < 1.0 }
-					}
-					# they're in a faction which is not at war
-					VNC = {
-						is_in_faction = yes
-						has_war = no
-					}
-					# they're in a faction which is at war but not with a major and not losing
-					VNC = {
-						is_in_faction = yes
-						has_war = yes
-						NOT = {
-							any_enemy_country = {
-								OR = {
-									tag = GER
-									tag = RUS
-									tag = SOV
-									tag = HUN
-									tag = SER
-									tag = AUS
-								}
-							}
-							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
-								surrender_progress > 0.20
-							}
-						}
-					}
-				}
-			}
-		}
-		will_lead_to_war_with = ITA
-		will_lead_to_war_with = LOM
-		will_lead_to_war_with = VNC
-		completion_reward = {
-			log = "[GetDateText]: [Root.GetName]: Focus SRD_destroy_roi"
-			if = {
-				limit = { country_exists = ITA }
-				declare_war_on = { target = ITA type = annex_everything }
-			}
-			else_if = {
-				limit = { country_exists = LOM }
-				declare_war_on = { target = LOM type = annex_everything }
-			}
-			else = {
-				declare_war_on = { target = VNC type = annex_everything }
-			}
-		}
-	}
-	focus = {# Florence Concordat
-		id = SRD_florence_concordat
-		icon = GFX_goal_accord_with_pope
-		cost = 6.00
-		available = {
-			has_war = no
-			is_subject = no
-			PAP = {
-				exists = yes
-				is_subject = no
-				has_war = no
-			}
-		}
-		prerequisite = {
-			focus = SRD_kingdom_of_italy
-		}
-		relative_position_id = SRD_unification
-		x = -3
-		y = 4
-		available_if_capitulated = no
-		cancel_if_invalid = yes
-		ai_will_do = {
-			factor = 20
-		}
-		completion_reward = {
-			log = "[GetDateText]: [Root.GetName]: Focus SRD_florence_concordat"
-			PAP = { country_event = srd.40 }
-		}
-	}
-	focus = {# Destroy the Two Sicilies
-		id = SRD_destroy_two_sicilies
-		icon = GFX_goal_generic_territory_or_war
-		cost = 4.00
-		available = {
-			is_subject = no
-			SIC = { is_valid_war_target = yes }
-		}
-		bypass = {
-			OR = {
-				has_war_with = SIC
-				NOT = { country_exists = SIC }
-			}
-		}
-		prerequisite = {
-			focus = SRD_kingdom_of_italy
-		}
-		relative_position_id = SRD_unification
-		x = -1
-		y = 4
-		available_if_capitulated = no
-		cancel_if_invalid = yes
-		ai_will_do = {
-			factor = 20
-			modifier = {
-				factor = 0
-				OR = {
-					has_war = yes
-					strength_ratio = { tag = SIC ratio < 0.75 }
-					# neither of us is in a faction and SIC is stronger
-					AND = {
-						SIC = { is_in_faction = no }
-						is_in_faction = no
-						strength_ratio = { tag = SIC ratio < 1.0 }
-					}
-					# they're in a faction which is not at war
-					SIC = {
-						is_in_faction = yes
-						has_war = no
-					}
-					# they're in a faction which is at war but not with a major and not losing
-					SIC = {
-						is_in_faction = yes
-						has_war = yes
-						NOT = {
-							any_enemy_country = {
-								OR = {
-									tag = GER
-									tag = RUS
-									tag = SOV
-									tag = HUN
-									tag = SER
-									tag = AUS
-								}
-							}
-							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
-								surrender_progress > 0.20
-							}
-						}
-					}
-				}
-			}
-			modifier = {
-				factor = 0.1
-				SIC = {
-					OR = {
-						is_in_faction_with = CAN
-						is_in_faction_with = GER
-					}
-				}
-			}
-		}
-		will_lead_to_war_with = SIC
-		completion_reward = {
-			log = "[GetDateText]: [Root.GetName]: Focus SRD_destroy_two_sicilies"
-			create_wargoal = {
-				type = annex_everything
-				target = SIC
-			}
-		}
-	}
 	focus = {# Italian Irredentism
 		id = SRD_italian_irredentism
-		icon = GFX_focus_generic_italy_first
+		icon = GFX_SRD_irridentism
 		cost = 6.00
 		prerequisite = {
-			focus = SRD_destroy_roi
-		}
-		prerequisite = {
-			focus = SRD_destroy_two_sicilies
+			focus = SRD_kingdom_of_italy
 		}
 		available = {
-			owns_state = 158
-			owns_state = 159
-			owns_state = 2
-			owns_state = 117
+			has_country_flag = ITA_united_italia
 		}
 		relative_position_id = SRD_unification
 		x = -4
-		y = 5
+		y = 3
 		available_if_capitulated = no
 		cancel_if_invalid = yes
 		ai_will_do = {
@@ -1023,19 +676,16 @@ focus_tree = {
 		}
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_italian_irredentism"
-			country_event = srd.38
+			custom_effect_tooltip = ITA_irredentist_decisions
+			add_war_support = 0.10
 		}
 	}
 	focus = {# Industralize the South
-
 		id = SRD_industralize_the_south
 		icon = GFX_goal_generic_production2
 		cost = 6.00
 		prerequisite = {
-			focus = SRD_destroy_roi
-		}
-		prerequisite = {
-			focus = SRD_destroy_two_sicilies
+			focus = SRD_kingdom_of_italy
 		}
 		available = {
 			OR = {
@@ -1048,7 +698,7 @@ focus_tree = {
 		}
 		relative_position_id = SRD_unification
 		x = -2
-		y = 5
+		y = 3
 		ai_will_do = {
 			factor = 3
 			modifier = {
@@ -1143,18 +793,42 @@ focus_tree = {
 			has_country_flag = SRD_has_piedmont
 		}
 		prerequisite = {
-			focus = SRD_destroy_sri
+			focus = SRD_fortress_sardinia
+		}
+		prerequisite = {
+			focus = SRD_french_naval_officers
+		}
+		prerequisite = {
+			focus = SRD_military_training
 		}
 		mutually_exclusive = {
 			focus = SRD_kingdom_of_italy
 		}
 		relative_position_id = SRD_unification
-		x = 3
-		y = 3
+		x = 2
+		y = 2
 		available_if_capitulated = no
 		cancel_if_invalid = yes
 		ai_will_do = {
 			factor = 10
+			modifier = {
+				factor = 0.1
+				is_subject = no
+				OR = {
+					owns_state = 162
+					owns_state = 1004
+					owns_state = 159
+				}
+			}
+			modifier = {
+				factor = 10
+				SIC = {
+					OR = {
+						has_country_flag = SIC_confed
+						has_country_flag = SIC_empire
+					}
+				}
+			}
 		}
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_sardinia_piedmont"
@@ -1167,6 +841,10 @@ focus_tree = {
 			if = {
 				limit = { 735 = { is_not_claim_or_core_of_ROOT = yes } }
 				add_state_claim = 735
+			}
+			if = {
+				limit = { 943 = { is_not_claim_or_core_of_ROOT = yes } }
+				add_state_claim = 943
 			}
 		}
 	}
@@ -1181,8 +859,8 @@ focus_tree = {
 			focus = SRD_sardinia_piedmont
 		}
 		relative_position_id = SRD_unification
-		x = 1
-		y = 4
+		x = 2
+		y = 3
 		available_if_capitulated = yes
 		cancel_if_invalid = yes
 		ai_will_do = {
@@ -1222,17 +900,18 @@ focus_tree = {
 		}
 		prerequisite = {
 			focus = SRD_sardinia_piedmont
+			focus = SRD_kingdom_of_italy
 		}
 		relative_position_id = SRD_unification
-		x = 3
-		y = 4
+		x = 0
+		y = 3
 		ai_will_do = {
 			factor = 2
 		}
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_marseille_confrence"
-			add_opinion_modifier = { target = NFA modifier = ITA_likes_govt }
-			reverse_add_opinion_modifier = { target = NFA modifier = ITA_likes_govt }
+			add_opinion_modifier = { target = NFA modifier = KR_approves_of_govt }
+			reverse_add_opinion_modifier = { target = NFA modifier = KR_approves_of_govt }
 			add_political_power = 100
 			add_stability = 0.03
 		}
@@ -1245,8 +924,8 @@ focus_tree = {
 			focus = SRD_sardinia_piedmont
 		}
 		relative_position_id = SRD_unification
-		x = 5
-		y = 4
+		x = 4
+		y = 3
 		ai_will_do = {
 			factor = 3
 		}
@@ -1257,209 +936,6 @@ focus_tree = {
 			add_political_power = 80
 		}
 	}
-	focus = {# Italian Free Trade
-		id = SRD_italian_free_trade
-		icon = GFX_goal_generic_positive_trade_relations
-		cost = 6.00
-		available = {
-			country_exists = SIC
-			country_exists = PAP
-			country_exists = VNC
-			country_exists = TUS
-			country_exists = EMI
-			country_exists = LOM
-			country_exists = TUS
-		}
-		prerequisite = {
-			focus = SRD_rebuild_piedmont
-		}
-		prerequisite = {
-			focus = SRD_promote_sardinian
-		}
-		relative_position_id = SRD_unification
-		x = 2
-		y = 5
-		ai_will_do = {
-			factor = 20
-		}
-		completion_reward = {
-			log = "[GetDateText]: [Root.GetName]: Focus SRD_italian_free_trade"
-			custom_effect_tooltip = SRD_italian_free_trade_tooltip
-			hidden_effect = {
-				add_opinion_modifier = { target = SIC modifier = SRD_italian_customs_union_opinion }
-				reverse_add_opinion_modifier = { target = SIC modifier = SRD_italian_customs_union_opinion }
-
-				add_opinion_modifier = { target = PAP modifier = SRD_italian_customs_union_opinion }
-				reverse_add_opinion_modifier = { target = PAP modifier = SRD_italian_customs_union_opinion }
-
-				add_opinion_modifier = { target = VNC modifier = SRD_italian_customs_union_opinion }
-				reverse_add_opinion_modifier = { target = VNC modifier = SRD_italian_customs_union_opinion }
-
-				add_opinion_modifier = { target = LOM modifier = SRD_italian_customs_union_opinion }
-				reverse_add_opinion_modifier = { target = LOM modifier = SRD_italian_customs_union_opinion }
-
-				add_opinion_modifier = { target = TUS modifier = SRD_italian_customs_union_opinion }
-				reverse_add_opinion_modifier = { target = TUS modifier = SRD_italian_customs_union_opinion }
-
-				add_opinion_modifier = { target = EMI modifier = SRD_italian_customs_union_opinion }
-				reverse_add_opinion_modifier = { target = EMI modifier = SRD_italian_customs_union_opinion }
-
-				SIC = {
-					add_opinion_modifier = { target = SRD modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = SRD modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = PAP modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = PAP modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = VNC modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = VNC modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = LOM modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = LOM modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = TUS modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = TUS modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = EMI modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = EMI modifier = SRD_italian_customs_union_opinion }
-				}
-				PAP = {
-					add_opinion_modifier = { target = SRD modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = SRD modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = SIC modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = SIC modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = VNC modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = VNC modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = LOM modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = LOM modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = TUS modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = TUS modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = EMI modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = EMI modifier = SRD_italian_customs_union_opinion }
-				}
-				VNC = {
-					add_opinion_modifier = { target = SRD modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = SRD modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = SIC modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = SIC modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = PAP modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = PAP modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = LOM modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = LOM modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = TUS modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = TUS modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = EMI modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = EMI modifier = SRD_italian_customs_union_opinion }
-				}
-				LOM = {
-					add_opinion_modifier = { target = SRD modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = SRD modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = SIC modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = SIC modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = VNC modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = VNC modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = PAP modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = PAP modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = TUS modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = TUS modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = EMI modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = EMI modifier = SRD_italian_customs_union_opinion }
-				}
-				TUS = {
-					add_opinion_modifier = { target = SRD modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = SRD modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = SIC modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = SIC modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = VNC modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = VNC modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = LOM modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = LOM modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = PAP modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = PAP modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = EMI modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = EMI modifier = SRD_italian_customs_union_opinion }
-				}
-				EMI = {
-					add_opinion_modifier = { target = SRD modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = SRD modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = SIC modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = SIC modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = VNC modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = VNC modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = LOM modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = LOM modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = TUS modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = TUS modifier = SRD_italian_customs_union_opinion }
-
-					add_opinion_modifier = { target = PAP modifier = SRD_italian_customs_union_opinion }
-					reverse_add_opinion_modifier = { target = PAP modifier = SRD_italian_customs_union_opinion }
-				}
-			}
-		}
-	}
-	focus = {# Italian Confederation
-		id = SRD_italian_confederation
-		icon = GFX_goal_military_academy
-		cost = 6.00
-		available = {
-			country_exists = SIC
-			country_exists = PAP
-			country_exists = VNC
-			country_exists = TUS
-			country_exists = EMI
-			country_exists = LOM
-			country_exists = TUS
-		}
-		prerequisite = {
-			focus = SRD_rebuild_piedmont
-		}
-		prerequisite = {
-			focus = SRD_promote_sardinian
-		}
-		relative_position_id = SRD_unification
-		x = 4
-		y = 5
-		ai_will_do = {
-			factor = 20
-		}
-		completion_reward = {
-			log = "[GetDateText]: [Root.GetName]: Focus SRD_italian_confederation"
-			custom_effect_tooltip = SRD_joint_military_tooltip
-			hidden_effect = {
-				SRD = { add_ideas = SRD_confederation_training_idea }
-				PAP = { add_ideas = SRD_confederation_training_idea }
-				VNC = { add_ideas = SRD_confederation_training_idea }
-				SIC = { add_ideas = SRD_confederation_training_idea }
-				TUS = { add_ideas = SRD_confederation_training_idea }
-				LOM = { add_ideas = SRD_confederation_training_idea }
-				EMI = { add_ideas = SRD_confederation_training_idea }
-			}
-		}
-	}
 
 
 ### Economics ####
@@ -1467,7 +943,7 @@ focus_tree = {
 		id = SRD_assess_the_economy
 		icon = GFX_goal_production
 		cost = 6.00
-		x = 28
+		x = 26
 		y = 0
 		ai_will_do = {
 			factor = 5
@@ -1475,7 +951,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_assess_the_economy"
 			add_tech_bonus = {
-				name = industrial_bonus
+				name = SRD_assess_the_economy
 				bonus = 1
 				uses = 1
 				category = industry
@@ -1498,7 +974,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_industrial_investment"
 			add_tech_bonus = {
-				name = industrial_bonus
+				name = SRD_industrial_investment
 				bonus = 1
 				uses = 1
 				category = industry
@@ -1766,7 +1242,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_new_industry"
 			add_tech_bonus = {
-				name = industrial_bonus
+				name = SRD_new_industry
 				bonus = 1
 				uses = 1
 				category = industry
@@ -2125,7 +1601,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_radio"
 			add_tech_bonus = {
-				name = electronics_bonus
+				name = SRD_radio
 				bonus = 1
 				uses = 2
 				category = electronics
@@ -2181,7 +1657,7 @@ focus_tree = {
 		id = SRD_assess_the_army
 		icon = GFX_goal_generic_small_arms
 		cost = 6.00
-		x = 46
+		x = 44
 		y = 0
 		ai_will_do = {
 			factor = 2
@@ -2199,7 +1675,7 @@ focus_tree = {
 			army_experience = 10
 			add_manpower = 20000
 			add_tech_bonus = {
-				name = land_doctrine_bonus
+				name = SRD_assess_the_army
 				bonus = 1
 				uses = 2
 				category = land_doctrine
@@ -2233,7 +1709,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_superior_fire_power_plan"
 			add_tech_bonus = {
-				name = doctrine_bonus
+				name = SRD_superior_fire_power_plan
 				bonus = 1
 				uses = 2
 				category = cat_superior_firepower
@@ -2266,7 +1742,7 @@ focus_tree = {
 			add_manpower = 5000
 			add_ideas = SRD_elite_army_idea
 			add_tech_bonus = {
-				name = doctrine_bonus
+				name = SRD_elite_army
 				bonus = 1
 				uses = 2
 				category = land_doctrine
@@ -2316,7 +1792,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_artillery_effort"
 			add_tech_bonus = {
-				name = artillery_bonus
+				name = SRD_artillery_effort
 				bonus = 1
 				uses = 2
 				category = artillery
@@ -2346,7 +1822,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_arditi"
 			add_tech_bonus = {
-				name = doctrine_bonus
+				name = SRD_arditi
 				bonus = 1
 				uses = 2
 				category = cat_superior_firepower
@@ -2374,7 +1850,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_arma_del_genio"
 			add_tech_bonus = {
-				name = support_bonus
+				name = SRD_arma_del_genio
 				bonus = 1
 				uses = 3
 				category = support_tech
@@ -2409,7 +1885,7 @@ focus_tree = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_mobile_war_plan"
 			add_manpower = 8000
 			add_tech_bonus = {
-				name = doctrine_bonus
+				name = SRD_mobile_war_plan
 				bonus = 1
 				uses = 2
 				category = cat_mobile_warfare
@@ -2436,13 +1912,13 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_fast_army"
 			add_tech_bonus = {
-				name = doctrine_bonus
+				name = SRD_fast_army
 				bonus = 1
 				uses = 1
 				category = cat_mobile_warfare
 			}
 			add_tech_bonus = {
-				name = mech_bonus
+				name = SRD_fast_army
 				bonus = 1
 				uses = 1
 				category = cat_mechanized_equipment
@@ -2492,7 +1968,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_infantry_tank"
 			add_tech_bonus = {
-				name = tank_bonus
+				name = SRD_infantry_tank
 				bonus = 1
 				uses = 2
 				category = armor
@@ -2523,7 +1999,7 @@ focus_tree = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_light_royal_legion"
 			add_ideas = SRD_light_royal_legion_idea
 			add_tech_bonus = {
-				name = doctrine_bonus
+				name = SRD_light_royal_legion
 				bonus = 1
 				uses = 2
 				category = cat_mobile_warfare
@@ -2541,7 +2017,7 @@ focus_tree = {
 			focus = SRD_carrier_plan
 			focus = SRD_sub_plan
 		}
-		x = 35
+		x = 33
 		y = 0
 		ai_will_do = {
 			factor = 1
@@ -2558,13 +2034,13 @@ focus_tree = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_battleship_plan"
 			navy_experience = 25
 			add_tech_bonus = {
-				name = navy_bonus
+				name = SRD_battleship_plan
 				bonus = 1
 				uses = 1
 				category = bb_tech
 			}
 			add_tech_bonus = {
-				name = naval_doctrine_bonus
+				name = SRD_battleship_plan
 				bonus = 1
 				uses = 2
 				category = cat_fleet_in_being
@@ -2589,13 +2065,13 @@ focus_tree = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_carrier_plan"
 			navy_experience = 25
 			add_tech_bonus = {
-				name = navy_bonus
+				name = SRD_carrier_plan
 				bonus = 1
 				uses = 1
 				category = cv_tech
 			}
 			add_tech_bonus = {
-				name = naval_doctrine_bonus
+				name = SRD_carrier_plan
 				bonus = 1
 				uses = 2
 				category = cat_base_strike
@@ -2628,13 +2104,13 @@ focus_tree = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_sub_plan"
 			navy_experience = 25
 			add_tech_bonus = {
-				name = navy_bonus
+				name = SRD_sub_plan
 				bonus = 1
 				uses = 1
 				category = ss_tech
 			}
 			add_tech_bonus = {
-				name = navdoctrine_bonus
+				name = SRD_sub_plan
 				bonus = 1
 				uses = 2
 				category = cat_trade_interdiction
@@ -2672,6 +2148,7 @@ focus_tree = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_reform_navy"
 			navy_experience = 25
 			add_tech_bonus = {
+				name = SRD_reform_navy
 				bonus = 1
 				uses = 1
 				category = naval_doctrine
@@ -2782,6 +2259,7 @@ focus_tree = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_continue_reforms"
 			navy_experience = 25
 			add_tech_bonus = {
+				name = SRD_continue_reforms
 				bonus = 1
 				uses = 1
 				category = naval_doctrine
@@ -2813,13 +2291,13 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_submarines"
 			add_tech_bonus = {
-				name = navy_bonus
+				name = SRD_submarines
 				bonus = 1
 				uses = 1
 				category = ss_tech
 			}
 			add_tech_bonus = {
-				name = navdoctrine_bonus
+				name = SRD_submarines
 				bonus = 1
 				uses = 1
 				category = cat_trade_interdiction
@@ -2846,7 +2324,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_cruisers"
 			add_tech_bonus = {
-				name = navy_bonus
+				name = SRD_cruisers
 				bonus = 1
 				uses = 2
 				category = cl_tech
@@ -2878,13 +2356,13 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_armoured_cruisers"
 			add_tech_bonus = {
-				name = navy_bonus
+				name = SRD_armoured_cruisers
 				bonus = 1
 				uses = 1
 				category = ca_tech
 			}
 			add_tech_bonus = {
-				name = naval_doctrine_bonus
+				name = SRD_armoured_cruisers
 				bonus = 1
 				uses = 1
 				category = cat_fleet_in_being
@@ -2907,7 +2385,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_battleships"
 			add_tech_bonus = {
-				name = navy_bonus
+				name = SRD_battleships
 				bonus = 1
 				uses = 1
 				category = shbb_tech
@@ -2939,13 +2417,13 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_carriers"
 			add_tech_bonus = {
-				name = navy_bonus
+				name = SRD_carriers
 				bonus = 1
 				uses = 1
 				category = cv_tech
 			}
 			add_tech_bonus = {
-				name = naval_doctrine_bonus
+				name = SRD_carriers
 				bonus = 1
 				uses = 1
 				category = cat_base_strike
@@ -2972,7 +2450,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_naval_aviation"
 			add_tech_bonus = {
-				name = navy_air_bonus
+				name = SRD_naval_aviation
 				bonus = 1
 				uses = 1
 				category = naval_air
@@ -2999,7 +2477,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_marines"
 			add_tech_bonus = {
-				name = marines_bonus
+				name = SRD_marines
 				bonus = 1
 				uses = 1
 				category = marine_tech
@@ -3026,7 +2504,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_synthetic_research"
 			add_tech_bonus = {
-				name = synthetic_industry_bonus
+				name = SRD_synthetic_research
 				bonus = 1
 				uses = 1
 				category = synth_resources
@@ -3065,6 +2543,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_thalassocracy"
 			add_tech_bonus = {
+				name = SRD_thalassocracy
 				bonus = 1
 				uses = 1
 				category = naval_doctrine
@@ -3127,7 +2606,7 @@ focus_tree = {
 		}
 		available = {
 			OR = {
-				158 = { is_owned_and_controlled_by = SRD }
+				1002 = { is_owned_and_controlled_by = SRD }
 				114 = { is_owned_and_controlled_by = SRD }
 			}
 		}
@@ -3147,7 +2626,7 @@ focus_tree = {
 		}
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_expand_air_ports"
-			158 = {
+			1002 = {
 				if = {
 					limit = {
 						is_owned_and_controlled_by = SRD
@@ -3227,6 +2706,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_fighters"
 			add_tech_bonus = {
+				name = SRD_fighters
 				bonus = 1
 				uses = 1
 				category = light_fighter
@@ -3262,6 +2742,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_bombers"
 			add_tech_bonus = {
+				name = SRD_bombers
 				bonus = 1
 				uses = 1
 				category = tactical_bomber
@@ -3316,6 +2797,7 @@ focus_tree = {
 				}
 			}
 			add_tech_bonus = {
+				name = SRD_expand_aviation_industry
 				bonus = 1
 				uses = 1
 				technology = antiair1
@@ -3347,7 +2829,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_paracadutisti"
 			add_tech_bonus = {
-				name = special_forces_bonus
+				name = SRD_paracadutisti
 				bonus = 1
 				uses = 2
 				technology = paratroopers
@@ -3376,6 +2858,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SRD_radar"
 			add_tech_bonus = {
+				name = SRD_radar
 				bonus = 1
 				uses = 2
 				category = radar_tech

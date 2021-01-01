@@ -1,0 +1,1656 @@
+political_actions = {
+
+	LEP_move_quickly = {
+		icon = generic_civil_support
+
+		allowed = {
+			OR = {
+				tag = LEP
+				tag = ANQ
+				tag = SQI
+				tag = CHI
+			}
+		}
+
+		activation = {
+			has_war_with = FROM
+		}
+
+		targets = { LEP ANQ SQI CHI }
+		target_trigger = {
+			is_ai = yes
+			has_war_with = FROM
+		}
+
+		available = {
+			FROM = {
+				OR = {
+					surrender_progress > 0.50
+					has_idea = china_lost_momentum
+				}
+			}
+		}
+
+		selectable_mission = no
+		days_mission_timeout = 365
+		is_good = no
+		fire_only_once = yes
+
+		cancel_trigger = {
+			OR = {
+				NOT = { has_war_with = FROM }
+				has_idea = china_lost_momentum
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout LEP_move_quickly target: [From.GetName]"
+			add_war_support = -0.20
+			if = {
+				limit = {
+					NOT = { has_idea = china_lost_momentum }
+				}
+				add_ideas = china_lost_momentum
+			}
+			FROM = {
+				if = {
+					limit = {
+						meta_trigger = {
+							text = {
+								NOT = { has_idea = [IDEA_NAME] }
+							}
+							IDEA_NAME = "victory_imminent_against_[Root.GetTag]"
+						}
+					}
+					custom_effect_tooltip = LEP_victory_imminent_tooltip_ROOT
+					meta_effect = {
+						text = {
+							add_timed_idea = {
+								idea = [IDEA_NAME]
+								days = 180
+							}
+						}
+						IDEA_NAME = "victory_imminent_against_[Root.GetTag]"
+					}
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision LEP_move_quickly target: [From.GetName]"
+			add_political_power = 50
+			if = {
+				limit = {
+					meta_trigger = {
+						text = {
+							NOT = { has_idea = [IDEA_NAME] }
+						}
+						IDEA_NAME = "victory_imminent_against_[From.GetTag]"
+					}
+				}
+				custom_effect_tooltip = LEP_victory_imminent_tooltip_FROM
+				meta_effect = {
+					text = {
+						add_timed_idea = {
+							idea = [IDEA_NAME]
+							days = 180
+						}
+					}
+					IDEA_NAME = "victory_imminent_against_[From.GetTag]"
+				}
+			}
+			FROM = {
+				if = {
+					limit = {
+						NOT = { has_idea = china_lost_momentum }
+					}
+					add_ideas = china_lost_momentum
+				}
+			}
+		}
+	}
+	
+	LEP_arms_dealers = {
+		icon = ger_military_buildup
+		allowed = {
+			OR = {
+				tag = SQI
+				tag = ANQ
+				tag = LEP
+				tag = CHI
+			}
+		}
+		available = {
+			has_equipment = { infantry_equipment < 250 }
+			has_political_power > -1000
+		}
+		visible = {
+			is_ai = yes
+			OR = {
+				has_war_with = SQI
+				has_war_with = ANQ
+				has_war_with = LEP
+				has_war_with = CHI
+			}
+		}
+
+		fire_only_once = no
+		days_re_enable = 90
+		cost = freedec?0
+
+		ai_will_do = {
+			factor = 10
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision LEP_arms_dealers"
+			if = {
+				limit = {
+					OR = {
+						SQI = { is_ai = no }
+						LEP = { is_ai = no }
+						ANQ = { is_ai = no }
+						CHI = { is_ai = no }
+						has_political_power > 100
+					}
+				}
+				add_political_power = -100
+			}
+			meta_effect = {
+				text = {
+					add_equipment_to_stockpile = {
+						type = infantry_equipment
+						amount = 1500
+						producer = [ROOT_TAG]
+					}
+				}
+				ROOT_TAG = "[Root.GetTag]"
+			}
+		}
+	}
+}
+
+china_army_decisions = {
+	china_army_reform = {
+		icon = generic_prepare_civil_war
+
+		modifier = {
+			political_power_gain = -0.1
+		}
+		custom_cost_text = china_army_reform_tooltip
+		custom_cost_trigger = {
+			has_army_experience > china_army_reform_cost?200
+		}
+		days_remove = 100
+
+		ai_will_do = {
+			factor = 500
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision china_army_reform"
+			set_temp_variable = { china_army_reform_cost_negative = china_army_reform_cost }
+			multiply_temp_variable = { china_army_reform_cost_negative = -1 }
+			army_experience = china_army_reform_cost_negative
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove china_army_reform"
+			if = {
+				limit = {
+					check_variable = { army_reform_var = -0.1 }
+				}
+				clear_variable = army_reform_var
+			}
+			else = {
+				add_to_variable = { army_reform_var = 0.1 }
+			}
+			increase_army_reform_level = yes
+		}
+	}
+}
+
+china_united_front_decisions = {
+	assume_chinese_leadership = {
+		icon = generic_civil_support
+		priority = 1000
+		allowed = {
+			OR = {
+				tag = QIE
+				tag = CHI
+				tag = FNG
+				tag = GXC
+				tag = SZC
+			}
+		}
+		visible = {
+			has_country_flag = can_assume_national_leadership
+			NOT = {
+				is_in_faction_with = event_target:current_china_leader
+				has_country_flag = is_chinese_national_leader
+			}
+		}
+		available = {
+			OR = {
+				NOT = {
+					country_exists = event_target:current_china_leader
+					custom_trigger_tooltip = {
+						tooltip = assume_chinese_leadership_tooltip
+						set_temp_variable = { china_strength_ratio = ROOT.num_battalions }
+						divide_temp_variable = { china_strength_ratio = event_target:current_china_leader.num_battalions }
+						check_variable = { china_strength_ratio > 1.2 }
+					}
+				}
+			}
+			if = {
+				limit = {
+					QIE = {
+						exists = yes
+						NOT = {
+							tag = ROOT
+							has_country_flag = is_chinese_national_leader
+						}
+						has_country_flag = can_assume_national_leadership
+					}
+				}
+				custom_trigger_tooltip = {
+					tooltip = assume_chinese_leadership_tooltip_QIE
+					set_temp_variable = { china_strength_ratio_QIE = ROOT.num_battalions }
+					divide_temp_variable = { china_strength_ratio_QIE = QIE.num_battalions }
+					check_variable = { china_strength_ratio_QIE > 1 }
+				}
+			}
+			if = {
+				limit = {
+					CHI = {
+						exists = yes
+						NOT = {
+							tag = ROOT
+							has_country_flag = is_chinese_national_leader
+						}
+						has_country_flag = can_assume_national_leadership
+					}
+				}
+				custom_trigger_tooltip = {
+					tooltip = assume_chinese_leadership_tooltip_CHI
+					set_temp_variable = { china_strength_ratio_CHI = ROOT.num_battalions }
+					divide_temp_variable = { china_strength_ratio_CHI = CHI.num_battalions }
+					check_variable = { china_strength_ratio_CHI > 1 }
+				}
+			}
+			if = {
+				limit = {
+					GXC = {
+						exists = yes
+						NOT = {
+							tag = ROOT
+							has_country_flag = is_chinese_national_leader
+						}
+						has_country_flag = can_assume_national_leadership
+					}
+				}
+				custom_trigger_tooltip = {
+					tooltip = assume_chinese_leadership_tooltip_GXC
+					set_temp_variable = { china_strength_ratio_GXC = ROOT.num_battalions }
+					divide_temp_variable = { china_strength_ratio_GXC = QIE.num_battalions }
+					check_variable = { china_strength_ratio_GXC > 1 }
+				}
+			}
+			if = {
+				limit = {
+					FNG = {
+						exists = yes
+						NOT = {
+							tag = ROOT
+							has_country_flag = is_chinese_national_leader
+						}
+						has_country_flag = can_assume_national_leadership
+					}
+				}
+				custom_trigger_tooltip = {
+					tooltip = assume_chinese_leadership_tooltip_FNG
+					set_temp_variable = { china_strength_ratio_FNG = ROOT.num_battalions }
+					divide_temp_variable = { china_strength_ratio_FNG = FNG.num_battalions }
+					check_variable = { china_strength_ratio_FNG > 1 }
+				}
+			}
+		}
+
+		days_remove = 7
+		cost = freedec?0
+		fire_only_once = no
+		ai_will_do = { factor = 1000 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision assume_chinese_leadership"
+			hidden_effect = {
+				event_target:current_china_leader = {
+					if = {
+						limit = { exists = yes }
+						country_event = china_shared.1
+					}
+				}
+			}
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove assume_chinese_leadership"
+			hidden_effect = {
+				event_target:current_china_leader = {
+					clr_country_flag = is_chinese_national_leader
+				}
+				clear_global_event_target = current_china_leader
+			}
+			set_country_flag = is_chinese_national_leader
+			save_global_event_target_as = current_china_leader
+		}
+	}
+
+	form_chinese_united_front = {
+		icon = generic_civil_support
+		priority = 1000
+		allowed = {
+			tag = event_target:current_china_leader
+		}
+		available = {
+			if = {
+				limit = {
+					NOT = { tag = FNG }
+				}
+				OR = {
+					608 = {
+						controller = {
+							has_war_with = ROOT
+							is_ruled_by_pro_fengtian = yes
+						}
+					}
+					613 = {
+						controller = {
+							has_war_with = ROOT
+							is_ruled_by_pro_fengtian = yes
+						}
+					}
+					1048 = {
+						controller = {
+							has_war_with = ROOT
+							is_ruled_by_pro_fengtian = yes
+						}
+					}
+					592 = {
+						controller = {
+							has_war_with = ROOT
+							is_ruled_by_pro_fengtian = yes
+						}
+					}
+				}
+			}
+		}
+		visible = {
+			has_war_with = JAP
+		}
+
+		cost = freedec?0
+		days_remove = 40
+		fire_only_once = yes
+		ai_will_do = { factor = 1000 }
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove form_chinese_united_front"
+			if = {
+				limit = {
+					is_faction_leader = yes
+				}
+				save_faction_into_array = yes
+			}
+			create_faction = "Chinese United Front"
+			set_global_flag = chinese_united_front_formed
+			setup_united_front_AI = yes
+			hidden_effect = {
+				news_event = china_shared.2
+			}
+		}
+	}
+
+	join_chinese_united_front = {
+		icon = generic_civil_support
+		allowed = {
+			is_han_chinese_tag = yes
+			NOT = {
+				tag = event_target:current_china_leader
+				tag = FNG
+			}
+		}
+		visible = {
+			has_global_flag = chinese_united_front_formed
+			is_subject = no
+			OR = {
+				is_faction_leader = yes
+				is_in_faction = no
+			}
+			OR = {
+				FNG_JAP_hostile = yes
+				is_ruled_by_pro_fengtian = no
+			}
+			NOT = {
+				has_war_with = event_target:current_china_leader
+				AND = {
+					tag = SIK
+					OR = {
+						has_war_with = TAN
+						has_war_with = ETS
+					}
+				}
+			}
+		}
+		days_remove = 5
+
+		cost = freedec?0
+		fire_only_once = no
+		ai_will_do = {
+			factor = 1000
+			modifier = {
+				factor = 0
+				is_in_array = {
+					array = FNG.FNG_conference_participants
+					value = ROOT
+				}
+			}
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove join_chinese_united_front"
+			if = {
+				limit = {
+					is_faction_leader = yes
+				}
+				save_faction_into_array = yes
+			}
+			event_target:current_china_leader = {
+				add_to_faction = ROOT
+			}
+			setup_united_front_AI = yes
+			if = {
+				limit = { is_major = no }
+				set_country_flag = united_front_major
+				set_major = yes
+			}
+		}
+	}
+
+	join_chinese_united_front_TIB = {
+		icon = generic_civil_support
+		allowed = {
+			tag = TIB
+		}
+		available = {
+			has_completed_focus = TIB_tip_gambit
+			NOT = {
+				has_country_flag = attending_tokyo_conference
+				has_country_flag = tokyo_conference_ally
+				any_of_scopes = {
+					array = ROOT.enemies
+					is_han_chinese_tag = yes
+				}
+			}
+		}
+		visible = {
+			has_global_flag = chinese_united_front_formed
+			is_subject = no
+			is_in_faction = no
+		}
+
+		cost = freedec?0
+		fire_only_once = yes
+		
+		ai_will_do = {
+			factor = 1000
+			modifier = {
+				factor = 0
+				is_in_array = {
+					array = FNG.FNG_conference_participants
+					value = ROOT
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision join_chinese_united_front_TIB"
+			event_target:current_china_leader = {
+				add_to_faction = ROOT
+			}
+		}
+	}
+
+	peace_to_join_united_front = {
+		icon = generic_civil_support
+		allowed = {
+			is_han_chinese_tag = yes
+			NOT = {
+				tag = event_target:current_china_leader
+				tag = FNG
+			}
+		}
+		visible = {
+			has_war_with = FROM
+			FROM = {
+				OR = {
+					is_han_chinese_tag = yes
+					tag = TAN
+				}
+				OR = {
+					FNG_JAP_hostile = yes
+					is_ruled_by_pro_fengtian = no
+				}
+				OR = {
+					is_in_faction = no
+					is_faction_leader = yes
+				}
+			}
+		}
+
+		target_array = enemies
+		target_root_trigger = {
+			has_global_flag = chinese_united_front_formed
+			is_ruled_by_pro_fengtian = no
+		}
+		target_trigger = {
+			has_war_with = FROM
+			FROM = {
+				OR = {
+					is_han_chinese_tag = yes
+					tag = TAN
+				}
+				OR = {
+					FNG_JAP_hostile = yes
+					is_ruled_by_pro_fengtian = no
+				}
+				OR = {
+					is_in_faction = no
+					is_faction_leader = yes
+				}
+			}
+		}
+		
+		ai_will_do = {
+			factor = 1000
+			modifier = {
+				factor = 0
+				is_in_array = {
+					array = FNG.FNG_conference_participants
+					value = ROOT
+				}
+			}
+			modifier = {
+				factor = 0
+				is_in_array = {
+					array = FNG.FNG_conference_participants
+					value = FROM
+				}
+			}
+		}
+
+		cost = freedec?0
+		fire_only_once = no
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision peace_to_join_united_front"
+			white_peace = {
+				tag = FROM
+				message = chinese_united_front_peace
+			}
+		}
+	}
+
+	dissolve_chinese_united_front = {
+		icon = generic_civil_support
+		allowed = {
+			tag = event_target:current_china_leader
+		}
+		visible = {
+			has_global_flag = chinese_united_front_formed
+			has_global_flag = JAP_Fading_Sun
+			if = {
+				limit = {
+					NOT = { tag = FNG }
+				}
+				FNG = {
+					OR = {
+						has_capitulated = yes
+						exists = no
+					}
+				}
+			}
+		}
+
+		cost = freedec?0
+		fire_only_once = yes
+		ai_will_do = { factor = 1000 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision dissolve_chinese_united_front"
+			clr_global_flag = chinese_united_front_formed
+			disable_united_front_AI = yes
+			for_each_loop = {
+				array = faction_members
+				var:v = {
+					if = {
+						limit = { has_country_flag = united_front_major }
+						clr_country_flag = united_front_major
+						set_major = no
+					}
+				}
+			}
+			dismantle_faction = yes
+			every_country = {
+				limit = {
+					has_country_flag = was_chinese_faction_leader
+				}
+				china_reform_faction = yes
+			}
+		}
+	}
+}
+
+china_second_sino_japanese_war_UF_decisions = {
+	UF_Resistance_Beijing = {
+		icon = generic_ignite_civil_war
+		available = {
+			hidden_trigger = { always = no }
+		}
+		visible = {
+			has_decision = UF_Resistance_Beijing
+		}
+
+		cancel_trigger = {
+			hidden_trigger = {
+				NOT = { has_war_with = JAP }
+			}
+		}
+
+		on_map_mode = map_only
+		highlight_states = { state = 608 }
+
+		targeted_modifier = {
+			tag = JAP
+			attack_bonus_against = 0.05
+			defense_bonus_against = 0.05
+		}
+
+		modifier = {
+			partisan_effect = 0.1
+		}
+
+		cost = freedec?0
+		days_remove = -1
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Beijing target: [From.GetName]"
+			increase_japanese_resistance_level_major = yes
+		}
+	}
+	UF_Resistance_Nanjing = {
+		icon = generic_ignite_civil_war
+		available = {
+			hidden_trigger = { always = no }
+		}
+		visible = {
+			has_decision = UF_Resistance_Nanjing
+		}
+
+		cancel_trigger = {
+			hidden_trigger = {
+				NOT = { has_war_with = JAP }
+			}
+		}
+
+		on_map_mode = map_only
+		highlight_states = { state = 613 }
+
+		targeted_modifier = {
+			tag = JAP
+			attack_bonus_against = 0.05
+			defense_bonus_against = 0.05
+		}
+
+		modifier = {
+			partisan_effect = 0.1
+		}
+
+		cost = freedec?0
+		days_remove = -1
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Nanjing target: [From.GetName]"
+			increase_japanese_resistance_level_major = yes
+		}
+	}
+	UF_Resistance_Wuhan = {
+		icon = generic_ignite_civil_war
+		available = {
+			hidden_trigger = { always = no }
+		}
+		visible = {
+			has_decision = UF_Resistance_Wuhan
+		}
+
+		cancel_trigger = {
+			hidden_trigger = {
+				NOT = { has_war_with = JAP }
+			}
+		}
+
+		on_map_mode = map_only
+		highlight_states = { state = 1048 }
+
+		targeted_modifier = {
+			tag = JAP
+			attack_bonus_against = 0.05
+			defense_bonus_against = 0.05
+		}
+
+		modifier = {
+			partisan_effect = 0.1
+		}
+
+		cost = freedec?0
+		days_remove = -1
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Wuhan target: [From.GetName]"
+			increase_japanese_resistance_level_major = yes
+		}
+	}
+	UF_Resistance_Chongqing = {
+		icon = generic_ignite_civil_war
+		available = {
+			hidden_trigger = { always = no }
+		}
+		visible = {
+			has_decision = UF_Resistance_Chongqing
+		}
+
+		cancel_trigger = {
+			hidden_trigger = {
+				NOT = { has_war_with = JAP }
+			}
+		}
+
+		on_map_mode = map_only
+		highlight_states = { state = 650 }
+
+		targeted_modifier = {
+			tag = JAP
+			attack_bonus_against = 0.05
+			defense_bonus_against = 0.05
+		}
+
+		modifier = {
+			partisan_effect = 0.1
+		}
+
+		cost = freedec?0
+		days_remove = -1
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Chongqing target: [From.GetName]"
+			increase_japanese_resistance_level_major = yes
+		}
+	}
+	UF_Resistance_Luoyang = {
+		icon = generic_ignite_civil_war
+		available = {
+			hidden_trigger = { always = no }
+		}
+		visible = {
+			has_decision = UF_Resistance_Luoyang
+		}
+
+		cancel_trigger = {
+			hidden_trigger = {
+				NOT = { has_war_with = JAP }
+			}
+		}
+
+		on_map_mode = map_only
+		highlight_states = { state = 607 }
+
+		targeted_modifier = {
+			tag = JAP
+			attack_bonus_against = 0.025
+			defense_bonus_against = 0.025
+		}
+
+		modifier = {
+			partisan_effect = 0.05
+		}
+
+		cost = freedec?0
+		days_remove = -1
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Luoyang target: [From.GetName]"
+			increase_japanese_resistance_level_minor = yes
+		}
+	}
+	UF_Resistance_Kunming = {
+		icon = generic_ignite_civil_war
+		available = {
+			hidden_trigger = { always = no }
+		}
+		visible = {
+			has_decision = UF_Resistance_Kunming
+		}
+
+		cancel_trigger = {
+			hidden_trigger = {
+				NOT = { has_war_with = JAP }
+			}
+		}
+
+		on_map_mode = map_only
+		highlight_states = { state = 325 }
+
+		targeted_modifier = {
+			tag = JAP
+			attack_bonus_against = 0.025
+			defense_bonus_against = 0.025
+		}
+
+		modifier = {
+			partisan_effect = 0.05
+		}
+
+		cost = freedec?0
+		days_remove = -1
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Kunming target: [From.GetName]"
+			increase_japanese_resistance_level_minor = yes
+		}
+	}
+	UF_Resistance_Changsha = {
+		icon = generic_ignite_civil_war
+		available = {
+			hidden_trigger = { always = no }
+		}
+		visible = {
+			has_decision = UF_Resistance_Changsha
+		}
+
+		cancel_trigger = {
+			hidden_trigger = {
+				NOT = { has_war_with = JAP }
+			}
+		}
+
+		on_map_mode = map_only
+		highlight_states = { state = 602 }
+
+		targeted_modifier = {
+			tag = JAP
+			attack_bonus_against = 0.025
+			defense_bonus_against = 0.025
+		}
+
+		modifier = {
+			partisan_effect = 0.05
+		}
+
+		cost = freedec?0
+		days_remove = -1
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Changsha target: [From.GetName]"
+			increase_japanese_resistance_level_minor = yes
+		}
+	}
+	UF_Resistance_Guangzhou = {
+		icon = generic_ignite_civil_war
+		available = {
+			hidden_trigger = { always = no }
+		}
+		visible = {
+			has_decision = UF_Resistance_Guangzhou
+		}
+
+		cancel_trigger = {
+			hidden_trigger = {
+				NOT = { has_war_with = JAP }
+			}
+		}
+
+		on_map_mode = map_only
+		highlight_states = { state = 592 }
+
+		targeted_modifier = {
+			tag = JAP
+			attack_bonus_against = 0.025
+			defense_bonus_against = 0.025
+		}
+
+		modifier = {
+			partisan_effect = 0.05
+		}
+
+		cost = freedec?0
+		days_remove = -1
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Guangzhou target: [From.GetName]"
+			increase_japanese_resistance_level_minor = yes
+		}
+	}
+	UF_Resistance_Jinan = {
+		icon = generic_ignite_civil_war
+		available = {
+			hidden_trigger = { always = no }
+		}
+		visible = {
+			has_decision = UF_Resistance_Jinan
+		}
+
+		cancel_trigger = {
+			hidden_trigger = {
+				NOT = { has_war_with = JAP }
+			}
+		}
+
+		on_map_mode = map_only
+		highlight_states = { state = 597 }
+
+		targeted_modifier = {
+			tag = JAP
+			attack_bonus_against = 0.025
+			defense_bonus_against = 0.025
+		}
+
+		modifier = {
+			partisan_effect = 0.05
+		}
+
+		cost = freedec?0
+		days_remove = -1
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Jinan target: [From.GetName]"
+			increase_japanese_resistance_level_minor = yes
+		}
+	}
+	UF_Resistance_Xian = {
+		icon = generic_ignite_civil_war
+		available = {
+			hidden_trigger = { always = no }
+		}
+		visible = {
+			has_decision = UF_Resistance_Xian
+		}
+
+		cancel_trigger = {
+			hidden_trigger = {
+				NOT = { has_war_with = JAP }
+			}
+		}
+
+		on_map_mode = map_only
+		highlight_states = { state = 799 }
+
+		targeted_modifier = {
+			tag = JAP
+			attack_bonus_against = 0.025
+			defense_bonus_against = 0.025
+		}
+
+		modifier = {
+			partisan_effect = 0.05
+		}
+
+		cost = freedec?0
+		days_remove = -1
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Xian target: [From.GetName]"
+			increase_japanese_resistance_level_minor = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove UF_Resistance_Xian target: [From.GetName]"
+			increase_japanese_resistance_level_minor = yes
+		}
+	}
+}
+
+china_second_sino_japanese_war_japan_decisions = {
+	JAP_Capture_Beijing = {
+		icon = generic_ignite_civil_war
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = JAP_Capture_Beijing_tooltip
+				608 = { has_state_flag = JAP_captures_this_state }
+			}
+		}
+
+		activation = {
+			has_war_with = event_target:current_china_leader
+			has_global_flag = chinese_united_front_formed
+			NOT = { 608 = { has_state_flag = JAP_captures_this_state } }
+		}
+
+		cancel_trigger = {
+			if = {
+				limit = { 608 = { has_state_flag = JAP_captures_this_state } }
+				NOT = {
+					custom_trigger_tooltip = {
+						tooltip = JAP_Capture_Beijing_tooltip
+						608 = { has_state_flag = JAP_captures_this_state }
+					}
+				}
+			}
+		}
+
+		highlight_states = { state = 608 }
+
+		modifier = {
+			war_support_factor = 0.1
+		}
+
+		days_remove = -1
+		days_mission_timeout = 365
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_Beijing target: [From.GetName]"
+			if = {
+				limit = {
+					NOT = { has_global_flag = JAP_captured_608_once }
+				}
+				set_global_flag = JAP_captured_608_once
+				custom_effect_tooltip = JAP_Capture_tooltip
+				hidden_effect = {
+					for_each_scope_loop = {
+						array = event_target:current_china_leader.faction_members
+						activate_decision = UF_Resistance_Beijing
+					}
+				}
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_Beijing target: [From.GetName]"
+			decrease_japanese_war_willingness = yes
+			hidden_effect = {
+				activate_mission = JAP_Capture_Beijing
+			}
+		}
+	}
+	JAP_Capture_Nanjing = {
+		icon = generic_ignite_civil_war
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = JAP_Capture_Nanjing_tooltip
+				613 = { has_state_flag = JAP_captures_this_state }
+			}
+		}
+
+		activation = {
+			has_war_with = event_target:current_china_leader
+			has_global_flag = chinese_united_front_formed
+			NOT = { 613 = { has_state_flag = JAP_captures_this_state } }
+		}
+
+		cancel_trigger = {
+			if = {
+				limit = { 613 = { has_state_flag = JAP_captures_this_state } }
+				NOT = {
+					custom_trigger_tooltip = {
+						tooltip = JAP_Capture_Nanjing_tooltip
+						613 = { has_state_flag = JAP_captures_this_state }
+					}
+				}
+			}
+		}
+
+		highlight_states = { state = 613 }
+
+		modifier = {
+			war_support_factor = 0.1
+		}
+
+		days_remove = -1
+		days_mission_timeout = 365
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_Nanjing target: [From.GetName]"
+			if = {
+				limit = {
+					NOT = { has_global_flag = JAP_captured_613_once }
+				}
+				set_global_flag = JAP_captured_613_once
+				custom_effect_tooltip = JAP_Capture_tooltip
+				hidden_effect = {
+					for_each_scope_loop = {
+						array = event_target:current_china_leader.faction_members
+						activate_decision = UF_Resistance_Nanjing
+					}
+				}
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_Beijing target: [From.GetName]"
+			decrease_japanese_war_willingness = yes
+			hidden_effect = {
+				activate_mission = JAP_Capture_Nanjing
+			}
+		}
+	}
+	JAP_Capture_Wuhan = {
+		icon = generic_ignite_civil_war
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = JAP_Capture_Wuhan_tooltip
+				1048 = { has_state_flag = JAP_captures_this_state }
+			}
+		}
+
+		activation = {
+			has_war_with = event_target:current_china_leader
+			has_global_flag = chinese_united_front_formed
+			OR = {
+				613 = { has_state_flag = JAP_captures_this_state }
+				602 = { has_state_flag = JAP_captures_this_state }
+				607 = { has_state_flag = JAP_captures_this_state }
+			}
+			NOT = { 1048 = { has_state_flag = JAP_captures_this_state } }
+		}
+
+		cancel_trigger = {
+			if = {
+				limit = { 1048 = { has_state_flag = JAP_captures_this_state } }
+				NOT = {
+					custom_trigger_tooltip = {
+						tooltip = JAP_Capture_Wuhan_tooltip
+						1048 = { has_state_flag = JAP_captures_this_state }
+					}
+				}
+			}
+		}
+
+		highlight_states = { state = 1048 }
+
+		modifier = {
+			war_support_factor = 0.1
+		}
+
+		days_remove = -1
+		days_mission_timeout = 365
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_Wuhan target: [From.GetName]"
+			if = {
+				limit = {
+					NOT = { has_global_flag = JAP_captured_1048_once }
+				}
+				set_global_flag = JAP_captured_1048_once
+				custom_effect_tooltip = JAP_Capture_tooltip
+				hidden_effect = {
+					for_each_scope_loop = {
+						array = event_target:current_china_leader.faction_members
+						activate_decision = UF_Resistance_Wuhan
+					}
+				}
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_Wuhan target: [From.GetName]"
+			decrease_japanese_war_willingness = yes
+			hidden_effect = {
+				activate_mission = JAP_Capture_Wuhan
+			}
+		}
+	}
+	JAP_Capture_Chongqing = {
+		icon = generic_ignite_civil_war
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = JAP_Capture_Chongqing_tooltip
+				650 = { has_state_flag = JAP_captures_this_state }
+			}
+		}
+
+		activation = {
+			has_war_with = event_target:current_china_leader
+			has_global_flag = chinese_united_front_formed
+			OR = {
+				1048 = { has_state_flag = JAP_captures_this_state }
+				325 = { has_state_flag = JAP_captures_this_state }
+				799 = { has_state_flag = JAP_captures_this_state }
+			}
+			NOT = { 650 = { has_state_flag = JAP_captures_this_state } }
+		}
+
+		cancel_trigger = {
+			if = {
+				limit = { 650 = { has_state_flag = JAP_captures_this_state } }
+				NOT = {
+					custom_trigger_tooltip = {
+						tooltip = JAP_Capture_Chongqing_tooltip
+						650 = { has_state_flag = JAP_captures_this_state }
+					}
+				}
+			}
+		}
+
+		highlight_states = { state = 650 }
+
+		modifier = {
+			war_support_factor = 0.1
+		}
+
+		days_remove = -1
+		days_mission_timeout = 365
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_Chongqing target: [From.GetName]"
+			if = {
+				limit = {
+					NOT = { has_global_flag = JAP_captured_650_once }
+				}
+				set_global_flag = JAP_captured_650_once
+				custom_effect_tooltip = JAP_Capture_tooltip
+				hidden_effect = {
+					for_each_scope_loop = {
+						array = event_target:current_china_leader.faction_members
+						activate_decision = UF_Resistance_Chongqing
+					}
+				}
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_Chongqing target: [From.GetName]"
+			decrease_japanese_war_willingness = yes
+			hidden_effect = {
+				activate_mission = JAP_Capture_Chongqing
+			}
+		}
+	}
+	JAP_Capture_Luoyang = {
+		icon = generic_ignite_civil_war
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = JAP_Capture_Luoyang_tooltip
+				607 = { has_state_flag = JAP_captures_this_state }
+			}
+		}
+
+		activation = {
+			has_war_with = event_target:current_china_leader
+			has_global_flag = chinese_united_front_formed
+			OR = {
+				608 = { has_state_flag = JAP_captures_this_state }
+				1048 = { has_state_flag = JAP_captures_this_state }
+			}
+			NOT = { 607 = { has_state_flag = JAP_captures_this_state } }
+		}
+
+		cancel_trigger = {
+			if = {
+				limit = { 607 = { has_state_flag = JAP_captures_this_state } }
+				NOT = {
+					custom_trigger_tooltip = {
+						tooltip = JAP_Capture_Luoyang_tooltip
+						607 = { has_state_flag = JAP_captures_this_state }
+					}
+				}
+			}
+		}
+
+		highlight_states = { state = 607 }
+
+		modifier = {
+			war_support_factor = 0.1
+		}
+
+		days_remove = -1
+		days_mission_timeout = 365
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_Luoyang target: [From.GetName]"
+			if = {
+				limit = {
+					NOT = { has_global_flag = JAP_captured_607_once }
+				}
+				set_global_flag = JAP_captured_607_once
+				custom_effect_tooltip = JAP_Capture_tooltip
+				hidden_effect = {
+					for_each_scope_loop = {
+						array = event_target:current_china_leader.faction_members
+						activate_decision = UF_Resistance_Luoyang
+					}
+				}
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_Luoyang target: [From.GetName]"
+			decrease_japanese_war_willingness = yes
+			hidden_effect = {
+				activate_mission = JAP_Capture_Luoyang
+			}
+		}
+	}
+	JAP_Capture_Kunming = {
+		icon = generic_ignite_civil_war
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = JAP_Capture_Kunming_tooltip
+				325 = { has_state_flag = JAP_captures_this_state }
+			}
+		}
+
+		activation = {
+			has_war_with = event_target:current_china_leader
+			has_global_flag = chinese_united_front_formed
+			592 = { has_state_flag = JAP_captures_this_state }
+			NOT = { 325 = { has_state_flag = JAP_captures_this_state } }
+		}
+
+		cancel_trigger = {
+			if = {
+				limit = { 325 = { has_state_flag = JAP_captures_this_state } }
+				NOT = {
+					custom_trigger_tooltip = {
+						tooltip = JAP_Capture_Kunming_tooltip
+						325 = { has_state_flag = JAP_captures_this_state }
+					}
+				}
+			}
+		}
+
+		highlight_states = { state = 325 }
+
+		modifier = {
+			war_support_factor = 0.1
+		}
+
+		days_remove = -1
+		days_mission_timeout = 365
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_Kunming target: [From.GetName]"
+			if = {
+				limit = {
+					NOT = { has_global_flag = JAP_captured_325_once }
+				}
+				set_global_flag = JAP_captured_325_once
+				custom_effect_tooltip = JAP_Capture_tooltip
+				hidden_effect = {
+					for_each_scope_loop = {
+						array = event_target:current_china_leader.faction_members
+						activate_decision = UF_Resistance_Kunming
+					}
+				}
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_Kunming target: [From.GetName]"
+			decrease_japanese_war_willingness = yes
+			hidden_effect = {
+				activate_mission = JAP_Capture_Kunming
+			}
+		}
+	}
+	JAP_Capture_Changsha = {
+		icon = generic_ignite_civil_war
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = JAP_Capture_Changsha_tooltip
+				602 = { has_state_flag = JAP_captures_this_state }
+			}
+		}
+
+		activation = {
+			has_war_with = event_target:current_china_leader
+			has_global_flag = chinese_united_front_formed
+			OR = {
+				592 = { has_state_flag = JAP_captures_this_state }
+				1048 = { has_state_flag = JAP_captures_this_state }
+			}
+			NOT = { 602 = { has_state_flag = JAP_captures_this_state } }
+		}
+
+		cancel_trigger = {
+			if = {
+				limit = { 602 = { has_state_flag = JAP_captures_this_state } }
+				NOT = {
+					custom_trigger_tooltip = {
+						tooltip = JAP_Capture_Changsha_tooltip
+						602 = { has_state_flag = JAP_captures_this_state }
+					}
+				}
+			}
+		}
+
+		highlight_states = { state = 602 }
+
+		modifier = {
+			war_support_factor = 0.1
+		}
+
+		days_remove = -1
+		days_mission_timeout = 365
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_Changsha target: [From.GetName]"
+			if = {
+				limit = {
+					NOT = { has_global_flag = JAP_captured_602_once }
+				}
+				set_global_flag = JAP_captured_602_once
+				custom_effect_tooltip = JAP_Capture_tooltip
+				hidden_effect = {
+					for_each_scope_loop = {
+						array = event_target:current_china_leader.faction_members
+						activate_decision = UF_Resistance_Changsha
+					}
+				}
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_Changsha target: [From.GetName]"
+			decrease_japanese_war_willingness = yes
+			hidden_effect = {
+				activate_mission = JAP_Capture_Changsha
+			}
+		}
+	}
+	JAP_Capture_Guangzhou = {
+		icon = generic_ignite_civil_war
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = JAP_Capture_Guangzhou_tooltip
+				592 = { has_state_flag = JAP_captures_this_state }
+			}
+		}
+
+		activation = {
+			has_war_with = event_target:current_china_leader
+			has_global_flag = chinese_united_front_formed
+			NOT = { 592 = { has_state_flag = JAP_captures_this_state } }
+		}
+
+		cancel_trigger = {
+			if = {
+				limit = { 592 = { has_state_flag = JAP_captures_this_state } }
+				NOT = {
+					custom_trigger_tooltip = {
+						tooltip = JAP_Capture_Guangzhou_tooltip
+						592 = { has_state_flag = JAP_captures_this_state }
+					}
+				}
+			}
+		}
+
+		highlight_states = { state = 592 }
+
+		modifier = {
+			war_support_factor = 0.1
+		}
+
+		days_remove = -1
+		days_mission_timeout = 365
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_Guangzhou target: [From.GetName]"
+			if = {
+				limit = {
+					NOT = { has_global_flag = JAP_captured_592_once }
+				}
+				set_global_flag = JAP_captured_592_once
+				custom_effect_tooltip = JAP_Capture_tooltip
+				hidden_effect = {
+					for_each_scope_loop = {
+						array = event_target:current_china_leader.faction_members
+						activate_decision = UF_Resistance_Guangzhou
+					}
+				}
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_Guangzhou target: [From.GetName]"
+			decrease_japanese_war_willingness = yes
+			hidden_effect = {
+				activate_mission = JAP_Capture_Guangzhou
+			}
+		}
+	}
+	JAP_Capture_Jinan = {
+		icon = generic_ignite_civil_war
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = JAP_Capture_Jinan_tooltip
+				597 = { has_state_flag = JAP_captures_this_state }
+			}
+		}
+
+		activation = {
+			has_war_with = event_target:current_china_leader
+			has_global_flag = chinese_united_front_formed
+			NOT = { 597 = { has_state_flag = JAP_captures_this_state } }
+		}
+
+		cancel_trigger = {
+			if = {
+				limit = { 597 = { has_state_flag = JAP_captures_this_state } }
+				NOT = {
+					custom_trigger_tooltip = {
+						tooltip = JAP_Capture_Jinan_tooltip
+						597 = { has_state_flag = JAP_captures_this_state }
+					}
+				}
+			}
+		}
+
+		highlight_states = { state = 597 }
+
+		modifier = {
+			war_support_factor = 0.1
+		}
+
+		days_remove = -1
+		days_mission_timeout = 365
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_Jinan target: [From.GetName]"
+			if = {
+				limit = {
+					NOT = { has_global_flag = JAP_captured_597_once }
+				}
+				set_global_flag = JAP_captured_597_once
+				custom_effect_tooltip = JAP_Capture_tooltip
+				hidden_effect = {
+					for_each_scope_loop = {
+						array = event_target:current_china_leader.faction_members
+						activate_decision = UF_Resistance_Jinan
+					}
+				}
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_Jinan target: [From.GetName]"
+			decrease_japanese_war_willingness = yes
+			hidden_effect = {
+				activate_mission = JAP_Capture_Jinan
+			}
+		}
+	}
+	JAP_Capture_Xian = {
+		icon = generic_ignite_civil_war
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = JAP_Capture_Xian_tooltip
+				799 = { has_state_flag = JAP_captures_this_state }
+			}
+		}
+
+		activation = {
+			has_war_with = event_target:current_china_leader
+			has_global_flag = chinese_united_front_formed
+			OR = {
+				607 = { has_state_flag = JAP_captures_this_state }
+				608 = { has_state_flag = JAP_captures_this_state }
+			}
+			NOT = { 799 = { has_state_flag = JAP_captures_this_state } }
+		}
+
+		cancel_trigger = {
+			if = {
+				limit = { 799 = { has_state_flag = JAP_captures_this_state } }
+				NOT = {
+					custom_trigger_tooltip = {
+						tooltip = JAP_Capture_Xian_tooltip
+						799 = { has_state_flag = JAP_captures_this_state }
+					}
+				}
+			}
+		}
+
+		highlight_states = { state = 799 }
+
+		modifier = {
+			war_support_factor = 0.1
+		}
+
+		days_remove = -1
+		days_mission_timeout = 365
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_Xian target: [From.GetName]"
+			if = {
+				limit = {
+					NOT = { has_global_flag = JAP_captured_799_once }
+				}
+				set_global_flag = JAP_captured_799_once
+				custom_effect_tooltip = JAP_Capture_tooltip
+				hidden_effect = {
+					for_each_scope_loop = {
+						array = event_target:current_china_leader.faction_members
+						activate_decision = UF_Resistance_Xian
+					}
+				}
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_Xian target: [From.GetName]"
+			decrease_japanese_war_willingness = yes
+			hidden_effect = {
+				activate_mission = JAP_Capture_Xian
+			}
+		}
+	}
+}

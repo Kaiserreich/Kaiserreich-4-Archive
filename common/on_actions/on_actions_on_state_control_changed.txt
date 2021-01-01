@@ -1,0 +1,651 @@
+on_actions = {
+	#ROOT is new controller #FROM is old controller #FROM.FROM is state ID
+	on_state_control_changed = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] on_state_control_changed OLD CONTROLLER: [From.GetName] STATE: [From.From.GetName]"
+			### russia shenanigans with capital change to moscow
+			if = {
+				limit = {
+					ROOT = { tag = RUS }
+					FROM.FROM = { state = 195 }
+					has_country_flag = CAP_MOS
+					219 = {
+						is_owned_by = RUS
+					}
+					219 = {
+						is_controlled_by = RUS
+					}
+				}
+				RUS = {
+					set_capital = 219
+				}
+			}
+
+			### RUS/SOV control array
+			if = {
+				limit = {
+					OR = {
+						tag = RUS
+						tag = SOV
+					}
+					NOT = { is_in_array = { ROOT.enemy_controlled_states = FROM.FROM } }
+					FROM.FROM = {
+						owner = { has_war_with = ROOT }
+						OR = {
+							is_on_continent = europe
+							is_on_continent = middle_east
+						}
+					}
+				}
+				set_country_flag = has_enemy_control_array
+				add_to_array = { ROOT.enemy_controlled_states = FROM.FROM }
+			}
+
+			### South African Civil War
+			if = {
+				limit = {
+					FROM.FROM = { state = 681 } #Cape Town
+					tag = SFR
+					has_authoritarian_government = yes
+					FROM = { tag = SAF }
+				}
+				FROM = { country_event = saf.76 }
+			}
+			if = {
+				limit = {
+					FROM.FROM = { state = 275 } #Transvaal
+					tag = SFR
+					has_authoritarian_government = no
+					FROM = { tag = SAF }
+				}
+				FROM = { country_event = saf.77 }
+			}
+			### BHC Civil War
+			if = {
+				limit = {
+					FROM.FROM = { state = 431 } #Calcutta
+					tag = INR
+					has_government = totalist
+					FROM = { tag = BHC }
+				}
+				FROM = { country_event = beng.83 }
+			}
+			if = {
+				limit = {
+					FROM.FROM = { state = 431 } #Calcutta
+					tag = INR
+					has_government = radical_socialist
+					FROM = { tag = BHC }
+				}
+				FROM = { country_event = beng.90 }
+			}
+			### American Civil War
+			if = {
+				limit = {
+					FROM = {
+						OR = {
+							tag = USA
+							tag = CSA
+							tag = TEX
+							tag = CAL
+						}
+						has_country_flag = ACW_is_recruiting
+						FROM.FROM = {
+							has_state_flag = ACW_recruiting_@PREV
+						}
+					}
+				}
+				FROM = {
+					clr_country_flag = ACW_is_recruiting
+					FROM.FROM = { clr_state_flag = ACW_recruiting_@PREV }
+				}
+				if = {
+					limit = { FROM.FROM = { state = 378 } }
+					797 = { clr_state_flag = ACW_recruiting_@FROM }
+				}
+				else_if = {
+					limit = { FROM.FROM = { state = 797 } }
+					378 = { clr_state_flag = ACW_recruiting_@FROM }
+				}
+				else_if = {
+					limit = { FROM.FROM = { state = 829 } }
+					798 = { clr_state_flag = ACW_recruiting_@FROM }
+				}
+				else_if = {
+					limit = { FROM.FROM = { state = 798 } }
+					829 = { clr_state_flag = ACW_recruiting_@FROM }
+				}
+			}
+			### Clearing State Modifiers
+			if = { #French Flanders state modifier
+				limit = {
+					ROOT = {
+						980 = {
+							has_state_flag = FLN_conscription_flag
+						}
+						controls_state = 980
+						NOT = {
+							tag = FLN
+						}
+					}
+				}
+				add_state_modifier = {
+					modifier = {
+						local_non_core_manpower = -0.18
+					}
+				}
+			}
+			if = { #French Flanders state modifier put back for FLN
+				limit = {
+					ROOT = {
+						980 = {
+							has_state_flag = FLN_conscription_flag
+						}
+						controls_state = 980
+						tag = FLN
+					}
+				}
+				add_state_modifier = {
+					modifier = {
+						local_non_core_manpower = 0.18
+					}
+				}
+			}
+			### Fixing state control when occupying occupied territory
+			if = {
+				limit = {
+					FROM.FROM = {
+						owner = {
+							NOT = { tag = ROOT }
+							OR = {
+								is_in_faction_with = ROOT
+								is_subject_of = ROOT
+								ROOT = { is_subject_of = PREV }
+							}
+						}
+					}
+				}
+				FROM.FROM = {
+					owner = {
+						set_state_controller = PREV
+					}
+				}
+			}
+			### GEA AOG BONUS
+			if = {
+				limit = {
+					ROOT = {
+						NOT = {
+							OR = {
+								tag = LEP
+								tag = GEA
+							}
+
+						}
+					}
+					FROM = {
+						OR = {
+							tag = LEP
+							tag = GEA
+						}
+
+					}
+					FROM.FROM = {
+						OR = {
+							state = 592
+							state = 802
+							state = 803
+							state = 1075
+						}
+					}
+				}
+				GEA = {
+					add_to_variable = { GEA_AOG_CITIES_FACTORIES = 3 }
+					add_to_variable = { GEA_AOG_CITIES = 0.03 }
+					subtract_from_variable = { GEA_AOG_CITIES_number = 1 }
+				}
+			}
+			###GEA AOG RESTORE BONUS
+			if = {
+				limit = {
+					ROOT = {
+
+						OR = {
+							tag = LEP
+							tag = GEA
+						}
+
+					}
+					FROM = { # might be helpful later
+						NOT = {
+							OR = {
+								tag = LEP
+								tag = GEA
+							}
+
+
+						}
+					}
+					FROM.FROM = {
+						OR = {
+							state = 592
+							state = 802
+							state = 803
+							state = 1075
+						}
+					}
+				}
+				GEA = {
+					subtract_from_variable = { GEA_AOG_CITIES_FACTORIES = 3 }
+					subtract_from_variable = { GEA_AOG_CITIES = 0.03 }
+					add_to_variable = { GEA_AOG_CITIES_NUMBER = 1 }
+				}
+			}
+			###KMT city capture events
+			if = {
+				limit = {
+					ROOT = { tag = CHI }
+					FROM.FROM = { state = 803 }
+					NOT = { has_country_flag = pass_Wenzhou }
+				}
+				country_event = {
+					id = chi_dom.5
+					days = 10
+				}
+			}
+			else_if = {
+				limit = {
+					ROOT = { tag = CHI }
+					FROM.FROM = { state = 1075 }
+					NOT = { has_country_flag = pass_Nantong }
+					OR = {
+						NOT = { owns_state = 803 }
+						has_country_flag = pass_Wenzhou
+					}
+				}
+				country_event = {
+					id = chi_dom.6
+					days = 10
+				}
+			}
+			else_if = {
+				limit = {
+					ROOT = { tag = CHI }
+					FROM.FROM = { state = 596 }
+					NOT = { has_country_flag = pass_Nantong }
+					OR = {
+						NOT = {
+							owns_state = 803 # Wenzhou
+							owns_state = 1075 # Nantong
+						}
+						AND = {
+							has_country_flag = pass_Wenzhou
+							has_country_flag = pass_Nantong
+						}
+						AND = {
+							NOT = { owns_state = 1075 }
+							has_country_flag = pass_Nantong
+						}
+					}
+				}
+				country_event = {
+					id = chi_dom.7
+					days = 10
+				}
+			}
+			###Zhili Remnant events
+			if = {
+				limit = {
+					tag = SZC
+					has_war_with = QIE
+					has_focus_tree = Sichuan_Clique_Zhili
+					FROM.FROM = { state = 607 }
+				}
+				country_event = {
+					id = sichuan_armament.27
+					hours = 8
+					random = 16
+				}
+			}
+			else_if = {
+				limit = {
+					tag = SZC
+					has_war_with = QIE
+					has_focus_tree = Sichuan_Clique_Zhili
+					FROM.FROM = { state = 1048 }
+				}
+				country_event = {
+					id = sichuan_armament.28
+					hours = 8
+					random = 16
+				}
+			}
+			else_if = {
+				limit = {
+					tag = SZC
+					has_war_with = QIE
+					has_focus_tree = Sichuan_Clique_Zhili
+					FROM.FROM = { state = 608 }
+				}
+				country_event = {
+					id = sichuan_armament.29
+					hours = 8
+					random = 16
+				}
+			}
+			### Fengtian events
+			if = {
+				limit = {
+					FROM = {
+						tag = FNG
+						surrender_progress > 0.75
+					}
+				}
+				JAP = {
+					country_event = {
+						id = fengtian.136
+						hours = 16
+						random = 16
+					}
+				}
+			}
+			if = {
+				limit = {
+					tag = FNG
+					FROM.FROM = { state = 608 }
+					NOT = { has_country_flag = FNG_conference_fired }
+				}
+				activate_mission = FNG_Secure_Beijing
+				country_event = {
+					id = fengtian.132
+					days = 1
+					random = 96
+				}
+			}
+			if = {
+				limit = {
+					FROM = {
+						tag = FNG
+						has_country_flag = FNG_conference_fired
+					}
+					FROM.FROM = { state = 608 }
+				}
+				FROM = { country_event = fngconf.32 }
+			}
+			if = { # Conquest of Beijing
+				limit = {
+					ROOT = { tag = FNG }
+					FROM.FROM = { state = 608 } #Baoding
+				}
+				ROOT = {
+					country_event = {
+						id = fengtian.270 #Matters of Occupation
+						days = 3
+					}
+					country_event = {
+						id = fengtian.272 #Scandal in Beijing
+						days = 14
+					}
+				}
+			}
+			if = { # Moving on to the North China plain
+				limit = {
+					ROOT = { tag = FNG }
+					FROM.FROM = { state = 608 } #Baoding
+				}
+				ROOT = {
+					country_event = {
+						id = fengtian.271 #Feeding the North China Plain
+						days = 38
+					}
+				}
+			}
+			if = { # Capture of Baoding
+				limit = {
+					ROOT = { tag = FNG }
+					FROM.FROM = { state = 1062 }
+				}
+				ROOT = {
+					country_event = {
+						id = fengtian.274 #Disorder at Baoding
+						days = 9
+					}
+				}
+			}
+			if = { # Capture of Kaifeng
+				limit = {
+					ROOT = { tag = FNG }
+					FROM.FROM = { state = 1059 }
+				}
+				ROOT = {
+					country_event = {
+						id = fengtian.276 #Railway Chaos in Zhengzhou
+						days = 2
+					}
+				}
+			}
+			if = { # Capture of Heluo
+				limit = {
+					ROOT = { tag = FNG }
+					FROM.FROM = { state = 607 }
+				}
+				ROOT = {
+					country_event = {
+						id = fengtian.277 #Bandits against Bandits
+						days = 9
+					}
+				}
+			}
+			if = { # Capture of Wuhan
+				limit = {
+					ROOT = { tag = FNG }
+					FROM.FROM = { state = 1048 }
+				}
+				ROOT = {
+					country_event = {
+						id = fengtian.280 #Disorder at Baoding
+						days = 9
+					}
+				}
+			}
+			if = { # Capture of Cangzhou
+				limit = {
+					ROOT = { tag = FNG }
+					FROM.FROM = { state = 1063 }
+				}
+				ROOT = {
+					country_event = {
+						id = fengtian.34 #Red Spears in Cangzhou
+						days = 36
+						random = 1500
+					}
+				}
+			}
+			if = { # Capture of Daming
+				limit = {
+					ROOT = { tag = FNG }
+					FROM.FROM = { state = 1061 }
+				}
+				ROOT = {
+					country_event = {
+						id = fengtian.35 # Deserters Rise up in Daming
+						days = 36
+						random = 1500
+					}
+				}
+			}
+			if = { # Capture of Ruyang
+				limit = {
+					ROOT = { tag = FNG }
+					FROM.FROM = { state = 1058 }
+				}
+				ROOT = {
+					country_event = {
+						id = fengtian.36 # Warlords Resist in Ruyang
+						days = 36
+						random = 1500
+					}
+				}
+			}
+			if = { # Capture of Guanzhong
+				limit = {
+					ROOT = { tag = FNG }
+					FROM.FROM = { state = 779 }
+				}
+				ROOT = {
+					country_event = {
+						id = fengtian.37 # Bandits Sweep Guangzhong
+						days = 36
+						random = 1500
+					}
+				}
+			}
+
+
+			###Sino-Japanese War events
+			if = {
+				limit = {
+					has_global_flag = chinese_united_front_formed
+					ROOT = {
+						OR = {
+							tag = JAP
+							AND = {
+								tag = FNG
+								FNG_JAP_hostile = no
+							}
+							is_in_array = {
+								array = JAP.allies
+								value = THIS
+							}
+						}
+						has_war_with = FROM
+					}
+					FROM = {
+						OR = {
+							tag = event_target:current_china_leader
+							is_in_faction_with = event_target:current_china_leader
+						}
+					}
+					FROM.FROM = {
+						OR = {
+							state = 608 #Beijing
+							state = 613 #Nanjing
+							state = 1048 #Wuhan
+							state = 650 #Chongqing
+							state = 607 #Luoyang
+							state = 325 #Kunming
+							state = 602 #Changsha
+							state = 592 #Guangzhou
+							state = 597 #Jinan
+							state = 799 #Xi'an
+						}
+					}
+				}
+				FROM.FROM = {
+					set_state_flag = JAP_captures_this_state
+				}
+			}
+			else_if = {
+				limit = {
+					has_global_flag = chinese_united_front_formed
+					ROOT = {
+						OR = {
+							tag = event_target:current_china_leader
+							is_in_faction_with = event_target:current_china_leader
+						}
+						has_war_with = FROM
+					}
+					FROM.FROM = {
+						has_state_flag = JAP_captures_this_state
+					}
+				}
+				FROM.FROM = {
+					clr_state_flag = JAP_captures_this_state
+				}
+			}
+			if = {
+				limit = {
+					has_global_flag = chinese_united_front_formed
+					tag = event_target:current_china_leader
+					FROM = {
+						OR = {
+							tag = JAP
+							AND = {
+								tag = FNG
+								FNG_JAP_hostile = no
+							}
+							is_in_array = {
+								array = JAP.allies
+								value = THIS
+							}
+						}
+						has_war_with = ROOT
+					}
+					surrender_progress > 0.8
+				}
+				if = {
+					limit = { is_in_faction_with = SZC }
+					SZC = { save_global_event_target_as = china_national_redoubt }
+				}
+				else_if = {
+					limit = { is_in_faction_with = YUN }
+					SZC = { save_global_event_target_as = china_national_redoubt }
+				}
+				country_event = china_redoubt.1
+			}
+			if = {
+				limit = {
+					has_global_flag = chinese_united_front_formed
+					tag = event_target:current_china_leader
+					FROM = {
+						OR = {
+							tag = JAP
+							AND = {
+								tag = FNG
+								FNG_JAP_hostile = no
+							}
+							is_in_array = {
+								array = JAP.allies
+								value = THIS
+							}
+						}
+						has_war_with = ROOT
+					}
+					surrender_progress > 0.8
+				}
+				if = {
+					limit = { is_in_faction_with = SZC }
+					SZC = { save_global_event_target_as = china_national_redoubt }
+				}
+				else_if = {
+					limit = { is_in_faction_with = YUN }
+					SZC = { save_global_event_target_as = china_national_redoubt }
+				}
+				country_event = china_redoubt.1
+			}
+			if = {
+				limit = {
+					has_global_flag = chinese_united_front_formed
+					NOT = { tag = event_target:current_china_leader }
+					is_in_faction_with = event_target:current_china_leader
+					FROM = {
+						OR = {
+							tag = JAP
+							AND = {
+								tag = FNG
+								FNG_JAP_hostile = no
+							}
+							is_in_array = {
+								array = JAP.allies
+								value = THIS
+							}
+						}
+						has_war_with = ROOT
+					}
+					surrender_progress > 0.8
+				}
+				country_event = china_redoubt.4
+			}
+		}
+	}
+}
