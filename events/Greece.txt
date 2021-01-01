@@ -593,6 +593,10 @@ country_event = {
 		name = gre.14.a #Of course!
 		ai_chance = {
 			factor = 90
+			modifier = {
+				factor = 0
+				GRE = { has_completed_focus = GRE_new_expansionism }
+			}
 		}
 		add_to_faction = GRE
 		GRE = {
@@ -609,6 +613,7 @@ country_event = {
 			modifier = {
 				factor = 0
 				has_war = yes
+				GRE = { NOT = { has_completed_focus = GRE_new_expansionism } }
 			}
 		}
 		GRE = {
@@ -7412,7 +7417,7 @@ country_event = {
 	}
 }
 
-# Greece offers peace to the Turks (fired by decision)
+# Greece offers peace to get claims (fired by decision)
 country_event = {
 	id = gre.254
 	immediate = {log = "[GetDateText]: [Root.GetName]: event gre.254"}
@@ -7424,23 +7429,37 @@ country_event = {
 
 	option = {
 		name = gre.254.a #We must make peace while we can
-		add_stability = -0.20
+		if = {
+			limit = {
+				OR = {
+					tag = TUR
+					tag = OTT
+				}
+			}
+			add_stability = -0.20
+		}
+		else = {
+			add_political_power = -100
+		}
+		
 		every_state = {
 			limit = {
 				OR = {
 					is_owned_by = ROOT
-					owner = {
-						is_subject_of = ROOT
-					}
+					owner = { is_subject_of = ROOT }
 				}
 				OR = {
 					is_core_of = GRE
 					is_claimed_by = GRE
-					state = 347 #Gelibolu
-					state = 341 #Edirne
-					state = 773 #Constantinople
 					state = 183 #Cyprus
 					state = 164 #Dodecanese Islands
+					AND = {
+						state = 1089 #Momchilgrad
+						OR = {
+							TUR = { owns_state = 1089 }
+							OTT = { owns_state = 1089 }
+						}
+					}
 				}
 			}
 			GRE = {
@@ -7462,7 +7481,7 @@ country_event = {
 	}
 }
 
-# The Turks refuse to make peace
+# They refuse to make peace
 country_event = {
 	id = gre.255
 	immediate = {log = "[GetDateText]: [Root.GetName]: event gre.255"}
@@ -7525,8 +7544,16 @@ country_event = {
 
 	option = {
 		name = gre.257.a
-		GRE = {
+		if = {
+			limit = {
+				731 = { is_owned_by = FROM }
+			}
 			transfer_state = 731
+		}
+		if = {
+			limit = {
+				769 = { is_owned_by = FROM }
+			}
 			transfer_state = 769
 		}
 	}
@@ -7545,34 +7572,117 @@ country_event = {
 	option = {
 		name = gre.258.a
 		if = {
-			limit = {
-				tag = GRE
-			}
-			FROM = {
-				every_owned_state = {
-					limit = {
-						state = 731
-					}
-					ROOT = {
-						transfer_state = PREV
+			limit = { tag = GRE }
+			transfer_state = 731
+		}
+		if = {
+			limit = { tag = BUL }
+			transfer_state = 769
+		}
+	}
+}
+
+# Greek faction leader concerned about expansionism
+country_event = {
+	id = gre.259
+	immediate = {log = "[GetDateText]: [Root.GetName]: event gre.259"}
+	title = gre.259.t
+	desc = gre.259.d
+	picture = GFX_report_event_GRE_army
+	
+	fire_only_once = yes
+	
+	trigger = {
+		OR = {
+			tag = CAN
+			tag = GBR
+			tag = AUS
+			tag = GER
+		}
+		is_faction_leader = yes
+		is_in_faction_with = GRE
+		GRE = {
+			has_completed_focus = GRE_new_expansionism
+			is_subject = no
+		}
+		has_war = no
+	}
+	
+	mean_time_to_happen = {
+		days = 7
+	}
+	
+	option = {
+		name = gre.259.a #We don't want to be involved
+		ai_chance = {
+			factor = 70
+			modifier = {
+				factor = 0
+				NOT = {
+					any_state = {
+						OR = {
+							is_owned_by = OTT
+							is_owned_by = TUR
+						}
+						OR = {
+							is_core_of = GRE
+							is_claimed_by = GRE
+							state = 766
+							state = 164
+							state = 183
+							state = 187
+							state = 184
+							state = 347 #Gelibolu
+							state = 341 #Edirne
+							state = 773 #Constantinople
+							state = 340 #Bursa
+							state = 339 #Izmir
+						}
 					}
 				}
 			}
 		}
-		if = {
-			limit = {
-				tag = BUL
+		set_country_flag = GRE_ejected_from_faction
+		remove_from_faction = GRE
+		GRE = {
+			add_opinion_modifier = { target = ROOT modifier = ITA_outraged }
+			country_event = gre.260
+		}
+	}
+	option = {
+		name = gre.259.b #We are unconcerned
+		ai_chance = {
+			factor = 30
+			modifier = {
+				factor = 0.1
+				NOT = { tag = GER }
 			}
-			FROM = {
-				every_owned_state = {
-					limit = {
-						state = 769
-					}
-					ROOT = {
-						transfer_state = PREV
-					}
+			modifier = {
+				factor = 0.1
+				OR = {
+					is_in_faction_with = TUR
+					is_in_faction_with = OTT
 				}
 			}
 		}
 	}
 }
+
+# Greeks ejected from faction
+country_event = {
+	id = gre.260
+	immediate = {log = "[GetDateText]: [Root.GetName]: event gre.260"}
+	title = gre.260.t
+	desc = gre.260.d
+	picture = GFX_report_event_GRE_army
+	
+	is_triggered_only = yes
+	
+	option = {
+		name = gre.260.a
+		effect_tooltip = {
+			FROM = { remove_from_faction = GRE }
+		}
+	}
+}
+
