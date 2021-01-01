@@ -44,6 +44,7 @@ NDefines.NGraphics.COUNTRY_FLAG_SMALL_TEX_WIDTH = 11						-- Vanilla is 10
 NDefines.NGraphics.COUNTRY_FLAG_TEX_MAX_SIZE = 512							-- Vanilla is 256
 NDefines.NGraphics.COUNTRY_FLAG_SMALL_TEX_MAX_SIZE = 128					-- Vanilla is 64
 NDefines.NGraphics.COUNTRY_FLAG_STRIPE_TEX_MAX_WIDTH = 11					-- Vanilla is 10
+NDefines.NGraphics.POLITICAL_GRID_SMALL_BOX_LIMIT = 12						-- Vanilla is 6
 NDefines.NGraphics.VICTORY_POINT_MAP_ICON_TEXT_CUTOFF = {300, 500, 800}  	-- Vanilla is 100, 250, 500
 NDefines.NGraphics.VICTORY_POINTS_DISTANCE_CUTOFF = {300, 500, 1000} 		-- Vanilla is 300, 500, 1500
 NDefines.NMilitary.DIG_IN_FACTOR = 0.01										-- Vanilla is 0.02
@@ -107,5 +108,3 @@ NDefines.NProduction.EQUIPMENT_MODULE_CONVERT_XP_COST = 1.5					-- Vanilla is 2
 -- XP cost for converting one equipment module to a related module when creating an equipment variant.
 NDefines.NProduction.EQUIPMENT_MODULE_REMOVE_XP_COST = 0.5					-- Vanilla is 1		
 -- XP cost for removing an equipment module and leaving the slot empty when creating an equipment variant.
-
-NDefines.NGraphics.POLITICAL_GRID_SMALL_BOX_LIMIT = 12              	-- Limit for gridbox in political view before it will be replaced with extended gridbox

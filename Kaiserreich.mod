@@ -1,5 +1,5 @@
 ﻿name = "Kaiserreich"
-path = "mod/Kaiserreich/"
+path = "mod/Kaiserreich"
 
 replace_path = "common/abilities"
 replace_path = "common/ai_areas"

@@ -426,14 +426,32 @@ country_event = { #Kanslergade Agreement
 
 	option = { #The Kanslergade agreement is reached
 		name = den.15.a
-		ai_chance = { factor = 60 }
+		ai_chance = { 
+			factor = 60 
+		}
 		custom_effect_tooltip = den_tt_kanslergade_agreement_succesful
 		set_country_flag = den_kanslergade_agreement_success
 	}
 
 	option = { #The Kanslergade agreement fails
 		name = den.15.b
-		ai_chance = { factor = 40 }
+		ai_chance = { 
+			factor = 40 
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = DEN_future
+					option = DEN_FUTURE_HYBRID
+				}
+			}
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = DEN_future
+					option = DEN_FUTURE_KINGS_CAB
+				}
+			}
+		}
 		hidden_effect = { country_event = { id = den.16 days = 40 } }
 	}
 }
@@ -451,7 +469,6 @@ country_event = { #The Government falls
 
 	option = { #A new Madsen-Mygdal Cabinet is formed with the same folketing
 		name = den.16.a
-		ai_chance = { factor = 60 }
 		set_politics = { ruling_party = market_liberal elections_allowed = yes }
 		remove_ideas_with_trait = head_of_government
 		add_ideas = DEN_Thomas_Madsen_Mygdal_hog_mli
@@ -502,6 +519,7 @@ country_event = { #Birth of Princess Margrethe
 		date > 1940.3.16
 		NOT = {
 			has_country_flag = den_danish_republic
+			has_country_flag = den_hybrid
 		}
 	}
 
@@ -664,7 +682,6 @@ country_event = { #Transferral of Norway-related documents to Norway, Norwegian 
 
 	option = { #Great!
 		name = den.25.a
-		ai_chance = { factor = 90 }
 		add_political_power = 25
 	}
 }
@@ -809,7 +826,10 @@ country_event = { #Death of Thorvald Stauning
 		}
 		if = {
 			limit = {
-				has_country_flag = den_danish_republic
+				OR = {
+					has_country_flag = den_danish_republic
+					has_country_flag = den_hybrid
+				}
 			}
 			create_country_leader = {
 				name = "Vilhelm Buhl"
@@ -991,9 +1011,6 @@ country_event = { #Germany says yes
 
 	option = { #Join the Reichspakt
 		name = den.35.a
-		ai_chance = {
-			factor = 80
-		}
 		effect_tooltip = {
 			GER = {
 				add_to_faction = DEN
@@ -1019,9 +1036,6 @@ country_event = { #Germany says no
 
 	option = { #Join the Reichspakt
 		name = den.36.a
-		ai_chance = {
-			factor = 80
-		}
 		add_political_power = -25
 	}
 }
@@ -1101,7 +1115,16 @@ country_event = { #Folketing makes vote of no-confidence
 
 	option = { #Stauning convinces the king to back down
 		name = den.39.a
-		ai_chance = { factor = 60 }
+		ai_chance = { 
+			factor = 60 
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = DEN_future
+					option = DEN_FUTURE_KINGS_CAB
+				}
+			}
+		}
 		set_politics = { ruling_party = social_democrat elections_allowed = yes }
 		remove_ideas_with_trait = head_of_government
 		add_ideas = DEN_Thorvald_Stauning_hog_sde
@@ -1116,9 +1139,47 @@ country_event = { #Folketing makes vote of no-confidence
 		remove_ideas = DEN_idea_doubtful_military
 		if = {
 			limit = {
+				AND = {
+					DEN = {
+						is_in_faction_with = GER
+					}
+					ICE = {
+						is_in_faction_with = GER
+					}
+				}
+			}
+			DEN = { leave_faction = yes }
+			ICE = { leave_faction = yes }
+			
+			# first peace out with faction leaders
+			every_country = {
+				limit = {
+					is_faction_leader = yes
+					has_war_with = DEN
+					has_war_with = GER
+				}
+				DEN = { white_peace = PREV }
+				ICE = { white_peace = PREV }
+			}
+
+			# then all non-puppets who aren't in factions
+			every_country = {
+				limit = {
+					is_in_faction = no
+					is_subject = no
+					has_war_with = DEN
+					has_war_with = GER
+				}
+				DEN = { white_peace = PREV }
+				ICE = { white_peace = PREV }
+			}
+		}
+		
+		else_if = {
+			limit = {
 				is_in_faction_with = GER
 			}
-			leave_faction = yes
+			DEN = { leave_faction = yes }
 			
 			# first peace out with faction leaders
 			every_country = {
@@ -1250,7 +1311,16 @@ country_event = { #General Strike extends beyond Syndicalist spheres
 
 	option = { #Give in...
 		name = den.43.b
-		ai_chance = { factor = 60 }
+		ai_chance = { 
+			factor = 60 
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = DEN_future
+					option = DEN_FUTURE_KINGS_CAB
+				}
+			}
+		}
 		remove_ideas = DEN_idea_general_strike_only_syndies
 		set_politics = { ruling_party = social_democrat elections_allowed = yes }
 		remove_ideas_with_trait = head_of_government
@@ -1267,15 +1337,67 @@ country_event = { #General Strike extends beyond Syndicalist spheres
 		hidden_effect = { country_event = { id = den.58 days = 7 } }
 		if = {
 			limit = {
-				is_in_faction_with = GER
+				AND = {
+					DEN = {
+						is_in_faction_with = GER
+					}
+					ICE = {
+						is_in_faction_with = GER
+					}
+				}
 			}
-			leave_faction = yes
+			DEN = { leave_faction = yes }
+			ICE = { leave_faction = yes }
+			
+			# first peace out with faction leaders
 			every_country = {
 				limit = {
+					is_faction_leader = yes
 					has_war_with = DEN
 					has_war_with = GER
 				}
-				white_peace = DEN
+				DEN = { white_peace = PREV }
+				ICE = { white_peace = PREV }
+			}
+
+			# then all non-puppets who aren't in factions
+			every_country = {
+				limit = {
+					is_in_faction = no
+					is_subject = no
+					has_war_with = DEN
+					has_war_with = GER
+				}
+				DEN = { white_peace = PREV }
+				ICE = { white_peace = PREV }
+			}
+		}
+		
+		else_if = {
+			limit = {
+				is_in_faction_with = GER
+			}
+			DEN = { leave_faction = yes }
+			
+			# first peace out with faction leaders
+			every_country = {
+				limit = {
+					is_faction_leader = yes
+					has_war_with = DEN
+					has_war_with = GER
+				}
+				DEN = { white_peace = PREV }
+			}
+
+			# then all non-puppets who aren't in factions
+			every_country = {
+				limit = {
+					is_in_faction = no
+					is_subject = no
+					has_war_with = DEN
+					has_war_with = GER
+				}
+				DEN = { white_peace = PREV }
 			}
 		}
 	}
@@ -1314,7 +1436,16 @@ country_event = { #General Strike continues
 
 	option = { #Give in...
 		name = den.44.b
-		ai_chance = { factor = 20 }
+		ai_chance = { 
+			factor = 20
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = DEN_future
+					option = DEN_FUTURE_KINGS_CAB
+				}
+			}
+		}
 		remove_ideas = DEN_idea_general_strike_only_syndies
 		set_politics = { ruling_party = social_democrat elections_allowed = yes }
 		remove_ideas_with_trait = head_of_government
@@ -1331,15 +1462,67 @@ country_event = { #General Strike continues
 		hidden_effect = { country_event = { id = den.58 days = 7 } }
 		if = {
 			limit = {
-				is_in_faction_with = GER
+				AND = {
+					DEN = {
+						is_in_faction_with = GER
+					}
+					ICE = {
+						is_in_faction_with = GER
+					}
+				}
 			}
-			leave_faction = yes
+			DEN = { leave_faction = yes }
+			ICE = { leave_faction = yes }
+			
+			# first peace out with faction leaders
 			every_country = {
 				limit = {
+					is_faction_leader = yes
 					has_war_with = DEN
 					has_war_with = GER
 				}
-				white_peace = DEN
+				DEN = { white_peace = PREV }
+				ICE = { white_peace = PREV }
+			}
+
+			# then all non-puppets who aren't in factions
+			every_country = {
+				limit = {
+					is_in_faction = no
+					is_subject = no
+					has_war_with = DEN
+					has_war_with = GER
+				}
+				DEN = { white_peace = PREV }
+				ICE = { white_peace = PREV }
+			}
+		}
+		
+		else_if = {
+			limit = {
+				is_in_faction_with = GER
+			}
+			DEN = { leave_faction = yes }
+			
+			# first peace out with faction leaders
+			every_country = {
+				limit = {
+					is_faction_leader = yes
+					has_war_with = DEN
+					has_war_with = GER
+				}
+				DEN = { white_peace = PREV }
+			}
+
+			# then all non-puppets who aren't in factions
+			every_country = {
+				limit = {
+					is_in_faction = no
+					is_subject = no
+					has_war_with = DEN
+					has_war_with = GER
+				}
+				DEN = { white_peace = PREV }
 			}
 		}
 	}
@@ -1438,7 +1621,16 @@ country_event = { #Communal government convenes on the next step
 
 	option = { #Stauning convinces the majority
 		name = den.48.a
-		ai_chance = { factor = 60 }
+		ai_chance = { 
+			factor = 60
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = DEN_future
+					option = DEN_FUTURE_KINGS_CAB
+				}
+			}
+		}
 		country_event = { id = den.49 days = 2 }
 	}
 
@@ -1481,15 +1673,67 @@ country_event = { #Civilian planes dump leaflets over military bases across the 
 		hidden_effect = { country_event = { id = den.58 days = 7 } }
 		if = {
 			limit = {
-				is_in_faction_with = GER
+				AND = {
+					DEN = {
+						is_in_faction_with = GER
+					}
+					ICE = {
+						is_in_faction_with = GER
+					}
+				}
 			}
-			leave_faction = yes
+			DEN = { leave_faction = yes }
+			ICE = { leave_faction = yes }
+			
+			# first peace out with faction leaders
 			every_country = {
 				limit = {
+					is_faction_leader = yes
 					has_war_with = DEN
 					has_war_with = GER
 				}
-				white_peace = DEN
+				DEN = { white_peace = PREV }
+				ICE = { white_peace = PREV }
+			}
+
+			# then all non-puppets who aren't in factions
+			every_country = {
+				limit = {
+					is_in_faction = no
+					is_subject = no
+					has_war_with = DEN
+					has_war_with = GER
+				}
+				DEN = { white_peace = PREV }
+				ICE = { white_peace = PREV }
+			}
+		}
+		
+		else_if = {
+			limit = {
+				is_in_faction_with = GER
+			}
+			DEN = { leave_faction = yes }
+			
+			# first peace out with faction leaders
+			every_country = {
+				limit = {
+					is_faction_leader = yes
+					has_war_with = DEN
+					has_war_with = GER
+				}
+				DEN = { white_peace = PREV }
+			}
+
+			# then all non-puppets who aren't in factions
+			every_country = {
+				limit = {
+					is_in_faction = no
+					is_subject = no
+					has_war_with = DEN
+					has_war_with = GER
+				}
+				DEN = { white_peace = PREV }
 			}
 		}
 	}
@@ -1591,7 +1835,16 @@ country_event = { #Germany has war with you
 
 	option = { #We'll survive on our own.
 		name = den.52.b
-		ai_chance = { factor = 10 }
+		ai_chance = { 
+			factor = 10
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = DEN_future
+					option = DEN_FUTURE_HYBRID
+				}
+			}
+		}
 		add_war_support = 0.2
 	}
 }
@@ -1615,7 +1868,16 @@ country_event = { #Denmark wants our help
 
 	option = { #No class snobs in my internationale
 		name = den.53.b
-		ai_chance = { factor = 70 }
+		ai_chance = {
+			factor = 70
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = DEN_future
+					option = DEN_FUTURE_HYBRID
+				}
+			}
+		}
 		DEN = { country_event = { id = den.57 days = 2 } }
 	}
 }
@@ -1667,7 +1929,16 @@ country_event = { #France demands reforms
 
 	option = { #NO!
 		name = den.54.b
-		ai_chance = { factor = 60 }
+		ai_chance = { 
+			factor = 60
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = DEN_future
+					option = DEN_FUTURE_HYBRID
+				}
+			}
+		}
 		FRA = { country_event = { id = den.56 days = 2 } }
 	}
 }
@@ -1735,6 +2006,7 @@ country_event = { #After the people won in the easter crisis, new king or republ
 	option = { #Christian abdicates and Frederick becomes king
 		name = den.58.a
 		ai_chance = { factor = 20 }
+		set_country_flag = Christian_X_dead
 		create_country_leader = {
 			name = "Frederick IX"
 			desc = "POLITICS_DEN_FRED_DESC"
@@ -1793,6 +2065,7 @@ country_event = { #After the people won in the easter crisis, new king or republ
 				}
 			}
 		}
+		set_country_flag = Christian_X_dead
 		effect_tooltip = {
 			create_country_leader = {
 				name = "Hakon I"
@@ -1831,6 +2104,7 @@ country_event = { #After the people won in the easter crisis, new king or republ
 	option = { #A republic is formed
 		name = den.58.c
 		ai_chance = { factor = 40 }
+		set_country_flag = Christian_X_dead
 		set_country_flag = den_danish_republic
 		create_country_leader = {
 			name = "Thorvald Stauning"
@@ -2011,7 +2285,29 @@ country_event = { #[GetYear] Elections
 
 	option = { #Venstre and DKF win
 		name = den.60.b
-		ai_chance = { factor = 20 }
+		ai_chance = { 
+			factor = 20
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = DEN_future
+					option = DEN_FUTURE_HYBRID
+				}
+				NOT = {
+					has_country_flag = DEN_constitutional_crisis_over
+				}
+			}
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = DEN_future
+					option = DEN_FUTURE_KINGS_CAB
+				}
+				NOT = {
+					has_country_flag = DEN_constitutional_crisis_over
+				}
+			}
+		}
 		add_popularity = { ideology = market_liberal popularity = 0.05 }
 		add_popularity = { ideology = social_conservative popularity = 0.02 }
 		set_politics = { ruling_party = market_liberal elections_allowed = yes }
@@ -2766,6 +3062,7 @@ country_event = { #Death of King Christian X
 
 	option = { #Christian abdicates and Frederick becomes king
 		name = den.80.a
+		set_country_flag = Christian_X_dead
 		create_country_leader = {
 			name = "Frederick IX"
 			desc = "POLITICS_DEN_FRED_DESC"
@@ -3004,7 +3301,6 @@ country_event = { #Germany accepts our deal!
 
 	option = { #Great!
 		name = den.87.a
-		ai_chance = { factor = 100 }
 		effect_tooltip = {
 			add_opinion_modifier = {
 				target = GER
@@ -3034,7 +3330,6 @@ country_event = { #Germany rejects our deal!
 
 	option = { #Hmm...
 		name = den.88.a
-		ai_chance = { factor = 100 }
 		effect_tooltip = {
 			add_opinion_modifier = {
 				target = GER
