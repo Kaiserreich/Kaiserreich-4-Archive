@@ -1,5 +1,5 @@
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This is alpha version 0.9 - 'Aurora Borealis'.
+This is alpha version 0.9.1.
 This version is compatible with 1.6.2, it may work with later hot fixes, but it is not guaranteed.
 
 Manual Installation Instructions
