@@ -57,6 +57,31 @@ is_impassable_state = {
 	}
 }
 
+is_paired_impassable_state = {
+	OR = {
+		state = 514 #Sahara
+		state = 860 #Malian Desert
+		state = 862 #Sudanese Desert
+		state = 910 #Niger Desert
+		state = 911 #Borkou-Ennedi
+		state = 926 #Sermersuaq
+		state = 967 #Mauritanian Desert
+		state = 1030 #Amazonas Jungle
+		state = 1031 #Roraima Jungle
+		state = 1032 #Mato Grosso Jungle
+		state = 1033 #Para Jungle
+		state = 1034 #Amapa Jungle
+		state = 1035 #Maranhao Jungle
+		state = 1036 #Bolivar Jungle
+		state = 1037 #East Guyana Jungle
+		state = 1038 #Suriname Jungle
+		state = 1039 #West Guyana Jungle
+		state = 1040 #Acre Jungle
+		state = 1079 #Mabaruma Jungle
+		state = 1086 #Changtang
+	}
+}
+
 is_actual_island_state = {
 	OR = {
 		is_island_state = yes
@@ -269,6 +294,13 @@ is_claim_or_core_of_ROOT = {
 	OR = {
 		is_claimed_by = ROOT
 		is_core_of = ROOT
+	}
+}
+
+is_claim_or_core_of_FROM = {
+	OR = {
+		is_claimed_by = FROM
+		is_core_of = FROM
 	}
 }
 
@@ -1349,7 +1381,7 @@ can_reach_state_direct = {
 			}
 		}
 		#then start this trigger over
-		can_reach_state = yes
+		can_reach_state_direct = yes
 	}
 	#otherwise check to see if FROM is in the array (meaning it can be reached by contiguous states)
 	else = {
@@ -1368,6 +1400,7 @@ is_willing_to_take_state_ROOT = {
 	rule_is_restricted_ROOT = no
 	rule_needs_connection_ROOT = no
 	rule_claims_needs_connection_ROOT = no
+	rule_look_for_direct_connection_ROOT = no
 	rule_dont_take_land_other_continents_ROOT = no
 	rule_dont_take_cheap_island_states_ROOT = no
 	rule_dont_take_impassable_states_ROOT = no
@@ -1395,6 +1428,10 @@ is_willing_to_take_state_ROOT = {
 	rule_let_KUR_take_cores_ROOT = no
 	rule_MON_split_up_ma_ROOT = no
 	rule_SQI_split_up_ma_ROOT = no
+	rule_SQI_split_up_LEP_ROOT = no
+	rule_ANQ_split_up_LEP_ROOT = no
+	rule_CHI_split_up_LEP_ROOT = no
+	rule_QIE_split_up_LEP_ROOT = no
 	rule_POR_stay_out_of_spain_ROOT = no
 	rule_leave_UKR_to_RUS_ROOT = no
 	rule_stay_out_of_western_russia_ROOT = no
@@ -1442,6 +1479,10 @@ is_willing_to_take_state_PREV = {
 	rule_let_KUR_take_cores_PREV = no
 	rule_MON_split_up_ma_PREV = no
 	rule_SQI_split_up_ma_PREV = no
+	rule_SQI_split_up_LEP_PREV = no
+	rule_ANQ_split_up_LEP_PREV = no
+	rule_CHI_split_up_LEP_PREV = no
+	rule_QIE_split_up_LEP_PREV = no
 	rule_POR_stay_out_of_spain_PREV = no
 	rule_leave_UKR_to_RUS_PREV = no
 	rule_stay_out_of_western_russia_PREV = no
@@ -1861,6 +1902,56 @@ rule_claims_needs_connection_ROOT = {
 	}
 }
 
+rule_look_for_direct_connection_ROOT = {
+	# don't take a state that isn't bordering or next to a claimed state
+	FROM = {
+		NOT = {
+			num_owned_neighbour_states = { count > 0 owner = ROOT }
+			num_claimed_peace_conference_neighbour_states = { count > 0 owner = ROOT }
+			# unless it's an important state, an island, or a coastal state in an island region (like Britain)
+			is_important_state = yes
+			AND = {
+				is_island_region = yes
+				is_coastal = yes
+			}
+		}
+	}
+	# when there's another country who can and will take that state through a direct connection
+	any_other_country = {
+		at_conference_has_war_with_owner = yes
+		OR = {
+			FROM = { is_claim_or_core_or_ambition_of_PREV = yes }
+			restrict_territorial_ambitions_PREV = no
+		}
+		is_willing_to_take_state_PREV = yes
+		can_reach_state_direct = yes
+	}
+	# exception: this is France, for NFA
+	NOT = {
+		AND = {
+			tag = NFA
+			FROM = {
+				is_coastal = yes
+				is_european_france = yes
+			}
+		}
+	}
+	# exception: this is GER, for many countries
+	NOT = {
+		AND = {
+			OR = {
+				tag = GBR
+				tag = ENG
+				tag = NFA
+				tag = CAN
+				tag = RUS
+				tag = SOV
+			}
+			FROM = { is_germany = yes }
+		}
+	}
+}
+
 rule_dont_take_land_other_continents_ROOT = {
 	same_continent_as_state_FROM = no
 	FROM = { is_claim_or_core_or_ambition_of_ROOT = no }
@@ -2033,84 +2124,95 @@ rule_dont_take_impassable_states_ROOT = {
 		}
 		# no neighboring state is owned or claimed
 		NOT = {
-			any_neighbor_state = { is_owned_or_claimed_by_ROOT = yes }
-		}
-		# check for specific impassable states that are "part" of another state
-		OR = {
-			NOT = { state = 514 } #Sahara
-			513 = { is_owned_or_claimed_by_ROOT = yes } #Southern Territories
-		}
-		OR = {
-			NOT = { state = 860 } #Malian Desert
-			556 = { is_owned_or_claimed_by_ROOT = yes } #French Sudan
-		}
-		OR = {
-			NOT = { state = 862 } #Sudanese Desert
-			551 = { is_owned_or_claimed_by_ROOT = yes } #Khartoum
-		}
-		OR = {
-			NOT = { state = 910 } #Niger Desert
-			809 = { is_owned_or_claimed_by_ROOT = yes } #Niger
-		}
-		OR = {
-			NOT = { state = 911 } #Borkou-Ennedi
-			515 = { is_owned_or_claimed_by_ROOT = yes } #Niger
-		}
-		OR = {
-			NOT = { state = 926 } #Humboldt Glacier
-			101 = { is_owned_or_claimed_by_ROOT = yes } #Coastal Greenland
-		}
-		OR = {
-			NOT = { state = 967 } #Mauritanian Desert
-			968 = { is_owned_or_claimed_by_ROOT = yes } #Adrar
-		}
-		OR = {
-			NOT = { state = 1030 } #Amazonas Jungle
-			495 = { is_owned_or_claimed_by_ROOT = yes } #Amazonas
-		}
-		OR = {
-			NOT = { state = 1031 } #Roraima Jungle
-			899 = { is_owned_or_claimed_by_ROOT = yes } #Roraima
-		}
-		OR = {
-			NOT = { state = 1032 } #Mato Grosso Jungle
-			280 = { is_owned_or_claimed_by_ROOT = yes } #Mato Grosso
-		}
-		OR = {
-			NOT = { state = 1033 } #Para Jungle
-			898 = { is_owned_or_claimed_by_ROOT = yes } #Para
-		}
-		OR = {
-			NOT = { state = 1034 } #Amapa Jungle
-			897 = { is_owned_or_claimed_by_ROOT = yes } #Amapa
-		}
-		OR = {
-			NOT = { state = 1036 } #Bolivar Jungle
-			912 = { is_owned_or_claimed_by_ROOT = yes } #Bolivar
-		}
-		OR = {
-			NOT = { state = 1037 } #East Guyana Jungle
-			310 = { is_owned_or_claimed_by_ROOT = yes } #East Guyana
-		}
-		OR = {
-			NOT = { state = 1038 } #Suriname Jungle
-			309 = { is_owned_or_claimed_by_ROOT = yes } #Suriname
-		}
-		OR = {
-			NOT = { state = 1039 } #West Guyana Jungle
-			687 = { is_owned_or_claimed_by_ROOT = yes } #West Guyana
-		}
-		OR = {
-			NOT = { state = 1040 } #Acre Jungle
-			855 = { is_owned_or_claimed_by_ROOT = yes } #Acre
-		}
-		OR = {
-			NOT = { state = 1079 } #Mabaruma Jungle
-			1078 = { is_owned_or_claimed_by_ROOT = yes } #Mabaruma
-		}
-		OR = {
-			NOT = { state = 1086 } #Changtang
-			322 = { is_owned_or_claimed_by_ROOT = yes } #Tibet
+			any_neighbor_state = {
+				is_owned_or_claimed_by_ROOT = yes
+				# check for impassable states which must be paired with a regular state
+				OR = {
+					AND = {
+						state = 1086 #Changtang
+						PREV = { state = 322 } #Tibet
+					}
+					AND = {
+						state = 1078 #Mabaruma
+						PREV = { state = 1079 } #Mabaruma Jungle
+					}
+					AND = {
+						state = 855 #Acre
+						PREV = { state = 1040 } #Acre Jungle
+					}
+					AND = {
+						state = 687 #West Guyana
+						PREV = { state = 1039 } #West Guyana Jungle
+					}
+					AND = {
+						state = 309 #Suriname
+						PREV = { state = 1038 } #Suriname Jungle
+					}
+					AND = {
+						state = 310 #East Guyana
+						PREV = { state = 1037 } #East Guyana Jungle
+					}
+					AND = {
+						state = 912 #Bolivar
+						PREV = { state = 1036 } #Bolivar Jungle
+					}
+					AND = {
+						state = 896 #Maranhao
+						PREV = { state = 1035 } #Maranhao Jungle
+					}
+					AND = {
+						state = 897 #Amapa
+						PREV = { state = 1034 } #Amapa Jungle
+					}
+					AND = {
+						state = 898 #Para
+						PREV = { state = 1033 } #Para Jungle
+					}
+					AND = {
+						state = 280 #Mato Grosso
+						PREV = { state = 1032 } #Mato Grosso Jungle
+					}
+					AND = {
+						state = 899 #Roraima
+						PREV = { state = 1031 } #Roraima Jungle
+					}
+					AND = {
+						state = 495 #Amazonas
+						PREV = { state = 1030 } #Amazonas Jungle
+					}
+					AND = {
+						state = 968 #Adrar
+						PREV = { state = 967 } #Mauritanian Desert
+					}
+					AND = {
+						state = 101 #Coastal Greenland
+						PREV = { state = 926 } #Humboldt Glacier
+					}
+					AND = {
+						state = 515 #Chad
+						PREV = { state = 911 } #Borkou-Ennedi
+					}
+					AND = {
+						state = 809 #Niger
+						PREV = { state = 910 } #Niger Desert
+					}
+					AND = {
+						state = 551 #Khartoum
+						PREV = { state = 862 } #Sudanese Desert
+					}
+					AND = {
+						state = 556 #French Sudan
+						PREV = { state = 860 } #Malian Desert
+					}
+					AND = {
+						state = 513 #Southern Territories
+						PREV = { state = 514 } #Sahara
+					}
+					PREV = {
+						is_paired_impassable_state = no
+					}
+				}
+			}
 		}
 	}
 }
@@ -2133,84 +2235,95 @@ rule_dont_take_impassable_states_PREV = {
 		}
 		# no neighboring state is owned or claimed
 		NOT = {
-			any_neighbor_state = { is_owned_or_claimed_by_PREVPREV = yes }
-		}
-		# check for specific impassable states that are "part" of another state
-		OR = {
-			NOT = { state = 514 } #Sahara
-			513 = { is_owned_or_claimed_by_PREVPREV = yes } #Southern Territories
-		}
-		OR = {
-			NOT = { state = 860 } #Malian Desert
-			556 = { is_owned_or_claimed_by_PREVPREV = yes } #French Sudan
-		}
-		OR = {
-			NOT = { state = 862 } #Sudanese Desert
-			551 = { is_owned_or_claimed_by_PREVPREV = yes } #Khartoum
-		}
-		OR = {
-			NOT = { state = 910 } #Niger Desert
-			809 = { is_owned_or_claimed_by_PREVPREV = yes } #Niger
-		}
-		OR = {
-			NOT = { state = 911 } #Borkou-Ennedi
-			515 = { is_owned_or_claimed_by_PREVPREV = yes } #Niger
-		}
-		OR = {
-			NOT = { state = 926 } #Humboldt Glacier
-			101 = { is_owned_or_claimed_by_PREVPREV = yes } #Coastal Greenland
-		}
-		OR = {
-			NOT = { state = 967 } #Mauritanian Desert
-			968 = { is_owned_or_claimed_by_PREVPREV = yes } #Adrar
-		}
-		OR = {
-			NOT = { state = 1030 } #Amazonas Jungle
-			495 = { is_owned_or_claimed_by_PREVPREV = yes } #Amazonas
-		}
-		OR = {
-			NOT = { state = 1031 } #Roraima Jungle
-			899 = { is_owned_or_claimed_by_PREVPREV = yes } #Roraima
-		}
-		OR = {
-			NOT = { state = 1032 } #Mato Grosso Jungle
-			280 = { is_owned_or_claimed_by_PREVPREV = yes } #Mato Grosso
-		}
-		OR = {
-			NOT = { state = 1033 } #Para Jungle
-			898 = { is_owned_or_claimed_by_PREVPREV = yes } #Para
-		}
-		OR = {
-			NOT = { state = 1034 } #Amapa Jungle
-			897 = { is_owned_or_claimed_by_PREVPREV = yes } #Amapa
-		}
-		OR = {
-			NOT = { state = 1036 } #Bolivar Jungle
-			912 = { is_owned_or_claimed_by_PREVPREV = yes } #Bolivar
-		}
-		OR = {
-			NOT = { state = 1037 } #East Guyana Jungle
-			310 = { is_owned_or_claimed_by_PREVPREV = yes } #East Guyana
-		}
-		OR = {
-			NOT = { state = 1038 } #Suriname Jungle
-			309 = { is_owned_or_claimed_by_PREVPREV = yes } #Suriname
-		}
-		OR = {
-			NOT = { state = 1039 } #West Guyana Jungle
-			687 = { is_owned_or_claimed_by_PREVPREV = yes } #West Guyana
-		}
-		OR = {
-			NOT = { state = 1040 } #Acre Jungle
-			855 = { is_owned_or_claimed_by_PREVPREV = yes } #Acre
-		}
-		OR = {
-			NOT = { state = 1079 } #Mabaruma Jungle
-			1078 = { is_owned_or_claimed_by_PREVPREV = yes } #Mabaruma
-		}
-		OR = {
-			NOT = { state = 1086 } #Changtang
-			322 = { is_owned_or_claimed_by_PREVPREV = yes } #Tibet
+			any_neighbor_state = {
+				is_owned_or_claimed_by_PREVPREV = yes
+				# check for impassable states which must be paired with a regular state
+				OR = {
+					AND = {
+						state = 1086 #Changtang
+						PREV = { state = 322 } #Tibet
+					}
+					AND = {
+						state = 1078 #Mabaruma
+						PREV = { state = 1079 } #Mabaruma Jungle
+					}
+					AND = {
+						state = 855 #Acre
+						PREV = { state = 1040 } #Acre Jungle
+					}
+					AND = {
+						state = 687 #West Guyana
+						PREV = { state = 1039 } #West Guyana Jungle
+					}
+					AND = {
+						state = 309 #Suriname
+						PREV = { state = 1038 } #Suriname Jungle
+					}
+					AND = {
+						state = 310 #East Guyana
+						PREV = { state = 1037 } #East Guyana Jungle
+					}
+					AND = {
+						state = 912 #Bolivar
+						PREV = { state = 1036 } #Bolivar Jungle
+					}
+					AND = {
+						state = 896 #Maranhao
+						PREV = { state = 1035 } #Maranhao Jungle
+					}
+					AND = {
+						state = 897 #Amapa
+						PREV = { state = 1034 } #Amapa Jungle
+					}
+					AND = {
+						state = 898 #Para
+						PREV = { state = 1033 } #Para Jungle
+					}
+					AND = {
+						state = 280 #Mato Grosso
+						PREV = { state = 1032 } #Mato Grosso Jungle
+					}
+					AND = {
+						state = 899 #Roraima
+						PREV = { state = 1031 } #Roraima Jungle
+					}
+					AND = {
+						state = 495 #Amazonas
+						PREV = { state = 1030 } #Amazonas Jungle
+					}
+					AND = {
+						state = 968 #Adrar
+						PREV = { state = 967 } #Mauritanian Desert
+					}
+					AND = {
+						state = 101 #Coastal Greenland
+						PREV = { state = 926 } #Humboldt Glacier
+					}
+					AND = {
+						state = 515 #Chad
+						PREV = { state = 911 } #Borkou-Ennedi
+					}
+					AND = {
+						state = 809 #Niger
+						PREV = { state = 910 } #Niger Desert
+					}
+					AND = {
+						state = 551 #Khartoum
+						PREV = { state = 862 } #Sudanese Desert
+					}
+					AND = {
+						state = 556 #French Sudan
+						PREV = { state = 860 } #Malian Desert
+					}
+					AND = {
+						state = 513 #Southern Territories
+						PREV = { state = 514 } #Sahara
+					}
+					PREV = {
+						is_paired_impassable_state = no
+					}
+				}
+			}
 		}
 	}
 }
@@ -3070,6 +3183,156 @@ rule_SQI_split_up_ma_PREV = {
 	FROM = {
 		is_owned_by = XSM
 		NOT = { region = 220 } #Xibei
+	}
+}
+
+rule_SQI_split_up_LEP_ROOT = {
+	OR = {
+		tag = ANQ
+		tag = CHI
+		tag = QIE
+	}
+	SQI = { at_conference_no_war_with_ROOT = yes }
+	FROM = {
+		is_owned_by = LEP
+		OR = {
+			state = 1047 #Xuzhou
+			state = 598 #Yangzhou
+		}
+	}
+}
+
+rule_SQI_split_up_LEP_PREV = {
+	OR = {
+		tag = ANQ
+		tag = CHI
+		tag = QIE
+	}
+	SQI = { at_conference_no_war_with_PREV = yes }
+	FROM = {
+		is_owned_by = LEP
+		OR = {
+			state = 1047 #Xuzhou
+			state = 598 #Yangzhou
+		}
+	}
+}
+
+rule_ANQ_split_up_LEP_ROOT = {
+	OR = {
+		tag = SQI
+		tag = CHI
+		tag = QIE
+	}
+	ANQ = { at_conference_no_war_with_ROOT = yes }
+	FROM = {
+		is_owned_by = LEP
+		OR = {
+			state = 613 #Nanjing
+			state = 596 #Qiantang
+			state = 1067 #Jinhua
+			state = 1068 #Kuaiji
+			AND = {
+				state = 1044 #Gandongbei
+				ROOT = { NOT = { tag = QIE } }
+			}
+		}
+	}
+}
+
+rule_ANQ_split_up_LEP_PREV = {
+	OR = {
+		tag = SQI
+		tag = CHI
+		tag = QIE
+	}
+	ANQ = { at_conference_no_war_with_PREV = yes }
+	FROM = {
+		is_owned_by = LEP
+		OR = {
+			state = 613 #Nanjing
+			state = 596 #Qiantang
+			state = 1067 #Jinhua
+			state = 1068 #Kuaiji
+			AND = {
+				state = 1044 #Gandongbei
+				PREV = { NOT = { tag = QIE } }
+			}
+		}
+	}
+}
+
+rule_CHI_split_up_LEP_ROOT = {
+	OR = {
+		tag = SQI
+		tag = ANQ
+		tag = QIE
+	}
+	CHI = { at_conference_no_war_with_ROOT = yes }
+	FROM = {
+		is_owned_by = LEP
+		OR = {
+			state = 1069 #Lishui
+			state = 1066 #Minhou
+			state = 595 #Jianan
+			state = 600 #Gannan
+		}
+	}
+}
+
+rule_CHI_split_up_LEP_PREV = {
+	OR = {
+		tag = SQI
+		tag = ANQ
+		tag = QIE
+	}
+	CHI = { at_conference_no_war_with_PREV = yes }
+	FROM = {
+		is_owned_by = LEP
+		OR = {
+			state = 1069 #Lishui
+			state = 1066 #Minhou
+			state = 595 #Jianan
+			state = 600 #Gannan
+		}
+	}
+}
+
+rule_QIE_split_up_LEP_ROOT = {
+	OR = {
+		tag = SQI
+		tag = ANQ
+		tag = CHI
+	}
+	QIE = { at_conference_no_war_with_ROOT = yes }
+	FROM = {
+		is_owned_by = LEP
+		OR = {
+			state = 1045 #Ganxibei
+			AND = {
+				state = 1044 #Gandongbei
+				ROOT = { NOT = { tag = ANQ } }
+			}
+		}
+	}
+}
+
+rule_QIE_split_up_LEP_PREV = {
+	OR = {
+		tag = SQI
+		tag = ANQ
+		tag = CHI
+	}
+	QIE = { at_conference_no_war_with_PREV = yes }
+	FROM = {
+		is_owned_by = LEP
+		OR = {
+			state = 1045 #Ganxibei
+			AND = {
+				state = 1044 #Gandongbei
+				PREV = { NOT = { tag = ANQ } }
+			}
+		}
 	}
 }
 

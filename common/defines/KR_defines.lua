@@ -107,3 +107,5 @@ NDefines.NProduction.EQUIPMENT_MODULE_CONVERT_XP_COST = 1.5					-- Vanilla is 2
 -- XP cost for converting one equipment module to a related module when creating an equipment variant.
 NDefines.NProduction.EQUIPMENT_MODULE_REMOVE_XP_COST = 0.5					-- Vanilla is 1		
 -- XP cost for removing an equipment module and leaving the slot empty when creating an equipment variant.
+
+NDefines.NGraphics.POLITICAL_GRID_SMALL_BOX_LIMIT = 12              	-- Limit for gridbox in political view before it will be replaced with extended gridbox
