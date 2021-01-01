@@ -40,8 +40,6 @@ replace_path = "map/supplyareas"
 replace_path = "gfx/loadingscreens"
 replace_path = "gfx/flags"
 
-replace_path = "music"
-
 tags = {
 	"Alternative History"
 	"Events"
