@@ -1,6 +1,6 @@
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This is alpha version 0.9.2.
-This version is compatible with 1.6.2, it may work with later hot fixes, but it is not guaranteed.
+This is alpha version 0.9.3.
+This version is compatible with 1.7.0, it may work with later hot fixes, but it is not guaranteed.
 
 Manual Installation Instructions
 1) Download the mod
@@ -23,6 +23,6 @@ http://kaiserreich.wikia.com/wiki/KR4_Changelog
 Progress reports:
 http://kaiserreich.wikia.com/wiki/Progress_Reports
 
-Please note the only places who have permission to share Kaiserreich are the steam workshop (http://steamcommunity.com/sharedfiles/filedetails/?id=1521695605) and the paradox forums (https://forum.paradoxplaza.com/forum/index.php?threads/kaiserreich-info-download.996902/), if you acquired this from any other source please bring it to the attention of the team.
+Please note the only legitimate places to get Kaiserreich from are the steam workshop (http://steamcommunity.com/sharedfiles/filedetails/?id=1521695605) and the paradox forums (https://forum.paradoxplaza.com/forum/index.php?threads/kaiserreich-info-download.996902/), if you acquired this from any other source please bring it to the attention of the team.
 
 - The KR4 Team, team list found in the credits
