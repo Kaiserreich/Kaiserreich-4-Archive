@@ -361,7 +361,6 @@ default_peace = {
 			}
 		}
 
-
 		### RESTRICTIONS
 
 		# puppets can only take cores/claims
@@ -397,18 +396,25 @@ default_peace = {
 					is_subject_of = JAP
 				}
 			}
+			# exception: Burma if a BHC puppet
+			NOT = {
+				AND = {
+					tag = BUR
+					is_subject_of = BHC
+				}
+			}
 		}
 
-		# majors do not take land if an ally at the conference has cores/claims and they don't
+		# does not take land if an ally at the conference has cores/claims and they don't
 		modifier = {
 			factor = 0
-			is_actual_major = yes
 			FROM = { is_not_claim_or_core_of_ROOT = yes }
 			any_other_country = {
 				at_conference_no_war_with_ROOT = yes
 				OR = {
 					is_in_faction_with = ROOT
 					is_subject_of = ROOT
+					ROOT = { is_subject_of = PREV }
 				}
 				FROM = {
 					is_claim_or_core_of_PREV = yes
@@ -445,7 +451,7 @@ default_peace = {
 			}
 		}
 
-		# minors cannot take cores/claims of other countries at the peace conference unless it's also a core/claim of their own
+		# minors cannot take cores/claims of other countries at the peace conference we like unless it's also a core/claim of their own
 		modifier = {
 			factor = 0
 			NOT = { is_actual_major = yes }
@@ -453,8 +459,9 @@ default_peace = {
 			any_other_country = {
 				at_conference_no_war_with_ROOT = yes
 				FROM = { is_claim_or_core_of_PREV = yes }
+				ROOT = { has_opinion = { target = PREV value > 50 } }
 			}
-
+			
 			# exception: Mongolia
 			NOT = { tag = MON }
 		}
@@ -494,19 +501,7 @@ default_peace = {
 							OR = {
 								region = 33 #Alaska
 								state = 685 #Panama Canal
-								region = 186 #Northeast
-								region = 120 #Midwest
-								region = 117 #Southeast
-								region = 119 #Southwest
-								region = 118 #West Coast
-								region = 185 #Northwest
-								region = 226 #Mid-Atlantic
-								region = 227 #Deep South
-								region = 228 #Great Plains
-								region = 229 #Texas
-								region = 230 #Great Lakes
-								region = 231 #Steel Belt
-								region = 233 #Appalachia
+								is_mainland_america = yes
 							}
 						}
 						OR = {
@@ -637,6 +632,15 @@ default_peace = {
 				}
 				# exceptions: look for states the other country won't take, even if they can
 				is_willing_to_take_state = yes
+				
+				# exception: this is Italy, for any Italian nation
+				NOT = {
+					AND = {
+						is_italian_tag = yes
+						ROOT = { is_italian_tag = yes }
+						FROM = { is_european_italy = yes }
+					}
+				}
 			}
 		}
 
@@ -680,11 +684,8 @@ default_peace = {
 						tag = GER
 					}
 					FROM = {
-						OR = {
-							region = 1 #Southern England
-							region = 2 #Northern England
-							region = 3 #Scotland
-						}
+						is_coastal = yes
+						is_british_isles = yes
 					}
 				}
 			}
@@ -694,11 +695,8 @@ default_peace = {
 				AND = {
 					tag = NFA
 					FROM = {
-						OR = {
-							region = 19 #Northern France
-							region = 20 #Southern France
-							state = 29 #Flandre Maritime
-						}
+						is_coastal = yes
+						is_european_france = yes
 					}
 				}
 			}
@@ -793,16 +791,21 @@ default_peace = {
 
 		# Germany prioritizes taking France
 		modifier = {
-			factor = 50
+			factor = 10
 			tag = GER
 			is_faction_leader = yes
 			FROM = {
 				OR = {
 					region = 19 #Northern France
-					region = 20 #Southern France
-					state = 29 #Flandre-Maritime
+					state = 29 #Flandre Maritime
 				}
 			}
+		}
+		modifier = {
+			factor = 5
+			tag = GER
+			is_faction_leader = yes
+			FROM = { region = 20 } #Southern France
 		}
 		modifier = {
 			factor = 0
@@ -811,24 +814,28 @@ default_peace = {
 			is_in_faction_with = GER
 			FROM = {
 				is_not_claim_or_core_of_ROOT = yes
-				OR = {
-					region = 19 #Northern France
-					region = 20 #Southern France
-					state = 29 #Flandre-Maritime
-				}
+				is_european_france = yes
 			}
 		}
 
 		# National France prioritizes taking France
+		modifier = {
+			factor = 10
+			tag = NFA
+			FROM = {
+				OR = {
+					region = 20 #Southern France
+					state = 943 #Haute-Savoie
+				}
+			}
+		}
 		modifier = {
 			factor = 5
 			tag = NFA
 			FROM = {
 				OR = {
 					region = 19 #Northern France
-					region = 20 #Southern France
-					state = 29 #Flandre-Maritime
-					state = 943 #Haute-Savoie
+					state = 29 #Flandre Maritime
 					state = 779 #Nancy
 					state = 28 #Alsace-Lorraine
 				}
@@ -841,9 +848,7 @@ default_peace = {
 			FROM = {
 				is_not_claim_or_core_of_ROOT = yes
 				OR = {
-					region = 19 #Northern France
-					region = 20 #Southern France
-					state = 29 #Flandre-Maritime
+					is_european_france = yes
 					state = 943 #Haute-Savoie
 					state = 779 #Nancy
 					state = 28 #Alsace-Lorraine
@@ -851,7 +856,9 @@ default_peace = {
 			}
 		}
 
-		# National France and Germany will split up France if they're in the conference together
+		### National France and Germany will split up France if they're in the conference together
+		
+		# Germany won't take states in southern France unless they control it or neither they nor NFA's faction does
 		modifier = {
 			factor = 0
 			tag = GER
@@ -870,9 +877,57 @@ default_peace = {
 						is_controlled_by_ROOT_or_ally = yes
 						any_neighbor_state = { is_owned_or_claimed_by_ROOT = yes }
 					}
+					AND = {
+						NOT = { is_controlled_by_ROOT_or_ally = yes }
+						NOT = { controller = { is_in_faction_with = NFA } }
+						any_neighbor_state = { is_owned_or_claimed_by_ROOT = yes }
+					}
 				}
 			}
 		}
+		# Germany won't take disconnected states in France if another connected state is available
+		modifier = {
+			factor = 0
+			tag = GER
+			NFA = {
+				at_conference_no_war_with_ROOT = yes
+				NOT = { is_in_faction_with = ROOT }
+			}
+			FROM = {
+				is_owned_by = FRA
+				is_core_of = FRA
+				NOT = {
+					any_neighbor_state = { is_owned_or_claimed_by_ROOT = yes }
+				}
+			}
+			FRA = {
+				at_conference_has_war_with_ROOT = yes
+				any_owned_state = {
+					any_neighbor_state = { is_owned_or_claimed_by_ROOT = yes }
+					NOT = {
+						state = FROM
+						any_country = {
+							is_in_peace_conference = yes
+							PREV = { has_claimed_state_in_peace_conference = PREV }
+						}
+					}
+					OR = {
+						region = 19 #Northern France
+						state = 29 #Flandre Maritime
+						AND = {
+							region = 20 #Southern France
+							is_controlled_by_ROOT_or_ally = yes
+						}
+						AND = {
+							region = 20 #Southern France
+							NOT = { is_controlled_by_ROOT_or_ally = yes }
+							NOT = { controller = { is_in_faction_with = NFA } }
+						}
+					}
+				}
+			}
+		}
+		# National France won't take states in Northern France unless they control it or neither they nor Germany's faction does
 		modifier = {
 			factor = 0
 			tag = NFA
@@ -906,6 +961,58 @@ default_peace = {
 							}
 						}
 					}
+					AND = {
+						NOT = { is_controlled_by_ROOT_or_ally = yes }
+						NOT = { controller = { is_in_faction_with = GER } }
+						any_neighbor_state = { is_owned_or_claimed_by_ROOT = yes }
+					}
+				}
+			}
+		}
+		# National France won't take disconnected states in France if another connected state is available
+		modifier = {
+			factor = 0
+			tag = NFA
+			GER = {
+				at_conference_no_war_with_ROOT = yes
+				NOT = { is_in_faction_with = ROOT }
+			}
+			FROM = {
+				is_owned_by = FRA
+				is_core_of = FRA
+				NOT = {
+					any_neighbor_state = { is_owned_or_claimed_by_ROOT = yes }
+				}
+			}
+			FRA = {
+				at_conference_has_war_with_ROOT = yes
+				any_owned_state = {
+					any_neighbor_state = { is_owned_or_claimed_by_ROOT = yes }
+					NOT = {
+						state = FROM
+						any_country = {
+							is_in_peace_conference = yes
+							PREV = { has_claimed_state_in_peace_conference = PREV }
+						}
+					}
+					OR = {
+						region = 20 #Southern France
+						AND = {
+							OR = {
+								region = 19 #Northern France
+								state = 29 #Flandre Maritime
+							}
+							is_controlled_by_ROOT_or_ally = yes
+						}
+						AND = {
+							OR = {
+								region = 19 #Northern France
+								state = 29 #Flandre Maritime
+							}
+							NOT = { is_controlled_by_ROOT_or_ally = yes }
+							NOT = { controller = { is_in_faction_with = GER } }
+						}
+					}
 				}
 			}
 		}
@@ -937,11 +1044,7 @@ default_peace = {
 			FROM = {
 				is_owned_by = FRA
 				is_not_claim_or_core_of_ROOT = yes
-				OR = {
-					region = 19 #Northern France
-					region = 20 #Southern France
-					state = 29 #Flandre Maritime
-				}
+				is_european_france = yes
 			}
 			NOT = { ambition_area = yes }
 		}
@@ -951,13 +1054,7 @@ default_peace = {
 			factor = 5
 			tag = CAN
 			is_faction_leader = yes
-			FROM = {
-				OR = {
-					region = 1 #Southern England
-					region = 2 #Northern England
-					region = 3 #Scotland
-				}
-			}
+			FROM = { is_british_isles = yes }
 		}
 		modifier = {
 			factor = 0
@@ -965,11 +1062,7 @@ default_peace = {
 			is_in_faction_with = CAN
 			FROM = {
 				is_not_claim_or_core_of_ROOT = yes
-				OR = {
-					region = 1 #Southern England
-					region = 2 #Northern England
-					region = 3 #Scotland
-				}
+				is_british_isles = yes
 			}
 		}
 
@@ -995,11 +1088,7 @@ default_peace = {
 			FROM = {
 				is_core_of = ENG
 				is_not_claim_or_core_of_ROOT = yes
-				OR = {
-					region = 1 #Southern England
-					region = 2 #Northern England
-					region = 3 #Scotland
-				}
+				is_british_isles = yes
 			}
 			NOT = { ambition_area = yes }
 		}
@@ -1312,21 +1401,7 @@ default_peace = {
 				USA = { at_conference_has_war_with_ROOT = yes }
 			}
 			FROM = {
-				OR = {
-					region = 186 #Northeast
-					region = 120 #Midwest
-					region = 117 #Southeast
-					region = 119 #Southwest
-					region = 118 #West Coast
-					region = 185 #Northwest
-					region = 226 #Mid-Atlantic
-					region = 227 #Deep South
-					region = 228 #Great Plains
-					region = 229 #Texas
-					region = 230 #Great Lakes
-					region = 231 #Steel Belt
-					region = 233 #Appalachia
-				}
+				is_mainland_america = yes
 				owner_is_neighbor_of_ROOT = yes
 				NOT = {
 					num_owned_neighbour_states = { count > 0 owner = ROOT }
@@ -1345,21 +1420,7 @@ default_peace = {
 				USA = { at_conference_no_war_with_ROOT = yes }
 			}
 			FROM = {
-				OR = {
-					region = 186 #Northeast
-					region = 120 #Midwest
-					region = 117 #Southeast
-					region = 119 #Southwest
-					region = 118 #West Coast
-					region = 185 #Northwest
-					region = 226 #Mid-Atlantic
-					region = 227 #Deep South
-					region = 228 #Great Plains
-					region = 229 #Texas
-					region = 230 #Great Lakes
-					region = 231 #Steel Belt
-					region = 233 #Appalachia
-				}
+				is_mainland_america = yes
 				owner = { is_neighbor_of = ROOT }
 				NOT = {
 					num_owned_neighbour_states = { count > 0 owner = ROOT }
@@ -1373,21 +1434,7 @@ default_peace = {
 			tag = CAN
 			FROM = {
 				owner_is_neighbor_of_ROOT = yes
-				OR = {
-					region = 186 #Northeast
-					region = 120 #Midwest
-					region = 117 #Southeast
-					region = 119 #Southwest
-					region = 118 #West Coast
-					region = 185 #Northwest
-					region = 226 #Mid-Atlantic
-					region = 227 #Deep South
-					region = 228 #Great Plains
-					region = 229 #Texas
-					region = 230 #Great Lakes
-					region = 231 #Steel Belt
-					region = 233 #Appalachia
-				}
+				is_mainland_america = yes
 				NOT = {
 					num_owned_neighbour_states = { count > 0 owner = ROOT }
 					num_claimed_peace_conference_neighbour_states = { count > 0 owner = ROOT }
@@ -1663,10 +1710,7 @@ default_peace = {
 			factor = 0
 			tag = BHC
 			SIA = { at_conference_has_war_with_ROOT = yes }
-			BUR = {
-				at_conference_no_war_with_ROOT = yes
-				is_subject = no
-			}
+			BUR = { at_conference_no_war_with_ROOT = yes }
 			FROM = {
 				is_core_of = SIA
 				NOT = {

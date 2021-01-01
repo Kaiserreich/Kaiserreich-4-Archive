@@ -165,7 +165,6 @@ country_event = {# Influence the Italian election?
 		name = ita.8.b
 		add_political_power = -50
 		ITA = { country_event = { id = ita.10 days = 10 } }
-
 	}
 	option = {# Support the Social Conservatives
 		name = ita.8.c
@@ -191,7 +190,6 @@ country_event = {# Austria supports Social Liberals
 		add_popularity = { ideology = national_populist popularity = 0.05 }
 		add_popularity = { ideology = social_liberal popularity = 0.1 }
 		hidden_effect = { set_country_flag = ITA_austria_supports_soc_lib }
-
 	}
 }
 country_event = {# Austria supports Market Liberals
@@ -404,7 +402,6 @@ country_event = {# Austrian Frendiship
 		}
 		add_political_power = 50
 		hidden_effect = { ITA = { country_event = { id = ita.14 days = 3 }}}
-
 	}
 	option = {
 		name = ita.13.b
@@ -940,6 +937,10 @@ country_event = {# Joining the Austrian Alliance
 
 	trigger = {
 		tag = ITA
+		OR = {
+			is_subject_of = AUS
+			is_subject = no
+		}
 		AUS = { has_completed_focus = AUS_protector_of_the_balkans }
 		not = { has_government = national_populist }
 	}
@@ -948,7 +949,7 @@ country_event = {# Joining the Austrian Alliance
 
 	option = {# We shall join.
 		name = ita.26.a
-		AUS = { add_to_faction = ITA}
+		AUS = { add_to_faction = ITA }
 	}
 }
 country_event = {# leaving the Austrian alliance
@@ -1195,7 +1196,6 @@ country_event = {# War with Venice
 	option = {# Venice is ours!
 		name = ita.58.a
 		declare_war_on = { target = VNC type = annex_everything	}
-
 	}
 }
 country_event = {# Imperial Italia
@@ -1532,7 +1532,6 @@ country_event = {# Venetian Admirals join the Revolt
 			}
 		}
 	}
-
 }
 ### Reunification and united Italy ###
 country_event = {# The Venetian Concord
@@ -1546,10 +1545,23 @@ country_event = {# The Venetian Concord
 
 	option = {# Go to Venice
 		name = ita.70.a
+		ai_chance = {
+			factor = 95
+		}
 		hidden_effect = { ITA = {country_event = { id = ita.71 days = 5 }}}
 	}
 	option = {# refuse the invitation
 		name = ita.70.b
+		ai_chance = {
+			factor = 5
+			modifier = {
+				factor = 0
+				OR = {
+					is_in_faction_with = ITA
+					is_subject_of = ITA
+				}
+			}
+		}
 		hidden_effect = { ITA = {country_event = { id = ita.72 days = 5 }}}
 	}
 }
@@ -1578,7 +1590,75 @@ country_event = {# The Pope does not attend
 
 	option = {# then we shall take Rome by force!
 		name = ita.72.a
+		trigger = { PAP = { is_valid_war_target = yes } }
+		ai_chance = {
+			factor = 70
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+			modifier = {
+				factor = 0
+				NOT = {
+					is_neighbor_of = PAP
+					has_equipment = { convoy > 100 }
+				}
+			}
+			modifier = {
+				factor = 0
+				NOT = {
+					# neither of us is in a faction and I'm stronger
+					AND = {
+						PAP = { is_in_faction = no }
+						is_in_faction = no
+						strength_ratio = { tag = PAP ratio > 1.0 }
+					}
+					# I'm in a faction but they're not
+					AND = {
+						PAP = { is_in_faction = no }
+						is_in_faction = yes
+						strength_ratio = { tag = PAP ratio > 0.75 }
+						any_allied_country = {
+							is_faction_leader = yes
+							strength_ratio = { tag = PAP ratio > 1.0 }
+						}
+					}
+					# I'm not in a faction but theirs is losing
+					AND = {
+						is_in_faction = no
+						PAP = {
+							is_in_faction = yes
+							any_allied_country = {
+								is_faction_leader = yes
+								surrender_progress > 0.30
+							}
+						}
+						strength_ratio = { tag = PAP ratio > 1.5 }
+					}
+					# I'm not in a faction and theirs is losing
+					AND = {
+						is_in_faction = yes
+						PAP = {
+							is_in_faction = yes
+							any_allied_country = {
+								is_faction_leader = yes
+								surrender_progress > 0.20
+							}
+						}
+						strength_ratio = { tag = PAP ratio > 1.5 }
+					}
+				}
+			}
+		}
 		declare_war_on = { target = PAP type = annex_everything }
+	}
+	option = {
+		name = 1ta.72.b
+		ai_chance = {
+			factor = 30
+		}
+		add_political_power = -50
+		add_opinion_modifier = { target = PAP modifier = ITA_outraged }
 	}
 }
 country_event = {# The Republic has presented their proposal
@@ -1592,11 +1672,24 @@ country_event = {# The Republic has presented their proposal
 
 	option = {# sign the treaty(game over)
 		name = ita.73.a
+		ai_chance = {
+			factor = 70
+		}
 		hidden_effect = { ITA = {country_event = { id = ita.74 days = 2 }}}
 		add_political_power = -150
 	}
 	option = {# Don't sign the treaty
 		name = ita.73.b
+		ai_chance = {
+			factor = 30
+			modifier = {
+				factor = 0
+				OR = {
+					is_in_faction_with = ITA
+					is_subject_of = ITA
+				}
+			}
+		}
 		hidden_effect = { PAP = {country_event = { id = ita.75 days = 2 }}}
 	}
 }
@@ -1609,7 +1702,7 @@ country_event = {# The Pope agrees to the Terms
 
 	is_triggered_only = yes
 
-	option = {# then we shall take Rome by force!
+	option = {
 		name = ita.74.a
 		annex_country = { target = PAP transfer_troops = no }
 	}
@@ -1625,7 +1718,75 @@ country_event = {# The Pope does not agree to the Terms
 
 	option = {# then we shall take Rome by force!
 		name = ita.75.a
+		trigger = { PAP = { is_valid_war_target = yes } }
+		ai_chance = {
+			factor = 70
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+			modifier = {
+				factor = 0
+				NOT = {
+					is_neighbor_of = PAP
+					has_equipment = { convoy > 100 }
+				}
+			}
+			modifier = {
+				factor = 0
+				NOT = {
+					# neither of us is in a faction and I'm stronger
+					AND = {
+						PAP = { is_in_faction = no }
+						is_in_faction = no
+						strength_ratio = { tag = PAP ratio > 1.0 }
+					}
+					# I'm in a faction but they're not
+					AND = {
+						PAP = { is_in_faction = no }
+						is_in_faction = yes
+						strength_ratio = { tag = PAP ratio > 0.75 }
+						any_allied_country = {
+							is_faction_leader = yes
+							strength_ratio = { tag = PAP ratio > 1.0 }
+						}
+					}
+					# I'm not in a faction but theirs is losing
+					AND = {
+						is_in_faction = no
+						PAP = {
+							is_in_faction = yes
+							any_allied_country = {
+								is_faction_leader = yes
+								surrender_progress > 0.30
+							}
+						}
+						strength_ratio = { tag = PAP ratio > 1.5 }
+					}
+					# I'm not in a faction and theirs is losing
+					AND = {
+						is_in_faction = yes
+						PAP = {
+							is_in_faction = yes
+							any_allied_country = {
+								is_faction_leader = yes
+								surrender_progress > 0.20
+							}
+						}
+						strength_ratio = { tag = PAP ratio > 1.5 }
+					}
+				}
+			}
+		}
 		declare_war_on = { target = PAP type = annex_everything }
+	}
+	option = {
+		name = ita.75.b
+		ai_chance = {
+			factor = 30
+		}
+		add_political_power = -50
+		add_opinion_modifier = { target = PAP modifier = ITA_outraged }
 	}
 }
 country_event = {# The Popal states is annexed by the RoI(Two Sicilies Response)
@@ -1639,6 +1800,10 @@ country_event = {# The Popal states is annexed by the RoI(Two Sicilies Response)
 
 	option = {# Attack the Republic
 		name = ita.76.a
+		trigger = {
+			is_subject = no
+			ITA = { is_valid_war_target = yes }
+		}
 		declare_war_on = { target = ITA type = annex_everything }
 		hidden_effect = {
 			load_oob = SIC_sicilian_garrision
@@ -1709,7 +1874,6 @@ country_event = {# Restore the Kingdom of Italy?
 			AND = {
 				not = {	ITA = {has_government = national_populist } }
 				not = { country_exists = SRI }
-
 			}
 			AND = {
 				ITA = { is_subject_of = AUS }
@@ -1732,7 +1896,6 @@ country_event = {# Restore the Kingdom of Italy?
 			factor = 70
 		}
 		ITA = { country_event = { id = ita.82 days = 3 } }
-
 	}
 	option = {# No, Don't restore it!
 		name = ita.81.b
@@ -1822,7 +1985,6 @@ country_event = {# Austria wishes to create the Kingdom of Italy
 		name = ita.82.b
 		trigger = { NOT = { ITA = { is_subject_of = AUS } } }
 		AUS = { country_event = { id = ita.84 days = 3 } }
-
 	}
 }
 country_event = {# Italy accepts our Ultimatium
@@ -2519,7 +2681,6 @@ country_event = {# Gabriele d'Annunzio dies(ANI are not in Power)
 		not = {
 			has_government = national_populist
 		}
-
 	}
 
 	mean_time_to_happen = {
