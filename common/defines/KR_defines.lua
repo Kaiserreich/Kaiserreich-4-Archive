@@ -31,8 +31,8 @@ NDefines.NCountry.MIN_STABILITY = -1.0										-- Vanilla is 0.0
 NDefines.NCountry.POLITICAL_POWER_CAP = 400.0								-- Vanilla is 2000.0
 NDefines.NCountry.STATE_OCCUPATION_COST_MULTIPLIER = 0.25					-- Vanilla is 0.01
 NDefines.NCountry.CAPITULATE_STOCKPILES_RATIO = 0.75						-- Vanilla is 0.5
-NDefines.NCountry.WAR_SUPPORT_OFFNSIVE_WAR = 0.0							-- Vanilla is -0.2
-NDefines.NCountry.WAR_SUPPORT_DEFENSIVE_WAR = 0.0							-- Vanilla is 0.3
+NDefines.NCountry.WAR_SUPPORT_OFFNSIVE_WAR = -0.1							-- Vanilla is -0.2
+NDefines.NCountry.WAR_SUPPORT_DEFENSIVE_WAR = 0.3							-- Vanilla is 0.3
 NDefines.NPolitics.BASE_POLITICAL_POWER_INCREASE = 1.0						-- Vanilla is 2
 NDefines.NBuildings.INFRASTRUCTURE_RESOURCE_BONUS = 0.0                     -- Vanilla is 0.1
 NDefines.NTrade.ALLOW_TRADE_CUT_OFF = 0 									-- Vanilla is 0
@@ -43,10 +43,11 @@ NDefines.NGraphics.COUNTRY_FLAG_SMALL_TEX_WIDTH = 11						-- Vanilla is 10
 NDefines.NGraphics.COUNTRY_FLAG_TEX_MAX_SIZE = 512							-- Vanilla is 256
 NDefines.NGraphics.COUNTRY_FLAG_SMALL_TEX_MAX_SIZE = 128					-- Vanilla is 64
 NDefines.NGraphics.COUNTRY_FLAG_STRIPE_TEX_MAX_WIDTH = 11					-- Vanilla is 10
-NDefines.NGraphics.COUNTRY_FLAG_STRIPE_TEX_MAX_HEIGHT = 4096				-- Vanilla is 1024
-NDefines.NGraphics.COUNTRY_FLAG_LARGE_STRIPE_MAX_HEIGHT = 12400				-- Vanilla is 4000
+NDefines.NGraphics.COUNTRY_FLAG_STRIPE_TEX_MAX_HEIGHT = 2048				-- Vanilla is 1024
+NDefines.NGraphics.COUNTRY_FLAG_LARGE_STRIPE_MAX_HEIGHT = 6200				-- Vanilla is 4000
 NDefines.NGraphics.VICTORY_POINT_MAP_ICON_TEXT_CUTOFF = {300, 500, 800}  	-- Vanilla is 100, 250, 500
 NDefines.NGraphics.VICTORY_POINTS_DISTANCE_CUTOFF = {300, 500, 1000} 		-- Vanilla is 300, 500, 1500
+NDefines.NMilitary.DIG_IN_FACTOR = 0.01										-- Vanilla is 0.02
 NDefines.NAI.VP_LEVEL_IMPORTANCE_HIGH = 25									-- Vanilla is 100
 NDefines.NAI.ORG_UNIT_NORMAL = 0.60											-- Vanilla is 0.35
 NDefines.NAI.STR_UNIT_NORMAL = 0.60											-- Vanilla is 0.4
@@ -60,7 +61,8 @@ NDefines.NAI.NAVY_PREFERED_MAX_SIZE = 50									-- Vanilla is 20
 NDefines.NAI.MAX_DISTANCE_NALAV_INVASION = 400.0							-- Vanilla is 200
 NDefines.NAI.ENEMY_NAVY_STRENGTH_DONT_BOTHER = 1.5							-- Vanilla is 2.5
 NDefines.NAI.MIN_ANTAGONIZE_FOR_WARGOAL_JUSTIFICATION = 0					-- Vanilla is -100
-
+NDefines.NAI.FALLBACK_LOSING_FACTOR = 0.25									-- Vanilla is 1.0
+NDefines.NAI.PLAN_MIN_SIZE_FOR_FALLBACK = 500								-- Vanilla is 50
 
 -- Naval rework defines
 
@@ -92,3 +94,13 @@ NDefines.NNavy.COMBAT_LEAD_TOO_MANY_SHIPS_PENALTY_SPEED = .7				-- Vanilla is 0.
 -- Speed penalty in % for ships coming into the battle (Those in the "incoming" field). Fe. 0.1 makes the ordinary speed drop down to 10% of the original speed when penalty is at max. Value should be between 0.0 and 1.0
 NDefines.NNavy.COMBAT_LEAD_TOO_MANY_SHIPS_PENALTY_CHAOS_CHANCE = 0.4		-- Vanilla is 0.5
 -- Chaos penalty - chance % of not taking a shot at the target.
+
+-- Rework rework defines
+NDefines.NProduction.EQUIPMENT_MODULE_ADD_XP_COST = 2.5						-- Vanilla is 5				
+-- XP cost for adding a new equipment module in an empty slot when creating an equipment variant.
+NDefines.NProduction.EQUIPMENT_MODULE_REPLACE_XP_COST = 3.0					-- Vanilla is 6
+-- XP cost for replacing one equipment module with an unrelated module when creating an equipment variant.
+NDefines.NProduction.EQUIPMENT_MODULE_CONVERT_XP_COST = 1.5					-- Vanilla is 2	
+-- XP cost for converting one equipment module to a related module when creating an equipment variant.
+NDefines.NProduction.EQUIPMENT_MODULE_REMOVE_XP_COST = 0.5					-- Vanilla is 1		
+-- XP cost for removing an equipment module and leaving the slot empty when creating an equipment variant.

@@ -1,14 +1,15 @@
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This is alpha version 0.8.4 - 'La Bella Antillana'.
+This is alpha version 0.8.5 - 'Return of the Kaiser'.
 It is NOT save game compatible with any prior version.
 This version is compatible with 1.5.4, it may work with later hot fixes, but it is not guaranteed.
 
 Manual Installation Instructions
 1) Download the mod
-2) Delete the former Version if you have one
+2) Delete the former version if you have one
 3) Extract the .rar to 'Documents\Paradox Interactive\Hearts of Iron IV\mod'
 4) Move Kaiserreich.mod out of 'Hearts of Iron IV\mod\Kaiserreich' and into 'Hearts of Iron IV\mod'
-5) Enable the mod in the Launcher mod menu and enjoy!
+5) Open Kaiserreich.mod and change the name in line 1 to read: name="Kaiserreich Manual Build"
+6) Enable the mod in the Launcher mod menu and enjoy!
 
 Old versions can be found at:
 https://forum.paradoxplaza.com/forum/index.php?threads/kaiserreich-info-download.996902
