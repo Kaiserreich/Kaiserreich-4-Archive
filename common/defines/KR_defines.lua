@@ -11,7 +11,9 @@ NDefines.NDiplomacy.BASE_PEACE_PUPPET_FACTOR = 0							-- Vanilla is 100
 NDefines.NDiplomacy.BASE_PEACE_LIBERATE_FACTOR = 0							-- Vanilla is 100
 NDefines.NDiplomacy.VERY_GOOD_OPINION = 100									-- Vanilla is 50
 NDefines.NDiplomacy.VERY_BAD_OPINION = -100									-- Vanilla is -50
-NDefines.NDiplomacy.VOLUNTEERS_DIVISIONS_REQUIRED = 20						-- Vanilla is 30
+NDefines.NDiplomacy.VOLUNTEERS_DIVISIONS_REQUIRED = 0						-- Vanilla is 30
+NDefines.NDiplomacy.VOLUNTEERS_PER_TARGET_PROVINCE = 0.025					-- Vanilla is 0.05
+NDefines.NDiplomacy.VOLUNTEERS_PER_COUNTRY_ARMY = 0.025						-- Vanilla is 0.05
 NDefines.NDiplomacy.TENSION_STATE_VALUE = 0									-- Vanilla is 2
 NDefines.NDiplomacy.TENSION_CIVIL_WAR_IMPACT = 0							-- Vanilla is 0.2
 NDefines.NDiplomacy.TENSION_NO_CB_WAR = 0									-- Vanilla is 15
@@ -58,53 +60,13 @@ NDefines.NAI.PLAN_FACTION_WEAK_TO_ABORT = 0.5								-- Vanilla is 0.65
 NDefines.NAI.RESEARCH_BONUS_FACTOR = 10.0									-- Vanilla is 0.9
 NDefines.NAI.LENDLEASE_FRACTION_OF_PRODUCTION = 0.25						-- Vanilla is 0.5
 NDefines.NAI.NAVY_PREFERED_MAX_SIZE = 50									-- Vanilla is 20
-NDefines.NAI.MAX_DISTANCE_NALAV_INVASION = 400.0							-- Vanilla is 200
+NDefines.NAI.MAX_DISTANCE_NALAV_INVASION = 300.0							-- Vanilla is 200
 NDefines.NAI.ENEMY_NAVY_STRENGTH_DONT_BOTHER = 1.5							-- Vanilla is 2.5
 NDefines.NAI.MIN_ANTAGONIZE_FOR_WARGOAL_JUSTIFICATION = 0					-- Vanilla is -100
 NDefines.NAI.FALLBACK_LOSING_FACTOR = 0.25									-- Vanilla is 1.0
 NDefines.NAI.PLAN_MIN_SIZE_FOR_FALLBACK = 500								-- Vanilla is 50
-NDefines.NAI.VARIANT_UPGRADE_MIN_XP = 25									-- Vanilla is 50
 NDefines.NAI.MIN_FORCE_RATIO_TO_PROTECT = 0.01								-- Vanilla is 0.5
 NDefines.NAI.DIFFERENT_FACTION_THREAT = 0									-- Vanilla is 30
 NDefines.NAI.NAVAL_INVADED_AREA_PRIO_MULT = 4.0								-- Vanilla is 2.0
-
--- Naval rework defines
-
-NDefines.NAI.PRODUCTION_MAX_PROGRESS_TTO_SWITCH_NAVAL = 0.10				-- Vanilla is 0.3
--- AI will not replace ships being built by newer types if progress is above this
-NDefines.NProduction.BASE_FACTORY_SPEED_NAV = 4							-- Vanilla is 2.5
--- Base factory speed multiplier (how much hoi3 style IC each factory gives)
-NDefines.NNavy.COMBAT_TORPEDO_ATTACK_USE_CHANCE = 0.5						-- Vanilla is 0.25
--- chance of using torpedo attack (to avoid torpedo spam when at close distance)
-NDefines.NNavy.COMBAT_EVASION_TO_HIT_CHANCE_TORPEDO_MULT = 55.0				-- Vanilla is 40.0
--- the above evasion hit chance is multiplied by 400% if shooting with torpedos. Torpedoes are slow, so evasion matters more.
-NDefines.NNavy.MAX_EVASION_BONUS = 0.90										-- Vanilla is 0.1
--- largest evasion penalty to hitting
-NDefines.NNavy.TARGETING_STACKING_HIT_CHANCE_PENALTY = 0.08					-- Vanilla is 0.08
--- penalty to hit chance for each ship targeting same target
-NDefines.NNavy.COMBAT_TORPEDO_CRITICAL_CHANCE = 0.25						-- Vanilla is 0.2
--- chance for critical hit from torpedo.
-NDefines.NNavy.COMBAT_CHASE_RUNNERS_SPEED_COMPARE_BALANCE = 0.2				-- Vanilla is 0.6
--- When we chase runners and they are faster then us, then we resign. But if we are faster then them by a very small speed difference, the chase may takes weeks. So this tweak value allows to resign chasing if speed difference is not so big.
-NDefines.NNavy.COMABT_CHASE_RUNNERS_TIMEOUT_HOURS = 36						-- Vanilla is 10
--- Stop chasing after timeout
-NDefines.NNavy.COMBAT_CHASE_RESIGNATION_HOURS = 18							-- Vanilla is 8
--- Before we resign chasing enemy, give them some minimum time so the combat doesn't end instantly.
-NDefines.NNavy.COMBAT_SHIP_SPEED_TO_FIELD_FACTOR = 0.1						-- Vanilla is 0.03
--- Modifier to the ships speed in the combat. For better balance, make it lower to slow down the speed of approaching.
-NDefines.NNavy.COMBAT_MAX_GROUPS = 5										-- Vanilla is 3
--- Max amount of "Fire Exchange" groups (FEX).
-NDefines.NNavy.COMBAT_LEAD_TOO_MANY_SHIPS_PENALTY_SPEED = .7				-- Vanilla is 0.1
--- Speed penalty in % for ships coming into the battle (Those in the "incoming" field). Fe. 0.1 makes the ordinary speed drop down to 10% of the original speed when penalty is at max. Value should be between 0.0 and 1.0
-NDefines.NNavy.COMBAT_LEAD_TOO_MANY_SHIPS_PENALTY_CHAOS_CHANCE = 0.4		-- Vanilla is 0.5
--- Chaos penalty - chance % of not taking a shot at the target.
-
--- Rework rework defines
-NDefines.NProduction.EQUIPMENT_MODULE_ADD_XP_COST = 2.5						-- Vanilla is 5				
--- XP cost for adding a new equipment module in an empty slot when creating an equipment variant.
-NDefines.NProduction.EQUIPMENT_MODULE_REPLACE_XP_COST = 3.0					-- Vanilla is 6
--- XP cost for replacing one equipment module with an unrelated module when creating an equipment variant.
-NDefines.NProduction.EQUIPMENT_MODULE_CONVERT_XP_COST = 1.5					-- Vanilla is 2	
--- XP cost for converting one equipment module to a related module when creating an equipment variant.
-NDefines.NProduction.EQUIPMENT_MODULE_REMOVE_XP_COST = 0.5					-- Vanilla is 1		
--- XP cost for removing an equipment module and leaving the slot empty when creating an equipment variant.
+NDefines.NAI.SEND_VOLUNTEER_EVAL_BASE_DISTANCE = 1000.0  					-- Vanilla is 175.0
+NDefines.NAI.SEND_VOLUNTEER_EVAL_CONTAINMENT_FACTOR = 0						-- Vanilla is 0.1

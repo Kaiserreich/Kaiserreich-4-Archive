@@ -5,6 +5,15 @@ VEN_COL_intervention_decisions = {
 		fire_only_once = yes
 		days_remove = 14
 		cost = 100
+		ai_will_do = {
+			factor = 50
+			modifier = {
+				set_temp_variable = { VEN_be_a_meanie_desire = party_popularity@paternal_autocrat }
+				multiply_temp_variable = { VEN_be_a_meanie_desire = 100 }
+				add = VEN_be_a_meanie_desire
+				always = yes
+			}
+		}
 		available = {
 			VEN = {
 				has_country_flag = VEN_perez_coup
@@ -37,11 +46,9 @@ VEN_COL_intervention_decisions = {
 		}
 	}
 	VEN_COL_intervene = {
-		icon = generic_ignite_civil_war
-		allowed = { original_tag = VEN }
-		fire_only_once = yes
-		days_remove = 14
-		cost = 50
+		icon = generic_prepare_civil_war
+		allowed = { tag = VEN }
+
 		available = {
 			VEN = {
 				has_country_flag = VEN_perez_coup
@@ -55,18 +62,90 @@ VEN_COL_intervention_decisions = {
 				is_subject = no
 			}
 		}
+
+		visible = {
+			NOT = { has_war_with = FROM }
+		}
+
+		target_root_trigger = {
+			has_government = paternal_autocrat
+		}
+
+		targets = { COL }
+
+		target_trigger = {
+			NOT = { has_war_with = FROM }
+		}
+
+		fire_only_once = yes
+		cost = freedec?0
+		days_remove = 20
+		war_with_target_on_remove = yes
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				is_in_faction = yes
+				is_faction_leader = no
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					has_war = yes
+					strength_ratio = { tag = FROM ratio < 0.75 }
+					# neither of us is in a faction and FROM is stronger
+					AND = {
+						FROM = {
+							is_in_faction = no
+							is_subject = no
+						}
+						is_in_faction = no
+						strength_ratio = { tag = FROM ratio < 1.0 }
+					}
+					# they're in a faction which is not at war
+					FROM = {
+						OR = {
+							is_in_faction = yes
+							is_subject = yes
+						}
+						has_war = no
+					}
+					# they're in a faction which is at war but not with a major and not losing
+					FROM = {
+						is_in_faction = yes
+						has_war = yes
+						NOT = {
+							any_enemy_country = {
+								OR = {
+									tag = GER
+									tag = AUS
+									tag = FRA
+								}
+							}
+							surrender_progress > 0.10
+							any_allied_country = {
+								is_faction_leader = yes
+								surrender_progress > 0.20
+							}
+						}
+					}
+				}
+			}
+		}
+
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision VEN_COL_intervene"
+			log = "[GetDateText]: [Root.GetName]: Decision VEN_COL_intervene target: [From.GetName]"
 			COL = {
-				country_event = { id = ven.23 days = 3 }
+				country_event = {
+					id = ven.23
+				}
 			}
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove VEN_COL_intervene"
-			add_war_support = 0.1
-			create_wargoal = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove VEN_COL_intervene target: [From.GetName]"
+			declare_war_on = {
+				target = FROM
 				type = annex_everything
-				target = COL
 			}
 		}
 	}
@@ -76,30 +155,190 @@ VEN_essequibo_decisions = {
 		icon = infiltrate_state
 		allowed = { original_tag = VEN }
 		fire_only_once = yes
-		days_remove = 5
-		cost = 50
-		available = {
-			VEN = {
+		days_remove = 20
+		cost = 45
+		ai_will_do = {
+			factor = 50
+			modifier = {
+				factor = 0
 				is_in_faction = yes
-				is_subject = no
+				is_faction_leader = no
 			}
-			CAN = {
-				is_in_faction_with = CAF
-				has_war_with = ENG
+			modifier = {
+				factor = 0
+				OR = {
+					has_war = yes
+					strength_ratio = { tag = FROM ratio < 0.75 }
+					# neither of us is in a faction and FROM is stronger
+					AND = {
+						FROM = {
+							is_in_faction = no
+							is_subject = no
+						}
+						is_in_faction = no
+						strength_ratio = { tag = FROM ratio < 1.0 }
+					}
+					# they're in a faction which is not at war
+					FROM = {
+						OR = {
+							is_in_faction = yes
+							is_subject = yes
+						}
+						has_war = no
+					}
+					# they're in a faction which is at war but not with a major and not losing
+					FROM = {
+						is_in_faction = yes
+						has_war = yes
+						NOT = {
+							any_enemy_country = {
+								OR = {
+									tag = GER
+									tag = AUS
+									tag = FRA
+								}
+							}
+							surrender_progress > 0.10
+							any_allied_country = {
+								is_faction_leader = yes
+								surrender_progress > 0.20
+							}
+						}
+					}
+				}
 			}
+		}
+		available = {
 			CAF = {
+				OR = {
+					has_war_with = ENG
+					has_war_with = CAN
+				}
 				has_full_control_of_state = 1078
 				has_full_control_of_state = 1079
 			}
 		}
+		visible = {
+			CAF = {
+				NOT = {
+					is_in_faction_with = VEN
+				}
+				OR = {
+					has_war_with = ENG
+					has_war_with = CAN
+				}
+				has_full_control_of_state = 1078
+				has_full_control_of_state = 1079
+			}
+		}
+		targets = { CAF }
+
+		target_trigger = {
+			FROM = {
+				exists = yes
+				NOT = { has_war_with = ROOT }
+			}
+		}
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision VEN_demand_essequibo"
+			log = "[GetDateText]: [Root.GetName]: Decision VEN_demand_essequibo target: [From.GetName]"
+			CAF = {
+				country_event = { id = ven.24 days = 18 }
+			}
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove VEN_demand_essequibo"
-			CAN = {
-				country_event = { id = ven.24 days = 3 }
+			log = "[GetDateText]: [Root.GetName]: Decision remove VEN_demand_essequibo target: [From.GetName]"
+			declare_war_on = {
+				target = CAF
+				type = take_core_state
+				generator = {
+					1078
+				}
 			}
+		}
+	}
+	VEN_peace_essequibo_start = {
+		icon = generic_prepare_civil_war
+		allowed = { original_tag = VEN }
+		fire_only_once = yes
+		cost = freedec?0
+		ai_will_do = { factor = 170}
+		available = {
+			has_full_control_of_state = 687
+			divisions_in_state = {
+				size > 0
+				state = 687
+			}
+			has_full_control_of_state = 1078
+			divisions_in_state = {
+				size > 0
+				state = 1078
+			}
+			has_full_control_of_state = 849
+		}
+		visible = {
+			has_war_with = CAF
+			is_in_faction = no
+		}
+		highlight_states = {
+			state = 687
+			state = 1078
+			state = 849
+		}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision VEN_peace_essequibo_start"
+			activate_mission = VEN_peace_essequibo_timer
+			set_country_flag = VEN_peace_essequibo_timer_start
+		}
+	}
+	VEN_peace_essequibo_timer = {
+		icon = generic_agreement
+
+		allowed = {
+			tag = VEN
+		}
+
+		highlight_states = {
+			state = 687
+			state = 1078
+			state = 849
+		}
+
+		available = {
+			NOT = {
+				has_full_control_of_state = 687
+				has_full_control_of_state = 1078
+				has_full_control_of_state = 849
+			}
+		}
+
+		activation = {
+			has_country_flag = VEN_peace_essequibo_timer_start
+		}
+
+		fire_only_once = yes
+
+		is_good = yes
+
+		days_mission_timeout = 150
+
+		cancel_trigger = {
+			OR = {
+				CAF = { NOT = { owns_state = 1078 } }
+				NOT = { has_war_with = CAF }
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout VEN_peace_essequibo_timer"
+			add_political_power = 50
+			CAF = {
+				country_event = ven.39
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision VEN_peace_essequibo_timer"
+			add_war_support = -0.1
 		}
 	}
 }
@@ -110,6 +349,7 @@ VEN_GCL_decisions = {
 		fire_only_once = yes
 		days_remove = 60
 		cost = 75
+		ai_will_do = { factor = 150}
 		available = {
 			has_full_control_of_state = 306
 			divisions_in_state = {
@@ -134,6 +374,7 @@ VEN_GCL_decisions = {
 		fire_only_once = yes
 		days_remove = 60
 		cost = 75
+		ai_will_do = { factor = 150}
 		available = {
 			has_full_control_of_state = 493
 			divisions_in_state = {
@@ -158,6 +399,7 @@ VEN_GCL_decisions = {
 		fire_only_once = yes
 		days_remove = 60
 		cost = 75
+		ai_will_do = { factor = 150}
 		available = {
 			has_full_control_of_state = 486
 			divisions_in_state = {
@@ -182,6 +424,7 @@ VEN_GCL_decisions = {
 		fire_only_once = yes
 		days_remove = 60
 		cost = 75
+		ai_will_do = { factor = 150}
 		available = {
 			has_full_control_of_state = 853
 			has_completed_focus = VEN_jungle_warfare
@@ -207,6 +450,7 @@ VEN_GCL_decisions = {
 		fire_only_once = yes
 		days_remove = 60
 		cost = 75
+		ai_will_do = { factor = 150}
 		available = {
 			has_full_control_of_state = 852
 			divisions_in_state = {
@@ -231,6 +475,7 @@ VEN_GCL_decisions = {
 		fire_only_once = yes
 		days_remove = 60
 		cost = 75
+		ai_will_do = { factor = 150}
 		available = {
 			has_full_control_of_state = 851
 			has_completed_focus = VEN_jungle_warfare
@@ -255,6 +500,7 @@ VEN_GCL_decisions = {
 		allowed = { original_tag = VEN }
 		fire_only_once = yes
 		days_remove = 60
+		ai_will_do = { factor = 550}
 		cost = 50
 		available = {
 			has_country_flag = VEN_bogota_secured
@@ -295,6 +541,7 @@ VEN_oil_decisions = {
 		}
 		fire_only_once = yes
 		cost = 150
+		ai_will_do = { factor = 150}
 		available = {
 			has_war = no
 			OR = {
@@ -348,6 +595,7 @@ VEN_oil_decisions = {
 		}
 		fire_only_once = yes
 		cost = 50
+		ai_will_do = { factor = 50}
 		available = {
 			has_war = no
 			OR = {
@@ -402,6 +650,7 @@ VEN_oil_decisions = {
 		}
 		fire_only_once = yes
 		cost = 150
+		ai_will_do = { factor = 150}
 		available = {
 			has_war = no
 			OR = {
@@ -453,6 +702,7 @@ VEN_oil_decisions = {
 			}
 		}
 		fire_only_once = yes
+		ai_will_do = { factor = 50}
 		cost = 50
 		available = {
 			has_war = no
@@ -498,12 +748,13 @@ VEN_oil_decisions = {
 		}
 	}
 }
-VEN_internationale_decisions = {
+VEN_alliance_decisions = {
 	VEN_join_internationale = {
 		icon = generic_agreement
 		allowed = { original_tag = VEN }
 		fire_only_once = yes
-		cost = 100
+		ai_will_do = { factor = 150}
+		cost = 35
 		available = {
 			has_socialist_government = yes
 			is_in_faction = no
@@ -515,16 +766,11 @@ VEN_internationale_decisions = {
 					has_war_with = CAN
 				}
 			}
-			hidden_trigger = {
-				NOT = {
-					has_global_flag = civil_war_avoided
-				}
-			}
-			custom_trigger_tooltip = {
-				tooltip = VEN_safe_from_coup
-				NOT = {
-					has_global_flag = civil_war_avoided
-				}
+		}
+		visible = {
+			NOT = {
+				has_government = paternal_autocrat
+				has_war_with = FRA
 			}
 		}
 		complete_effect = {
@@ -534,4 +780,42 @@ VEN_internationale_decisions = {
 			}
 		}
 	}
+	VEN_join_entente = {
+		icon = generic_agreement
+		allowed = { original_tag = VEN }
+		fire_only_once = yes
+		ai_will_do = { factor = 400}
+		cost = 15
+		available = {
+			any_enemy_country = {
+				OR = {
+					is_in_faction_with = FRA
+					is_in_faction_with = ENG
+				}
+			}
+			is_in_faction = no
+			CAN = {
+				exists = yes
+				is_faction_leader = yes
+				is_in_faction_with = CAF
+			}
+		}
+		visible = {
+			CAN = {
+				exists = yes
+				is_faction_leader = yes
+				is_in_faction_with = CAF
+			}
+			NOT = {
+				has_war_with = CAN
+			}
+		}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision VEN_join_entente"
+			CAN = {
+				country_event = { id = ven.36 days = 3 }
+			}
+		}
+	}
 }
+
