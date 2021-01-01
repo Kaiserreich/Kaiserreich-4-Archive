@@ -22,7 +22,6 @@ default_peace = {
 	# ROOT = Taker, FROM = Giver
 	puppet = {
 		factor = 0 #200
-
 	}
 
 	# ROOT = Taker, FROM = State
@@ -461,7 +460,7 @@ default_peace = {
 				FROM = { is_claim_or_core_of_PREV = yes }
 				ROOT = { has_opinion = { target = PREV value > 50 } }
 			}
-			
+
 			# exception: Mongolia
 			NOT = { tag = MON }
 		}
@@ -632,7 +631,7 @@ default_peace = {
 				}
 				# exceptions: look for states the other country won't take, even if they can
 				is_willing_to_take_state = yes
-				
+
 				# exception: this is Italy, for any Italian nation
 				NOT = {
 					AND = {
@@ -786,6 +785,24 @@ default_peace = {
 			}
 		}
 
+		# don't take impassable states without owning/claiming a neighboring state
+		modifier = {
+			factor = 0
+			FROM = {
+				is_impassable_state = yes
+				is_not_claim_or_core_of_ROOT = yes
+				# the owner of the impassable state also owns a neighboring non-impassable state
+				any_neighbor_state = {
+					is_impassable_state = no
+					owner = { owns_state = PREV.PREV }
+				}
+				# no neighboring state is owned or claimed
+				NOT = {
+					any_neighbor_state = { is_owned_or_claimed_by_ROOT = yes }
+				}
+			}
+		}
+
 
 		### SPECIFIC COUNTRIES
 
@@ -857,7 +874,7 @@ default_peace = {
 		}
 
 		### National France and Germany will split up France if they're in the conference together
-		
+
 		# Germany won't take states in southern France unless they control it or neither they nor NFA's faction does
 		modifier = {
 			factor = 0
@@ -1066,27 +1083,20 @@ default_peace = {
 			}
 		}
 
-		# when Canada's at the conference, other faction leaders other than Germany or Russia will stay out of the UK unless they control territory in it
+		# Countries other than Germany, Russia, and Canada should stay out of Union of Britain if any of them are at the conference
 		modifier = {
 			factor = 0
 			NOT = {
 				tag = GER
 				tag = RUS
-				is_in_faction_with = CAN
-				restrict_territorial_ambitions = yes
-				ENG = {
-					any_owned_state = {
-						is_core_of = ENG
-						OR = {
-							is_controlled_by = ROOT
-							controller = { is_in_faction_with = ROOT }
-						}
-					}
-				}
+				tag = CAN
 			}
-			CAN = { at_conference_no_war_with_ROOT = yes }
+			OR = {
+				GER = { at_conference_has_war_with_owner = yes }
+				RUS = { at_conference_has_war_with_owner = yes }
+				CAN = { at_conference_has_war_with_owner = yes }
+			}
 			FROM = {
-				is_core_of = ENG
 				is_not_claim_or_core_of_ROOT = yes
 				is_british_isles = yes
 			}
@@ -1098,98 +1108,71 @@ default_peace = {
 		# Scotland goes to whoever controls Lothian
 		modifier = {
 			factor = 0
-			NOT = { restrict_territorial_ambitions = yes }
-			ENG = {
-				at_conference_has_war_with_ROOT = yes
-				any_owned_state = {
-					is_core_of = ENG
-					OR = {
-						is_controlled_by = ROOT
-						controller = { is_in_faction_with = ROOT }
-					}
-				}
+			FROM = {
+				region = 3 #Scotland
 			}
 			any_other_country = {
-				NOT = { tag = ROOT }
 				at_conference_has_war_with_owner = yes
-				NOT = { restrict_territorial_ambitions_PREV = yes }
+				is_willing_to_take_state = yes
+				OR = {
+					NOT = { restrict_territorial_ambitions_PREV = yes }
+					FROM = { is_claim_or_core_of_PREV = yes }
+					ambition_area = yes
+				}
 				OR = {
 					controls_state = 121 #Lothian
 					any_allied_country = { controls_state = 121 }
 				}
 				OR = {
-					tag = CAN
 					tag = GER
-					NOT = { has_opinion = { target = CAN value > 50 } }
-					CAN = { NOT = { at_conference_no_war_with_ROOT = yes } }
+					tag = RUS
+					tag = CAN
+					NOT = {
+						GER = { at_conference_has_war_with_owner = yes }
+						RUS = { at_conference_has_war_with_owner = yes }
+						CAN = { at_conference_has_war_with_owner = yes }
+					}
+					FROM = { is_claim_or_core_of_PREV = yes }
+					ambition_area = yes
 				}
-			}
-			FROM = {
-				region = 3 #Scotland
 			}
 		}
 		# Wales goes to whoever controls it
 		modifier = {
 			factor = 0
-			NOT = { restrict_territorial_ambitions = yes }
-			ENG = {
-				at_conference_has_war_with_ROOT = yes
-				any_owned_state = {
-					is_core_of = ENG
-					OR = {
-						is_controlled_by = ROOT
-						controller = { is_in_faction_with = ROOT }
-					}
-				}
+			FROM = {
+				state = 122 #Wales
 			}
 			any_other_country = {
-				NOT = { tag = ROOT }
 				at_conference_has_war_with_owner = yes
-				NOT = { restrict_territorial_ambitions_PREV = yes }
+				is_willing_to_take_state = yes
+				OR = {
+					NOT = { restrict_territorial_ambitions_PREV = yes }
+					FROM = { is_claim_or_core_of_PREV = yes }
+					ambition_area = yes
+				}
 				OR = {
 					controls_state = 122 #Wales
 					any_allied_country = { controls_state = 122 }
 				}
 				OR = {
-					tag = CAN
 					tag = GER
-					NOT = { has_opinion = { target = CAN value > 50 } }
-					CAN = { NOT = { at_conference_no_war_with_ROOT = yes } }
+					tag = RUS
+					tag = CAN
+					NOT = {
+						GER = { at_conference_has_war_with_owner = yes }
+						RUS = { at_conference_has_war_with_owner = yes }
+						CAN = { at_conference_has_war_with_owner = yes }
+					}
+					FROM = { is_claim_or_core_of_PREV = yes }
+					ambition_area = yes
 				}
 			}
-			FROM = {
-				state = 122
-			}
+			NOT = { ambition_area = yes }
 		}
 		# Northern England goes to whoever controls Liverpool
 		modifier = {
 			factor = 0
-			NOT = { restrict_territorial_ambitions = yes }
-			ENG = {
-				at_conference_has_war_with_ROOT = yes
-				any_owned_state = {
-					is_core_of = ENG
-					OR = {
-						is_controlled_by = ROOT
-						controller = { is_in_faction_with = ROOT }
-					}
-				}
-			}
-			any_other_country = {
-				NOT = { tag = ROOT }
-				at_conference_has_war_with_owner = yes
-				NOT = { restrict_territorial_ambitions_PREV = yes }
-				OR = {
-					controls_state = 132 #Lancashire
-					any_allied_country = { controls_state = 132 }
-				}
-				OR = {
-					tag = CAN
-					tag = GER
-					NOT = { has_opinion = { target = CAN value > 50 } }
-					CAN = { NOT = { at_conference_no_war_with_ROOT = yes } }
-				}
-			}
 			FROM = {
 				OR = {
 					state = 132 #Lancashire
@@ -1197,72 +1180,70 @@ default_peace = {
 					state = 131 #Northern England
 				}
 			}
+			any_other_country = {
+				at_conference_has_war_with_owner = yes
+				is_willing_to_take_state = yes
+				OR = {
+					NOT = { restrict_territorial_ambitions_PREV = yes }
+					FROM = { is_claim_or_core_of_PREV = yes }
+					ambition_area = yes
+				}
+				OR = {
+					controls_state = 132 #Lancashire
+					any_allied_country = { controls_state = 132 }
+				}
+				OR = {
+					tag = GER
+					tag = RUS
+					tag = CAN
+					NOT = {
+						GER = { at_conference_has_war_with_owner = yes }
+						RUS = { at_conference_has_war_with_owner = yes }
+						CAN = { at_conference_has_war_with_owner = yes }
+					}
+					FROM = { is_claim_or_core_of_PREV = yes }
+					ambition_area = yes
+				}
+			}
 		}
 		# Midlands goes to whoever controls Birmingham
 		modifier = {
 			factor = 0
-			NOT = { restrict_territorial_ambitions = yes }
-			ENG = {
-				at_conference_has_war_with_ROOT = yes
-				any_owned_state = {
-					is_core_of = ENG
-					OR = {
-						is_controlled_by = ROOT
-						controller = { is_in_faction_with = ROOT }
-					}
-				}
-			}
-			any_other_country = {
-				NOT = { tag = ROOT }
-				at_conference_has_war_with_owner = yes
-				NOT = { restrict_territorial_ambitions_PREV = yes }
-				OR = {
-					controls_state = 128 #West Midlands
-					any_allied_country = { controls_state = 128 }
-				}
-				OR = {
-					tag = CAN
-					tag = GER
-					NOT = { has_opinion = { target = CAN value > 50 } }
-					CAN = { NOT = { at_conference_no_war_with_ROOT = yes } }
-				}
-			}
 			FROM = {
 				OR = {
 					state = 128 #West Midlands
 					state = 129 #East Midlands
 				}
 			}
+			any_other_country = {
+				at_conference_has_war_with_owner = yes
+				is_willing_to_take_state = yes
+				OR = {
+					NOT = { restrict_territorial_ambitions_PREV = yes }
+					FROM = { is_claim_or_core_of_PREV = yes }
+					ambition_area = yes
+				}
+				OR = {
+					controls_state = 128 #West Midlands
+					any_allied_country = { controls_state = 128 }
+				}
+				OR = {
+					tag = GER
+					tag = RUS
+					tag = CAN
+					NOT = {
+						GER = { at_conference_has_war_with_owner = yes }
+						RUS = { at_conference_has_war_with_owner = yes }
+						CAN = { at_conference_has_war_with_owner = yes }
+					}
+					FROM = { is_claim_or_core_of_PREV = yes }
+					ambition_area = yes
+				}
+			}
 		}
 		# Southern England goes to whoever controls London
 		modifier = {
 			factor = 0
-			NOT = { restrict_territorial_ambitions = yes }
-			ENG = {
-				at_conference_has_war_with_ROOT = yes
-				any_owned_state = {
-					is_core_of = ENG
-					OR = {
-						is_controlled_by = ROOT
-						controller = { is_in_faction_with = ROOT }
-					}
-				}
-			}
-			any_other_country = {
-				NOT = { tag = ROOT }
-				at_conference_has_war_with_owner = yes
-				NOT = { restrict_territorial_ambitions_PREV = yes }
-				OR = {
-					controls_state = 126 #London
-					any_allied_country = { controls_state = 126 }
-				}
-				OR = {
-					tag = CAN
-					tag = GER
-					NOT = { has_opinion = { target = CAN value > 50 } }
-					CAN = { NOT = { at_conference_no_war_with_ROOT = yes } }
-				}
-			}
 			FROM = {
 				OR = {
 					state = 126 #London
@@ -1270,6 +1251,31 @@ default_peace = {
 					state = 127 #Sussex
 					state = 338 #Gloucestershire
 					state = 123 #Cornwall
+				}
+			}
+			any_other_country = {
+				at_conference_has_war_with_owner = yes
+				is_willing_to_take_state = yes
+				OR = {
+					NOT = { restrict_territorial_ambitions_PREV = yes }
+					FROM = { is_claim_or_core_of_PREV = yes }
+					ambition_area = yes
+				}
+				OR = {
+					controls_state = 126 #London
+					any_allied_country = { controls_state = 126 }
+				}
+				OR = {
+					tag = GER
+					tag = RUS
+					tag = CAN
+					NOT = {
+						GER = { at_conference_has_war_with_owner = yes }
+						RUS = { at_conference_has_war_with_owner = yes }
+						CAN = { at_conference_has_war_with_owner = yes }
+					}
+					FROM = { is_claim_or_core_of_PREV = yes }
+					ambition_area = yes
 				}
 			}
 		}
