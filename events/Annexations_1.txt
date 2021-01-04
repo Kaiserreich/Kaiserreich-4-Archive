@@ -18,7 +18,13 @@ country_event = { #Check for possible annexations
 	trigger = {
 		is_subject = no
 		NOT = {
-			is_in_array = { global.special_tags_array = ROOT }
+			# Special tags - these shouldn't exist outside of very specific circumstances
+			tag = XXA #debug tag
+			tag = SIR #SIA civil war
+			tag = GRR #GRE civil war
+			tag = PRC #GXC civil war
+			tag = INR #BHC civil war
+			original_tag = IKH #not meant to survive
 		}
 	}
 
@@ -390,6 +396,23 @@ country_event = { #Serbian liberation
 					}
 					kill_ideology_leader = paternal_autocrat
 					kill_ideology_leader = national_populist
+				}
+			}
+			if = {
+				limit = { has_democratic_government = no }
+				SER = {
+					set_politics = {
+						ruling_party = var:SER.current_party_ideology_group
+						elections_allowed = no
+					}
+				}
+			}
+			else = {
+				SER = {
+					set_politics = {
+						ruling_party = var:SER.current_party_ideology_group
+						elections_allowed = yes
+					}
 				}
 			}
 			add_to_temp_array = { core_removal_array = SER }
@@ -6196,6 +6219,10 @@ country_event = { #Fate of Central Spain
 				unlock_national_focus = SPA_no_civil_war
 			}
 			set_cosmetic_tag = SPA_republic
+			if = {
+				limit = { has_idea = SPA_memories_of_the_republic }
+				remove_ideas = SPA_memories_of_the_republic
+			}
 			hidden_effect = {
 				create_country_leader = {
 					name = "Francisco Franco Bahamonde"
@@ -6226,46 +6253,21 @@ country_event = { #The Irish Question
 	id = annex.68
 	immediate = { log = "[GetDateText]: [Root.GetName]: event annex.68" }
 	title = annexation_IRE_CONQ
-	desc = {
-		text = annexation_IRE_CONQ_desc
-		trigger = {
-			is_british_isles_tag = no
-			is_CANZACAF_tag = no
-		}
-	}
-	desc = {
-		text = uk.110.d
-		trigger = {
-			OR = {
-				is_british_isles_tag = yes
-				is_CANZACAF_tag = yes
-			}
-			has_socialist_government = no
-		}
-	}
-	desc = {
-		text = uob.84.d
-		trigger = {
-			tag = ENG
-		}
-	}
+	desc = annexation_IRE_CONQ_desc
 	is_triggered_only = yes
+
 	immediate = {
 		hidden_effect = {
 			if = {
 				limit = {
 					is_british_isles_tag = yes
 					has_socialist_government = no
-				}
-				if = {
-					limit = {
-						119 = {
-							is_owned_by = ROOT
-							is_not_claim_or_core_of_ROOT = yes
-						}
+					119 = {
+						is_owned_by = ROOT
+						is_claim_or_core_of_ROOT = no
 					}
-					119 = { add_claim_by = ROOT }
 				}
+				add_state_claim = 119 #Ulster
 			}
 		}
 	}
@@ -6275,12 +6277,8 @@ country_event = { #The Irish Question
 		trigger = {
 			is_british_tag = no
 		}
-		ai_chance = {
-			factor = 100
-		}
 		set_temp_variable = { tag_to_release = IRE }
 		release_targeted_tag = yes
-
 		if = {
 			limit = {
 				OR = {
@@ -6294,7 +6292,19 @@ country_event = { #The Irish Question
 		}
 		else = {
 			hidden_effect = {
-				IRE = { country_event = annex.69 }
+				var:tag_to_release = {
+					if = {
+						limit = { has_socialist_government = yes }
+						create_syndicalist_irish_government = yes
+					}
+					else_if = {
+						limit = { has_elected_government = yes }
+						create_democratic_irish_government = yes
+					}
+					else = {
+						create_autocratic_irish_government = yes
+					}
+				}
 			}
 		}
 	}
@@ -6302,34 +6312,15 @@ country_event = { #The Irish Question
 	option = { #occupy
 		name = annex.68.b
 		trigger = {
+			is_ai = no
 			is_british_tag = no
 		}
-		ai_chance = {
-			factor = 0
-		}
-
 		set_country_flag = IRE_CONQ
 		occupy_medium_country = yes
 	}
 
 	option = {
-		name = uk.110.a #Direct Rule
-		trigger = {
-			is_british_tag = yes
-			has_socialist_government = no
-		}
-		ai_chance = {
-			factor = 0
-		}
-		set_country_flag = IRE_CONQ
-		occupy_medium_country = yes
-		set_country_flag = ENG_IRA
-		add_ideas = ENG_IRA
-		irish_republican_army_events = yes
-	}
-
-	option = {
-		name = uk.110.b #Puppet the south
+		name = annex.68.c #Puppet the south
 		trigger = {
 			is_british_tag = yes
 			has_socialist_government = no
@@ -6337,22 +6328,12 @@ country_event = { #The Irish Question
 		ai_chance = {
 			factor = 90
 		}
-		set_temp_variable = { tag_to_release = IRE }
-		release_targeted_tag = yes
 		add_political_power = -50
 		add_stability = -0.05
-		every_owned_state = {
-			limit = {
-				is_core_of = IRE
-				is_not_claim_or_core_of_ROOT = yes
-			}
-			IRE = {
-				transfer_state = PREV
-			}
-		}
-
+		set_temp_variable = { tag_to_release = IRE }
+		release_targeted_tag = yes
 		hidden_effect = {
-			IRE = {
+			var:tag_to_release = {
 				drop_cosmetic_tag = yes
 				set_cosmetic_tag = IRE_gbr
 				set_popularities = {
@@ -6378,6 +6359,7 @@ country_event = { #The Irish Question
 					expire = "1965.1.1"
 					ideology = social_conservative_subtype
 				}
+				remove_all_minister_types = yes
 				add_ideas = {
 					IRE_Sean_Lemass_hog_mli
 					IRE_Eamon_de_Valera_for_sli
@@ -6396,7 +6378,7 @@ country_event = { #The Irish Question
 	}
 
 	option = {
-		name = uk.110.c #Ireland independent
+		name = annex.68.d #Ireland independent
 		trigger = {
 			is_british_tag = yes
 			has_socialist_government = no
@@ -6404,19 +6386,12 @@ country_event = { #The Irish Question
 		ai_chance = { 
 			factor = 10
 		}
-		hidden_effect = {
-			IRE = {
-				drop_cosmetic_tag = yes
-				set_cosmetic_tag = IRE_gbr
-			}
-		}
 		every_owned_state = {
 			limit = {
 				is_core_of = IRE
+				is_claim_or_core_of_ROOT = no
 			}
-			IRE = {
-				transfer_state = PREV
-			}	
+			IRE = { transfer_state = PREV }	
 		}
 		if = {
 			limit = { is_in_faction = yes }
@@ -6424,6 +6399,8 @@ country_event = { #The Irish Question
 		}
 		hidden_effect = {
 			IRE = {
+				drop_cosmetic_tag = yes
+				set_cosmetic_tag = IRE_gbr
 				set_popularities = {
 					totalist = 3
 					radical_socialist = 5
@@ -6440,6 +6417,7 @@ country_event = { #The Irish Question
 					ruling_party = social_conservative
 					elections_allowed = no
 				}
+				remove_all_minister_types = yes
 				add_ideas = {
 					IRE_Sean_Lemass_hog_mli
 					IRE_Eamon_de_Valera_for_sli
@@ -6451,13 +6429,11 @@ country_event = { #The Irish Question
 	}
 
 	option = {
-		name = uob.84.a #Direct Rule
+		name = annex.68.e #Direct Rule
 		trigger = {
+			is_ai = no
 			is_british_tag = yes
-			has_socialist_government = yes
-		}
-		ai_chance = {
-			factor = 0
+			has_socialist_government = no
 		}
 		set_country_flag = IRE_CONQ
 		occupy_medium_country = yes
@@ -6467,7 +6443,7 @@ country_event = { #The Irish Question
 	}
 
 	option = {
-		name = uob.84.b #Puppet
+		name = annex.68.f #Puppet
 		trigger = {
 			is_british_tag = yes
 			has_socialist_government = yes
@@ -6486,10 +6462,13 @@ country_event = { #The Irish Question
 		add_stability = -0.05
 		set_temp_variable = { tag_to_release = IRE }
 		release_targeted_tag = yes
+		hidden_effect = {
+			var:tag_to_release = { create_syndicalist_irish_government = yes }
+		}
 	}
 
 	option = {
-		name = uob.84.c #Independent
+		name = annex.68.g #Independent
 		trigger = {
 			is_british_tag = yes
 			has_socialist_government = yes
@@ -6526,6 +6505,7 @@ country_event = { #The Irish Question
 					ruling_party = syndicalist
 					elections_allowed = no
 				}
+				remove_all_minister_types = yes
 				add_ideas = {
 					IRE_William_X_O'Brien_hog_syn
 					IRE_John_O'Leary_for_syn
@@ -6535,28 +6515,19 @@ country_event = { #The Irish Question
 			}
 		}
 	}
-}
-
-country_event = { #Irish Government
-	id = annex.69
-	immediate = { log = "[GetDateText]: [Root.GetName]: event annex.69" }
-	title = annex.69.t
-	desc = annex.69.d
-	is_triggered_only = yes
 
 	option = {
-		name = annex.69.a
-		if = {
-			limit = { has_socialist_government = yes }
-			create_syndicalist_irish_government = yes
+		name = annex.68.h #Direct Rule
+		trigger = {
+			is_ai = no
+			is_british_tag = yes
+			has_socialist_government = yes
 		}
-		else_if = {
-			limit = { has_elected_government = yes }
-			create_democratic_irish_government = yes
-		}
-		else = {
-			create_autocratic_irish_government = yes
-		}
+		set_country_flag = IRE_CONQ
+		occupy_medium_country = yes
+		set_country_flag = ENG_IRA
+		add_ideas = ENG_IRA
+		irish_republican_army_events = yes
 	}
 }
 
@@ -6570,7 +6541,18 @@ country_event = { #The fate of Georgia
 	
 	immediate = {
 		hidden_effect = {
+			add_to_temp_array = { core_removal_array = GEO }
+			remove_all_cores_and_claims_of_tags = yes
 			GEO = {
+				add_state_core = 231 #Sakartvelo
+				add_state_core = 1080 #Abkhazia
+				if = {
+					limit = {
+						231 = { is_valid_annexation_state = no } #Yerevan
+						ARM = { ROOT_can_grant_land = no }
+					}
+					add_state_core = 1082 #Lori
+				}
 				if = {
 					limit = { has_country_flag = was_puppeted }
 					kill_country_leader = yes
@@ -6605,12 +6587,12 @@ country_event = { #The fate of Georgia
 			}
 			230 = { #Yerevan
 				is_owned_by_ROOT_or_subject = yes
-				owner = { controls_state = PREV }
+				is_controlled_by = owner
 				is_claim_or_core_of_ROOT = no
 			}
 			990 = { #Baku
 				is_owned_by_ROOT_or_subject = yes
-				owner = { controls_state = PREV }
+				is_controlled_by = owner
 				is_claim_or_core_of_ROOT = no
 			}
 		}
@@ -7007,25 +6989,7 @@ country_event = { #fate of Germany
 	id = annex.75
 	immediate = { log = "[GetDateText]: [Root.GetName]: event annex.75" }
 	title = annexation_GER_CONQ
-
-	desc = {
-		text = annexation_GER_CONQ_RUS_desc
-		trigger = {
-			OR = {
-				tag = RUS
-				tag = SOV
-			}
-		}
-	}
-	desc = {
-		text = annexation_GER_CONQ_desc
-		trigger = {
-			NOT = {
-				tag = RUS
-				tag = SOV
-			}
-		}
-	}
+	desc = annexation_GER_CONQ_desc
 
 	is_triggered_only = yes
 
@@ -8625,7 +8589,7 @@ country_event = { #The Annexation of Persia
 			}
 			var:tag_to_release = { transfer_state = PREV }
 		}
-		puppet_released_tag = yes
+		puppet_released_tag_nocosmetic = yes
 		hidden_effect = {
 			var:tag_to_release = {
 				if = {
@@ -8771,6 +8735,12 @@ country_event = { #The Annexation of Armenia
 				if = {
 					limit = { state = 998 } #Highland Karabakh
 					990 = { is_valid_annexation_state = no } #Baku
+					AZR = { ROOT_can_grant_land = no }
+				}
+				if = {
+					limit = { state = 1082 } #Lori
+					231 = { is_valid_annexation_state = no } #Sakartvelo
+					GEO = { ROOT_can_grant_land = no }
 				}
 			}
 			var:tag_to_release = { transfer_state = PREV }
@@ -9896,15 +9866,22 @@ country_event = { #The Annexation of the Ukraine
 			if = {
 				limit = {
 					NOT = { tag = RUS }
-					check_variable = { RUS.UKR_original_generals^num > 0 }
+					OR = {
+						NOT = { country_exists = RUS }
+						has_subject = RUS
+					}
 				}
-				for_each_scope_loop = {
-					array = RUS.UKR_original_generals
-					set_nationality = UKR
+				RUS = {
+					every_unit_leader = {
+						limit = { has_unit_leader_flag = UKR_leader }
+						set_nationality = UKR
+					}
 				}
-				clear_array = RUS.UKR_original_generals
 			}
-			UKR = { set_cosmetic_tag = UKR_republican }
+			UKR = {
+				set_cosmetic_tag = UKR_republic
+				clr_country_flag = kingdom_survives
+			}
 		}
 	}
 
@@ -10054,50 +10031,75 @@ country_event = { #Fate of Japan
 
 	option = { #liberate
 		name = annex.127.b
-		ai_chance = {
-			factor = 1
-		}
-
+		set_temp_variable = { tag_to_release = JAP }
 		every_owned_state = {
 			limit = {
-				is_core_of = JAP
-				NOT = {
-					region = 191 #Korea
-					state = 745 #Kwantung
-					is_core_of = TRM
-					is_mainland_china = yes
+				is_claim_or_core_of_ROOT = no
+				OR = {
+					is_core_of = JAP
 					AND = {
-						state = 537
-						ROOT = { is_russian_tag = yes }
+						OR = {
+							state = 630 #Johnston Atoll
+							state = 631 #Midway Island
+							state = 632 #Wake Island
+							state = 638 #Guam
+							state = 642 #Phoenix Island
+							state = 726 #Samoa
+							state = 727 #Line Islands
+						}
+						629 = { is_valid_annexation_state = no } #Hawaii
+						NOT = {
+							ROOT = {
+								any_allied_country = {
+									PREV = { is_claim_or_core_of_PREV = yes }
+								}
+							}
+						}
+					}
+					AND = {
+						state = 534 #Sakhalin
+						ROOT = { is_russian_tag = no }
+						NOT = {
+							ROOT = { tag = SIB }
+							var:560.owner = {
+								is_russian_tag = yes
+								is_ally_with = ROOT
+							}
+							AND = {
+								570 = { is_valid_annexation_state = yes } #Novo-Nikolayevsk
+								NOT = {
+									country_exists = SIB
+									ROOT = { has_country_flag = SIB_CONQ }
+								}
+							}
+							AND = {
+								219 = { is_valid_annexation_state = yes } #Moscow
+								NOT = {
+									country_exists = RUS
+									country_exists = SOV
+									ROOT = { has_country_flag = RUS_CONQ }
+								}
+							}
+						}
 					}
 				}
-				is_not_claim_or_core_of_ROOT = yes
 			}
-			JAP = {
+			var:tag_to_release = {
+				hidden_effect = {
+					if = {
+						limit = {
+							PREV = { NOT = { is_core_of = var:tag_to_release } }
+						}
+						set_variable = { PREV.ambition_area_@JAP = 1 }
+						add_state_claim = PREV
+					}
+				}
 				transfer_state = PREV
 			}
 		}
-
-		every_state = {
-			limit = {
-				OR = {
-					is_claimed_by = JAP
-					is_core_of = JAP
-				}
-				NOT = { is_owned_by = JAP }
-			}
-			hidden_effect = {
-				JAP = {
-					remove_state_claim = PREV
-					remove_state_core = PREV
-				}
-			}
-		}
-
-		set_temp_variable = { tag_to_release = JAP }
 		puppet_released_tag = yes
-		JAP = {
-			hidden_effect = {
+		hidden_effect = {
+			var:tag_to_release = {
 				country_event = japdom.238
 				country_event = japdom.239
 			}
@@ -10106,9 +10108,7 @@ country_event = { #Fate of Japan
 
 	option = { #occupation
 		name = annex.127.a
-		ai_chance = {
-			factor = 0
-		}
+		trigger = { is_ai = no }
 		set_country_flag = JAP_CONQ
 		occupy_large_country = yes
 	}

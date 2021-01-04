@@ -1,9 +1,9 @@
-#################################################
-### Kaiserreich Beta 0.15 'Leaving for Syria' ###
-#################################################
+###################################################
+### Kaiserreich Beta 0.15.1 'Leaving for Syria' ###
+###################################################
 
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This version is designed for Hearts of Iron IV version 1.10.1. It may work with later hot fixes but it isn't guaranteed.
+This version is designed for Hearts of Iron IV version 1.10.2. It may work with later hot fixes but it isn't guaranteed.
 
 Manual Installation Instructions
 1) Download the mod
