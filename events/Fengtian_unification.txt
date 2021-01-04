@@ -9,6 +9,8 @@ country_event = { #hidden conference starter event
 	hidden = yes
 
 	trigger = {
+		NOT = { has_country_flag = FNG_shenyang_conference }
+		NOT = { has_country_flag = FNG_conference_fired }
 		OR = {
 			ANQ = {
 				exists = yes
@@ -27,11 +29,34 @@ country_event = { #hidden conference starter event
 				SZC_federalists_in_exile = yes
 			}
 		}
+		QIE = {
+			exists = yes
+		}
 	}
 
 	is_triggered_only = yes
 
-	option = { #wait for the GXC-PRC war to end and ANQ to have peace
+	option = { #war already started, PRC-GXC not finished -> only for Anqing
+		trigger = {
+			has_war_with = QIE
+			ANQ = {
+				exists = yes
+				is_ruled_by_pro_fengtian = yes
+				has_country_flag = ANQ_peace
+				NOT = { 
+					has_country_flag = ANQ_feng_aid_undecided 
+				}
+			}
+		}
+		set_country_flag = FNG_shenyang_anq_only
+		country_event = {
+			id = fngshen.1
+			days = 1
+			random_hours = 12
+		}
+	}
+	
+	option = { #wait for the GXC-PRC war to end and ANQ to have peace / SQI won League War and FNG did national irredentism
 		trigger = {
 			OR = {
 				GXC = {
@@ -57,7 +82,7 @@ country_event = { #hidden conference starter event
 		}
 	}
 
-	option = {
+	option = { #ANQ won League War and the GXC-PRC war is finished
 		trigger = {
 			has_country_flag = FNG_national_irredentism_flag
 			ANQ = {
@@ -79,7 +104,7 @@ country_event = { #hidden conference starter event
 		country_event = fngshen.1
 	}
 
-	option = {
+	option = { #ANQ is not pro fengtian / does not exist
 		trigger = {
 			has_country_flag = FNG_national_irredentism_flag
 			NOT = {
@@ -106,11 +131,32 @@ country_event = { #A Conference in Shenyang
 	id = fngshen.1
 	immediate = { log = "[GetDateText]: [Root.GetName]: event fngshen.1" }
 	title = fngshen.1.t
-	desc = fngshen.1.d
+	desc = {
+		text = fngshen.1.d1
+		trigger = {
+			NOT = { has_country_flag = FNG_shenyang_anq_only }
+		}
+	}
+	desc = {
+		text = fngshen.1.d2
+		trigger = {
+			has_country_flag = FNG_shenyang_anq_only
+		}
+	}
 
 	picture = china_new_government
 
 	is_triggered_only = yes
+
+	trigger = {
+		NOT = { has_country_flag = FNG_conference_fired }
+	}
+
+	immediate = {
+		hidden_effect = {
+			set_country_flag = FNG_shenyang_conference
+		}
+	}
 
 	option = {
 		name = fngshen.1.a #Send the invites
@@ -123,21 +169,56 @@ country_event = { #A Conference in Shenyang
 						days = 1
 						random = 14
 					}
+					FNG = { set_country_flag = FNG_shenyang_ANQ } #they autoaccept
 				}
 			}
-			SQI = {
-				if = {
-					limit = { is_ruled_by_pro_fengtian = yes }
-					country_event = {
-						id = fngshen.2
-						days = 1
-						random = 14
+			if = {
+				limit = {
+					has_country_flag = FNG_shenyang_anq_only
+				}
+				country_event = {
+					id = fngshen.7
+					days = 5
+				}
+			}
+			else = {
+				SQI = {
+					if = {
+						limit = { is_ruled_by_pro_fengtian = yes }
+						country_event = {
+							id = fngshen.2
+							days = 1
+							random = 14
+						}
+						FNG = { set_country_flag = FNG_shenyang_SQI } #they autoaccept
 					}
 				}
-			}
-			country_event = {
-				id = fngshen.4
-				days = 8
+				if = {
+					limit = {
+						OR = {
+							GXC = {
+								exists = yes
+								GXC_has_federalist_government = yes
+								NOT = { has_war_with = ROOT }
+							}
+							SZC = {
+								exists = yes
+								SZC_federalists_in_exile = yes
+								NOT = { has_war_with = ROOT }
+							}
+						}
+					}
+					country_event = {
+						id = fngshen.4
+						days = 8
+					}
+				}
+				else = { #if there are no federalists anymore
+					country_event = {
+						id = fngshen.7
+						days = 8
+					}
+				}
 			}
 		}
 	}
@@ -147,7 +228,22 @@ country_event = { #Go to the Shenyang Conference? (ANQ/SQI)
 	id = fngshen.2
 	immediate = { log = "[GetDateText]: [Root.GetName]: event fngshen.2" }
 	title = fngshen.2.t
-	desc = fngshen.2.d
+	desc = {
+		text = fngshen.2.ddef
+		trigger = {
+			FNG = { NOT = { has_country_flag = FNG_shenyang_anq_only } }
+		}
+	}
+	desc = {
+		text = fngshen.2.danq
+		trigger = {
+			FNG = { has_country_flag = FNG_shenyang_anq_only }
+		}
+	}
+
+	trigger = {
+		NOT = { has_country_flag = FNG_conference_fired }
+	}
 
 	is_triggered_only = yes
 
@@ -157,6 +253,12 @@ country_event = { #Go to the Shenyang Conference? (ANQ/SQI)
 		name = fngshen.2.a #Send a delegation
 		add_political_power = 10
 		add_stability = 0.01
+		if = {
+			limit = {
+				FNG = { has_country_flag = FNG_shenyang_anq_only }
+			}
+			set_country_flag = ANQ_reclamation_deciding_fast
+		}
 		hidden_effect = {
 			FROM = {
 				country_event = {
@@ -199,7 +301,6 @@ country_event = { #FROM attending the conference
 	option = {
 		name = fngshen.3.a
 		add_political_power = 5
-		set_country_flag = FNG_shenyang_@FROM
 	}
 }
 
@@ -424,6 +525,10 @@ country_event = { #Start of the Shenyang Conference
 	picture = china_new_government
 
 	is_triggered_only = yes
+
+	trigger = {
+		NOT = { has_country_flag = FNG_conference_fired }
+	}
 
 	option = {
 		name = fngshen.7.a
@@ -833,7 +938,7 @@ country_event = { #Anqing Is Glad for our stance
 		ANQ = {
 			country_event = {
 				id = anq.171
-				hours = 12
+				hours = 56
 				random = 24
 			}
 		}
@@ -886,7 +991,7 @@ country_event = { #End of the Conference
 		}
 		country_event = {
 			id = anq.171
-			hours = 12
+			hours = 56
 			random = 24
 		}
 	}
@@ -955,8 +1060,8 @@ country_event = { #Fengtian Refuses To Denounce The Concessions
 		}
 		country_event = {
 			id = anq.171
-			days = 1
-			random = 12
+			hours = 56
+			random = 24
 		}
 	}
 }
@@ -1154,6 +1259,10 @@ country_event = { #Attend the National Conference?
 			}
 			modifier = {
 				factor = 0
+				has_country_flag = ANQ_is_projapan
+			}
+			modifier = {
+				factor = 0
 				any_allied_country = {
 					is_faction_leader = yes
 					is_in_array = { FNG.FNG_conference_participants = THIS }
@@ -1320,7 +1429,10 @@ country_event = { #Invite Chen Jiongming?
 	trigger = {
 		OR = {
 			AND = {
-				GXC = { GXC_has_federalist_government = yes }
+				GXC = {
+					GXC_has_federalist_government = yes
+					NOT = { has_war_with = PRC }
+				}
 				NOT = { has_war_with = GXC }
 			}
 			AND = {
