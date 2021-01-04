@@ -87,7 +87,9 @@ country_event = { #wu says yes
 		add_stability = 0.05
 		set_country_flag = ANQ_wu_initial_support
 		hidden_effect = {
-			complete_national_focus = ANQ_rolling_dice
+			if = { limit = { NOT = { has_completed_focus = ANQ_rolling_dice } }
+				complete_national_focus = ANQ_rolling_dice
+			}	
 		}
 		complete_national_focus = ANQ_stand_with_beijing
 		QIE = {
@@ -230,7 +232,9 @@ country_event = { #Japan has pledged support, attack now
 		#ANQ_add_embargo = yes
 		custom_effect_tooltip = anq_increase_fng_1
 		hidden_effect = {
-			complete_national_focus = ANQ_rolling_dice
+			if = { limit = { NOT = { has_completed_focus = ANQ_rolling_dice } }
+				complete_national_focus = ANQ_rolling_dice
+			}
 			set_country_flag = ANQ_is_projapan
 			set_country_flag = LEP_collapsed
 			set_party_name = {
@@ -775,6 +779,7 @@ country_event = { # Five Provinces Together Again
 					hours = 6
 				}
 			}
+			custom_effect_tooltip = anq_qing_guarantee_tt
 		}
 		else_if = {
 			limit = {
@@ -802,6 +807,7 @@ country_event = { # Five Provinces Together Again
 					days = 1
 				}
 			}
+			custom_effect_tooltip = anq_fengtian_guarantee_tt
 		}
 	}
 }
@@ -850,19 +856,19 @@ country_event = { #Relocating the Capital
 	is_triggered_only = yes
 
 	trigger = {
-		NOT = {
-			has_country_flag = moved_capital
-		}
+		613 = { is_capital = no }
 	}
 
 	option = {
 		name = anq.18.a
 		set_country_flag = moved_capital
 		set_capital = 613
-		#another effect
 		hidden_effect = {
 			if = {
-				limit = { has_country_flag = ANQ_is_proqing }
+				limit = { 
+					NOT = { has_country_flag = moved_capital }
+					has_country_flag = ANQ_is_proqing 
+				}
 				QIE = {
 					country_event = {
 						id = qiefor.58
@@ -2925,15 +2931,15 @@ country_event = { # Puppet for pro-japan ANQ
 				set_country_flag = SQI_puppet
 				set_popularities = {
 					totalist = 0
-					radical_socialist = 0.02
-					syndicalist = 0.01
-					social_democrat = 0.03
-					social_liberal = 0.05
-					market_liberal = 0.04
+					radical_socialist = 2
+					syndicalist = 1
+					social_democrat = 3
+					social_liberal = 5
+					market_liberal = 4
 					social_conservative = 0
-					authoritarian_democrat = 0.45
-					paternal_autocrat = 0.30
-					national_populist = 0.10
+					authoritarian_democrat = 45
+					paternal_autocrat = 30
+					national_populist = 10
 				}
 				drop_cosmetic_tag = yes
 				remove_ideas = {
@@ -5506,6 +5512,201 @@ country_event = { # fengtian doesn't help
 	}
 }
 
+country_event = { # deciding on reclamation chain start (triggers before anq.165) (triggered by fengtian.243, only after escalate propaganda war)
+	id = anq.171
+	immediate = { log = "[GetDateText]: [Root.GetName]: event anq.171" }
+	title = anq.171.t
+	desc = {
+		text = anq.171.d1
+		trigger = {
+			FNG = { 
+				has_country_flag = FNG_shenyang_anticoncessions 
+				NOT = { has_country_flag = FNG_shenyang_anq_only }
+			}
+		}
+	}
+	desc = {
+		text = anq.171.d2
+		trigger = {
+			NOT = { FNG = { has_country_flag = FNG_shenyang_anticoncessions } }
+		}
+	}
+	desc = {
+		text = anq.171.d3
+		trigger = {
+			FNG = { has_country_flag = FNG_shenyang_anq_only }
+		}
+	}
+
+	fire_only_once = yes
+	is_triggered_only = yes
+
+	option = {
+		name = anq.171.a
+		if = { #skip reconstruction
+			limit = { has_country_flag = ANQ_reclamation_deciding_fast }
+			country_event = {
+				id = anq.165
+				days = 1
+				random_hours = 6
+			}
+		}
+		else = { #weigh reconstruction decision
+			country_event = {
+				id = anq.172
+				days = 2
+				random_hours = 8
+			}
+		}
+		if = {
+			limit = {
+				FNG = { has_country_flag = FNG_shenyang_anticoncessions }
+			}
+			custom_effect_tooltip = anq_increase_reclamation_willingness_2
+			add_to_variable = { ANQ_reclamation_willingness = 2 }
+		}
+		else = {
+			custom_effect_tooltip = anq_decrease_reclamation_willingness_1
+			add_to_variable = { ANQ_reclamation_willingness = -1 }
+		}
+	}
+}
+
+country_event = { # willingness reconstruction (triggers before anq.165)
+	id = anq.172
+	immediate = { log = "[GetDateText]: [Root.GetName]: event anq.172" }
+	title = anq.172.t
+	desc = {
+		text = anq.172.d1
+		trigger = { has_country_flag = ANQ_feng_aids_reconstruction }
+	}
+	desc = {
+		text = anq.172.d2
+		trigger = { has_country_flag = ANQ_fengjapan_aids_reconstruction }
+	}
+	desc = {
+		text = anq.172.d3
+		trigger = { has_country_flag = ANQ_no_reconstruction_aid }
+	}
+
+	fire_only_once = yes
+	is_triggered_only = yes
+
+	option = {
+		name = anq.172.a
+		if = {
+			limit = { has_country_flag = ANQ_feng_aids_reconstruction }
+			custom_effect_tooltip = anq_increase_reclamation_willingness_1
+			add_to_variable = { ANQ_reclamation_willingness = 1 }
+		}
+		else_if = {
+			limit = { has_country_flag = ANQ_fengjapan_aids_reconstruction }
+			custom_effect_tooltip = anq_increase_reclamation_willingness_2
+			add_to_variable = { ANQ_reclamation_willingness = 2 }
+		}
+		else = {
+			custom_effect_tooltip = anq_decrease_reclamation_willingness_1
+			add_to_variable = { ANQ_reclamation_willingness = -1 }
+		}
+
+		if = {
+			limit = { FNG = { has_country_flag = FNG_anqsqi_warc_started } }
+			country_event = { #weigh shandong deal
+				id = anq.173
+				days = 2
+			}
+		}
+		else = {
+			country_event = {
+				id = anq.165
+				days = 3
+			}
+		}
+	}
+}
+
+country_event = { # shandong anqing war conference willingness result
+	id = anq.173
+	immediate = { log = "[GetDateText]: [Root.GetName]: event anq.173" }
+	title = anq.173.t
+	desc = {
+		text = anq.173.d1
+		trigger = { #failure at start, no ideal
+			NOT = { country_exists = SQI }
+			FNG = { NOT = { has_country_flag = FNG_anqsqi_warc2_started } }
+		}
+	}
+	desc = {
+		text = anq.173.d2
+		trigger = { #failure at second
+			FNG = { has_country_flag = FNG_anqsqi_warc2_failure }
+		}
+	}
+	desc = {
+		text = anq.173.d3
+		trigger = {
+			FNG = { #success second, ideal
+				has_country_flag = FNG_anqsqi_warc2_success
+				has_country_flag = FNG_anqsqi_warc_ideal_success
+			}
+		}
+	}
+	desc = {
+		text = anq.173.d4
+		trigger = {
+			FNG = { #full success
+				has_country_flag = FNG_anqsqi_warc2_success
+				NOT = { has_country_flag = FNG_anqsqi_warc_ideal_success }
+			}
+		}
+	}
+
+	fire_only_once = yes
+	is_triggered_only = yes
+
+	option = {
+		name = anq.173.a
+		if = {
+			limit = {
+				NOT = { country_exists = SQI }
+				FNG = { NOT = { has_country_flag = FNG_anqsqi_warc2_started } }
+			}
+			custom_effect_tooltip = anq_decrease_reclamation_willingness_2
+			add_to_variable = { ANQ_reclamation_willingness = -2 }
+		}
+		else_if = {
+			limit = {
+				FNG = { has_country_flag = FNG_anqsqi_warc2_failure }
+			}
+			custom_effect_tooltip = anq_decrease_reclamation_willingness_1
+			add_to_variable = { ANQ_reclamation_willingness = -1 }
+		}
+		else_if = {
+			limit = {
+				FNG = { #success second, ideal
+					has_country_flag = FNG_anqsqi_warc2_success
+					has_country_flag = FNG_anqsqi_warc_ideal_success
+				}
+			}
+			custom_effect_tooltip = anq_nochange_reclamation_willingness
+		}
+		else_if = {
+			limit = {
+				FNG = { #full success
+					has_country_flag = FNG_anqsqi_warc2_success
+					NOT = { has_country_flag = FNG_anqsqi_warc_ideal_success }
+				}
+			}
+			custom_effect_tooltip = anq_increase_reclamation_willingness_1
+			add_to_variable = { ANQ_reclamation_willingness = 1 }
+		}
+		country_event = {
+			id = anq.165
+			days = 2
+		}
+	}
+}
+
 country_event = { # anti concessionist opinion of qing (pro-fengtian)
 	id = anq.165
 	immediate = { log = "[GetDateText]: [Root.GetName]: event anq.165" }
@@ -5551,13 +5752,7 @@ country_event = { # anti concessionist opinion of qing (pro-fengtian)
 	fire_only_once = yes
 	is_triggered_only = yes
 
-	trigger = {
-		NOT = {
-			FNG = { owns_state = 608 }
-		}
-	}
-
-	option = {
+	option = { #normal zhili-led qing
 		name = anq.165.a
 		trigger = {
 			QIE = {
@@ -5569,49 +5764,54 @@ country_event = { # anti concessionist opinion of qing (pro-fengtian)
 			}
 		}
 		custom_effect_tooltip = anq_nochange_reclamation_willingness
-		if = {
+		if = { #high japanese influence leads anti-concessions league to rally against reclamation
 			limit = { FNG_mantetsu_level_very_high = yes }
 			set_country_flag = ANQ_anticonc_against_reclamation_high_feng_jap
 			country_event = {
 				id = anq.167
-				days = 5
+				days = 1
+				random_hours = 18
 			}
 		}
-		else_if = {
+		else_if = { #high cred leads to anti-concessions league to rally in favor of reclamation
 			limit = { check_variable = { credibility_factor > 90 } }
 			set_country_flag = ANQ_anticonc_support_reclamation_high_cred
 			country_event = {
 				id = anq.166
-				days = 5
+				days = 1
+				random_hours = 18
 			}
 		}
-		else_if = {
+		else_if = { #high japanese influence but also okayish credibility leads to divided on reclamation
 			limit = {
 				FNG_mantetsu_level_high = yes
-				check_variable = { credibility_factor > 70 }
+				check_variable = { credibility_factor > 80 }
 			}
 			country_event = {
 				id = anq.168
-				days = 5
+				days = 1
+				random_hours = 18
 			}
 		}
-		else_if = {
+		else_if = { #high japanese influence leads them to be against reclamation
 			limit = { FNG_mantetsu_level_high = yes }
 			set_country_flag = ANQ_anticonc_against_reclamation_high_feng_jap
 			country_event = {
 				id = anq.167
-				days = 5
+				days = 1
+				random_hours = 18
 			}
 		}
-		else = {
+		else = { #default divided onr eclamation
 			country_event = {
 				id = anq.168
-				days = 5
+				days = 1
+				random_hours = 18
 			}
 		}
 	}
 
-	option = {
+	option = { 
 		name = anq.165.b
 		trigger = {
 			QIE = {
@@ -5626,17 +5826,19 @@ country_event = { # anti concessionist opinion of qing (pro-fengtian)
 		add_to_variable = { ANQ_reclamation_willingness = 1 }
 		custom_effect_tooltip = anq_increase_cred_10
 		add_to_variable = { credibility_factor = 10 }
-		if = {
+		if = { #high japanese will lead to division even though puyi is strong
 			limit = { FNG_mantetsu_level_very_high = yes }
 			country_event = {
 				id = anq.168
-				days = 5
+				days = 1
+				random_hours = 18
 			}
 		}
-		else = {
+		else = { #otherwise they will be in favor always
 			country_event = {
 				id = anq.166
-				days = 5
+				days = 1
+				random_hours = 18
 			}
 		}
 	}
@@ -5660,9 +5862,10 @@ country_event = { # anti concessionist opinion of qing (pro-fengtian)
 			var = credibility_factor
 			value = 20
 		}
-		country_event = {
+		country_event = { #bad stuff now they will always be against
 			id = anq.167
-			days = 5
+			days = 1
+			random_hours = 18
 		}
 	}
 }
@@ -5695,12 +5898,6 @@ country_event = { # anti-concessions for reclamation
 	fire_only_once = yes
 	is_triggered_only = yes
 
-	trigger = {
-		NOT = {
-			FNG = { owns_state = 608 }
-		}
-	}
-
 	option = {
 		name = anq.166.a
 		custom_effect_tooltip = anq_increase_reclamation_willingness_1
@@ -5708,7 +5905,8 @@ country_event = { # anti-concessions for reclamation
 		add_political_power = 20
 		country_event = {
 			id = anq.169
-			days = 4
+			days = 1
+			random_hours = 18
 		}
 	}
 }
@@ -5738,19 +5936,14 @@ country_event = { # anti-concessions against reclamation
 	fire_only_once = yes
 	is_triggered_only = yes
 
-	trigger = {
-		NOT = {
-			FNG = { owns_state = 608 }
-		}
-	}
-
 	option = {
 		name = anq.167.a
 		custom_effect_tooltip = anq_decrease_reclamation_willingness_1
 		add_to_variable = { ANQ_reclamation_willingness = -1 }
 		country_event = {
 			id = anq.169
-			days = 4
+			days = 1
+			random_hours = 18
 		}
 	}
 }
@@ -5764,18 +5957,13 @@ country_event = { # anti-concessions divided reclamation
 	fire_only_once = yes
 	is_triggered_only = yes
 
-	trigger = {
-		NOT = {
-			FNG = { owns_state = 608 }
-		}
-	}
-
 	option = {
 		name = anq.168.a
 		custom_effect_tooltip = anq_nochange_reclamation_willingness
 		country_event = {
 			id = anq.169
-			days = 4
+			days = 1
+			random_hours = 18
 		}
 	}
 }
@@ -5808,12 +5996,6 @@ country_event = { # japanese influence in fengtian willingness
 	fire_only_once = yes
 	is_triggered_only = yes
 
-	trigger = {
-		NOT = {
-			FNG = { owns_state = 608 }
-		}
-	}
-
 	option = {
 		name = anq.169.a
 		if = {
@@ -5843,13 +6025,15 @@ country_event = { # japanese influence in fengtian willingness
 			limit = { FNG_JAP_hostile = no }
 			country_event = {
 				id = anq.170
-				days = 2
+				days = 1
+				random_hours = 18
 			}
 		}
 		else = {
 			country_event = {
 				id = anq.174
-				days = 6
+				days = 1
+				random_hours = 18
 			}
 		}
 	}
@@ -5878,12 +6062,6 @@ country_event = { # japanese aid score willingness
 	fire_only_once = yes
 	is_triggered_only = yes
 
-	trigger = {
-		NOT = {
-			FNG = { owns_state = 608 }
-		}
-	}
-
 	option = {
 		name = anq.170.a
 		if = {
@@ -5901,200 +6079,8 @@ country_event = { # japanese aid score willingness
 		}
 		country_event = {
 			id = anq.174
-			days = 4
-		}
-	}
-}
-
-country_event = { # deciding on reclamation chain start (triggers before anq.165) (triggered by fengtian.243, only after escalate propaganda war)
-	id = anq.171
-	immediate = { log = "[GetDateText]: [Root.GetName]: event anq.171" }
-	title = anq.171.t
-	desc = {
-		text = anq.171.d1
-		trigger = {
-			FNG = { has_country_flag = FNG_shenyang_anticoncessions }
-		}
-	}
-	desc = {
-		text = anq.171.d2
-		trigger = {
-			NOT = { FNG = { has_country_flag = FNG_shenyang_anticoncessions } }
-		}
-	}
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	trigger = {
-		NOT = {
-			FNG = { owns_state = 608 }
-		}
-	}
-
-	option = {
-		name = anq.171.a
-		country_event = {
-			id = anq.172
-			days = 5
-		}
-		if = {
-			limit = {
-				FNG = { has_country_flag = FNG_shenyang_anticoncessions }
-			}
-			custom_effect_tooltip = anq_increase_reclamation_willingness_2
-			add_to_variable = { ANQ_reclamation_willingness = 2 }
-		}
-		else = {
-			custom_effect_tooltip = anq_decrease_reclamation_willingness_1
-			add_to_variable = { ANQ_reclamation_willingness = -1 }
-		}
-	}
-}
-
-country_event = { # willingness reconstruction (triggers before anq.165)
-	id = anq.172
-	immediate = { log = "[GetDateText]: [Root.GetName]: event anq.172" }
-	title = anq.172.t
-	desc = {
-		text = anq.172.d1
-		trigger = { has_country_flag = ANQ_feng_aids_reconstruction }
-	}
-	desc = {
-		text = anq.172.d2
-		trigger = { has_country_flag = ANQ_fengjapan_aids_reconstruction }
-	}
-	desc = {
-		text = anq.172.d3
-		trigger = { has_country_flag = ANQ_no_reconstruction_aid }
-	}
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	trigger = {
-		NOT = {
-			FNG = { owns_state = 608 }
-		}
-	}
-
-	option = {
-		name = anq.172.a
-		if = {
-			limit = { has_country_flag = ANQ_feng_aids_reconstruction }
-			custom_effect_tooltip = anq_increase_reclamation_willingness_1
-			add_to_variable = { ANQ_reclamation_willingness = 1 }
-		}
-		else_if = {
-			limit = { has_country_flag = ANQ_fengjapan_aids_reconstruction }
-			custom_effect_tooltip = anq_increase_reclamation_willingness_2
-			add_to_variable = { ANQ_reclamation_willingness = 2 }
-		}
-		else = {
-			custom_effect_tooltip = anq_decrease_reclamation_willingness_1
-			add_to_variable = { ANQ_reclamation_willingness = -1 }
-		}
-
-		if = {
-			limit = { FNG = { has_country_flag = FNG_anqsqi_warc_started } }
-			country_event = {
-				id = anq.173
-				days = 3
-			}
-		}
-		else = {
-			country_event = {
-				id = anq.165
-				days = 4
-			}
-		}
-	}
-}
-
-country_event = { # shandong anqing war conference willingness result
-	id = anq.173
-	immediate = { log = "[GetDateText]: [Root.GetName]: event anq.173" }
-	title = anq.173.t
-	desc = {
-		text = anq.173.d1
-		trigger = { #failure at start, no ideal
-			NOT = { country_exists = SQI }
-			FNG = { NOT = { has_country_flag = FNG_anqsqi_warc2_started } }
-		}
-	}
-	desc = {
-		text = anq.173.d2
-		trigger = { #failure at second
-			FNG = { has_country_flag = FNG_anqsqi_warc2_failure }
-		}
-	}
-	desc = {
-		text = anq.173.d3
-		trigger = {
-			FNG = { #success second, ideal
-				has_country_flag = FNG_anqsqi_warc2_success
-				has_country_flag = FNG_anqsqi_warc_ideal_success
-			}
-		}
-	}
-	desc = {
-		text = anq.173.d4
-		trigger = {
-			FNG = { #full success
-				has_country_flag = FNG_anqsqi_warc2_success
-				NOT = { has_country_flag = FNG_anqsqi_warc_ideal_success }
-			}
-		}
-	}
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	trigger = {
-		NOT = {
-			FNG = { owns_state = 608 }
-		}
-	}
-
-	option = {
-		name = anq.173.a
-		if = {
-			limit = {
-				NOT = { country_exists = SQI }
-				FNG = { NOT = { has_country_flag = FNG_anqsqi_warc2_started } }
-			}
-			custom_effect_tooltip = anq_decrease_reclamation_willingness_2
-			add_to_variable = { ANQ_reclamation_willingness = -2 }
-		}
-		else_if = {
-			limit = {
-				FNG = { has_country_flag = FNG_anqsqi_warc2_failure }
-			}
-			custom_effect_tooltip = anq_decrease_reclamation_willingness_1
-			add_to_variable = { ANQ_reclamation_willingness = -1 }
-		}
-		else_if = {
-			limit = {
-				FNG = { #success second, ideal
-					has_country_flag = FNG_anqsqi_warc2_success
-					has_country_flag = FNG_anqsqi_warc_ideal_success
-				}
-			}
-			custom_effect_tooltip = anq_nochange_reclamation_willingness
-		}
-		else_if = {
-			limit = {
-				FNG = { #full success
-					has_country_flag = FNG_anqsqi_warc2_success
-					NOT = { has_country_flag = FNG_anqsqi_warc_ideal_success }
-				}
-			}
-			custom_effect_tooltip = anq_increase_reclamation_willingness_1
-			add_to_variable = { ANQ_reclamation_willingness = 1 }
-		}
-		country_event = {
-			id = anq.165
-			days = 4
+			days = 1
+			random_hours = 18
 		}
 	}
 }
@@ -6130,12 +6116,6 @@ country_event = { # fengtian influence
 	fire_only_once = yes
 	is_triggered_only = yes
 
-	trigger = {
-		NOT = {
-			FNG = { owns_state = 608 }
-		}
-	}
-
 	option = {
 		name = anq.174.a
 		if = {
@@ -6162,7 +6142,8 @@ country_event = { # fengtian influence
 			}
 			country_event = {
 				id = anq.175
-				days = 1
+				days = 3
+				random_days = 2
 			}
 		}
 	}
@@ -6215,12 +6196,6 @@ country_event = { # final decision commitment reclamation war
 	fire_only_once = yes
 	is_triggered_only = yes
 
-	trigger = {
-		NOT = {
-			FNG = { owns_state = 608 }
-		}
-	}
-
 	option = { #Commit to join and participate actively
 		name = anq.175.a
 		ai_chance = {
@@ -6245,6 +6220,18 @@ country_event = { # final decision commitment reclamation war
 		custom_effect_tooltip = anq_commit_fengtian_tt
 		set_country_flag = ANQ_reclamation_decided
 		set_country_flag = ANQ_commits_reclamation
+		set_country_flag = FNG_alliance
+
+		custom_effect_tooltip = anq_increase_fng_5
+		hidden_effect = {
+			add_popularity = {
+				ideology = market_liberal
+				popularity = 0.05
+			}
+			ANQ_remove_fengtian_spirit = yes
+			ANQ_calculate_fengtian_level = yes
+			ANQ_add_fengtian_spirit = yes
+		}
 
 		FNG = {
 			country_event = {
