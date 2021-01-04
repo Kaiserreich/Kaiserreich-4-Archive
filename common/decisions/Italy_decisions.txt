@@ -762,17 +762,12 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					owns_state = 160
 				}
 				controls_all_owned_states = yes
-				if = {
-					limit = {
-						NOT = { has_government = national_populist }
-					}
-					OR = {
-						is_in_faction = no
-						is_faction_leader = yes
-					}
+				OR = {
+					is_in_faction = no
+					is_faction_leader = yes
 				}
 			}
-			can_declare_war_on = AUS
+			can_declare_war_on = FROM
 		}
 
 		visible = {
@@ -784,59 +779,109 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 			AUS = {
 				exists = yes
 				NOT = { has_war_with = ROOT }
-				owns_state = 783
-				owns_state = 736
+				OR = {
+					owns_state = 783
+					owns_state = 736
+				}
+			}
+		}
+		
+		targets = { AUS }
+		target_root_trigger = {
+			OR = {
+				has_government = national_populist
+				783 = { is_claimed_by = ROOT }
+				736 = { is_claimed_by = ROOT }
+			}
+		}
+		target_trigger = {
+			FROM = {
+				OR = {
+					owns_state = 783
+					owns_state = 736
+				}
 			}
 		}
 
 		fire_only_once = yes
 		cost = 0
 		days_remove = 20
-		war_with_on_remove = AUS
+		war_with_target_on_remove = yes
+		
 		ai_will_do = {
 			factor = 10
+			modifier = {
+				factor = 0
+				SER = {
+					exists = yes
+					is_in_faction_with = BPL
+					OR = {
+						NOT = { has_completed_focus = SER_Together_Against_Austria }
+						is_in_array = { SER.SER_will_attack_austria = THIS }
+						has_decision = SER_Attack_Austria
+					}
+				}
+			}
 			modifier = {
 				factor = 0
 				has_war = yes
 			}
 			modifier = {
 				factor = 0
-				AUS = { is_in_faction_with = GER }
+				AUS = {
+					NOT = {
+						controls_state = 783
+						controls_state = 736
+					}
+				}
 			}
 			modifier = {
 				factor = 0
 				AUS = {
-					is_subject = no
-					is_faction_leader = yes
-					surrender_progress < 0.10
-					NOT = {
-						has_war_with = GER
-						has_war_with = RUS
-						has_war_with = HUN
-						has_war_with = SER
-						has_war_with = ROM
-						has_war_with = POL
-					}
+					is_in_faction_with = GER
+					GER = { surrender_progress < 0.20 }
 				}
-				NOT = {
-					strength_ratio = { tag = AUS ratio > 1.2 }
-					SER = { has_country_flag = waiting_to_attack_austria }
-					ROM = { has_country_flag = waiting_to_attack_austria }
-					POL = { has_country_flag = waiting_to_attack_austria }
+			}
+			modifier = {
+				factor = 0
+				AUS = {
+					set_temp_variable = { strength = num_divisions }
+					clamp_temp_variable = { var = strength min = 1 }
+					if = {
+						limit = { HUN = { is_ally_with = AUS } }
+						add_to_temp_variable = { strength = HUN.num_divisions }
+					}
+					if = {
+						limit = { CZE = { is_ally_with = AUS } }
+						add_to_temp_variable = { strength = CZE.num_divisions }
+					}
+					if = {
+						limit = { GAL = { is_ally_with = AUS } }
+						add_to_temp_variable = { strength = GAL.num_divisions }
+					}
+					if = {
+						limit = { CRO = { is_ally_with = AUS } }
+						add_to_temp_variable = { strength = CRO.num_divisions }
+					}
+					set_temp_variable = { my_strength = ROOT.num_divisions }
+					clamp_temp_variable = { var = my_strength min = 1 }
+					divide_temp_variable = { strength = my_strength }
+					check_variable = { strength > 0.9 }
+					NOT = {
+						surrender_progress > 0.10
+						HUN = {
+							is_ally_with = AUS
+							surrender_progress > 0.30
+						}
+						has_war_with = RUS
+						has_war_with = POL
+						has_war_with = HUN
+					}
 				}
 			}
 			modifier = {
 				factor = 5
-				OR = {
-					AUS = { has_war_with = HUN }
-					SER = { has_country_flag = waiting_to_attack_austria }
-					ROM = { has_country_flag = waiting_to_attack_austria }
-					POL = { has_country_flag = waiting_to_attack_austria }
-				}
-			}
-			modifier = {
-				factor = 10
-				has_country_flag = waiting_to_attack_austria
+				AUS = { has_war_with = HUN }
 			}
 		}
 
@@ -853,40 +898,14 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					}
 				}
 			}
-			hidden_effect = {
-				add_ai_strategy = {
-					type = prepare_for_war
-					id = AUS
-					value = 1000
-				}
-				AUS = {
-					add_ai_strategy = {
-						type = prepare_for_war
-						id = ROOT
-						value = 1000
-					}
-				}
-			}
+			setup_decision_attack_AI = yes
 		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ITA_attack_austria"
+			clear_decision_attack_AI = yes
 			declare_war_on = {
 				target = AUS
 				type = annex_everything
-			}
-			hidden_effect = {
-				add_ai_strategy = {
-					type = prepare_for_war
-					id = AUS
-					value = -1000
-				}
-				AUS = {
-					add_ai_strategy = {
-						type = prepare_for_war
-						id = ROOT
-						value = -1000
-					}
-				}
 			}
 		}
 	}
@@ -1064,7 +1083,10 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 			is_in_faction = no
 			is_subject = no
 			has_socialist_government = no
-			NOT = { has_government = national_populist }
+			NOT = {
+				has_government = national_populist
+				has_country_flag = ITA_no_join_aus
+			}
 			FROM = {
 				is_subject = no
 				has_socialist_government = no
@@ -4239,7 +4261,6 @@ ITA_resorgimento_decisions = {
 		icon = italy_flag
 		allowed = { tag = ITA }
 		available = {
-			is_subject = no
 			owns_state = 159
 			owns_state = 160
 			owns_state = 158
@@ -4274,7 +4295,6 @@ ITA_resorgimento_decisions = {
 		icon = italy_flag
 		allowed = { original_tag = SRI }
 		available = {
-			is_subject = no
 			owns_state = 159
 			owns_state = 160
 			owns_state = 158

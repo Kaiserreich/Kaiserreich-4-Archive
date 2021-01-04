@@ -379,7 +379,6 @@ ROM_reconquest_category = {
 			for_each_scope_loop = {
 				array = global.ROM_transylvania_states
 				tooltip = ROM_transylvanian_resistance_effect_tooltip
-				custom_effect_tooltip = ROM_rail_sabotage_effect
 				add_to_variable = {
 					ROM_transylvanian_resistance_activity = 0.2
 					tooltip = ROM_transylvanian_resistance_activity_tooltip
@@ -594,6 +593,7 @@ ROM_reconquest_category = {
 		}
 
 		visible = {
+			is_subject = no
 			can_declare_war_on = FROM
 			FROM = { owns_state = 84 }
 			has_completed_focus = ROM_transylvania_or_war
@@ -609,9 +609,14 @@ ROM_reconquest_category = {
 		cost = 30
 		days_remove = 14
 		fire_only_once = yes
+		war_with_target_on_remove = yes
 
 		ai_will_do = {
 			factor = 100
+			modifier = {
+				factor = 0
+				has_country_flag = imminent_war
+			}
 			modifier = { # don't attack before completing a few decisions
 				factor = 0
 				check_variable = { ROM.revolt < 6 }
@@ -619,6 +624,20 @@ ROM_reconquest_category = {
 			modifier = { # don't do anything if already at war
 				factor = 0
 				has_war = yes
+			}
+			modifier = { # wait for Serbia to prepare the Pact
+				factor = 0
+				OR = {
+					NOT = {
+						SER = { has_completed_focus = SER_Together_Against_Austria }
+					}
+					AND = {
+						is_in_array = { SER.SER_will_attack_austria = ROOT }
+						NOT = {
+							SER = { has_war_with = AUS }
+						}
+					}
+				}
 			}
 			modifier = { #don't attack if...
 				factor = 0
@@ -631,8 +650,6 @@ ROM_reconquest_category = {
 				NOT = {
 					has_country_flag = ROM_TRS_revolt #Uprising hasn't started
 					strength_ratio = { tag = AUS ratio > 2.0 } #ROM isn't stronk
-					POL = { has_country_flag = waiting_to_attack_austria } #Wolves aren't gathering
-					ITA = { has_country_flag = waiting_to_attack_austria }
 				}
 			}
 			modifier = {
@@ -686,6 +703,7 @@ ROM_reconquest_category = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision ROM_start_the_uprising"
+			set_country_flag = { flag = imminent_war days = 30 value = 1 }
 			setup_decision_attack_AI = yes
 			hidden_effect = { country_event = romania.48 }
 		}
@@ -1157,7 +1175,7 @@ ROM_great_game_carol_category = {
 			command_power > 99
 		}
 
-		cost = 50
+		cost = 25
 		days_remove = 60
 		fire_only_once = no
 		days_re_enable = 120
@@ -1173,6 +1191,7 @@ ROM_great_game_carol_category = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision ROM_recruit_conspirators"
 			add_command_power = -100
+			hidden_effect = { add_political_power = -25 }
 		}
 
 		remove_effect = {
@@ -1437,6 +1456,12 @@ ROM_reunion_category = {
 					add_idea = ROM_reintegration1
 				}
 			}	
+			hidden_effect = {
+				country_event = {
+					id = romania.168
+					days = 96
+				}
+			}
 		}
 	}
 	ROM_integrate_state_decision = {
@@ -1941,9 +1966,11 @@ ROM_foreign_policy = {
 		icon = eng_trade_unions_demand
 
 		visible = {
+			is_subject = no
 			can_declare_war_on = FROM
 			FROM = { owns_state = 772 }
 			has_completed_focus = ROM_demand_dobrudzha
+			NOT = { has_country_flag = SER_lost_balkan_war }
 		}
 
 		targets = { BUL }
@@ -1956,37 +1983,79 @@ ROM_foreign_policy = {
 		}
 
 		cost = 0
-		days_remove = 7
+		days_remove = 20
 		fire_only_once = yes
+		war_with_target_on_remove = yes
 
 		ai_will_do = {
 			factor = 10
 			modifier = {
 				factor = 0
-				strength_ratio = { tag = FROM ratio < 0.5 }
-				FROM = { has_war = no }
+				strength_ratio = { tag = FROM ratio < 1.0 }
+				FROM = {
+					OR = {
+						has_war = no
+						surrender_progress < 0.10
+					}
+				}
 			}
 			modifier = {
 				factor = 0
 				has_war = yes
 			}
 			modifier = {
-				factor = 2
+				factor = 0
+				has_country_flag = imminent_war
+			}
+			modifier = {
+				factor = 0
 				is_in_faction_with = SER
 			}
 			modifier = {
 				factor = 10
 				has_global_flag = balkan_war_started
 			}
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = yes
+					var:faction_leader = {
+						surrender_progress < 0.20
+					}
+				}
+			}
+			# they're guaranteed but not in a faction
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = no
+					has_guarantor = yes
+					any_of_scopes = {
+						array = guarantor_array
+						has_guaranteed = PREV
+						OR = {
+							strength_ratio = { tag = ROOT ratio > 1.0 }
+							is_in_faction = yes
+						}
+						OR = {
+							has_war = no
+							surrender_progress < 0.20
+						}
+					}
+				}
+			}
 		}
 
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_dobrogea_ultimatum target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 30 value = 1 }
+			setup_decision_attack_AI = yes
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_dobrogea_ultimatum target: [From.GetName]"
+			clear_decision_attack_AI = yes
 			FROM = {
-				country_event = {
-					id = romania.36
-					days = 1
-				}
+				country_event = romania.36
 			}
 		}
 	}
@@ -2008,10 +2077,11 @@ ROM_foreign_policy = {
 			}
 		}
 		visible = {
+			is_ai = no
+			is_subject = no
 			can_declare_war_on = FROM
 			FROM = { owns_state = 84 }
 			owns_state = 772
-			has_completed_focus = ROM_manoeuvres_in_the_carpathians
 		}
 
 		targets = { 84.OWNER }
@@ -2024,32 +2094,18 @@ ROM_foreign_policy = {
 		}
 
 		cost = 0
-		days_remove = 7
+		days_remove = 20
 		fire_only_once = yes
+		war_with_target_on_remove = yes
 
-		ai_will_do = {
-			factor = 0
-			modifier = {
-				factor = 100
-				FROM = { has_war_with = AUS }
-			}
-			modifier = { # don't do anything if already at war
-				factor = 0
-				has_war = yes
-			}
-			modifier = { #don't attack if unsupported
-				factor = 0
-				strength_ratio = { tag = FROM ratio < 0.7 }
-				NOT = {
-					SER = { has_country_flag = waiting_to_attack_austria }
-					POL = { has_country_flag = waiting_to_attack_austria }
-					ITA = { has_country_flag = waiting_to_attack_austria }
-				}
-			}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_issue_ultimatum target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 30 value = 1 }
+			setup_decision_attack_AI = yes
 		}
-
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_issue_ultimatum target: [From.GetName]"
+			clear_decision_attack_AI = yes
 			FROM = {
 				if = {
 					limit = { is_subject = yes }
@@ -2063,10 +2119,12 @@ ROM_foreign_policy = {
 			}
 		}
 	}
+
 	ROM_demand_bucovina = {
 		icon = eng_trade_unions_demand
 
 		visible = {
+			is_subject = no
 			can_declare_war_on = FROM
 			FROM = {
 				OR = {
@@ -2091,8 +2149,9 @@ ROM_foreign_policy = {
 		}
 
 		cost = 0
-		days_remove = 7
+		days_remove = 20
 		fire_only_once = yes
+		war_with_target_on_remove = yes
 
 		ai_will_do = {
 			factor = 10
@@ -2102,8 +2161,47 @@ ROM_foreign_policy = {
 			}
 			modifier = {
 				factor = 0
+				has_country_flag = imminent_war
+			}
+			modifier = {
+				factor = 0
 				is_in_faction = no
-				strength_ratio = { tag = FROM ratio < 0.9 }
+				strength_ratio = { tag = FROM ratio < 1.0 }
+				FROM = {
+					OR = {
+						has_war = no
+						surrender_progress < 0.10
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = yes
+					var:faction_leader = {
+						surrender_progress < 0.20
+					}
+				}
+			}
+			# they're guaranteed but not in a faction
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = no
+					has_guarantor = yes
+					any_of_scopes = {
+						array = guarantor_array
+						has_guaranteed = PREV
+						OR = {
+							strength_ratio = { tag = ROOT ratio > 1.0 }
+							is_in_faction = yes
+						}
+						OR = {
+							has_war = no
+							surrender_progress < 0.20
+						}
+					}
+				}
 			}
 			modifier = {
 				factor = 10
@@ -2115,8 +2213,14 @@ ROM_foreign_policy = {
 			}
 		}
 
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_demand_bucovina target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 30 value = 1 }
+			setup_decision_attack_AI = yes
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_demand_bucovina target: [From.GetName]"
+			clear_decision_attack_AI = yes
 			FROM = {
 				if = {
 					limit = { is_subject = yes }
@@ -2139,6 +2243,7 @@ ROM_foreign_policy = {
 		}
 
 		visible = {
+			is_subject = no
 			has_government = national_populist
 			can_declare_war_on = FROM
 			FROM = { owns_state = 875 }
@@ -2156,8 +2261,9 @@ ROM_foreign_policy = {
 		}
 
 		cost = 0
-		days_remove = 7
+		days_remove = 20
 		fire_only_once = yes
+		war_with_target_on_remove = yes
 
 		ai_will_do = {
 			factor = 5
@@ -2167,11 +2273,51 @@ ROM_foreign_policy = {
 			}
 			modifier = {
 				factor = 0
+				has_country_flag = imminent_war
+			}
+			modifier = {
+				factor = 0
 				NOT = { owns_state = 713 }
 			}
 			modifier = {
 				factor = 0
-				strength_ratio = { tag = FROM ratio < 0.7 }
+				is_in_faction = no
+				strength_ratio = { tag = FROM ratio < 1.0 }
+				FROM = {
+					OR = {
+						has_war = no
+						surrender_progress < 0.10
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = yes
+					var:faction_leader = {
+						surrender_progress < 0.20
+					}
+				}
+			}
+			# they're guaranteed but not in a faction
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = no
+					has_guarantor = yes
+					any_of_scopes = {
+						array = guarantor_array
+						has_guaranteed = PREV
+						OR = {
+							strength_ratio = { tag = ROOT ratio > 1.0 }
+							is_in_faction = yes
+						}
+						OR = {
+							has_war = no
+							surrender_progress < 0.20
+						}
+					}
+				}
 			}
 			modifier = {
 				factor = 0.1
@@ -2179,8 +2325,14 @@ ROM_foreign_policy = {
 			}
 		}
 
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_demand_banat target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 30 value = 1 }
+			setup_decision_attack_AI = yes
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_demand_banat target: [From.GetName]"
+			clear_decision_attack_AI = yes
 			FROM = {
 				country_event = {
 					id = romania.139
@@ -2305,6 +2457,53 @@ ROM_foreign_policy = {
 		}
 	}
 
+	ROM_leave_belgrade_pact_if_leader = {
+		icon = generic_break_treaty
+
+		available = {
+			has_war = no
+		}
+
+		visible = {
+			has_completed_focus = ROM_renew_pride
+			is_subject = no
+			is_faction_leader = yes
+		}
+
+		cost = 0
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 10
+				has_completed_focus = ROM_green_prince_stands_up
+			}
+			modifier = {
+				add = 10
+				has_completed_focus = ROM_carlist_restoration
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_leave_belgrade_pact_if_leader"
+			if = {
+				limit = {
+					is_in_faction_with = SER
+					SER = { is_subject = no }
+				}
+				SER = {
+					set_faction_leader = yes
+					country_event = romania.113
+				}
+				leave_faction = yes
+			}
+			else = {
+				dismantle_faction = yes
+			}
+		}
+	}
+
 	ROM_leave_faction = {
 		icon = generic_break_treaty
 
@@ -2375,8 +2574,6 @@ ROM_foreign_policy = {
 		}
 
 		visible = {
-			is_in_faction = no
-			is_subject = no
 			OR = {
 				has_completed_focus = ROM_entente
 				AND = {
@@ -2389,13 +2586,12 @@ ROM_foreign_policy = {
 					}
 				}
 			}
+			is_valid_peace_target = yes
 			FROM = { is_faction_leader = yes }
 		}
 
 		targets = { ENT }
 		target_root_trigger = {
-			is_in_faction = no
-			is_subject = no
 			OR = {
 				has_completed_focus = ROM_entente
 				AND = {
@@ -2408,6 +2604,7 @@ ROM_foreign_policy = {
 					}
 				}
 			}
+			is_valid_peace_target = yes
 		}
 		target_trigger = {
 			FROM = { is_faction_leader = yes }
@@ -2460,6 +2657,7 @@ ROM_foreign_policy = {
 			}
 		}
 	}
+
 	ROM_economic_council_decision = {
 		icon = generic_agreement
 
@@ -2535,6 +2733,7 @@ ROM_foreign_policy = {
 			clr_global_flag = BP_working_on_eco_union
 		}
 	}
+
 	ROM_economic_council_expansion = {
 		icon = generic_agreement
 
@@ -2587,6 +2786,7 @@ ROM_foreign_policy = {
 			clr_global_flag = BP_working_on_eco_union
 		}
 	}
+
 	ROM_negotiate_with_Russia = {
 		icon = generic_decision
 
@@ -2650,6 +2850,7 @@ ROM_foreign_policy = {
 			}
 		}
 	}
+
 	ROM_negotiate_with_Germany = {
 		icon = generic_decision
 

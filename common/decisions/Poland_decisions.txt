@@ -1,6 +1,5 @@
-POL_foreign_policy_decisions = {
+POL_integration_decisions = {
 	POL_integrate_state = {
-		name = RUS_Integrate_State
 		icon = eng_trade_unions_demand
 
 		available = {
@@ -17,7 +16,7 @@ POL_foreign_policy_decisions = {
 			}
 		}
 
-		cost = 30
+		cost = 25
 		days_remove = 60
 		
 		state_target = yes
@@ -39,6 +38,8 @@ POL_foreign_policy_decisions = {
 			add_state_core = FROM
 		}
 	}
+}
+POL_foreign_policy_decisions = {
 	POL_seize_galicia = {
 		icon = generic_prepare_civil_war
 		
@@ -62,73 +63,91 @@ POL_foreign_policy_decisions = {
 
 		ai_will_do = {
 			factor = 10
+			# don't do anything if already at war
 			modifier = {
 				factor = 0
 				has_war = yes
 			}
+			# wait for Serbia to prepare the Pact
 			modifier = {
 				factor = 0
-				FROM = { is_ally_with = AUS }
-				is_in_faction = yes
-				var:faction_leader = {
-					NOT = { has_war_with = AUS }
+				OR = {
+					NOT = {
+						SER = { has_completed_focus = SER_Together_Against_Austria }
+					}
+					AND = {
+						is_in_array = { SER.SER_will_attack_austria = ROOT }
+						NOT = {
+							SER = { has_war_with = AUS }
+						}
+					}
 				}
 			}
+			# don't attack Austria unless it's vulnerable or other countries are waiting to help
 			modifier = {
 				factor = 0
-				FROM = { is_ally_with = AUS }
-				AUS = {
+				FROM = {
 					is_subject = no
 					is_faction_leader = yes
 					surrender_progress < 0.10
 					NOT = {
-						any_enemy_country = { is_actual_major = yes }
+						has_war_with = GER
+						has_war_with = RUS
+						has_war_with = HUN
+						has_war_with = POL
+						has_war_with = ITA
 					}
 				}
 				NOT = {
-					count_triggers = {
-						amount = 2
-						SER = { has_country_flag = waiting_to_attack_austria }
-						ROM = { has_country_flag = waiting_to_attack_austria }
-						ITA = { has_country_flag = waiting_to_attack_austria }
+					is_in_array = { SER.SER_will_attack_austria = POL }
+					is_in_array = { SER.SER_will_attack_austria = ITA }
+				}
+			}
+			# don't attack if it's owned by an Austria who is a puppet of a stronger overlord
+			modifier = {
+				factor = 0
+				FROM = {
+					is_subject = yes
+					overlord = {
+						surrender_progress < 0.10
+						strength_ratio = { tag = ROOT ratio > 1.0 }
+					}
+				}
+			}
+			# don't attack if it's owned by an Austria who is in a faction with a stronger leader
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = yes
+					is_faction_leader = no
+					var:faction_leader = {
+						surrender_progress < 0.10
+						strength_ratio = { tag = ROOT ratio > 1.0 }
 					}
 				}
 			}
 			modifier = {
-				factor = 5
-				FROM = { is_ally_with = AUS }
-				OR = {
-					AUS = { has_war_with = HUN }
-					count_triggers = {
-						amount = 2
-						SER = { has_country_flag = waiting_to_attack_austria }
-						ROM = { has_country_flag = waiting_to_attack_austria }
-						ITA = { has_country_flag = waiting_to_attack_austria }
-					}
-				}
-			}
-			modifier = {
-				factor = 5
-				has_country_flag = waiting_to_attack_austria
+				factor = 0
+				has_country_flag = imminent_war
 			}
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_galicia target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 15 value = 1 }
 			setup_decision_attack_AI = yes
-			FROM = {
-				if = {
-					limit = { is_subject = yes }
-					overlord = {
-						set_temp_variable = { global.GAL_target = THIS }
-					}
+			if = {
+				limit = {
+					FROM = { is_subject = yes }
 				}
-				else = {
-					set_temp_variable = { GAL_target = THIS }
+				var:FROM.overlord = {
+					country_event = { id = poland.177 days = 5 }
 				}
 			}
-			var:GAL_target = {
-				country_event = { id = poland.177 days = 5 }
+			else = {
+				FROM = {
+					country_event = { id = poland.177 days = 5 }
+				}
 			}
 		}
 
@@ -166,25 +185,41 @@ POL_foreign_policy_decisions = {
 			}
 			modifier = {
 				factor = 0
-				FROM = { is_in_faction_with = GER }
-				is_in_faction = yes
-				var:faction_leader = {
-					NOT = { has_war_with = GER }
+				strength_ratio = { tag = FROM ratio < 1 }
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = yes
+					var:FROM.faction_leader = {
+						strength_ratio = {
+							tag = ROOT
+							ratio > 0.7
+						}
+					}
 				}
 			}
 			modifier = {
 				factor = 0
-				FROM = { is_in_faction_with = GER }
-				GER = {
-					NOT = {
-						any_enemy_country = { is_actual_major = yes }
+				FROM = {
+					is_subject = yes
+					overlord = {
+						strength_ratio = {
+							tag = ROOT
+							ratio > 0.7
+						}
 					}
 				}
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = imminent_war
 			}
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_brzesc target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 15 value = 1 }
 			setup_decision_attack_AI = yes
 		}
 
@@ -219,32 +254,48 @@ POL_foreign_policy_decisions = {
 		war_with_target_on_remove = yes
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 			modifier = {
 				factor = 0
 				has_war = yes
 			}
 			modifier = {
 				factor = 0
-				FROM = { is_in_faction_with = GER }
-				is_in_faction = yes
-				var:faction_leader = {
-					NOT = { has_war_with = GER }
+				strength_ratio = { tag = FROM ratio < 1 }
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = yes
+					var:FROM.faction_leader = {
+						strength_ratio = {
+							tag = ROOT
+							ratio > 0.7
+						}
+					}
 				}
 			}
 			modifier = {
 				factor = 0
-				FROM = { is_in_faction_with = GER }
-				GER = {
-					NOT = {
-						any_enemy_country = { is_actual_major = yes }
+				FROM = {
+					is_subject = yes
+					overlord = {
+						strength_ratio = {
+							tag = ROOT
+							ratio > 0.7
+						}
 					}
 				}
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = imminent_war
 			}
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_brzesc target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 15 value = 1 }
 			setup_decision_attack_AI = yes
 			FROM = {
 				country_event = { id = poland.181 days = 4 }
@@ -276,37 +327,55 @@ POL_foreign_policy_decisions = {
 		war_with_target_on_remove = yes
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 			modifier = {
 				factor = 0
 				has_war = yes
 			}
 			modifier = {
 				factor = 0
-				is_in_faction = yes
-				var:faction_leader = {
-					NOT = { has_war_with = FROM }
+				strength_ratio = { tag = FROM ratio < 1 }
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = yes
+					var:FROM.faction_leader = {
+						strength_ratio = {
+							tag = ROOT
+							ratio > 0.7
+						}
+					}
 				}
 			}
 			modifier = {
 				factor = 0
-				NOT = {
-					FROM = {
-						any_enemy_country = { is_actual_major = yes }
+				FROM = {
+					is_subject = yes
+					overlord = {
+						strength_ratio = {
+							tag = ROOT
+							ratio > 0.7
+						}
 					}
 				}
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = imminent_war
 			}
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_brzesc target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision POL_crush_germany target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 15 value = 1 }
 			setup_decision_attack_AI = yes
-			country_event = poland.188
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_brzesc target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision POL_crush_germany target: [From.GetName]"
 			clear_decision_attack_AI = yes
+			country_event = poland.188
 		}
 	}
 	POL_occupy_poznan = {
@@ -358,14 +427,39 @@ POL_foreign_policy_decisions = {
 		fire_only_once = yes
 		war_with_target_on_remove = yes
 
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision POL_occupy_poznan"
-			FROM = {
-				country_event = {
-					id = poland.115
-					days = 2
+		ai_will_do = {
+			factor = 1000
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+			modifier = {
+				factor = 0
+				is_in_faction = yes
+				var:faction_leader = {
+					NOT = { has_war_with = FROM }
 				}
 			}
+			modifier = {
+				factor = 0
+				NOT = {
+					FROM = {
+						any_enemy_country = { is_actual_major = yes }
+					}
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_occupy_poznan target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 15 value = 1 }
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_occupy_poznan target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			FROM = { country_event = poland.115 }
 		}
 	}
 	POL_alliance_with_ukraine = {
