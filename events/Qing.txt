@@ -1153,6 +1153,7 @@ country_event = { #LEP is victorious, time to guarantee them
 		name = qielepcollapse.23.a
 		add_political_power = 75
 		give_guarantee = LEP #you can get them in faction later, need to wrangle with germany
+		remove_ideas = QIE_intervention_idea
 		add_opinion_modifier = {
 			target = LEP
 			modifier = QIE_helped_during_LEP_war
@@ -1161,7 +1162,6 @@ country_event = { #LEP is victorious, time to guarantee them
 			target = LEP
 			modifier = QIE_helped_during_LEP_war
 		}
-		remove_ideas = QIE_intervention_idea
 	}
 }
 
@@ -1686,17 +1686,109 @@ country_event = {
 }
 
 country_event = {
-	id = qiefor.10 #generals protest sneak attack, lose PP
+	id = qiefor.10 #generals protest sneak attack, lose PP or command power depending on allies
 	immediate = { log = "[GetDateText]: [Root.GetName]: event qiefor.10" }
 	title = qiefor.10.t
-	desc = qiefor.10.d
+	desc = {
+		text = qiefor.10.d.solo
+		trigger = {
+			NOT = {
+				OR = {
+					LEP = {
+						exists = yes
+						OR = {
+							is_guaranteed_by = QIE
+							is_in_faction_with = QIE
+						}
+					}
+					ANQ = {
+						exists = yes
+						OR = {
+							is_guaranteed_by = QIE
+							is_in_faction_with = QIE
+						}
+					}
+				}
+			}	
+		}
+	}
+
+	desc = {
+		text = qiefor.10.d.backup
+		trigger = {
+			OR = {
+				LEP = {
+					exists = yes
+					OR = {
+						is_guaranteed_by = QIE
+						is_in_faction_with = QIE
+					}
+				}
+				ANQ = {
+					exists = yes
+					OR = {
+						is_guaranteed_by = QIE
+						is_in_faction_with = QIE
+					}
+				}
+			}	
+		}
+	}
 
 	is_triggered_only = yes
 	fire_only_once = yes
 
 	option = {
 		name = qiefor.10.a #generals pissed, FNG/SHX reaction
+		trigger = {
+			NOT = {
+				LEP = {
+					exists = yes
+					OR = {
+						is_guaranteed_by = QIE
+						is_in_faction_with = QIE
+					}
+				}
+				ANQ = {
+					exists = yes
+					OR = {
+						is_guaranteed_by = QIE
+						is_in_faction_with = QIE
+					}
+				}
+			}
+		}
 		add_political_power = -150
+		declare_war_on = {
+			target = SHX
+			type = annex_everything
+		}
+		activate_mission = QIE_fng_supports_yan_unless_we_win_fast
+		FNG = { country_event = qiefor.19 } #qie launch sneak attack on SHX
+		SHX = { country_event = qiefor.20 } #qie launch sneak attack on us! fng is unprepared
+	}
+	
+	option = {
+		name = qiefor.10.b #generals a little pissed but wu placates them
+		trigger = {
+			OR = {
+				LEP = {
+					exists = yes
+					OR = {
+						is_guaranteed_by = QIE
+						is_in_faction_with = QIE
+					}
+				}
+				ANQ = {
+					exists = yes
+					OR = {
+						is_guaranteed_by = QIE
+						is_in_faction_with = QIE
+					}
+				}
+			}
+		}
+		add_command_power = -20
 		declare_war_on = {
 			target = SHX
 			type = annex_everything
@@ -5553,6 +5645,7 @@ country_event = {
 		name = qiecoup.2.a #ask Yan Xishan
 		trigger = {
 			SHX = {
+				exists = yes
 				has_country_leader = {
 					name = "Yan Xishan"
 					ruling_only = yes
@@ -5570,6 +5663,7 @@ country_event = {
 		name = qiecoup.2.b #ask Song Zheyuan
 		trigger = {
 			SQI = {
+				exists = yes
 				has_war = no
 				has_country_leader = {
 					name = "Song Zheyuan"
@@ -5588,6 +5682,7 @@ country_event = {
 		name = qiecoup.2.c #ask Zhang Tianran
 		trigger = {
 			SQI = {
+				exists = yes
 				has_war = no
 				has_country_leader = {
 					name = "Zhang Tianran"
@@ -5934,28 +6029,7 @@ country_event = {
 				limit = { is_ai = yes }
 				news_event = { id = worldnews.232 hours = 2 }
 			}
-			LEP = {
-				set_country_flag = LEP_QIE_Zhili_Coup
-				if = {
-					limit = { has_cosmetic_tag = LEP_NAN }
-					set_cosmetic_tag = LEP_NAN_REP
-				}
-				else_if = {
-					limit = { has_cosmetic_tag = LEP_LFP }
-					set_cosmetic_tag = LEP_LFP_REP
-				}
-				else_if = {
-					limit = { has_cosmetic_tag = LEP_LSP }
-					set_cosmetic_tag = LEP_LSP_REP
-				}
-				else_if = {
-					limit = { has_cosmetic_tag = LEP_LNP }
-					set_cosmetic_tag = LEP_LNP_REP
-				}
-				else = {
-					set_cosmetic_tag = LEP_REP
-				}
-			}
+			LEP_change_to_republican_flag = yes
 			kill_country_leader = yes
 			create_country_leader = {
 				name = "Wu Peifu"
@@ -6290,9 +6364,7 @@ country_event = {
 			}
 		}
 		hidden_effect = {
-			country_event = {
-				id = qiecoup.22
-			}
+			country_event = qiecoup.22
 			remove_ideas = QIE_leadership_crisis
 			remove_unit_leader = 1170
 			set_country_flag = on_our_own_militarily
@@ -6339,6 +6411,7 @@ country_event = {
 		remove_ideas = QIE_fractured_empire
 		clr_country_flag = legation_council_member
 		hidden_effect = {
+			LEP_change_to_republican_flag = yes
 			QIE_zhili_clique_flees = yes
 			LEP = {
 				if = {
@@ -6510,17 +6583,7 @@ country_event = {
 				limit = { is_ai = yes }
 				news_event = { id = worldnews.232 hours = 2 }
 			}
-			LEP = {
-				if = {
-					limit = { has_cosmetic_tag = LEP_NAN }
-					drop_cosmetic_tag = yes
-					set_cosmetic_tag = LEP_NAN_REP
-				}
-				else = {
-					drop_cosmetic_tag = yes
-					set_cosmetic_tag = LEP_REP
-				}
-			}
+			LEP_change_to_republican_flag = yes
 			kill_country_leader = yes
 			create_country_leader = {
 				name = "Wu Peifu"
@@ -8358,6 +8421,7 @@ country_event = { #troops appreciate radios
 
 country_event = { #The Fall of Luoyang
 	id = qieflavor.28
+	immediate = { log = "[GetDateText]: [Root.GetName]: event qieflavor.28" }
 	title = qieflavor.28.t
 	desc = qieflavor.28.d
 
