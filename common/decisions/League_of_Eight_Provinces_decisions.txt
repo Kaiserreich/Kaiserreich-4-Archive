@@ -466,7 +466,7 @@ LEP_redoubts_for_revenue_decisions = {
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_fortify_xuzhou"
+			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_fortify_xuzhou target: [From.GetName]"
 			add_political_power = 25
 			1047 = {
 				add_building_construction = {
@@ -572,7 +572,7 @@ LEP_redoubts_for_revenue_decisions = {
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_fortify_hangzhou_bay"
+			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_fortify_hangzhou_bay target: [From.GetName]"
 			add_political_power = 25
 			596 = {
 				add_building_construction = {
@@ -623,7 +623,7 @@ LEP_redoubts_for_revenue_decisions = {
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_jiangxi_mountain_strongholds"
+			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_jiangxi_mountain_strongholds target: [From.GetName]"
 			add_political_power = 25
 			1044 = {
 				add_building_construction = {
@@ -745,32 +745,81 @@ LEP_reestablish_control = {
 			has_idea = LEP_kuomintang
 		}
 
-		cost = 30
-		days_remove = LEP_temp_suppress_kmt_remove?0
-		selectable_mission = yes
-		days_mission_timeout = lep_suppress_kmt_mission_timeout?50
+		ai_will_do = {
+			factor = 90
+			modifier = {
+				check_variable = { lep_kmt_unrest_level > 2 }
+				factor = 3
+			}
+			modifier = {
+				has_completed_focus = LEP_track_down_kmt
+				factor = 5
+			}
+		}
 
-		ai_will_do = { factor = 640 }
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = lep_can_suppress_tt
+				NOT = {
+					check_variable = {
+						var = lep_kmt_unrest_level
+						value = 2
+						compare = less_than
+					}
+				}
+			}
+		}
+
+		cost = 30
+		days_remove = lep_kmt_suppress_remove?0
+		selectable_mission = yes
+		days_mission_timeout = lep_suppress_kmt_mission_timeout?70
 
 		timeout_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision timeout LEP_temp_suppress_kmt"
-			custom_effect_tooltip = lep_increase_kmt_unrest_tt
+			clear_variable = lep_kmt_suppress_remove
 			hidden_effect = {
 				LEP_increase_kmt_unrest_level = yes
 				activate_mission = LEP_temp_suppress_kmt
 				LEP_negative_kmt_event = yes
 			}
+			custom_effect_tooltip = lep_increase_kmt_unrest_tt
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_temp_suppress_kmt"
-			set_variable = { LEP_temp_suppress_kmt_remove = days_mission_timeout@LEP_temp_suppress_kmt }
+			log = "[GetDateText]: [Root.GetName]: Decision LEP_temp_suppress_kmt"
+			custom_effect_tooltip = lep_decrease_kmt_unrest_tt
+			if = {
+				limit = {
+					OR = {
+						NOT = { has_completed_focus = LEP_track_down_kmt }
+						check_variable = { lep_kmt_unrest_level > 1 }
+					}
+				}
+				custom_effect_tooltip = lep_reduce_kmt_available_tt
+				set_variable = { lep_kmt_suppress_remove = days_mission_timeout@LEP_temp_suppress_kmt }
+			}
+			hidden_effect = { LEP_decrease_kmt_unrest_level = yes }
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_temp_suppress_kmt"
-			clear_variable = LEP_temp_suppress_kmt_remove
-			hidden_effect = { activate_mission = LEP_temp_suppress_kmt }
+			clear_variable = lep_kmt_suppress_remove
+			if = {
+				limit = {
+					OR = {
+						NOT = { has_completed_focus = LEP_track_down_kmt }
+						check_variable = { lep_kmt_unrest_level > 1 }
+					}
+				}
+				hidden_effect = { 
+					set_temp_variable = { lep_kmt_random_delay = random }
+					subtract_from_temp_variable = { lep_kmt_random_delay = -0.5 }
+					multiply_temp_variable = { lep_kmt_random_delay = 15 }
+					add_to_variable = { lep_suppress_kmt_mission_timeout = lep_kmt_random_delay }
+					activate_mission = LEP_temp_suppress_kmt 
+				}
+			}
 		}
 	}
 
@@ -784,9 +833,19 @@ LEP_reestablish_control = {
 
 		cost = 45
 		days_remove = 50
-		days_re_enable = 5
 
 		ai_will_do = { factor = 640 }
+
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = lep_can_eliminate_tt
+				check_variable = {
+					var = lep_kmt_unrest_level
+					value = 2
+					compare = less_than
+				}
+			}
+		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_decision_lower_kmt_unrest"
@@ -818,15 +877,23 @@ LEP_reestablish_control = {
 			has_idea = LEP_yiguandao
 		}
 
+		ai_will_do = {
+			factor = 80
+
+			modifier = {
+				has_completed_focus = LEP_crack_down_yiguandao_sects
+				factor = 5
+			}
+		}
+
 		selectable_mission = yes
 		cost = 20
-		days_remove = LEP_temp_suppress_yiguandao_remove?0
-		days_mission_timeout = lep_suppress_yiguandao_mission_timeout?50
-
-		ai_will_do = { factor = 640 }
+		days_remove = lep_yiguandao_suppress_remove?0
+		days_mission_timeout = lep_suppress_yiguandao_mission_timeout?70
 
 		timeout_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision timeout LEP_temp_suppress_yiguandao"
+			clear_variable = lep_yiguandao_suppress_remove
 			hidden_effect = {
 				LEP_increase_yiguandao_unrest_level = yes
 				activate_mission = LEP_temp_suppress_yiguandao
@@ -837,13 +904,41 @@ LEP_reestablish_control = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision LEP_temp_suppress_yiguandao"
-			set_variable = { LEP_temp_suppress_yiguandao_remove = days_mission_timeout@LEP_temp_suppress_yiguandao }
+			custom_effect_tooltip = lep_decrease_yiguandao_unrest_tt
+			if = {
+				limit = {
+					OR = { 
+						NOT = { has_completed_focus = LEP_crack_down_yiguandao_sects }
+						check_variable = { lep_yiguandao_unrest_level > 1 }
+					}
+				}
+				set_variable = { lep_yiguandao_suppress_remove = days_mission_timeout@LEP_temp_suppress_yiguandao }
+			}
+			else = {
+				custom_effect_tooltip = lep_reduce_yiguandao_available_tt
+				set_variable = { lep_yiguandao_suppress_remove = 0 }
+			}
+			hidden_effect = { LEP_decrease_yiguandao_unrest_level = yes }
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_temp_suppress_yiguandao"
-			clear_variable = LEP_temp_suppress_yiguandao_remove
-			hidden_effect = { activate_mission = LEP_temp_suppress_yiguandao }
+			clear_variable = lep_yiguandao_suppress_remove
+			if = {
+				limit = {
+					OR = { 
+						NOT = { has_completed_focus = LEP_crack_down_yiguandao_sects }
+						check_variable = { lep_yiguandao_unrest_level > 1 }
+					}
+				}
+				hidden_effect = { 
+					set_temp_variable = { lep_yiguandao_random_delay = random }
+					subtract_from_temp_variable = { lep_yiguandao_random_delay = -0.5 }
+					multiply_temp_variable = { lep_yiguandao_random_delay = 15 }
+					add_to_variable = { lep_suppress_yiguandao_mission_timeout = lep_yiguandao_random_delay }
+					activate_mission = LEP_temp_suppress_yiguandao 
+				}
+			}
 		}
 	}
 
@@ -857,9 +952,19 @@ LEP_reestablish_control = {
 
 		cost = 30
 		days_remove = 40
-		days_re_enable = 5
 
 		ai_will_do = { factor = 640 }
+
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = lep_can_eliminate_tt
+				check_variable = {
+					var = lep_yiguandao_unrest_level
+					value = 2
+					compare = less_than
+				}
+			}
+		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_decision_lower_yiguandao_unrest"
@@ -1204,7 +1309,7 @@ LEP_foreign_policy_decisions = {
 			can_declare_war_on = FROM
 		}
 
-		targets = { HNN GXC }
+		targets = { HNN GXC PRC }
 		target_trigger = {
 			can_declare_war_on = FROM
 		}
@@ -1389,7 +1494,13 @@ LEP_foreign_policy_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision LEP_league_of_5_decision"
-			set_cosmetic_tag = LEP_LFP
+			if = {
+				limit = { has_country_flag = LEP_QIE_Zhili_Coup }
+				set_cosmetic_tag = LEP_LFP_REP
+			}
+			else = {
+				set_cosmetic_tag = LEP_LFP
+			}
 		}
 	}
 	LEP_league_of_6_decision = {
@@ -1422,7 +1533,13 @@ LEP_foreign_policy_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision LEP_league_of_6_decision"
-			set_cosmetic_tag = LEP_LSP
+			if = {
+				limit = { has_country_flag = LEP_QIE_Zhili_Coup }
+				set_cosmetic_tag = LEP_LSP_REP
+			}
+			else = {
+				set_cosmetic_tag = LEP_LSP
+			}
 		}
 	}
 	LEP_league_back_to_normal_decision = {
@@ -1453,7 +1570,13 @@ LEP_foreign_policy_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision LEP_league_back_to_normal_decision"
-			set_cosmetic_tag = LEP_LEP
+			if = {
+				limit = { has_country_flag = LEP_QIE_Zhili_Coup }
+				set_cosmetic_tag = LEP_REP
+			}
+			else = {
+				set_cosmetic_tag = LEP_LEP
+			}
 		}
 	}
 	LEP_league_of_9_decision = {
@@ -1499,7 +1622,13 @@ LEP_foreign_policy_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision LEP_league_of_9_decision"
-			set_cosmetic_tag = LEP_LNP
+			if = {
+				limit = { has_country_flag = LEP_QIE_Zhili_Coup }
+				set_cosmetic_tag = LEP_LNP_REP
+			}
+			else = {
+				set_cosmetic_tag = LEP_LNP
+			}
 		}
 	}
 }
@@ -1715,7 +1844,7 @@ LEP_AOG_decisions = {
 		}
 
 		modifier = {
-			market_liberal_drift = -0.05
+			market_liberal_drift = -0.1
 		}
 
 		complete_effect = {

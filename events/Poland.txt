@@ -9,6 +9,7 @@ add_namespace = poland
 ### Reaction to Stock Crash
 country_event = { # The economy fails!
 	id = poland.1
+	immediate = { log = "[GetDateText]: [Root.GetName]: event poland.1" }
 	title = poland.1.t
 	desc = poland.1.d
 	picture = GFX_report_event_spain_civil_war_soldiers
@@ -16,7 +17,6 @@ country_event = { # The economy fails!
 	is_triggered_only = yes
 
 	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event poland.1"
 		hidden_effect = {
 			country_event = {
 				id = poland.232
@@ -119,6 +119,16 @@ country_event = { # The economy fails!
 				ideology = social_conservative
 				popularity = 0.2
 			}
+			if = {
+				limit = { gives_military_access_to = GER }
+				GER = {
+					diplomatic_relation = {
+						country = ROOT
+						relation = military_access
+						active = no
+					}
+				}
+			}
 			mark_focus_tree_layout_dirty = yes
 			news_event = {
 				id = worldnews.54
@@ -200,6 +210,10 @@ country_event = { # Solutions for our immense problems
 	title = poland.6.t
 	desc = poland.6.d
 	picture = GFX_report_event_POL_rebels
+	
+	trigger = {
+		NOT = { has_cosmetic_tag = POL_PLC }
+	}
 
 	is_triggered_only = yes
 
@@ -264,17 +278,16 @@ country_event = { # Solutions for our immense problems
 		}
 		add_stability = -0.2
 		hidden_effect = {
+			clear_all_relations = yes
 			if = {
-				limit = {
-					is_subject = yes
-				}
-				overlord = {
-					set_autonomy = {
-						target = ROOT
-						autonomy_state = autonomy_free
+				limit = { gives_military_access_to = GER }
+				GER = {
+					diplomatic_relation = {
+						country = ROOT
+						relation = military_access
+						active = no
 					}
 				}
-				leave_faction = yes
 			}
 		}
 		country_event = {
@@ -339,6 +352,16 @@ country_event = { # Solutions for our immense problems
 				ideology = social_conservative
 				popularity = 0.1
 			}
+			if = {
+				limit = { gives_military_access_to = GER }
+				GER = {
+					diplomatic_relation = {
+						country = ROOT
+						relation = military_access
+						active = no
+					}
+				}
+			}
 			mark_focus_tree_layout_dirty = yes
 			news_event = {
 				id = worldnews.55
@@ -361,6 +384,10 @@ country_event = { # Chaos in the Countryside (Previously: Time to Choose)
 	title = poland.7.t
 	desc = poland.7.d
 	picture = GFX_report_event_POL_rebels
+	
+	trigger = {
+		NOT = { has_cosmetic_tag = POL_PLC }
+	}
 
 	is_triggered_only = yes
 
@@ -521,6 +548,7 @@ country_event = { # Another attempt at a King of Poland
 
 	trigger = {
 		has_government = authoritarian_democrat
+		NOT = { has_cosmetic_tag = POL_PLC }
 	}
 
 	option = {
@@ -544,7 +572,10 @@ country_event = { # The Polish election
 	picture = GFX_report_event_POL_council
 
 	trigger = {
-		POL = { has_government = authoritarian_democrat }
+		POL = {
+			has_government = authoritarian_democrat
+			NOT = { has_cosmetic_tag = POL_PLC }
+		}
 	}
 
 	is_triggered_only = yes
@@ -1449,7 +1480,7 @@ country_event = { # The decision of Mendog
 			GER = { add_to_faction = ROOT }
 			LIT = {
 				POL = {
-					transfer_technology = yes
+					transfer_technology_without_doctrines = yes
 				}
 				every_unit_leader = {
 					set_unit_leader_flag = LIT_leader
@@ -2503,24 +2534,13 @@ country_event = { # Proposing Peace to Poland
 	desc = {
 		text = poland.110.d.victory
 		trigger = {
-			controls_state = 1088 #Chelm
-			OR = {
-				controls_state = 92 #Lublin
-				check_variable = { POL.surrender_progress > 0.2 }
-			}
+			has_global_flag = POL_defeated_by_UKR
 		}
 	}
 	desc = {
 		text = poland.110.d.defeat
 		trigger = {
-			NOT = {
-				controls_state = 93 #Brest
-				controls_state = 997 #Polesia
-			}
-			OR = {
-				NOT = { controls_state = 792 } #Rovno
-				surrender_progress > 0.2
-			}
+			NOT = { has_global_flag = POL_defeated_by_UKR }
 		}
 	}
 
@@ -2529,44 +2549,35 @@ country_event = { # Proposing Peace to Poland
 	fire_only_once = yes
 	is_triggered_only = yes
 
+	immediate = {
+		if = {
+			limit = {
+				OR = {
+					POL = { surrender_progress > 0.15 }
+					controls_state = 92 #Lublin
+				}
+			}
+			set_global_flag = { flag = POL_defeated_by_UKR days = 60 value = 1 }
+		}
+	}
+
 	trigger = {
 		tag = UKR
 		has_war_with = POL
 		is_valid_peace_target = yes
 		POL = { is_valid_peace_target = yes }
 		OR = {
-			AND = {
-				controls_state = 1088 #Chelm
-				OR = {
-					controls_state = 92 #Lublin
-					check_variable = { POL.surrender_progress > 0.2 }
-				}
-			}
-			AND = {
-				NOT = {
-					controls_state = 93 #Brest
-					controls_state = 997 #Polesia
-				}
-				OR = {
-					NOT = { controls_state = 792 } #Rovno
-					surrender_progress > 0.2
-				}
-			}
+			# Ukraine loses
+			surrender_progress > 0.15
+			POL = { controls_state = 792 } #Rovno
+			# Ukraine wins
+			POL = { surrender_progress > 0.15 }
+			controls_state = 92 #Lublin
 		}
 	}
 
 	option = {
 		name = poland.110.a
-		if = {
-			limit = {
-				controls_state = 1088 #Chelm
-				OR = {
-					controls_state = 92 #Lublin
-					check_variable = { POL.surrender_progress > 0.2 }
-				}
-			}
-			set_global_flag = { flag = POL_defeated_by_UKR days = 60 value = 1 }
-		}
 		POL = {
 			country_event = {
 				id = poland.111
@@ -2689,6 +2700,7 @@ country_event = { # Poland occupies Silesia and Greater Poland!
 		}
 		every_owned_state = {
 			limit = {
+				is_controlled_by = ROOT
 				OR = {
 					state = 67
 					state = 86
@@ -3351,6 +3363,10 @@ country_event = { # Russian Support - Sure
 
 	option = {
 		name = poland.150.a
+		add_state_claim = 67 #Upper Silesia
+		add_state_claim = 86 #Posen
+		add_state_claim = 776 #West Prussia
+		add_state_claim = 777 #Masuria
 	}
 }
 
@@ -3469,6 +3485,7 @@ country_event = { # Join France - Nope
 
 country_event = { # Emergency Elections
 	id = poland.164
+	immediate = { log = "[GetDateText]: [Root.GetName]: event poland.164" }
 	title = poland.164.t
 	desc = poland.164.d
 	picture = GFX_report_event_POL_sejm
@@ -3476,7 +3493,6 @@ country_event = { # Emergency Elections
 	is_triggered_only = yes
 
 	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event poland.164"
 		hidden_effect = {
 			kill_ideology_leader = social_conservative
 			country_event = {
@@ -3601,45 +3617,30 @@ country_event = { # Ukraine Joins Internationale - Request
 	title = poland.173.t
 	desc = poland.173.d
 	picture = GFX_report_event_POL_aggressive_militarism
+	
+	trigger = {
+		FROM = {
+			is_in_faction = yes
+			NOT = { is_in_faction_with = ROOT }
+		}
+	}
 
 	is_triggered_only = yes
 
 	option = {
 		name = poland.173.a
-		ai_chance = { factor = 95 }
-		FROM = {
-			country_event = {
-				id = ukraine.37
-				days = 2
-			}
-		}
+		ai_chance = { factor = 100 }
+		var:FROM.faction_leader = { add_to_faction = ROOT }
 	}
 
 	option = {
 		name = poland.173.b
-		ai_chance = { factor = 5 }
+		ai_chance = { factor = 0 }
 		FROM = {
 			country_event = {
 				days = 2
 				id = poland.175
 			}
-		}
-	}
-}
-
-country_event = { # Ukraine Joins Internationale - Sure
-	id = poland.174
-	immediate = { log = "[GetDateText]: [Root.GetName]: event poland.174" }
-	title = poland.174.t
-	desc = poland.174.d
-	picture = GFX_report_event_POL_aggressive_militarism
-
-	is_triggered_only = yes
-
-	option = {
-		name = poland.174.a
-		var:faction_leader = {
-			add_to_faction = UKR
 		}
 	}
 }
@@ -3765,18 +3766,27 @@ country_event = { # Galician Demands - No
 				factor = 0
 				is_in_faction = yes
 				is_faction_leader = no
-				var:faction_leader = {
+				faction_leader = {
 					NOT = { has_war_with = GER }
 				}
 			}
 			modifier = {
 				factor = 0
-				91 = {
-					owner = {
-						NOT = {
-							is_subject_of = AUS
-							is_in_faction_with = AUS
-						}
+				var:91.owner = {
+					NOT = { is_ally_with = AUS }
+					surrender_progress < 0.10
+					strength_ratio = {
+						tag = POL
+						ratio > 1.0
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				var:91.owner = {
+					is_subject = yes
+					overlord = {
+						NOT = { tag = AUS }
 						surrender_progress < 0.10
 						strength_ratio = {
 							tag = POL
@@ -3787,43 +3797,23 @@ country_event = { # Galician Demands - No
 			}
 			modifier = {
 				factor = 0
-				91 = {
-					owner = {
-						is_subject = yes
-						overlord = {
-							NOT = { tag = AUS }
-							surrender_progress < 0.10
-							strength_ratio = {
-								tag = POL
-								ratio > 1.0
-							}
+				var:91.owner = {
+					is_in_faction = yes
+					is_faction_leader = no
+					faction_leader = {
+						NOT = { tag = AUS }
+						surrender_progress < 0.10
+						strength_ratio = {
+							tag = POL
+							ratio > 1.0
 						}
 					}
 				}
 			}
 			modifier = {
 				factor = 0
-				91 = {
-					owner = {
-						is_in_faction = yes
-						is_faction_leader = no
-						var:faction_leader = {
-							NOT = { tag = AUS }
-							surrender_progress < 0.10
-							strength_ratio = {
-								tag = POL
-								ratio > 1.0
-							}
-						}
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				91 = {
-					owner = { is_subject_of = AUS }
-				}
 				AUS = {
+					has_subject = var:91.owner
 					is_faction_leader = yes
 					surrender_progress < 0.10
 					NOT = {
@@ -3928,7 +3918,7 @@ country_event = { # Lithuanian Demands - No
 				factor = 0
 				is_in_faction = yes
 				is_faction_leader = no
-				var:faction_leader = {
+				faction_leader = {
 					NOT = { has_war_with = GER }
 				}
 			}
@@ -3968,21 +3958,7 @@ country_event = { # German Demands - Request
 
 	option = {
 		name = poland.188.b
-		ai_chance = {
-			factor = 70
-			modifier = {
-				factor = 0
-				has_war = yes
-			}
-			modifier = {
-				factor = 0
-				is_in_faction = yes
-				is_faction_leader = no
-				var:faction_leader = {
-					NOT = { has_war_with = GER }
-				}
-			}
-		}
+		ai_chance = { factor = 70 }
 		add_political_power = -25
 		add_state_claim = 67
 		add_state_claim = 86
@@ -4006,7 +3982,33 @@ country_event = { # German Demands - Response
 
 	option = {
 		name = poland.189.a
-		ai_chance = { factor = 15 }
+		ai_chance = {
+			factor = 15
+			modifier = {
+				factor = 0
+				NOT = {
+					surrender_progress > 0.20
+					AND = {
+						has_war_with = FRA
+						OR = {
+							has_war_with = RUS
+							has_war_with = SOV
+						}
+						OR = {
+							surrender_progress > 0.10
+							UKR = {
+								is_in_faction_with = ROOT
+								has_capitulated = yes
+							}
+							AUS = {
+								is_in_faction_with = ROOT
+								surrender_progress > 0.20
+							}
+						}
+					}
+				}
+			}
+		}
 		FROM = {
 			country_event = {
 				id = poland.190
@@ -4017,7 +4019,25 @@ country_event = { # German Demands - Response
 
 	option = {
 		name = poland.189.b
-		ai_chance = { factor = 85 }
+		ai_chance = {
+			factor = 85
+			modifier = {
+				factor = 0.75
+				surrender_progress > 0.10
+			}
+			modifier = {
+				factor = 0.75
+				surrender_progress > 0.20
+			}
+			modifier = {
+				factor = 0.75
+				has_war_with = FRA
+				OR = {
+					has_war_with = RUS
+					has_war_with = SOV
+				}
+			}
+		}
 		FROM = {
 			country_event = {
 				id = poland.191
@@ -4079,17 +4099,7 @@ country_event = { # German Demands - No
 
 	option = {
 		name = poland.191.b
-		ai_chance = {
-			factor = 90
-			modifier = {
-				factor = 0
-				is_in_faction = yes
-				is_faction_leader = no
-				var:faction_leader = {
-					NOT = { has_war_with = FROM }
-				}
-			}
-		}
+		ai_chance = { factor = 90 }
 		trigger = {
 			can_declare_war_on = FROM
 			FROM = {

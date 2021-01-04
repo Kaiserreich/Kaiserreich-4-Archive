@@ -355,9 +355,7 @@ country_event = { #The navy defects to SFR (SAF)
 		name = natal.10.a
 		custom_effect_tooltip = sfr_tt_hallifax_becomes_natalian
 		effect_tooltip = {
-			transfer_navy = {
-				target = SFR
-			}
+			transfer_navy = { target = SFR }
 		}
 	}
 }
@@ -368,9 +366,12 @@ country_event = { #Option for white peace for either Natal or Southern Rhodesia
 	title = natal.12.t
 	desc = natal.12.d
 	picture = GFX_report_event_SAF_cape_town
+	
+	trigger = {
+		NOT = { has_country_flag = SFR_peace_deal_ongoing }
+	}
 
 	is_triggered_only = yes
-
 
 	option = { #Let us sign a peace
 		name = natal.12.a
@@ -395,10 +396,10 @@ country_event = { #Option for white peace for either Natal or Southern Rhodesia
 				}
 			}
 		}
+		country_event = natal.14 #Newcastle Convention
 		hidden_effect = {
-			SAF = {	country_event = { id = natal.13 } } #Newcastle Convention
+			SAF = {	country_event = natal.13 } #Newcastle Convention
 		}
-		country_event = { id = natal.14 }
 	}
 
 	option = { #We will not rest until the republic is destroyed!
@@ -438,176 +439,69 @@ country_event = { #Newcastle Convention (South African perspective)
 	is_triggered_only = yes
 
 	immediate = {
+		clr_global_flag = saf_boer_war
 		hidden_effect = {
-			if = { #If you defeated Rhodesia, they're dead
-				limit = {
-					ZIM = {
-						has_capitulated = yes
-					}
-				}
-				hidden_effect = {
-					ZIM = {
-						every_owned_state = {
-							limit = {
-								is_core_of = ZIM
-							}
-							remove_core_of = ZIM
-							add_core_of = SAF
-						}
-					}
-				}
-				annex_country = {
-					target = ZIM
-					transfer_troops = no
-				}
-			}
-			else = { #If not, give up your claims
-				ZIM = {
-					every_owned_state = {
-						limit = {
-							is_claimed_by = SAF
-						}
-						remove_claim_by = SAF
-					}
-				}
-			}
-			if = { #If you defeated Natal, they're dead too
-				limit = {
-					SFR = {
-						has_capitulated = yes
-					}
-				}
-				hidden_effect = {
-					SFR = {
-						every_owned_state = {
-							limit = {
-								is_core_of = SFR
-							}
-							remove_core_of = SFR
-							add_core_of = SAF
-						}
-					}
-				}
-				annex_country = {
-					target = SFR
-					transfer_troops = no
-				}
-			}
-			else = { #If not, give up your claims
-				SFR = {
-					every_owned_state = {
-						limit = {
-							is_claimed_by = SAF
-						}
-						remove_claim_by = SAF
-					}
-				}
-			}
-			if = { #If Natal has control over Lesotho, they keep it
-				limit = {
-					SFR = {
-						controls_state = 85
-					}
-				}
-				SFR = {
-					transfer_state = 85
-				}
+			every_owned_state = {
 				if = {
 					limit = {
-						85 = {
-							is_claimed_by = SAF
+						OR = {
+							state = 85 #Lesotho
+							state = 738 #Swaziland
 						}
+						controller = { is_ally_with = SFR }
 					}
-					85 = {
-						add_claim_by = SFR
-						remove_claim_by = SAF
-					}
-				}
-				else_if = {
-					limit = {
-						85 = {
-							is_core_of = SAF
-						}
-					}
-					85 = {
+					if = {
+						limit = { is_core_of = ROOT }
+						remove_core_of = ROOT
 						add_core_of = SFR
-						remove_core_of = SAF
 					}
+					else = {
+						remove_claim_by = ROOT
+						add_claim_by = SFR
+					}
+					SFR = { transfer_state = PREV }
 				}
 				else = {
-					85 = {
-						add_claim_by = SFR
-					}
-				}
-			}
-			if = { #If Natal has control over Swaziland, they keep it
-				limit = {
-					SFR = {
-						controls_state = 738
-					}
-				}
-				SFR = {
-					transfer_state = 738
-				}
-				if = {
-					limit = {
-						738 = {
-							is_claimed_by = SAF
-						}
-					}
-					738 = {
-						add_claim_by = SFR
-						remove_claim_by = SAF
-					}
-				}
-				else_if = {
-					limit = {
-						738 = {
-							is_core_of = SAF
-						}
-					}
-					738 = {
-						add_core_of = SFR
-						remove_core_of = SAF
-					}
-				}
-				else = {
-					738 = {
-						add_claim_by = SFR
-					}
-				}
-			}
-			SAF = { #Everything that is left will no longer be claimed by Natal. If they wanted the fed they needed to capitulate SAF
-				every_owned_state = {
-					limit = {
-						is_claimed_by = SFR
-					}
 					remove_claim_by = SFR
-				}
-				every_owned_state = {
-					limit = {
-						is_core_of = SFR
-					}
 					remove_core_of = SFR
 				}
 			}
-			every_country = { #And, white peace!
+			every_enemy_country = {
 				limit = {
-					has_war_with = SAF
 					OR = {
-						is_in_faction_with = ENT
-						is_subject_of = ENT
-						tag = ENT
+						tag = ZIM
+						tag = SFR
+					}
+					has_capitulated = yes
+				}
+				if = {
+					limit = { is_subject = yes }
+					overlord = {
+						set_autonomy = {
+							target = PREV
+							autonomy_state = autonomy_free
+						}
 					}
 				}
-				SAF = {
-					white_peace = PREV
+				if = {
+					limit = { is_in_faction = yes }
+					leave_faction = yes
 				}
 			}
-			ENT = {	country_event = { id = natal.14 } } #Briton's Newcastle Convention
-			clr_global_flag = saf_boer_war
-			SFR = {
-				set_country_flag = sfr_boer_war_over
+			every_enemy_country = {
+				limit = {
+					OR = {
+						tag = ZIM
+						tag = SFR
+						tag = ENT
+					}
+					has_capitulated = no
+				}
+				if = {
+					limit = { is_valid_peace_target = yes }
+					every_owned_state = { remove_claim_by = ROOT }
+					white_peace_with_ROOT = yes
+				}
 			}
 		}
 	}
@@ -615,176 +509,15 @@ country_event = { #Newcastle Convention (South African perspective)
 	option = { #Signed
 		name = natal.13.a
 		effect_tooltip = {
-			if = { #If you defeated Rhodesia, they're dead
+			every_enemy_country = {
 				limit = {
-					ZIM = {
-						has_capitulated = yes
-					}
-				}
-				hidden_effect = {
-					ZIM = {
-						every_owned_state = {
-							limit = {
-								is_core_of = ZIM
-							}
-							remove_core_of = ZIM
-							add_core_of = SAF
-						}
-					}
-				}
-				annex_country = {
-					target = ZIM
-					transfer_troops = no
-				}
-			}
-			else_if = { #If not, give up your claims
-				limit = {
-					country_exists = SFR
-				}
-				ZIM = {
-					every_owned_state = {
-						limit = {
-							is_claimed_by = SAF
-						}
-						remove_claim_by = SAF
-					}
-				}
-			}
-			if = { #If you defeated Natal, they're dead too
-				limit = {
-					SFR = {
-						has_capitulated = yes
-					}
-				}
-				hidden_effect = {
-					SFR = {
-						every_owned_state = {
-							limit = {
-								is_core_of = SFR
-							}
-							remove_core_of = SFR
-							add_core_of = SAF
-						}
-					}
-				}
-				annex_country = {
-					target = SFR
-					transfer_troops = no
-				}
-			}
-			else_if = { #If not, give up your claims
-				limit = {
-					country_exists = SFR
-				}
-				SFR = {
-					every_owned_state = {
-						limit = {
-							is_claimed_by = SAF
-						}
-						remove_claim_by = SAF
-					}
-				}
-			}
-			if = { #If Natal has control over Lesotho, they keep it
-				limit = {
-					SFR = {
-						controls_state = 85
-					}
-				}
-				SFR = {
-					transfer_state = 85
-				}
-				if = {
-					limit = {
-						85 = {
-							is_claimed_by = SAF
-						}
-					}
-					85 = {
-						add_claim_by = SFR
-						remove_claim_by = SAF
-					}
-				}
-				else_if = {
-					limit = {
-						85 = {
-							is_core_of = SAF
-						}
-					}
-					85 = {
-						add_core_of = SFR
-						remove_core_of = SAF
-					}
-				}
-				else = {
-					85 = {
-						add_claim_by = SFR
-					}
-				}
-			}
-			if = { #If Natal has control over Swaziland, they keep it
-				limit = {
-					SFR = {
-						controls_state = 738
-					}
-				}
-				SFR = {
-					transfer_state = 738
-				}
-				if = {
-					limit = {
-						738 = {
-							is_claimed_by = SAF
-						}
-					}
-					738 = {
-						add_claim_by = SFR
-						remove_claim_by = SAF
-					}
-				}
-				else_if = {
-					limit = {
-						738 = {
-							is_core_of = SAF
-						}
-					}
-					738 = {
-						add_core_of = SFR
-						remove_core_of = SAF
-					}
-				}
-				else = {
-					738 = {
-						add_claim_by = SFR
-					}
-				}
-			}
-			SAF = { #Everything that is left will no longer be claimed by Natal. If they wanted the fed they needed to capitulate SAF
-				every_owned_state = {
-					limit = {
-						is_claimed_by = SFR
-					}
-					remove_claim_by = SFR
-				}
-				every_owned_state = {
-					limit = {
-						is_core_of = SFR
-					}
-					remove_core_of = SFR
-				}
-			}
-			every_country = { #And, white peace!
-				limit = {
-					has_war_with = SAF
 					OR = {
-						is_in_faction_with = ENT
-						is_subject_of = ENT
+						tag = ZIM
+						tag = SFR
 						tag = ENT
 					}
 				}
-				SAF = {
-					white_peace = PREV
-				}
+				white_peace_with_ROOT = yes
 			}
 		}
 		custom_effect_tooltip = SAF_tt_boer_volunteers_stand_down
@@ -814,177 +547,7 @@ country_event = { #Newcastle Convention (British perspective)
 	option = { #Signed
 		name = natal.14.a
 		effect_tooltip = {
-			if = { #If you defeated Rhodesia, they're dead
-				limit = {
-					ZIM = {
-						has_capitulated = yes
-					}
-				}
-				hidden_effect = {
-					ZIM = {
-						every_owned_state = {
-							limit = {
-								is_core_of = ZIM
-							}
-							remove_core_of = ZIM
-							add_core_of = SAF
-						}
-					}
-				}
-				annex_country = {
-					target = ZIM
-					transfer_troops = no
-				}
-			}
-			else_if = { #If not, give up your claims
-				limit = {
-					country_exists = ZIM
-				}
-				ZIM = {
-					every_owned_state = {
-						limit = {
-							is_claimed_by = SAF
-						}
-						remove_claim_by = SAF
-					}
-				}
-			}
-			if = { #If you defeated Natal, they're dead too
-				limit = {
-					SFR = {
-						has_capitulated = yes
-					}
-				}
-				hidden_effect = {
-					SFR = {
-						every_owned_state = {
-							limit = {
-								is_core_of = SFR
-							}
-							remove_core_of = SFR
-							add_core_of = SAF
-						}
-					}
-				}
-				annex_country = {
-					target = SFR
-					transfer_troops = no
-				}
-			}
-			else_if = { #If not, give up your claims
-				limit = {
-					country_exists = SFR
-				}
-				SFR = {
-					every_owned_state = {
-						limit = {
-							is_claimed_by = SAF
-						}
-						remove_claim_by = SAF
-					}
-				}
-			}
-			if = { #If Natal has control over Lesotho, they keep it
-				limit = {
-					SFR = {
-						controls_state = 85
-					}
-				}
-				SFR = {
-					transfer_state = 85
-				}
-				if = {
-					limit = {
-						85 = {
-							is_claimed_by = SAF
-						}
-					}
-					85 = {
-						add_claim_by = SFR
-						remove_claim_by = SAF
-					}
-				}
-				else_if = {
-					limit = {
-						85 = {
-							is_core_of = SAF
-						}
-					}
-					85 = {
-						add_core_of = SFR
-						remove_core_of = SAF
-					}
-				}
-				else = {
-					85 = {
-						add_claim_by = SFR
-					}
-				}
-			}
-			if = { #If Natal has control over Swaziland, they keep it
-				limit = {
-					SFR = {
-						controls_state = 738
-					}
-				}
-				SFR = {
-					transfer_state = 738
-				}
-				if = {
-					limit = {
-						738 = {
-							is_claimed_by = SAF
-						}
-					}
-					738 = {
-						add_claim_by = SFR
-						remove_claim_by = SAF
-					}
-				}
-				else_if = {
-					limit = {
-						738 = {
-							is_core_of = SAF
-						}
-					}
-					738 = {
-						add_core_of = SFR
-						remove_core_of = SAF
-					}
-				}
-				else = {
-					738 = {
-						add_claim_by = SFR
-					}
-				}
-			}
-			SAF = { #Everything that is left will no longer be claimed by Natal. If they wanted the fed they needed to capitulate SAF
-				every_owned_state = {
-					limit = {
-						is_claimed_by = SFR
-					}
-					remove_claim_by = SFR
-				}
-				every_owned_state = {
-					limit = {
-						is_core_of = SFR
-					}
-					remove_core_of = SFR
-				}
-			}
-			every_country = { #And, white peace!
-				limit = {
-					has_war_with = SAF
-					OR = {
-						is_in_faction_with = ENT
-						is_subject_of = ENT
-						tag = ENT
-					}
-				}
-				SAF = {
-					white_peace = PREV
-				}
-			}
+			SAF = { white_peace_with_ROOT = yes }
 		}
 	}
 }
@@ -1000,65 +563,14 @@ country_event = { #2nd Pretoria Convention (British perspective)
 
 	immediate = {
 		hidden_effect = {
-			#General cleanup
-			every_state = {
-				limit = {
-					is_core_of = SFR
-				}
-				remove_core_of = SFR
-				add_core_of = SAF
-			}
-			every_state = {
-				limit = {
-					is_claimed_by = SFR
-				}
-				remove_claim_by = SFR
-			}
-			every_state = {
-				limit = {
-					is_core_of = ZIM
-				}
-				remove_core_of = ZIM
-				add_core_of = SAF
-			}
-			every_state = {
-				limit = {
-					is_claimed_by = ZIM
-				}
-				remove_claim_by = ZIM
-			}
-			SAF = { #Annex Natal and Rhodesia
-				annex_country = {
-					target = SFR
-					transfer_troops = no
-				}
-				annex_country = {
-					target = ZIM
-					transfer_troops = no
-				}
-			}
-			every_country = { #And, white peace!
-				limit = {
-					has_war_with = SAF
-					OR = {
-						is_in_faction_with = ENT
-						is_subject_of = ENT
-						tag = ENT
-					}
-				}
-				SAF = {
-					white_peace = PREV
-				}
-			}
-			SAF = {	country_event = { id = natal.15 } } #SAF's Pretoria Convention
-			clr_global_flag = saf_boer_war
+			SAF = { country_event = natal.16 }
 		}
 	}
 
 	option = { #Signed
 		name = natal.14.a
 		effect_tooltip = {
-			SAF = { #Annex Natal and Rhodesia
+			SAF = {
 				annex_country = {
 					target = SFR
 					transfer_troops = no
@@ -1067,19 +579,7 @@ country_event = { #2nd Pretoria Convention (British perspective)
 					target = ZIM
 					transfer_troops = no
 				}
-			}
-			every_country = { #And, white peace!
-				limit = {
-					has_war_with = SAF
-					OR = {
-						is_in_faction_with = ENT
-						is_subject_of = ENT
-						tag = ENT
-					}
-				}
-				SAF = {
-					white_peace = PREV
-				}
+				white_peace_with_ROOT = yes
 			}
 		}
 	}
@@ -1091,35 +591,59 @@ country_event = { #2nd Pretoria Convention (South African perspective)
 	title = natal.16.t
 	desc = natal.16.d
 	picture = GFX_report_event_SAF_cape_town
+	
+	immediate = {
+		clr_global_flag = saf_boer_war
+		hidden_effect = {
+			every_enemy_country = {
+				limit = {
+					OR = {
+						tag = ZIM
+						tag = SFR
+					}
+					is_in_faction_with = FROM
+				}
+				if = {
+					limit = { is_subject = yes }
+					overlord = {
+						set_autonomy = {
+							target = PREV
+							autonomy_state = autonomy_free
+						}
+					}
+				}
+				leave_faction = yes
+			}
+			every_state = {
+				limit = {
+					OR = {
+						is_core_of = SFR
+						is_claimed_by = SFR
+						is_claimed_by = ZIM
+					}
+				}
+				remove_core_of = SFR
+				remove_claim_by = SFR
+				remove_claim_by = ZIM
+			}
+			FROM = { white_peace_with_ROOT = yes }
+		}
+	}
 
 	is_triggered_only = yes
 
 	option = { #Signed
 		name = natal.16.a
 		effect_tooltip = {
-			SAF = { #Annex Natal and Rhodesia
-				annex_country = {
-					target = SFR
-					transfer_troops = no
-				}
-				annex_country = {
-					target = ZIM
-					transfer_troops = no
-				}
+			annex_country = {
+				target = SFR
+				transfer_troops = no
 			}
-			every_country = { #And, white peace!
-				limit = {
-					has_war_with = SAF
-					OR = {
-						is_in_faction_with = ENT
-						is_subject_of = ENT
-						tag = ENT
-					}
-				}
-				SAF = {
-					white_peace = PREV
-				}
+			annex_country = {
+				target = ZIM
+				transfer_troops = no
 			}
+			FROM = { white_peace_with_ROOT = yes }
 		}
 		custom_effect_tooltip = SAF_tt_boer_volunteers_stand_down
 		hidden_effect = {
@@ -1142,47 +666,30 @@ country_event = { #Cleanup event for if SAF is capitulated by the Entente or the
 	hidden = yes
 
 	fire_only_once = yes
+	is_triggered_only = yes
 
 	trigger = {
 		tag = SAF
+		has_war = no
 		has_global_flag = saf_boer_war
-		NOT = {
-			has_war = yes
-			has_country_flag = saf_boer_war_buildup
-		}
-	}
-
-	mean_time_to_happen = {
-		days = 1
 	}
 
 	option = {
 		clr_global_flag = saf_boer_war
 		every_state = {
 			limit = {
-				is_core_of = SFR
+				OR = {
+					is_core_of = SFR
+					is_claimed_by = SFR
+					is_core_of = ZIM
+					is_claimed_by = ZIM
+				}
 			}
 			remove_core_of = SFR
-			add_core_of = SAF
-		}
-		every_state = {
-			limit = {
-				is_claimed_by = SFR
-			}
 			remove_claim_by = SFR
-		}
-		every_state = {
-			limit = {
-				is_core_of = ZIM
-			}
-			remove_core_of = ZIM
-			add_core_of = SAF
-		}
-		every_state = {
-			limit = {
-				is_claimed_by = ZIM
-			}
 			remove_claim_by = ZIM
+			remove_claim_by = SAF
+			add_core_of = SAF
 		}
 	}
 }
@@ -1525,8 +1032,9 @@ country_event = { #Victory in the third Boer war
 	is_triggered_only = yes
 	trigger = {
 		tag = SFR
+		has_global_flag = saf_boer_war
+		NOT = { country_exists = SAF }
 	}
-
 
 	option = { #We are the true South Africa
 		name = natal.26.a
@@ -1802,7 +1310,7 @@ country_event = { #Natal - British India Request
 
 country_event = { #Natal Request Support
 	id = natal.41
-	immediate = { log = "[GetDateText]: [Root.GetName]: event natal.40" }
+	immediate = { log = "[GetDateText]: [Root.GetName]: event natal.41" }
 	title = natal.41.t
 	desc = natal.41.d
 	picture = GFX_report_event_PRF_war

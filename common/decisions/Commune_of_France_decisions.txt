@@ -27,7 +27,7 @@ FRA_integration_decisions = {
 		cancel_if_not_visible = yes
 
 		state_target = yes
-		targets = { 8 28 34 741 760 }
+		targets = { 8 28 34 741 760 948 }
 		target_trigger = {
 			FROM = {
 				is_owned_by = ROOT
@@ -45,15 +45,12 @@ FRA_integration_decisions = {
 			add_state_core = FROM
 		}
 	}
-	NFA_integrate_state = {
+	FRP_integrate_state = {
 		name = FRA_integrate_state
 		icon = eng_trade_unions_demand
 
 		allowed = {
-			OR = {
-				tag = NFA
-				tag = FRP
-			}
+			tag = FRP
 		}
 
 		available = {
@@ -75,7 +72,7 @@ FRA_integration_decisions = {
 		cancel_if_not_visible = yes
 
 		state_target = yes
-		targets = { 8 28 34 741 779 943 }
+		targets = { 8 28 34 741 779 943 948 }
 		target_root_trigger = { owns_state = 16 } #Paris
 		target_trigger = {
 			FROM = {
@@ -89,7 +86,7 @@ FRA_integration_decisions = {
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_integrate_state target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRP_integrate_state target: [From.GetName]"
 			hidden_effect = { remove_state_claim = FROM }
 			add_state_core = FROM
 		}
@@ -207,48 +204,68 @@ FRA_internationale_category = {
 			}
 		}
 
-		cost = 50
-		days_remove = 90
-		days_re_enable = 100
+		cost = 80
+		days_remove = FRA_Sabotage_days_remove?0
+		days_re_enable = 240
 
-		targets = { NFA MOR }
-		target_root_trigger = {
-			has_completed_focus = FRA_arab_committee
-		}
+		targets = { NFA }
+		target_root_trigger = { has_completed_focus = FRA_arab_committee }
 		target_trigger = {
-			can_declare_war_on = FROM
+			country_exists = FROM
 			FROM = {
 				has_socialist_government = no
 			}
 		}
 
 		ai_will_do = {
-			factor = 2
+			factor = 1
+			modifier = {
+				factor = 5
+				has_war_with = FROM
+			}
+			modifier = {
+				factor = 0.5
+				has_global_flag = NFA_has_collapsed_natives
+			}
+			modifier = {
+				factor = 20
+				any_owned_state = { is_controlled_by = FROM }
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Sabotage target: [From.GetName]"
+			set_variable = { FRA_Sabotage_days_remove = 120 }
+			country_event = comfrance.65
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Sabotage target: [From.GetName]"
-			FROM = {
-				if = {
-					limit = { tag = NFA }
-					country_event = comfrance.70
-				}
-				else = {
-					country_event = comfrance.69
-				}
+			clear_variable = FRA_Sabotage_days_remove
+			if = {
+				limit = { has_country_flag = FRA_rebellion }
+				FROM = { country_event = comfrance.67 }
 			}
+			if = {
+				limit = { has_country_flag = FRA_unrest }
+				FROM = { country_event = comfrance.68 }
+			}
+			else = {
+				FROM = { country_event = comfrance.66 }
+			}
+			clr_country_flag = FRA_rebellion
+			clr_country_flag = FRA_unrest
 		}
 	}
 
-	FRA_help_CNT = {
+	FRA_help_SWF = {
 		icon = generic_industry
 
 		visible = {
-			has_country_flag = FRA_support_cnt
 			FROM = {
 				OR = {
+					has_war_with = SPA
 					has_war_with = SPR
-					has_war_with = CAR
 				}
 				has_socialist_government = yes
 			}
@@ -260,15 +277,15 @@ FRA_internationale_category = {
 		}
 		fire_only_once = yes
 
-		targets = { CNT }
+		targets = { SWF }
 		target_root_trigger = {
-			has_country_flag = FRA_support_cnt
+			has_country_flag = FRA_support_SWF
 		}
 		target_trigger = {
 			FROM = {
 				OR = {
+					has_war_with = SPA
 					has_war_with = SPR
-					has_war_with = CAR
 				}
 				has_socialist_government = yes
 			}
@@ -283,8 +300,8 @@ FRA_internationale_category = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision FRA_help_CNT target: [From.GetName]"
-			clr_country_flag = FRA_support_cnt
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_help_SWF target: [From.GetName]"
+			clr_country_flag = FRA_support_SWF
 			FROM = {
 				country_event = comfrance.124
 			}
@@ -470,9 +487,694 @@ FRA_internationale_category = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision FRA_invite_SRI_to_intl"
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_invite_SRI_to_intl target: [From.GetName]"
 			clr_global_flag = KR_italy_balance
 			FROM = { country_event = comfrance.168 }
+		}
+	}
+}
+
+@FRA_phalantere_decision_cost = 50
+@FRA_phalantere_decision_time = 50
+
+FRA_phalanstere_category = {
+	FRA_join_phalanstere = {
+		icon = generic_research
+
+		allowed = {
+			NOT = {
+				tag = FRA #added by event
+				tag = ENG
+				tag = GER #always hostile
+				tag = GEX
+				tag = GEA
+				tag = MAF
+				tag = BAT
+				tag = JAP
+				tag = RUS
+				tag = NFA
+				tag = SRD
+				tag = SIC
+				tag = ITA
+				tag = PAP
+				tag = ARG
+				tag = USA
+				tag = TEX
+				tag = CAL
+				tag = NEE
+				tag = DEH
+				tag = PRF
+				tag = OTT
+				tag = DEI
+				tag = ICE #handled by tag content
+				tag = INS
+				tag = SAF
+			}
+			is_chinese_tag = no
+		}
+
+		visible = {
+			is_in_faction_with = FROM
+			NOT = { is_in_tech_sharing_group = phalanstere_research }
+			FROM = {
+				exists = yes
+				is_in_tech_sharing_group = phalanstere_research
+			}
+		}
+
+		cost = 0
+		fire_only_once = yes
+
+		targets = { INT }
+		target_root_trigger = { is_in_faction = yes }
+		target_trigger = {
+			is_in_faction_with = FROM
+			FROM = { is_in_tech_sharing_group = phalanstere_research }
+		}
+
+		ai_will_do = {
+			factor = 100
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_join_phalanstere target: [From.GetName]"
+			add_to_tech_sharing_group = phalanstere_research
+		}
+	}
+
+	FRA_Develop_ENG = {
+		name = FRA_Develop_Country
+		icon = generic_construction
+
+		allowed = { tag = INT }
+
+		available = {
+			NOT = { has_global_flag = FRA_ongoing_phalanstere_development }
+		}
+
+		visible = {
+			country_exists = FROM
+			FRA_phalanstere_target = yes
+		}
+		
+		cancel_trigger = {
+			FRA_phalanstere_target = no
+		}
+
+		targets = { ENG }
+		target_root_trigger = { has_global_flag = FRA_created_phalanstere }
+		target_trigger = {
+			FRA_phalanstere_target = yes
+		}
+
+		fire_only_once = yes
+		cost = @FRA_phalantere_decision_cost
+		days_remove = @FRA_phalantere_decision_time
+
+		ai_will_do = {
+			factor = 4
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_Develop_ENG target: [From.GetName]"
+			set_global_flag = { flag = FRA_ongoing_phalanstere_development days = @FRA_phalantere_decision_time value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Develop_ENG target: [From.GetName]"
+			set_temp_variable = { FRA_num_target_states = 2 }
+			set_variable = { FROM.FRA_num_target_states = 2 }
+			FROM = {
+				country_event = comfrance.129
+				effect_tooltip = { FRA_phalanstere_effect = yes }
+			}
+		}
+	}
+
+	FRA_Develop_SRI = {
+		name = FRA_Develop_Country
+		icon = generic_construction
+
+		allowed = { tag = INT }
+
+		available = {
+			NOT = { has_global_flag = FRA_ongoing_phalanstere_development }
+		}
+
+		visible = {
+			country_exists = FROM
+			FRA_phalanstere_target = yes
+		}
+		
+		cancel_trigger = {
+			FRA_phalanstere_target = no
+		}
+
+		targets = { SRI }
+		target_root_trigger = { has_global_flag = FRA_created_phalanstere }
+		target_trigger = {
+			FRA_phalanstere_target = yes
+		}
+
+		fire_only_once = yes
+		cost = @FRA_phalantere_decision_cost
+		days_remove = @FRA_phalantere_decision_time
+
+		ai_will_do = {
+			factor = 4
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_Develop_SRI target: [From.GetName]"
+			set_global_flag = { flag = FRA_ongoing_phalanstere_development days = @FRA_phalantere_decision_time value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Develop_SRI target: [From.GetName]"
+			set_temp_variable = { FRA_num_target_states = 2 }
+			set_variable = { FROM.FRA_num_target_states = 2 }
+			if = {
+				limit = { ENG = { is_in_tech_sharing_group = phalanstere_research } }
+				add_to_temp_variable = { FRA_num_target_states = 2 }
+				add_to_variable = { FROM.FRA_num_target_states = 2 }
+			}
+			FROM = {
+				country_event = comfrance.129
+				effect_tooltip = { FRA_phalanstere_effect = yes }
+			}
+		}
+	}
+
+	FRA_Develop_SWF = {
+		name = FRA_Develop_Country
+		icon = generic_construction
+
+		allowed = { tag = INT }
+
+		available = {
+			NOT = { has_global_flag = FRA_ongoing_phalanstere_development }
+		}
+
+		visible = {
+			country_exists = FROM
+			FRA_phalanstere_target = yes
+			FROM = { has_country_flag = aftermath_of_the_civil_war }
+		}
+		
+		cancel_trigger = {
+			FRA_phalanstere_target = no
+		}
+
+		targets = { SWF }
+		target_root_trigger = { has_global_flag = FRA_created_phalanstere }
+		target_trigger = {
+			FRA_phalanstere_target = yes
+			FROM = { has_country_flag = aftermath_of_the_civil_war }
+		}
+
+		fire_only_once = yes
+		cost = @FRA_phalantere_decision_cost
+		days_remove = @FRA_phalantere_decision_time
+
+		ai_will_do = {
+			factor = 4
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_Develop_SWF target: [From.GetName]"
+			set_global_flag = { flag = FRA_ongoing_phalanstere_development days = @FRA_phalantere_decision_time value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Develop_SWF target: [From.GetName]"
+			set_temp_variable = { FRA_num_target_states = 2 }
+			set_variable = { FROM.FRA_num_target_states = 2 }
+			if = {
+				limit = { ENG = { is_in_tech_sharing_group = phalanstere_research } }
+				add_to_temp_variable = { FRA_num_target_states = 1 }
+				add_to_variable = { FROM.FRA_num_target_states = 1 }
+			}
+			FROM = {
+				country_event = comfrance.129
+				effect_tooltip = { FRA_phalanstere_effect = yes }
+			}
+		}
+	}
+
+	FRA_Develop_NOR = {
+		name = FRA_Develop_Country
+		icon = generic_construction
+
+		allowed = { tag = INT }
+
+		available = {
+			NOT = { has_global_flag = FRA_ongoing_phalanstere_development }
+		}
+
+		visible = {
+			country_exists = FROM
+			FRA_phalanstere_target = yes
+		}
+		
+		cancel_trigger = {
+			FRA_phalanstere_target = no
+		}
+
+		targets = { NOR }
+		target_root_trigger = { has_global_flag = FRA_created_phalanstere }
+		target_trigger = {
+			FRA_phalanstere_target = yes
+		}
+
+		fire_only_once = yes
+		cost = @FRA_phalantere_decision_cost
+		days_remove = @FRA_phalantere_decision_time
+
+		ai_will_do = {
+			factor = 4
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_Develop_NOR target: [From.GetName]"
+			set_global_flag = { flag = FRA_ongoing_phalanstere_development days = @FRA_phalantere_decision_time value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Develop_NOR target: [From.GetName]"
+			set_temp_variable = { FRA_num_target_states = 2 }
+			set_variable = { FROM.FRA_num_target_states = 2 }
+			FROM = {
+				country_event = comfrance.129
+				effect_tooltip = { FRA_phalanstere_effect = yes }
+			}
+		}
+	}
+
+	FRA_Develop_BHC = {
+		name = FRA_Develop_Country
+		icon = generic_construction
+
+		allowed = { tag = INT }
+
+		available = {
+			NOT = { has_global_flag = FRA_ongoing_phalanstere_development }
+		}
+
+		visible = {
+			country_exists = FROM
+			FRA_phalanstere_target = yes
+		}
+		
+		cancel_trigger = {
+			FRA_phalanstere_target = no
+		}
+
+		targets = { BHC }
+		target_root_trigger = { has_global_flag = FRA_created_phalanstere }
+		target_trigger = {
+			FRA_phalanstere_target = yes
+		}
+
+		fire_only_once = yes
+		cost = @FRA_phalantere_decision_cost
+		days_remove = @FRA_phalantere_decision_time
+
+		ai_will_do = {
+			factor = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_Develop_BHC target: [From.GetName]"
+			set_global_flag = { flag = FRA_ongoing_phalanstere_development days = @FRA_phalantere_decision_time value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Develop_BHC target: [From.GetName]"
+			set_temp_variable = { FRA_num_target_states = 2 }
+			set_variable = { FROM.FRA_num_target_states = 2 }
+			if = {
+				limit = { ENG = { is_in_tech_sharing_group = phalanstere_research } }
+				add_to_temp_variable = { FRA_num_target_states = 2 }
+				add_to_variable = { FROM.FRA_num_target_states = 2 }
+			}
+			FROM = {
+				country_event = comfrance.129
+				effect_tooltip = { FRA_phalanstere_effect = yes }
+			}
+		}
+	}
+
+	FRA_Develop_MEX = {
+		name = FRA_Develop_Country
+		icon = generic_construction
+
+		allowed = { tag = INT }
+
+		available = {
+			NOT = { has_global_flag = FRA_ongoing_phalanstere_development }
+		}
+
+		visible = {
+			country_exists = FROM
+			FRA_phalanstere_target = yes
+		}
+		
+		cancel_trigger = {
+			FRA_phalanstere_target = no
+		}
+
+		targets = { MEX }
+		target_root_trigger = { has_global_flag = FRA_created_phalanstere }
+		target_trigger = {
+			FRA_phalanstere_target = yes
+		}
+
+		fire_only_once = yes
+		cost = @FRA_phalantere_decision_cost
+		days_remove = @FRA_phalantere_decision_time
+
+		ai_will_do = {
+			factor = 4
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_Develop_MEX target: [From.GetName]"
+			set_global_flag = { flag = FRA_ongoing_phalanstere_development days = @FRA_phalantere_decision_time value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Develop_MEX target: [From.GetName]"
+			set_temp_variable = { FRA_num_target_states = 1 }
+			set_variable = { FROM.FRA_num_target_states = 1 }
+			if = {
+				limit = { ENG = { is_in_tech_sharing_group = phalanstere_research } }
+				add_to_temp_variable = { FRA_num_target_states = 1 }
+				add_to_variable = { FROM.FRA_num_target_states = 1 }
+			}
+			FROM = {
+				country_event = comfrance.129
+				effect_tooltip = { FRA_phalanstere_effect = yes }
+			}
+		}
+	}
+
+	FRA_Develop_Central_America = {
+		name = FRA_Develop_Country
+		icon = generic_construction
+
+		allowed = { tag = INT }
+
+		available = {
+			NOT = { has_global_flag = FRA_ongoing_phalanstere_development }
+		}
+
+		visible = {
+			country_exists = FROM
+			FRA_phalanstere_target = yes
+		}
+		
+		cancel_trigger = {
+			FRA_phalanstere_target = no
+		}
+
+		targets = { GUA ELS HON NIC COS PAN }
+		target_root_trigger = { has_global_flag = FRA_created_phalanstere }
+		target_trigger = {
+			FRA_phalanstere_target = yes
+		}
+
+		fire_only_once = yes
+		cost = @FRA_phalantere_decision_cost
+		days_remove = @FRA_phalantere_decision_time
+
+		ai_will_do = {
+			factor = 4
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_Develop_Central_America target: [From.GetName]"
+			set_global_flag = { flag = FRA_ongoing_phalanstere_development days = @FRA_phalantere_decision_time value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Develop_Central_America target: [From.GetName]"
+			FROM = {
+				country_event = comfrance.129
+				effect_tooltip = { FRA_phalanstere_effect = yes }
+			}
+		}
+	}
+
+	FRA_Develop_Caribbean = {
+		name = FRA_Develop_Country
+		icon = generic_construction
+
+		allowed = { tag = INT }
+
+		available = {
+			NOT = { has_global_flag = FRA_ongoing_phalanstere_development }
+		}
+
+		visible = {
+			country_exists = FROM
+			FRA_phalanstere_target = yes
+		}
+		
+		cancel_trigger = {
+			FRA_phalanstere_target = no
+		}
+
+		targets = { CUB HAI DOM CAF }
+		target_root_trigger = { has_global_flag = FRA_created_phalanstere }
+		target_trigger = {
+			FRA_phalanstere_target = yes
+		}
+
+		fire_only_once = yes
+		cost = @FRA_phalantere_decision_cost
+		days_remove = @FRA_phalantere_decision_time
+
+		ai_will_do = {
+			factor = 4
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_Develop_Caribbean target: [From.GetName]"
+			set_global_flag = { flag = FRA_ongoing_phalanstere_development days = @FRA_phalantere_decision_time value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Develop_Caribbean target: [From.GetName]"
+			FROM = {
+				country_event = comfrance.129
+				effect_tooltip = { FRA_phalanstere_effect = yes }
+			}
+		}
+	}
+
+	FRA_Develop_CEN = {
+		name = FRA_Develop_Country
+		icon = generic_construction
+
+		allowed = { tag = INT }
+
+		available = {
+			NOT = { has_global_flag = FRA_ongoing_phalanstere_development }
+		}
+
+		visible = {
+			country_exists = FROM
+			FRA_phalanstere_target = yes
+		}
+		
+		cancel_trigger = {
+			FRA_phalanstere_target = no
+		}
+
+		targets = { CEN }
+		target_root_trigger = { has_global_flag = FRA_created_phalanstere }
+		target_trigger = {
+			FRA_phalanstere_target = yes
+		}
+
+		fire_only_once = yes
+		cost = @FRA_phalantere_decision_cost
+		days_remove = @FRA_phalantere_decision_time
+
+		ai_will_do = {
+			factor = 4
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_Develop_CEN target: [From.GetName]"
+			set_global_flag = { flag = FRA_ongoing_phalanstere_development days = @FRA_phalantere_decision_time value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Develop_CEN target: [From.GetName]"
+			FROM = {
+				country_event = comfrance.129
+				effect_tooltip = { FRA_phalanstere_effect = yes }
+			}
+		}
+	}
+
+	FRA_Develop_BRA = {
+		name = FRA_Develop_Country
+		icon = generic_construction
+
+		allowed = { tag = INT }
+
+		available = {
+			NOT = { has_global_flag = FRA_ongoing_phalanstere_development }
+		}
+
+		visible = {
+			country_exists = FROM
+			FRA_phalanstere_target = yes
+		}
+
+		cancel_trigger = {
+			FRA_phalanstere_target = no
+		}
+
+		targets = { BRA }
+		target_root_trigger = { has_global_flag = FRA_created_phalanstere }
+		target_trigger = {
+			FRA_phalanstere_target = yes
+		}
+
+		fire_only_once = yes
+		cost = @FRA_phalantere_decision_cost
+		days_remove = @FRA_phalantere_decision_time
+
+		ai_will_do = {
+			factor = 4
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_Develop_BRA target: [From.GetName]"
+			set_global_flag = { flag = FRA_ongoing_phalanstere_development days = @FRA_phalantere_decision_time value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Develop_BRA target: [From.GetName]"
+			set_temp_variable = { FRA_num_target_states = 2 }
+			set_variable = { FROM.FRA_num_target_states = 2 }
+			if = {
+				limit = { ENG = { is_in_tech_sharing_group = phalanstere_research } }
+				add_to_temp_variable = { FRA_num_target_states = 1 }
+				add_to_variable = { FROM.FRA_num_target_states = 1 }
+			}
+			FROM = {
+				country_event = comfrance.129
+				effect_tooltip = { FRA_phalanstere_effect = yes }
+			}
+		}
+	}
+
+	FRA_Develop_FOP = {
+		name = FRA_Develop_Country
+		icon = generic_construction
+
+		allowed = { tag = INT }
+
+		available = {
+			NOT = { has_global_flag = FRA_ongoing_phalanstere_development }
+		}
+
+		visible = {
+			country_exists = FROM
+			FRA_phalanstere_target = yes
+			NOT = { country_exists = ARG }
+		}
+		
+		cancel_trigger = {
+			FRA_phalanstere_target = no
+		}
+
+		targets = { FOP }
+		target_root_trigger = {
+			has_global_flag = FRA_created_phalanstere
+			NOT = { country_exists = ARG }
+		}
+		target_trigger = {
+			FRA_phalanstere_target = yes
+		}
+
+		fire_only_once = yes
+		cost = @FRA_phalantere_decision_cost
+		days_remove = @FRA_phalantere_decision_time
+
+		ai_will_do = {
+			factor = 4
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_Develop_FOP target: [From.GetName]"
+			set_global_flag = { flag = FRA_ongoing_phalanstere_development days = @FRA_phalantere_decision_time value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Develop_FOP target: [From.GetName]"
+			set_temp_variable = { FRA_num_target_states = 1 }
+			set_variable = { FROM.FRA_num_target_states = 1 }
+			if = {
+				limit = { ENG = { is_in_tech_sharing_group = phalanstere_research } }
+				add_to_temp_variable = { FRA_num_target_states = 1 }
+				add_to_variable = { FROM.FRA_num_target_states = 1 }
+			}
+			FROM = {
+				country_event = comfrance.129
+				effect_tooltip = { FRA_phalanstere_effect = yes }
+			}
+		}
+	}
+
+	FRA_Develop_South_America = {
+		name = FRA_Develop_Country
+		icon = generic_construction
+
+		allowed = { tag = INT }
+
+		available = {
+			NOT = { has_global_flag = FRA_ongoing_phalanstere_development }
+		}
+
+		visible = {
+			country_exists = FROM
+			FRA_phalanstere_target = yes
+		}
+		
+		cancel_trigger = {
+			FRA_phalanstere_target = no
+		}
+
+		targets = { CHL URG PAR BOL PRU ECU COL VEN }
+		target_root_trigger = { has_global_flag = FRA_created_phalanstere }
+		target_trigger = {
+			FRA_phalanstere_target = yes
+		}
+
+		fire_only_once = yes
+		cost = @FRA_phalantere_decision_cost
+		days_remove = @FRA_phalantere_decision_time
+
+		ai_will_do = {
+			factor = 4
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FRA_Develop_South_America target: [From.GetName]"
+			set_global_flag = { flag = FRA_ongoing_phalanstere_development days = @FRA_phalantere_decision_time value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_Develop_South_America target: [From.GetName]"
+			FROM = {
+				country_event = comfrance.129
+				effect_tooltip = { FRA_phalanstere_effect = yes }
+			}
 		}
 	}
 }
@@ -482,7 +1184,6 @@ FRA_liberate_europe_category = {
 		icon = generic_nationalism
 
 		visible = {
-			has_completed_focus = FRA_european_revolution
 			can_declare_war_on = FROM
 			FROM = {
 				has_socialist_government = no
@@ -547,10 +1248,20 @@ FRA_liberate_europe_category = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision FRA_invade_liberation_target target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 15 value = 1 }
+			setup_decision_attack_AI = yes
+			FROM = {
+				country_event = kr.political.30
+				save_event_target_as = attack_target
+			}
+			every_other_country = {
+				limit = { is_ally_with = ROOT }
+				country_event = kr.political.32
+			}
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove FRA_invade_liberation_target target: [From.GetName]"
+			clear_decision_attack_AI = yes
 			declare_war_on = {
 				target = FROM
 				type = annex_everything

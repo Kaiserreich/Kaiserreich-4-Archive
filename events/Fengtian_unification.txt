@@ -306,6 +306,7 @@ country_event = { #FROM attending the conference
 
 country_event = { #An Alliance with the Federalists?
 	id = fngshen.4
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngshen.4" }
 	title = fngshen.4.t
 
 	desc = {
@@ -324,7 +325,6 @@ country_event = { #An Alliance with the Federalists?
 	picture = GFX_report_event_GXC_federalist_party_2
 
 	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event fngshen.4"
 		if = {
 			limit = {
 				SZC = { SZC_federalists_in_exile = yes }
@@ -402,6 +402,7 @@ country_event = { #An Alliance with the Federalists?
 
 country_event = { #An Offer From Fengtian (GXC)
 	id = fngshen.5
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngshen.5" }
 	title = fngshen.5.t
 
 	desc = {
@@ -424,7 +425,6 @@ country_event = { #An Offer From Fengtian (GXC)
 	is_triggered_only = yes
 
 	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event fngshen.5"
 		hidden_effect = {
 			FROM = {
 				country_event = {
@@ -461,6 +461,7 @@ country_event = { #An Offer From Fengtian (GXC)
 
 country_event = { #Federalist Response
 	id = fngshen.6
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngshen.6" }
 
 	title = {
 		text = fngshen.6.t.accepted
@@ -492,7 +493,6 @@ country_event = { #Federalist Response
 	is_triggered_only = yes
 
 	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event fngshen.6"
 		clr_country_flag = FNG_shenyang_no_allies
 		hidden_effect = {
 			country_event = {
@@ -1104,29 +1104,31 @@ country_event = { #Preparing the National Conference
 		name = fngconf.1.a
 		ai_chance = {
 			factor = 100
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = FNG_JAP_PATH
+					option = FNG_OBEDIENCE
+				}
+			}
 		}
 		hidden_effect = {
-			for_each_scope_loop = {
-				array = global.china_tags_array
-				if = {
-					limit = {
-						exists = yes
-						FNG_can_attend_unification_conference = yes
-						NOT = {
-							tag = TIB
-							tag = MON
-							tag = ROOT
-						}
-						is_valid_peace_target = yes
-						NOT = {
-							any_enemy_country = { is_ally_with = ROOT }
-						}
+			every_other_country = {
+				limit = {
+					is_chinese_tag = yes
+					is_valid_peace_target = yes
+					FNG_can_attend_unification_conference = yes
+					NOT = {
+						tag = TIB
+						tag = MON
+						has_war_with = JAP
+						any_enemy_country = { is_ally_with = ROOT }
 					}
-					country_event = {
-						id = fngconf.2
-						days = 3
-						random = 24
-					}
+				}
+				country_event = {
+					id = fngconf.2
+					days = 3
+					random = 24
 				}
 			}
 			country_event = {
@@ -1173,6 +1175,13 @@ country_event = { #Preparing the National Conference
 		name = fngconf.1.b
 		ai_chance = {
 			factor = 0
+			modifier = {
+				add = 100
+				has_game_rule = {
+					rule = FNG_JAP_PATH
+					option = FNG_OBEDIENCE
+				}
+			}
 		}
 		set_global_flag = FNG_conference_failed
 	}
@@ -1192,7 +1201,6 @@ country_event = { #Attend the National Conference?
 			has_global_flag = FNG_conference_failed
 			any_enemy_country = { is_ally_with = FROM }
 		}
-		FNG_can_attend_unification_conference = yes
 	}
 
 	is_triggered_only = yes
@@ -1218,18 +1226,26 @@ country_event = { #Attend the National Conference?
 			if = {
 				limit = { num_subjects > 0 }
 				for_each_loop = {
-					array = ROOT.subjects
-					add_to_array = { FNG.FNG_conference_participants = v }
+					array = subjects
+					if = {
+						limit = {
+							NOT = {
+								check_variable = { v = MON }
+								check_variable = { v = TIB }
+							}
+						}
+						add_to_array = { FNG.FNG_conference_participants = v }
+					}
 				}
 			}
 			if = {
 				limit = { is_faction_leader = yes }
 				for_each_scope_loop = {
-					array = global.china_tags_array
+					array = faction_members
 					if = {
 						limit = {
-							is_in_faction_with = ROOT
-							exists = yes
+							is_subject = no
+							is_chinese_tag = yes
 							NOT = { tag = ROOT }
 						}
 						country_event = {
@@ -1285,9 +1301,7 @@ country_event = { #Attend the National Conference?
 			modifier = {
 				factor = 0
 				is_in_faction = yes
-				var:faction_leader = {
-					is_in_array = { FNG.FNG_conference_participants = THIS }
-				}
+				is_in_array = { FNG.FNG_conference_participants = var:faction_leader }
 			}
 		}
 		if = {
@@ -1465,6 +1479,7 @@ country_event = { #Japan Demands Observer Status
 
 country_event = { #Invite Chen Jiongming?
 	id = fngconf.6
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.6" }
 	title = fngconf.6.t
 	desc = fngconf.6.d
 
@@ -1472,39 +1487,36 @@ country_event = { #Invite Chen Jiongming?
 
 	trigger = {
 		OR = {
-			AND = {
-				GXC = {
-					GXC_has_federalist_government = yes
-					NOT = { has_war_with = PRC }
+			GXC = {
+				exists = yes
+				is_subject = no
+				GXC_has_federalist_government = yes
+				NOT = {
+					has_war_with = PRC
+					has_war_with = ROOT
 				}
-				NOT = { has_war_with = GXC }
 			}
-			AND = {
-				SZC = { SZC_federalists_in_exile = yes }
-				NOT = { has_war_with = SZC }
+			SZC = {
+				exists = yes
+				is_subject = no
+				SZC_federalists_in_exile = yes
+				NOT = { has_war_with = ROOT }
 			}
 		}
 		FNG = { controls_state = 608 }
-		NOT = {
-			has_global_flag = FNG_conference_failed
-			any_enemy_country = { is_ally_with = FROM }
-		}
+		NOT = { has_global_flag = FNG_conference_failed }
 	}
 
 	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event fngconf.6"
 		hidden_effect = {
 			if = {
 				limit = {
-					GXC = { GXC_has_federalist_government = yes }
-				}
-				GXC = { save_global_event_target_as = FNG_federalist_leader }
-			}
-			else_if = {
-				limit = {
-					SZC = { has_focus_tree = Sichuan_Clique_Federalist }
+					SZC = { SZC_federalists_in_exile = yes }
 				}
 				SZC = { save_global_event_target_as = FNG_federalist_leader }
+			}
+			else = {
+				GXC = { save_global_event_target_as = FNG_federalist_leader }
 			}
 		}
 	}
@@ -1606,6 +1618,7 @@ country_event = { #Japan Complains
 
 country_event = { #The Delegates Arrive / A Shattered Dream
 	id = fngconf.9
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.9" }
 
 	title = {
 		text = fngconf.9.t.conference
@@ -1644,7 +1657,6 @@ country_event = { #The Delegates Arrive / A Shattered Dream
 	picture = GFX_report_event_SQI_zongchang_and_zuolin
 
 	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event fngconf.9"
 		set_country_flag = FNG_show_and_tooltip
 	}
 
@@ -3107,10 +3119,7 @@ country_event = { #Tiaoyuan Denounces Zuolin
 		}
 		remove_from_array = { FNG.FNG_conference_participants = ANQ }
 		hidden_effect = {
-			ANQ = {
-				#Scripted effect that takes cares of all flags and other things
-				ANQ_break_relations_fengtian = yes
-			}
+			ANQ_break_relations_fengtian = yes
 			if = {
 				limit = { has_global_flag = FNG_conference_song }
 				clr_global_flag = FNG_conference_song
@@ -3969,6 +3978,7 @@ country_event = { #Fengtian Refuses Concessions
 
 country_event = { #FROM Demands Territory
 	id = fngconf.55
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.55" }
 	title = fngconf.55.t
 
 	desc = {
@@ -4096,7 +4106,6 @@ country_event = { #FROM Demands Territory
 	is_triggered_only = yes
 
 	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event fngconf.55"
 		if = {
 			limit = {
 				event_target:FNG_active_negotiations_target = { tag = SQI }
@@ -5308,6 +5317,7 @@ country_event = { #Compromise Rejected
 
 country_event = { #Territorial Demands Refused
 	id = fngconf.69
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.69" }
 	title = fngconf.69.t
 
 	desc = {
@@ -5338,7 +5348,6 @@ country_event = { #Territorial Demands Refused
 	picture = GFX_report_event_CHI_china_abandoned
 
 	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event fngconf.69"
 		hidden_effect = {
 			if = {
 				limit = {
@@ -5589,6 +5598,7 @@ country_event = { #Ma Clique Claims Xinjiang
 
 country_event = { #End of the Conference
 	id = fngconf.73
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.73" }
 	title = fngconf.73.t
 
 	desc = {
@@ -5614,7 +5624,6 @@ country_event = { #End of the Conference
 	is_triggered_only = yes
 
 	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event fngconf.73"
 		hidden_effect = {
 			if = {
 				limit = { tag = FNG }
