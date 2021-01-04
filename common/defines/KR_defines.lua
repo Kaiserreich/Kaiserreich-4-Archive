@@ -38,20 +38,20 @@ NDefines.NCountry.STATE_OCCUPATION_COST_MULTIPLIER = 0.25					-- Vanilla is 0.01
 NDefines.NCountry.CAPITULATE_STOCKPILES_RATIO = 0.75						-- Vanilla is 0.5
 NDefines.NCountry.WAR_SUPPORT_OFFNSIVE_WAR = -0.1							-- Vanilla is -0.2
 NDefines.NCountry.WAR_SUPPORT_DEFENSIVE_WAR = 0.3							-- Vanilla is 0.3
+NDefines.NCountry.FEMALE_UNIT_LEADER_BASE_CHANCE = {
+	-- applies as a factor to female unit leader randomization
+	-- the values needs to be zero if you don't actually have random portraits
+	0.0, -- navy leaders												-- Vanilla is 0.0
+	0.0, -- army leaders												-- Vanilla is 0.0
+	0.7, -- operatives													-- Vanilla is 1.0
+}
 NDefines.NResistance.RESISTANCE_TARGET_MODIFIER_PER_STABILITY_LOSS = 0.1	-- Vanilla is 0.2
 NDefines.NPolitics.BASE_POLITICAL_POWER_INCREASE = 1.5						-- Vanilla is 2
 NDefines.NBuildings.INFRASTRUCTURE_RESOURCE_BONUS = 0.0                     -- Vanilla is 0.1
 NDefines.NTrade.ALLOW_TRADE_CUT_OFF = 0 									-- Vanilla is 0
 NDefines.NTrade.BASE_TRADE_FACTOR = 100										-- Vanilla is 150
-NDefines.NWiki.BASE_URL = "http://kaiserreich.wikia.com/wiki/The_Kaiserreich_Wiki"
+NDefines.NWiki.BASE_URL = "https://kaiserreich.fandom.com/wiki/The_Kaiserreich_Wiki"
 -- Vanilla is "http://www.hoi4wiki.com/"
-NDefines.NGraphics.POLITICAL_GRID_SMALL_BOX_LIMIT = 12
-NDefines.NGraphics.COUNTRY_FLAG_SMALL_TEX_WIDTH = 11						-- Vanilla is 10
-NDefines.NGraphics.COUNTRY_FLAG_TEX_MAX_SIZE = 512							-- Vanilla is 256
-NDefines.NGraphics.COUNTRY_FLAG_SMALL_TEX_MAX_SIZE = 128					-- Vanilla is 64
-NDefines.NGraphics.COUNTRY_FLAG_STRIPE_TEX_MAX_WIDTH = 11					-- Vanilla is 10
-NDefines.NGraphics.VICTORY_POINT_MAP_ICON_TEXT_CUTOFF = {300, 500, 800}  	-- Vanilla is 100, 250, 500
-NDefines.NGraphics.VICTORY_POINTS_DISTANCE_CUTOFF = {300, 500, 1000} 		-- Vanilla is 300, 500, 1500
 NDefines.NMilitary.DIG_IN_FACTOR = 0.01										-- Vanilla is 0.02
 NDefines.NAI.ORG_UNIT_NORMAL = 0.60											-- Vanilla is 0.35
 NDefines.NAI.STR_UNIT_NORMAL = 0.60											-- Vanilla is 0.4
@@ -72,3 +72,11 @@ NDefines.NAI.DIFFERENT_FACTION_THREAT = 0									-- Vanilla is 30
 NDefines.NAI.NAVAL_INVADED_AREA_PRIO_MULT = 4.0								-- Vanilla is 2.0
 NDefines.NAI.SEND_VOLUNTEER_EVAL_BASE_DISTANCE = 1000.0  					-- Vanilla is 175.0
 NDefines.NAI.SEND_VOLUNTEER_EVAL_CONTAINMENT_FACTOR = 0						-- Vanilla is 0.1
+
+NDefines.NGraphics.POLITICAL_GRID_SMALL_BOX_LIMIT = 12						-- Vanilla is 6
+NDefines.NGraphics.COUNTRY_FLAG_SMALL_TEX_WIDTH = 11						-- Vanilla is 10
+NDefines.NGraphics.COUNTRY_FLAG_TEX_MAX_SIZE = 512							-- Vanilla is 256
+NDefines.NGraphics.COUNTRY_FLAG_SMALL_TEX_MAX_SIZE = 128					-- Vanilla is 64
+NDefines.NGraphics.COUNTRY_FLAG_STRIPE_TEX_MAX_WIDTH = 11					-- Vanilla is 10
+NDefines.NGraphics.VICTORY_POINT_MAP_ICON_TEXT_CUTOFF = {300, 500, 800}  	-- Vanilla is 100, 250, 500
+NDefines.NGraphics.VICTORY_POINTS_DISTANCE_CUTOFF = {300, 500, 1000} 		-- Vanilla is 300, 500, 1500

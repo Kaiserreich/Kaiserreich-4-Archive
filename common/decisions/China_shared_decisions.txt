@@ -14,12 +14,13 @@ political_actions = {
 
 		activation = {
 			has_war_with = FROM
+			FROM = { is_ai = yes }
 		}
 
 		targets = { LEP ANQ SQI CHI }
 		target_trigger = {
-			is_ai = yes
 			has_war_with = FROM
+			FROM = { is_ai = yes }
 		}
 
 		available = {
@@ -42,12 +43,14 @@ political_actions = {
 				has_idea = china_lost_momentum
 				hidden_trigger = {
 					is_ai = no
-					count_triggers = {
-						amount < 2
-						has_war_with = LEP
-						has_war_with = ANQ
-						has_war_with = SQI
-						has_war_with = CHI
+					NOT = {
+						count_triggers = {
+							amount = 2
+							has_war_with = LEP
+							has_war_with = ANQ
+							has_war_with = SQI
+							has_war_with = CHI
+						}
 					}
 				}
 			}
@@ -170,65 +173,6 @@ political_actions = {
 					}
 					remove_ideas = LEP_war_surrender_limit_idea
 				}
-			}
-		}
-	}
-
-	LEP_arms_dealers = {
-		icon = ger_military_buildup
-		allowed = {
-			OR = {
-				tag = SQI
-				tag = ANQ
-				tag = LEP
-				tag = CHI
-			}
-		}
-		available = {
-			has_equipment = { infantry_equipment < 250 }
-			has_political_power > -1000
-		}
-		visible = {
-			is_ai = yes
-			OR = {
-				has_war_with = SQI
-				has_war_with = ANQ
-				has_war_with = LEP
-				has_war_with = CHI
-			}
-		}
-
-		fire_only_once = no
-		days_re_enable = 90
-		cost = freedec?0
-
-		ai_will_do = {
-			factor = 10
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision LEP_arms_dealers"
-			if = {
-				limit = {
-					OR = {
-						SQI = { is_ai = no }
-						LEP = { is_ai = no }
-						ANQ = { is_ai = no }
-						CHI = { is_ai = no }
-						has_political_power > 100
-					}
-				}
-				add_political_power = -100
-			}
-			meta_effect = {
-				text = {
-					add_equipment_to_stockpile = {
-						type = infantry_equipment
-						amount = 1500
-						producer = [ROOT_TAG]
-					}
-				}
-				ROOT_TAG = "[Root.GetTag]"
 			}
 		}
 	}
@@ -408,7 +352,7 @@ china_united_front_decisions = {
 		}
 
 		days_remove = 7
-		cost = freedec?0
+		cost = 0
 		fire_only_once = no
 		ai_will_do = { factor = 1000 }
 
@@ -492,7 +436,7 @@ china_united_front_decisions = {
 			has_war_with = JAP
 		}
 
-		cost = freedec?0
+		cost = 0
 		days_remove = 40
 		fire_only_once = yes
 		ai_will_do = { factor = 1000 }
@@ -531,7 +475,7 @@ china_united_front_decisions = {
 			NOT = { has_war_with = JAP }
 		}
 
-		cost = freedec?0
+		cost = 0
 		fire_only_once = yes
 
 		ai_will_do = {
@@ -559,23 +503,48 @@ china_united_front_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision leave_chinese_united_front"
 			set_global_flag = { flag = united_front_collapse days = 3 value = 1 }
-			random_other_country = {
+			if = {
 				limit = {
-					is_faction_leader = yes
-					is_in_faction_with = ROOT
-				}
-				country_event = china_shared.12 #Notify Front leader
-			}
-			hidden_effect = { leave_faction = yes }
-			china_reform_faction = yes
-			hidden_effect = {
-				for_each_scope_loop = {
-					array = ROOT.chinese_faction_members
-					activate_targeted_decision = {
-						decision = rejoin_chinese_faction
-						target = ROOT
+					all_allied_country = {
+						OR = {
+							is_faction_leader = yes
+							tag = ROOT
+							has_country_flag = original_front_faction_member
+						}
 					}
 				}
+				random_other_country = {
+					limit = {
+						is_faction_leader = yes
+						is_in_faction_with = ROOT
+					}
+					country_event = china_shared.11 #Front collapses
+				}
+			}
+			else = {
+				random_other_country = {
+					limit = {
+						is_faction_leader = yes
+						is_in_faction_with = ROOT
+					}
+					country_event = china_shared.12 #Notify Front leader
+				}
+			}
+			hidden_effect = { leave_faction = yes }
+			clr_country_flag = united_front_member
+			if = {
+				limit = { has_country_flag = was_chinese_faction_leader }
+				china_reform_faction = yes
+				hidden_effect = {
+					for_each_scope_loop = {
+						array = ROOT.chinese_faction_members
+						activate_targeted_decision = {
+							decision = rejoin_chinese_faction
+							target = ROOT
+						}
+					}
+				}
+				clr_country_flag = was_chinese_faction_leader
 			}
 		}
 	}
@@ -597,7 +566,7 @@ china_united_front_decisions = {
 			is_in_array = { FROM.chinese_faction_members = ROOT }
 		}
 
-		cost = freedec?0
+		cost = 0
 		fire_only_once = yes
 
 		ai_will_do = {
@@ -661,7 +630,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		}
 
 		on_map_mode = map_only
-		highlight_states = { state = 608 }
+		highlight_state_targets = { state = 608 }
 
 		targeted_modifier = {
 			tag = JAP
@@ -673,7 +642,7 @@ china_second_sino_japanese_war_UF_decisions = {
 			resistance_growth_on_our_occupied_states = 0.1
 		}
 
-		cost = freedec?0
+		cost = 0
 		days_remove = -1
 
 		complete_effect = {
@@ -697,7 +666,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		}
 
 		on_map_mode = map_only
-		highlight_states = { state = 613 }
+		highlight_state_targets = { state = 613 }
 
 		targeted_modifier = {
 			tag = JAP
@@ -709,7 +678,7 @@ china_second_sino_japanese_war_UF_decisions = {
 			resistance_growth_on_our_occupied_states = 0.1
 		}
 
-		cost = freedec?0
+		cost = 0
 		days_remove = -1
 
 		complete_effect = {
@@ -733,7 +702,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		}
 
 		on_map_mode = map_only
-		highlight_states = { state = 1048 }
+		highlight_state_targets = { state = 1048 }
 
 		targeted_modifier = {
 			tag = JAP
@@ -745,7 +714,7 @@ china_second_sino_japanese_war_UF_decisions = {
 			resistance_growth_on_our_occupied_states = 0.1
 		}
 
-		cost = freedec?0
+		cost = 0
 		days_remove = -1
 
 		complete_effect = {
@@ -769,7 +738,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		}
 
 		on_map_mode = map_only
-		highlight_states = { state = 650 }
+		highlight_state_targets = { state = 650 }
 
 		targeted_modifier = {
 			tag = JAP
@@ -781,7 +750,7 @@ china_second_sino_japanese_war_UF_decisions = {
 			resistance_growth_on_our_occupied_states = 0.1
 		}
 
-		cost = freedec?0
+		cost = 0
 		days_remove = -1
 
 		complete_effect = {
@@ -805,7 +774,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		}
 
 		on_map_mode = map_only
-		highlight_states = { state = 607 }
+		highlight_state_targets = { state = 607 }
 
 		targeted_modifier = {
 			tag = JAP
@@ -817,7 +786,7 @@ china_second_sino_japanese_war_UF_decisions = {
 			resistance_growth_on_our_occupied_states = 0.05
 		}
 
-		cost = freedec?0
+		cost = 0
 		days_remove = -1
 
 		complete_effect = {
@@ -841,7 +810,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		}
 
 		on_map_mode = map_only
-		highlight_states = { state = 325 }
+		highlight_state_targets = { state = 325 }
 
 		targeted_modifier = {
 			tag = JAP
@@ -853,7 +822,7 @@ china_second_sino_japanese_war_UF_decisions = {
 			resistance_growth_on_our_occupied_states = 0.05
 		}
 
-		cost = freedec?0
+		cost = 0
 		days_remove = -1
 
 		complete_effect = {
@@ -877,7 +846,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		}
 
 		on_map_mode = map_only
-		highlight_states = { state = 602 }
+		highlight_state_targets = { state = 602 }
 
 		targeted_modifier = {
 			tag = JAP
@@ -889,7 +858,7 @@ china_second_sino_japanese_war_UF_decisions = {
 			resistance_growth_on_our_occupied_states = 0.05
 		}
 
-		cost = freedec?0
+		cost = 0
 		days_remove = -1
 
 		complete_effect = {
@@ -913,7 +882,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		}
 
 		on_map_mode = map_only
-		highlight_states = { state = 592 }
+		highlight_state_targets = { state = 592 }
 
 		targeted_modifier = {
 			tag = JAP
@@ -925,7 +894,7 @@ china_second_sino_japanese_war_UF_decisions = {
 			resistance_growth_on_our_occupied_states = 0.05
 		}
 
-		cost = freedec?0
+		cost = 0
 		days_remove = -1
 
 		complete_effect = {
@@ -949,7 +918,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		}
 
 		on_map_mode = map_only
-		highlight_states = { state = 597 }
+		highlight_state_targets = { state = 597 }
 
 		targeted_modifier = {
 			tag = JAP
@@ -961,7 +930,7 @@ china_second_sino_japanese_war_UF_decisions = {
 			resistance_growth_on_our_occupied_states = 0.05
 		}
 
-		cost = freedec?0
+		cost = 0
 		days_remove = -1
 
 		complete_effect = {
@@ -985,7 +954,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		}
 
 		on_map_mode = map_only
-		highlight_states = { state = 799 }
+		highlight_state_targets = { state = 799 }
 
 		targeted_modifier = {
 			tag = JAP
@@ -997,7 +966,7 @@ china_second_sino_japanese_war_UF_decisions = {
 			resistance_growth_on_our_occupied_states = 0.05
 		}
 
-		cost = freedec?0
+		cost = 0
 		days_remove = -1
 
 		complete_effect = {
@@ -1034,7 +1003,7 @@ china_second_sino_japanese_war_japan_decisions = {
 			}
 		}
 
-		highlight_states = { state = 608 }
+		highlight_state_targets = { state = 608 }
 
 		modifier = {
 			war_support_factor = 0.1
@@ -1090,7 +1059,7 @@ china_second_sino_japanese_war_japan_decisions = {
 			}
 		}
 
-		highlight_states = { state = 613 }
+		highlight_state_targets = { state = 613 }
 
 		modifier = {
 			war_support_factor = 0.1
@@ -1151,7 +1120,7 @@ china_second_sino_japanese_war_japan_decisions = {
 			}
 		}
 
-		highlight_states = { state = 1048 }
+		highlight_state_targets = { state = 1048 }
 
 		modifier = {
 			war_support_factor = 0.1
@@ -1212,7 +1181,7 @@ china_second_sino_japanese_war_japan_decisions = {
 			}
 		}
 
-		highlight_states = { state = 650 }
+		highlight_state_targets = { state = 650 }
 
 		modifier = {
 			war_support_factor = 0.1
@@ -1272,7 +1241,7 @@ china_second_sino_japanese_war_japan_decisions = {
 			}
 		}
 
-		highlight_states = { state = 607 }
+		highlight_state_targets = { state = 607 }
 
 		modifier = {
 			war_support_factor = 0.1
@@ -1329,7 +1298,7 @@ china_second_sino_japanese_war_japan_decisions = {
 			}
 		}
 
-		highlight_states = { state = 325 }
+		highlight_state_targets = { state = 325 }
 
 		modifier = {
 			war_support_factor = 0.1
@@ -1389,7 +1358,7 @@ china_second_sino_japanese_war_japan_decisions = {
 			}
 		}
 
-		highlight_states = { state = 602 }
+		highlight_state_targets = { state = 602 }
 
 		modifier = {
 			war_support_factor = 0.1
@@ -1445,7 +1414,7 @@ china_second_sino_japanese_war_japan_decisions = {
 			}
 		}
 
-		highlight_states = { state = 592 }
+		highlight_state_targets = { state = 592 }
 
 		modifier = {
 			war_support_factor = 0.1
@@ -1501,7 +1470,7 @@ china_second_sino_japanese_war_japan_decisions = {
 			}
 		}
 
-		highlight_states = { state = 597 }
+		highlight_state_targets = { state = 597 }
 
 		modifier = {
 			war_support_factor = 0.1
@@ -1561,7 +1530,7 @@ china_second_sino_japanese_war_japan_decisions = {
 			}
 		}
 
-		highlight_states = { state = 799 }
+		highlight_state_targets = { state = 799 }
 
 		modifier = {
 			war_support_factor = 0.1

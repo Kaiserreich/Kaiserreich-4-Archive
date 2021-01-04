@@ -44,6 +44,116 @@ occupy_massive_country = {
 	add_war_support = -0.2
 }
 
+remove_all_cores_and_claims_of_tags = {
+	every_state = {
+		limit = {
+			any_of = {
+				array = core_removal_array
+				OR = {
+					is_core_of = var:v
+					is_claimed_by = var:v
+				}
+			}
+		}
+		for_each_loop = {
+			array = core_removal_array
+			remove_core_of = var:v
+			remove_claim_by = var:v
+		}
+	}
+}
+
+transfer_territory_from_core_regions = {
+	every_owned_state = {
+		limit = {
+			any_of = {
+				array = target_cores_to_release
+				is_core_of = var:v
+			}
+			is_claim_or_core_of_ROOT = no
+			NOT = {
+				is_in_array = { ROOT.states_to_keep = THIS }
+			}
+		}
+		var:tag_to_release = { transfer_state = PREV }
+	}
+}
+
+transfer_territory_from_core_regions_and_add_cores = {
+	every_owned_state = {
+		limit = {
+			any_of = {
+				array = target_cores_to_release
+				is_core_of = var:v
+			}
+			is_claim_or_core_of_ROOT = no
+			NOT = {
+				is_in_array = { ROOT.states_to_keep = THIS }
+			}
+		}
+		var:tag_to_release = {
+			add_state_core = PREV
+			transfer_state = PREV
+		}
+	}
+}
+
+release_targeted_tag_from_core_regions = {
+	transfer_territory_from_core_regions = yes
+	puppet_released_tag = yes
+}
+
+release_targeted_tag_from_core_regions_and_add_cores = {
+	transfer_territory_from_core_regions_and_add_cores = yes
+	puppet_released_tag = yes
+}
+
+release_targeted_tag_with_claims = {
+	every_owned_state = {
+		limit = {
+			OR = {
+				is_core_of = var:tag_to_release
+				AND = {
+					is_claimed_by = var:tag_to_release
+					is_clear_other_claims = yes
+				}
+			}
+			is_claim_or_core_of_ROOT = no
+			NOT = {
+				is_in_array = { ROOT.states_to_keep = THIS }
+			}
+		}
+		var:tag_to_release = { transfer_state = PREV }
+	}
+	puppet_released_tag = yes
+}
+
+release_targeted_tag = {
+	every_owned_state = {
+		limit = {
+			is_core_of = var:tag_to_release
+			is_claim_or_core_of_ROOT = no
+			NOT = {
+				is_in_array = { ROOT.states_to_keep = THIS }
+			}
+		}
+		var:tag_to_release = { transfer_state = PREV }
+	}
+	puppet_released_tag = yes
+}
+
+puppet_released_tag = {
+	puppet = var:tag_to_release
+	var:tag_to_release = {
+		drop_cosmetic_tag = yes
+		syndicalist_socdem_government_change = yes
+		mark_focus_tree_layout_dirty = yes
+		remove_all_ministers_and_lobe = yes
+		hidden_effect = { set_puppet_minister = yes }
+		custom_effect_tooltip = general_minister_change_tt
+	}
+}
+
 setup_brazilian_splinters = {
 	hidden_effect = {
 		PIR = {
@@ -58,20 +168,17 @@ setup_brazilian_splinters = {
 		AMA = {
 			add_state_core = 495
 			add_state_core = 855
-			add_state_core = 897
 			add_state_core = 898
 			add_state_core = 899
 			add_state_core = 1030
 			add_state_core = 1031
 			add_state_core = 1033
-			add_state_core = 1034
 			add_state_core = 1040
 		}
 		GRP = {
 			add_state_core = 498
 			add_state_core = 497
 			add_state_core = 896
-			add_state_core = 1035
 		}
 		GOY = {
 			add_state_core = 280
@@ -147,22 +254,71 @@ setup_brazilian_splinters = {
 	}
 }
 
-setup_vavro_srobar = {
-	if = {
-		limit = { has_elected_government = yes }
-		meta_effect = {
-			text = {
-				create_country_leader = {
-					name = "Vavro Srobar"
-					desc = "POLITICS_VAVRO_SROBAR_DESC"
-					picture = "gfx/leaders/SVK/Portrait_SVK_Vavro_Srobar.tga"
-					expire = "1965.1.1"
-					ideology = [OVERLORD_IDEOLOGY]
+remove_lithuanian_monarch = {
+	hidden_effect = {
+		LIT = {
+			if = {
+				limit = {
+					OR = {
+						has_country_leader = {
+							name = "Mindaugas III"
+							ruling_only = yes
+						}
+						has_country_leader = {
+							name = "Kazimieras II"
+							ruling_only = yes
+						}
+					}
 				}
+				kill_country_leader = yes
 			}
-			OVERLORD_IDEOLOGY = "[ROOT.GetRulingIdeologySubtype]"
 		}
-		set_country_flag = CZE_SVK_was_puppeted
+	}
+}
+
+setup_puppet_lithuania = {
+	if = {
+		limit = {
+			is_german_tag = yes
+			has_socialist_government = no
+		}
+		LIT = {
+			meta_effect = {
+				text = {
+					create_country_leader = {
+						name = "Mindaugas III"
+						desc = "POLITICS_MINDAUGAS_III_DESC"
+						picture = "gfx/leaders/LIT/Portrait_LIT_Mindaugas_III.tga"
+						expire = "1965.1.1"
+						ideology = [OVERLORD_IDEOLOGY]
+					}
+				}
+				OVERLORD_IDEOLOGY = "[ROOT.GetRulingIdeologySubtype]"
+			}
+		}
+	}
+	else_if = {
+		limit = {
+			is_russian_tag = yes
+			has_socialist_government = no
+		}
+		LIT = {
+			meta_effect = {
+				text = {
+					create_country_leader = {
+						name = "Kazimieras II"
+						desc = "POLITICS_KAZIMIERAS_II_DESC"
+						picture = "Portrait_LIT_Kazimieras_II_Tiskevicius.tga"
+						expire = "1965.1.1"
+						ideology = [OVERLORD_IDEOLOGY]
+					}
+				}
+				OVERLORD_IDEOLOGY = "[ROOT.GetRulingIdeologySubtype]"
+			}
+		}
+	}
+	else = {
+		LIT = { set_cosmetic_tag = LIT_republican }
 	}
 }
 
@@ -172,17 +328,24 @@ release_chinese_government = {
 			is_controlled_chinese_region = yes
 			is_not_claim_or_core_of_ROOT = yes
 			if = {
-				limit = { ROOT = { tag = JAP } }
+				limit = {
+					ROOT = { tag = JAP }
+				}
 				NOT = { has_variable = ambition_area_@ROOT }
 			}
 		}
-		event_target:released_china_tag = {
-			transfer_state = PREV
-		}
+		event_target:released_china_tag = { transfer_state = PREV }
 	}
 	puppet = event_target:released_china_tag
-	event_target:released_china_tag = {
-		drop_cosmetic_tag = yes
+	hidden_effect = {
+		if = {
+			limit = {
+				NOT = {
+					event_target:released_china_tag = { has_cosmetic_tag = FNG_ROC }
+				}
+			}
+		}
+		event_target:released_china_tag = { drop_cosmetic_tag = yes }
 	}
 }
 
@@ -192,17 +355,24 @@ release_chinese_government_in_manchuria = {
 			is_manchuria = yes
 			is_not_claim_or_core_of_ROOT = yes
 			if = {
-				limit = { ROOT = { tag = JAP } }
+				limit = {
+					ROOT = { tag = JAP }
+				}
 				NOT = { has_variable = ambition_area_@ROOT }
 			}
 		}
-		event_target:released_china_tag = {
-			transfer_state = PREV
-		}
+		event_target:released_china_tag = { transfer_state = PREV }
 	}
 	puppet = event_target:released_china_tag
-	event_target:released_china_tag = {
-		drop_cosmetic_tag = yes
+	hidden_effect = {
+		if = {
+			limit = {
+				NOT = {
+					event_target:released_china_tag = { has_cosmetic_tag = FNG_ROC }
+				}
+			}
+		}
+		event_target:released_china_tag = { drop_cosmetic_tag = yes }
 	}
 }
 
@@ -355,7 +525,6 @@ setup_puppet_leader_TIB = {
 			}
 			create_country_leader = {
 				name = "Abdullah Bughra"
-				desc = "POLITICS_ABDULLAH_BUGHRA_DESC"
 				picture = "gfx/leaders/ETS/Portrait_ETS_Abdullah_Bughra.tga"
 				expire = "1965.1.1"
 				ideology = national_populist_subtype
@@ -426,7 +595,6 @@ setup_puppet_leader_TIB = {
 			}
 			create_country_leader = {
 				name = "Wen Tsungyao"
-				desc = "POLITICS_TIB_WEN_TSUNGYAO_DESC"
 				picture = "gfx/leaders/QIE/Portrait_QIE_Wen_Tsungyao.tga"
 				expire = "1965.1.1"
 				ideology = authoritarian_democrat_subtype
@@ -458,7 +626,6 @@ setup_puppet_leader_TIB = {
 			}
 			create_country_leader = {
 				name = "Huang Musong"
-				desc = "POLITICS_TIB_HUANG_MUSONG_LEADER_DESC"
 				picture = "gfx/leaders/TIB/Portrait_TIB_Huang_Musong.tga"
 				expire = "1965.1.1"
 				ideology = paternal_autocrat_subtype
@@ -513,7 +680,6 @@ setup_puppet_leader_MON = {
 			}
 			create_country_leader = {
 				name = "Li Shouxin"
-				desc = "POLITICS_MON_LI_SHOUXIN_DESC"
 				picture = "gfx/leaders/MON/Portrait_MON_Li_Shouxin.tga"
 				expire = "1965.1.1"
 				ideology = paternal_autocrat_subtype
@@ -549,7 +715,6 @@ setup_puppet_leader_MON = {
 			}
 			create_country_leader = {
 				name = "Jodbajab"
-				desc = "POLITICS_JODBAJAB_DESC"
 				picture = "gfx/leaders/MON/Portrait_MON_Jodbajab.tga"
 				expire = "1965.1.1"
 				ideology = paternal_autocrat_subtype

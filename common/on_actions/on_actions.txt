@@ -190,6 +190,56 @@ on_actions = {
 			}
 		}
 	}
+	
+	# scope is operative
+	# from scope is the country 
+	on_operative_created = {
+		effect = {
+			log = "[GetDateText]: ROOT: [Root.GetName] FROM: [From.GetName] on_operative_created"
+			add_operative_nationalities = yes
+		}
+	}
+
+	on_operation_completed = {
+		effect = {
+			# same scope setup as in operation outcome:
+			# THIS: the operation
+			# ROOT: the initiating country
+			# FROM: the target country
+			log = "[GetDateText] [Root.GetName]: on_operation_completed OPERATION: [This.GetName] TARGET: [From.GetName]"
+			
+			if = {
+				limit = {
+					ROOT = { has_country_flag = just_freed_operative_flag }
+				}
+				every_operative = {
+					if = {
+						limit = {
+							NOT = { has_trait = operative_escape_artist }
+						}
+						random_list = {
+							15 = { add_unit_leader_trait = operative_escape_artist }
+							85 = {}
+						}
+					}
+				}
+				ROOT = { clr_country_flag = just_freed_operative_flag }
+			}
+			every_operative = { #add target nationality if linguist
+				if = {
+					limit = {
+						has_trait = operative_linguist
+						NOT = { operative_leader_mission = no_mission }
+						NOT = { has_nationality = FROM }
+					}
+					random_list = {
+						20 = { add_nationality = FROM }
+						80 = {}
+					}
+				}
+			}
+		}
+	}
 
 	on_weekly = {
 		effect = {
@@ -246,10 +296,21 @@ on_actions = {
 				country_event = kr.political.10
 			}
 
+			#Remove GEA/MAF from the Reichspakt
+			GEA = { leave_faction = yes }
+			MAF = { leave_faction = yes }
+
 			#UFC
 			GUA = {
 				remove_ideas = { GUA_united_fruit_start_clone }
 				add_ideas = { GUA_united_fruit }
+			}
+			
+			PRI = {
+				country_event = {
+					id = pri.205
+					days = 1433
+				}
 			}
 		}
 	}
@@ -280,6 +341,7 @@ on_actions = {
 			#clr_country_flag = KR_can_lower_autonomy_level
 			#clr_country_flag = KR_can_be_annexed
 			clr_country_flag = KR_can_become_free
+			clr_country_flag = KR_independence_refused
 		}
 	}
 
@@ -301,6 +363,9 @@ on_actions = {
 			#clr_country_flag = KR_can_lower_autonomy_level
 			#clr_country_flag = KR_can_be_annexed
 			clr_country_flag = KR_can_become_free
+			clr_country_flag = KR_independence_war_overlord
+			clr_country_flag = KR_independence_war
+			clr_country_flag = KR_independence_refused
 		}
 	}
 
@@ -404,16 +469,22 @@ on_actions = {
 					country_event = { id = romania.24 days = 3 random = 96 }
 				}
 			}
-			ROOT = {
-				if = {
-					limit = { NOT = { has_country_flag = AI_move_unit_check } }
-					country_event = kr.political.200
+			if = {
+				limit = {
+					ROOT = { tag = SOV }
+					FROM = { tag = RUS }
+				}
+				ROOT = {
+					country_event = { id = russia.1949 days = 1 random = 30 }
 				}
 			}
-			FROM = {
-				if = {
-					limit = { NOT = { has_country_flag = AI_move_unit_check } }
-					country_event = kr.political.200
+			if = {
+				limit = {
+					ROOT = { tag = RUS }
+					FROM = { tag = SOV }
+				}
+				ROOT = {
+					country_event = { id = russia.1951 days = 1 random = 30 }
 				}
 			}
 		}
@@ -424,42 +495,48 @@ on_actions = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] has capitulated to [From.GetName]"
 			news_event = country_capitulated.0
-			if = {
-				limit = {
-					OR = {
-						is_in_faction_with = GER
-						is_subject_of = GER
+			
+			# Remove the force-surrender idea, just in case it's still there
+			remove_ideas = ready_to_surrender
+			
+			# Fixes for vanilla bugs
+			FROM = {
+				every_enemy_country = {
+					limit = {
+						is_in_faction = yes
+						is_faction_leader = no
+						NOT = {
+							any_allied_country = {
+								is_faction_leader = yes
+								has_war_with = PREV.PREV
+							}
+						}
 					}
-					is_in_asia = yes
-				}
-				GER = {
-					country_event = { id = asiapeace.1 days = 20 }
+					random_country = {
+						limit = {
+							is_in_faction_with = PREV
+							is_faction_leader = yes
+						}
+						save_event_target_as = factionhead
+					}
+					country_event = { id = kr.political.208 hours = 1 }
+					leave_faction = yes
 				}
 			}
 			if = {
-				limit = {
-					OR = {
-						is_in_faction_with = HOL
-						is_subject_of = HOL
-					}
-					is_in_asia = yes
-				}
-				HOL = {
-					country_event = { id = asiapeace.4 days = 20 }
-				}
-			}
-			if = {
-				limit = {
-					tag = INS
-					has_war_with = DEI
-				}
-				DEI = {
-					annex_country = {
-						target = INS
-						transfer_troops = no
+				limit = { is_faction_leader = yes }
+				every_country = {
+					limit = { is_ally_with = ROOT }
+					every_controlled_state = {
+						limit = {
+							owner = { has_war_with = ROOT }
+						}
+						owner = { set_state_controller = PREV }
 					}
 				}
 			}
+			
+			# FRA capitulation
 			if = {
 				limit = {
 					tag = FRA
@@ -467,22 +544,69 @@ on_actions = {
 				}
 				country_event = { id = capt.40 days = 1 }
 			}
-			#Russian-Bulgarian alliance
+			
+			# Disable SOV civil war unit lock
 			if = {
 				limit = {
-					tag = BUL
-					is_in_faction_with = RUS
-					NOT = {
-						any_of_scopes = {
-							array = RUS.faction_members
-							is_subject = no
+					ROOT = {
+						tag = SOV
+						has_idea = SOV_chaotic_revolution
+					}
+				}
+				ROOT = {
+					remove_ideas = SOV_chaotic_revolution
+					country_lock_all_division_template = no
+				}
+			}
+			
+			# Disable Romanian civil war unit lock, transfer loser's ships
+			if = {
+				limit = {
+					has_global_flag = romanian_civil_war
+					ROOT = {
+						OR = {
+							tag = ROM
+							tag = RRM
+						}
+					}
+					FROM = {
+						OR = {
+							tag = ROM
+							tag = RRM
 						}
 					}
 				}
-				RUS = {
-					country_event = { id = bulgaria.99 months = 2 }
+				ROOT = {
+					remove_ideas = ROM_civil_war
+					country_lock_all_division_template = no
+					transfer_units_fraction = {
+						target = FROM
+						size = 0
+						navy_ratio = 1
+						keep_unit_leaders_trigger = { always = yes }
+					}
+				}
+				FROM = {
+					remove_ideas = ROM_civil_war
+					country_lock_all_division_template = no
 				}
 			}
+			
+			# France capitulates
+			if = {
+				limit = {
+					tag = FRA
+					NOT = { has_global_flag = FRA_capitulated }
+				}
+				country_event = { id = capt.40 days = 1 }
+			}
+			
+			# Move the Internationale leader
+			if = {
+				limit = { tag = INT }
+				FRA_transfer_internationale_leader = yes
+			}
+			
 			# double-checking exile system
 			if = {
 				limit = {
@@ -521,18 +645,6 @@ on_actions = {
 					modifier = faction_traitor_trade
 					target = ROOT
 					days = 365
-				}
-			}
-			ROOT = {
-				if = {
-					limit = { NOT = { has_country_flag = AI_move_unit_check } }
-					country_event = kr.political.200
-				}
-			}
-			FROM = {
-				if = {
-					limit = { NOT = { has_country_flag = AI_move_unit_check } }
-					country_event = kr.political.200
 				}
 			}
 		}
@@ -584,7 +696,6 @@ on_actions = {
 	on_send_volunteers = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] is sending volunteers to [From.GetName]"
-			country_event = { id = kr.political.200 days = 30 }
 		}
 	}
 
@@ -592,7 +703,6 @@ on_actions = {
 	on_send_expeditionary_force = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] is sending an expeditionary force to [From.GetName]"
-			country_event = { id = kr.political.200 days = 30 }
 		}
 	}
 
@@ -702,6 +812,9 @@ on_actions = {
 			ROOT = {
 				remove_all_ministers = yes
 				set_puppet_minister = yes
+				clr_country_flag = KR_independence_war_overlord
+				clr_country_flag = KR_independence_war
+				clr_country_flag = KR_independence_refused
 			}
 		}
 	}
@@ -756,79 +869,6 @@ on_actions = {
 	on_faction_formed = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] on_faction_formed"
-		}
-	}
-
-	on_government_change = {
-		effect = {
-			log = "[GetDateText] [Root.GetName] on_government_change"
-			country_event = kr.political.41 #opinion modifiers
-			country_event = kr.political.12 #puppet ministers
-
-			if = {
-				limit = {
-					is_in_array = { global.asian_economic_sphere = ROOT }
-					has_socialist_government = yes
-				}
-				country_event = japfor.404
-			}
-
-			if = {
-				limit = {
-					tag = BRA
-					not_has_elected_government = yes
-				}
-				set_country_flag = BRA_is_dictatorship
-			}
-			else_if = {
-				limit = {
-					tag = SZC
-				}
-				SZC_add_government_ministers = yes
-			}
-			else_if = {
-				limit = {
-					tag = HAW
-					OR = {
-						has_country_flag = HAW_monarchy_restored
-						has_country_flag = HAW_republic_declared
-						has_country_flag = HAW_revolution_commune_declared
-					}
-				}
-				if = {
-					limit = {
-						has_country_flag = HAW_revolution_commune_declared
-						has_socialist_government = no
-					}
-					clr_country_flag = HAW_revolution_commune_declared
-					set_country_flag = HAW_republic_declared
-				}
-				else_if = {
-					limit = {
-						NOT = { has_country_flag = HAW_revolution_commune_declared }
-						has_socialist_government = yes
-					}
-					set_country_flag = HAW_revolution_commune_declared
-					clr_country_flag = HAW_monarchy_restored
-					clr_country_flag = HAW_republic_declared
-				}
-				else_if = {
-					limit = {
-						has_country_flag = HAW_monarchy_restored
-						has_elected_government = no
-					}
-					clr_country_flag = HAW_monarchy_restored
-					set_country_flag = HAW_republic_declared
-				}
-			}
-			else_if = {
-				limit = {
-					is_co_prosperity_candidate = yes
-					is_puppet_of = JAP
-				}
-				add_to_array = { global.JAP_possible_allies_array = ROOT }
-				set_variable = { ROOT.japanese_economic_influence = 0 }
-			}
 		}
 	}
 
@@ -975,20 +1015,14 @@ on_actions = {
 	on_war = {
 		effect = {
 			log = "[GetDateText]: [From.GetName]: on_war"
-			# News events
-			if = {
-				limit = {
-					OR = {
-						tag = ARG
-						tag = CHL
-						tag = FOP
-					}
-				}
-				news_event = {
-					id = worldnews.16
-					days = 2
-				}
-			}
+			# World tension events
+			country_event = worldtension.1
+			country_event = worldtension.2
+			country_event = worldtension.3
+			country_event = worldtension.4
+			country_event = worldtension.5
+			
+			# Start of the Second Weltkrieg
 			if = {
 				limit = {
 					tag = GER
@@ -996,8 +1030,9 @@ on_actions = {
 				}
 				news_event = {
 					id = worldnews.5
-					days = 2
+					days = 1
 				}
+				set_global_flag = second_weltkrieg_has_started
 			}
 
 			# Fengtian
@@ -1009,6 +1044,20 @@ on_actions = {
 					random = 16
 				}
 				country_event = fngsystem.15
+			}
+
+			# Dutch East Indies
+			if = {
+				limit = {
+					tag = JAP
+					FROM = { tag = HOL }
+				}
+				HOL = {
+					country_event = {
+						id = holdei.4
+						days = 1095
+					}
+				}
 			}
 
 			# Paraguay vs Bolivia
@@ -1038,6 +1087,20 @@ on_actions = {
 				}
 				country_event = {
 					days = 5 id = albania.38
+				}
+			}
+
+			# Dominion of India events
+			if = {
+				limit = {
+					tag = DEH
+					FROM = { tag = ENT }
+				}
+				DEH = {
+					country_event = {
+						id = delhi.25
+						days = 2
+					}
 				}
 			}
 
@@ -1113,6 +1176,30 @@ on_actions = {
 	on_peace = {
 		effect = {
 			log = "[GetDateText]: [From.GetName]: on_peace"
+			#Demobilization check for the AI
+			if = {
+				limit = {
+					is_ai = yes
+					NOT = { has_country_flag = has_demobilization_check }
+				}
+				set_country_flag = { flag = has_demobilization_check days = 30 value = 1 }
+				country_event = { id = kr.political.120 days = 30 }
+			}
+			
+			#Remove emergency USA units
+			if = {
+				limit = {
+					OR = {
+						tag = USA
+						tag = CAL
+						tag = TEX
+						tag = CSA
+					}
+					has_country_flag = ACW_attacked_during_recovery
+				}
+				country_event = { id = amcivwar.616 days = 2 random_days = 3 }
+			}
+			
 			#Remove British Loyalist templates
 			if = {
 				limit = { has_country_flag = CAN_has_british_loyalists }
@@ -1146,13 +1233,15 @@ on_actions = {
 					days = 2
 				}
 			}
-
-			# End GEA-YUN war
+			
+			# Independence
 			if = {
-				limit = {
-					has_country_flag = YUN_GEA_WAR_OVER_TIN
-				}
-				clr_country_flag = YUN_GEA_WAR_OVER_TIN
+				limit = { has_country_flag = KR_independence_war }
+				clr_country_flag = KR_independence_war
+			}
+			if = {
+				limit = { has_country_flag = KR_independence_war_overlord }
+				clr_country_flag = KR_independence_war_overlord
 			}
 
 			# Volunteers

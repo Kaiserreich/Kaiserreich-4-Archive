@@ -6,6 +6,7 @@
 
 # Germany oil related events are at the bottom
 add_namespace = romania
+add_namespace = royalist
 
 ### Introduction event
 country_event = {
@@ -33,7 +34,6 @@ country_event = {
 	desc = romania.1.d
 
 	trigger = {
-		tag = ROM
 		OR = {
 			has_government = national_populist
 			has_government = paternal_autocrat
@@ -43,11 +43,7 @@ country_event = {
 		}
 	}
 
-	mean_time_to_happen = {
-		days = 70
-	}
-
-	fire_only_once = yes
+	is_triggered_only = yes
 
 	option = {
 		name = romania.1.a # Iorga must be stopped
@@ -176,13 +172,10 @@ country_event = {
 
 	trigger = {
 		tag = ROM
-
-		has_idea = ROM_royalist_threat
 		date > 1937.1.1
-
-		NOT = {
-			country_exists = RRM
-		}
+		has_idea = ROM_royalist_threat
+		has_government = national_populist
+		NOT = { country_exists = RRM }
 
 		# No civil war if Romania is a puppet
 		is_subject = no
@@ -197,19 +190,12 @@ country_event = {
 			has_political_power < -200
 			has_stability < 0.30
 		}
-
-		# Only if the Iron Guard hasn't been ousted
-		OR = {
-			has_government = national_populist
-			has_government = paternal_autocrat
-		}
 	}
 
 	fire_only_once = yes
 
 	mean_time_to_happen = {
 		days = 150
-
 		modifier = {
 			factor = 0.8
 			has_country_flag = did_not_purge_the_circle
@@ -220,18 +206,12 @@ country_event = {
 		log = "[GetDateText]: [Root.GetName]: event romania.7"
 		hidden_effect = {
 			set_global_flag = romanian_civil_war
-			every_state = {
-				limit = { is_core_of = ROM }
-				add_core_of = RRM
-			}
-			every_state = {
-				limit = { is_claimed_by = ROM }
-				add_claim_by = RRM
-			}
+			remove_ideas = ROM_royalist_threat
 
 			if = {
 				limit = { is_in_faction_with = SER }
 				set_country_flag = ROM_left_faction_for_civil_war
+				clr_country_flag = SER_invited_to_belgradepact
 				leave_faction = yes
 				SER = {
 					remove_opinion_modifier = { target = ROOT modifier = Belgrade_Pact_joined_yay }
@@ -243,182 +223,94 @@ country_event = {
 				}
 				remove_opinion_modifier = { target = BUL modifier = Belgrade_Pact_anti_bulgaria }
 			}
-
-			if = {
+			else_if = {
 				limit = {
-					NOT = { is_in_faction_with = SER }
 					is_in_faction = yes
+					NOT = { is_in_faction_with = SER }
 				}
 				leave_faction = yes
 			}
-
-			set_temp_variable = { temp = num_equipment@infantry_equipment }
-			multiply_temp_variable = { temp = 0.5 }
-			send_equipment = { target = RRM type = infantry_equipment amount = temp }
-
-			set_temp_variable = { temp = num_equipment@artillery_equipment }
-			multiply_temp_variable = { temp = 0.5 }
-			send_equipment = { target = RRM type = artillery_equipment amount = temp }
-
-			set_temp_variable = { temp = num_equipment@support_equipment }
-			multiply_temp_variable = { temp = 0.5 }
-			send_equipment = { target = RRM type = support_equipment amount = temp }
-
+			
+			every_state = {
+				limit = {
+					OR = {
+						is_core_of = ROM
+						is_claimed_by = ROM
+					}
+				}
+				if = {
+					limit = { is_core_of = ROM }
+					add_core_of = RRM
+				}
+				if = {
+					limit = { is_claimed_by = ROM }
+					add_claim_by = RRM
+				}
+			}
+			
+			every_owned_state = {
+				limit = {
+					OR = {
+						state = 76 # North Transylvania
+						state = 78 # Bessarabia
+						state = 79 # Moldova
+						state = 80 # Cernauti
+						state = 713 # Suceava
+						state = 789 # Sezklerland
+					}
+				}
+				RRM = { transfer_state = PREV }
+			}
+			transfer_units_fraction = {
+				target = RRM
+				size = 0.45
+				navy_ratio = 1
+				keep_unit_leaders_trigger = { always = yes }
+			}
+			add_ideas = ROM_civil_war
+			country_lock_all_division_template = yes
 			RRM = {
-				transfer_state = 78 # Bessarabia
-				transfer_state = 79 # Moldova
-
-				if = {
-					limit = {
-						80 = { is_owned_and_controlled_by = ROM }
-					}
-					transfer_state = 80 # Northern Bucovina
-				}
-
-				if = {
-					limit = {
-						713 = { is_owned_and_controlled_by = ROM }
-					}
-					transfer_state = 713 # Southern Bucovina
-				}
-
-				if = {
-					limit = {
-						789 = { is_owned_and_controlled_by = ROM }
-					}
-					transfer_state = 789 # East Transylvania
-				}
-
-				if = {
-					limit = {
-						76 = { is_owned_and_controlled_by = ROM }
-					}
-					transfer_state = 76 # North Transylvania
-				}
-
+				country_lock_all_division_template = yes
+				add_ideas = ROM_civil_war
 				transfer_technology = yes
 				set_capital = 79
 				add_manpower = 25000
-				country_event = { id = royalist.1 days = 2 }
-
-				# Add chiefs if ROM has them (to keep it balanced)
-				if = {
-					limit = {
-						ROM = { has_idea_with_trait = chief_of_army }
-					}
-					add_ideas = RRM_Constantin_Sanatescu_carm_ade
+				country_event = {
+					id = romania.100
+					hours = 2
 				}
-				if = {
-					limit = {
-						ROM = { has_idea_with_trait = chief_of_navy }
-					}
-					add_ideas = RRM_Nicolae_Caranfil_cnav_sco
+				country_event = {
+					id = romania.31
+					days = 17
+					random = 720
 				}
-				if = {
-					limit = {
-						ROM = { has_idea_with_trait = chief_of_air_force }
-					}
-					add_ideas = RRM_Gheorghe_Jienescu_cair_ade
-				}
-			}
-			country_event = {
-				id = romania.8
-				days = 7
-			}
-			country_event = {
-				id = romania.31
-				days = 17
-				random = 720
-			}
-			RRM = {
 				country_event = {
 					id = romania.32
 					days = 17
 					random = 720
 				}
 			}
-		}
-	}
-
-	option = {
-		name = romania.7.a # The traitors!
-		remove_ideas = ROM_royalist_threat
-		add_political_power = -200
-	}
-	option = {
-		name = romania.7.b # We will restore the monarchy!
-		trigger = { is_ai = no }
-		remove_ideas = ROM_royalist_threat
-		add_political_power = -200
-
-		# Workaround to prevent the player from deleting all units
-		hidden_effect = {
-			ROM = {
-				if = {
-					limit = {
-						num_divisions < 13 # Likely the player has deleted some or all divisions
-					}
-
-					# Just to be sure, delete all units of the default templates
-					delete_unit_template_and_units = {
-						division_template = "Divizie Infanterie"
-					}
-					delete_unit_template_and_units = {
-						division_template = "Divizie Infanterie II"
-					}
-					delete_unit_template_and_units = {
-						division_template = "Divizie Cavalerie"
-					}
-					delete_unit_template_and_units = {
-						division_template = "Divizie Cavalerie II"
-					}
-
-					load_oob = ROM
-				}
+			# Add chiefs if ROM has them (to keep it balanced)
+			if = {
+				limit = { has_idea_with_trait = chief_of_army }
+				RRM = { add_ideas = RRM_Constantin_Sanatescu_carm_ade }
 			}
-		}
-
-		RRM = {
-			change_tag_from = ROM
-		}
-	}
-}
-
-# Serbia and Bulgaria notified
-country_event = {
-	id = romania.70
-	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.70" }
-	title = romania.70.t
-	desc = romania.70.d
-
-	is_triggered_only = yes
-
-	option = {
-		name = romania.70.a
-	}
-}
-
-# The monarchists rebelled
-country_event = {
-	id = romania.8
-	title = romania.8.t
-	desc = romania.8.d
-
-	is_triggered_only = yes
-
-	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event romania.8"
-		hidden_effect = {
-			random_other_country = {
-				limit = {
-					NOT = {
-						tag = RRM
-					}
-				}
-				news_event = {
-					id = worldnews.65
-					hours = 6
-				}
+			if = {
+				limit = { has_idea_with_trait = chief_of_navy }
+				RRM = { add_ideas = RRM_Nicolae_Caranfil_cnav_sco }
+			}
+			if = {
+				limit = { has_idea_with_trait = chief_of_air_force }
+				RRM = { add_ideas = RRM_Gheorghe_Jienescu_cair_ade }
+			}
+			declare_war_on = {
+				target = RRM
+				type = annex_everything
+			}
+			
+			news_event = {
+				id = worldnews.65
+				hours = 6
 			}
 			SER = {
 				country_event = {
@@ -451,14 +343,31 @@ country_event = {
 	}
 
 	option = {
-		name = romania.8.a # Death to the traitors!
-		clr_country_flag = SER_invited_to_belgradepact
-		RRM = {
-			declare_war_on = {
-				target = ROM
-				type = annex_everything
-			}
-		}
+		name = romania.7.a # The traitors!
+		effect_tooltip = { remove_ideas = ROM_royalist_threat }
+		add_political_power = -200
+	}
+	option = {
+		name = romania.7.b # We will restore the monarchy!
+		trigger = { is_ai = no }
+		effect_tooltip = { remove_ideas = ROM_royalist_threat }
+		remove_ideas = ROM_royalist_threat
+		add_political_power = -200
+		RRM = { change_tag_from = ROOT }
+	}
+}
+
+# Serbia and Bulgaria notified
+country_event = {
+	id = romania.70
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.70" }
+	title = romania.70.t
+	desc = romania.70.d
+
+	is_triggered_only = yes
+
+	option = {
+		name = romania.70.a
 	}
 }
 
@@ -1041,7 +950,7 @@ country_event = {
 			factor = 5
 		}
 		if = {
-			limit = { has_cosmetic_tag = RTS }
+			limit = { has_cosmetic_tag = RUS_empire }
 			add_political_power = -40
 		}
 		set_country_flag = no_ROM_intervention
@@ -1117,10 +1026,8 @@ country_event = {
 	option = {
 		name = romania.25.a # Long live Romania
 		custom_effect_tooltip = romania.25.tt
-		set_country_flag = RRM_has_won
 		hidden_effect = {
 			load_oob = RRM_victory
-			load_oob = RRM_victory_naval
 
 			# Remove all cores and claims of Iron Guard Romania
 			every_state = {
@@ -1180,9 +1087,16 @@ country_event = {
 			factor = 20
 		}
 		add_political_power = -20
-
-		# They may return in the future, so set Iron Guard leaders as party leaders
-		RRM_set_iron_guard_leaders = yes # custom effect from scripted effects
+		hidden_effect = {
+			kill_ideology_leader = national_populist
+			create_country_leader = {
+				name = "Corneliu Zelea Codreanu"
+				desc = "POLITICS_CORNELIU_ZELEA_CODREANU_DESC"
+				picture = "gfx/leaders/ROM/Portrait_ROM_Corneliu_Zelea_Codreanu.tga"
+				expire = "1965.1.1"
+				ideology = national_populist_subtype
+			}
+		}
 	}
 
 	option = {
@@ -1215,7 +1129,6 @@ country_event = {
 		ai_chance = {
 			factor = 90
 		}
-
 		add_political_power = -20
 		reverse_add_opinion_modifier = {
 			target = RRM
@@ -1234,7 +1147,6 @@ country_event = {
 		ai_chance = {
 			factor = 10
 		}
-
 		add_political_power = 20
 		reverse_add_opinion_modifier = {
 			target = RRM
@@ -1245,10 +1157,17 @@ country_event = {
 				id = romania.29
 				days = 3
 			}
+			hidden_effect = {
+				kill_ideology_leader = national_populist
+				create_country_leader = {
+					name = "Corneliu Zelea Codreanu"
+					desc = "POLITICS_CORNELIU_ZELEA_CODREANU_DESC"
+					picture = "gfx/leaders/ROM/Portrait_ROM_Corneliu_Zelea_Codreanu.tga"
+					expire = "1965.1.1"
+					ideology = national_populist_subtype
+				}
+			}
 		}
-
-		# They may return in the future, so set Iron Guard leaders as party leaders
-		RRM_set_iron_guard_leaders = yes # custom effect from scripted effects
 	}
 }
 
@@ -1263,26 +1182,28 @@ country_event = {
 
 	option = {
 		name = romania.28.a # Hang them high
-
 		ai_chance = {
 			factor = 70
 		}
 		add_political_power = 40
-
-		# Disable all Iron Guard leaders
-		RRM_disable_iron_guard_leaders = yes # custom effect from scripted effects
 	}
 
 	option = {
 		name = romania.28.b # Imprison them
-
 		ai_chance = {
 			factor = 30
 		}
 		add_political_power = -80
-
-		# Though imprisoned, they may return in the future, so set Iron Guard leaders as party leaders
-		RRM_set_iron_guard_leaders = yes # custom effect from scripted effects
+		hidden_effect = {
+			kill_ideology_leader = national_populist
+			create_country_leader = {
+				name = "Corneliu Zelea Codreanu"
+				desc = "POLITICS_CORNELIU_ZELEA_CODREANU_DESC"
+				picture = "gfx/leaders/ROM/Portrait_ROM_Corneliu_Zelea_Codreanu.tga"
+				expire = "1965.1.1"
+				ideology = national_populist_subtype
+			}
+		}
 	}
 }
 
@@ -1395,7 +1316,10 @@ country_event = {
 # Germany: Romania is nationalizing the oil industry, what shall we do?
 country_event = {
 	id = romania.34
-	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.34" }
+	immediate = {
+		log = "[GetDateText]: [Root.GetName]: event romania.34"
+		hidden_effect = { set_country_flag = ROM_already_start_nationalizing_the_oil }
+	}
 	title = romania.34.t
 	desc = romania.34.d
 
@@ -2374,7 +2298,7 @@ country_event = {
 }
 
 # Germany Oil Related Events
-#
+
 # Germany: Romania stops oil shipments
 country_event = {
 	id = romania.44
@@ -2397,5 +2321,43 @@ country_event = {
 				modifier = ROM_stopped_oil_shipments_trade
 			}
 		}
+	}
+}
+
+# Royalist Events
+
+# Return of the king: civil war
+country_event = {
+	id = romania.100
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.100" }
+	title = romania.100.t
+	desc = romania.100.d
+	picture = GFX_report_event_royal_parade
+
+	is_triggered_only = yes
+
+	option = {
+		name = romania.100.a # We will fight for you
+		hidden_effect = {
+			country_event = {
+				id = romania.101
+				days = 2
+			}
+		}
+	}
+}
+
+# FRN: coalition of parties
+country_event = {
+	id = romania.101
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.101" }
+	title = romania.101.t
+	desc = romania.101.d
+	picture = GFX_report_event_generic_sign_treaty3
+
+	is_triggered_only = yes
+
+	option = {
+		name = romania.101.a # As long as we fight together
 	}
 }
