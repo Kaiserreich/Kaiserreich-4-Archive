@@ -967,9 +967,12 @@ focus_tree = {
 				ideology = syndicalist
 				popularity = 0.2
 			}
-			swap_ideas = {
-				remove_idea = INC_Trade_Unionism_idea_2
-				add_idea = INC_Trade_Unionism_idea_3
+			custom_effect_tooltip = INC_Empower_the_CGT_tt
+			hidden_effect = {
+				swap_ideas = {
+					remove_idea = INC_Trade_Unionism_idea_2
+					add_idea = INC_Trade_Unionism_idea_3
+				}
 			}
 			country_event = { id = viet.30 days = 10 }
 		}
@@ -3879,18 +3882,70 @@ focus_tree = {
 			factor = 100
 			modifier = {
 				factor = 0
-				strength_ratio = { tag = SIA ratio < 1.0 }
-			}
-			modifier = {
-				factor = 0
-				is_in_faction = no
-				SIA = {
-					is_in_faction = yes
+				OR = {
+					has_war = yes
+					strength_ratio = { tag = SIA ratio < 0.75 }
+					# neither of us is in a faction and SIA is stronger
+					AND = {
+						SIA = {
+							is_in_faction = no
+							is_subject = no
+						}
+						is_in_faction = no
+						strength_ratio = { tag = SIA ratio < 1.0 }
+					}
+					# they're in a faction which is not at war
+					SIA = {
+						OR = {
+							is_in_faction = yes
+							is_subject = yes
+						}
+						has_war = no
+					}
+					# they're guaranteed but not in a faction
+					SIA = {
+						is_in_faction = no
+						has_guarantor = yes
+						any_of_scopes = {
+							array = guarantor_array
+							has_guaranteed = PREV
+							OR = {
+								strength_ratio = { tag = ROOT ratio > 1.0 }
+								is_in_faction = yes
+							}
+							OR = {
+								has_war = no
+								surrender_progress < 0.20
+							}
+						}
+					}
+					# they're a subject but not in a faction or guaranteed
+					SIA = {
+						is_in_faction = no
+						has_guarantor = no
+						is_subject = yes
+						overlord = {
+							OR = {
+								strength_ratio = { tag = ROOT ratio > 1.0 }
+								is_in_faction = yes
+							}
+							OR = {
+								has_war = no
+								surrender_progress < 0.30
+							}
+						}
+					}
+					# they're in a faction which is at war but not with a major and not losing
+					SIA = {
+						is_in_faction = yes
+						has_war = yes
+						NOT = {
+							any_enemy_country = { is_actual_major = yes }
+							surrender_progress > 0.10
+							faction_leader = { surrender_progress > 0.20 }
+						}
+					}
 				}
-			}
-			modifier = {
-				factor = 0.025
-				has_war = yes
 			}
 		}
 		completion_reward = {
