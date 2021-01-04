@@ -17,6 +17,7 @@ political_actions = {
 					array = global.china_tags_array
 					var:v = {
 						has_country_flag = legation_council_member
+						exists = yes
 					}
 				}
 			}
@@ -57,35 +58,66 @@ political_actions = {
 	}
 
 	LEC_china_peace = {
-		icon = GFX_decision_generic_political_discourse
+		icon = generic_agreement
+
 		allowed = {
 			is_chinese_tag = yes
 		}
+
 		available = {
-			LEC = {
-				has_capitulated = yes
+			if = {
+				limit = { country_exists = LEC }
+				OR = {
+					LEC = { has_capitulated = no }
+					any_owned_state = {
+						custom_trigger_tooltip = {
+							tooltip = LEC_war_tooltip
+							controller = {
+								has_country_flag = LEC_war_backer
+							}
+						}
+					}
+				}
+			}
+			else = {
+				any_owned_state = {
+					custom_trigger_tooltip = {
+						tooltip = LEC_war_tooltip
+						controller = {
+							has_country_flag = LEC_war_backer
+						}
+					}
+				}
 			}
 		}
-		visible = {
-			has_war_with = LEC
-			OR = {
-				has_war_with = CAN
-				has_war_with = GER
-				has_war_with = USA
-				has_war_with = CAL
-				has_war_with = TEX
-				has_war_with = AUS
-				has_war_with = BEL
+
+        activation = {
+			has_country_flag = LEC_war
+			if = {
+				limit = { country_exists = LEC }
+				LEC = { has_capitulated = yes }
 			}
-		}
-		fire_only_once = yes
-		ai_will_do = { factor = 425}
-		cost = freedec?0
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision LEC_china_peace"
+			any_of_scopes = {
+				array = ROOT.enemies
+				has_country_flag = LEC_war_backer
+			}
+        }
+
+		fire_only_once = no
+		is_good = yes
+		days_mission_timeout = 150
+		selectable_mission = no
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout LEC_china_peace"
 			country_event = {
 				id = lec.93
 			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision LEC_china_peace"
+			add_war_support = -0.01
 		}
 	}
 }
@@ -1281,7 +1313,7 @@ LEC_influence_category = {
 			original_tag = JAP
 		}
 		available = {
-			AUS = {
+			LEC = {
 				custom_trigger_tooltip = {
 					tooltip = LEC_big_recession
 					OR = {
@@ -1294,9 +1326,6 @@ LEC_influence_category = {
 		}
 
 		visible = {
-			AUS = {
-				exists = yes
-			}
 			LEC = {
 				exists = yes
 				owns_state = 609
@@ -1615,32 +1644,34 @@ LEC_influence_category = {
 		icon = GFX_decision_generic_political_discourse
 		allowed = {
 			OR = {
-				original_tag = AST
-				original_tag = CAN
+				tag = AST
+				tag = CAN
+				tag = GBR
 			}
 		}
 		available = {
-			has_country_flag = AST_hong_kong
+			LEC = { owns_state = 326 }
 		}
 		visible = {
 			LEC = {
 				is_subject = no
 				exists = yes
 				owns_state = 326
+				NOT = { has_country_flag = AST_reached_out_hong_kong }
 			}
-			NOT = {
-				has_government = radical_socialist
-				has_government = syndicalist
-				has_government = totalist
-				has_country_flag = no_AST_hong_kong
-			}
+			has_country_flag = AST_hong_kong
+			is_subject = no
+			not_has_socialist_government = yes
+			NOT = { has_global_flag = AST_cannot_retake_hong_kong }
 		}
 		fire_only_once = yes
 		ai_will_do = { factor = 425}
 		cost = 25
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision LEC_AST_reach_out_hong_kong"
+			custom_effect_tooltip = LEC_increases_british_influence
 			LEC = {
+				set_country_flag = AST_reached_out_hong_kong
 				country_event = {
 					id = lecbrits.11
 					days = 3
@@ -1653,34 +1684,41 @@ LEC_influence_category = {
 		icon = generic_prepare_civil_war
 		allowed = {
 			OR = {
-				original_tag = AST
-				original_tag = CAN
+				tag = AST
+				tag = CAN
+				tag = GBR
 			}
 		}
 		available = {
-			has_country_flag = AST_hong_kong
+			has_manpower > 1000
+			LEC = { owns_state = 326 }
 		}
 		visible = {
 			LEC = {
 				is_subject = no
 				exists = yes
 				owns_state = 326
+				NOT = { has_country_flag = AST_sent_volunteers }
 			}
-			has_manpower > 1000
-			NOT = {
-				has_government = radical_socialist
-				has_government = syndicalist
-				has_government = totalist
-				has_country_flag = no_AST_hong_kong
-			}
+			has_country_flag = AST_hong_kong
+			is_subject = no
+			not_has_socialist_government = yes
+			NOT = { has_global_flag = AST_cannot_retake_hong_kong }
 		}
 		fire_only_once = yes
-		ai_will_do = { factor = 125}
+		ai_will_do = {
+			factor = 125
+			modifier = {
+				factor = 0
+				has_manpower < 10000
+			}
+		}
 		cost = 25
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision LEC_AST_send_volunteers"
 			add_manpower = -1000
 			LEC = {
+				set_country_flag = AST_sent_volunteers
 				add_popularity = {
 					ideology = social_conservative
 					popularity = 0.025
@@ -1696,14 +1734,15 @@ LEC_influence_category = {
 		icon = GFX_decision_generic_political_discourse
 		allowed = {
 			OR = {
-				original_tag = AST
-				original_tag = CAN
+				tag = AST
+				tag = CAN
+				tag = GBR
 			}
 		}
 		available = {
-			has_country_flag = AST_hong_kong
 			LEC = {
 				social_conservative > 0.1
+				owns_state = 326
 			}
 		}
 		visible = {
@@ -1711,13 +1750,12 @@ LEC_influence_category = {
 				is_subject = no
 				exists = yes
 				owns_state = 326
+				NOT = { has_country_flag = AST_had_royal_visit }
 			}
-			NOT = {
-				has_government = radical_socialist
-				has_government = syndicalist
-				has_government = totalist
-				has_country_flag = no_AST_hong_kong
-			}
+			has_country_flag = AST_hong_kong
+			is_subject = no
+			not_has_socialist_government = yes
+			NOT = { has_global_flag = AST_cannot_retake_hong_kong }
 		}
 		fire_only_once = yes
 		ai_will_do = { factor = 125}
@@ -1729,6 +1767,13 @@ LEC_influence_category = {
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove LEC_AST_royal_visit"
 			LEC = {
+				set_country_flag = AST_had_royal_visit
+				effect_tooltip = {
+					add_popularity = {
+						ideology = social_conservative
+						popularity = 0.05
+					}
+				}
 				country_event = {
 					id = lecbrits.27
 				}
@@ -1740,14 +1785,15 @@ LEC_influence_category = {
 		icon = generic_prepare_civil_war
 		allowed = {
 			OR = {
-				original_tag = AST
-				original_tag = CAN
+				tag = AST
+				tag = CAN
+				tag = GBR
 			}
 		}
 		available = {
-			has_country_flag = AST_hong_kong
 			LEC = {
 				social_conservative > 0.15
+				owns_state = 326
 			}
 		}
 		visible = {
@@ -1756,12 +1802,10 @@ LEC_influence_category = {
 				exists = yes
 				owns_state = 326
 			}
-			NOT = {
-				has_government = radical_socialist
-				has_government = syndicalist
-				has_government = totalist
-				has_country_flag = no_AST_hong_kong
-			}
+			has_country_flag = AST_hong_kong
+			is_subject = no
+			not_has_socialist_government = yes
+			NOT = { has_global_flag = AST_cannot_retake_hong_kong }
 		}
 		fire_only_once = yes
 		ai_will_do = {
@@ -1781,6 +1825,7 @@ LEC_influence_category = {
 		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove LEC_AST_appoint_new_governor"
+			custom_effect_tooltip = LEC_increases_british_influence
 			LEC = {
 				add_popularity = {
 					ideology = social_conservative
@@ -1798,22 +1843,23 @@ LEC_influence_category = {
 		icon = GFX_decision_generic_political_discourse
 		allowed = {
 			OR = {
-				original_tag = AST
-				original_tag = CAN
+				tag = AST
+				tag = CAN
+				tag = GBR
 			}
 		}
 		available = {
 			LEC = {
 				NOT = {
 					has_government = social_conservative
-					is_in_faction_with = CAN
+					is_in_faction_with = ROOT
 				}
 				OR = {
+					has_country_flag = LEC_bankrupt
 					AND = {
 						has_war = yes
 						has_country_flag = LEC_AST_governor
 					}
-					has_country_flag = LEC_bankrupt
 					AND = {
 						social_conservative > 0.35
 						has_country_flag = LEC_AST_governor
@@ -1826,17 +1872,20 @@ LEC_influence_category = {
 				exists = yes
 				owns_state = 326
 				NOT = {
-					is_in_faction_with = CAN
+					is_in_faction_with = ROOT
+					has_war_with = ROOT
+					has_country_flag = AST_tried_to_take_hong_kong
 				}
 			}
-			NOT = {
-				has_government = radical_socialist
-				has_government = syndicalist
-				has_government = totalist
-				has_country_flag = no_AST_hong_kong
-			}
+			is_subject = no
+			not_has_socialist_government = yes
+			event_target:LEC_has_british_vote = { tag = ROOT }
+			NOT = { has_global_flag = AST_cannot_retake_hong_kong }
 		}
+		
 		fire_only_once = yes
+		cost = freedec?0
+		
 		ai_will_do = { factor = 500
 			modifier = {
 				factor = 0
@@ -1845,8 +1894,12 @@ LEC_influence_category = {
 					option = LEC_UK
 				}
 			}
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
 		}
-		cost = freedec?0
+		
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision LEC_AST_retake_hong_kong"
 			add_state_claim = 326
@@ -1860,32 +1913,36 @@ LEC_influence_category = {
 		icon = GFX_decision_generic_political_discourse
 		allowed = {
 			OR = {
-				original_tag = AST
-				original_tag = CAN
+				tag = AST
+				tag = CAN
+				tag = GBR
 			}
 		}
 		available = {
-			has_country_flag = AST_hong_kong
 			LEC = {
 				social_conservative > 0.3
+				owns_state = 326
 			}
 		}
 		visible = {
 			LEC = {
+				is_subject = no
 				exists = yes
-			}
-			NOT = {
-				LEC = {
+				owns_state = 326
+				NOT = {
 					has_country_flag = LEC_brits_vote
+					has_country_flag = AST_requested_voting_rights
 				}
-				has_government = radical_socialist
-				has_government = syndicalist
-				has_government = totalist
-				has_country_flag = no_AST_hong_kong
 			}
+			has_country_flag = AST_hong_kong
+			has_country_flag = legation_council_member
+			NOT = { has_country_flag = legation_council_vote }
+			is_subject = no
+			not_has_socialist_government = yes
+			NOT = { has_global_flag = AST_cannot_retake_hong_kong }
 		}
 		fire_only_once = yes
-		ai_will_do = { factor = 500}
+		ai_will_do = { factor = 500 }
 		cost = 50
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision LEC_AST_request_voting"
@@ -2012,6 +2069,20 @@ LEC_influence_category = {
 					has_war = yes
 				}
 			}
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = LEC_faction_path
+					option = LEC_FAC_NO
+				}
+			}
+			modifier = {
+				factor = 1000
+				has_game_rule = {
+					rule = LEC_faction_path
+					option = LEC_FAC_YES
+				}
+			}
 		}
 		cost = 50
 		complete_effect = {
@@ -2055,6 +2126,20 @@ LEC_influence_category = {
 					has_war = yes
 				}
 			}
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = LEC_faction_path
+					option = LEC_FAC_NO
+				}
+			}
+			modifier = {
+				factor = 1000
+				has_game_rule = {
+					rule = LEC_faction_path
+					option = LEC_FAC_YES
+				}
+			}
 		}
 		cost = 50
 		complete_effect = {
@@ -2076,11 +2161,19 @@ LEC_influence_category = {
 			has_completed_focus = LEC_they_made_ready
 		}
 		visible = {
-			CAN = {
-				is_faction_leader = yes
+			OR = {
+				CAN = {
+					is_faction_leader = yes
+					NOT = { has_war_with = ROOT }
+				}
+				GBR = {
+					is_faction_leader = yes
+					NOT = { has_war_with = ROOT }
+				}
 			}
 			has_completed_focus = LEC_they_made_ready
 			is_subject = no
+			is_in_faction = no
 			OR = {
 				has_government = social_conservative
 				has_government = market_liberal
@@ -2104,13 +2197,42 @@ LEC_influence_category = {
 					has_war = yes
 				}
 			}
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = LEC_faction_path
+					option = LEC_FAC_NO
+				}
+			}
+			modifier = {
+				factor = 1000
+				has_game_rule = {
+					rule = LEC_faction_path
+					option = LEC_FAC_YES
+				}
+			}
 		}
 		cost = 50
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision LEC_join_entente"
-			CAN = {
-				country_event = {
-					id = lecbrits.50
+			if = {
+				limit = {
+					GBR = {
+						is_faction_leader = yes
+						NOT = { has_war_with = ROOT }
+					}
+				}
+				GBR = {
+					country_event = {
+						id = lecbrits.50
+					}
+				}
+			}
+			else = {
+				CAN = {
+					country_event = {
+						id = lecbrits.50
+					}
 				}
 			}
 		}
@@ -3367,3 +3489,137 @@ LEC_influence_category = {
 	}
 }
 
+	
+LEC_france_fate_of_lec_category = {	
+	LEC_france_shanghai = {
+		icon = GFX_decision_generic_political_discourse
+		allowed = {
+			original_tag = FRA
+		}
+		available = {
+			owns_state = 743
+			NOT = {
+				owns_state = 746
+				owns_state = 747
+				owns_state = 801
+				owns_state = 326
+				owns_state = 609
+			}
+		}
+		visible = {
+			owns_state = 743
+			NOT = {
+				owns_state = 746
+				owns_state = 747
+				owns_state = 801
+				owns_state = 326
+				owns_state = 609
+			}
+			country_exists = CHI
+		}
+		ai_will_do = {
+			factor = 100
+		}
+		
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision LEC_france_shanghai"
+			
+			CHI = {
+				transfer_state = 743
+			}
+		}
+	}
+	LEC_france_concessions = {
+		icon = GFX_decision_generic_political_discourse
+		allowed = {
+			original_tag = FRA
+		}
+		available = {
+			owns_state = 743				
+			owns_state = 746
+			owns_state = 747
+			owns_state = 801
+			owns_state = 326
+			owns_state = 609
+		}
+		visible = {
+			owns_state = 743
+			owns_state = 746
+			owns_state = 747
+			owns_state = 801
+			owns_state = 326
+			owns_state = 609
+			country_exists = CHI
+		}
+		ai_will_do = {
+			factor = 100
+		}
+		
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision LEC_france_concessions"
+			
+			CHI = {
+				transfer_state = 743
+				transfer_state = 746
+				transfer_state = 747
+				transfer_state = 801
+				transfer_state = 326
+				transfer_state = 609
+			}
+		}
+	}
+	LEC_france_macao = {
+		icon = GFX_decision_generic_political_discourse
+		allowed = {
+			original_tag = FRA
+		}
+		available = {
+			owns_state = 729				
+		}
+		visible = {
+			owns_state = 729
+			country_exists = CHI
+		}
+		ai_will_do = {
+			factor = 100
+		}
+		
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision LEC_france_concessions"
+			
+			CHI = {
+				transfer_state = 729
+			}
+		}
+	}
+}
+
+LEC_uk_stuff_category = {
+	LEC_ask_for_hongkong = {
+		icon = GFX_decision_generic_political_discourse
+		allowed = {
+			original_tag = GBR
+		}
+		available = {
+			AST = {
+				owns_state = 326
+			}
+		}
+		visible = {
+			AST = {
+				owns_state = 326
+			}
+		}
+		ai_will_do = {
+			factor = 100
+		}
+		
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision LEC_ask_for_hongkong"
+					
+			GBR = {
+				transfer_state = 326
+			}
+		}
+	}
+}
