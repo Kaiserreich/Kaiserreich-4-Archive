@@ -95,9 +95,7 @@ disband_twenty_percent_units = {
 	random_state = {
 		limit = {
 			impassable = yes
-			owner = {
-				PREV = { is_fully_controlled_by = PREV  }
-			}
+			is_fully_controlled_by = owner
 		}
 		owner = { save_event_target_as = disband_state_owner }
 		save_event_target_as = disband_state
@@ -112,13 +110,8 @@ disband_twenty_percent_units = {
 		}
 	}
 	XXB = {
-		every_state = {
-			XXB = {
-				delete_unit = {
-					state = PREV
-					disband = yes
-				}
-			}
+		delete_unit = {
+			disband = yes
 		}
 		set_temp_variable = {
 			manpower_diff = manpower_k
@@ -140,35 +133,34 @@ disband_twenty_percent_units = {
 			manpower_diff = -1
 		}
 		add_manpower = manpower_diff
-		transfer_units_fraction = {
-			target =  event_target:disband_country
-			size = 0
-			stockpile_ratio = 1
-			keep_unit_leaders_trigger = {
-				always = yes
-			}
-		}
 	}
 	event_target:disband_state = {
 		event_target:disband_state_owner = { set_state_owner = PREV }
 	}
 	annex_country = {
 		target = XXB
+		transfer_troops = no
 	}
 }
 
 calculate_maximum_divisions = {
 	# base upper division limit = number of factories
-	set_variable = { net_factory_count = num_of_factories } #NOTE: doing this separately for the player-facing tooltip
-	set_variable = { max_divisions = net_factory_count }
 	
+	set_variable = { net_factory_count = 0 } #NOTE: doing this separately for the player-facing tooltip
+	for_each_loop = {
+		array = owned_states
+		add_to_variable = { net_factory_count = v:industrial_complex_level }
+		add_to_variable = { net_factory_count = v:arms_factory_level }
+	}
+	set_variable = { max_divisions = net_factory_count }
+
 	# base lower division limit is either max manpower/35 (for countries with very high manpower but low factories)
 	# or the number of owned states or 5, whichever of the three numbers is higher
 	set_variable = { lower_limit_from_manpower = max_available_manpower_k }
 	divide_variable = { lower_limit_from_manpower = 35 }
 	round_variable = lower_limit_from_manpower
 	set_variable = { lower_limit_from_states = num_owned_states }
-	
+
 	set_variable = { lower_limit = lower_limit_from_manpower }
 	clamp_variable = {
 		var = lower_limit
@@ -180,7 +172,7 @@ calculate_maximum_divisions = {
 		min = 5
 		max = 1000
 	}
-	
+
 	# +15% for majors
 	if = {
 		limit = { is_major = yes }
@@ -195,11 +187,11 @@ calculate_maximum_divisions = {
 	# the upper and lower limit is then adjusted according to the economy law, overriding the base
 	set_variable = { upper_limit_from_factory_mult = modifier@unit_limit_factory_bonus }
 	multiply_variable = { upper_limit_from_factory_mult = 100 }
-	
+
 	set_temp_variable = { economy_mult = 1 }
 	add_to_temp_variable = { economy_mult = modifier@unit_limit_factory_bonus }
 	multiply_variable = { max_divisions = economy_mult }
-	
+
 	set_variable = { net_max_divisions = max_divisions }
 	round_variable = net_max_divisions
 	set_variable = { upper_limit = modifier@unit_limit_max }
@@ -214,11 +206,11 @@ calculate_maximum_divisions = {
 			max = upper_limit
 		}
 	}
-	
+
 	# add any specific bonuses to the limit
 	set_variable = { upper_limit_unit_bonus = modifier@unit_limit_bonus }
 	add_to_variable = { max_divisions = upper_limit_unit_bonus }
-	
+
 	round_variable = max_divisions
 }
 
@@ -226,16 +218,16 @@ calculate_mobilisation_penalty = {
 	set_variable = { mobilisation_penalty_var = num_divisions }
 	divide_variable = { mobilisation_penalty_var = max_divisions }
 	subtract_from_variable = { mobilisation_penalty_var = 1 }
-	
+
 	divide_variable = { mobilisation_penalty_var = 4 }
 	clamp_variable = {
 		var = mobilisation_penalty_var
 		min = -0.25
 		max = 0.25
 	}
-	
+
 	set_variable = { mobilisation_penalty_var_positive = mobilisation_penalty_var }
-	
+
 	#for negative effects
 	multiply_variable = { mobilisation_penalty_var = -1 }
 }

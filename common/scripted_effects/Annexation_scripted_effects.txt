@@ -59,12 +59,14 @@ occupy_massive_country = {
 transfer_state_and_add_core = {
 	remove_claim_and_add_core_of_target = yes
 	var:tag_to_release = { transfer_state = PREV }
+	recheck_annexations = yes
 }
 
 # state scope
 transfer_state_and_add_claim = {
 	remove_claim_and_add_claim_of_target = yes
 	var:tag_to_release = { transfer_state = PREV }
+	recheck_annexations = yes
 }
 
 # state scope
@@ -293,6 +295,31 @@ puppet_released_tag_nocosmetic = {
 
 ### COUNTRY-SPECIFIC EFFECTS ###
 
+release_france = {
+	every_state = {
+		limit = {
+			is_european_france = yes
+			is_claim_or_core_of_ROOT = no
+			if = {
+				limit = {
+					ROOT = { is_italian_tag = yes }
+				}
+				NOT = {
+					state = 762 #Nice
+					state = 735 #Savoy
+					state = 943 #Upper Savoy
+				}
+			}
+		}
+		add_core_of = var:tag_to_release
+		if = {
+			limit = { is_owned_and_controlled_by = ROOT }
+			var:tag_to_release = { transfer_state = PREV }
+		}
+	}
+	puppet_released_tag = yes
+}
+
 release_spain = {
 	hidden_effect = {
 		every_state = {
@@ -307,14 +334,14 @@ release_spain = {
 						is_important_state = no
 						ROOT = { is_actual_major = no }
 					}
-					OR = {
-						ROOT = {
-							NOT = { has_country_flag = SPA_CONQ }
+					if = {
+						limit = {
+							ROOT = { has_country_flag = SPA_CONQ }
 						}
-						AND = {
-							NOT = { is_core_of = BAS }
-							NOT = { is_core_of = GLC }
-							NOT = { is_core_of = CAT }
+						NOT = {
+							is_core_of = BAS
+							is_core_of = GLC
+							is_core_of = CAT
 						}
 					}
 				}
@@ -479,7 +506,7 @@ setup_puppet_baltic_union = {
 					infantry = { x = 1 y = 1 }
 					infantry = { x = 1 y = 2 }
 				}
-			
+
 				support = {
 					artillery = { x = 0 y = 0 }
 				}
@@ -820,7 +847,7 @@ release_chinese_government = {
 	}
 	puppet_released_tag = yes
 	hidden_effect = {
-		var:tag_to_release = { 
+		var:tag_to_release = {
 			if = {
 				limit = {
 					NOT = { has_cosmetic_tag = FNG_ROC }
@@ -850,7 +877,7 @@ release_chinese_government_in_manchuria = {
 	}
 	puppet_released_tag = yes
 	hidden_effect = {
-		var:tag_to_release = { 
+		var:tag_to_release = {
 			if = {
 				limit = {
 					NOT = { has_cosmetic_tag = FNG_ROC }
@@ -918,7 +945,28 @@ determine_chinese_ally = {
 		}
 		else_if = {
 			limit = {
+				tag = JAP
+				country_exists = FNG
+				OR = {
+					has_subject = FNG
+					FNG = { has_cosmetic_tag = FNG_JAP }
+					AND = {
+						FNG_JAP_hostile = no
+						FNG = { is_subject = no }
+					}
+				}
+			}
+			FNG = {
+				save_event_target_as = china_ally_target
+			}
+		}
+		else_if = {
+			limit = {
 				has_elected_government = yes
+				NOT = {
+					tag = GER
+					tag = JAP
+				}
 				GXC = {
 					exists = yes
 					is_subject = no
@@ -926,19 +974,6 @@ determine_chinese_ally = {
 				}
 			}
 			GXC = {
-				save_event_target_as = china_ally_target
-			}
-		}
-		else_if = {
-			limit = {
-				tag = JAP
-				FNG_JAP_hostile = no
-				FNG = {
-					exists = yes
-					is_subject = no
-				}
-			}
-			FNG = {
 				save_event_target_as = china_ally_target
 			}
 		}
@@ -1289,30 +1324,20 @@ transfer_iraq = {
 			region = 239 #Mesopotamia
 			if = {
 				limit = { state = 819 } #Sulaymaniyah
-				NOT = {
-					ROOT = { tag = TUR }
-					ROOT = { tag = OTT }
-					ROOT = { tag = PER }
-					TUR = { ROOT_can_grant_land = yes }
-					OTT = { ROOT_can_grant_land = yes }
-					PER = { ROOT_can_grant_land = yes }
-					350 = { #Diyarbakir
-						is_owned_and_controlled_by = ROOT
-						is_claim_or_core_of_ROOT = no
-					}
-					352 = { #Van
-						is_owned_and_controlled_by = ROOT
-						is_claim_or_core_of_ROOT = no
-					}
-					417 = { #Western Azerbaijan
-						is_owned_and_controlled_by = ROOT
-						is_claim_or_core_of_ROOT = no
-					}
-					420 = { #Kurdistan
-						is_owned_and_controlled_by = ROOT
-						is_claim_or_core_of_ROOT = no
+				ROOT = {
+					NOT = {
+						tag = TUR
+						tag = OTT
+						tag = PER
 					}
 				}
+				TUR = { ROOT_can_grant_land = no }
+				OTT = { ROOT_can_grant_land = no }
+				PER = { ROOT_can_grant_land = no }
+				350 = { is_valid_annexation_state = no } #Diyarbakir
+				352 = { is_valid_annexation_state = no } #Van
+				417 = { is_valid_annexation_state = no } #Western Azerbaijan
+				420 = { is_valid_annexation_state = no } #Kurdistan
 			}
 		}
 		if = {
@@ -1331,17 +1356,9 @@ transfer_iraq = {
 transfer_sinai_if_annexation_unavailable = {
 	if = {
 		limit = {
-			453 = { #Sinai
-				is_owned_and_controlled_by = ROOT
-				is_claim_or_core_of_ROOT = no
-			}
-			NOT = {
-				EGY = { ROOT_can_grant_land = yes }
-				446 = { #Cairo
-					is_owned_and_controlled_by = ROOT
-					is_claim_or_core_of_ROOT = no
-				}
-			}
+			453 = { is_valid_annexation_state = yes } #Sinai
+			EGY = { ROOT_can_grant_land = no }
+			446 = { is_valid_annexation_state = no } #Cairo
 		}
 		var:tag_to_release = {
 			add_state_claim = 453
