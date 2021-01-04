@@ -3,6 +3,16 @@ on_actions = {
 	on_state_control_changed = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] on_state_control_changed OLD CONTROLLER: [From.GetName] STATE: [From.From.GetName]"
+			### Operative Nationality Check
+			if = {
+				limit = {
+					is_operative_copy_country = yes
+					NOT = { has_country_flag = KR_operative_nationality_check }
+				}
+				set_country_flag = KR_operative_nationality_check
+				country_event = kr.political.209
+			}
+			
 			### RUS/SOV control array
 			if = {
 				limit = {
@@ -21,6 +31,30 @@ on_actions = {
 				}
 				set_country_flag = has_enemy_control_array
 				add_to_array = { ROOT.enemy_controlled_states = FROM.FROM }
+			}
+			
+			### Fix for NFA capital
+			if = {
+				limit = {
+					tag = NFA
+					has_completed_focus = NFA_return_to_paris
+					controls_state = 16
+					capital_scope = {
+						NOT = { state = 16 }
+					}
+				}
+				set_capital = 16
+			}
+			else_if = {
+				limit = {
+					tag = NFA
+					has_completed_focus = NFA_return_to_marseille
+					controls_state = 21
+					capital_scope = {
+						NOT = { state = 21 }
+					}
+				}
+				set_capital = 21
 			}
 
 			### Russian event - "A New 1812/1328"
@@ -84,43 +118,23 @@ on_actions = {
 				}
 				FROM = { country_event = beng.90 }
 			}
-
-			### American Civil War
+			
+			### POL-UKR War
 			if = {
 				limit = {
+					OR = {
+						tag = POL
+						tag = UKR
+					}
+					has_war_with = FROM
 					FROM = {
 						OR = {
-							tag = USA
-							tag = CSA
-							tag = TEX
-							tag = CAL
-						}
-						has_country_flag = ACW_is_recruiting
-						FROM.FROM = {
-							has_state_flag = ACW_recruiting_@PREV
+							tag = POL
+							tag = UKR
 						}
 					}
 				}
-				FROM = {
-					clr_country_flag = ACW_is_recruiting
-					FROM.FROM = { clr_state_flag = ACW_recruiting_@PREV }
-				}
-				if = {
-					limit = { FROM.FROM = { state = 378 } }
-					797 = { clr_state_flag = ACW_recruiting_@FROM }
-				}
-				else_if = {
-					limit = { FROM.FROM = { state = 797 } }
-					378 = { clr_state_flag = ACW_recruiting_@FROM }
-				}
-				else_if = {
-					limit = { FROM.FROM = { state = 829 } }
-					798 = { clr_state_flag = ACW_recruiting_@FROM }
-				}
-				else_if = {
-					limit = { FROM.FROM = { state = 798 } }
-					829 = { clr_state_flag = ACW_recruiting_@FROM }
-				}
+				UKR = { country_event = poland.110 }
 			}
 
 			### Clearing State Modifiers
@@ -512,6 +526,52 @@ on_actions = {
 					country_event = {
 						id = chl.10
 						days = 7
+					}
+				}
+			}
+			
+			### Yunnan events
+			if = {
+				limit = {
+					FROM.FROM = { state = 671 }
+				}
+				YUN = {
+					country_event = {
+						id = yun.156
+						days = 1
+					}
+				}
+			}
+			
+			### split LEP stockpile
+			if = {
+				limit = {
+					ROOT = {
+						OR = {
+							tag = ANQ
+							tag = LEP
+							tag = CHI
+						}
+					}
+					FROM = {
+						tag = LEP
+						surrender_progress > 0.9
+					}
+				}
+				set_temp_variable = { LEP_stockpile_ratio = 1 }
+				divide_temp_variable = { LEP_stockpile_ratio = LEP.enemies^num }
+				every_other_country = {
+					limit = { has_war_with = LEP }
+					LEP = {
+						transfer_units_fraction = {
+							target = PREV
+							size = 0
+							army_ratio = 0
+							navy_ratio = 0
+							air_ratio = 0
+							stockpile_ratio = LEP_stockpile_ratio
+							keep_unit_leaders_trigger = { always = yes }
+						}
 					}
 				}
 			}

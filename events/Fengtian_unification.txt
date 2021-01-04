@@ -938,7 +938,7 @@ country_event = { #Anqing Is Glad for our stance
 		ANQ = {
 			country_event = {
 				id = anq.171
-				hours = 56
+				hours = 90
 				random = 24
 			}
 		}
@@ -991,7 +991,7 @@ country_event = { #End of the Conference
 		}
 		country_event = {
 			id = anq.171
-			hours = 56
+			hours = 90
 			random = 24
 		}
 	}
@@ -1060,7 +1060,7 @@ country_event = { #Fengtian Refuses To Denounce The Concessions
 		}
 		country_event = {
 			id = anq.171
-			hours = 56
+			hours = 90
 			random = 24
 		}
 	}
@@ -1116,6 +1116,7 @@ country_event = { #Preparing the National Conference
 							tag = MON
 							tag = ROOT
 						}
+						is_subject = no
 						OR = {
 							is_faction_leader = yes
 							is_in_faction = no
@@ -1189,6 +1190,7 @@ country_event = { #Attend the National Conference?
 	trigger = {
 		FNG = { controls_state = 608 }
 		NOT = { has_global_flag = FNG_conference_failed }
+		FNG_can_attend_unification_conference = yes
 	}
 
 	is_triggered_only = yes
@@ -1212,9 +1214,14 @@ country_event = { #Attend the National Conference?
 		add_to_array = { FNG.FNG_conference_participants = ROOT }
 		hidden_effect = {
 			if = {
-				limit = {
-					is_faction_leader = yes
+				limit = { num_subjects > 0 }
+				for_each_loop = {
+					array = ROOT.subjects
+					add_to_array = { FNG.FNG_conference_participants = v }
 				}
+			}
+			if = {
+				limit = { is_faction_leader = yes }
 				for_each_scope_loop = {
 					array = global.china_tags_array
 					if = {
@@ -1240,6 +1247,13 @@ country_event = { #Attend the National Conference?
 
 	option = {
 		name = fngconf.2.b #No
+		trigger = {
+			OR = {	
+				NOT = { tag = ANQ }
+				has_country_flag = ANQ_abandons_reclamation
+				NOT = { has_country_flag = ANQ_is_profengtian }
+			}
+		}
 		ai_chance = {
 			factor = 20
 			modifier = {
@@ -1255,11 +1269,16 @@ country_event = { #Attend the National Conference?
 			}
 			modifier = {
 				factor = 0
+				NOT = { tag = ANQ }
+				is_ruled_by_pro_fengtian = yes
+			}
+			modifier = {
+				factor = 0
 				has_country_flag = FNG_alliance
 			}
 			modifier = {
 				factor = 0
-				has_country_flag = ANQ_is_projapan
+				has_country_flag = ANQ_is_profengtian
 			}
 			modifier = {
 				factor = 0
@@ -1268,6 +1287,19 @@ country_event = { #Attend the National Conference?
 					is_in_array = { FNG.FNG_conference_participants = THIS }
 				}
 			}
+		}
+		if = {
+			limit = {
+				tag = ANQ
+				has_country_flag = ANQ_is_profengtian
+			}
+			custom_effect_tooltip = anq_abandon_conference_tolerated_tt
+			ANQ_break_relations_fengtian = yes
+		}
+		else_if = {
+			limit = { is_ruled_by_pro_fengtian = yes }
+			custom_effect_tooltip = FNG_betrayal_tooltip
+			set_country_flag = FNG_hostile
 		}
 	}
 }
@@ -1323,6 +1355,16 @@ country_event = { #The KMT Denounces Us
 	trigger = {
 		OR = {
 			country_exists = CHI
+			AND = {
+				NOT = { country_exists = CHI }
+				country_exists = GXC
+				GXC = {
+					has_country_leader = {
+						name = "Chen Mingshu"
+						ruling_only = yes
+					}
+				}
+			}
 			AND = {
 				country_exists = YUN
 				YUN = {
@@ -1500,9 +1542,11 @@ country_event = { #Invite Song Qingling?
 	picture = chi_speech
 
 	trigger = {
-		CHI = { exists = no }
 		FNG = { controls_state = 608 }
-		NOT = { has_global_flag = FNG_conference_failed }
+		NOT = {
+			country_exists = CHI
+			has_global_flag = FNG_conference_failed
+		}
 	}
 
 	is_triggered_only = yes
@@ -1555,10 +1599,42 @@ country_event = { #Japan Complains
 	}
 }
 
-country_event = { #The Delegates Arrive
+country_event = { #The Delegates Arrive / A Shattered Dream
 	id = fngconf.9
-	title = fngconf.9.t
-	desc = fngconf.9.d
+	
+	title = {
+		text = fngconf.9.t.conference
+		trigger = {
+			OR = {
+				check_variable = { FNG.FNG_conference_participants^num > 2 }
+				has_global_flag = FNG_conference_federalists
+			}
+		}
+	}
+	title = {
+		text = fngconf.9.t.conference_fails
+		trigger = {
+			NOT = { has_global_flag = FNG_conference_federalists }
+			check_variable = { FNG.FNG_conference_participants^num < 3 }
+		}
+	}
+	
+	desc = {
+		text = fngconf.9.d.conference
+		trigger = {
+			OR = {
+				check_variable = { FNG.FNG_conference_participants^num > 2 }
+				has_global_flag = FNG_conference_federalists
+			}
+		}
+	}
+	desc = {
+		text = fngconf.9.d.conference_fails
+		trigger = {
+			NOT = { has_global_flag = FNG_conference_federalists }
+			check_variable = { FNG.FNG_conference_participants^num < 3 }
+		}
+	}
 
 	picture = zongchang_and_zuolin
 
@@ -1576,6 +1652,12 @@ country_event = { #The Delegates Arrive
 
 	option = {
 		name = fngconf.9.a
+		trigger = {
+			OR = {
+				check_variable = { FNG.FNG_conference_participants^num > 2 }
+				has_global_flag = FNG_conference_federalists
+			}
+		}
 		clr_country_flag = FNG_show_and_tooltip
 		hidden_effect = {
 			country_event = {
@@ -1583,6 +1665,19 @@ country_event = { #The Delegates Arrive
 				days = 1
 			}
 		}
+	}
+
+	option = {
+		name = fngconf.9.a
+		trigger = {
+			NOT = { has_global_flag = FNG_conference_federalists }
+			check_variable = { FNG.FNG_conference_participants^num < 3 }
+		}
+		clr_country_flag = FNG_show_and_tooltip
+		set_global_flag = FNG_conference_failed
+		add_political_power = -100
+		set_variable = { FNG_legitimacy_level = 1 }
+		hidden_effect = { country_event = fngconf.76 }
 	}
 }
 
@@ -2503,6 +2598,11 @@ country_event = { #The Point of Decision
 			modifier = {
 				add = FNG_anticoncessionist_support
 			}
+			modifier = {
+				set_temp_variable = { FNG_concession_accept_chance = FNG.party_popularity@market_liberal }
+				multiply_temp_variable = { FNG_concession_accept_chance = -1 }
+				add = FNG_concession_accept_chance
+			}
 		}
 		hidden_effect = {
 			JAP = {
@@ -2522,9 +2622,12 @@ country_event = { #The Point of Decision
 		ai_chance = {
 			factor = 1
 			modifier = {
-				set_temp_variable = { FNG_concession_refuse_chance = FNG_anticoncessionist_support }
-				multiply_temp_variable = { FNG_concession_refuse_chance = -0.1 }
-				add = FNG_concession_refuse_chance
+				set_temp_variable = { FNG_concession_refuse_chance_support = FNG_anticoncessionist_support }
+				multiply_temp_variable = { FNG_concession_refuse_chance_support = -0.3 }
+				add = FNG_concession_refuse_chance_support
+			}
+			modifier = {
+				add = FNG.party_popularity@market_liberal
 			}
 		}
 		hidden_effect = {
@@ -2915,7 +3018,16 @@ country_event = { #Fengtian Accepts Japanese Concessions (ANQ)
 				add = 50
 				has_global_flag = FNG_conference_federalists_left
 			}
+			modifier = {
+				add = 25
+				has_completed_focus = ANQ_republican_focus
+			}
+			modifier = {
+				factor = 0
+				has_completed_focus = ANQ_panasian_legitimacy
+			}
 		}
+		custom_effect_tooltip = anq_denounce_fengtian_tt
 		hidden_effect = {
 			FNG = {
 				country_event = {
@@ -2931,6 +3043,10 @@ country_event = { #Fengtian Accepts Japanese Concessions (ANQ)
 		name = fngconf.28.b #Protest
 		ai_chance = {
 			factor = 50
+			modifier = {
+				add = -25
+				has_completed_focus = ANQ_republican_focus
+			}
 		}
 		hidden_effect = {
 			FNG = {
@@ -2987,8 +3103,8 @@ country_event = { #Tiaoyuan Denounces Zuolin
 		remove_from_array = { FNG.FNG_conference_participants = ANQ }
 		hidden_effect = {
 			ANQ = {
-				clr_country_flag = ANQ_is_projapan
-				set_country_flag = FNG_hostile
+				#Scripted effect that takes cares of all flags and other things
+				ANQ_break_relations_fengtian = yes
 			}
 			if = {
 				limit = { has_global_flag = FNG_conference_song }
@@ -3106,6 +3222,7 @@ country_event = { #The Conference Continues
 									}
 								}
 							}
+							is_subject = no
 							exists = yes
 						}
 						country_event = {
@@ -3140,8 +3257,22 @@ country_event = { #The Conference Falls Apart
 	desc = {
 		text = fngconf.32.d.failure
 		trigger = {
-			FNG = { controls_state = 608 }
-			NOT = {
+			FNG = {
+				controls_state = 608
+				NOT = {
+					has_country_leader = {
+						name = "Yang Yuting"
+						ruling_only = yes
+					}
+				}
+			}
+		}
+	}
+	desc = {
+		text = fngconf.32.d.cancelled
+		trigger = {
+			FNG = {
+				controls_state = 608
 				has_country_leader = {
 					name = "Yang Yuting"
 					ruling_only = yes
@@ -3150,32 +3281,30 @@ country_event = { #The Conference Falls Apart
 		}
 	}
 	desc = {
-		text = fngconf.32.d.cancelled
-		trigger = {
-			FNG = { controls_state = 608 }
-			has_country_leader = {
-				name = "Yang Yuting"
-				ruling_only = yes
-			}
-		}
-	}
-	desc = {
 		text = fngconf.32.d.beijing_lost
 		trigger = {
-			NOT = { controls_state = 608 }
+			NOT = {
+				FNG = { controls_state = 608 }
+			}
 		}
 	}
 
 	trigger = {
-		NOT = { has_global_flag = FNG_conference_failed }
+		NOT = {
+			has_global_flag = FNG_conference_success
+			has_global_flag = FNG_conference_failed
+		}
 		OR = {
-			NOT = { controls_state = 608 }
+			NOT = { 
+				FNG = { controls_state = 608 }
+			}
 			check_variable = { FNG.FNG_conference_participants^num < 3 }
 		}
 	}
 
 	picture = china_protest
 
+	fire_only_once = yes
 	is_triggered_only = yes
 
 	major = yes
@@ -5503,7 +5632,7 @@ country_event = { #End of the Conference
 		add_to_variable = { FNG_legitimacy_level = 1 }
 		add_political_power = 100
 		set_global_flag = FNG_conference_success
-		create_faction = "National Pacification Army"
+		create_faction = pacification_faction
 		if = {
 			limit = {
 				event_target:FNG_federalist_leader = {

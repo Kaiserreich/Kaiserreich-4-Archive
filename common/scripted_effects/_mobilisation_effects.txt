@@ -84,3 +84,76 @@ decrease_mobilisation = {
 		}
 	}
 }
+
+disband_ten_percent_units = {
+	save_event_target_as = disband_country
+    XXB = { 
+        set_temp_variable = {
+            old_manpower = manpower_k
+        }
+    }
+    random_state = {
+        limit = {
+			impassable = yes
+            owner = {
+                PREV = { is_fully_controlled_by = PREV  }
+            }
+        }
+        owner = { save_event_target_as = disband_state_owner }
+        save_event_target_as = disband_state
+        XXB = { set_state_owner = PREV }
+    }
+    transfer_units_fraction = {
+        target = XXB
+        size = 0
+        army_ratio = 0.1
+        keep_unit_leaders_trigger = {
+            always = yes
+        }
+    }
+    XXB = {
+        every_state = {
+            XXB = {
+                delete_unit = { 
+                    state = PREV
+                    disband = yes
+                }
+            }
+        }
+        set_temp_variable = {
+            manpower_diff = manpower_k
+        }
+        subtract_from_temp_variable = {
+            manpower_diff = old_manpower
+        }
+        while_loop_effect = { #avoid overflows
+            limit = { check_variable = { manpower_diff > 1 } }
+            subtract_from_temp_variable = { manpower_diff = 1 }
+            event_target:disband_country = { add_manpower = 1000 }
+            add_manpower = -1000
+        }
+        multiply_temp_variable = {
+            manpower_diff = 1000
+        }
+         event_target:disband_country = { add_manpower = PREV.manpower_diff }
+        multiply_temp_variable = {
+            manpower_diff = -1
+        }
+        add_manpower = manpower_diff
+        transfer_units_fraction = {
+            target =  event_target:disband_country
+            size = 0
+            stockpile_ratio = 1
+            keep_unit_leaders_trigger = {
+                always = yes
+            }
+        }
+    }
+    event_target:disband_state = {
+        event_target:disband_state_owner = { set_state_owner = PREV }
+    }
+    annex_country = {
+        target = XXB
+    }
+}
+

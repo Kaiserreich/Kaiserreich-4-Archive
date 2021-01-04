@@ -12,66 +12,24 @@ is_important_state = {
 	}
 }
 
-is_impassable_state = {
-	OR = {
-		state = 262 #Pechora
-		state = 273 #Fezzan
-		state = 332 #Labrador
-		state = 397 #Ust-Solyosk
-		state = 471 #Yukon Territory
-		state = 472 #Northwest Territory
-		state = 488 #Guiana Highlands
-		state = 514 #Sahara
-		state = 516 #Taymyr
-		state = 552 #Western Desert
-		state = 577 #Surgut
-		state = 579 #Obdorsk
-		state = 580 #Tobolsk
-		state = 581 #Severny Ural
-		state = 644 #Severo-Ostochnaya
-		state = 674 #Central Australia
-		state = 678 #Rub al Khali
-		state = 683 #Northern Quebec
-		state = 860 #Malian Desert
-		state = 862 #Sudanese Desert
-		state = 910 #Niger Desert
-		state = 911 #Borkou-Ennedi
-		state = 926 #Sermersuaq
-		state = 967 #Mauritanian Desert
-		state = 981 #Najran
-		state = 994 #Jawf
-		state = 1030 #Amazonas Jungle
-		state = 1031 #Roraima Jungle
-		state = 1032 #Mato Grosso Jungle
-		state = 1033 #Para Jungle
-		state = 1034 #Amapa Jungle
-		state = 1035 #Maranhao Jungle
-		state = 1036 #Bolivar Jungle
-		state = 1037 #East Guyana Jungle
-		state = 1038 #Suriname Jungle
-		state = 1039 #West Guyana Jungle
-		state = 1040 #Acre Jungle
-		state = 1079 #Mabaruma Jungle
-		state = 1085 #Taklamakan Desert
-		state = 1086 #Changtang
-	}
-}
-
 is_paired_impassable_state = {
 	OR = {
+		state = 273 #Fezzan
 		state = 514 #Sahara
+		state = 581 #Northern Urals
+		state = 678 #Rub Al Khali
+		state = 683 #New Quebec
 		state = 860 #Malian Desert
 		state = 862 #Sudanese Desert
 		state = 910 #Niger Desert
 		state = 911 #Borkou-Ennedi
 		state = 926 #Sermersuaq
 		state = 967 #Mauritanian Desert
+		state = 1009 #Kufra
 		state = 1030 #Amazonas Jungle
 		state = 1031 #Roraima Jungle
 		state = 1032 #Mato Grosso Jungle
 		state = 1033 #Para Jungle
-		state = 1034 #Amapa Jungle
-		state = 1035 #Maranhao Jungle
 		state = 1036 #Bolivar Jungle
 		state = 1037 #East Guyana Jungle
 		state = 1038 #Suriname Jungle
@@ -83,22 +41,25 @@ is_paired_impassable_state = {
 }
 
 is_actual_island_state = {
-	OR = {
-		is_island_state = yes
-		# the following are not considered island_states, for some reason
-		state = 1 #Corsica
-		state = 100 #Iceland
-		state = 124 #Gotland
-		state = 182 #Crete
-		state = 183 #Cyprus
-		state = 331 #Newfoundland
-		state = 422 #Ceylon
-		state = 543 #Madagascar
-		state = 629 #Hawaii
-		state = 634 #Solomon Islands
-		state = 635 #New Caledonia
-		state = 647 #Palau
-		state = 694 #French Carribean
+	custom_trigger_tooltip = {
+		tooltip = is_actually_an_island
+		OR = {
+			is_island_state = yes
+			# the following are not considered island_states, for some reason
+			state = 1 #Corsica
+			state = 100 #Iceland
+			state = 124 #Gotland
+			state = 182 #Crete
+			state = 183 #Cyprus
+			state = 331 #Newfoundland
+			state = 422 #Ceylon
+			state = 543 #Madagascar
+			state = 629 #Hawaii
+			state = 634 #Solomon Islands
+			state = 635 #New Caledonia
+			state = 647 #Palau
+			state = 694 #French Carribean
+		}
 	}
 }
 
@@ -238,6 +199,12 @@ is_mainland_china = {
 		region = 220 #Xibei
 		region = 221 #Xinjiang
 		region = 222 #Inner Mongolia
+		AND = {
+			region = 146 #Himalayas
+			ROOT = {
+				NOT = { owns_state = 322 } #Lhasa
+			}
+		}
 	}
 }
 
@@ -377,6 +344,13 @@ is_not_claim_or_core_of_ROOT = {
 	NOT = {
 		is_claimed_by = ROOT
 		is_core_of = ROOT
+	}
+}
+
+is_not_claim_or_core_of_FROM = {
+	NOT = {
+		is_claimed_by = FROM
+		is_core_of = FROM
 	}
 }
 
@@ -584,7 +558,7 @@ is_in_conference_with_chinese_ally = {
 		AND = {
 			tag = RUS
 			OR = {
-				has_cosmetic_tag = RTS
+				has_cosmetic_tag = RUS_empire
 				has_country_leader = {
 					name = "Pyetr Vrangel"
 					ruling_only = yes
@@ -968,12 +942,21 @@ restrict_territorial_ambitions_PREV = {
 				PREV_is_restriction_exception = no
 
 				# country has more than 1.5 total number of factories/battalions
-				set_temp_variable = { power_score = PREV.num_of_factories }
-				add_to_temp_variable = { power_score = PREV.num_divisions }
-				multiply_temp_variable = { power_score = 1.5 }
-				subtract_from_temp_variable = { power_score = num_of_factories }
-				subtract_from_temp_variable = { power_score = num_divisions }
-				check_variable = { power_score < 0 }
+				set_temp_variable = { global.power_score = 0 }
+				all_of_scopes = {
+					array = PREV.owned_states
+					add_to_temp_variable = { global.power_score = THIS.arms_factory_level }
+					add_to_temp_variable = { global.power_score = THIS.industrial_complex_level }
+				}
+				add_to_temp_variable = { global.power_score = PREV.num_divisions }
+				multiply_temp_variable = { global.power_score = 1.5 }				
+				all_of_scopes = {
+					array = owned_states
+					subtract_from_temp_variable = { global.power_score = THIS.arms_factory_level }
+					subtract_from_temp_variable = { global.power_score = THIS.industrial_complex_level }
+				}
+				subtract_from_temp_variable = { global.power_score = num_divisions }
+				check_variable = { global.power_score < 0 }
 			}
 		}
 		# is an exception to the restriction rules
@@ -1024,12 +1007,21 @@ restrict_territorial_ambitions_ROOT = {
 				PREV_is_restriction_exception = no
 
 				# country has more than 1.5 total number of factories/battalions
-				set_temp_variable = { power_score = ROOT.num_of_factories }
-				add_to_temp_variable = { power_score = ROOT.num_divisions }
-				multiply_temp_variable = { power_score = 1.5 }
-				subtract_from_temp_variable = { power_score = num_of_factories }
-				subtract_from_temp_variable = { power_score = num_divisions }
-				check_variable = { power_score < 0 }
+				set_temp_variable = { global.power_score = 0 }
+				all_of_scopes = {
+					array = ROOT.owned_states
+					add_to_temp_variable = { global.power_score = THIS.arms_factory_level }
+					add_to_temp_variable = { global.power_score = THIS.industrial_complex_level }
+				}
+				add_to_temp_variable = { global.power_score = ROOT.num_divisions }
+				multiply_temp_variable = { global.power_score = 1.5 }				
+				all_of_scopes = {
+					array = owned_states
+					subtract_from_temp_variable = { global.power_score = THIS.arms_factory_level }
+					subtract_from_temp_variable = { global.power_score = THIS.industrial_complex_level }
+				}
+				subtract_from_temp_variable = { global.power_score = num_divisions }
+				check_variable = { global.power_score < 0 }
 			}
 		}
 		# is an exception to the restriction rules
@@ -1661,36 +1653,6 @@ rule_take_bordering_first = {
 	}
 }
 
-rule_take_double_bordering_first = {
-	FROM = {
-		is_important_state = no
-		NOT = {
-			num_owned_neighbour_states = { count > 1 owner = ROOT }
-			num_claimed_peace_conference_neighbour_states = { count > 1 owner = ROOT }
-			AND = {
-				num_owned_neighbour_states = { count > 0 owner = ROOT }
-				num_claimed_peace_conference_neighbour_states = { count > 0 owner = ROOT }
-			}
-		}
-		owner = {
-			any_of_scopes = {
-				array = current_states@THIS
-				# has two neighboring states
-				OR = {
-					num_owned_neighbour_states = { count > 1 owner = ROOT }
-					num_claimed_peace_conference_neighbour_states = { count > 1 owner = ROOT }
-					AND = {
-						num_owned_neighbour_states = { count > 0 owner = ROOT }
-						num_claimed_peace_conference_neighbour_states = { count > 0 owner = ROOT }
-					}
-				}
-				set_temp_variable = { global.eval_state = THIS.id }
-				ROOT = { is_willing_to_take_state_ROOT = yes }
-			}
-		}
-	}
-}
-
 rule_puppets_only_get_leftovers_ROOT = {
 	is_subject = yes
 	var:global.eval_state = { is_claim_or_core_of_ROOT = no }
@@ -1968,7 +1930,7 @@ rule_dont_take_friend_claims_PREV = {
 rule_is_restricted_ROOT = {
 	restrict_territorial_ambitions_ROOT = yes
 	var:global.eval_state = {
-		is_impassable_state = no
+		impassable = no
 		is_claim_or_core_or_ambition_of_ROOT = no
 	}
 }
@@ -1976,7 +1938,7 @@ rule_is_restricted_ROOT = {
 rule_is_restricted_PREV = {
 	restrict_territorial_ambitions_PREV = yes
 	var:global.eval_state = {
-		is_impassable_state = no
+		impassable = no
 		is_claim_or_core_or_ambition_of_PREV = no
 	}
 }
@@ -2256,17 +2218,17 @@ rule_dont_take_cheap_island_states_PREV = {
 
 rule_dont_take_impassable_states_ROOT = {
 	var:global.eval_state = {
-		is_impassable_state = yes
+		impassable = yes
 		is_claim_or_core_or_ambition_of_ROOT = no
 		# the owner of the impassable state also owns a non-impassable neighboring state
 		OR = {
 			any_neighbor_state = {
-				is_impassable_state = no
+				impassable = no
 				owner = { owns_state = PREV.PREV }
 			}
 			NOT = {
 				any_neighbor_state = {
-					is_impassable_state = no
+					impassable = no
 				}
 			}
 		}
@@ -2305,14 +2267,6 @@ rule_dont_take_impassable_states_ROOT = {
 						PREV = { state = 1036 } #Bolivar Jungle
 					}
 					AND = {
-						state = 896 #Maranhao
-						PREV = { state = 1035 } #Maranhao Jungle
-					}
-					AND = {
-						state = 897 #Amapa
-						PREV = { state = 1034 } #Amapa Jungle
-					}
-					AND = {
 						state = 898 #Para
 						PREV = { state = 1033 } #Para Jungle
 					}
@@ -2327,6 +2281,10 @@ rule_dont_take_impassable_states_ROOT = {
 					AND = {
 						state = 495 #Amazonas
 						PREV = { state = 1030 } #Amazonas Jungle
+					}
+					AND = {
+						state = 663 #Jaghbub
+						PREV = { state = 1009 } #Kufra
 					}
 					AND = {
 						state = 968 #Adrar
@@ -2353,8 +2311,24 @@ rule_dont_take_impassable_states_ROOT = {
 						PREV = { state = 860 } #Malian Desert
 					}
 					AND = {
+						state = 292 #Nejd
+						PREV = { state = 678 } #Rub Al Khali
+					}
+					AND = {
+						state = 466 #Quebec
+						PREV = { state = 683 } #New Quebec
+					}
+					AND = {
+						state = 573 #Zlatoust
+						PREV = { state = 581 } #Northern Urals
+					}
+					AND = {
 						state = 513 #Southern Territories
 						PREV = { state = 514 } #Sahara
+					}
+					AND = {
+						state = 448 #Tripoli
+						PREV = { state = 273 } #Fezzan
 					}
 					PREV = {
 						is_paired_impassable_state = no
@@ -2367,17 +2341,17 @@ rule_dont_take_impassable_states_ROOT = {
 
 rule_dont_take_impassable_states_PREV = {
 	var:global.eval_state = {
-		is_impassable_state = yes
+		impassable = yes
 		is_claim_or_core_or_ambition_of_PREV = no
 		# the owner of the impassable state also owns a non-impassable neighboring state
 		OR = {
 			any_neighbor_state = {
-				is_impassable_state = no
+				impassable = no
 				owner = { owns_state = PREV.PREV }
 			}
 			NOT = {
 				any_neighbor_state = {
-					is_impassable_state = no
+					impassable = no
 				}
 			}
 		}
@@ -2388,8 +2362,8 @@ rule_dont_take_impassable_states_PREV = {
 				# check for impassable states which must be paired with a regular state
 				OR = {
 					AND = {
-						state = 1086 #Changtang
-						PREV = { state = 322 } #Tibet
+						state = 322 #Tibet
+						PREV = { state = 1086 } #Changtang
 					}
 					AND = {
 						state = 1078 #Mabaruma
@@ -2416,14 +2390,6 @@ rule_dont_take_impassable_states_PREV = {
 						PREV = { state = 1036 } #Bolivar Jungle
 					}
 					AND = {
-						state = 896 #Maranhao
-						PREV = { state = 1035 } #Maranhao Jungle
-					}
-					AND = {
-						state = 897 #Amapa
-						PREV = { state = 1034 } #Amapa Jungle
-					}
-					AND = {
 						state = 898 #Para
 						PREV = { state = 1033 } #Para Jungle
 					}
@@ -2438,6 +2404,10 @@ rule_dont_take_impassable_states_PREV = {
 					AND = {
 						state = 495 #Amazonas
 						PREV = { state = 1030 } #Amazonas Jungle
+					}
+					AND = {
+						state = 663 #Jaghbub
+						PREV = { state = 1009 } #Kufra
 					}
 					AND = {
 						state = 968 #Adrar
@@ -2464,8 +2434,24 @@ rule_dont_take_impassable_states_PREV = {
 						PREV = { state = 860 } #Malian Desert
 					}
 					AND = {
+						state = 466 #Quebec
+						PREV = { state = 683 } #New Quebec
+					}
+					AND = {
+						state = 292 #Nejd
+						PREV = { state = 678 } #Rub Al Khali
+					}
+					AND = {
+						state = 573 #Zlatoust
+						PREV = { state = 581 } #Northern Urals
+					}
+					AND = {
 						state = 513 #Southern Territories
 						PREV = { state = 514 } #Sahara
+					}
+					AND = {
+						state = 448 #Tripoli
+						PREV = { state = 273 } #Fezzan
 					}
 					PREV = {
 						is_paired_impassable_state = no
@@ -3731,7 +3717,7 @@ rule_stay_out_of_western_russia_ROOT = {
 		}
 		OR = {
 			is_willing_to_take_state_PREV = yes
-			var:global.eval_state = { is_impassable_state = yes }
+			var:global.eval_state = { impassable = yes }
 		}
 	}
 }
@@ -3817,7 +3803,7 @@ rule_stay_out_of_siberia_ROOT = {
 		}
 		OR = {
 			is_willing_to_take_state_PREV = yes
-			var:global.eval_state = { is_impassable_state = yes }
+			var:global.eval_state = { impassable = yes }
 		}
 	}
 }
@@ -4177,7 +4163,6 @@ rule_leave_italy_to_italy_ROOT = {
 		at_conference_has_war_with_owner = yes
 		var:global.eval_state = { is_claim_or_core_or_ambition_of_PREV = yes }
 		is_willing_to_take_state_PREV = yes
-		can_reach_state_direct = yes
 	}
 }
 
