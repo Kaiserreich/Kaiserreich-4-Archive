@@ -1,0 +1,365 @@
+on_actions = {
+
+	#FROM is war target
+	on_declare_war = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] has declared war on [From.GetName]"
+			FROM = { set_country_flag = had_war }
+			ROOT = { set_country_flag = had_war }
+			
+			# Great Patriotic War
+			if = {
+				limit = {
+					OR = {
+						AND = {
+							tag = RUS
+							FROM = {
+								OR = {
+									tag = GER
+									tag = FRA
+								}
+							}
+						}
+						AND = {
+							OR = {
+								tag = GER
+								tag = FRA
+							}
+							FROM = { tag = RUS }
+						}
+					}
+				}
+				RUS = {
+					country_event = {
+						id = rusfor.51
+						days = 3
+					}
+				}
+			}
+			
+			# removing Italian balance globals
+			if = {
+				limit = {
+					has_global_flag = KR_italy_balance
+					tag = GER
+					FROM = { tag = FRA }
+				}
+				clr_global_flag = KR_italy_balance
+			}
+			
+			# CoF events
+			if = {
+				limit = {
+					ROOT = { tag = FRA }
+					FROM = {
+						tag = BEL
+						is_subject = no
+						is_in_faction = no
+					}
+				}
+				FROM = {
+					country_event = {
+						id = comfrance.167
+						days = 2
+					}
+				}
+			}
+			if = {
+				limit = {
+					ROOT = { tag = FRA }
+					FROM = {
+						tag = HOL
+						is_subject = no
+						is_in_faction = no
+					}
+				}
+				FROM = {
+					country_event = {
+						id = comfrance.168
+						days = 2
+					}
+				}
+			}
+
+			# removing from Japanese economic sphere
+			if = {
+				limit = {
+					is_in_array = { global.asian_economic_sphere = ROOT }
+					FROM = { tag = JAP }
+				}
+				ROOT = { country_event = japfor.404 }
+			}
+			if = {
+				limit = {
+					is_in_array = { global.asian_economic_sphere = FROM }
+					ROOT = { tag = JAP }
+				}
+				FROM = { country_event = japfor.404 }
+			}
+
+			# removing Japanese extra mils
+			if = {
+				limit = {
+					FROM = { has_country_flag = has_offsite_mils_from_JAP }
+					ROOT = { tag = JAP }
+				}
+				FROM = {
+					add_offsite_building = { type = arms_factory level = -2 }
+					clr_country_flag = has_offsite_mils_from_JAP
+				}
+				ROOT = {
+					random_owned_state = {
+						limit = { has_state_flag = JAP_mils_to_china_state }
+						clr_state_flag = JAP_mils_to_china_state
+						add_building_construction = {
+							type = arms_factory
+							level = 2
+							instant_build = yes
+						}
+					}
+				}
+			}
+			if = {
+				limit = {
+					ROOT = { has_country_flag = has_offsite_mils_from_JAP }
+					FROM = { tag = JAP }
+				}
+				ROOT = {
+					add_offsite_building = { type = arms_factory level = -2 }
+					clr_country_flag = has_offsite_mils_from_JAP
+				}
+				FROM = {
+					random_owned_state = {
+						limit = { has_state_flag = JAP_mils_to_china_state }
+						clr_state_flag = JAP_mils_to_china_state
+						add_building_construction = {
+							type = arms_factory
+							level = 2
+							instant_build = yes
+						}
+					}
+				}
+			}
+
+			if = {
+				limit = {
+					FROM = {
+						has_country_flag = ACW_has_deal_with_devil
+						has_country_flag = ACW_deal_with_devil_@ROOT
+					}
+				}
+				FROM = {
+					clr_country_flag = ACW_has_deal_with_devil
+					clr_country_flag = ACW_deal_with_devil_@ROOT
+				}
+				ROOT = {
+					clr_country_flag = ACW_has_deal_with_devil
+					clr_country_flag = ACW_deal_with_devil_@FROM
+				}
+			}
+
+			# Attacking an American country post-ACW while it's in recovery
+			if = {
+				limit = {
+					ROOT = {
+						NOT = {
+							tag = USA
+							tag = CAL
+							tag = TEX
+							tag = CSA
+						}
+					}
+					FROM = {
+						OR = {
+							tag = USA
+							tag = CAL
+							tag = TEX
+							tag = CSA
+						}
+						OR = {
+							has_idea = USA_civil_war_aftermath_idea
+							has_idea = USA_civil_war_aftermath_idea2
+							has_idea = USA_civil_war_aftermath_idea3
+							has_idea = USA_civil_war_aftermath_idea4
+							has_idea = USA_civil_war_aftermath_idea5
+						}
+						NOT = { has_country_flag = ACW_attacked_during_recovery }
+					}
+				}
+				FROM = {
+					set_country_flag = ACW_attacked_during_recovery
+					country_event = amcivwar.615
+				}
+			}
+			
+			# China attacking LEC
+			if = {
+				limit = {
+					ROOT = { is_chinese_tag = yes }
+					FROM = { tag = LEC }
+				}
+				ROOT = { set_country_flag = LEC_war }
+				every_other_country = {
+					limit = {
+						OR = {
+							LEC = { is_subject_of = PREV }
+							has_guaranteed = LEC
+							AND = {
+								is_faction_leader = yes
+								is_in_faction_with = LEC
+							}
+						}
+					}
+					set_country_flag = LEC_war_backer
+				}
+			}
+
+			# Cancelling debt payements between Bolivia and Paraguay
+			if = {
+				limit = {
+					OR = {
+						ROOT = {
+							tag = PAR
+							NOT = {
+								has_war_with = BOL
+							}
+						}
+						FROM = {
+							tag = PAR
+							NOT = {
+								has_war_with = BOL
+							}
+						}
+					}
+				}
+				BOL = {
+					country_event = {
+						id = bol.19
+						days = 2
+						random = 24
+					}
+				}
+			}
+
+			# removing ceasefire global
+			if = {
+				limit = {
+					has_global_flag = PSA_rockies_ceasefire
+					OR = {
+						tag = CSA
+						tag = USA
+						tag = CAL
+						tag = TEX
+					}
+					FROM = {
+						OR = {
+							tag = CSA
+							tag = USA
+							tag = CAL
+							tag = TEX
+						}
+					}
+				}
+				clr_global_flag = PSA_rockies_ceasefire
+			}
+
+			#early war on a Zhao Hunan
+			if = {
+				limit = {
+					ROOT = {
+						is_han_chinese_tag = yes
+						is_ruled_by_federalists = no
+					}
+					FROM = {
+						tag = HNN
+						has_country_leader = {
+							name = "Zhao Hengti"
+							ruling_only = yes
+						}
+						ic_ratio = {
+							tag = ROOT
+							ratio > 0.5
+						}
+						is_in_faction = no
+						is_subject = no
+					}
+					NOT = {
+						has_global_flag = GXCHNN_foronaction
+					}
+					OR = {
+						GXC = {
+							is_subject = no
+							has_country_leader = {
+								name = "Chen Jiongming"
+								ruling_only = yes
+							}
+						}
+						PRC = {
+							is_subject = no
+							has_country_leader = {
+								name = "Chen Jiongming"
+								ruling_only = yes
+							}
+						}
+					}
+				}
+				HNN = {
+					country_event = {
+						id = hnn.84
+						hours = 6
+					}
+				}
+				random_country = {
+					limit = {
+						has_country_leader = {
+							name = "Chen Jiongming"
+							ruling_only = yes
+						}
+					}
+					country_event = {
+						id = hnn.840
+						hours = 6
+					}
+				}
+			}
+			if = {
+				limit = {
+					ROOT = {
+						is_han_chinese_tag = yes
+						is_ruled_by_federalists = no
+					}
+					FROM = {
+						tag = HNN
+						has_country_leader = {
+							name = "Zhao Hengti"
+							ruling_only = yes
+						}
+						ic_ratio = {
+							tag = ROOT
+							ratio > 0.5
+						}
+						is_in_faction = no
+						is_subject = no
+					}
+					has_global_flag = GXCHNN_foronaction
+					GXC = {
+						is_subject = no
+						has_country_leader = {
+							name = "Chen Jiongming"
+							ruling_only = yes
+						}
+					}
+				}
+				ROOT = {
+					save_global_event_target_as = GXCHNN_enemy
+				}
+				HNN = {
+					country_event = {
+						id = hnn.85
+						hours = 6
+					}
+				}
+			}
+		}
+	}
+}
