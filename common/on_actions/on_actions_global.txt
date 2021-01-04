@@ -276,6 +276,22 @@ on_actions = {
 			country_event = kr.political.51
 			country_event = kr.political.53
 			country_event = kr.political.55
+			
+			# maintain list of guarantors
+            if = {
+                limit = { has_variable = guarantor_array^num } #the array exists
+                for_each_loop = {
+                    array = guarantor_array
+                    if = {
+                        limit = { NOT = { is_guaranteed_by = var:v }  }
+                        add_to_temp_array = { guarantors_to_remove = v }
+                    }
+                }
+                for_each_loop = {
+                    array = guarantors_to_remove
+                    remove_from_array = { guarantor_array = v }
+                }
+            }
 		}
 	}
 
@@ -513,7 +529,8 @@ on_actions = {
 			# Remove the force-surrender idea, just in case it's still there
 			remove_ideas = ready_to_surrender
 
-			# Fix for a vanilla bug
+			# Fixes for vanilla bugs
+			restore_control_of_all_non_enemy_states = yes
 			FROM = {
 				every_enemy_country = {
 					limit = {
@@ -535,7 +552,9 @@ on_actions = {
 					limit = { is_ally_with = ROOT }
 					every_controlled_state = {
 						limit = {
-							owner = { has_war_with = ROOT }
+							owner = {
+								NOT = { has_war_with = ROOT }
+							}
 						}
 						owner = { set_state_controller = PREV }
 					}
@@ -581,6 +600,19 @@ on_actions = {
 					target = ROOT
 					days = 365
 				}
+			}
+		}
+	}
+
+	# FROM = country receiving guarantee, ROOT = country giving guarantee
+	on_guarantee = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] has guaranteed [From.GetName]"
+			if = {
+				limit = {
+					NOT = { is_in_array = { FROM.guarantor_array = ROOT } }
+				}
+				add_to_array = { FROM.guarantor_array = ROOT }
 			}
 		}
 	}
@@ -932,6 +964,7 @@ on_actions = {
 			country_event = worldtension.3
 			country_event = worldtension.4
 			country_event = worldtension.5
+			country_event = worldtension.27
 
 			# Volunteers
 			every_other_country = {

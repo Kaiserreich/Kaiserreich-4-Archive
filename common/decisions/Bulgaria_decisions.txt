@@ -23,6 +23,7 @@ BUL_foreign_policy_decisions = {
 			is_subject = no
 			GER = { has_war_with = FRA }
 			NOT = {
+				has_government = social_conservative
 				has_country_flag = { flag = BUL_considering_join_intl value > 0 }
 				has_country_flag = { flag = BUL_considering_join_russia value > 0 }
 				has_country_flag = { flag = BUL_considering_join_austria value > 0 }
@@ -662,18 +663,7 @@ BUL_foreign_policy_decisions = {
 
 		available = {
 			is_in_faction = no
-			OR = {
-				has_war = no
-				custom_trigger_tooltip = {
-					tooltip = USA_same_wars_as_FROM
-					has_war = yes
-					NOT = {
-						any_enemy_country = {
-							NOT = { has_war_with = FROM }
-						}
-					}
-				}
-			}
+			at_peace_or_same_enemies_as_FROM = yes
 			if = {
 				limit = {
 					OR = {
@@ -872,6 +862,78 @@ BUL_foreign_policy_decisions = {
 			set_country_flag = { flag = BUL_considering_join_austria days = 11 value = 1 }
 			AUS = {
 				country_event = { id = bulgaria.80 days = 5 }
+			}
+		}
+	}
+
+	BUL_alliance_with_serbia = {
+		icon = generic_political_discourse
+
+		allowed = {
+			original_tag = BUL
+		}
+		
+		available = {
+			has_country_flag = BUL_ties_with_serbia
+			if = {
+				limit = { has_war = yes }
+				surrender_progress < 0.20
+			}
+			OR = {
+				has_war = no
+				custom_trigger_tooltip = {
+					tooltip = USA_same_wars_as_FROM
+					has_war = yes
+					NOT = {
+						any_enemy_country = {
+							NOT = { has_war_with = FROM }
+						}
+					}
+				}
+			}
+		}
+		
+		visible = {
+			has_government = social_conservative
+			is_subject = no
+			is_in_faction = no
+		}
+		
+		target_root_trigger = {
+			has_government = social_conservative
+		}
+
+		targets = { SER }
+
+		target_trigger = {
+			FROM = {
+				is_faction_leader = yes
+				NOT = { has_war_with = ROOT }
+			}
+		}
+		
+		fire_only_once = yes
+		cost = 50
+		
+		ai_will_do = {
+			factor = 25
+			modifier = {
+				factor = 0
+				NOT = { has_completed_focus = BUL_agrarian_alliance }
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					has_war = yes
+					surrender_progress > 0.20
+				}
+			}
+		}
+		
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision BUL_alliance_with_serbia target: [From.GetName]"
+			SER = {
+				country_event = { id = bulgaria.120 days = 5 }
 			}
 		}
 	}
@@ -1104,10 +1166,23 @@ BUL_foreign_policy_decisions = {
 		}
 
 		visible = {
-			has_completed_focus = BUL_rebuilding_the_nation
+			if = {
+				limit = {
+					OR = {
+						has_government = market_liberal
+						has_government = social_democrat
+					}
+				}
+				has_completed_focus = BUL_rebuilding_the_nation
+			}
+			else_if = {
+				limit = { has_government = social_conservative }
+				has_completed_focus = BUL_a_path_to_peace
+			}
 			OR = {
 				has_government = market_liberal
 				has_government = social_democrat
+				has_government = social_conservative
 			}
 			is_subject = no
 			FROM = {
@@ -1124,6 +1199,7 @@ BUL_foreign_policy_decisions = {
 			OR = {
 				has_government = market_liberal
 				has_government = social_democrat
+				has_government = social_conservative
 			}
 		}
 
@@ -1140,13 +1216,22 @@ BUL_foreign_policy_decisions = {
 			}
 		}
 
-		fire_only_once = no
+		fire_only_once = yes
 
 		cost = 0
 		days_remove = 35
 
 		ai_will_do = {
 			factor = 50
+			modifier = {
+				factor = 2
+				has_government = social_conservative
+				FROM = { tag = SER }
+			}
+			modifier = {
+				factor = 0
+				FROM = { has_war = yes }
+			}
 		}
 
 		complete_effect = {
@@ -1222,6 +1307,7 @@ BUL_foreign_policy_decisions = {
 				has_government = national_populist
 				has_government = social_democrat
 				has_government = market_liberal
+				has_government = social_conservative
 			}
 			can_declare_war_on = FROM
 			FROM = {
@@ -1270,6 +1356,26 @@ BUL_foreign_policy_decisions = {
 					}
 				}
 			}
+			# they're guaranteed but not in a faction
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = no
+					has_guarantor = yes
+					any_of_scopes = {
+						array = guarantor_array
+						has_guaranteed = PREV
+						OR = {
+							strength_ratio = { tag = ROOT ratio > 1.0 }
+							is_in_faction = yes
+						}
+						OR = {
+							has_war = no
+							surrender_progress < 0.20
+						}
+					}
+				}
+			}
 			modifier = {
 				factor = 0
 				strength_ratio = { tag = FROM ratio < 1.25 }
@@ -1314,6 +1420,7 @@ BUL_foreign_policy_decisions = {
 				has_idea = BUL_reparation_payments_from_serbia
 				has_government = market_liberal
 				has_government = social_democrat
+				has_government = social_conservative
 			}
 			can_declare_war_on = FROM
 			FROM = {
@@ -1342,6 +1449,26 @@ BUL_foreign_policy_decisions = {
 					is_in_faction = yes
 					var:faction_leader = {
 						surrender_progress < 0.40
+					}
+				}
+			}
+			# they're guaranteed but not in a faction
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = no
+					has_guarantor = yes
+					any_of_scopes = {
+						array = guarantor_array
+						has_guaranteed = PREV
+						OR = {
+							strength_ratio = { tag = ROOT ratio > 1.0 }
+							is_in_faction = yes
+						}
+						OR = {
+							has_war = no
+							surrender_progress < 0.20
+						}
 					}
 				}
 			}
@@ -1436,6 +1563,7 @@ BUL_foreign_policy_decisions = {
 				has_idea = BUL_reparation_payments_from_serbia
 				has_government = social_democrat
 				has_government = market_liberal
+				has_government = social_conservative
 			}
 			can_declare_war_on = FROM
 			FROM = {
@@ -1481,6 +1609,26 @@ BUL_foreign_policy_decisions = {
 					is_in_faction = yes
 					var:faction_leader = {
 						surrender_progress < 0.40
+					}
+				}
+			}
+			# they're guaranteed but not in a faction
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = no
+					has_guarantor = yes
+					any_of_scopes = {
+						array = guarantor_array
+						has_guaranteed = PREV
+						OR = {
+							strength_ratio = { tag = ROOT ratio > 1.0 }
+							is_in_faction = yes
+						}
+						OR = {
+							has_war = no
+							surrender_progress < 0.20
+						}
 					}
 				}
 			}
@@ -1553,6 +1701,7 @@ BUL_foreign_policy_decisions = {
 			owns_state = 106 #Macedonia
 			owns_state = 731 #Western Salonica
 			owns_state = 769 #Eastern Salonica
+			NOT = { has_government = social_conservative }
 			FROM = {
 				owns_state = 341
 				NOT = { is_subject_of = ROOT }
@@ -1592,6 +1741,26 @@ BUL_foreign_policy_decisions = {
 					has_socialist_government = yes
 					has_government = paternal_autocrat
 					has_country_leader = { ruling_only = yes name = "Ferdinand I" }
+				}
+			}
+			# they're guaranteed but not in a faction
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = no
+					has_guarantor = yes
+					any_of_scopes = {
+						array = guarantor_array
+						has_guaranteed = PREV
+						OR = {
+							strength_ratio = { tag = ROOT ratio > 1.0 }
+							is_in_faction = yes
+						}
+						OR = {
+							has_war = no
+							surrender_progress < 0.20
+						}
+					}
 				}
 			}
 			modifier = {
@@ -1682,6 +1851,7 @@ BUL_foreign_policy_decisions = {
 
 		visible = {
 			owns_state = 341 #Adrianople
+			NOT = { has_government = social_conservative }
 			FROM = {
 				owns_state = 773
 				NOT = { is_subject_of = ROOT }
@@ -1721,6 +1891,26 @@ BUL_foreign_policy_decisions = {
 					has_socialist_government = yes
 					has_government = paternal_autocrat
 					has_country_leader = { ruling_only = yes name = "Ferdinand I" }
+				}
+			}
+			# they're guaranteed but not in a faction
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = no
+					has_guarantor = yes
+					any_of_scopes = {
+						array = guarantor_array
+						has_guaranteed = PREV
+						OR = {
+							strength_ratio = { tag = ROOT ratio > 1.0 }
+							is_in_faction = yes
+						}
+						OR = {
+							has_war = no
+							surrender_progress < 0.20
+						}
+					}
 				}
 			}
 			modifier = {

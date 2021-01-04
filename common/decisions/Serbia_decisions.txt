@@ -94,17 +94,17 @@ foreign_politics = {
 		allowed = { tag = SER }
 
 		visible = {
-			country_exists = FROM
-			NOT = { has_war_with = FROM }
 			has_completed_focus = SER_Shipbuilding_Investments
+			country_exists = ENT
+			ENT = {
+				is_subject = no
+				NOT = { has_war_with = ROOT }
+			}
 		}
 
 		cost = 60
 		days_remove = 60
 		fire_only_once = yes
-
-		targets = { ENT }
-		target_root_trigger = { has_completed_focus = SER_Shipbuilding_Investments }
 
 		ai_will_do = {
 			factor = 1
@@ -116,14 +116,14 @@ foreign_politics = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SER_Purchase_HMS_Lion target: [From.GetName]"
-			FROM = {
+			ENT = {
 				country_event = { id = serbia.55 days = 5 }
 			}
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove SER_Purchase_HMS_Lion target: [From.GetName]"
-			custom_effect_tooltip = if_FROM_agrees
+			custom_effect_tooltip = SER_if_ENT_agrees
 			hidden_effect = { SER_EVENT_BB01_naval_variant = yes }
 			create_ship = {
 				name = "KB Lav" # HMS Lion
@@ -142,44 +142,26 @@ foreign_politics = {
 		}
 		
 		available = {
-			has_war = no
+			at_peace_or_same_enemies_as_FROM = yes
 		}
 		
 		visible = {
 			is_valid_peace_target = yes
-			OR = {
-				owns_state = 45 #Vojvodina
-				has_war_with = 45.owner
-			}
+			owns_state = 45 #Vojvodina
 			FROM = {
 				is_faction_leader = yes
-				NOT = { is_in_faction_with = 45.owner }
-				if = {
-					limit = {
-						ROOT = { has_war_with = 45.owner }
-					}
-					has_war_with = 45.owner
-				}
+				NOT = { has_war_with = ROOT }
 			}
 		}
 		
 		targets = { ENT }
 		target_root_trigger = {
-			OR = {
-				owns_state = 45 #Vojvodina
-				has_war_with = 45.owner
-			}
+			owns_state = 45 #Vojvodina
 		}
 		target_trigger = {
 			FROM = {
 				is_faction_leader = yes
-				NOT = { is_in_faction_with = 45.owner }
-				if = {
-					limit = {
-						ROOT = { has_war_with = 45.owner }
-					}
-					has_war_with = 45.owner
-				}
+				NOT = { has_war_with = ROOT }
 			}
 		}
 		
@@ -188,6 +170,15 @@ foreign_politics = {
 		
 		ai_will_do = {
 			base = 100
+			modifier = {
+				factor = 0
+				NOT = {
+					country_exists = GBR
+					var:126.controller = { is_in_faction_with = FROM } #London
+					var:16.controller = { is_in_faction_with = FROM } #Paris
+					var:21.controller = { is_in_faction_with = FROM } #Marseille
+				}
+			}
 			modifier = {
 				factor = 0
 				FROM = { surrender_progress > 0.20 }
@@ -222,44 +213,26 @@ foreign_politics = {
 		}
 		
 		available = {
-			has_war = no
+			at_peace_or_same_enemies_as_FROM = yes
 		}
 		
 		visible = {
 			is_valid_peace_target = yes
+			owns_state = 45 #Vojvodina
 			FROM = {
 				is_faction_leader = yes
-				NOT = { is_in_faction_with = 45.owner }
-				if = {
-					limit = {
-						ROOT = { has_war_with = 45.owner }
-					}
-					has_war_with = 45.owner
-				}
-			}
-			OR = {
-				owns_state = 45 #Vojvodina
-				has_war_with = 45.owner
+				NOT = { has_war_with = ROOT }
 			}
 		}
 		
 		targets = { RUS }
 		target_root_trigger = {
-			OR = {
-				owns_state = 45 #Vojvodina
-				has_war_with = 45.owner
-			}
+			owns_state = 45 #Vojvodina
 		}
 		target_trigger = {
 			FROM = {
 				is_faction_leader = yes
-				NOT = { is_in_faction_with = 45.owner }
-				if = {
-					limit = {
-						ROOT = { has_war_with = 45.owner }
-					}
-					has_war_with = 45.owner
-				}
+				NOT = { has_war_with = ROOT }
 			}
 		}
 		
@@ -309,10 +282,10 @@ SER_Balkan_Research_Initiative_decisions = {
 				}
 				else_if = {
 					limit = { tag = POL }
-					OR = {
+					#OR = {
 						has_government = national_populist
-						POL_sikorski_in_power = yes
-					}
+					#	POL_sikorski_in_power = yes
+					#}
 					is_subject = no
 					NOT = { has_war_with = ROOT }
 				}
@@ -344,10 +317,10 @@ SER_Balkan_Research_Initiative_decisions = {
 				}
 				else_if = {
 					limit = { tag = POL }
-					OR = {
+					#OR = {
 						has_government = national_populist
-						POL_sikorski_in_power = yes
-					}
+					#	POL_sikorski_in_power = yes
+					#}
 					is_subject = no
 					NOT = { has_war_with = ROOT }
 				}
@@ -402,9 +375,13 @@ SER_Balkan_Research_Initiative_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SER_economic_council_decision"
 			set_global_flag = BP_working_on_eco_union
-			set_variable = {
-				var = BP_economic_council_members
-				value = 1
+			if = {
+				limit = {
+					NOT = {
+						is_in_array = { global.balkan_economic_union = ROOT }
+					}
+				}
+				add_to_array = { global.balkan_economic_union = ROOT }
 			}
 			if = {
 				limit = {
@@ -478,7 +455,8 @@ SER_Balkan_Research_Initiative_decisions = {
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove SER_economic_council_expansion"
-			every_country = {
+			country_event = pact.304
+			every_other_country = {
 				limit = {
 					OR = {
 						has_idea = BP_economic_council_1
@@ -828,7 +806,6 @@ SER_The_Road_To_Unification_decisions = {
 				is_owned_and_controlled_by = ROOT
 				NOT = { is_core_of = ROOT }
 			}
-			has_country_flag = SER_accepted_bulgaria_union
 		}
 
 		on_map_mode = map_only
@@ -1049,7 +1026,7 @@ SER_The_Road_To_Unification_decisions = {
 				factor = 0
 				has_war = yes
 			}
-			# wait for AI ROM to prepare the revolt
+			# wait for AI ROM to prepare the revolt if Austria and its allies aren't losing
 			modifier = {
 				factor = 0
 				is_in_faction_with = ROM
@@ -1057,6 +1034,18 @@ SER_The_Road_To_Unification_decisions = {
 					is_ai = yes
 					has_country_flag = ROM_funded_separatist
 					check_variable = { revolt < 4 }
+				}
+				NOT = {
+					FROM = { surrender_progress > 0.10 }
+					FROM = {
+						is_in_faction = yes
+						is_faction_leader = no
+						var:faction_leader = { surrender_progress > 0.10 }
+					}
+					FROM = {
+						is_subject = yes
+						overlord = { surrender_progress > 0.10 }
+					}
 				}
 			}
 			# don't attack if a player isn't ready
@@ -1123,7 +1112,10 @@ SER_The_Road_To_Unification_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove SER_Attack_Austria target: [From.GetName]"
-			country_event = serbia.32
+			if = {
+				limit = { is_ai = yes }
+				country_event = serbia.32
+			}
 			every_other_country = {
 				limit = {
 					is_in_array = { SER.SER_will_attack_austria = THIS }
@@ -1222,4 +1214,3 @@ SER_The_Road_To_Unification_decisions = {
 		}
 	}
 }
-

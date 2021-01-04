@@ -1,4 +1,4 @@
-###########################
+﻿###########################
 # Iron Guard Romania Events
 ###########################
 # By MatoroTBS, wyandotte
@@ -6,9 +6,8 @@
 
 add_namespace = romania
 
-#1-74 Pre-war and war
+#1-74 pre-war and war events
 #75- post-war events
-
 
 ### Introduction event
 country_event = {
@@ -40,6 +39,30 @@ country_event = {
 				id = romania.61
 				days = 250
 				random = 50
+			}
+			country_event = {
+				id = romania.154
+				days = 360
+				random = 50
+			}
+			country_event = {
+				id = romania.155
+				days = 660
+				random = 50
+			}
+			country_event = {
+				id = romania.158
+				days = 600
+				random = 50
+			}
+			country_event = {
+				id = romania.158
+				days = 200
+				random = 50
+			}
+			country_event = {
+				id = romania.161
+				days = 410
 			}
 		}
 	}
@@ -154,7 +177,7 @@ country_event = {
 	immediate = {log = "[GetDateText]: [Root.GetName]: event romania.5"}
 	title = romania.5.t
 	desc = romania.5.d
-	picture = GFX_FIN_black_monday
+	picture = GFX_report_event_FIN_black_monday
 	is_triggered_only = yes
 
 	option = {
@@ -295,6 +318,7 @@ country_event = {
 			has_idea = ROM_great_game_carol
 			has_idea = ROM_great_game_czc
 		}
+		NOT = { has_country_flag = ROM_crisis }
 	}
 
 	immediate = {
@@ -1172,7 +1196,8 @@ country_event = {
 		ai_chance = {
 			factor = 70
 		}
-		add_stability = -0.8
+		add_stability = -0.08
+		add_political_power = -60
 		ROM_increase_captain = yes
 		custom_effect_tooltip = ROM_pol_cap
 
@@ -1269,7 +1294,7 @@ country_event = {
 		ai_chance = {
 			factor = 70
 		}
-		add_stability = -0.8
+		add_stability = -0.08
 		ROM_increase_king = yes
 		custom_effect_tooltip = ROM_pol_king
 	}
@@ -1708,39 +1733,14 @@ country_event = {
 		}
 		hidden_effect = {
 			set_country_flag = ROM_TRS_revolt
-			#Remove AUS/HUN armies
-			set_state_controller = 84
-			set_state_controller = 83
-			set_state_controller = 82
-			set_state_controller = 76
-			set_state_controller = 789
-			for_each_scope_loop = {
-				array = global.ROM_transylvania_states
-				cancel_resistance = yes
-			}
 			event_target:ROM_transylvania_target = {
 				if = {
 					limit = {
 						tag = TRS
 						is_subject = yes
 					}
-					become_exiled_in = { target = event_target:ROM_transylvania_overlord legitimacy = 100 }
-				}
-				every_owned_state = {
-					limit = { region = 144 } #Transylvania
-					TRS = {
-						delete_unit = { state = PREV }
-					}
-					teleport_armies = {
-						limit = {
-							OR = {
-								is_ally_with = AUS
-								is_ally_with = HUN
-								is_ally_with = PREV.PREV
-							}
-						}
-						to_state_array = owned_controlled_states
-					}
+					delete_unit = { disband = yes }
+					become_exiled_in = { target = event_target:ROM_transylvania_overlord legitimacy = 0 } #Collapse TRS
 				}
 				country_event = romania.50 #Inform the owner of TRS
 				if = {
@@ -1748,6 +1748,38 @@ country_event = {
 					overlord = { country_event = romania.50 }
 				}
 			}
+			for_each_scope_loop = {
+				array = global.ROM_transylvania_states
+				
+				#Remove AUS/HUN armies
+				teleport_armies = {
+					limit = {
+						OR = {
+							is_ally_with = AUS
+							is_ally_with = HUN
+							is_ally_with = var:THIS.owner
+						}
+					}
+					to_state_array = owned_controlled_states
+				}
+				
+				#Remove resistance
+				add_resistance = -100
+				if = {
+					limit = {
+						NOT = { state = 789 }
+					}
+					add_dynamic_modifier = { modifier = ROM_transylvanian_collaboration }
+				}
+			}
+			
+			#Transfer control
+			set_state_controller = 84
+			set_state_controller = 83
+			set_state_controller = 82
+			set_state_controller = 76
+			set_state_controller = 789
+			
 			#Strongest possible revolt
 			if = {
 				limit = {
@@ -1873,21 +1905,12 @@ country_event = {
 			ROM_increase_captain = yes
 		}
 		hidden_effect = {
-			TRS = { add_ideas = ROM_compliance_gain_bonus }
 			for_each_scope_loop = {
 				array = global.ROM_transylvania_states
-				remove_resistance_target = 1
-				remove_resistance_target = 2
-				remove_resistance_target = 3
-				remove_resistance_target = 4
-				remove_resistance_target = 5
-				remove_dynamic_modifier = { modifier = ROM_transylvanian_resistance_1 }
-				remove_dynamic_modifier = { modifier = ROM_transylvanian_resistance_2 }
-				remove_dynamic_modifier = { modifier = ROM_transylvanian_resistance_3 }
-				remove_dynamic_modifier = { modifier = ROM_transylvanian_resistance_4 }
-				remove_dynamic_modifier = { modifier = ROM_transylvanian_resistance_5 }
-				force_disable_resistance = { clear = yes }
-				start_resistance = yes
+				clear_variable = ROM_transylvanian_resistance_target
+				clear_variable = ROM_transylvanian_resistance_activity
+				clear_variable = ROM_transylvanian_resistance_garrison
+				remove_dynamic_modifier = { modifier = ROM_transylvanian_resistance }
 			}
 		}
 		clear_array = global.ROM_transylvania_states
@@ -2037,8 +2060,16 @@ country_event = {
 				}
 				has_country_flag = ROM_cantacuzino_in_ani
 			}
-			has_war_with = AUS
-			has_war_with = HUN
+			AND = {
+				OR = {
+					has_country_flag = ROM_cantacuzino_in_spain
+					has_country_flag = ROM_cantacuzino_in_ani
+				}
+				OR = {
+					has_war_with = AUS
+					has_war_with = HUN
+				}
+			}
 		}
 	}
 
@@ -2718,6 +2749,23 @@ country_event = {
 					days = 7
 				}
 			}
+			country_event = {
+				id = romania.104
+				days = 40
+			}
+			country_event = {
+				id = romania.156
+				days = 50
+				random = 25
+			}
+			country_event = {
+				id = romania.160
+				days = 185
+			}
+			country_event = {
+				id = romania.164
+				days = 112
+			}
 		}
 	}
 }
@@ -3349,6 +3397,7 @@ country_event = {
 		name = romania.83.a # forced abdication
 
 		set_politics = { ruling_party = national_populist }
+		ROM_set_legionary_HoG = yes
 		ROM_set_legionary_ministers = yes
 		add_popularity = {
 			ideology = national_populist
@@ -4105,6 +4154,7 @@ country_event = {
 			}
 		}
 		set_politics = { ruling_party = national_populist }
+		ROM_set_legionary_HoG = yes
 		ROM_set_legionary_ministers = yes
 		add_popularity = {
 			ideology = national_populist
@@ -4406,6 +4456,9 @@ country_event = {
 			remove_ideas = ROM_great_game
 			remove_ideas = ROM_great_game_czc
 			remove_ideas = ROM_great_game_carol
+			news_event = romania.151 
+			news_event = romania.152 
+			news_event = romania.153 
 			if = {
 				limit = {
 					has_country_flag = ROM_Michael_I
@@ -5313,6 +5366,10 @@ country_event = {
 		name = romania.136.a #never!
 		ai_chance = {
 			factor = 20
+			modifier = {
+				factor = 0
+				is_puppet_of = ROM
+			}
 		}
 		hidden_effect = {
 			FROM = { country_event = romania.138 }
@@ -5431,6 +5488,10 @@ country_event = {
 		}
 		ai_chance = {
 			factor = 20
+			modifier = {
+				factor = 0
+				is_puppet_of = ROM
+			}
 		}
 	}
 	option = {
@@ -5731,5 +5792,355 @@ news_event = {
 
 	option = {
 		name = romania.150.a
+	}
+}
+news_event = {
+	id = romania.151
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.151" }
+	title = romania.151.t
+	desc = romania.151.d
+	picture = GFX_news_event_ROM_parade
+
+	major = yes
+
+	is_triggered_only = yes
+
+	trigger = { ROM = { has_government = national_populist } }
+
+	show_major = {
+		NOT = {
+			tag = ROM
+		}
+		regional_europe_news = yes
+	}
+
+	option = {
+		name = romania.151.a
+	}
+}
+news_event = {
+	id = romania.152
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.152" }
+	title = romania.152.t
+	desc = romania.152.d
+	picture = GFX_news_event_ROM_michael_carol
+
+	major = yes
+
+	is_triggered_only = yes
+
+	trigger = { ROM = { has_government = paternal_autocrat } }
+
+	show_major = {
+		NOT = {
+			tag = ROM
+		}
+		regional_europe_news = yes
+	}
+
+	option = {
+		name = romania.152.a
+	}
+}
+news_event = {
+	id = romania.153
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.153" }
+	title = romania.153.t
+	desc = romania.153.d
+	picture = GFX_news_event_ROM_FRN_speech
+
+	major = yes
+
+	is_triggered_only = yes
+
+	trigger = { ROM = { has_government = authoritarian_democrat } }
+
+	show_major = {
+		NOT = {
+			tag = ROM
+		}
+		regional_europe_news = yes
+	}
+
+	option = {
+		name = romania.153.a
+	}
+}
+country_event = {
+	id = romania.154
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.154" }
+	title = romania.154.t
+	desc = romania.154.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.154.a
+		add_political_power = 5
+	}
+}
+country_event = {
+	id = romania.155
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.155" }
+	title = romania.155.t
+	desc = romania.155.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.155.a
+		add_popularity = {
+			ideology = paternal_autocrat
+			popularity = 0.02
+		}
+	}
+}
+country_event = {
+	id = romania.156
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.156" }
+	title = romania.156.t
+	desc = romania.156.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.156.a
+		add_stability = 0.02
+		hidden_effect = {
+			country_event = {
+				id = romania.157
+				days = 20
+				random = 5
+			}
+		}
+	}
+}
+country_event = {
+	id = romania.157
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.157" }
+	title = romania.157.t
+	desc = romania.157.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.157.a
+		add_stability = 0.03
+	}
+	option = {
+		name = romania.157.b
+		add_political_power = 5
+		add_stability = 0.01
+	}
+	option = {
+		name = romania.157.c
+		add_political_power = 10
+	}
+}
+country_event = {
+	id = romania.158
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.158" }
+	title = romania.158.t
+	desc = romania.158.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.158.a
+		add_political_power = 10
+	}
+}
+country_event = {
+	id = romania.159
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.159" }
+	title = romania.159.t
+	desc = romania.159.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.159.a
+		trigger = { has_country_flag = ROM_selectczc }
+		add_popularity = {
+			ideology = national_populist
+			popularity = 0.02
+		}
+	}
+	option = {
+		name = romania.159.b
+		trigger = { has_country_flag = ROM_selectcarol }
+		add_popularity = {
+			ideology = national_populist
+			popularity = 0.02
+		}
+	}
+}
+country_event = {
+	id = romania.160
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.160" }
+	title = romania.160.t
+	desc = romania.160.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.160.a
+		add_stability = 0.01
+	}
+}
+country_event = {
+	id = romania.161
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.161" }
+	title = romania.161.t
+	desc = romania.161.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.161.a
+		add_political_power = 10
+	}
+}
+country_event = {
+	id = romania.162
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.162" }
+	title = romania.162.t
+	desc = romania.162.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.162.a
+		add_popularity = {
+			ideology = paternal_autocrat
+			popularity = 0.04
+		}
+	}
+}
+country_event = {
+	id = romania.163
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.163" }
+	title = romania.163.t
+	desc = romania.163.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.163.a
+		add_popularity = {
+			ideology = paternal_autocrat
+			popularity = 0.02
+		}
+		hidden_effect = {
+			country_event = {
+				id = romania.162
+				days = 400
+				random = 70
+			}
+		}
+	}
+}
+country_event = {
+	id = romania.164
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.164" }
+	title = romania.164.t
+	desc = romania.164.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.164.a
+		if = {
+			limit = { has_war = no }
+			add_war_support = -0.22
+		}
+		else = { add_war_support = -0.11 }
+		add_popularity = {
+			ideology = national_populist
+			popularity = -0.07
+		}
+	}
+}
+country_event = {
+	id = romania.165
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.165" }
+	title = romania.165.t
+	desc = romania.165.d
+
+	fire_only_once = yes
+	
+	trigger = {
+		tag = ROM
+		is_subject = no
+		owns_state = 772
+		GER = {
+			OR = {
+				AND = {
+					has_war_with = RUS
+					has_war_with = FRA
+				}
+				surrender_progress > 0.3
+			}
+		}
+	}
+
+	mean_time_to_happen = { days = 30 }
+
+	option = {
+		name = romania.165.a
+		add_political_power = 25
+		set_temp_variable = { ideology_change_var = 5 }
+		change_ruling_party_popularity = yes
+		GER = { country_event = romania.167 }
+	}
+}
+country_event = {
+	id = romania.166
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.166" }
+	title = romania.166.t
+	desc = romania.166.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.166.a
+		add_popularity = {
+			ideology = national_populist
+			popularity = -0.11
+		}
+	}
+	option = {
+		name = romania.166.b
+		add_stability = -0.05
+		add_popularity = {
+			ideology = national_populist
+			popularity = -0.18
+		}
+	}
+}
+country_event = {
+	id = romania.167
+	immediate = { log = "[GetDateText]: [Root.GetName]: event romania.167" }
+	title = romania.167.t
+	desc = romania.167.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = romania.167.a
+		add_political_power = -10
 	}
 }
