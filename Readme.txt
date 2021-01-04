@@ -1,6 +1,6 @@
-##########################################################
-### Kaiserreich Beta 0.14 - 'The Duke and the Hertzog' ###
-##########################################################
+###############################
+### Kaiserreich Beta 0.14.1 ###
+###############################
 
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
 This version is designed for Hearts of Iron IV version 1.9.3. It may work with later hot fixes but it isn't guaranteed.
