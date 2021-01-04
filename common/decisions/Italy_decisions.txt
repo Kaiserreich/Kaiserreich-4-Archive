@@ -1536,8 +1536,12 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 				add = 10
 				has_country_flag = PAP_permission_denied_neosanfedisti
 				has_war = no
-				NOT = { country_exists = SRI }
-				NOT = { SIC = { has_country_flag = SIC_confed } }
+				has_army_manpower = { size > 75000 }
+				NOT = {
+					country_exists = SRI
+					SIC = { has_country_flag = SIC_confed }
+					SRD = { has_country_flag = SIC_confed }
+				}
 			}
 		}
 
@@ -1556,7 +1560,6 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 						NOT = { tag = SIC }
 						is_in_faction_with = PAP
 					}
-					remove_from_faction = PAP
 					add_opinion_modifier = { target = NEE modifier = KR_disapproves_of_govt }
 				}
 				leave_faction = yes
@@ -2929,15 +2932,18 @@ ITA_resorgimento_decisions = {
 				has_completed_focus = ITA_military_exercises
 			}
 			FROM = {
-				is_valid_war_target = yes
+				NOT = { has_capitulated = yes }
 			}
 		}
 
 		visible = {
 			FROM = {
 				exists = yes
-				NOT = { has_war_with = ROOT }
-				NOT = { has_country_flag = ITA_considering_invite_@ROOT }
+				NOT = {
+					has_war_with = ROOT
+					is_subject_of = ROOT
+					has_country_flag = ITA_considering_invite_@ROOT
+				}
 				OR = {
 					tag = SRI
 					NOT = { country_exists = SRI }
@@ -2961,9 +2967,11 @@ ITA_resorgimento_decisions = {
 
 		target_trigger = {
 			FROM = {
-				exists = yes
-				NOT = { has_war_with = ROOT }
-				NOT = { has_country_flag = ITA_considering_invite_@ROOT }
+				NOT = {
+					has_war_with = ROOT
+					is_subject_of = ROOT
+					has_country_flag = ITA_considering_invite_@ROOT
+				}
 			}
 		}
 
@@ -2972,10 +2980,45 @@ ITA_resorgimento_decisions = {
 		days_remove = 20
 		war_with_target_on_remove = yes
 		ai_will_do = {
-			factor = 50
+			factor = 10
+			modifier = {
+				factor = 0
+				is_in_faction_with = FROM
+			}
 			modifier = {
 				factor = 0
 				has_country_flag = { flag = ITA_currently_inviting value > 0 }
+			}
+			modifier = {
+				factor = 0
+				# should be asking them to join peacefully first
+				has_democratic_government = yes
+				owns_state = 160 #Venice
+				if = {
+					limit = { SRD = { owns_state = 158 } }
+					OR = {
+						owns_state = 162 #Tuscany
+						owns_state = 1004 #Emilia
+					}
+				}
+				else = {
+					count_triggers = {
+						amount = 2
+						158 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Piedmont
+						1004 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Emilia
+						162 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Tuscany
+					}
+				}
+				FROM = {
+					is_subject = no
+					not_has_socialist_government = yes
+					OR = {
+						is_in_faction = no
+						is_in_faction_with = ROOT
+						is_faction_leader = no
+					}
+					NOT = { has_country_flag = ITA_refuse_join_@ROOT }
+				}
 			}
 			modifier = {
 				factor = 0.1
@@ -3062,6 +3105,10 @@ ITA_resorgimento_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision ITA_attack_italy target: [From.GetName]"
 			add_war_support = 0.10
+			if = {
+				limit = { is_in_faction_with = FROM }
+				leave_faction = yes
+			}
 		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ITA_attack_italy target: [From.GetName]"
@@ -3093,9 +3140,9 @@ ITA_resorgimento_decisions = {
 						tooltip = ITA_control_any_two
 						count_triggers = {
 							amount = 2
-							158 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
-							1004 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
-							162 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
+							158 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Piedmont
+							1004 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Emilia
+							162 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Tuscany
 						}
 					}
 				}
@@ -3148,6 +3195,7 @@ ITA_resorgimento_decisions = {
 				}
 				NOT = {
 					has_country_flag = ITA_refuse_join_@ROOT
+					has_country_flag = { flag = ITA_considering_invite_@ROOT value > 0 }
 					is_justifying_wargoal_against = ROOT
 					any_enemy_country = {
 						is_italian_tag = yes
@@ -3195,23 +3243,14 @@ ITA_resorgimento_decisions = {
 				factor = 0.1
 				NOT = { is_neighbor_of = FROM }
 			}
-			modifier = {
-				factor = 0.1
-				OR = {
-					tag = ITA
-					tag = SIC
-					tag = SRD
-					tag = PAP
-				}
-			}
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision ITA_invite_into_federation target: [From.GetName]"
-			set_country_flag = { flag = ITA_currently_inviting days = 30 }
+			set_country_flag = { flag = ITA_currently_inviting days = 30 value = 1 }
 			country_event = sic.109
 			FROM = {
-				set_country_flag = { flag = ITA_considering_invite_@ROOT days = 30 }
+				set_country_flag = { flag = ITA_considering_invite_@ROOT days = 30 value = 1 }
 				hidden_effect = {
 					country_event = sic.110
 				}
@@ -3485,15 +3524,18 @@ ITA_resorgimento_decisions = {
 				controls_all_owned_states = yes
 			}
 			FROM = {
-				is_valid_war_target = yes
+				NOT = { has_capitulated = yes }
 			}
 		}
 
 		visible = {
 			FROM = {
 				exists = yes
-				NOT = { has_war_with = ROOT }
-				NOT = { has_country_flag = ITA_considering_invite_@ROOT }
+				NOT = {
+					has_war_with = ROOT
+					is_subject_of = ROOT
+					has_country_flag = ITA_considering_invite_@ROOT
+				}
 				is_neighbor_of = ROOT
 			}
 		}
@@ -3506,9 +3548,11 @@ ITA_resorgimento_decisions = {
 
 		target_trigger = {
 			FROM = {
-				exists = yes
-				NOT = { has_war_with = ROOT }
-				NOT = { has_country_flag = ITA_considering_invite_@ROOT }
+				NOT = {
+					has_war_with = ROOT
+					is_subject_of = ROOT
+					has_country_flag = ITA_considering_invite_@ROOT
+				}
 			}
 		}
 
@@ -3521,6 +3565,56 @@ ITA_resorgimento_decisions = {
 			modifier = {
 				factor = 0
 				has_country_flag = { flag = ITA_currently_inviting value > 0 }
+			}
+			modifier = {
+				factor = 0
+				is_in_faction_with = FROM
+			}
+			modifier = {
+				factor = 0
+				# should be asking them to join peacefully
+				has_country_flag = SIC_confed
+				FROM = {
+					is_subject = no
+					not_has_socialist_government = yes
+					OR = {
+						is_in_faction = no
+						is_in_faction_with = ROOT
+						is_faction_leader = no
+					}
+					NOT = { has_country_flag = ITA_refuse_join_@ROOT }
+				}
+			}
+			modifier = {
+				factor = 0
+				has_cosmetic_tag = SRD_ITA
+				owns_state = 838 #Liguria
+				if = {
+					limit = { ITA = { owns_state = 159 } }
+					OR = {
+						owns_state = 162 #Tuscany
+						owns_state = 1004 #Emilia
+					}
+				}
+				else = {
+					count_triggers = {
+						amount = 2
+						159 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
+						160 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
+						1004 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
+						162 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
+					}
+				}
+				FROM = {
+					is_subject = no
+					not_has_socialist_government = yes
+					OR = {
+						is_in_faction = no
+						is_in_faction_with = ROOT
+						is_faction_leader = no
+					}
+					NOT = { has_country_flag = ITA_refuse_join_@ROOT }
+				}
 			}
 			modifier = {
 				factor = 0
@@ -3594,6 +3688,10 @@ ITA_resorgimento_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SRD_attack_italy target: [From.GetName]"
 			add_war_support = 0.10
+			if = {
+				limit = { is_in_faction_with = FROM }
+				leave_faction = yes
+			}
 		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove SRD_attack_italy target: [From.GetName]"
@@ -3883,6 +3981,7 @@ ITA_resorgimento_decisions = {
 				}
 				NOT = {
 					has_country_flag = ITA_refuse_join_@ROOT
+					has_country_flag = { flag = ITA_considering_invite_@ROOT value > 0 }
 					is_justifying_wargoal_against = ROOT
 					any_enemy_country = {
 						is_italian_tag = yes
@@ -3944,10 +4043,10 @@ ITA_resorgimento_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SRD_invite_into_kingdom target: [From.GetName]"
-			set_country_flag = { flag = ITA_currently_inviting days = 30 }
+			set_country_flag = { flag = ITA_currently_inviting days = 30 value = 1 }
 			country_event = sic.109
 			FROM = {
-				set_country_flag = { flag = ITA_considering_invite_@ROOT days = 30 }
+				set_country_flag = { flag = ITA_considering_invite_@ROOT days = 30 value = 1 }
 				hidden_effect = {
 					country_event = sic.110
 				}
@@ -4043,12 +4142,12 @@ ITA_resorgimento_decisions = {
 		available = {
 			2 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
 			OR = {
-				162 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
-				161 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
+				162 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Tuscany
+				161 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Romagna
 			}
 			OR = {
-				159 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
-				158 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
+				159 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Lombardy
+				158 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Piedmont
 			}
 			controls_all_owned_states = yes
 			if = {
@@ -4253,6 +4352,7 @@ ITA_resorgimento_decisions = {
 				}
 				NOT = {
 					has_country_flag = ITA_refuse_join_@ROOT
+					has_country_flag = { flag = ITA_considering_invite_@ROOT value > 0 }
 					is_justifying_wargoal_against = ROOT
 					any_enemy_country = {
 						is_italian_tag = yes
@@ -4283,10 +4383,10 @@ ITA_resorgimento_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SIC_invite_into_empire target: [From.GetName]"
-			set_country_flag = { flag = ITA_currently_inviting days = 30 }
+			set_country_flag = { flag = ITA_currently_inviting days = 30 value = 1 }
 			country_event = sic.109
 			FROM = {
-				set_country_flag = { flag = ITA_considering_invite_@ROOT days = 30 }
+				set_country_flag = { flag = ITA_considering_invite_@ROOT days = 30 value = 1 }
 				hidden_effect = {
 					country_event = sic.110
 				}
@@ -4560,6 +4660,7 @@ ITA_resorgimento_decisions = {
 				}
 				NOT = {
 					has_country_flag = ITA_refuse_join_@ROOT
+					has_country_flag = { flag = ITA_considering_invite_@ROOT value > 0 }
 					is_justifying_wargoal_against = ROOT
 					any_enemy_country = {
 						is_italian_tag = yes
@@ -4620,10 +4721,10 @@ ITA_resorgimento_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SIC_invite_into_confed target: [From.GetName]"
-			set_country_flag = { flag = ITA_currently_inviting days = 30 }
+			set_country_flag = { flag = ITA_currently_inviting days = 30 value = 1 }
 			country_event = sic.109
 			FROM = {
-				set_country_flag = { flag = ITA_considering_invite_@ROOT days = 30 }
+				set_country_flag = { flag = ITA_considering_invite_@ROOT days = 30 value = 1 }
 				hidden_effect = {
 					country_event = sic.110
 				}

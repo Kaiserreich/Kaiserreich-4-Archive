@@ -326,7 +326,6 @@ JAP_influence_china = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision JAP_ichigo_mission"
 			add_ideas = JAP_ichigo
-			activate_mission = JAP_conquer_china
 		}
 	}
 
@@ -335,6 +334,7 @@ JAP_influence_china = {
 		allowed = { tag = JAP }
 		available = {
 			ROOT = {
+				has_idea = JAP_ichigo
 				controls_all_owned_states = yes
 			}
 			FROM = {
@@ -346,30 +346,25 @@ JAP_influence_china = {
 			}
 		}
 		visible = {
-			has_idea = JAP_ichigo
-			527 = { is_owned_by_ROOT_or_ally = yes } #North Korea
+			is_faction_leader = yes
+			NOT = { has_global_flag = JAP_Fading_Sun }
 			FROM = {
 				tag = event_target:current_china_leader
-				NOT = {
-					tag = FNG
-					has_war_with = ROOT
-				}
 				exists = yes
 				if = {
-					limit = { tag = QIE }
-					OR = {
-						NOT = { country_exists = FNG }
-						FNG_JAP_hostile = yes
-						FNG = {
-							is_subject = yes
-							NOT = { is_subject_of = JAP }
-						}
-					}
+					limit = { tag = FNG }
+					FNG_JAP_hostile = yes
+					NOT = { has_country_flag = JAP_invade_manchuria_unlocked }
+				}
+				NOT = {
+					has_war_with = ROOT
+					is_subject_of = ROOT
+					is_in_faction_with = ROOT
 				}
 			}
 		}
 
-		fire_only_once = yes
+		fire_only_once = no
 		war_with_target_on_remove = yes
 		days_remove = 20
 
@@ -378,18 +373,6 @@ JAP_influence_china = {
 		target_trigger = {
 			FROM = {
 				tag = event_target:current_china_leader
-				NOT = { tag = FNG }
-				if = {
-					limit = { tag = QIE }
-					OR = {
-						NOT = { country_exists = FNG }
-						FNG_JAP_hostile = yes
-						FNG = {
-							is_subject = yes
-							NOT = { is_subject_of = JAP }
-						}
-					}
-				}
 			}
 		}
 
@@ -398,11 +381,12 @@ JAP_influence_china = {
 			modifier = {
 				factor = 0
 				has_war = yes
+				FROM = {
+					NOT = { has_war_with = FNG }
+				}
 				OR = {
 					any_enemy_country = { is_actual_major = yes }
 					any_enemy_country = { is_chinese_tag = yes }
-					FROM = { is_in_faction = yes }
-					FROM = { is_subject = yes }
 				}
 			}
 		}
@@ -429,9 +413,18 @@ JAP_influence_china = {
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove JAP_attack_china_leader target: [From.GetName]"
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
+			if = {
+				limit = {
+					FROM = {
+						tag = event_target:current_china_leader
+						is_valid_war_target = yes
+						NOT = { has_capitulated = yes }
+					}
+				}
+				declare_war_on = {
+					target = FROM
+					type = annex_everything
+				}
 			}
 			hidden_effect = {
 				add_ai_strategy = {
@@ -451,33 +444,36 @@ JAP_influence_china = {
 	}
 
 	JAP_conquer_china = {
-
 		icon = jap_conquer_china
-
+		allowed = { tag = JAP }
 		available = {
 			event_target:current_china_leader = {
 				OR = {
-					has_capitulated = yes
 					exists = no
+					has_capitulated = yes
 					is_subject_of = ROOT
 				}
 			}
 		}
-
 		visible = {
-			has_war_with = event_target:current_china_leader
 			is_faction_leader = yes
 			NOT = { has_global_flag = JAP_Fading_Sun }
 		}
 
 		activation = {
-			always = no
+			has_idea = JAP_ichigo
+			event_target:current_china_leader = {
+				has_war_with = ROOT
+				NOT = {
+					has_capitulated = yes
+					is_subject_of = ROOT
+				}
+			}
 		}
 
 		fire_only_once = yes
 
 		is_good = no
-
 		days_mission_timeout = 365
 
 		timeout_effect = {
