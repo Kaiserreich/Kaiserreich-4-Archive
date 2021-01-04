@@ -6,50 +6,75 @@
 IRE_american_civil_war = {# Dealing with the Civil War Stuff
 	IRE_AIDAMERICA = {# Irish - American Aid Association
 		icon = generic_research
-		allowed = { original_tag = IRE }
+		
 		available = {
 			has_war = yes
 		}
+		
 		visible = {
-			has_war = yes
-			OR = {
-				country_exists = USA
-				CAL = {
-					exists = yes
-					has_country_flag = PSA_reunited_america_flag
+			if = {
+				limit = { has_socialist_government = yes }
+				country_exists = CSA
+				NOT = {
+					country_exists = USA
+					country_exists = TEX
 				}
 			}
-			not_has_socialist_government = yes
-			NOT = {
-				country_exists = TEX
-				country_exists = CSA
+			else = {
+				OR = {
+					country_exists = USA
+					country_exists = CAL
+				}
+				NOT = {
+					country_exists = TEX
+					country_exists = CSA
+				}
 			}
 		}
+		
 		fire_only_once = yes
 		cost = 50
-		days_remove = 70
+		
+		ai_will_do = {
+			factor = 100
+		}
+		
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision IRE_AIDAMERICA"
-			add_equipment_to_stockpile = { type = infantry_equipment_1 amount = 2000 producer = USA }
-			add_equipment_to_stockpile = { type = support_equipment_1 amount = 1000 producer = USA }
+			if = {
+				limit = { has_socialist_government = yes }
+				add_equipment_to_stockpile = { type = infantry_equipment amount = 2000 producer = CSA }
+				add_equipment_to_stockpile = { type = support_equipment amount = 1000 producer = CSA }
+			}
+			else = {
+				add_equipment_to_stockpile = { type = infantry_equipment amount = 2000 producer = USA }
+				add_equipment_to_stockpile = { type = support_equipment amount = 1000 producer = USA }
+			}
 		}
 	}
-	IRE_SENDIRA = {# Send the IRA - not syndie
+	IRE_SENDIRA = {# Send the IRA
 		icon = generic_research
-		allowed = { original_tag = IRE }
+		
 		available = {
 			has_manpower > 10000
 			has_equipment = { infantry_equipment > 1000 }
 		}
+		
 		visible = {
-			country_exists = USA
+			if = {
+				limit = { has_socialist_government = yes }
+				country_exists = CSA
+			}
+			else = {
+				country_exists = USA
+			}
 			has_global_flag = USA_civil_war_begun_flag
-			not_has_socialist_government = yes
 			NOT = { has_global_flag = USA_civil_war_over_flag }
 		}
+		
 		fire_only_once = yes
 		cost = 50
-		days_remove = 70
+		
 		ai_will_do = {
 			factor = 10
 			modifier = {
@@ -57,62 +82,48 @@ IRE_american_civil_war = {# Dealing with the Civil War Stuff
 				has_war = yes
 			}
 		}
+		
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision IRE_SENDIRA"
+			set_country_flag = IRE_sent_volunteers
+			if = {
+				limit = { has_socialist_government = yes }
+				set_temp_variable = { IRE_IRA_destination = CSA }
+			}
+			else = {
+				set_temp_variable = { IRE_IRA_destination = USA }
+			}
+			set_country_flag = ACW_supported_@var:IRE_IRA_destination
 			add_manpower = -10000
 			send_equipment = {
-				target = USA
+				target = var:IRE_IRA_destination
 				type = infantry_equipment
 				amount = 1000
 			}
-			hidden_effect = { USA = { country_event = { id = ire.208 days = 1 }}}
-		}
-	}
-	IRE_send_ira_syndie = {# Send the IRA - syndie
-		icon = generic_research
-		allowed = { original_tag = IRE }
-		available = {
-			has_manpower > 10000
-			has_equipment = { infantry_equipment > 1000 }
-		}
-		visible = {
-			country_exists = CSA
-			has_socialist_government = yes
-			has_global_flag = USA_civil_war_begun_flag
-			NOT = { has_global_flag = USA_civil_war_over_flag }
-		}
-		fire_only_once = yes
-		cost = 50
-		days_remove = 70
-		ai_will_do = {
-			factor = 10
-			modifier = {
-				factor = 0
-				has_war = yes
+			var:IRE_IRA_destination = {
+				country_event = { id = ire.208 days = 1 }
 			}
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision IRE_send_ira_syndie"
-			add_manpower = -10000
-			send_equipment = {
-				target = CSA
-				type = infantry_equipment
-				amount = 1000
-			}
-			hidden_effect = { CSA = { country_event = { id = ire.208 days = 1 }}}
 		}
 	}
 	IRE_SANCTUARY = {# Invite Refugees
 		icon = generic_research
-		allowed = { original_tag = IRE }
-		available = { NOT = { has_war = yes } }
+		
+		available = {
+			has_war = no
+		}
+		
 		visible = {
 			has_global_flag = USA_civil_war_begun_flag
 			NOT = { has_global_flag = USA_civil_war_over_flag }
 		}
+		
 		fire_only_once = yes
 		cost = 50
-		days_remove = 70
+		
+		ai_will_do = {
+			factor = 100
+		}
+		
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision IRE_SANCTUARY"
 			add_political_power = 10
@@ -126,12 +137,10 @@ IRE_american_civil_war = {# Dealing with the Civil War Stuff
 			}
 		}
 	}
+	
 	IRE_REFUGEEWORK = {# Refugee work Programs
 		icon = generic_research
-		allowed = { original_tag = IRE }
-		available = {
-			has_idea = IRE_REFUGEES
-		}
+		
 		visible = {
 			has_idea = IRE_REFUGEES
 			NOT = {
@@ -139,9 +148,14 @@ IRE_american_civil_war = {# Dealing with the Civil War Stuff
 				has_idea = IRE_REFUGEE_WORK
 			}
 		}
+		
 		fire_only_once = yes
 		cost = 50
-		days_remove = 70
+		
+		ai_will_do = {
+			factor = 100
+		}
+		
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision IRE_REFUGEEWORK"
 			add_ideas = IRE_REFUGEE_WORK
@@ -149,10 +163,7 @@ IRE_american_civil_war = {# Dealing with the Civil War Stuff
 	}
 	IRE_REFUGEEFIGHT = {# Refugee Brigades
 		icon = generic_research
-		allowed = { original_tag = IRE }
-		available = {
-			has_idea = IRE_REFUGEES
-		}
+		
 		visible = {
 			has_idea = IRE_REFUGEES
 			NOT = {
@@ -160,9 +171,14 @@ IRE_american_civil_war = {# Dealing with the Civil War Stuff
 				has_idea = IRE_REFUGEE_WORK
 			}
 		}
+		
 		fire_only_once = yes
 		cost = 50
-		days_remove = 70
+		
+		ai_will_do = {
+			factor = 100
+		}
+		
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision IRE_REFUGEEFIGHT"
 			add_ideas = IRE_REFUGEE_FIGHT
