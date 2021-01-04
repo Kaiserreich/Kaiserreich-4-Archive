@@ -344,6 +344,51 @@ restore_control_of_all_non_enemy_states = {
 			}
 		}
 	}
+	
+	# additional check for any states which are only partially controlled and have non-enemy units in them
+	# this will grant military access to the non-enemy and any of its allies
+	every_country = {
+		limit = {
+			is_government_in_exile = yes
+			any_owned_state = {
+				controller = {
+					has_war_with = PREV.PREV
+					NOT = { has_full_control_of_state = PREV }
+				}
+			}
+		}
+		save_event_target_as = original_owner
+		every_owned_state = {
+			limit = {
+				controller = {
+					has_war_with = event_target:original_owner
+					NOT = { has_full_control_of_state = PREV }
+				}
+			}
+			controller = {
+				every_enemy_country = {
+					limit = {
+						divisions_in_state = { state = PREV.PREV size > 0 }
+						NOT = {
+							is_ally_with = event_target:original_owner
+							has_military_access_to = event_target:original_owner
+						}
+					}
+					event_target:original_owner = { give_military_access = PREV }
+					every_other_country = {
+						limit = {
+							is_ally_with = PREV
+							NOT = {
+								is_ally_with = event_target:original_owner
+								has_military_access_to = event_target:original_owner
+							}
+						}
+						event_target:original_owner = { give_military_access = PREV }
+					}
+				}
+			}
+		}
+	}
 }
 
 embargo_ROOT = {

@@ -1658,7 +1658,7 @@ country_event = {
 			transfer_state = 794
 		}
 		set_temp_variable = { tag_to_release = BOS }
-		release_targeted_tag = yes
+		release_targeted_tag_during_war = yes
 		set_autonomy = {
 			target = var:tag_to_release
 			autonomy_state = kr_integrated_puppet
@@ -1673,7 +1673,7 @@ country_event = {
 			transfer_state = 794
 		}
 		set_temp_variable = { tag_to_release = CRO }
-		release_targeted_tag = yes
+		release_targeted_tag_during_war = yes
 		set_autonomy = {
 			target = var:tag_to_release
 			autonomy_state = kr_integrated_puppet
@@ -2242,7 +2242,7 @@ country_event = { #creation of Slovakia?
 			GAL = { transfer_state = 73 } #Transcarpathia
 		}
 		set_temp_variable = { tag_to_release = SVK }
-		release_targeted_tag = yes
+		release_targeted_tag_during_war = yes
 		set_autonomy = {
 			target = var:tag_to_release
 			autonomy_state = kr_integrated_puppet
@@ -2333,7 +2333,16 @@ country_event = {
 					}
 				}
 				HUN = { remove_state_core = PREV }
-				TRS = { transfer_state = PREV }
+				if = {
+					limit = {
+						is_fully_controlled_by = controller
+						controller = { is_ally_with = ROOT }
+					}
+					TRS = { transfer_state = PREV }
+				}
+				else = {
+					TRS = { set_state_owner = PREV }
+				}
 			}
 			HUN = { add_state_core = 789 }
 		}
@@ -2402,7 +2411,7 @@ country_event = {
 		}
 		set_country_flag = AUS_a_new_Hungary
 		set_temp_variable = { tag_to_release = HUN }
-		release_targeted_tag = yes
+		release_targeted_tag_during_war = yes
 		set_autonomy = {
 			target = var:tag_to_release
 			autonomy_state = kr_integrated_puppet
@@ -2863,6 +2872,7 @@ country_event = { #We're losing, sue for peace? (AUS)
 	immediate = {
 		log = "[GetDateText]: [Root.GetName]: event ausgleich.new.800"
 		hidden_effect = {
+			add_ideas = has_scripted_peace
 			if = {
 				limit = {
 					has_war_with = SER
@@ -2882,7 +2892,7 @@ country_event = { #We're losing, sue for peace? (AUS)
 					save_event_target_as = AUS_belgrade_pact_leader
 				}
 			}
-			country_event = { id = ausgleich.new.802 days = 3 }
+			country_event = { id = ausgleich.new.802 days = 2 }
 		}
 	}
 
@@ -2910,16 +2920,7 @@ country_event = { #We're losing, sue for peace? (AUS)
 				}
 				is_valid_peace_target = yes
 			}
-			country_event = { id = ausgleich.new.801 hours = 8 random = 16 }
-		}
-		every_enemy_country = {
-			limit = {
-				is_subject = no
-				is_in_faction_with = SER
-				SER = { is_faction_leader = yes }
-				is_faction_leader = no
-			}
-			country_event = { id = ausgleich.new.801 days = 1 random = 24 }
+			country_event = ausgleich.new.801
 		}
 	}
 
@@ -2939,6 +2940,9 @@ country_event = { #We're losing, sue for peace? (AUS)
 		}
 		add_stability = -0.1
 		add_war_support = -0.1
+		hidden_effect = {
+			remove_ideas = has_scripted_peace
+		}
 	}
 	
 	option = {
@@ -2980,16 +2984,7 @@ country_event = { #We're losing, sue for peace? (AUS)
 				}
 				is_valid_peace_target = yes
 			}
-			country_event = { id = ausgleich.new.801 hours = 8 random = 16 }
-		}
-		every_enemy_country = {
-			limit = {
-				is_subject = no
-				is_in_faction_with = SER
-				SER = { is_faction_leader = yes }
-				is_faction_leader = no
-			}
-			country_event = { id = ausgleich.new.801 days = 1 random = 24 }
+			country_event = ausgleich.new.801
 		}
 	}
 	
@@ -3007,6 +3002,9 @@ country_event = { #We're losing, sue for peace? (AUS)
 		}
 		add_stability = -0.1
 		add_war_support = -0.1
+		hidden_effect = {
+			remove_ideas = has_scripted_peace
+		}
 	}
 }
 
@@ -3031,16 +3029,102 @@ country_event = { #Austria seeks peace (SER/ROM/POL/ITA)
 	}
 	
 	desc = {
-		text = ausgleich.new.801.d
+		text = ausgleich.new.801.d.main
 		trigger = {
+			OR = {
+				is_faction_leader = yes
+				is_in_faction = no
+			}
 			AUS = {
 				NOT = { has_country_flag = AUS_german_intervention }
 			}
 		}
 	}
 	desc = {
-		text = ausgleich.new.801.d.germany
+		text = augleich.new.801.d.main.faction1
 		trigger = {
+			is_in_faction = yes
+			is_faction_leader = no
+			var:faction_leader = { has_country_flag = AUS_accepts_peace }
+			AUS = {
+				NOT = { has_country_flag = AUS_german_intervention }
+			}
+		}
+	}
+	desc = {
+		text = augleich.new.801.d.main.faction2
+		trigger = {
+			is_in_faction = yes
+			is_faction_leader = no
+			var:faction_leader = { has_country_flag = AUS_will_continue_war }
+			AUS = {
+				NOT = { has_country_flag = AUS_german_intervention }
+			}
+		}
+	}
+	desc = {
+		text = ausgleich.new.801.d.germany.main1
+		trigger = {
+			OR = {
+				is_faction_leader = yes
+				is_in_faction = no
+			}
+			AUS = { has_country_flag = AUS_german_intervention }
+			if = {
+				limit = { tag = ITA }
+				OR = {
+					783 = { owned_by_austria_or_puppet = yes }
+					103 = {
+						is_claimed_by = ITA
+						owned_by_austria_or_puppet = yes
+					}
+					163 = {
+						is_claimed_by = ITA
+						owned_by_austria_or_puppet = yes
+					}
+				}
+			}
+		}
+	}
+	desc = {
+		text = ausgleich.new.801.d.germany.main2
+		trigger = {
+			OR = {
+				is_faction_leader = yes
+				is_in_faction = no
+			}
+			AUS = { has_country_flag = AUS_german_intervention }
+			if = {
+				limit = { tag = ITA }
+				NOT = {
+					783 = { owned_by_austria_or_puppet = yes }
+					103 = {
+						is_claimed_by = ITA
+						owned_by_austria_or_puppet = yes
+					}
+					163 = {
+						is_claimed_by = ITA
+						owned_by_austria_or_puppet = yes
+					}
+				}
+			}
+		}
+	}
+	desc = {
+		text = ausgleich.new.801.d.germany.main.faction1
+		trigger = {
+			is_in_faction = yes
+			is_faction_leader = no
+			var:faction_leader = { has_country_flag = AUS_accepts_peace }
+			AUS = { has_country_flag = AUS_german_intervention }
+		}
+	}
+	desc = {
+		text = ausgleich.new.801.d.germany.main.faction2
+		trigger = {
+			is_in_faction = yes
+			is_faction_leader = no
+			var:faction_leader = { has_country_flag = AUS_will_continue_war }
 			AUS = { has_country_flag = AUS_german_intervention }
 		}
 	}
@@ -3048,7 +3132,7 @@ country_event = { #Austria seeks peace (SER/ROM/POL/ITA)
 	is_triggered_only = yes
 	
 	trigger = {
-		has_war_with = FROM
+		has_war_with = AUS
 	}
 
 	option = {
@@ -3065,45 +3149,42 @@ country_event = { #Austria seeks peace (SER/ROM/POL/ITA)
 			}
 		}
 		if = {
-			limit = { is_in_faction = yes }
-			if = {
+			limit = { is_faction_leader = yes }
+			every_other_country = {
 				limit = {
-					is_faction_leader = no
-					var:faction_leader = { has_country_flag = AUS_will_continue_war }
+					NOT = { tag = ROOT }
+					is_in_faction_with = ROOT
+					is_subject = no
 				}
-				var:faction_leader = {
-					country_event = ausgleich.new.823
-				}
-				leave_faction = yes
-				every_other_country = {
-					limit = { is_subject_of = ROOT }
-					leave_faction = yes
-				}
-			}
-			else_if = {
-				limit = { is_faction_leader = yes }
-				every_other_country = {
-					limit = {
-						is_in_faction_with = ROOT
-						has_country_flag = AUS_will_continue_war
-					}
-					country_event = ausgleich.new.823
-					leave_faction = yes
+				hidden_effect = {
+					country_event = ausgleich.new.801
 				}
 			}
 		}
+		else_if = {
+			limit = {
+				is_in_faction = yes
+				is_faction_leader = no
+				var:faction_leader = { has_country_flag = AUS_will_continue_war }
+			}
+			var:faction_leader = {
+				country_event = ausgleich.new.823
+			}
+			leave_faction = yes
+			every_other_country = {
+				limit = { is_subject_of = ROOT }
+				leave_faction = yes
+			}
+		}
 		effect_tooltip = {
-			FROM = {
-				country_event = { id = ausgleich.new.802 days = 1 random = 24 }
+			AUS = {
+				country_event = ausgleich.new.802
 			}
 		}
 	}
 
 	option = {
 		name = ausgleich.new.801.b
-		trigger = {
-			is_subject = no
-		}
 		ai_chance = {
 			factor = 50
 			modifier = {
@@ -3112,7 +3193,10 @@ country_event = { #Austria seeks peace (SER/ROM/POL/ITA)
 			}
 			modifier = {
 				factor = 0
-				is_in_faction = no
+				OR = {
+					is_in_faction = no
+					is_faction_leader = yes
+				}
 			}
 			modifier = {
 				factor = 0
@@ -3124,7 +3208,9 @@ country_event = { #Austria seeks peace (SER/ROM/POL/ITA)
 		set_country_flag = AUS_will_continue_war
 		add_stability = -0.2
 		add_war_support = -0.2
-		FROM = { country_event = ausgleich.new.804 }
+		AUS = {
+			country_event = { id = ausgleich.new.804 hours = 4 random = 12 }
+		}
 		if = {
 			limit = { num_subjects > 0 }
 			every_other_country = {
@@ -3133,31 +3219,31 @@ country_event = { #Austria seeks peace (SER/ROM/POL/ITA)
 			}
 		}
 		if = {
-			limit = { is_in_faction = yes }
-			if = {
+			limit = { is_faction_leader = yes }
+			every_other_country = {
 				limit = {
-					is_faction_leader = no
-					var:faction_leader = { has_country_flag = AUS_accepts_peace }
+					NOT = { tag = ROOT }
+					is_in_faction_with = ROOT
+					is_subject = no
 				}
-				var:faction_leader = {
-					country_event = ausgleich.new.805
-				}
-				leave_faction = yes
-				every_other_country = {
-					limit = { is_subject_of = ROOT }
-					leave_faction = yes
+				hidden_effect = {
+					country_event = ausgleich.new.801
 				}
 			}
-			else_if = {
-				limit = { is_faction_leader = yes }
-				every_other_country = {
-					limit = {
-						is_in_faction_with = ROOT
-						has_country_flag = AUS_accepts_peace
-					}
-					country_event = ausgleich.new.805
-					leave_faction = yes
-				}
+		}
+		else_if = {
+			limit = {
+				is_in_faction = yes
+				is_faction_leader = no
+				var:faction_leader = { has_country_flag = AUS_accepts_peace }
+			}
+			var:faction_leader = {
+				country_event = ausgleich.new.805
+			}
+			leave_faction = yes
+			every_other_country = {
+				limit = { is_subject_of = ROOT }
+				leave_faction = yes
 			}
 		}
 	}
@@ -3350,7 +3436,15 @@ country_event = { #Treaty of Budapest
 			country_event = { id = ausgleich.new.808 days = 1 }
 			
 			### Fire the news event
-			news_event = { id = ausgleich.new.806 days = 2 }
+			if = {
+				limit = {
+					OR = {
+						SER = { has_country_flag = AUS_accepts_peace }
+						ROM = { has_country_flag = AUS_accepts_peace }
+					}
+				}
+				news_event = { id = ausgleich.new.806 days = 1 }
+			}
 			
 			### Clear Austrian claims/cores/ambition_areas
 			every_state = {
@@ -3400,6 +3494,14 @@ country_event = { #Treaty of Budapest
 			limit = { is_faction_leader = yes }
 			dismantle_faction = yes
 		}
+		hidden_effect = {
+			remove_ideas = has_scripted_peace
+			recheck_annexations = yes
+			every_country = {
+				limit = { is_subject_of = ROOT }
+				recheck_annexations = yes
+			}
+		}
 	}
 }
 
@@ -3410,16 +3512,56 @@ country_event = { #Victory Against Austria (SER/ROM/POL/ITA)
 	picture = GFX_report_event_generic_happy_crowd
 	
 	desc = {
-		text = ausgleich.new.803.d
+		text = ausgleich.new.803.d.balkan
 		trigger = {
+			NOT = {
+				tag = ITA
+				tag = POL
+			}
 			AUS = {
 				NOT = { has_country_flag = AUS_german_intervention }
 			}
 		}
 	}
 	desc = {
-		text = ausgleich.new.803.d.germany
+		text = ausgleich.new.803.d.germany.balkan
 		trigger = {
+			NOT = {
+				tag = ITA
+				tag = POL
+			}
+			AUS = { has_country_flag = AUS_german_intervention }
+		}
+	}
+	desc = {
+		text = ausgleich.new.803.d.italy
+		trigger = {
+			tag = ITA
+			AUS = {
+				NOT = { has_country_flag = AUS_german_intervention }
+			}
+		}
+	}
+	desc = {
+		text = ausgleich.new.803.d.germany.italy
+		trigger = {
+			tag = ITA
+			AUS = { has_country_flag = AUS_german_intervention }
+		}
+	}
+	desc = {
+		text = ausgleich.new.803.d.poland
+		trigger = {
+			tag = POL
+			AUS = {
+				NOT = { has_country_flag = AUS_german_intervention }
+			}
+		}
+	}
+	desc = {
+		text = ausgleich.new.803.d.germany.poland
+		trigger = {
+			tag = POL
 			AUS = { has_country_flag = AUS_german_intervention }
 		}
 	}
@@ -3804,16 +3946,7 @@ country_event = { #Germany has agreed to intervene
 				}
 				is_valid_peace_target = yes
 			}
-			country_event = { id = ausgleich.new.801 hours = 8 random = 16 }
-		}
-		every_enemy_country = {
-			limit = {
-				is_subject = no
-				is_in_faction_with = SER
-				SER = { is_faction_leader = yes }
-				is_faction_leader = no
-			}
-			country_event = { id = ausgleich.new.801 days = 1 random = 24 }
+			country_event = ausgleich.new.801
 		}
 	}
 }
@@ -3839,16 +3972,7 @@ country_event = { #Germany has refused to intervene
 				}
 				is_valid_peace_target = yes
 			}
-			country_event = { id = ausgleich.new.801 hours = 8 random = 16 }
-		}
-		every_enemy_country = {
-			limit = {
-				is_subject = no
-				is_in_faction_with = SER
-				SER = { is_faction_leader = yes }
-				is_faction_leader = no
-			}
-			country_event = { id = ausgleich.new.801 days = 1 random = 24 }
+			country_event = ausgleich.new.801
 		}
 	}
 	
@@ -3857,6 +3981,9 @@ country_event = { #Germany has refused to intervene
 		trigger = { is_ai = no }
 		add_stability = -0.1
 		add_war_support = -0.1
+		hidden_effect = {
+			remove_ideas = has_scripted_peace
+		}
 	}
 }
 
