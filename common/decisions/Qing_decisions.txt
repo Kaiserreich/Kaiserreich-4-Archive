@@ -407,6 +407,9 @@ QIE_liu_menggeng_plan_category = {
 	}
 }
 
+@QIE_german_influence_small_change = 0.05
+@QIE_german_influence_large_change = 0.08
+
 ############################
 #German Influence Decisions#
 ############################
@@ -425,7 +428,7 @@ QIE_manage_german_influence = { #ways to buy down german support or gain PP by s
 			}
 			modifier = {
 				add = 25
-				market_liberal < 0.10
+				market_liberal > 0.10
 			}
 			modifier = {
 				add = -200
@@ -436,14 +439,36 @@ QIE_manage_german_influence = { #ways to buy down german support or gain PP by s
 		custom_cost_text = QIE_MINUS_50_PP_MINUS_5_PEKCOM
 		custom_cost_trigger = {
 			has_political_power > 50
-			check_variable = { party_popularity@market_liberal > 0.05 }
+			check_variable = { party_popularity@market_liberal > @QIE_german_influence_small_change }
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision QIE_bribe_lobbyists"
-			add_popularity = {
-				ideology = market_liberal
-				popularity = -0.05
+			effect_tooltip = {
+				set_temp_variable = { change = @QIE_german_influence_small_change }
+				multiply_temp_variable = { change = -1 }
+				add_popularity = {
+					ideology = market_liberal
+					popularity = change
+				}
+			}
+			hidden_effect = {
+				set_temp_variable = { QIE_final_harmony_association_influence = party_popularity@authoritarian_democrat }
+				add_to_temp_variable = { QIE_final_harmony_association_influence = @QIE_german_influence_small_change }
+				multiply_temp_variable = { QIE_final_harmony_association_influence = 100 }
+
+				set_temp_variable = { QIE_final_peking_kommission_influence = party_popularity@market_liberal }
+				subtract_from_temp_variable = { QIE_final_peking_kommission_influence = @QIE_german_influence_small_change }
+				multiply_temp_variable = { QIE_final_peking_kommission_influence = 100 }
+
+				set_political_party = {
+					ideology = authoritarian_democrat
+					popularity = QIE_final_harmony_association_influence
+				}
+				set_political_party = {
+					ideology = market_liberal
+					popularity = QIE_final_peking_kommission_influence
+				}
 			}
 			QIE_recalculate_peking_commission = yes
 			add_political_power = -50
@@ -474,9 +499,31 @@ QIE_manage_german_influence = { #ways to buy down german support or gain PP by s
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision QIE_encourage_domestic_production"
-			add_popularity = {
-				ideology = market_liberal
-				popularity = -0.08
+			effect_tooltip = {
+				set_temp_variable = { change = @QIE_german_influence_large_change }
+				multiply_temp_variable = { change = -1 }
+				add_popularity = {
+					ideology = market_liberal
+					popularity = change
+				}
+			}
+			hidden_effect = {
+				set_temp_variable = { QIE_final_harmony_association_influence = party_popularity@authoritarian_democrat }
+				add_to_temp_variable = { QIE_final_harmony_association_influence = @QIE_german_influence_large_change }
+				multiply_temp_variable = { QIE_final_harmony_association_influence = 100 }
+
+				set_temp_variable = { QIE_final_peking_kommission_influence = party_popularity@market_liberal }
+				subtract_from_temp_variable = { QIE_final_peking_kommission_influence = @QIE_german_influence_large_change }
+				multiply_temp_variable = { QIE_final_peking_kommission_influence = 100 }
+
+				set_political_party = {
+					ideology = authoritarian_democrat
+					popularity = QIE_final_harmony_association_influence
+				}
+				set_political_party = {
+					ideology = market_liberal
+					popularity = QIE_final_peking_kommission_influence
+				}
 			}
 			QIE_recalculate_peking_commission = yes
 			add_timed_idea = {
@@ -505,19 +552,21 @@ QIE_manage_german_influence = { #ways to buy down german support or gain PP by s
 
 		custom_cost_text = QIE_MINUS_5_HA_MINUS_5_PEKOM
 		custom_cost_trigger = {
-			check_variable = { party_popularity@authoritarian_democrat > 0.05 }
-			check_variable = { party_popularity@market_liberal > 0.05 }
+			check_variable = { party_popularity@authoritarian_democrat > @QIE_german_influence_small_change }
+			check_variable = { party_popularity@market_liberal > @QIE_german_influence_small_change }
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision QIE_encourage_anti_german_boycott"
+			set_temp_variable = { change = @QIE_german_influence_small_change }
+			multiply_temp_variable = { change = -1 }
 			add_popularity = {
 				ideology = authoritarian_democrat
-				popularity = -0.05
+				popularity = change
 			}
 			add_popularity = {
 				ideology = market_liberal
-				popularity = -0.05
+				popularity = change
 			}
 			QIE_recalculate_peking_commission = yes
 		}
@@ -548,7 +597,7 @@ QIE_manage_german_influence = { #ways to buy down german support or gain PP by s
 
 		custom_cost_text = QIE_PLUS_5_PEKOM_PLUS_50_PP
 		custom_cost_trigger = {
-			always = yes
+			check_variable = { party_popularity@market_liberal < 0.95 }
 		}
 
 		complete_effect = {
@@ -556,7 +605,7 @@ QIE_manage_german_influence = { #ways to buy down german support or gain PP by s
 			add_political_power = 50
 			add_popularity = {
 				ideology = market_liberal
-				popularity = 0.05
+				popularity = @QIE_german_influence_small_change
 			}
 			QIE_recalculate_peking_commission = yes
 		}
@@ -578,21 +627,29 @@ QIE_buy_german_eqip_decisions = {	#purchase german small arms
 		ai_will_do = {
 			factor = 0
 			modifier = {
-				add = 80
-				stockpile_ratio = {
-					archetype = infantry_equipment
-					ratio < 0.75
-				}
+				# avoid division by zero
+				check_variable = { num_target_equipment_in_armies@infantry_equipment > 0 }
+
+				set_temp_variable = { QIE_infantry_equipment_ratio = num_equipment_in_armies@infantry_equipment }
+				divide_temp_variable = { QIE_infantry_equipment_ratio = num_target_equipment_in_armies@infantry_equipment }
+
+				set_temp_variable = { QIE_purchase_infantry_equipment_factor = 1 }
+				subtract_from_temp_variable = { QIE_purchase_infantry_equipment_factor = QIE_infantry_equipment_ratio }
+				multiply_temp_variable = { QIE_purchase_infantry_equipment_factor = 20 }
+
+				add = QIE_purchase_infantry_equipment_factor
 			}
 			modifier = {
-				add = -100
-				market_liberal > 0.25
+				set_temp_variable = { QIE_german_influence_negative_factor = party_popularity@market_liberal }
+				multiply_temp_variable = { QIE_german_influence_negative_factor = -20 }
+
+				add = QIE_german_influence_negative_factor
 			}
 		}
 
 		custom_cost_text = QIE_3_MARKS
 		custom_cost_trigger = {
-			check_variable = { party_popularity@market_liberal > 0.03 }
+			check_variable = { party_popularity@market_liberal < 0.97 }
 		}
 
 		remove_effect = {
@@ -610,7 +667,7 @@ QIE_buy_german_eqip_decisions = {	#purchase german small arms
 			QIE_recalculate_peking_commission = yes
 		}
 	}
-	QIE_buy_ger_support = { #purchase german support equipment
+	QIE_buy_ger_support = { #purchase German support equipment
 		icon = generic_prepare_civil_war
 		available = {
 			has_completed_focus = QIE_buymauser
@@ -623,21 +680,29 @@ QIE_buy_german_eqip_decisions = {	#purchase german small arms
 		ai_will_do = {
 			factor = 0
 			modifier = {
-				add = 80
-				stockpile_ratio = {
-					archetype = support_equipment
-					ratio < 0.75
-				}
+				# avoid division by zero
+				check_variable = { num_target_equipment_in_armies@support_equipment > 0 }
+
+				set_temp_variable = { QIE_support_ratio = num_equipment_in_armies@support_equipment }
+				divide_temp_variable = { QIE_support_ratio = num_target_equipment_in_armies@support_equipment }
+
+				set_temp_variable = { QIE_purchase_support_factor = 1 }
+				subtract_from_temp_variable = { QIE_purchase_support_factor = QIE_support_ratio }
+				multiply_temp_variable = { QIE_purchase_support_factor = 20 }
+
+				add = QIE_purchase_support_factor
 			}
 			modifier = {
-				add = -100
-				market_liberal > 0.25
+				set_temp_variable = { QIE_german_influence_negative_factor = party_popularity@market_liberal }
+				multiply_temp_variable = { QIE_german_influence_negative_factor = -20 }
+
+				add = QIE_german_influence_negative_factor
 			}
 		}
 
 		custom_cost_text = QIE_4_MARKS
 		custom_cost_trigger = {
-			check_variable = { party_popularity@market_liberal > 0.04 }
+			check_variable = { party_popularity@market_liberal < 0.96 }
 		}
 
 		remove_effect = {
@@ -654,7 +719,7 @@ QIE_buy_german_eqip_decisions = {	#purchase german small arms
 			QIE_recalculate_peking_commission = yes
 		}
 	}
-	QIE_buy_ger_arty = { #purchase german artillery
+	QIE_buy_ger_arty = { #purchase German artillery
 		icon = generic_prepare_civil_war
 		available = {
 			has_completed_focus = QIE_buymauser
@@ -667,27 +732,35 @@ QIE_buy_german_eqip_decisions = {	#purchase german small arms
 		ai_will_do = {
 			factor = 0
 			modifier = {
-				add = 80
-				stockpile_ratio = {
-					archetype = artillery_equipment
-					ratio < 0.75
-				}
+				# avoid division by zero
+				check_variable = { num_target_equipment_in_armies@artillery_equipment > 0 }
+
+				set_temp_variable = { QIE_artillery_ratio = num_equipment_in_armies@artillery_equipment }
+				divide_temp_variable = { QIE_artillery_ratio = num_target_equipment_in_armies@artillery_equipment }
+
+				set_temp_variable = { QIE_purchase_artillery_factor = 1 }
+				subtract_from_temp_variable = { QIE_purchase_artillery_factor = QIE_artillery_ratio }
+				multiply_temp_variable = { QIE_purchase_artillery_factor = 20 }
+
+				add = QIE_purchase_artillery_factor
 			}
 			modifier = {
-				add = -100
-				market_liberal > 0.25
+				set_temp_variable = { QIE_german_influence_negative_factor = party_popularity@market_liberal }
+				multiply_temp_variable = { QIE_german_influence_negative_factor = -20 }
+
+				add = QIE_german_influence_negative_factor
 			}
 		}
 
 		custom_cost_text = QIE_4_MARKS
 		custom_cost_trigger = {
-			check_variable = { party_popularity@market_liberal > 0.04 }
+			check_variable = { party_popularity@market_liberal < 0.96 }
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_buy_ger_arty"
 			add_equipment_to_stockpile = {
-				type = artillery_equipment_1
+				type = artillery_equipment
 				amount = 500
 				producer = GER
 			}
@@ -698,7 +771,111 @@ QIE_buy_german_eqip_decisions = {	#purchase german small arms
 			QIE_recalculate_peking_commission = yes
 		}
 	}
-	QIE_buy_light_tanks = { #purchase german light tanks
+	QIE_buy_ger_anti_tank = { #purchase German anti-tank guns
+		icon = generic_prepare_civil_war
+		available = {
+			has_completed_focus = QIE_buymauser
+		}
+
+		fire_only_once = no
+		days_remove = 30
+		days_re_enable = 90
+
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				# avoid division by zero
+				check_variable = { num_target_equipment_in_armies@anti_tank_equipment > 0 }
+
+				set_temp_variable = { QIE_anti_tank_ratio = num_equipment_in_armies@anti_tank_equipment }
+				divide_temp_variable = { QIE_anti_tank_ratio = num_target_equipment_in_armies@anti_tank_equipment }
+
+				set_temp_variable = { QIE_purchase_anti_tank_factor = 1 }
+				subtract_from_temp_variable = { QIE_purchase_anti_tank_factor = QIE_anti_tank_ratio }
+				multiply_temp_variable = { QIE_purchase_anti_tank_factor = 20 }
+
+				add = QIE_purchase_anti_tank_factor
+			}
+			modifier = {
+				set_temp_variable = { QIE_german_influence_negative_factor = party_popularity@market_liberal }
+				multiply_temp_variable = { QIE_german_influence_negative_factor = -20 }
+
+				add = QIE_german_influence_negative_factor
+			}
+		}
+
+		custom_cost_text = QIE_4_MARKS
+		custom_cost_trigger = {
+			check_variable = { party_popularity@market_liberal < 0.96 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_buy_ger_anti_tank"
+			add_equipment_to_stockpile = {
+				type = anti_tank_equipment
+				amount = 500
+				producer = GER
+			}
+			add_popularity = {
+				ideology = market_liberal
+				popularity = 0.04
+			}
+			QIE_recalculate_peking_commission = yes
+		}
+	}
+	QIE_buy_ger_anti_air = { #purchase German anti-air guns
+		icon = generic_prepare_civil_war
+		available = {
+			has_completed_focus = QIE_buymauser
+		}
+
+		fire_only_once = no
+		days_remove = 30
+		days_re_enable = 90
+
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				# avoid division by zero
+				check_variable = { num_target_equipment_in_armies@anti_air_equipment > 0 }
+
+				set_temp_variable = { QIE_anti_air_ratio = num_equipment_in_armies@anti_air_equipment }
+				divide_temp_variable = { QIE_anti_air_ratio = num_target_equipment_in_armies@anti_air_equipment }
+
+				set_temp_variable = { QIE_purchase_anti_air_factor = 1 }
+				subtract_from_temp_variable = { QIE_purchase_anti_air_factor = QIE_anti_air_ratio }
+				multiply_temp_variable = { QIE_purchase_anti_air_factor = 20 }
+
+				add = QIE_purchase_anti_air_factor
+			}
+			modifier = {
+				set_temp_variable = { QIE_german_influence_negative_factor = party_popularity@market_liberal }
+				multiply_temp_variable = { QIE_german_influence_negative_factor = -20 }
+
+				add = QIE_german_influence_negative_factor
+			}
+		}
+
+		custom_cost_text = QIE_4_MARKS
+		custom_cost_trigger = {
+			check_variable = { party_popularity@market_liberal < 0.96 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_buy_ger_arty"
+			add_equipment_to_stockpile = {
+				type = anti_air_equipment
+				amount = 500
+				producer = GER
+			}
+			add_popularity = {
+				ideology = market_liberal
+				popularity = 0.04
+			}
+			QIE_recalculate_peking_commission = yes
+		}
+	}
+	QIE_buy_light_tanks = { #purchase German light tanks
 		icon = generic_prepare_civil_war
 		available = {
 			has_completed_focus = QIE_motorized_armor
@@ -711,27 +888,35 @@ QIE_buy_german_eqip_decisions = {	#purchase german small arms
 		ai_will_do = {
 			factor = 0
 			modifier = {
-				add = 80
-				stockpile_ratio = {
-					archetype = light_tank_equipment
-					ratio < 0.75
-				}
+				# avoid division by zero
+				check_variable = { num_target_equipment_in_armies@light_tank_equipment > 0 }
+
+				set_temp_variable = { QIE_light_tank_ratio = num_equipment_in_armies@light_tank_equipment }
+				divide_temp_variable = { QIE_light_tank_ratio = num_target_equipment_in_armies@light_tank_equipment }
+
+				set_temp_variable = { QIE_purchase_light_tank_factor = 1 }
+				subtract_from_temp_variable = { QIE_purchase_light_tank_factor = QIE_light_tank_ratio }
+				multiply_temp_variable = { QIE_purchase_light_tank_factor = 20 }
+
+				add = QIE_purchase_light_tank_factor
 			}
 			modifier = {
-				add = -100
-				market_liberal > 0.25
+				set_temp_variable = { QIE_german_influence_negative_factor = party_popularity@market_liberal }
+				multiply_temp_variable = { QIE_german_influence_negative_factor = -20 }
+
+				add = QIE_german_influence_negative_factor
 			}
 		}
 
 		custom_cost_text = QIE_8_MARKS
 		custom_cost_trigger = {
-			check_variable = { party_popularity@market_liberal > 0.08 }
+			check_variable = { party_popularity@market_liberal < 0.92 }
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_buy_light_tanks"
 			add_equipment_to_stockpile = {
-				type = light_tank_equipment_1
+				type = light_tank_equipment
 				amount = 250
 				producer = GER
 			}
@@ -742,7 +927,7 @@ QIE_buy_german_eqip_decisions = {	#purchase german small arms
 			QIE_recalculate_peking_commission = yes
 		}
 	}
-	QIE_buy_medium_tanks = { #purchase german medium tanks
+	QIE_buy_medium_tanks = { #purchase German medium tanks
 		icon = generic_prepare_civil_war
 		available = {
 			has_completed_focus = QIE_motorized_armor
@@ -758,27 +943,35 @@ QIE_buy_german_eqip_decisions = {	#purchase german small arms
 		ai_will_do = {
 			factor = 0
 			modifier = {
-				add = 80
-				stockpile_ratio = {
-					archetype = medium_tank_equipment
-					ratio < 0.75
-				}
+				# avoid division by zero
+				check_variable = { num_target_equipment_in_armies@medium_tank_equipment > 0 }
+
+				set_temp_variable = { QIE_medium_tank_ratio = num_equipment_in_armies@medium_tank_equipment }
+				divide_temp_variable = { QIE_medium_tank_ratio = num_target_equipment_in_armies@medium_tank_equipment }
+
+				set_temp_variable = { QIE_purchase_medium_tank_factor = 1 }
+				subtract_from_temp_variable = { QIE_purchase_medium_tank_factor = QIE_medium_tank_ratio }
+				multiply_temp_variable = { QIE_purchase_medium_tank_factor = 20 }
+
+				add = QIE_purchase_medium_tank_factor
 			}
 			modifier = {
-				add = -100
-				market_liberal > 0.25
+				set_temp_variable = { QIE_german_influence_negative_factor = party_popularity@market_liberal }
+				multiply_temp_variable = { QIE_german_influence_negative_factor = -20 }
+
+				add = QIE_german_influence_negative_factor
 			}
 		}
 
 		custom_cost_text = QIE_8_MARKS
 		custom_cost_trigger = {
-			check_variable = { party_popularity@market_liberal > 0.08 }
+			check_variable = { party_popularity@market_liberal < 0.92 }
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_buy_medium_tanks"
 			add_equipment_to_stockpile = {
-				type = medium_tank_equipment_1
+				type = medium_tank_equipment
 				amount = 250
 				producer = GER
 			}
@@ -789,7 +982,7 @@ QIE_buy_german_eqip_decisions = {	#purchase german small arms
 			QIE_recalculate_peking_commission = yes
 		}
 	}
-	QIE_buy_motorized = { #purchase german motorized
+	QIE_buy_motorized = { #purchase German motorized
 		icon = generic_prepare_civil_war
 		available = {
 			has_completed_focus = QIE_motorized_armor
@@ -802,21 +995,29 @@ QIE_buy_german_eqip_decisions = {	#purchase german small arms
 		ai_will_do = {
 			factor = 0
 			modifier = {
-				add = 80
-				stockpile_ratio = {
-					archetype = motorized_equipment
-					ratio < 0.75
-				}
+				# avoid division by zero
+				check_variable = { num_target_equipment_in_armies@motorized_equipment > 0 }
+
+				set_temp_variable = { QIE_motorised_ratio = num_equipment_in_armies@motorized_equipment }
+				divide_temp_variable = { QIE_motorised_ratio = num_target_equipment_in_armies@motorized_equipment }
+
+				set_temp_variable = { QIE_purchase_motorised_factor = 1 }
+				subtract_from_temp_variable = { QIE_purchase_motorised_factor = QIE_motorised_ratio }
+				multiply_temp_variable = { QIE_purchase_motorised_factor = 20 }
+
+				add = QIE_purchase_motorised_factor
 			}
 			modifier = {
-				add = -100
-				market_liberal > 0.25
+				set_temp_variable = { QIE_german_influence_negative_factor = party_popularity@market_liberal }
+				multiply_temp_variable = { QIE_german_influence_negative_factor = -20 }
+
+				add = QIE_german_influence_negative_factor
 			}
 		}
 
 		custom_cost_text = QIE_8_MARKS
 		custom_cost_trigger = {
-			check_variable = { party_popularity@market_liberal > 0.08 }
+			check_variable = { party_popularity@market_liberal < 0.92 }
 		}
 
 		remove_effect = {
@@ -833,6 +1034,65 @@ QIE_buy_german_eqip_decisions = {	#purchase german small arms
 			QIE_recalculate_peking_commission = yes
 		}
 	}
+
+	QIE_buy_ger_armored_cars = {
+		icon = GFX_decision_hol_attract_foreign_investors
+
+		allowed = {
+			has_dlc = "La Resistance"
+		}
+
+		available = {
+			has_completed_focus = QIE_motorized_armor
+		}
+
+		fire_only_once = no
+		days_remove = 40
+		days_re_enable = 120
+
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				# avoid division by zero
+				check_variable = { num_target_equipment_in_armies@armored_car_equipment > 0 }
+
+				set_temp_variable = { QIE_armoured_car_ratio = num_equipment_in_armies@armored_car_equipment }
+				divide_temp_variable = { QIE_armoured_car_ratio = num_target_equipment_in_armies@armored_car_equipment }
+
+				set_temp_variable = { QIE_purchase_armoured_car_factor = 1 }
+				subtract_from_temp_variable = { QIE_purchase_armoured_car_factor = QIE_armoured_car_ratio }
+				multiply_temp_variable = { QIE_purchase_armoured_car_factor = 20 }
+
+				add = QIE_purchase_armoured_car_factor
+			}
+			modifier = {
+				set_temp_variable = { QIE_german_influence_negative_factor = party_popularity@market_liberal }
+				multiply_temp_variable = { QIE_german_influence_negative_factor = -20 }
+
+				add = QIE_german_influence_negative_factor
+			}
+		}
+
+		custom_cost_text = QIE_8_MARKS
+		custom_cost_trigger = {
+			check_variable = { party_popularity@market_liberal < 0.92 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_buy_ger_armored_cars"
+			add_equipment_to_stockpile = {
+				type = armored_car_equipment
+				amount = 200
+				producer = GER
+			}
+			add_popularity = {
+				ideology = market_liberal
+				popularity = 0.08
+			}
+			QIE_recalculate_peking_commission = yes
+		}
+	}
+
 	QIE_buy_ger_fighter = { #purchase german fighters
 		icon = generic_prepare_civil_war
 		available = {
@@ -1303,7 +1563,7 @@ QIE_hire_mercenaries_decisions = {
 QIE_buy_foreign_guns_decisions = {
 	QIE_buy_small_arms = {  #czech guns
 		icon = generic_prepare_civil_war
-		
+
 		visible = {
 			country_exists = CZE
 			NOT = {
@@ -1367,7 +1627,7 @@ QIE_buy_foreign_guns_decisions = {
 	}
 	QIE_buy_support_equipment = { #buy danish MGs
 		icon = generic_prepare_civil_war
-		
+
 		visible = {
 			country_exists = DEN
 			NOT = {
@@ -1403,7 +1663,7 @@ QIE_buy_foreign_guns_decisions = {
 	}
 	QIE_buy_arty = { #buy arty
 		icon = ger_military_buildup
-		
+
 		visible = {
 			country_exists = AUS
 			NOT = {
@@ -5920,7 +6180,7 @@ QIE_endgame_FP_decisions_category = {
 
 	QIE_integrate_faction_members = {
 		icon = generic_agreement
-		
+
 		available = {
 			is_neighbor_of = FROM
 		}

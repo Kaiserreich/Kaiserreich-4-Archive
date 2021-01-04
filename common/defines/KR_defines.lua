@@ -46,6 +46,8 @@ NDefines.NCountry.FEMALE_UNIT_LEADER_BASE_CHANCE = {
 	0.7, -- operatives													-- Vanilla is 1.0
 }
 NDefines.NResistance.RESISTANCE_TARGET_MODIFIER_PER_STABILITY_LOSS = 0.1	-- Vanilla is 0.2
+NDefines.NResistance.SUPPRESSION_NEEDED_BY_RESISTANCE_POINT = 0.5			-- Vanilla is 0.75
+NDefines.NResistance.GARRISON_MANPOWER_LOST_BY_ATTACK = 0.012				-- Vanilla is 0.018
 NDefines.NPolitics.BASE_POLITICAL_POWER_INCREASE = 1.5						-- Vanilla is 2
 NDefines.NBuildings.INFRASTRUCTURE_RESOURCE_BONUS = 0.0                     -- Vanilla is 0.1
 NDefines.NTrade.ALLOW_TRADE_CUT_OFF = 0 									-- Vanilla is 0
