@@ -17,6 +17,7 @@ political_actions = {
 		available = {
 			owns_state = 608
 			is_subject = no
+			has_war = no
 		}
 		visible = {
 			if = {
@@ -108,6 +109,69 @@ political_actions = {
 		}
 	}
 
+	china_integrate_faction_members = {
+		name = FNG_Integrate_Faction_Members
+		icon = infiltrate_state
+		allowed = {
+			OR = {
+				is_han_chinese_tag = yes
+				tag = TAN
+			}
+			NOT = {
+				tag = QIE
+				tag = FNG
+				tag = CHI
+				tag = UPC
+			}
+		}
+		visible = {
+			has_country_flag = has_united_china
+			is_faction_leader = yes
+			is_neighbor_of = FROM
+		}
+
+		target_array = ROOT.faction_members
+		target_root_trigger = {
+			has_country_flag = has_united_china
+			is_faction_leader = yes
+		}
+		target_trigger = {
+			is_neighbor_of = FROM
+			FROM = {
+				OR = {
+					tag = TAN
+					is_han_chinese_tag = yes
+				}
+			}
+		}
+
+		cost = 40
+		days_remove = 60
+
+		modifier = {
+			political_power_cost = 0.1
+			production_factory_max_efficiency_factor = -0.05
+		}
+
+		ai_will_do = {
+			factor = 1000
+			modifier = {
+				factor = 0
+				has_country_flag = integration_underway
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision china_integrate_faction_members target: [From.GetName]"
+			set_country_flag = { flag = integration_underway days = 62 value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove china_integrate_faction_members target: [From.GetName]"
+			FROM = { country_event = fengtian.284 }
+		}
+	}
+
 	LEC_china_observer_rights = {
 		icon = GFX_decision_generic_political_discourse
 		allowed = {
@@ -158,66 +222,33 @@ political_actions = {
 		}
 
 		available = {
-			if = {
-				limit = { country_exists = LEC }
-				OR = {
-					LEC = { has_capitulated = no }
+			custom_trigger_tooltip = {
+				tooltip = LEC_at_war_for_six_months_tooltip
+				has_country_flag = { flag = LEC_war days > 180 }
+			}
+			custom_trigger_tooltip = {
+				tooltip = LEC_controlled_by_council_backer_tooltip
+				NOT = {
 					any_owned_state = {
-						custom_trigger_tooltip = {
-							tooltip = LEC_war_tooltip
-							controller = {
-								has_country_flag = LEC_war_backer
-							}
-						}
-					}
-				}
-			}
-			else = {
-				any_owned_state = {
-					custom_trigger_tooltip = {
-						tooltip = LEC_war_tooltip
-						controller = {
-							has_country_flag = LEC_war_backer
-						}
+						is_in_array = { LEC.LEC_war_backers = controller }
 					}
 				}
 			}
 		}
 
-		activation = {
+		visible = {
 			has_country_flag = LEC_war
-			if = {
-				limit = { country_exists = LEC }
-				LEC = { has_capitulated = yes }
-			}
-			any_of_scopes = {
-				array = ROOT.enemies
-				has_country_flag = LEC_war_backer
+			any_enemy_country = {
+				is_in_array = { LEC.LEC_war_backers = THIS }
 			}
 		}
 
-		cancel_trigger = {
-			NOT = {
-				country_exists = LEC
-				any_of_scopes = {
-					array = ROOT.enemies
-					has_country_flag = LEC_war_backer
-				}
-			}
-		}
-
-		is_good = yes
+		cost = 0
 		fire_only_once = yes
-		days_mission_timeout = 150
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout LEC_china_peace"
-			country_event =  lec.93
-		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision LEC_china_peace"
-			add_war_support = -0.01
+			country_event = lec.93
 		}
 	}
 
@@ -1805,3 +1836,2268 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 	}
 }
+
+prospect_for_resources = {
+	steel_huainan_find = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 1050 #huaisi/northern anhui
+		}
+		
+		available = {
+			num_of_civilian_factories_available_for_projects > 1
+			1050 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { NOT = { tag = ANQ } }
+				has_tech = excavation1
+			}
+		}
+
+		visible = {
+			1050 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = ANQ_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = ANQ }
+				has_country_flag = ANQ_resource_finds_huainan
+			}
+		}
+		
+		fire_only_once = yes
+		
+		cost = 25
+		days_remove = 40
+		
+		modifier = {
+			civilian_factory_use = 2
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision steel_huainan_find"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove steel_huainan_find"
+			if = {
+				limit = { has_country_flag = ANQ_can_prospect_resources_qing }
+				1050 = {
+					set_state_flag = ANQ_steel_mines_developed
+					add_resource = {
+						type = steel
+						amount = 4
+					}
+				}
+			}
+			else = {
+				1050 = {
+					set_state_flag = ANQ_steel_mines_developed
+					add_resource = {
+						type = steel
+						amount = 2
+					}
+				}
+			}
+		}
+		
+		ai_will_do = {
+			factor = 10
+		}
+	}
+	
+	steel_changsa_find = {
+		icon = steel
+		
+		allowed = {
+			tag = ANQ
+		}
+
+		highlight_state_targets = {
+			state = 602 #xiangjiang - hunan
+		}
+		
+		available = {
+			num_of_civilian_factories_available_for_projects > 1
+			602 = { is_owned_and_controlled_by = ROOT }
+		}
+
+		visible = {
+			602 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = ANQ_steel_mines_developed }
+			}
+			has_country_flag = ANQ_resource_finds_changsa
+		}
+		
+		fire_only_once = yes
+		
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 2
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision steel_changsa_find"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove steel_changsa_find"
+			if = {
+				limit = { has_country_flag = ANQ_can_prospect_resources_qing }
+				602 = {
+					set_state_flag = ANQ_steel_mines_developed
+					add_resource = {
+						type = steel
+						amount = 8
+					}
+				}
+			}
+			else = {
+				602 = {
+					set_state_flag = ANQ_steel_mines_developed
+					add_resource = {
+						type = steel
+						amount = 2
+					}
+				}
+			}
+		}
+		
+		ai_will_do = {
+			factor = 10
+		}
+	}
+
+	steel_nhunan_find = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 1013 #chenyuan - n hunan
+		}
+		
+		available = {
+			num_of_civilian_factories_available_for_projects > 0
+			1013 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { NOT = { tag = ANQ } }
+				has_tech = excavation1
+			}
+		}
+
+		visible = {
+			1013 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = ANQ_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = ANQ }
+				has_country_flag = ANQ_resource_finds_nhunan
+			}
+		}
+		
+		fire_only_once = yes
+		
+		cost = 25
+		days_remove = 30
+
+		modifier = {
+			civilian_factory_use = 1
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision steel_nhunan_find"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove steel_nhunan_find"
+			if = {
+				limit = { has_country_flag = ANQ_can_prospect_resources_qing }
+				1013 = {
+					set_state_flag = ANQ_steel_mines_developed
+					add_resource = {
+						type = steel
+						amount = 3
+					}
+				}
+			}
+			else = {
+				1013 = {
+					set_state_flag = ANQ_steel_mines_developed
+					add_resource = {
+						type = steel
+						amount = 1
+					}
+				}
+			}
+		}
+		
+		ai_will_do = {
+			factor = 10
+		}
+	}
+
+	steel_nanjing_find = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 613 #jinling / nanjing
+		}
+		
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			613 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { NOT = { tag = ANQ } }
+				has_tech = excavation1
+			}
+		}
+
+		visible = {
+			613 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = ANQ_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = ANQ }
+				has_country_flag = ANQ_resource_finds_nanjing
+			}
+		}
+		
+		fire_only_once = yes
+		
+		cost = 25
+		days_remove = 70
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision steel_nanjing_find"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove steel_nanjing_find"
+			if = {
+				limit = { has_country_flag = ANQ_can_prospect_resources_qing }
+				613 = {
+					set_state_flag = ANQ_steel_mines_developed
+					add_resource = {
+						type = steel
+						amount = 6
+					}
+				}
+			}
+			else = {
+				613 = {
+					set_state_flag = ANQ_steel_mines_developed
+					add_resource = {
+						type = steel
+						amount = 2
+					}
+				}
+			}
+		}
+		
+		ai_will_do = {
+			factor = 10
+		}
+	}
+
+	steel_jinan_find = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 597 #jinan / w shandong
+		}
+		
+		available = {
+			num_of_civilian_factories_available_for_projects > 0
+			597 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { NOT = { tag = ANQ } }
+				has_tech = excavation1
+			}
+		}
+
+		visible = {
+			597 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = ANQ_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = ANQ }
+				has_country_flag = ANQ_resource_finds_jinan
+			}
+		}
+		
+		fire_only_once = yes
+		
+		cost = 25
+		days_remove = 30
+
+		modifier = {
+			civilian_factory_use = 1
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision steel_jinan_find"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove steel_jinan_find"
+			if = {
+				limit = { has_country_flag = ANQ_can_prospect_resources_qing }
+				597 = {
+					set_state_flag = ANQ_steel_mines_developed
+					add_resource = {
+						type = steel
+						amount = 2
+					}
+				}
+			}
+			else = {
+				597 = {
+					set_state_flag = ANQ_steel_mines_developed
+					add_resource = {
+						type = steel
+						amount = 1
+					}
+				}
+			}
+		}
+		
+		ai_will_do = {
+			factor = 10
+		}
+	}
+	
+	FNG_Expand_the_Anshan_Mines = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 716
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			716 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = FNG }
+				has_completed_focus = FNG_Expand_the_Anshan_Mines
+			}
+			else_if = {
+				limit = { tag = MAN }
+				has_completed_focus = MAN_Anshan_Mines
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			716 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = FNG_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = FNG }
+				has_completed_focus = FNG_Expand_the_Anshan_Mines
+			}
+			else_if = {
+				limit = { tag = MAN }
+				has_completed_focus = MAN_Anshan_Mines
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FNG_Expand_the_Anshan_Mines"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Expand_the_Anshan_Mines"
+			716 = {
+				set_state_flag = FNG_steel_mines_developed
+				add_resource = {
+					type = steel
+					amount = 20
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	MAN_Aluminium_Extraction = {
+		icon = aluminium
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 716
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			716 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = FNG }
+				has_completed_focus = FNG_Fengtian_Society_for_Light_Metals
+			}
+			else_if = {
+				limit = { tag = MAN }
+				has_completed_focus = MAN_Aluminium_Extraction
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			716 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = FNG_aluminium_mines_developed }
+			}
+			if = {
+				limit = { tag = FNG }
+				has_completed_focus = FNG_Fengtian_Society_for_Light_Metals
+			}
+			else_if = {
+				limit = { tag = MAN }
+				has_completed_focus = MAN_Aluminium_Extraction
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision MAN_Aluminium_Extraction"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove MAN_Aluminium_Extraction"
+			716 = {
+				set_state_flag = FNG_aluminium_mines_developed
+				add_resource = {
+					type = aluminium
+					amount = 16
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	HNN_Exploit_Hunan_Machinery_Factory1 = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+			NOT = { tag = ANQ }
+		}
+
+		highlight_state_targets = {
+			state = 602
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			602 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = HNN }
+				has_completed_focus = HNN_Exploit_Hunan_Machinery_Factory
+			}
+			else = {
+				has_tech = excavation3
+			}
+		}
+
+		visible = {
+			602 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = HNN_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = HNN }
+				has_completed_focus = HNN_Exploit_Hunan_Machinery_Factory
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision HNN_Exploit_Hunan_Machinery_Factory1"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove HNN_Exploit_Hunan_Machinery_Factory1"
+			602 = {
+				set_state_flag = HNN_steel_mines_developed
+				add_resource = {
+					type = steel
+					amount = 12
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	LEP_improved_tungsten_extraction = {
+		icon = tungsten
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 1012
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			1012 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = LEP }
+				has_completed_focus = LEP_improved_tungsten_extraction
+			}
+			else = {
+				has_tech = excavation3
+			}
+		}
+
+		visible = {
+			1012 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = LEP_tungsten_mines_developed }
+			}
+			if = {
+				limit = { tag = LEP }
+				has_completed_focus = LEP_improved_tungsten_extraction
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision LEP_improved_tungsten_extraction"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_improved_tungsten_extraction"
+			1012 = {
+				set_state_flag = LEP_tungsten_mines_developed
+				add_resource = {
+					type = tungsten
+					amount = 18
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	LEC_to_the_coal_fields = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 609
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			609 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = LEC }
+				has_completed_focus = LEC_to_the_coal_fields
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			609 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = LEC_coal_mines_developed }
+			}
+			if = {
+				limit = { tag = LEC }
+				has_completed_focus = LEC_to_the_coal_fields
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision LEC_to_the_coal_fields"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove LEC_to_the_coal_fields"
+			609 = {
+				set_state_flag = LEC_coal_mines_developed
+				add_resource = {
+					type = steel
+					amount = 8
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	GXC_Fuguo_Coal_Mine = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 800
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			800 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = GXC }
+				has_completed_focus = GXC_Fuguo_Coal_Mine
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			800 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = GXC_coal_mines_developed }
+			}
+			if = {
+				limit = { tag = GXC }
+				has_completed_focus = GXC_Fuguo_Coal_Mine
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision GXC_Fuguo_Coal_Mine"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove GXC_Fuguo_Coal_Mine"
+			800 = {
+				set_state_flag = GXC_coal_mines_developed
+				add_resource = {
+					type = steel
+					amount = 8
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	QIE_expandmines1 = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 614
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			614 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = QIE }
+				has_completed_focus = QIE_expandmines
+			}
+			else_if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_Renovate_The_Kailuan_Mining_Bureau
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			614 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = QIE_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = QIE }
+				has_completed_focus = QIE_expandmines
+			}
+			else_if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_Renovate_The_Kailuan_Mining_Bureau
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision QIE_expandmines1"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_expandmines1"
+			614 = {
+				set_state_flag = QIE_steel_mines_developed
+				add_resource = {
+					type = steel
+					amount = 8
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	QIE_expandmines2 = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 1060
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			1060 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = QIE }
+				has_completed_focus = QIE_expandmines
+			}
+			else_if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_Renovate_The_Kailuan_Mining_Bureau
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			1060 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = QIE_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = QIE }
+				has_completed_focus = QIE_expandmines
+			}
+			else_if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_Renovate_The_Kailuan_Mining_Bureau
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision QIE_expandmines2"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_expandmines2"
+			1060 = {
+				set_state_flag = QIE_steel_mines_developed
+				add_resource = {
+					type = steel
+					amount = 8
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SQI_Improve_Jiangxi = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 1044
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			1044 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SQI }
+				has_completed_focus = SQI_Improve_Jiangxi
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			1044 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SQI_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = SQI }
+				has_completed_focus = SQI_Improve_Jiangxi
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SQI_Improve_Jiangxi"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SQI_Improve_Jiangxi"
+			1044 = {
+				set_state_flag = SQI_steel_mines_developed
+				add_resource = {
+					type = steel
+					amount = 4
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SQI_Improve_Fujian = {
+		icon = aluminium
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 1046
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			1046 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SQI }
+				has_completed_focus = SQI_Improve_Fujian
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			1046 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SQI_aluminium_mines_developed }
+			}
+			if = {
+				limit = { tag = SQI }
+				has_completed_focus = SQI_Improve_Fujian
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SQI_Improve_Fujian"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SQI_Improve_Fujian"
+			1046 = {
+				set_state_flag = SQI_aluminium_mines_developed
+				add_resource = {
+					type = aluminium
+					amount = 2
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SQI_Improve_Zhejiang = {
+		icon = chromium
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 1067
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			1067 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SQI }
+				has_completed_focus = SQI_Improve_Zhejiang
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			1067 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SQI_chromium_mines_developed }
+			}
+			if = {
+				limit = { tag = SQI }
+				has_completed_focus = SQI_Improve_Zhejiang
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SQI_Improve_Zhejiang"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SQI_Improve_Zhejiang"
+			1067 = {
+				set_state_flag = SQI_chromium_mines_developed
+				add_resource = {
+					type = chromium
+					amount = 2
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SHX_expand_coal_mines1 = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 1015
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			1015 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SHX }
+				OR = {
+					has_completed_focus = SHX_expand_coal_mines
+					has_completed_focus = SHX_Expand_The_Coal_Fields
+				}
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			1015 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SHX_coal_mines_developed }
+			}
+			if = {
+				limit = { tag = SHX }
+				OR = {
+					has_completed_focus = SHX_expand_coal_mines
+					has_completed_focus = SHX_Expand_The_Coal_Fields
+				}
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_expand_coal_mines1"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_expand_coal_mines1"
+			1015 = {
+				set_state_flag = SHX_coal_mines_developed
+				add_resource = {
+					type = steel
+					amount = 6
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SHX_expand_coal_mines2 = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 1072
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			1072 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SHX }
+				OR = {
+					has_completed_focus = SHX_expand_coal_mines
+					has_completed_focus = SHX_Expand_The_Coal_Fields
+				}
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			1072 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SHX_coal_mines_developed }
+			}
+			if = {
+				limit = { tag = SHX }
+				OR = {
+					has_completed_focus = SHX_expand_coal_mines
+					has_completed_focus = SHX_Expand_The_Coal_Fields
+				}
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_expand_coal_mines2"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_expand_coal_mines2"
+			1072 = {
+				set_state_flag = SHX_coal_mines_developed
+				add_resource = {
+					type = steel
+					amount = 4
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SHX_improve_metal_refining1 = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 1015
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			1015 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SHX }
+				has_completed_focus = SHX_improve_metal_refining
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			1015 = {
+				is_owned_by = ROOT
+				has_state_flag = SHX_coal_mines_developed
+				NOT = { has_state_flag = SHX_coal_mines_developed2 }
+			}
+			if = {
+				limit = { tag = SHX }
+				has_completed_focus = SHX_improve_metal_refining
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_improve_metal_refining1"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_improve_metal_refining1"
+			1015 = {
+				set_state_flag = SHX_coal_mines_developed2
+				add_resource = {
+					type = steel
+					amount = 4
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SHX_improve_metal_refining2 = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 622
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			622 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SHX }
+				OR = {
+					has_completed_focus = SHX_improve_metal_refining
+					has_completed_focus = SHX_Exploit_The_Western_Mines
+				}
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			622 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SHX_coal_mines_developed }
+			}
+			if = {
+				limit = { tag = SHX }
+				OR = {
+					has_completed_focus = SHX_improve_metal_refining
+					has_completed_focus = SHX_Exploit_The_Western_Mines
+				}
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_improve_metal_refining2"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_improve_metal_refining2"
+			622 = {
+				set_state_flag = SHX_coal_mines_developed
+				add_resource = {
+					type = steel
+					amount = 7
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SHX_improve_metal_refining3 = {
+		icon = tungsten
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 622
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			622 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SHX }
+				has_completed_focus = SHX_improve_metal_refining
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			622 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SHX_tungsten_mines_developed }
+			}
+			if = {
+				limit = { tag = SHX }
+				has_completed_focus = SHX_improve_metal_refining
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_improve_metal_refining3"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_improve_metal_refining3"
+			622 = {
+				set_state_flag = SHX_tungsten_mines_developed
+				add_resource = {
+					type = tungsten
+					amount = 3
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SHX_further_modernisation1 = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 1072
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			1072 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SHX }
+				has_completed_focus = SHX_further_modernisation
+			}
+			else = {
+				has_tech = excavation3
+			}
+		}
+
+		visible = {
+			1072 = {
+				is_owned_by = ROOT
+				has_state_flag = SHX_coal_mines_developed
+				NOT = { has_state_flag = SHX_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = SHX }
+				has_completed_focus = SHX_further_modernisation
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_further_modernisation1"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_further_modernisation1"
+			1072 = {
+				set_state_flag = SHX_steel_mines_developed
+				add_resource = {
+					type = steel
+					amount = 2
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SHX_further_modernisation2 = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 1015
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			1015 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SHX }
+				has_completed_focus = SHX_further_modernisation
+			}
+			else = {
+				has_tech = excavation3
+			}
+		}
+
+		visible = {
+			1015 = {
+				is_owned_by = ROOT
+				has_state_flag = SHX_coal_mines_developed2
+				NOT = { has_state_flag = SHX_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = SHX }
+				has_completed_focus = SHX_further_modernisation
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_further_modernisation2"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_further_modernisation2"
+			1015 = {
+				set_state_flag = SHX_steel_mines_developed
+				add_resource = {
+					type = steel
+					amount = 6
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SZC_Jialing_Coal_Fields = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 661
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			661 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_Jialing_Coal_Fields
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			661 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SZC_coal_mines_developed }
+			}
+			if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_Jialing_Coal_Fields
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SZC_Jialing_Coal_Fields"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Jialing_Coal_Fields"
+			661 = {
+				set_state_flag = SZC_coal_mines_developed
+				add_resource = {
+					type = steel
+					amount = 3
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SZC_The_Riches_Of_Xikang = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 601
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			601 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_The_Riches_Of_Xikang
+			}
+			else = {
+				has_tech = excavation3
+			}
+		}
+
+		visible = {
+			601 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SZC_coal_mines_developed }
+			}
+			if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_The_Riches_Of_Xikang
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SZC_The_Riches_Of_Xikang"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_The_Riches_Of_Xikang"
+			601 = {
+				set_state_flag = SZC_coal_mines_developed
+				add_resource = {
+					type = steel
+					amount = 10
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SZC_Extract_Natural_Gas1 = {
+		icon = oil
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 661
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			661 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_Extract_Natural_Gas
+			}
+			else = {
+				has_tech = oil_processing
+			}
+		}
+
+		visible = {
+			661 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SZC_oil_wells_developed }
+			}
+			if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_Extract_Natural_Gas
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SZC_Extract_Natural_Gas1"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Extract_Natural_Gas1"
+			661 = {
+				set_state_flag = SZC_oil_wells_developed
+				add_resource = {
+					type = oil
+					amount = 3
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SZC_Extract_Natural_Gas2 = {
+		icon = oil
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 650
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			650 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_Extract_Natural_Gas
+			}
+			else = {
+				has_tech = oil_processing
+			}
+		}
+
+		visible = {
+			650 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SZC_oil_wells_developed }
+			}
+			if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_Extract_Natural_Gas
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SZC_Extract_Natural_Gas2"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Extract_Natural_Gas2"
+			650 = {
+				set_state_flag = SZC_oil_wells_developed
+				add_resource = {
+					type = oil
+					amount = 3
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SZC_Extract_Natural_Gas3 = {
+		icon = oil
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 605
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			605 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_Extract_Natural_Gas
+			}
+			else = {
+				has_tech = oil_processing
+			}
+		}
+
+		visible = {
+			605 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SZC_oil_wells_developed }
+			}
+			if = {
+				limit = { tag = SZC }
+				has_completed_focus = SZC_Extract_Natural_Gas
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SZC_Extract_Natural_Gas3"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Extract_Natural_Gas3"
+			605 = {
+				set_state_flag = SZC_oil_wells_developed
+				add_resource = {
+					type = oil
+					amount = 3
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SIK_mineral_expedition = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 617
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 1
+			617 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SIK }
+				has_completed_focus = SIK_mineral_expedition
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			617 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SIK_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = SIK }
+				has_completed_focus = SIK_mineral_expedition
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 2
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SIK_mineral_expedition"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SIK_mineral_expedition"
+			617 = {
+				set_state_flag = SIK_steel_mines_developed
+				add_resource = {
+					type = steel
+					amount = 4
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SIK_open_mineral_mining = {
+		icon = aluminium
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 287
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 1
+			287 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SIK }
+				has_completed_focus = SIK_open_mineral_mining
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			287 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SIK_aluminium_mines_developed }
+			}
+			if = {
+				limit = { tag = SIK }
+				has_completed_focus = SIK_open_mineral_mining
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 2
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SIK_open_mineral_mining"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SIK_open_mineral_mining"
+			287 = {
+				set_state_flag = SIK_aluminium_mines_developed
+				add_resource = {
+					type = aluminium
+					amount = 2
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	SIK_northern_gold = {
+		icon = tungsten
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 618
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 1
+			618 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = SIK }
+				has_completed_focus = SIK_northern_gold
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			618 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = SIK_tungsten_mines_developed }
+			}
+			if = {
+				limit = { tag = SIK }
+				has_completed_focus = SIK_northern_gold
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 2
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SIK_northern_gold"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SIK_northern_gold"
+			618 = {
+				set_state_flag = SIK_tungsten_mines_developed
+				add_resource = {
+					type = tungsten
+					amount = 4
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	YUN_mining1 = {
+		icon = steel
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 816
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			816 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = YUN }
+				has_completed_focus = YUN_mining
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			816 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = YUN_steel_mines_developed }
+			}
+			if = {
+				limit = { tag = YUN }
+				has_completed_focus = YUN_mining
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision YUN_mining1"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove YUN_mining1"
+			816 = {
+				set_state_flag = YUN_steel_mines_developed
+				add_resource = {
+					type = steel
+					amount = 4
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	YUN_mining2 = {
+		icon = aluminium
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 325
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			325 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = YUN }
+				has_completed_focus = YUN_mining
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			325 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = YUN_aluminium_mines_developed }
+			}
+			if = {
+				limit = { tag = YUN }
+				has_completed_focus = YUN_mining
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision YUN_mining2"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove YUN_mining2"
+			325 = {
+				set_state_flag = YUN_aluminium_mines_developed
+				add_resource = {
+					type = aluminium
+					amount = 10
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	YUN_mining3 = {
+		icon = chromium
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 816
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			816 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = YUN }
+				has_completed_focus = YUN_mining
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			816 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = YUN_chromium_mines_developed }
+			}
+			if = {
+				limit = { tag = YUN }
+				has_completed_focus = YUN_mining
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision YUN_mining3"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove YUN_mining3"
+			816 = {
+				set_state_flag = YUN_chromium_mines_developed
+				add_resource = {
+					type = chromium
+					amount = 4
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+
+	YUN_mining4 = {
+		icon = tungsten
+		
+		allowed = {
+			is_chinese_tag = yes
+		}
+
+		highlight_state_targets = {
+			state = 816
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			816 = { is_owned_and_controlled_by = ROOT }
+			if = {
+				limit = { tag = YUN }
+				has_completed_focus = YUN_mining
+			}
+			else = {
+				has_tech = excavation2
+			}
+		}
+
+		visible = {
+			816 = {
+				is_owned_by = ROOT
+				NOT = { has_state_flag = YUN_tungsten_mines_developed }
+			}
+			if = {
+				limit = { tag = YUN }
+				has_completed_focus = YUN_mining
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 60
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision YUN_mining4"
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove YUN_mining4"
+			816 = {
+				set_state_flag = YUN_tungsten_mines_developed
+				add_resource = {
+					type = tungsten
+					amount = 3
+				}
+			}
+		}
+
+		ai_will_do = {
+			factor = 1
+		}
+	}
+}
+
