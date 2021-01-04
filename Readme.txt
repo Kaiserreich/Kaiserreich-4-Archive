@@ -1,6 +1,6 @@
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This is beta version 0.10 - 'Blood on the Yangtze'.
-This version is compatible with 1.7.1, it may work with later hot fixes, but it is not guaranteed.
+This is beta version 0.10.1.
+This version is compatible with 1.8.1, it may work with later hot fixes, but it is not guaranteed.
 
 Manual Installation Instructions
 1) Download the mod
@@ -10,9 +10,6 @@ Manual Installation Instructions
 5) Enable the mod in the Launcher mod menu and enjoy!
 
 Don't worry about Kaiserreich Dev Build.mod, sadly it doesn't unlock super secret new features, it just lets us run release and dev versions together more easily for testing.
-
-Old versions can be found at:
-https://forum.paradoxplaza.com/forum/index.php?threads/kaiserreich-info-download.996902
 
 FAQ:
 http://kaiserreich.wikia.com/wiki/FAQ

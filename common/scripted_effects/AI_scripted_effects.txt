@@ -13,7 +13,10 @@ FROM_send_volunteers_to_ROOT = {
 				limit = {
 					NOT = { has_country_flag = can_send_volunteers }
 				}
-				set_country_flag = can_send_volunteers
+				log = "[volunteer_target.GetName]: unlocked AI volunteers"
+			}
+			else = {
+				log = "[volunteer_target.GetName]: AI volunteers already unlocked"
 			}
 
 			#set variable if not set already, update count
@@ -25,18 +28,49 @@ FROM_send_volunteers_to_ROOT = {
 			}
 			add_to_variable = { send_volunteers_count = 1 }
 
-			#add strategies
+			#add spare unit factor
 			if = {
 				limit = {
 					num_divisions < 32
+					num_divisions > 24
 					is_actual_major = no
 				}
-				set_country_flag = AI_increased_spare_factor
+				log = "[From.GetName]: increased spare unit factor by 12"
+				set_country_flag = AI_increased_spare_factor_12
 				add_ai_strategy = {
 					type = spare_unit_factor
 					value = 12
 				}
 			}
+			else_if = {
+				limit = {
+					num_divisions < 24
+					num_divisions > 12
+					is_actual_major = no
+				}
+				log = "[From.GetName]: increased spare unit factor by 6"
+				set_country_flag = AI_increased_spare_factor_6
+				add_ai_strategy = {
+					type = spare_unit_factor
+					value = 6
+				}
+			}
+			else_if = {
+				limit = {
+					num_divisions < 12
+					num_divisions > 6
+					is_actual_major = no
+				}
+				log = "[From.GetName]: increased spare unit factor by 3"
+				set_country_flag = AI_increased_spare_factor_3
+				add_ai_strategy = {
+					type = spare_unit_factor
+					value = 3
+				}
+			}
+
+			#add strategies
+			log = "[From.GetName]: increased volunteer desire to [Root.GetName]"
 			add_ai_strategy = {
 				type = send_volunteers_desire
 				id = ROOT
@@ -66,6 +100,10 @@ send_volunteers_to_TARGET = {
 				NOT = { has_country_flag = can_send_volunteers }
 			}
 			set_country_flag = can_send_volunteers
+			log = "[volunteer_target.GetName]: unlocked AI volunteers"
+		}
+		else = {
+			log = "[volunteer_target.GetName]: AI volunteers already unlocked"
 		}
 
 		#set variable if not set already, update count
@@ -77,19 +115,49 @@ send_volunteers_to_TARGET = {
 		}
 		add_to_variable = { send_volunteers_count = 1 }
 
-		#add strategies
+		#add spare unit factor if necessary
 		if = {
 			limit = {
 				num_divisions < 32
+				num_divisions > 24
 				is_actual_major = no
-				NOT = { has_country_flag = AI_increased_spare_factor }
 			}
-			set_country_flag = AI_increased_spare_factor
+			log = "[volunteer_target.GetName]: increased spare unit factor by 12"
+			set_country_flag = AI_increased_spare_factor_12
 			add_ai_strategy = {
 				type = spare_unit_factor
 				value = 12
 			}
 		}
+		else_if = {
+			limit = {
+				num_divisions < 24
+				num_divisions > 12
+				is_actual_major = no
+			}
+			log = "[volunteer_target.GetName]: increased spare unit factor by 6"
+			set_country_flag = AI_increased_spare_factor_6
+			add_ai_strategy = {
+				type = spare_unit_factor
+				value = 6
+			}
+		}
+		else_if = {
+			limit = {
+				num_divisions < 12
+				num_divisions > 6
+				is_actual_major = no
+			}
+			log = "[volunteer_target.GetName]: increased spare unit factor by 3"
+			set_country_flag = AI_increased_spare_factor_3
+			add_ai_strategy = {
+				type = spare_unit_factor
+				value = 3
+			}
+		}
+
+		#add strategies
+		log = "[From.GetName]: increased volunteer desire to [volunteer_target.GetName]"
 		add_ai_strategy = {
 			type = send_volunteers_desire
 			id = event_target:volunteer_target
@@ -114,19 +182,46 @@ clear_volunteers_to_TARGET = {
 			check_variable = { send_volunteers_count < 1 }
 		}
 		clr_country_flag = can_send_volunteers
+		log = "[From.GetName]: locked AI volunteers"
 	}
 
-	#remove strategies
+	#remove spare unit factor
 	if = {
 		limit = {
-			has_country_flag = AI_increased_spare_factor
+			has_country_flag = AI_increased_spare_factor_12
 		}
-		clr_country_flag = AI_increased_spare_factor
+		log = "[volunteer_target.GetName]: reduced spare unit factor by 12"
+		clr_country_flag = AI_increased_spare_factor_12
 		add_ai_strategy = {
 			type = spare_unit_factor
 			value = -12
 		}
 	}
+	else_if = {
+		limit = {
+			has_country_flag = AI_increased_spare_factor_6
+		}
+		log = "[volunteer_target.GetName]: reduced spare unit factor by 6"
+		clr_country_flag = AI_increased_spare_factor_6
+		add_ai_strategy = {
+			type = spare_unit_factor
+			value = -6
+		}
+	}
+	else_if = {
+		limit = {
+			has_country_flag = AI_increased_spare_factor_3
+		}
+		log = "[volunteer_target.GetName]: reduced spare unit factor by 3"
+		clr_country_flag = AI_increased_spare_factor_3
+		add_ai_strategy = {
+			type = spare_unit_factor
+			value = -3
+		}
+	}
+
+	#remove strategies
+	log = "[From.GetName]: removed volunteer desire to [volunteer_target.GetName]"
 	add_ai_strategy = {
 		type = send_volunteers_desire
 		id = event_target:volunteer_target
@@ -146,6 +241,11 @@ setup_united_front_AI = {
 	every_country = {
 		limit = { is_in_faction_with = ROOT }
 		setup_united_front_AI_PREV = yes
+		if = {
+			limit = { is_major = no }
+			set_country_flag = united_front_major
+			set_major = yes
+		}
 	}
 }
 
@@ -248,26 +348,36 @@ disable_united_front_AI = {
 					}
 				}
 			}
+			if = {
+				limit = { has_country_flag = united_front_major }
+				clr_country_flag = united_front_major
+				set_major = no
+			}
 		}
 	}
 }
 
 set_JAP_FNG_hostile_AI = {
-	set_country_flag = JAP_FNG_AI_setup
-	add_ai_strategy = {
-		type = dont_defend_ally_borders
-		id = "FNG"
-		value = 1000
-	}
-	add_ai_strategy = {
-		type = prepare_for_war
-		id = "FNG"
-		value = 1000
-	}
-	add_ai_strategy = {
-		type = antagonize
-		id = "FNG"
-		value = 1000
+	if = {
+		limit = {
+			NOT = { has_country_flag = JAP_FNG_AI_setup }
+		}
+		set_country_flag = JAP_FNG_AI_setup
+		add_ai_strategy = {
+			type = dont_defend_ally_borders
+			id = "FNG"
+			value = 1000
+		}
+		add_ai_strategy = {
+			type = prepare_for_war
+			id = "FNG"
+			value = 1000
+		}
+		add_ai_strategy = {
+			type = antagonize
+			id = "FNG"
+			value = 1000
+		}
 	}
 }
 

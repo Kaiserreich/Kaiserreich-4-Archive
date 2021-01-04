@@ -5,7 +5,7 @@
 add_namespace = china_shared
 add_namespace = china_redoubt
 
-country_event = { #Fading legitimacy!
+country_event = { #Fading Legitimacy!
 	id = china_shared.1
 	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.1" }
 	title = china_shared.1.t
@@ -19,33 +19,361 @@ country_event = { #Fading legitimacy!
 	}
 }
 
-news_event = { #The Chinese United Front
+country_event = { #An United Front
 	id = china_shared.2
 	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.2" }
 	title = china_shared.2.t
+	desc = china_shared.2.d
+
+	is_triggered_only = yes
+
+	option = {
+		name = china_shared.2.a
+		hidden_effect = {
+			every_other_country = {
+				limit = {
+					OR = {
+						is_han_chinese_tag = yes
+						tag = TAN
+						AND = {
+							tag = TIB
+							has_government = social_democrat
+							NOT = {
+								has_country_flag = attending_tokyo_conference
+								has_country_flag = tokyo_conference_ally
+								any_of_scopes = {
+									array = ROOT.enemies
+									is_han_chinese_tag = yes
+								}
+							}
+						}
+					}
+					is_subject = no
+					OR = {
+						is_in_faction = no
+						is_faction_leader = yes
+					}
+				}
+				if = {
+					limit = {
+						NOT = { has_war_with = ROOT }
+					}
+					country_event = {
+						id = china_shared.3
+						days = 8
+						random = 288
+					}
+				}
+				else_if = {
+					limit = {
+						has_war_with = ROOT
+						surrender_progress < 0.3
+					}
+					country_event = {
+						id = china_shared.4
+						days = 8
+						random = 288
+					}
+				}
+			}
+		}
+	}
+}
+
+country_event = { #A Call For Unity
+	id = china_shared.3
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.3" }
+	title = china_shared.3.t
+	desc = china_shared.3.d
+
+	is_triggered_only = yes
+
+	option = {
+		name = china_shared.3.a #Yes, for the good of China
+		ai_chance = {
+			factor = 90
+			modifier = {
+				factor = 0
+				is_in_array = {
+					array = FNG.FNG_conference_participants
+					value = ROOT
+				}
+			}
+			modifier = {
+				factor = 0.1
+				is_ruled_by_pro_fengtian = yes
+			}
+		}
+		set_country_flag = joined_united_front
+		hidden_effect = {
+			if = {
+				limit = { is_faction_leader = yes }
+				for_each_scope_loop = {
+					array = ROOT.faction_members
+					country_event = {
+						id = china_shared.3
+						days = 5
+						random = 120
+					}
+				}
+			}
+			FROM = {
+				country_event = china_shared.4
+			}
+		}
+	}
+
+	option = {
+		name = china_shared.3.b #No, we shall not join
+		ai_chance = {
+			factor = 10
+			modifier = {
+				factor = 9
+				is_ruled_by_pro_fengtian = yes
+			}
+			modifier = {
+				factor = 0
+				FROM = { has_country_flag = joined_united_front }
+			}
+		}
+		hidden_effect = {
+			FROM = {
+				country_event = china_shared.5
+			}
+		}
+	}
+}
+
+country_event = { #FROM joins the United Front
+	id = china_shared.4
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.4" }
+	title = china_shared.4.t
+	desc = china_shared.4.d
+
+	is_triggered_only = yes
+
+	option = {
+		name = china_shared.4.a
+		add_political_power = 5
+	}
+}
+
+country_event = { #FROM refuses to join the Front
+	id = china_shared.5
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.5" }
+	title = china_shared.5.t
+	desc = china_shared.5.d
+
+	is_triggered_only = yes
+
+	option = {
+		name = china_shared.5.a
+		add_political_power = -5
+	}
+}
+
+country_event = { #FROM Offers A Ceasefire
+	id = china_shared.6
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.6" }
+	title = china_shared.6.t
+	desc = china_shared.6.d
+
+	is_triggered_only = yes
+
+	option = {
+		name = china_shared.6.a #For now
+		ai_chance = {
+			factor = 90
+			modifier = {
+				factor = 0
+				is_in_array = {
+					array = FNG.FNG_conference_participants
+					value = ROOT
+				}
+			}
+			modifier = {
+				factor = 0.1
+				is_ruled_by_pro_fengtian = yes
+			}
+		}
+		set_country_flag = joined_united_front
+		chinese_united_front_ceasefire = yes
+		FROM = {
+			country_event = china_shared.7
+		}
+	}
+
+	option = {
+		name = china_shared.6.b #Never
+		ai_chance = {
+			factor = 10
+			modifier = {
+				factor = 9
+				is_ruled_by_pro_fengtian = yes
+			}
+		}
+		custom_effect_tooltip = china_war_with_united_front
+		FROM = {
+			country_event = china_shared.8
+		}
+	}
+}
+
+country_event = { #FROM Accepts Ceasefire
+	id = china_shared.7
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.7" }
+	title = china_shared.7.t
+	desc = china_shared.7.d
+
+	is_triggered_only = yes
+
+	immediate = {
+		hidden_effect = {
+			### peace out FROM and ROOT
+			FROM = {
+				save_event_target_as = white_peace_receiver
+				white_peace_with_ROOT = yes
+			}
+
+			### peace out any future UF members
+			every_other_country = {
+				limit = {
+					has_war_with = FROM
+					has_country_flag = joined_united_front
+				}
+				white_peace_with_TARGET = yes
+			}
+		}
+	}
+
+	option = {
+		name = china_shared.7.a
+		custom_effect_tooltip = china_ceasefire_occupation_transfer
+		effect_tooltip = {
+			FROM = {
+				white_peace_with_ROOT = yes
+			}
+		}
+	}
+}
+
+country_event = { #FROM Refuses Ceasefire
+	id = china_shared.8
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.8" }
+	title = china_shared.8.t
+	desc = china_shared.8.d
+
+	is_triggered_only = yes
+
+	option = {
+		name = china_shared.8.a
+	}
+}
+
+country_event = { #Formation of the United Front
+	id = china_shared.9
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.9" }
+	title = china_shared.9.t
+	desc = china_shared.9.d
+
+	is_triggered_only = yes
+
+	option = {
+		name = china_shared.9.a
+		set_global_flag = chinese_united_front_formed
+		save_global_event_target_as = chinese_united_front_leader
+		if = {
+			limit = { is_faction_leader = yes }
+			set_faction_name = "Chinese United Front"
+			for_each_scope_loop = {
+				array = ROOT.faction_members
+				set_country_flag = original_front_faction_member
+			}
+		}
+		else = {
+			create_faction = "Chinese United Front"
+		}
+		every_other_country = {
+			limit = {
+				is_chinese_tag = yes
+				is_faction_leader = yes
+				has_country_flag = joined_united_front
+			}
+			save_faction_into_array = yes
+			dismantle_faction = yes
+		}
+		every_other_country = {
+			limit = {
+				is_chinese_tag = yes
+				has_country_flag = joined_united_front
+			}
+			ROOT = { add_to_faction = PREV }
+		}
+		setup_united_front_AI = yes
+	}
+}
+
+country_event = { #The United Front Collapses
+	id = china_shared.10
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.10" }
+	title = china_shared.10.t
+	desc = china_shared.10.d
+
+	trigger = {
+		has_global_flag = chinese_united_front_formed
+	}
+
+	is_triggered_only = yes
+
+	option = {
+		name = china_shared.10.a
+		add_political_power = -20
+		clr_global_flag = chinese_united_front_formed
+		clear_global_event_target = chinese_united_front_leader
+		disable_united_front_AI = yes
+		dismantle_faction = yes
+		every_other_country = {
+			limit = {
+				has_country_flag = original_front_faction_member
+			}
+			ROOT = { add_to_faction = PREV }
+		}
+		every_other_country = {
+			limit = {
+				has_country_flag = was_chinese_faction_leader
+			}
+			china_reform_faction = yes
+		}
+	}
+}
+
+news_event = { #The Chinese United Front
+	id = china_shared.11
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.11" }
+	title = china_shared.11.t
 
 	desc = {
-		text = china_shared.2.d.pro_JAP
+		text = china_shared.11.d.pro_JAP
 		trigger = {
 			is_chinese_tag = yes
 			is_working_with_JAP = yes
 		}
 	}
 	desc = {
-		text = china_shared.2.d.anti_JAP
+		text = china_shared.11.d.anti_JAP
 		trigger = {
 			is_chinese_tag = yes
 			is_working_with_JAP = no
 		}
 	}
 	desc = {
-		text = china_shared.2.d.JAP
+		text = china_shared.11.d.JAP
 		trigger = {
 			tag = JAP
 		}
 	}
 	desc = {
-		text = china_shared.2.d.others
+		text = china_shared.11.d.others
 		trigger = {
 			NOT = { tag = JAP }
 			is_chinese_tag = no
@@ -61,61 +389,66 @@ news_event = { #The Chinese United Front
 		}
 	}
 
+	immediate = {
+		hidden_effect = {
+			every_state = {
+				limit = {
+					OR = {
+						state = 608 #Beijing
+						state = 613 #Nanjing
+						state = 1048 #Wuhan
+						state = 650 #Chongqing
+						state = 607 #Luoyang
+						state = 325 #Kunming
+						state = 602 #Changsha
+						state = 592 #Guangzhou
+						state = 597 #Jinan
+						state = 799 #Xi'an
+					}
+					controller = {
+						OR = {
+							tag = JAP
+							AND = {
+								NOT = { is_in_faction_with = JAP }
+								is_ruled_by_pro_fengtian = yes
+								FNG_JAP_hostile = no
+							}
+							is_in_array = {
+								array = JAP.allies
+								value = THIS
+							}
+						}
+					}
+				}
+				set_state_flag = JAP_captures_this_state
+			}
+		}
+	}
+
 	is_triggered_only = yes
 
 	option = {
-		name = china_shared.2.a
+		name = china_shared.11.a
 		trigger = {
 			is_chinese_tag = yes
 			is_working_with_JAP = yes
 		}
 	}
 	option = {
-		name = china_shared.2.b
+		name = china_shared.11.b
 		trigger = {
 			is_chinese_tag = yes
 			is_working_with_JAP = no
 		}
 	}
 	option = {
-		name = china_shared.2.c
+		name = china_shared.11.c
 		trigger = {
 			tag = JAP
 		}
-		every_state = {
-			limit = {
-				OR = {
-					state = 608 #Beijing
-					state = 613 #Nanjing
-					state = 1048 #Wuhan
-					state = 650 #Chongqing
-					state = 607 #Luoyang
-					state = 325 #Kunming
-					state = 602 #Changsha
-					state = 592 #Guangzhou
-					state = 597 #Jinan
-					state = 799 #Xi'an
-				}
-				controller = {
-					OR = {
-						tag = JAP
-						AND = {
-							NOT = { is_in_faction_with = JAP }
-							is_ruled_by_pro_fengtian = yes
-							FNG_JAP_hostile = no
-						}
-						is_in_array = {
-							array = JAP.allies
-							value = THIS
-						}
-					}
-				}
-			}
-			set_state_flag = JAP_captures_this_state
-		}
 	}
 	option = {
-		name = china_shared.2.e
+		name = china_shared.11.e
 		trigger = {
 			NOT = { tag = JAP }
 			is_chinese_tag = no
