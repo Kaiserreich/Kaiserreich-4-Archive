@@ -307,6 +307,7 @@ country_event = {
 	immediate = { log = "[GetDateText]: [Root.GetName]: event ausgleich.new.202" }
 	title = ausgleich.new.202.t
 	desc = ausgleich.new.202.d
+	picture = Ausgleich_prag
 
 	is_triggered_only = yes
 
@@ -1462,10 +1463,19 @@ country_event = {
 				}
 			}
 			CRO = {
-				separate_peace_all_wars = yes
-				leave_faction = yes
+				if = {
+					limit = { has_war = yes }
+					separate_peace_all_wars = yes
+				}
+				if = {
+					limit = { is_in_faction = yes }
+					leave_faction = yes
+				}
 				country_event = ausgleich.new.327
 			}
+			set_rule = { can_not_declare_war = no }
+			remove_ideas = HUN_financial_ties
+			remove_ideas = HUN_financial_ties_broken
 			load_oob = HUN_AUS_Civil_war
 		}
 		custom_effect_tooltip = "Ten new militia divisions will be formed"
@@ -1514,20 +1524,33 @@ country_event = {
 	option = { # This is outrageous.
 		name = ausgleich.new.328.a
 		hidden_effect = {
+			random_other_country = {
+				news_event = { id = worldnews.7 days = 1 }
+			}
+		}
+		hidden_effect = {
 			AUS = {
-				set_autonomy = {
-					target = CRO
-					autonomy_state = kr_integrated_puppet
-				}
 				set_autonomy = {
 					target = HUN
 					autonomy_state = autonomy_free
 				}
+				add_to_war = {
+					targeted_alliance = CRO
+					enemy = HUN
+				}
+				CRO = { get_current_government_type = yes }
+				set_autonomy = {
+					target = CRO
+					autonomy_state = kr_integrated_puppet
+				}
+				CRO = { restore_previous_government_type = yes }
 			}
 		}
-		add_to_war = {
-			targeted_alliance = CRO
-			enemy = HUN
+		effect_tooltip = {
+			add_to_war = {
+				targeted_alliance = CRO
+				enemy = HUN
+			}
 		}
 	}
 	option = { # Leave them to it
@@ -1543,6 +1566,11 @@ country_event = {
 		name = ausgleich.new.328.c
 		trigger = {
 			has_global_flag = AUS_ausgleich_secret_deal
+		}
+		hidden_effect = {
+			random_other_country = {
+				news_event = { id = worldnews.7 days = 1 }
+			}
 		}
 		set_country_flag = CRO_release
 		set_global_flag = AUS_illyrian_war
@@ -1601,6 +1629,7 @@ country_event = {
 					random_hours = 10
 				}
 			}
+			set_rule = { can_not_declare_war = no }
 			separate_peace_all_wars = yes
 			leave_faction = yes
 		}
@@ -1712,6 +1741,7 @@ country_event = {
 			}
 			separate_peace_all_wars = yes
 			leave_faction = yes
+			set_rule = { can_not_declare_war = no }
 			load_oob = HUN_AUS_Civil_war
 		}
 		custom_effect_tooltip = "Ten new militia divisions will be formed"
@@ -2124,6 +2154,9 @@ country_event = {
 			factor = 95
 		}
 		hidden_effect = {
+			random_other_country = {
+				news_event = { id = worldnews.7 days = 1 }
+			}
 			HUN = {
 				separate_peace_all_wars = yes
 				leave_faction = yes
@@ -2266,7 +2299,7 @@ country_event = { #creation of Slovakia?
 	option = { #no
 		name = ausgleich.new.345.b
 		ai_chance = {
-			factor = 0
+			factor = 10
 		}
 		add_political_power = -40
 		set_country_flag = AUS_slovakia_occupied
@@ -2377,7 +2410,13 @@ country_event = {
 	option = { # no.
 		name = ausgleich.new.346.b
 		ai_chance = {
-			factor = 0
+			factor = 10
+			modifier = {
+				factor = 0
+				SVK = {
+					has_idea = AUS_part_of_the_Empire
+				}
+			}
 		}
 		add_political_power = -40
 		set_country_flag = AUS_transylvania_occupied
@@ -2462,7 +2501,18 @@ country_event = {
 	option = { # no.
 		name = ausgleich.new.347.b
 		ai_chance = {
-			factor = 0
+			factor = 10
+			modifier = {
+				factor = 0
+				OR = {
+					SVK = {
+						has_idea = AUS_part_of_the_Empire
+					}
+					TRS = {
+						has_idea = AUS_part_of_the_Empire
+					}	
+				}
+			}
 		}
 		add_political_power = -40
 		set_country_flag = AUS_hungary_occupied
@@ -2506,6 +2556,9 @@ country_event = {
 				target = CZE
 				autonomy_state = autonomy_free
 			}
+		}
+		hidden_effect = {
+			set_rule = { can_not_declare_war = no }
 		}
 		declare_war_on = {
 			target = AUS
@@ -2551,6 +2604,7 @@ country_event = { #Bohemian faction building
 		hidden_effect = {
 			separate_peace_all_wars = yes
 			leave_faction = yes
+			set_rule = { can_not_declare_war = no }
 		}
 		AUS = {
 			set_autonomy = {
@@ -2662,6 +2716,9 @@ country_event = {
 			factor = 0
 		}
 		add_political_power = -300
+		hidden_effect = {
+			set_rule = { can_not_declare_war = no }
+		}
 		declare_war_on = {
 			target = AUS
 			type = annex_everything
@@ -2786,65 +2843,87 @@ country_event = { #We're losing, sue for peace? (AUS)
 				SER = { is_valid_peace_target = yes }
 			}
 			AND = {
-				46 = { #ROM/RRM
-					owner = {
-						has_war_with = ROOT
-						is_valid_peace_target = yes
-					}
-				}
+				has_war_with = ROM
+				ROM = { is_valid_peace_target = yes }
 			}
 		}
 		OR = {
 			surrender_progress > 0.5 #for USGA/DanFed
-			AND = {
-				count_triggers = {
-					amount = 2
-					AND = {
-						owns_state = 43 #Budapest
-						NOT = { controls_state = 43 }
+			count_triggers = {
+				amount = 3
+				## Hungary
+				OR = {
+					43 = { #Budapest
+						owned_by_austria_or_puppet = yes
+						NOT = { is_controlled_by = var:43.owner }
 					}
 					HUN = {
 						is_subject_of = ROOT
-						OR = {
-							has_capitulated = yes
-							surrender_progress > 0.5
-						}
+						surrender_progress > 0.4
 					}
-					AND = {
-						owns_state = 9 #Bohemia
-						NOT = { controls_state = 9 }
+				}
+				
+				## Transylvania
+				TRS = {
+					is_subject_of = ROOT
+					surrender_progress > 0.5
+				}
+				
+				## Slovakia
+				OR = {
+					70 = { #Pressburg
+						owned_by_austria_or_puppet = yes
+						NOT = { is_controlled_by = var:70.owner }
+					}
+					SVK = {
+						is_subject_of = ROOT
+						surrender_progress > 0.4
+					}
+				}
+				
+				## Bohemia
+				OR = {
+					9 = { #Prague
+						owned_by_austria_or_puppet = yes
+						NOT = { is_controlled_by = var:9.owner }
 					}
 					CZE = {
 						is_subject_of = ROOT
-						OR = {
-							has_capitulated = yes
-							surrender_progress > 0.5
-						}
+						surrender_progress > 0.5
 					}
-					AND = {
-						owns_state = 109 #Zagreb
-						NOT = { controls_state = 109 }
+				}
+				
+				## Illyria
+				OR = {
+					109 = { #Zagreb
+						owned_by_austria_or_puppet = yes
+						NOT = { is_controlled_by = var:109.owner }
 					}
 					CRO = {
 						is_subject_of = ROOT
-						OR = {
-							has_capitulated = yes
-							surrender_progress > 0.5
-						}
+						surrender_progress > 0.5
 					}
-					AND = {
-						owns_state = 91 #Lwow
-						NOT = { controls_state = 91 }
+				}
+				
+				## Galicia
+				OR = {
+					91 = { #Lwow
+						owned_by_austria_or_puppet = yes
+						NOT = { is_controlled_by = var:91.owner }
 					}
 					GAL = {
 						is_subject_of = ROOT
-						OR = {
-							has_capitulated = yes
-							surrender_progress > 0.5
-						}
+						surrender_progress > 0.5
 					}
 				}
 			}
+		}
+		if = {
+			limit = {
+				has_subject = TRS
+				has_war_with = ROM
+			}
+			TRS = { has_capitulated = yes }
 		}
 	}
 	
@@ -2860,7 +2939,6 @@ country_event = { #We're losing, sue for peace? (AUS)
 					OR = {
 						tag = SER
 						tag = ROM
-						tag = RRM
 					}
 				}
 				save_event_target_as = AUS_belgrade_pact_leader
@@ -2871,16 +2949,15 @@ country_event = { #We're losing, sue for peace? (AUS)
 
 	option = {
 		name = ausgleich.new.800.a
-		every_other_country = {
+		every_enemy_country = {
 			limit = {
-				has_war_with = FROM
 				OR = {
 					tag = SER
 					tag = ROM
-					tag = RRM
 					tag = POL
 					is_italian_tag = yes
 				}
+				is_subject = no
 			}
 			country_event = { id = ausgleich.new.801 days = 1 random = 24 }
 		}
@@ -2913,19 +2990,9 @@ country_event = { #Austria seeks peace (SER/ROM/POL/ITA)
 		name = ausgleich.new.801.a
 		set_country_flag = AUS_accepts_peace
 		if = {
-			limit = {
-				OR = {
-					num_subjects > 0
-					is_faction_leader = yes
-				}
-			}
+			limit = { num_subjects > 0 }
 			every_other_country = {
-				limit = {
-					OR = {
-						is_subject_of = ROOT
-						is_in_faction_with = ROOT
-					}
-				}
+				limit = { is_subject_of = ROOT }
 				set_country_flag = AUS_accepts_peace
 			}
 		}
@@ -2940,11 +3007,27 @@ country_event = { #Austria seeks peace (SER/ROM/POL/ITA)
 		name = ausgleich.new.801.b
 		trigger = {
 			is_ai = no
+			is_subject = no
 		}
 		add_stability = -0.2
 		add_war_support = -0.2
-		FROM = {
-			country_event = ausgleich.new.804
+		FROM = { country_event = ausgleich.new.804 }
+		if = {
+			limit = { is_in_faction = yes }
+			if = {
+				limit = { is_faction_leader = no }
+				var:faction_leader = {
+					country_event = ausgleich.new.805
+				}
+				leave_faction = yes
+			}
+			else = {
+				every_other_country = {
+					limit = { is_in_faction_with = ROOT }
+					country_event = ausgleich.new.805
+				}
+				dismantle_faction = yes
+			}
 		}
 	}
 }
@@ -2970,16 +3053,6 @@ country_event = { #Treaty of Budapest
 			}
 			save_event_target_as = AUS_italian_target
 		}
-		random_enemy_country = {
-			limit = {
-				OR = {
-					tag = ROM
-					tag = RRM
-				}
-				has_country_flag = AUS_accepts_peace
-			}
-			save_event_target_as = AUS_romanian_target
-		}
 	}
 	
 	option = {
@@ -2988,12 +3061,19 @@ country_event = { #Treaty of Budapest
 			### Italian claims
 			if = {
 				limit = { has_event_target = AUS_italian_target }
-				every_owned_state = {
+				every_state = {
 					limit = {
 						OR = {
-							state = 39 #Alto Adige
 							state = 736 #Istria
 							state = 783 #Trentino
+							AND = {
+								OR = {
+									state = 39 #Alto Adige
+									state = 103 #Lika
+									state = 163 #Dalmatia
+								}
+								is_claimed_by = event_target:AUS_italian_target
+							}
 						}
 					}
 					event_target:AUS_italian_target = { transfer_state = PREV }
@@ -3009,18 +3089,20 @@ country_event = { #Treaty of Budapest
 					}
 				}
 				
-				### Release GAL
+				### Release GAL, if it's to be annexed
 				if = {
 					limit = { has_subject = GAL }
 					GAL = {
 						every_owned_state = {
-							limit = {
-								NOT = {
-									region = 155 #Galicia
-									state = 73 #Transcarpathia
+							if = {
+								limit = {
+									NOT = { region = 155 } #Galicia
 								}
+								ROOT = { transfer_state = PREV }
 							}
-							ROOT = { transfer_state = PREV }
+							else = {
+								clear_variable = ambition_area_@ROOT
+							}
 						}
 					}
 					set_autonomy = {
@@ -3032,12 +3114,7 @@ country_event = { #Treaty of Budapest
 				
 				### Cede all claims
 				every_owned_state = {
-					limit = {
-						OR = {
-							region = 155 #Galicia
-							state = 73 #Transcarpathia
-						}
-					}
+					limit = { region = 155 } #Galicia
 					POL = { transfer_state = PREV }
 				}
 			}
@@ -3053,54 +3130,21 @@ country_event = { #Treaty of Budapest
 				
 				### Release CRO, if it's to be annexed
 				if = {
-					limit = {
-						SER = { has_completed_focus = SER_slavic_federation }
+					limit = { has_subject = CRO }
+					set_autonomy = {
+						target = CRO
+						autonomy_state = autonomy_free
 					}
-					if = {
-						limit = { has_subject = CRO }
-						set_autonomy = {
-							target = CRO
-							autonomy_state = autonomy_free
-						}
-						remove_from_faction = CRO
-					}
-				}
-				### Illyria reverts to Croatia if it survives the deal
-				else = {
-					CRO = {
-						if = {
-							limit = {
-								is_subject_of = ROOT
-								has_cosmetic_tag = CRO_ILL
-							}
-							drop_cosmetic_tag = yes
-						}
-					}
+					remove_from_faction = CRO
 				}
 				
 				### Cede all claims
 				every_state = {
 					limit = {
-						if = {
-							limit = {
-								SER = { has_completed_focus = SER_slavic_federation }
-							}
-							OR = {
-								region = 143 #Northern Balkans
-								state = 45 #Vojvodina
-								state = 102 #Slovenia
-								state = 736 #Istria
-								state = 875 #West Banat
-							}
-						}
-						else = {
-							OR = {
-								state = 45 #Vojvodina
-								state = 104 #Bosnia
-								state = 105 #Montenegro
-								state = 794 #Syrmia
-								state = 875 #West Banat
-							}
+						OR = {
+							region = 143 #Northern Balkans
+							state = 45 #Vojvodina
+							state = 875 #West Banat
 						}
 						OR = {
 							is_owned_by = ROOT
@@ -3113,7 +3157,12 @@ country_event = { #Treaty of Budapest
 			
 			### Romanian claims
 			if = {
-				limit = { has_event_target = AUS_romanian_target }
+				limit = {
+					ROM = {
+						has_war_with = ROOT
+						has_country_flag = AUS_accepts_peace
+					}
+				}
 				
 				### Release TRS, if it's to be annexed
 				if = {
@@ -3134,32 +3183,53 @@ country_event = { #Treaty of Budapest
 							owner = { is_subject_of = ROOT }
 						}
 					}
-					event_target:AUS_romanian_target = { transfer_state = PREV }
+					ROM = { transfer_state = PREV }
 				}
-			}
-			
-			### Dismantle Austria's faction if they lost against the Belgrade Pact
-			if = {
-				limit = {
-					has_event_target = AUS_belgrade_pact_leader
-					event_target:AUS_belgrade_pact_leader = { has_country_flag = AUS_accepts_peace }
-				}
-				dismantle_faction = yes
-				news_event = { id = ausgleich.new.805 days = 2 }
 			}
 			
 			### Peace everyone out
 			every_other_country = {
 				limit = { has_country_flag = AUS_accepts_peace }
 				set_country_flag = { flag = AUS_had_war days = 5 value = 1 }
-				clr_country_flag = AUS_accepts_peace
 				country_event = ausgleich.new.803
 				if = {
 					limit = { is_valid_peace_target = yes }
 					white_peace_with_ROOT = yes
 				}
 			}
+			
+			### Fire the news event
+			news_event = { id = ausgleich.new.806 days = 2 }
+			
+			### Clear Austrian claims/cores/ambition_areas
+			every_state = {
+				limit = {
+					OR = {
+						is_claim_or_core_of_ROOT = yes
+						has_variable = ambition_area_@ROOT
+					}
+				}
+				if = {
+					limit = {
+						NOT = {
+							owner = { is_ally_with = ROOT }
+							AND = {
+								owner = { tag = HUN }
+								OR = {
+									region = 27 #Hungary
+									region = 145 #Slovakia
+								}
+								NOT = { state = 45 } #Vojvodina
+							}
+						}
+					}
+					remove_core_of = ROOT
+					remove_claim_by = ROOT
+					clear_variable = ambition_area_@ROOT
+				}
+			}
 		}
+		set_global_flag = AUS_treaty_of_budapest
 	}
 }
 
@@ -3192,12 +3262,25 @@ country_event = { #FROM refuses peace (AUS)
 	}
 }
 
-
-news_event = { #The Treaty of Budapest
+country_event = { #FROM refuses peace (SER)
 	id = ausgleich.new.805
 	immediate = { log = "[GetDateText]: [Root.GetName]: event ausgleich.new.805" }
 	title = ausgleich.new.805.t
 	desc = ausgleich.new.805.d
+
+	is_triggered_only = yes
+
+	option = {
+		name = ausgleich.new.805.a
+		effect_tooltip = { remove_from_faction = FROM }
+	}
+}
+
+news_event = { #The Treaty of Budapest
+	id = ausgleich.new.806
+	immediate = { log = "[GetDateText]: [Root.GetName]: event ausgleich.new.806" }
+	title = ausgleich.new.806.t
+	desc = ausgleich.new.806.d
 	picture = GFX_news_event_romania_poland_visit
 
 	is_triggered_only = yes
@@ -3212,6 +3295,191 @@ news_event = { #The Treaty of Budapest
 	}
 
 	option = {
+		name = ausgleich.new.806.a
+	}
+}
+
+country_event = { #The Terms of the Treaty of Budapest
+	id = ausgleich.new.807
+	immediate = { log = "[GetDateText]: [Root.GetName]: event ausgleich.new.807" }
+	title = ausgleich.new.807.t
+	desc = ausgleich.new.807.d
+
+	trigger = {
+		OR = {
+			tag = SER
+			tag = ROM
+			tag = POL
+			is_italian_tag = yes
+		}
+		has_global_flag = AUS_treaty_of_budapest
+		has_country_flag = AUS_accepts_peace
+		country_exists = AUS
+		AUS = {
+			is_subject = no
+			NOT = { has_war_with = ROOT }
+		}
+		any_owned_state = {
+			OR = {
+				region = 145 #Slovakia
+				region = 27 #Hungary
+			}
+			NOT = { state = 45 } #Vojvodina
+		}
+	}
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
 		name = ausgleich.new.805.a
+		every_owned_state = {
+			limit = {
+				OR = {
+					region = 145 #Slovakia
+					region = 27 #Hungary
+				}
+				NOT = { state = 45 } #Vojvodina
+			}
+			AUS = { transfer_state = PREV }
+		}
+	}
+}
+
+country_event = { #Returning Pact Claims
+	id = ausgleich.new.808
+	immediate = { log = "[GetDateText]: [Root.GetName]: event ausgleich.new.808" }
+	title = ausgleich.new.808.t
+	desc = ausgleich.new.808.d
+
+	trigger = {
+		tag = AUS
+		has_global_flag = AUS_treaty_of_budapest
+		any_owned_state = {
+			OR = {
+				AND = {
+					region = 144 #Transylvania
+					country_exists = ROM
+					ROM = {
+						is_subject = no
+						NOT = { has_war_with = ROOT }
+						has_country_flag = AUS_accepts_peace
+					}
+				}
+				AND = {
+					OR = {
+						region = 143 #Northern Balkans
+						state = 45 #Vojvodina
+					}
+					country_exists = SER
+					SER = {
+						is_subject = no
+						NOT = { has_war_with = ROOT }
+						has_country_flag = AUS_accepts_peace
+					}
+				}
+				AND = {
+					region = 155 #Galicia
+					country_exists = POL
+					POL = {
+						is_subject = no
+						NOT = { has_war_with = ROOT }
+						has_country_flag = AUS_accepts_peace
+					}
+				}
+			}
+		}
+	}
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = ausgleich.new.805.a
+		every_owned_state = {
+			if = {
+				limit = {
+					region = 144 #Transylvania
+					country_exists = ROM
+					ROM = {
+						is_subject = no
+						NOT = { has_war_with = ROOT }
+						has_country_flag = AUS_accepts_peace
+					}
+				}
+				ROM = { transfer_state = PREV }
+			}
+			else_if = {
+				limit = {
+					OR = {
+						region = 143 #Northern Balkans
+						state = 45 #Vojvodina
+					}
+					country_exists = SER
+					SER = {
+						is_subject = no
+						NOT = { has_war_with = ROOT }
+						has_country_flag = AUS_accepts_peace
+					}
+				}
+				SER = { transfer_state = PREV }
+			}
+			else_if = {
+				limit = {
+					region = 155 #Galicia
+					country_exists = POL
+					POL = {
+						is_subject = no
+						NOT = { has_war_with = ROOT }
+						has_country_flag = AUS_accepts_peace
+					}
+				}
+				POL = { transfer_state = PREV }
+			}
+		}
+		for_each_scope_loop = {
+			array = ROOT.subjects
+			every_owned_state = {
+				if = {
+					limit = {
+						region = 144 #Transylvania
+						country_exists = ROM
+						ROM = {
+							is_subject = no
+							NOT = { has_war_with = ROOT }
+							has_country_flag = AUS_accepts_peace
+						}
+					}
+					ROM = { transfer_state = PREV }
+				}
+				else_if = {
+					limit = {
+						OR = {
+							region = 143 #Northern Balkans
+							state = 45 #Vojvodina
+						}
+						country_exists = SER
+						SER = {
+							is_subject = no
+							NOT = { has_war_with = ROOT }
+							has_country_flag = AUS_accepts_peace
+						}
+					}
+					SER = { transfer_state = PREV }
+				}
+				else_if = {
+					limit = {
+						region = 155 #Galicia
+						country_exists = POL
+						POL = {
+							is_subject = no
+							NOT = { has_war_with = ROOT }
+							has_country_flag = AUS_accepts_peace
+						}
+					}
+					POL = { transfer_state = PREV }
+				}
+			}
+		}
 	}
 }

@@ -539,7 +539,7 @@ economy_decisions = {
 ITA_foreign_policy = {# Foreign Policy Stuff
 	SRI_join_the_intl = {
 		icon = generic_political_discourse
-
+		allowed = { tag = SRI }
 		available = {
 			OR = {
 				has_global_flag = second_weltkrieg_has_started
@@ -548,6 +548,7 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					NOT = { has_global_flag = KR_italy_balance }
 				}
 			}
+			NOT = { has_capitulated = yes }
 			if = {
 				limit = { FROM = { has_war = yes } }
 				FROM = {
@@ -580,10 +581,18 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 		fire_only_once = yes
 
 		ai_will_do = {
-			base = 0
+			factor = 0
 			modifier = {
 				add = 100
 				NOT = { country_exists = FRA }
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = { flag = ITA_recent_peace days < 30 }
+			}
+			modifier = {
+				factor = 0
+				has_global_flag = { flag = second_weltkrieg_has_started days < 30 }
 			}
 		}
 
@@ -608,7 +617,10 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 			FROM = { has_war = no }
 			if = {
 				limit = { has_country_flag = attacked_SRI_first }
-				ROOT = { surrender_progress > 0.30 }
+				ROOT = { surrender_progress > 0.40 }
+			}
+			else = {
+				ROOT = { surrender_progress > 0.20 }
 			}
 		}
 
@@ -656,9 +668,7 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision ITA_call_for_help target: [From.GetName]"
-			FROM = {
-				country_event = { id = sic.104 days = 1 }
-			}
+			FROM = { country_event = sic.104 }
 		}
 	}
 
@@ -670,11 +680,15 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 			FROM = { has_war = no }
 			if = {
 				limit = { has_country_flag = attacked_SRI_first }
-				ROOT = { surrender_progress > 0.30 }
+				ROOT = { surrender_progress > 0.40 }
+			}
+			else = {
+				ROOT = { surrender_progress > 0.20 }
 			}
 		}
 
 		visible = {
+			has_war_with = SRI
 			is_subject = no
 			is_in_faction = no
 			NOT = {
@@ -721,9 +735,7 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SIC_call_for_help target: [From.GetName]"
-			FROM = {
-				country_event = { id = sic.104 days = 1 }
-			}
+			FROM = { country_event = sic.104 }
 		}
 	}
 
@@ -841,12 +853,40 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					}
 				}
 			}
+			hidden_effect = {
+				add_ai_strategy = {
+					type = prepare_for_war
+					id = AUS
+					value = 1000
+				}
+				AUS = {
+					add_ai_strategy = {
+						type = prepare_for_war
+						id = ROOT
+						value = 1000
+					}
+				}
+			}
 		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ITA_attack_austria"
 			declare_war_on = {
 				target = AUS
 				type = annex_everything
+			}
+			hidden_effect = {
+				add_ai_strategy = {
+					type = prepare_for_war
+					id = AUS
+					value = -1000
+				}
+				AUS = {
+					add_ai_strategy = {
+						type = prepare_for_war
+						id = ROOT
+						value = -1000
+					}
+				}
 			}
 		}
 	}
@@ -991,7 +1031,11 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					custom_trigger_tooltip = {
 						tooltip = FROM_same_wars_as_us
 						has_war = yes
-						any_enemy_country = { has_war_with = ROOT }
+						NOT = {
+							any_enemy_country = {
+								NOT = { has_war_with = ROOT }
+							}
+						}
 					}
 				}
 			}
@@ -1001,7 +1045,11 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					custom_trigger_tooltip = {
 						tooltip = USA_same_wars_as_AUS
 						has_war = yes
-						any_enemy_country = { has_war_with = FROM }
+						NOT = {
+							any_enemy_country = {
+								NOT = { has_war_with = FROM }
+							}
+						}
 					}
 				}
 			}
@@ -1030,95 +1078,21 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 
 		fire_only_once = yes
 		cost = 25
-		ai_will_do = { factor = 99 }
+		ai_will_do = {
+			factor = 99
+			modifier = {
+				factor = 0
+				has_country_flag = { flag = ITA_recent_peace days < 30 }
+			}
+			modifier = {
+				factor = 0
+				has_global_flag = { flag = second_weltkrieg_has_started days < 30 }
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision ITA_join_the_austrian_pact target: [From.GetName]"
-			FROM = { country_event = { id = ita.13 days = 5 } }
-		}
-	}
-
-	ITA_join_belgrade_pact = {
-		icon = generic_political_discourse
-
-		allowed = { tag = ITA }
-
-		available = {
-			OR = {
-				NOT = { country_exists = SRI }
-				has_global_flag = second_weltkrieg_has_started
-				ROOT = { has_war_with = AUS }
-			}
-			ROOT = {
-				OR = {
-					has_war = no
-					custom_trigger_tooltip = {
-						tooltip = USA_same_wars_as_FROM
-						has_war = yes
-						any_enemy_country = { has_war_with = FROM }
-					}
-				}
-			}
-			FROM = {
-				OR = {
-					has_war = no
-					has_capitulated = no
-				}
-			}
-		}
-
-		visible = {
-			is_in_faction = no
-			is_subject = no
-			has_government = national_populist
-			has_global_flag = balkan_war_ended
-			FROM = {
-				is_faction_leader = yes
-				has_socialist_government = no
-				NOT = { has_war_with = ROOT }
-			}
-			AUS = {
-				any_owned_state = {
-					is_claim_or_core_of_ROOT = yes
-				}
-			}
-		}
-
-		target_root_trigger = {
-			has_government = national_populist
-		}
-
-		targets = { SER }
-
-		target_trigger = {
-			FROM = {
-				is_faction_leader = yes
-				has_socialist_government = no
-				NOT = { has_war_with = ROOT }
-			}
-		}
-
-		fire_only_once = yes
-
-		cost = 0
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision ITA_join_belgrade_pact target: [From.GetName]"
-			FROM = {
-				country_event = sic.37
-			}
-		}
-
-		ai_will_do = {
-			factor = 5
-			modifier = {
-				factor = 0
-				FROM = { surrender_progress > 0.20 }
-			}
-			modifier = {
-				factor = 5
-				FROM = { has_war_with = AUS }
-			}
+			FROM = { country_event = ita.13 }
 		}
 	}
 
@@ -1145,7 +1119,11 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					tooltip = USA_same_wars_as_AUS
 					ROOT = {
 						has_war = yes
-						any_enemy_country = { has_war_with = FROM }
+						NOT = {
+							any_enemy_country = {
+								NOT = { has_war_with = FROM }
+							}
+						}
 					}
 				}
 			}
@@ -1186,14 +1164,20 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SIC_join_austria target: [From.GetName]"
-			set_country_flag = { flag = SIC_considering_faction days = 6 value = 1 }
-			FROM = {
-				country_event = sic.37
-			}
+			set_country_flag = { flag = SIC_considering_faction days = 2 value = 1 }
+			FROM = { country_event = sic.37 }
 		}
 
 		ai_will_do = {
 			factor = 5
+			modifier = {
+				factor = 0
+				has_country_flag = { flag = ITA_recent_peace days < 30 }
+			}
+			modifier = {
+				factor = 0
+				has_global_flag = { flag = second_weltkrieg_has_started days < 30 }
+			}
 			modifier = {
 				factor = 0
 				FROM = { surrender_progress > 0.20 }
@@ -1290,7 +1274,11 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					tooltip = GRE_same_wars_as_entente
 					ROOT = {
 						has_war = yes
-						any_enemy_country = { has_war_with = FROM }
+						NOT = {
+							any_enemy_country = {
+								NOT = { has_war_with = FROM }
+							}
+						}
 					}
 				}
 			}
@@ -1333,13 +1321,19 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SIC_join_entente target: [From.GetName]"
 			set_country_flag = { flag = SIC_considering_faction days = 6 value = 1 }
-			FROM = {
-				country_event = sic.31
-			}
+			FROM = { country_event = sic.31 }
 		}
 
 		ai_will_do = {
 			factor = 5
+			modifier = {
+				factor = 0
+				has_country_flag = { flag = ITA_recent_peace days < 30 }
+			}
+			modifier = {
+				factor = 0
+				has_global_flag = { flag = second_weltkrieg_has_started days < 30 }
+			}
 			modifier = {
 				factor = 0
 				FROM = { surrender_progress > 0.20 }
@@ -1410,7 +1404,11 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					tooltip = GRE_same_wars_as_germany
 					ROOT = {
 						has_war = yes
-						any_enemy_country = { has_war_with = FROM }
+						NOT = {
+							any_enemy_country = {
+								NOT = { has_war_with = FROM }
+							}
+						}
 					}
 				}
 			}
@@ -1458,6 +1456,14 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 
 		ai_will_do = {
 			factor = 5
+			modifier = {
+				factor = 0
+				has_country_flag = { flag = ITA_recent_peace days < 30 }
+			}
+			modifier = {
+				factor = 0
+				has_global_flag = { flag = second_weltkrieg_has_started days < 30 }
+			}
 			modifier = {
 				factor = 0
 				FROM = { surrender_progress > 0.20 }
@@ -1637,7 +1643,7 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 				add = 10
 				has_country_flag = PAP_permission_denied_neosanfedisti
 				has_war = no
-				has_army_manpower = { size > 75000 }
+				has_army_manpower = { size > 50000 }
 				NOT = {
 					country_exists = SRI
 					SIC = { has_country_flag = SIC_confed }
@@ -1665,10 +1671,7 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 				}
 				leave_faction = yes
 			}
-			if = {
-				limit = { has_war = yes }
-				separate_peace_all_wars = yes
-			}
+			separate_peace_all_wars = yes
 			SIC = {
 				country_event = { id = papalstate.50 hours = 8 }
 			}
@@ -1862,8 +1865,7 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 								}
 							}
 							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
+							var:faction_leader = {
 								surrender_progress > 0.20
 							}
 						}
@@ -1875,6 +1877,20 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision ITA_war_for_libya target: [From.GetName]"
 			add_war_support = 0.10
+			hidden_effect = {
+				add_ai_strategy = {
+					type = prepare_for_war
+					id = FROM
+					value = 1000
+				}
+				FROM = {
+					add_ai_strategy = {
+						type = prepare_for_war
+						id = ROOT
+						value = 1000
+					}
+				}
+			}
 		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ITA_war_for_libya target: [From.GetName]"
@@ -1883,6 +1899,20 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 			declare_war_on = {
 				target = FROM
 				type = annex_everything
+			}
+			hidden_effect = {
+				add_ai_strategy = {
+					type = prepare_for_war
+					id = FROM
+					value = -1000
+				}
+				FROM = {
+					add_ai_strategy = {
+						type = prepare_for_war
+						id = ROOT
+						value = -1000
+					}
+				}
 			}
 		}
 	}
@@ -2022,8 +2052,7 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 								}
 							}
 							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
+							var:faction_leader = {
 								surrender_progress > 0.20
 							}
 						}
@@ -2067,7 +2096,11 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					custom_trigger_tooltip = {
 						tooltip = USA_same_wars_as_FROM
 						has_war = yes
-						any_enemy_country = { has_war_with = FROM }
+						NOT = {
+							any_enemy_country = {
+								NOT = { has_war_with = FROM }
+							}
+						}
 					}
 				}
 			}
@@ -2138,6 +2171,14 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 
 		ai_will_do = {
 			factor = 5
+			modifier = {
+				factor = 0
+				has_country_flag = { flag = ITA_recent_peace days < 30 }
+			}
+			modifier = {
+				factor = 0
+				has_global_flag = { flag = second_weltkrieg_has_started days < 30 }
+			}
 			modifier = {
 				factor = 0
 				FROM = { tag = AUS }
@@ -2214,7 +2255,11 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					custom_trigger_tooltip = {
 						tooltip = USA_same_wars_as_FROM
 						has_war = yes
-						any_enemy_country = { has_war_with = FROM }
+						NOT = {
+							any_enemy_country = {
+								NOT = { has_war_with = FROM }
+							}
+						}
 					}
 				}
 			}
@@ -2282,6 +2327,14 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 
 		ai_will_do = {
 			factor = 5
+			modifier = {
+				factor = 0
+				has_country_flag = { flag = ITA_recent_peace days < 30 }
+			}
+			modifier = {
+				factor = 0
+				has_global_flag = { flag = second_weltkrieg_has_started days < 30 }
+			}
 			modifier = {
 				factor = 0
 				FROM = { tag = AUS }
@@ -2421,12 +2474,40 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					}
 				}
 			}
+			hidden_effect = {
+				add_ai_strategy = {
+					type = prepare_for_war
+					id = AUS
+					value = 1000
+				}
+				AUS = {
+					add_ai_strategy = {
+						type = prepare_for_war
+						id = ROOT
+						value = 1000
+					}
+				}
+			}
 		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove VNC_attack_austria"
 			declare_war_on = {
 				target = AUS
 				type = annex_everything
+			}
+			hidden_effect = {
+				add_ai_strategy = {
+					type = prepare_for_war
+					id = AUS
+					value = -1000
+				}
+				AUS = {
+					add_ai_strategy = {
+						type = prepare_for_war
+						id = ROOT
+						value = -1000
+					}
+				}
 			}
 		}
 	}
@@ -2962,10 +3043,8 @@ ITA_resorgimento_decisions = {
 			}
 		}
 
-		fire_only_once = yes
+		fire_only_once = no
 		cost = 0
-		days_remove = 20
-		war_with_target_on_remove = yes
 		ai_will_do = {
 			factor = 20
 			modifier = {
@@ -3044,7 +3123,7 @@ ITA_resorgimento_decisions = {
 			}
 			modifier = {
 				factor = 0
-				has_navy_size = { size < 200 type = convoy }
+				has_navy_size = { size < 100 type = convoy }
 				NOT = { is_neighbor_of = FROM }
 			}
 			modifier = {
@@ -3082,8 +3161,7 @@ ITA_resorgimento_decisions = {
 								}
 							}
 							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
+							var:faction_leader = {
 								surrender_progress > 0.20
 							}
 						}
@@ -3095,9 +3173,6 @@ ITA_resorgimento_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SRI_attack_italy target: [From.GetName]"
 			add_war_support = 0.10
-		}
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SRI_attack_italy target: [From.GetName]"
 			declare_war_on = {
 				target = FROM
 				type = annex_everything
@@ -3169,10 +3244,8 @@ ITA_resorgimento_decisions = {
 			}
 		}
 
-		fire_only_once = yes
+		fire_only_once = no
 		cost = 0
-		days_remove = 20
-		war_with_target_on_remove = yes
 		ai_will_do = {
 			factor = 10
 			modifier = {
@@ -3282,8 +3355,7 @@ ITA_resorgimento_decisions = {
 								}
 							}
 							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
+							var:faction_leader = {
 								surrender_progress > 0.20
 							}
 						}
@@ -3299,9 +3371,6 @@ ITA_resorgimento_decisions = {
 				limit = { is_in_faction_with = FROM }
 				leave_faction = yes
 			}
-		}
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove ITA_attack_italy target: [From.GetName]"
 			if = {
 				limit = {
 					FROM = { tag = SRI }
@@ -3377,6 +3446,7 @@ ITA_resorgimento_decisions = {
 		}
 
 		visible = {
+			has_democratic_government = yes
 			NOT = {
 				country_exists = SRI
 				SIC = {
@@ -3493,8 +3563,6 @@ ITA_resorgimento_decisions = {
 
 		fire_only_once = yes
 		cost = 0
-		days_remove = 20
-		war_with_target_on_remove = yes
 		ai_will_do = {
 			factor = 50
 			modifier = {
@@ -3541,8 +3609,7 @@ ITA_resorgimento_decisions = {
 								}
 							}
 							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
+							var:faction_leader = {
 								surrender_progress > 0.20
 							}
 						}
@@ -3554,9 +3621,6 @@ ITA_resorgimento_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SIC_attack_sri target: [From.GetName]"
 			add_war_support = 0.10
-		}
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SIC_attack_sri target: [From.GetName]"
 			set_country_flag = attacked_SRI_first
 			if = {
 				limit = {
@@ -3675,8 +3739,6 @@ ITA_resorgimento_decisions = {
 
 		fire_only_once = yes
 		cost = 0
-		days_remove = 20
-		war_with_target_on_remove = yes
 		ai_will_do = {
 			factor = 50
 			modifier = {
@@ -3722,8 +3784,7 @@ ITA_resorgimento_decisions = {
 								}
 							}
 							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
+							var:faction_leader = {
 								surrender_progress > 0.20
 							}
 						}
@@ -3735,9 +3796,6 @@ ITA_resorgimento_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SRD_attack_sri target: [From.GetName]"
 			add_war_support = 0.10
-		}
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SRD_attack_sri target: [From.GetName]"
 			if = {
 				limit = {
 					has_global_flag = KR_italy_balance
@@ -3775,8 +3833,8 @@ ITA_resorgimento_decisions = {
 		}
 
 		visible = {
+			has_cosmetic_tag = SRD_ITA
 			FROM = {
-				exists = yes
 				NOT = {
 					has_war_with = ROOT
 					is_subject_of = ROOT
@@ -3802,10 +3860,8 @@ ITA_resorgimento_decisions = {
 			}
 		}
 
-		fire_only_once = yes
+		fire_only_once = no
 		cost = 0
-		days_remove = 20
-		war_with_target_on_remove = yes
 		ai_will_do = {
 			factor = 1
 			modifier = {
@@ -3921,8 +3977,7 @@ ITA_resorgimento_decisions = {
 								}
 							}
 							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
+							var:faction_leader = {
 								surrender_progress > 0.20
 							}
 						}
@@ -3938,9 +3993,6 @@ ITA_resorgimento_decisions = {
 				limit = { is_in_faction_with = FROM }
 				leave_faction = yes
 			}
-		}
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SRD_attack_italy target: [From.GetName]"
 			declare_war_on = {
 				target = FROM
 				type = annex_everything
@@ -3968,6 +4020,7 @@ ITA_resorgimento_decisions = {
 		}
 
 		visible = {
+			has_government = national_populist
 			FROM = {
 				NOT = { has_war_with = ROOT }
 				is_neighbor_of = ROOT
@@ -3988,8 +4041,6 @@ ITA_resorgimento_decisions = {
 
 		fire_only_once = yes
 		cost = 0
-		days_remove = 20
-		war_with_target_on_remove = yes
 		ai_will_do = {
 			factor = 50
 			modifier = {
@@ -4032,8 +4083,7 @@ ITA_resorgimento_decisions = {
 								}
 							}
 							surrender_progress > 0.10
-							any_allied_country = {
-								is_faction_leader = yes
+							var:faction_leader = {
 								surrender_progress > 0.20
 							}
 						}
@@ -4045,9 +4095,6 @@ ITA_resorgimento_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision PAP_attack_sri target: [From.GetName]"
 			add_war_support = 0.10
-		}
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove PAP_attack_sri target: [From.GetName]"
 			if = {
 				limit = {
 					has_global_flag = KR_italy_balance
@@ -4066,9 +4113,6 @@ ITA_resorgimento_decisions = {
 			declare_war_on = {
 				target = FROM
 				type = annex_everything
-			}
-			hidden_effect = {
-				news_event = { id = worldnews.202 }
 			}
 		}
 	}
@@ -4234,6 +4278,7 @@ ITA_resorgimento_decisions = {
 		}
 
 		visible = {
+			has_cosmetic_tag = SRD_ITA
 			NOT = {
 				country_exists = SRI
 				SIC = {
@@ -6664,8 +6709,8 @@ ITA_resorgimento_decisions = {
 				158 = { is_claim_or_core_of_ROOT = yes }
 				159 = { is_claim_or_core_of_ROOT = yes }
 			}
-			OR = {
-				is_subject = no
+			if = {
+				limit = { is_subject = yes }
 				overlord = {
 					761 = {
 						is_claim_or_core_or_ambition_of_PREV = no
@@ -6860,8 +6905,8 @@ ITA_resorgimento_decisions = {
 				838 = { is_claim_or_core_of_ROOT = yes }
 				158 = { is_claim_or_core_of_ROOT = yes }
 			}
-			OR = {
-				is_subject = no
+			if = {
+				limit = { is_subject = yes }
 				overlord = {
 					762 = {
 						is_claim_or_core_or_ambition_of_PREV = no
@@ -7044,8 +7089,8 @@ ITA_resorgimento_decisions = {
 				}
 			}
 			158 = { is_claim_or_core_of_ROOT = yes }
-			OR = {
-				is_subject = no
+			if = {
+				limit = { is_subject = yes }
 				overlord = {
 					735 = {
 						is_claim_or_core_or_ambition_of_PREV = no
@@ -7225,8 +7270,8 @@ ITA_resorgimento_decisions = {
 				735 = { is_claim_or_core_of_ROOT = yes }
 				1003 = { is_claim_or_core_of_ROOT = yes }
 			}
-			OR = {
-				is_subject = no
+			if = {
+				limit = { is_subject = yes }
 				overlord = {
 					943 = {
 						is_claim_or_core_or_ambition_of_PREV = no
@@ -7412,8 +7457,8 @@ ITA_resorgimento_decisions = {
 				159 = { is_claim_or_core_of_ROOT = yes }
 				160 = { is_claim_or_core_of_ROOT = yes }
 			}
-			OR = {
-				is_subject = no
+			if = {
+				limit = { is_subject = yes }
 				overlord = {
 					783 = {
 						is_claim_or_core_or_ambition_of_PREV = no
@@ -7604,8 +7649,8 @@ ITA_resorgimento_decisions = {
 				}
 			}
 			783 = { is_claim_or_core_of_ROOT = yes }
-			OR = {
-				is_subject = no
+			if = {
+				limit = { is_subject = yes }
 				overlord = {
 					39 = {
 						is_claim_or_core_or_ambition_of_PREV = no
@@ -7794,8 +7839,8 @@ ITA_resorgimento_decisions = {
 				}
 			}
 			759 = { is_claim_or_core_of_ROOT = yes }
-			OR = {
-				is_subject = no
+			if = {
+				limit = { is_subject = yes }
 				overlord = {
 					736 = {
 						is_claim_or_core_or_ambition_of_PREV = no
@@ -7987,8 +8032,8 @@ ITA_resorgimento_decisions = {
 				759 = { is_claim_or_core_of_ROOT = yes }
 				736 = { is_claim_or_core_of_ROOT = yes }
 			}
-			OR = {
-				is_subject = no
+			if = {
+				limit = { is_subject = yes }
 				overlord = {
 					163 = {
 						is_claim_or_core_or_ambition_of_PREV = no
@@ -8113,8 +8158,8 @@ ITA_resorgimento_decisions = {
 				}
 			}
 			163 = { is_claim_or_core_of_ROOT = yes }
-			OR = {
-				is_subject = no
+			if = {
+				limit = { is_subject = yes }
 				overlord = {
 					103 = {
 						is_claim_or_core_or_ambition_of_PREV = no
@@ -8238,8 +8283,8 @@ ITA_resorgimento_decisions = {
 				}
 			}
 			115 = { is_claim_or_core_of_ROOT = yes }
-			OR = {
-				is_subject = no
+			if = {
+				limit = { is_subject = yes }
 				overlord = {
 					116 = {
 						is_claim_or_core_or_ambition_of_PREV = no
@@ -8419,8 +8464,8 @@ ITA_resorgimento_decisions = {
 				1002 = { is_claim_or_core_of_ROOT = yes }
 				838 = { is_claim_or_core_of_ROOT = yes }
 			}
-			OR = {
-				is_subject = no
+			if = {
+				limit = { is_subject = yes }
 				overlord = {
 					1 = {
 						is_claim_or_core_or_ambition_of_PREV = no
@@ -8575,19 +8620,16 @@ ITA_occupation_decisions = {
 
 		visible = {
 			is_subject = no
+			has_war_with = FROM
 			OR = {
 				tag = ITA
 				tag = SRI
 				tag = SIC
 				tag = SRD
-				any_allied_country = {
-					OR = {
-						tag = ITA
-						tag = SRI
-						tag = SIC
-						tag = SRD
-					}
-				}
+				is_in_faction_with = ITA
+				is_in_faction_with = SRI
+				is_in_faction_with = SIC
+				is_in_faction_with = SRD
 			}
 			FROM = {
 				exists = yes
@@ -8595,7 +8637,17 @@ ITA_occupation_decisions = {
 				has_war_with = ROOT
 				has_legitimacy > 20
 				is_in_faction = yes
-				any_owned_state = { is_controlled_by_ROOT_or_ally = yes }
+			}
+			if = {
+				limit = { is_italian_tag = yes }
+				FROM = {
+					any_owned_state = { is_controlled_by_ROOT_or_ally = yes }
+				}
+			}
+			else = {
+				FROM = {
+					any_owned_state = { is_controlled_by = ROOT }
+				}
 			}
 		}
 
@@ -8603,7 +8655,7 @@ ITA_occupation_decisions = {
 		days_remove = 30
 		cost = 25
 
-		target_root_trigger = { has_war = yes }
+		target_root_trigger = { has_war_with = FROM }
 
 		targets = { ITA SRI SIC SRD PAP VNC EMI TUS LOM }
 

@@ -706,7 +706,7 @@ country_event = {
 
 add_namespace = aus.tree
 
-## Joining the French-German war against Italy
+## Joining forces with the Reichspakt
 
 country_event = {
 	id = aus.tree.4011
@@ -718,22 +718,13 @@ country_event = {
 
 	option = {
 		name = aus.tree.4011.a #Brothers in Arms once more!
-		FROM = {
-			country_event = {
-				id = aus.tree.4013
-				days = 1
-			}
-		}
+		effect_tooltip = { add_to_faction = AUS }
+		FROM = { country_event = aus.tree.4013 }
 	}
 	option = {
 		name = aus.tree.4011.b #We are doing good on our own
 		trigger = { is_ai = no }
-		FROM = {
-			country_event = {
-				id = aus.tree.4012
-				days = 1
-			}
-		}
+		FROM = { country_event = aus.tree.4012 }
 	}
 }
 
@@ -747,29 +738,7 @@ country_event = {
 
 	option = {
 		name = aus.tree.4012.a #How rude
-		ai_chance = {
-			factor = 10
-		}
-		add_political_power = -50
-	}
-	option = {
-		name = aus.tree.4012.b #Does he think he can decide this on his own?
-		ai_chance = {
-			factor = 90
-		}
-		add_political_power = -50
-		declare_war_on = {
-			target = FRA
-			type = annex_everything
-		}
-		hidden_effect = {
-			random_other_country = {
-				limit = { is_ai = yes }
-				news_event = {
-					id = worldnews.177
-				}
-			}
-		}
+		add_political_power = -25
 	}
 }
 
@@ -785,90 +754,111 @@ country_event = {
 		name = aus.tree.4013.a
 		set_country_flag = AUS_intervened_in_weltkrieg
 		add_political_power = 100
+		custom_effect_tooltip = joining_reichspakt_tt
+		
 		hidden_effect = {
 			every_country = {
 				limit = {
-					NOT = { is_in_faction_with = GER }
-					is_in_europe = yes
-					OR = {
-						tag = ROOT
-						is_in_faction_with = ROOT
-						is_subject_of = ROOT
-					}
+					is_subject = no
+					is_in_faction_with = ROOT
+					NOT = { tag = ROOT }
 				}
-				every_country = {
-					limit = {
-						is_in_faction_with = GER
-						is_in_europe = yes
-					}
-					give_military_access = PREV
-					PREV = { give_military_access = PREV }
-				}
+				set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
+				set_country_flag = AUS_former_faction_member
+				GER = { add_to_faction = PREV }
 			}
+			dismantle_faction = yes
 		}
-		if = {
-			limit = {
-				GER = {
-					has_war_with = FRA
+		GER = { add_to_faction = ROOT }
+		meta_effect = {
+			text = {
+				add_to_war = {
+					targeted_alliance = GER
+					enemy = [ENEMY]
 				}
 			}
-			add_to_war = {
-				targeted_alliance = GER
-				enemy = FRA
-			}
-		}
-		else = {
-			declare_war_on = {
-				target = FRA
-				type = annex_everything
-			}
-		}
-		if = {
-			limit = {
-				SRI = {
-					has_war_with = GER
-					NOT = { has_war_with = AUS }
-				}
-			}
-			add_to_war = {
-				targeted_alliance = GER
-				enemy = SRI
-			}
-		}
-		else_if = {
-			limit = {
-				can_declare_war_on = SRI
-				SRI = {
-					has_socialist_government = yes
-					NOT = { is_in_faction_with = FRA }
-					count_triggers = {
-						amount = 4
-						158 = { is_controlled_by = SRI } #Piedmont
-						159 = { is_controlled_by = SRI } #Lombardy
-						160 = { is_controlled_by = SRI } #Venice
-						162 = { is_controlled_by = SRI } #Tuscany
-						2 = { is_controlled_by = SRI } #Rome
-						117 = { is_controlled_by = SRI } #Naples
-						115 = { is_controlled_by = SRI } #Sicily
-					}
-				}
-			}
-			declare_war_on = {
-				target = SRI
-				type = annex_everything
-			}
-		}
+			ENEMY = "[threat_country.GetTag]"
+		}	
 		hidden_effect = {
 			random_other_country = {
 				limit = { is_ai = yes }
-				news_event = {
-					id = worldnews.177
-				}
+				news_event = { id = worldnews.177 }
 			}
 		}
 	}
 }
 
+# Austria reforms its faction after the war
+country_event = {
+	id = aus.tree.4014
+	immediate = { log = "[GetDateText]: [Root.GetName]: event aus.tree.4014" }
+	title = aus.tree.4014.t
+	
+	desc = {
+		text = aus.tree.4014.d
+		trigger = {
+			NOT = { is_in_faction_with = GER }
+		}
+	}
+	desc = {
+		text = aus.tree.4014.d.rp
+		trigger = {
+			is_in_faction_with = GER
+		}
+	}
+
+	is_triggered_only = yes
+	
+	option = {
+		name = aus.tree.4014.a #Of course!
+		clr_country_flag = AUS_former_faction_member
+		AUS = { add_to_faction = ROOT }
+		every_country = {
+			limit = { is_subject_of = ROOT }
+			AUS = { add_to_faction = PREV }
+		}
+	}
+	option = {
+		name = aus.tree.4014.b #No way!
+		trigger = {
+			is_ai = no
+			NOT = { is_subject_of = AUS }
+		}
+		clr_country_flag = AUS_former_faction_member
+		if = {
+			limit = { is_in_faction_with = GER }
+			leave_faction = yes
+		}
+	}
+}
+
+# Informing Germany
+country_event = {
+	id = aus.tree.4015
+	immediate = { log = "[GetDateText]: [Root.GetName]: event aus.tree.4015" }
+	title = aus.tree.4015.t
+	desc = aus.tree.4015.d
+
+	is_triggered_only = yes
+	
+	option = {
+		name = aus.tree.4015.a
+	}
+}
+
+# Austria informed of Germany's fall
+country_event = {
+	id = aus.tree.4016
+	immediate = { log = "[GetDateText]: [Root.GetName]: event aus.tree.4016" }
+	title = aus.tree.4016.t
+	desc = aus.tree.4016.d
+
+	is_triggered_only = yes
+	
+	option = {
+		name = aus.tree.4016.a
+	}
+}
 
 ## Adding Balkans nation to sphere
 country_event = {
@@ -907,7 +897,6 @@ country_event = {
 			}
 			modifier = {
 				factor = 0
-				NOT = { has_country_flag = AUS_intervened_in_civil_war }
 				any_state = {
 					is_claim_or_core_of_ROOT = yes
 					owner = {
@@ -927,7 +916,6 @@ country_event = {
 	option = {
 		name = aus.tree.4020.b #We want our claimed lands back, first
 		trigger = {
-			NOT = { has_country_flag = AUS_intervened_in_civil_war }
 			any_state = {
 				is_claim_or_core_of_ROOT = yes
 				owner = {
@@ -962,10 +950,6 @@ country_event = {
 		name = aus.tree.4020.c #We refuse
 		ai_chance = {
 			factor = 50
-			modifier = {
-				factor = 0.5
-				has_country_flag = AUS_intervened_in_civil_war
-			}
 			modifier = {
 				factor = 0.5
 				AUS = { same_government_type_as_ROOT = yes }

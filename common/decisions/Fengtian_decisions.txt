@@ -286,6 +286,7 @@ FNG_fixing_the_economy_category = { # Wang Yongjiang's Legacy
 			has_country_flag = banks_centralized
 			NOT = {
 				has_country_flag = reserve_full
+				has_country_flag = filling_FNG_silver
 			}
 		}
 
@@ -310,11 +311,18 @@ FNG_fixing_the_economy_category = { # Wang Yongjiang's Legacy
 			}
 		}
 
+		complete_effect = {
+			hidden_effect = {
+				set_country_flag = introducing_FNG_dollar
+			}
+		}
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Re-Introduce_the_Fengtian_Dollar"
 			custom_effect_tooltip = FNG_unlock_investment_decisions
 			hidden_effect = {
 				set_country_flag = fengtian_dollar_reintroduced
+				clr_country_flag = introducing_FNG_dollar
 				country_event = {
 					id = fengtian.126
 					days = 90
@@ -333,6 +341,7 @@ FNG_fixing_the_economy_category = { # Wang Yongjiang's Legacy
 			has_country_flag = banks_centralized
 			NOT = {
 				has_country_flag = fengtian_dollar_reintroduced
+				has_country_flag = introducing_FNG_dollar
 			}
 		}
 
@@ -357,11 +366,20 @@ FNG_fixing_the_economy_category = { # Wang Yongjiang's Legacy
 			}
 		}
 
+		complete_effect = {
+			hidden_effect = {
+				set_country_flag = filling_FNG_silver
+			}
+		}
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Fill_the_Silver_Reserve"
 			custom_effect_tooltip = FNG_unlock_investment_decisions
 			add_stability = 0.10
 			country_event = fengtian.70
+			hidden_effect = {
+				clr_country_flag = filling_FNG_silver
+			}
 			JAP = {
 				add_opinion_modifier = {
 					target = FNG
@@ -1848,6 +1866,7 @@ FNG_foreign_policy = { #The Road to Reclamation
 		icon = GFX_decision_generic_industry
 
 		visible = {
+			has_completed_focus = FNG_Continue_the_Reclamation_War
 			can_declare_war_on = FROM
 			FROM = {
 				is_ruled_by_pro_fengtian = no
@@ -2001,6 +2020,7 @@ FNG_foreign_policy = { #The Road to Reclamation
 	FNG_Integrate_Faction_Members = {
 		icon = infiltrate_state
 		visible = {
+			has_country_flag = FNG_roc_proclaimed
 			is_faction_leader = yes
 			is_neighbor_of = FROM
 		}
@@ -2426,17 +2446,25 @@ FNG_foreign_policy = { #The Road to Reclamation
 
 		visible = {
 			has_country_flag = FNG_preparing_war_of_national_reclamation
-			can_declare_war_on = 608.owner
-			608 = {
-				owner = { is_chinese_tag = yes }
+			can_declare_war_on = FROM
+			FROM = {
+				is_chinese_tag = yes
+				owns_state = 608
 			}
 		}
 
 		fire_only_once = yes
 
+		targets = { 608.OWNER }
+		target_root_trigger = { has_country_flag = FNG_preparing_war_of_national_reclamation }
+		target_trigger = {
+			can_declare_war_on = FROM
+			FROM = { is_chinese_tag = yes }
+		}
+
 		cost = 0
 		days_remove = 30
-		war_with_on_remove = 608.owner
+		war_with_target_on_remove = yes
 
 		ai_will_do = {
 			factor = -40
@@ -2480,9 +2508,25 @@ FNG_foreign_policy = { #The Road to Reclamation
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision FNG_Begin_the_War_of_National_Reclamation"
 			hidden_effect = {
-				608 = {
-					owner = {
-						country_event = fengtian.255
+				for_each_scope_loop = {
+					array = global.china_tags_array
+					if = {
+						limit = { is_ally_with = ROOT }
+						set_country_flag = FNG_AI_strategy_against_FROM
+						add_ai_strategy = {
+							type = prepare_for_war
+							id = FROM
+							value = 1000
+						}
+					}
+					if = {
+						limit = { is_ally_with = FROM }
+						set_country_flag = FNG_AI_strategy_against_ROOT
+						add_ai_strategy = {
+							type = prepare_for_war
+							id = ROOT
+							value = 1000
+						}
 					}
 				}
 				ANQ = {
@@ -2502,14 +2546,31 @@ FNG_foreign_policy = { #The Road to Reclamation
 			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Begin_the_War_of_National_Reclamation"
 			custom_effect_tooltip = FNG_declare_reclamation_war
 			hidden_effect = {
+				for_each_scope_loop = {
+					array = global.china_tags_array
+					if = {
+						limit = { has_country_flag = FNG_AI_strategy_against_FROM }
+						clr_country_flag = FNG_AI_strategy_against_FROM
+						add_ai_strategy = {
+							type = prepare_for_war
+							id = FROM
+							value = -1000
+						}
+					}
+					if = {
+						limit = { has_country_flag = FNG_AI_strategy_against_ROOT }
+						clr_country_flag = FNG_AI_strategy_against_ROOT
+						add_ai_strategy = {
+							type = prepare_for_war
+							id = ROOT
+							value = -1000
+						}
+					}
+				}
 				declare_war_on = {
-					target = 608.owner
+					target = FROM
 					type = annex_everything
 				}
-			}
-			add_timed_idea = {
-				idea = FNG_The_National_Reclamation_War
-				days = 200
 			}
 			set_country_flag = FNG_begun_national_reclamation_war
 		}
@@ -2713,19 +2774,18 @@ FNG_foreign_policy = { #The Road to Reclamation
 
 	FNG_Annex_Shandong_Anqing_Puppet = {
 		icon = GFX_decision_generic_prepare_civil_war
+		
+		visible = {
+			has_war_with = 608.owner
+			FROM = { has_country_flag = SQI_projapan_anqing_puppet }
+		}
 
 		targets = { SQI }
 		target_root_trigger = {
-			608 = {
-				owner = {
-					has_war_with = ROOT
-				}
-			}
+			has_war_with = 608.owner
 		}
 		target_trigger = {
-			FROM = {
-				has_country_flag = SQI_projapan_anqing_puppet
-			}
+			FROM = { has_country_flag = SQI_projapan_anqing_puppet }
 		}
 
 		fire_only_once = yes
