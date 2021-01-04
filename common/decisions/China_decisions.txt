@@ -1,7 +1,7 @@
 political_actions = {
 
 	form_republic_china_decision = {
-		icon = GFX_decision_chinese_flag
+		icon = generic_nationalism
 		allowed = {
 			OR = {
 				is_han_chinese_tag = yes
@@ -12,6 +12,7 @@ political_actions = {
 				tag = FNG
 				tag = CHI
 				tag = UPC
+				tag = NPA
 			}
 		}
 		available = {
@@ -36,16 +37,14 @@ political_actions = {
 			if = {
 				limit = { tag = GXC }
 				NOT = {
-					OR = {
-						tag = UPC
-						has_country_leader = {
-							name = "Chen Jiongming"
-							ruling_only = yes
-						}
-						has_country_leader = {
-							name = "Ma Ji"
-							ruling_only = yes
-						}
+					tag = UPC
+					has_country_leader = {
+						name = "Chen Jiongming"
+						ruling_only = yes
+					}
+					has_country_leader = {
+						name = "Ma Ji"
+						ruling_only = yes
 					}
 				}
 				has_government = market_liberal
@@ -69,10 +68,8 @@ political_actions = {
 			if = {
 				limit = { tag = YUN }
 				NOT = {
-					has_country_leader = {
-						name = "Zhu Peide"
-						ruling_only = yes
-					}
+					has_government = social_liberal
+					has_government = social_democrat
 				}
 			}
 			if = {
@@ -95,9 +92,15 @@ political_actions = {
 			set_potential_national_government = yes
 			set_country_flag = has_united_china
 			if = {
-				limit = {
-					tag = LEP
-				}
+				limit = { is_ruled_by_kmt = yes }
+				set_cosmetic_tag = YUN_CHI_ROC
+			}
+			else_if = {
+				limit = { is_ruled_by_federalists = yes }
+				set_cosmetic_tag = UPC
+			}
+			else_if = {
+				limit = { tag = LEP }
 				set_cosmetic_tag = LEP_CHI
 			}
 			else = {
@@ -112,6 +115,13 @@ political_actions = {
 				news_event = {
 					id = worldnews.413
 					days = 1
+				}
+				if = {
+					limit = {
+						has_subject = var:693.owner
+						var:693.owner = { is_han_chinese_tag = no }
+					}
+					transfer_state = 693 #Chamdo
 				}
 			}
 		}
@@ -183,21 +193,20 @@ political_actions = {
 	LEC_china_observer_rights = {
 		icon = GFX_decision_generic_political_discourse
 		allowed = {
-			is_chinese_tag = yes
+			is_han_chinese_tag = yes
 		}
 		available = {
 			NOT = {
-				any_of = {
+				any_of_scopes = {
 					array = global.china_tags_array
-					var:v = {
-						has_country_flag = legation_council_member
-						exists = yes
-					}
+					exists = yes
+					has_country_flag = legation_council_member
 				}
 			}
 		}
 		visible = {
-			tag = event_target:current_china_leader
+			is_faction_leader = yes
+			is_ruled_by_kmt = no
 			NOT = { has_country_flag = legation_council_member }
 			LEC = {
 				is_subject = no
@@ -205,7 +214,7 @@ political_actions = {
 			}
 		}
 		fire_only_once = yes
-		ai_will_do = { factor = 425}
+		ai_will_do = { factor = 425 }
 		cost = 0
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision LEC_china_observer_rights"
@@ -299,18 +308,6 @@ political_actions = {
 			OR = {
 				NOT = { has_war_with = FROM }
 				has_idea = china_lost_momentum
-				hidden_trigger = {
-					is_ai = no
-					NOT = {
-						count_triggers = {
-							amount = 2
-							has_war_with = LEP
-							has_war_with = ANQ
-							has_war_with = SQI
-							has_war_with = CHI
-						}
-					}
-				}
 			}
 		}
 
@@ -437,258 +434,255 @@ political_actions = {
 }
 
 china_army_decisions = {
-	china_army_reform = {
+	china_army_reform_1 = {
 		icon = generic_prepare_civil_war
+		
+		allowed = {
+			starts_at_army_reform_level_two = no
+		}
+		
+		visible = {
+			has_idea = china_inadequate_army_1
+		}
 
-		modifier = {
-			political_power_gain = -0.1
-		}
-		custom_cost_text = china_army_reform_tooltip
+		custom_cost_text = china_army_reform_tooltip_200
 		custom_cost_trigger = {
-			has_army_experience > china_army_reform_cost?200
+			has_army_experience > 199.99
 		}
+
 		days_remove = 100
+		fire_only_once = yes
 
 		ai_will_do = {
 			factor = 500
 		}
 
+		modifier = {
+			political_power_gain = -0.1
+		}
+
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision china_army_reform"
-			set_temp_variable = { china_army_reform_cost_negative = china_army_reform_cost }
-			multiply_temp_variable = { china_army_reform_cost_negative = -1 }
-			army_experience = china_army_reform_cost_negative
+			log = "[GetDateText]: [Root.GetName]: Decision china_army_reform_1"
+			hidden_effect = { army_experience = -200 }
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove china_army_reform"
-			increase_army_reform_level = yes
+			log = "[GetDateText]: [Root.GetName]: Decision remove china_army_reform_1"
+			add_to_variable = { army_reform_frame = 1 }
+			add_to_variable = { army_reform_var_org = 0.1 }
+			add_to_variable = { army_reform_var_exp = -0.15 }
+			custom_effect_tooltip = china_army_reform_effect
+			hidden_effect = {
+				swap_ideas = {
+					remove_idea = china_inadequate_army_1
+					add_idea = china_inadequate_army_2
+				}
+			}
+		}
+	}
+	china_army_reform_2 = {
+		name = china_army_reform_1
+		icon = generic_prepare_civil_war
+		
+		visible = {
+			has_idea = china_inadequate_army_2
+		}
+
+		custom_cost_text = china_army_reform_tooltip_100
+		custom_cost_trigger = {
+			has_army_experience > 99.99
+		}
+		
+		days_remove = 100
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 500
+		}
+
+		modifier = {
+			political_power_gain = -0.1
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision china_army_reform_2"
+			hidden_effect = { army_experience = -100 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove china_army_reform_2"
+			add_to_variable = { army_reform_frame = 1 }
+			add_to_variable = { army_reform_var_org = 0.1 }
+			add_to_variable = { army_reform_var_exp = -0.15 }
+			custom_effect_tooltip = china_army_reform_effect
+			hidden_effect = {
+				swap_ideas = {
+					remove_idea = china_inadequate_army_2
+					add_idea = china_inadequate_army_3
+				}
+			}
+		}
+	}
+	china_army_reform_3 = {
+		name = china_army_reform_1
+		icon = generic_prepare_civil_war
+		
+		visible = {
+			has_idea = china_inadequate_army_3
+		}
+
+		custom_cost_text = china_army_reform_tooltip_50
+		custom_cost_trigger = {
+			has_army_experience > 49.99
+		}
+
+		days_remove = 100
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 500
+		}
+
+		modifier = {
+			political_power_gain = -0.1
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision china_army_reform_3"
+			hidden_effect = { army_experience = -50 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove china_army_reform_3"
+			add_to_variable = { army_reform_frame = 1 }
+			add_to_variable = { army_reform_var_org = 0.1 }
+			add_to_variable = { army_reform_var_exp = -0.15 }
+			custom_effect_tooltip = china_army_reform_effect
+			hidden_effect = {
+				swap_ideas = {
+					remove_idea = china_inadequate_army_3
+					add_idea = china_inadequate_army_4
+				}
+			}
+		}
+	}
+	china_army_reform_4 = {
+		name = china_army_reform_1
+		icon = generic_prepare_civil_war
+		
+		visible = {
+			has_idea = china_inadequate_army_4
+		}
+
+		custom_cost_text = china_army_reform_tooltip_100
+		custom_cost_trigger = {
+			has_army_experience > 99.99
+		}
+
+		days_remove = 100
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 500
+		}
+
+		modifier = {
+			political_power_gain = -0.1
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision china_army_reform_4"
+			hidden_effect = { army_experience = -100 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove china_army_reform_4"
+			add_to_variable = { army_reform_frame = 1 }
+			add_to_variable = { army_reform_var_org = 0.1 }
+			add_to_variable = { army_reform_var_exp = -0.15 }
+			custom_effect_tooltip = china_army_reform_effect
+			hidden_effect = {
+				swap_ideas = {
+					remove_idea = china_inadequate_army_4
+					add_idea = china_inadequate_army_5
+				}
+			}
+		}
+	}
+	china_army_reform_5 = {
+		icon = generic_prepare_civil_war
+		
+		visible = {
+			has_idea = china_inadequate_army_5
+		}
+
+		custom_cost_text = china_army_reform_tooltip_150
+		custom_cost_trigger = {
+			has_army_experience > 149.99
+		}
+
+		days_remove = 100
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 500
+		}
+
+		modifier = {
+			political_power_gain = -0.1
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision china_army_reform_5"
+			hidden_effect = { army_experience = -150 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove china_army_reform_5"
+			custom_effect_tooltip = china_army_reform_effect_complete
+			hidden_effect = { remove_ideas = china_inadequate_army_5 }
+			clear_variable = army_reform_var_org
+			clear_variable = army_reform_var_exp
+			clear_variable = army_reform_frame
 		}
 	}
 }
 
 china_united_front_decisions = {
-	assume_chinese_leadership = {
-		icon = generic_civil_support
-		priority = 1000
-		allowed = {
-			is_chinese_tag = yes
-		}
-		visible = {
-			has_country_flag = can_assume_national_leadership
-			OR = {
-				is_in_faction = no
-				is_faction_leader = yes
-			}
-			NOT = { is_in_faction_with = event_target:current_china_leader }
-		}
-		available = {
-			OR = {
-				NOT = {
-					country_exists = event_target:current_china_leader
-					custom_trigger_tooltip = {
-						tooltip = assume_chinese_leadership_tooltip
-						set_temp_variable = { china_strength_ratio = ROOT.num_battalions }
-						divide_temp_variable = { china_strength_ratio = event_target:current_china_leader.num_battalions }
-						check_variable = { china_strength_ratio > 1.2 }
-					}
-				}
-			}
-			if = {
-				limit = {
-					QIE = {
-						exists = yes
-						NOT = {
-							tag = ROOT
-							tag = event_target:current_china_leader
-						}
-						has_country_flag = can_assume_national_leadership
-					}
-				}
-				custom_trigger_tooltip = {
-					tooltip = assume_chinese_leadership_tooltip_QIE
-					set_temp_variable = { china_strength_ratio_QIE = ROOT.num_battalions }
-					divide_temp_variable = { china_strength_ratio_QIE = QIE.num_battalions }
-					check_variable = { china_strength_ratio_QIE > 1 }
-				}
-			}
-			if = {
-				limit = {
-					CHI = {
-						exists = yes
-						NOT = {
-							tag = ROOT
-							tag = event_target:current_china_leader
-						}
-						has_country_flag = can_assume_national_leadership
-					}
-				}
-				custom_trigger_tooltip = {
-					tooltip = assume_chinese_leadership_tooltip_CHI
-					set_temp_variable = { china_strength_ratio_CHI = ROOT.num_battalions }
-					divide_temp_variable = { china_strength_ratio_CHI = CHI.num_battalions }
-					check_variable = { china_strength_ratio_CHI > 1 }
-				}
-			}
-			if = {
-				limit = {
-					GXC = {
-						exists = yes
-						NOT = {
-							tag = ROOT
-							tag = event_target:current_china_leader
-						}
-						has_country_flag = can_assume_national_leadership
-					}
-				}
-				custom_trigger_tooltip = {
-					tooltip = assume_chinese_leadership_tooltip_GXC
-					set_temp_variable = { china_strength_ratio_GXC = ROOT.num_battalions }
-					divide_temp_variable = { china_strength_ratio_GXC = QIE.num_battalions }
-					check_variable = { china_strength_ratio_GXC > 1 }
-				}
-			}
-			if = {
-				limit = {
-					FNG = {
-						exists = yes
-						NOT = {
-							tag = ROOT
-							tag = event_target:current_china_leader
-						}
-						has_country_flag = can_assume_national_leadership
-					}
-				}
-				custom_trigger_tooltip = {
-					tooltip = assume_chinese_leadership_tooltip_FNG
-					set_temp_variable = { china_strength_ratio_FNG = ROOT.num_battalions }
-					divide_temp_variable = { china_strength_ratio_FNG = FNG.num_battalions }
-					check_variable = { china_strength_ratio_FNG > 1 }
-				}
-			}
-			if = {
-				limit = {
-					YUN = {
-						exists = yes
-						NOT = {
-							tag = ROOT
-							tag = event_target:current_china_leader
-						}
-						has_country_flag = can_assume_national_leadership
-					}
-				}
-				custom_trigger_tooltip = {
-					tooltip = assume_chinese_leadership_tooltip_YUN
-					set_temp_variable = { china_strength_ratio_YUN = ROOT.num_battalions }
-					divide_temp_variable = { china_strength_ratio_YUN = YUN.num_battalions }
-					check_variable = { china_strength_ratio_YUN > 1 }
-				}
-			}
-			if = {
-				limit = {
-					SZC = {
-						exists = yes
-						NOT = {
-							tag = ROOT
-							tag = event_target:current_china_leader
-						}
-						has_country_flag = can_assume_national_leadership
-					}
-				}
-				custom_trigger_tooltip = {
-					tooltip = assume_chinese_leadership_tooltip_SZC
-					set_temp_variable = { china_strength_ratio_SZC = ROOT.num_battalions }
-					divide_temp_variable = { china_strength_ratio_SZC = SZC.num_battalions }
-					check_variable = { china_strength_ratio_SZC > 1 }
-				}
-			}
-		}
-
-		days_remove = 7
-		cost = 0
-		fire_only_once = no
-		ai_will_do = { factor = 1000 }
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision assume_chinese_leadership"
-			hidden_effect = {
-				event_target:current_china_leader = {
-					if = {
-						limit = { exists = yes }
-						country_event = china_shared.1
-					}
-				}
-			}
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove assume_chinese_leadership"
-			save_global_event_target_as = current_china_leader
-		}
-	}
-
 	form_chinese_united_front = {
 		icon = generic_civil_support
 		priority = 1000
+
 		allowed = {
-			tag = event_target:current_china_leader
+			is_han_chinese_tag = yes
 		}
+
 		available = {
-			if = {
-				limit = {
-					NOT = { tag = FNG }
-				}
-				OR = {
-					608 = {
-						controller = {
-							has_war_with = ROOT
-							custom_trigger_tooltip = {
-								tooltip = form_chinese_united_front_tooltip
-								is_working_with_JAP = yes
-							}
-						}
-					}
-					613 = {
-						controller = {
-							has_war_with = ROOT
-							custom_trigger_tooltip = {
-								tooltip = form_chinese_united_front_tooltip
-								is_working_with_JAP = yes
-							}
-						}
-					}
-					1048 = {
-						controller = {
-							has_war_with = ROOT
-							custom_trigger_tooltip = {
-								tooltip = form_chinese_united_front_tooltip
-								is_working_with_JAP = yes
-							}
-						}
-					}
-					592 = {
-						controller = {
-							has_war_with = ROOT
-							custom_trigger_tooltip = {
-								tooltip = form_chinese_united_front_tooltip
-								is_working_with_JAP = yes
-							}
-						}
-					}
-				}
-			}
+			surrender_progress > 0.2
 		}
+
 		visible = {
 			has_war_with = JAP
+			NOT = { has_global_flag = chinese_united_front_started }
+			OR = {
+				owns_state = 592 #Guangzhou
+				owns_state = 608 #Beijing
+				owns_state = 613 #Nanjing
+				owns_state = 716 #Shenyang
+				owns_state = 1048 #Wuhan
+			}
+			is_subject = no
 		}
 
 		cost = 0
 		days_remove = 40
 		fire_only_once = yes
+
 		ai_will_do = { factor = 1000 }
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision form_chinese_united_front"
+			set_global_flag = chinese_united_front_started
 			country_event = {
 				id = china_shared.2
 				days = 18
@@ -698,8 +692,18 @@ china_united_front_decisions = {
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove form_chinese_united_front"
 			hidden_effect = {
-				country_event = china_shared.9
-				country_event = china_shared.10
+				if = {
+					limit = {
+						any_of_scopes = {
+							array = global.china_tags_array
+							has_country_flag = united_front_member
+						}
+					}
+					country_event = china_shared.9
+				}
+				else = {
+					country_event = china_shared.10
+				}
 				news_event = {
 					id = china_shared.13
 					days = 2
@@ -711,18 +715,32 @@ china_united_front_decisions = {
 	leave_chinese_united_front = {
 		icon = generic_civil_support
 		priority = 1000
-		allowed = { always = no } #unlocked by event
+		
+		allowed = {
+			OR = {
+				is_han_chinese_tag = yes
+				tag = TAN
+				tag = TIB
+			}
+			NOT = { tag = FNG }
+		}
 
 		available = {
+			has_global_flag = JAP_Fading_Sun
 			has_war = no
 		}
 
 		visible = {
-			NOT = { has_war_with = JAP }
+			is_in_faction_with = event_target:chinese_united_front_leader
+			NOT = { has_country_flag = original_front_faction_member }
+			FROM = { is_faction_leader = yes }
 		}
 
 		cost = 0
 		fire_only_once = yes
+		
+		targets = { faction_leader }
+		target_root_trigger = { is_in_faction_with = event_target:chinese_united_front_leader }
 
 		ai_will_do = {
 			factor = 1000
@@ -733,12 +751,11 @@ china_united_front_decisions = {
 			modifier = {
 				factor = 0
 				any_allied_country = {
-					any_of = {
-						array = THIS.owned_states
+					any_owned_state = {
 						ROOT = {
 							divisions_in_state = {
 								size > 0
-								state = v
+								state = PREV
 							}
 						}
 					}
@@ -749,67 +766,49 @@ china_united_front_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision leave_chinese_united_front"
 			set_global_flag = { flag = united_front_collapse days = 3 value = 1 }
-			if = {
-				limit = {
-					all_allied_country = {
-						OR = {
-							is_faction_leader = yes
-							tag = ROOT
-							has_country_flag = original_front_faction_member
-						}
-					}
-				}
-				random_other_country = {
-					limit = {
-						is_faction_leader = yes
-						is_in_faction_with = ROOT
-					}
-					country_event = china_shared.11 #Front collapses
-				}
-			}
-			else = {
-				random_other_country = {
-					limit = {
-						is_faction_leader = yes
-						is_in_faction_with = ROOT
-					}
-					country_event = china_shared.12 #Notify Front leader
-				}
-			}
-			hidden_effect = { leave_faction = yes }
+			leave_faction = yes
 			clr_country_flag = united_front_member
 			if = {
-				limit = { has_country_flag = was_chinese_faction_leader }
+				limit = { has_country_flag = original_faction_leader }
+				set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
 				china_reform_faction = yes
+				clr_country_flag = original_faction_leader
+			}
+			FROM = {
+				country_event = china_shared.12 #Notify Front leader
 				hidden_effect = {
-					for_each_scope_loop = {
-						array = ROOT.chinese_faction_members
-						activate_targeted_decision = {
-							decision = rejoin_chinese_faction
-							target = ROOT
-						}
-					}
+					country_event = { id = china_shared.11 days = 3 } #Front collapses
 				}
-				clr_country_flag = was_chinese_faction_leader
 			}
 		}
 	}
 
 	rejoin_chinese_faction = {
 		priority = 1000
-		allowed = { always = no } #unlocked by event
+		allowed = {
+			OR = {
+				is_han_chinese_tag = yes
+				tag = TAN
+				tag = TIB
+			}
+			NOT = { tag = FNG }
+		}
 
 		available = {
 			has_war = no
 		}
 
 		visible = {
-			NOT = { has_war_with = JAP }
+			has_variable = original_faction_leader_tag
+			FROM = {
+				exists = yes
+				is_faction_leader = yes
+			}
 		}
 
-		target_array = global.china_tags_array
+		targets = { original_faction_leader_tag }
 		target_trigger = {
-			is_in_array = { FROM.chinese_faction_members = ROOT }
+			FROM = { is_faction_leader = yes }
 		}
 
 		cost = 0
@@ -817,44 +816,14 @@ china_united_front_decisions = {
 
 		ai_will_do = {
 			factor = 1000
-			modifier = {
-				factor = 0
-				has_global_flag = united_front_collapse
-			}
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision leave_chinese_united_front"
+			log = "[GetDateText]: [Root.GetName]: Decision rejoin_chinese_faction target: [From.GetName]"
 			set_global_flag = { flag = united_front_collapse days = 3 value = 1 }
-			if = {
-				limit = {
-					all_allied_country = {
-						OR = {
-							is_faction_leader = yes
-							tag = ROOT
-							has_country_flag = original_front_faction_member
-						}
-					}
-				}
-				random_other_country = {
-					limit = {
-						is_faction_leader = yes
-						is_in_faction_with = ROOT
-					}
-					country_event = china_shared.11 #Front collapses
-				}
-			}
-			else = {
-				random_other_country = {
-					limit = {
-						is_faction_leader = yes
-						is_in_faction_with = ROOT
-					}
-					country_event = china_shared.12 #Notify Front leader
-				}
-			}
-			hidden_effect = { leave_faction = yes }
+			set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
 			FROM = { add_to_faction = ROOT }
+			clear_variable = original_faction_leader_tag
 		}
 	}
 }
@@ -864,9 +833,6 @@ china_second_sino_japanese_war_UF_decisions = {
 		icon = generic_ignite_civil_war
 		available = {
 			hidden_trigger = { always = no }
-		}
-		visible = {
-			has_decision = UF_Resistance_Beijing
 		}
 
 		cancel_trigger = {
@@ -886,13 +852,14 @@ china_second_sino_japanese_war_UF_decisions = {
 
 		modifier = {
 			resistance_growth_on_our_occupied_states = 0.1
+			surrender_limit = 0.05
 		}
 
 		cost = 0
 		days_remove = -1
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Beijing"
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Beijing target: [From.GetName]"
 			increase_japanese_resistance_level_major = yes
 		}
 	}
@@ -900,9 +867,6 @@ china_second_sino_japanese_war_UF_decisions = {
 		icon = generic_ignite_civil_war
 		available = {
 			hidden_trigger = { always = no }
-		}
-		visible = {
-			has_decision = UF_Resistance_Nanjing
 		}
 
 		cancel_trigger = {
@@ -922,13 +886,14 @@ china_second_sino_japanese_war_UF_decisions = {
 
 		modifier = {
 			resistance_growth_on_our_occupied_states = 0.1
+			surrender_limit = 0.05
 		}
 
 		cost = 0
 		days_remove = -1
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Nanjing"
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Nanjing target: [From.GetName]"
 			increase_japanese_resistance_level_major = yes
 		}
 	}
@@ -936,9 +901,6 @@ china_second_sino_japanese_war_UF_decisions = {
 		icon = generic_ignite_civil_war
 		available = {
 			hidden_trigger = { always = no }
-		}
-		visible = {
-			has_decision = UF_Resistance_Wuhan
 		}
 
 		cancel_trigger = {
@@ -964,7 +926,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		days_remove = -1
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Wuhan"
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Wuhan target: [From.GetName]"
 			increase_japanese_resistance_level_major = yes
 		}
 	}
@@ -972,9 +934,6 @@ china_second_sino_japanese_war_UF_decisions = {
 		icon = generic_ignite_civil_war
 		available = {
 			hidden_trigger = { always = no }
-		}
-		visible = {
-			has_decision = UF_Resistance_Chongqing
 		}
 
 		cancel_trigger = {
@@ -1000,7 +959,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		days_remove = -1
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Chongqing"
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Chongqing target: [From.GetName]"
 			increase_japanese_resistance_level_major = yes
 		}
 	}
@@ -1008,9 +967,6 @@ china_second_sino_japanese_war_UF_decisions = {
 		icon = generic_ignite_civil_war
 		available = {
 			hidden_trigger = { always = no }
-		}
-		visible = {
-			has_decision = UF_Resistance_Luoyang
 		}
 
 		cancel_trigger = {
@@ -1036,7 +992,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		days_remove = -1
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Luoyang"
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Luoyang target: [From.GetName]"
 			increase_japanese_resistance_level_minor = yes
 		}
 	}
@@ -1044,9 +1000,6 @@ china_second_sino_japanese_war_UF_decisions = {
 		icon = generic_ignite_civil_war
 		available = {
 			hidden_trigger = { always = no }
-		}
-		visible = {
-			has_decision = UF_Resistance_Kunming
 		}
 
 		cancel_trigger = {
@@ -1072,7 +1025,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		days_remove = -1
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Kunming"
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Kunming target: [From.GetName]"
 			increase_japanese_resistance_level_minor = yes
 		}
 	}
@@ -1080,9 +1033,6 @@ china_second_sino_japanese_war_UF_decisions = {
 		icon = generic_ignite_civil_war
 		available = {
 			hidden_trigger = { always = no }
-		}
-		visible = {
-			has_decision = UF_Resistance_Changsha
 		}
 
 		cancel_trigger = {
@@ -1108,7 +1058,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		days_remove = -1
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Changsha"
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Changsha target: [From.GetName]"
 			increase_japanese_resistance_level_minor = yes
 		}
 	}
@@ -1116,9 +1066,6 @@ china_second_sino_japanese_war_UF_decisions = {
 		icon = generic_ignite_civil_war
 		available = {
 			hidden_trigger = { always = no }
-		}
-		visible = {
-			has_decision = UF_Resistance_Guangzhou
 		}
 
 		cancel_trigger = {
@@ -1138,13 +1085,14 @@ china_second_sino_japanese_war_UF_decisions = {
 
 		modifier = {
 			resistance_growth_on_our_occupied_states = 0.05
+			surrender_limit = 0.05
 		}
 
 		cost = 0
 		days_remove = -1
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Guangzhou"
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Guangzhou target: [From.GetName]"
 			increase_japanese_resistance_level_minor = yes
 		}
 	}
@@ -1152,9 +1100,6 @@ china_second_sino_japanese_war_UF_decisions = {
 		icon = generic_ignite_civil_war
 		available = {
 			hidden_trigger = { always = no }
-		}
-		visible = {
-			has_decision = UF_Resistance_Jinan
 		}
 
 		cancel_trigger = {
@@ -1180,7 +1125,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		days_remove = -1
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Jinan"
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Jinan target: [From.GetName]"
 			increase_japanese_resistance_level_minor = yes
 		}
 	}
@@ -1188,9 +1133,6 @@ china_second_sino_japanese_war_UF_decisions = {
 		icon = generic_ignite_civil_war
 		available = {
 			hidden_trigger = { always = no }
-		}
-		visible = {
-			has_decision = UF_Resistance_Xian
 		}
 
 		cancel_trigger = {
@@ -1216,12 +1158,7 @@ china_second_sino_japanese_war_UF_decisions = {
 		days_remove = -1
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Xian"
-			increase_japanese_resistance_level_minor = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove UF_Resistance_Xian"
+			log = "[GetDateText]: [Root.GetName]: Decision UF_Resistance_Xian target: [From.GetName]"
 			increase_japanese_resistance_level_minor = yes
 		}
 	}
@@ -1238,8 +1175,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		activation = {
-			has_war_with = event_target:current_china_leader
-			has_global_flag = chinese_united_front_formed
+			has_war_with = event_target:chinese_united_front_leader
 			NOT = {
 				608 = { has_state_flag = JAP_captures_this_state }
 			}
@@ -1247,7 +1183,7 @@ china_second_sino_japanese_war_japan_decisions = {
 
 		cancel_trigger = {
 			hidden_trigger = {
-				NOT = { has_war_with = event_target:current_china_leader }
+				NOT = { has_war_with = event_target:chinese_united_front_leader }
 			}
 		}
 
@@ -1257,21 +1193,20 @@ china_second_sino_japanese_war_japan_decisions = {
 			war_support_factor = 0.1
 		}
 
+		is_good = no
 		days_remove = -1
 		days_mission_timeout = 365
-		selectable_mission = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_608"
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_608 target: [From.GetName]"
 			if = {
 				limit = {
 					NOT = { has_global_flag = JAP_captured_608_once }
 				}
 				set_global_flag = JAP_captured_608_once
-				custom_effect_tooltip = JAP_Capture_tooltip
 				hidden_effect = {
 					for_each_scope_loop = {
-						array = event_target:current_china_leader.faction_members
+						array = event_target:chinese_united_front_leader.faction_members
 						activate_decision = UF_Resistance_Beijing
 					}
 				}
@@ -1279,7 +1214,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_608"
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_608 target: [From.GetName]"
 			decrease_japanese_war_willingness = yes
 			hidden_effect = {
 				activate_mission = JAP_Capture_608
@@ -1296,8 +1231,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		activation = {
-			has_war_with = event_target:current_china_leader
-			has_global_flag = chinese_united_front_formed
+			has_war_with = event_target:chinese_united_front_leader
 			NOT = {
 				613 = { has_state_flag = JAP_captures_this_state }
 			}
@@ -1305,7 +1239,7 @@ china_second_sino_japanese_war_japan_decisions = {
 
 		cancel_trigger = {
 			hidden_trigger = {
-				NOT = { has_war_with = event_target:current_china_leader }
+				NOT = { has_war_with = event_target:chinese_united_front_leader }
 			}
 		}
 
@@ -1315,21 +1249,20 @@ china_second_sino_japanese_war_japan_decisions = {
 			war_support_factor = 0.1
 		}
 
+		is_good = no
 		days_remove = -1
 		days_mission_timeout = 365
-		selectable_mission = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_613"
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_613 target: [From.GetName]"
 			if = {
 				limit = {
 					NOT = { has_global_flag = JAP_captured_613_once }
 				}
 				set_global_flag = JAP_captured_613_once
-				custom_effect_tooltip = JAP_Capture_tooltip
 				hidden_effect = {
 					for_each_scope_loop = {
-						array = event_target:current_china_leader.faction_members
+						array = event_target:chinese_united_front_leader.faction_members
 						activate_decision = UF_Resistance_Nanjing
 					}
 				}
@@ -1337,7 +1270,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_613"
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_613 target: [From.GetName]"
 			decrease_japanese_war_willingness = yes
 			hidden_effect = {
 				activate_mission = JAP_Capture_613
@@ -1354,8 +1287,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		activation = {
-			has_war_with = event_target:current_china_leader
-			has_global_flag = chinese_united_front_formed
+			has_war_with = event_target:chinese_united_front_leader
 			OR = {
 				613 = { has_state_flag = JAP_captures_this_state }
 				602 = { has_state_flag = JAP_captures_this_state }
@@ -1368,7 +1300,7 @@ china_second_sino_japanese_war_japan_decisions = {
 
 		cancel_trigger = {
 			hidden_trigger = {
-				NOT = { has_war_with = event_target:current_china_leader }
+				NOT = { has_war_with = event_target:chinese_united_front_leader }
 			}
 		}
 
@@ -1378,21 +1310,20 @@ china_second_sino_japanese_war_japan_decisions = {
 			war_support_factor = 0.1
 		}
 
+		is_good = no
 		days_remove = -1
 		days_mission_timeout = 365
-		selectable_mission = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_1048"
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_1048 target: [From.GetName]"
 			if = {
 				limit = {
 					NOT = { has_global_flag = JAP_captured_1048_once }
 				}
 				set_global_flag = JAP_captured_1048_once
-				custom_effect_tooltip = JAP_Capture_tooltip
 				hidden_effect = {
 					for_each_scope_loop = {
-						array = event_target:current_china_leader.faction_members
+						array = event_target:chinese_united_front_leader.faction_members
 						activate_decision = UF_Resistance_Wuhan
 					}
 				}
@@ -1400,7 +1331,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_1048"
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_1048 target: [From.GetName]"
 			decrease_japanese_war_willingness = yes
 			hidden_effect = {
 				activate_mission = JAP_Capture_1048
@@ -1417,8 +1348,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		activation = {
-			has_war_with = event_target:current_china_leader
-			has_global_flag = chinese_united_front_formed
+			has_war_with = event_target:chinese_united_front_leader
 			OR = {
 				1048 = { has_state_flag = JAP_captures_this_state }
 				325 = { has_state_flag = JAP_captures_this_state }
@@ -1431,7 +1361,7 @@ china_second_sino_japanese_war_japan_decisions = {
 
 		cancel_trigger = {
 			hidden_trigger = {
-				NOT = { has_war_with = event_target:current_china_leader }
+				NOT = { has_war_with = event_target:chinese_united_front_leader }
 			}
 		}
 
@@ -1441,21 +1371,20 @@ china_second_sino_japanese_war_japan_decisions = {
 			war_support_factor = 0.1
 		}
 
+		is_good = no
 		days_remove = -1
 		days_mission_timeout = 365
-		selectable_mission = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_650"
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_650 target: [From.GetName]"
 			if = {
 				limit = {
 					NOT = { has_global_flag = JAP_captured_650_once }
 				}
 				set_global_flag = JAP_captured_650_once
-				custom_effect_tooltip = JAP_Capture_tooltip
 				hidden_effect = {
 					for_each_scope_loop = {
-						array = event_target:current_china_leader.faction_members
+						array = event_target:chinese_united_front_leader.faction_members
 						activate_decision = UF_Resistance_Chongqing
 					}
 				}
@@ -1463,7 +1392,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_650"
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_650 target: [From.GetName]"
 			decrease_japanese_war_willingness = yes
 			hidden_effect = {
 				activate_mission = JAP_Capture_650
@@ -1480,8 +1409,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		activation = {
-			has_war_with = event_target:current_china_leader
-			has_global_flag = chinese_united_front_formed
+			has_war_with = event_target:chinese_united_front_leader
 			OR = {
 				608 = { has_state_flag = JAP_captures_this_state }
 				1048 = { has_state_flag = JAP_captures_this_state }
@@ -1493,7 +1421,7 @@ china_second_sino_japanese_war_japan_decisions = {
 
 		cancel_trigger = {
 			hidden_trigger = {
-				NOT = { has_war_with = event_target:current_china_leader }
+				NOT = { has_war_with = event_target:chinese_united_front_leader }
 			}
 		}
 
@@ -1503,21 +1431,20 @@ china_second_sino_japanese_war_japan_decisions = {
 			war_support_factor = 0.1
 		}
 
+		is_good = no
 		days_remove = -1
 		days_mission_timeout = 365
-		selectable_mission = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_607"
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_607 target: [From.GetName]"
 			if = {
 				limit = {
 					NOT = { has_global_flag = JAP_captured_607_once }
 				}
 				set_global_flag = JAP_captured_607_once
-				custom_effect_tooltip = JAP_Capture_tooltip
 				hidden_effect = {
 					for_each_scope_loop = {
-						array = event_target:current_china_leader.faction_members
+						array = event_target:chinese_united_front_leader.faction_members
 						activate_decision = UF_Resistance_Luoyang
 					}
 				}
@@ -1525,7 +1452,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_607"
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_607 target: [From.GetName]"
 			decrease_japanese_war_willingness = yes
 			hidden_effect = {
 				activate_mission = JAP_Capture_607
@@ -1542,8 +1469,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		activation = {
-			has_war_with = event_target:current_china_leader
-			has_global_flag = chinese_united_front_formed
+			has_war_with = event_target:chinese_united_front_leader
 			592 = { has_state_flag = JAP_captures_this_state }
 			NOT = {
 				325 = { has_state_flag = JAP_captures_this_state }
@@ -1552,7 +1478,7 @@ china_second_sino_japanese_war_japan_decisions = {
 
 		cancel_trigger = {
 			hidden_trigger = {
-				NOT = { has_war_with = event_target:current_china_leader }
+				NOT = { has_war_with = event_target:chinese_united_front_leader }
 			}
 		}
 
@@ -1562,21 +1488,20 @@ china_second_sino_japanese_war_japan_decisions = {
 			war_support_factor = 0.1
 		}
 
+		is_good = no
 		days_remove = -1
 		days_mission_timeout = 365
-		selectable_mission = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_325"
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_325 target: [From.GetName]"
 			if = {
 				limit = {
 					NOT = { has_global_flag = JAP_captured_325_once }
 				}
 				set_global_flag = JAP_captured_325_once
-				custom_effect_tooltip = JAP_Capture_tooltip
 				hidden_effect = {
 					for_each_scope_loop = {
-						array = event_target:current_china_leader.faction_members
+						array = event_target:chinese_united_front_leader.faction_members
 						activate_decision = UF_Resistance_Kunming
 					}
 				}
@@ -1584,7 +1509,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_325"
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_325 target: [From.GetName]"
 			decrease_japanese_war_willingness = yes
 			hidden_effect = {
 				activate_mission = JAP_Capture_325
@@ -1601,8 +1526,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		activation = {
-			has_war_with = event_target:current_china_leader
-			has_global_flag = chinese_united_front_formed
+			has_war_with = event_target:chinese_united_front_leader
 			OR = {
 				592 = { has_state_flag = JAP_captures_this_state }
 				1048 = { has_state_flag = JAP_captures_this_state }
@@ -1614,7 +1538,7 @@ china_second_sino_japanese_war_japan_decisions = {
 
 		cancel_trigger = {
 			hidden_trigger = {
-				NOT = { has_war_with = event_target:current_china_leader }
+				NOT = { has_war_with = event_target:chinese_united_front_leader }
 			}
 		}
 
@@ -1624,21 +1548,20 @@ china_second_sino_japanese_war_japan_decisions = {
 			war_support_factor = 0.1
 		}
 
+		is_good = no
 		days_remove = -1
 		days_mission_timeout = 365
-		selectable_mission = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_602"
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_602 target: [From.GetName]"
 			if = {
 				limit = {
 					NOT = { has_global_flag = JAP_captured_602_once }
 				}
 				set_global_flag = JAP_captured_602_once
-				custom_effect_tooltip = JAP_Capture_tooltip
 				hidden_effect = {
 					for_each_scope_loop = {
-						array = event_target:current_china_leader.faction_members
+						array = event_target:chinese_united_front_leader.faction_members
 						activate_decision = UF_Resistance_Changsha
 					}
 				}
@@ -1646,7 +1569,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_602"
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_602 target: [From.GetName]"
 			decrease_japanese_war_willingness = yes
 			hidden_effect = {
 				activate_mission = JAP_Capture_602
@@ -1663,8 +1586,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		activation = {
-			has_war_with = event_target:current_china_leader
-			has_global_flag = chinese_united_front_formed
+			has_war_with = event_target:chinese_united_front_leader
 			NOT = {
 				592 = { has_state_flag = JAP_captures_this_state }
 			}
@@ -1672,7 +1594,7 @@ china_second_sino_japanese_war_japan_decisions = {
 
 		cancel_trigger = {
 			hidden_trigger = {
-				NOT = { has_war_with = event_target:current_china_leader }
+				NOT = { has_war_with = event_target:chinese_united_front_leader }
 			}
 		}
 
@@ -1682,21 +1604,20 @@ china_second_sino_japanese_war_japan_decisions = {
 			war_support_factor = 0.1
 		}
 
+		is_good = no
 		days_remove = -1
 		days_mission_timeout = 365
-		selectable_mission = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_592"
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_592 target: [From.GetName]"
 			if = {
 				limit = {
 					NOT = { has_global_flag = JAP_captured_592_once }
 				}
 				set_global_flag = JAP_captured_592_once
-				custom_effect_tooltip = JAP_Capture_tooltip
 				hidden_effect = {
 					for_each_scope_loop = {
-						array = event_target:current_china_leader.faction_members
+						array = event_target:chinese_united_front_leader.faction_members
 						activate_decision = UF_Resistance_Guangzhou
 					}
 				}
@@ -1704,7 +1625,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_592"
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_592 target: [From.GetName]"
 			decrease_japanese_war_willingness = yes
 			hidden_effect = {
 				activate_mission = JAP_Capture_592
@@ -1721,8 +1642,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		activation = {
-			has_war_with = event_target:current_china_leader
-			has_global_flag = chinese_united_front_formed
+			has_war_with = event_target:chinese_united_front_leader
 			NOT = {
 				597 = { has_state_flag = JAP_captures_this_state }
 			}
@@ -1730,7 +1650,7 @@ china_second_sino_japanese_war_japan_decisions = {
 
 		cancel_trigger = {
 			hidden_trigger = {
-				NOT = { has_war_with = event_target:current_china_leader }
+				NOT = { has_war_with = event_target:chinese_united_front_leader }
 			}
 		}
 
@@ -1740,21 +1660,20 @@ china_second_sino_japanese_war_japan_decisions = {
 			war_support_factor = 0.1
 		}
 
+		is_good = no
 		days_remove = -1
 		days_mission_timeout = 365
-		selectable_mission = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_597"
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_597 target: [From.GetName]"
 			if = {
 				limit = {
 					NOT = { has_global_flag = JAP_captured_597_once }
 				}
 				set_global_flag = JAP_captured_597_once
-				custom_effect_tooltip = JAP_Capture_tooltip
 				hidden_effect = {
 					for_each_scope_loop = {
-						array = event_target:current_china_leader.faction_members
+						array = event_target:chinese_united_front_leader.faction_members
 						activate_decision = UF_Resistance_Jinan
 					}
 				}
@@ -1762,7 +1681,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_597"
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_597 target: [From.GetName]"
 			decrease_japanese_war_willingness = yes
 			hidden_effect = {
 				activate_mission = JAP_Capture_597
@@ -1779,8 +1698,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		activation = {
-			has_war_with = event_target:current_china_leader
-			has_global_flag = chinese_united_front_formed
+			has_war_with = event_target:chinese_united_front_leader
 			OR = {
 				607 = { has_state_flag = JAP_captures_this_state }
 				608 = { has_state_flag = JAP_captures_this_state }
@@ -1792,7 +1710,7 @@ china_second_sino_japanese_war_japan_decisions = {
 
 		cancel_trigger = {
 			hidden_trigger = {
-				NOT = { has_war_with = event_target:current_china_leader }
+				NOT = { has_war_with = event_target:chinese_united_front_leader }
 			}
 		}
 
@@ -1802,21 +1720,20 @@ china_second_sino_japanese_war_japan_decisions = {
 			war_support_factor = 0.1
 		}
 
+		is_good = no
 		days_remove = -1
 		days_mission_timeout = 365
-		selectable_mission = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_799"
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_Capture_799 target: [From.GetName]"
 			if = {
 				limit = {
 					NOT = { has_global_flag = JAP_captured_799_once }
 				}
 				set_global_flag = JAP_captured_799_once
-				custom_effect_tooltip = JAP_Capture_tooltip
 				hidden_effect = {
 					for_each_scope_loop = {
-						array = event_target:current_china_leader.faction_members
+						array = event_target:chinese_united_front_leader.faction_members
 						activate_decision = UF_Resistance_Xian
 					}
 				}
@@ -1824,7 +1741,7 @@ china_second_sino_japanese_war_japan_decisions = {
 		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_799"
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_Capture_799 target: [From.GetName]"
 			decrease_japanese_war_willingness = yes
 			hidden_effect = {
 				activate_mission = JAP_Capture_799
@@ -1872,10 +1789,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision steel_huainan_find"
+			log = "[GetDateText]: [Root.GetName]: Decision steel_huainan_find target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove steel_huainan_find"
+			log = "[GetDateText]: [Root.GetName]: Decision remove steel_huainan_find target: [From.GetName]"
 			if = {
 				limit = { has_country_flag = ANQ_can_prospect_resources_qing }
 				1050 = {
@@ -1936,10 +1853,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision steel_changsa_find"
+			log = "[GetDateText]: [Root.GetName]: Decision steel_changsa_find target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove steel_changsa_find"
+			log = "[GetDateText]: [Root.GetName]: Decision remove steel_changsa_find target: [From.GetName]"
 			if = {
 				limit = { has_country_flag = ANQ_can_prospect_resources_qing }
 				602 = {
@@ -2004,10 +1921,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision steel_nhunan_find"
+			log = "[GetDateText]: [Root.GetName]: Decision steel_nhunan_find target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove steel_nhunan_find"
+			log = "[GetDateText]: [Root.GetName]: Decision remove steel_nhunan_find target: [From.GetName]"
 			if = {
 				limit = { has_country_flag = ANQ_can_prospect_resources_qing }
 				1013 = {
@@ -2072,10 +1989,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision steel_nanjing_find"
+			log = "[GetDateText]: [Root.GetName]: Decision steel_nanjing_find target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove steel_nanjing_find"
+			log = "[GetDateText]: [Root.GetName]: Decision remove steel_nanjing_find target: [From.GetName]"
 			if = {
 				limit = { has_country_flag = ANQ_can_prospect_resources_qing }
 				613 = {
@@ -2140,10 +2057,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision steel_jinan_find"
+			log = "[GetDateText]: [Root.GetName]: Decision steel_jinan_find target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove steel_jinan_find"
+			log = "[GetDateText]: [Root.GetName]: Decision remove steel_jinan_find target: [From.GetName]"
 			if = {
 				limit = { has_country_flag = ANQ_can_prospect_resources_qing }
 				597 = {
@@ -2222,10 +2139,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision FNG_Expand_the_Anshan_Mines"
+			log = "[GetDateText]: [Root.GetName]: Decision FNG_Expand_the_Anshan_Mines target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Expand_the_Anshan_Mines"
+			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Expand_the_Anshan_Mines target: [From.GetName]"
 			716 = {
 				set_state_flag = FNG_steel_mines_developed
 				add_resource = {
@@ -2292,10 +2209,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision MAN_Aluminium_Extraction"
+			log = "[GetDateText]: [Root.GetName]: Decision MAN_Aluminium_Extraction target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove MAN_Aluminium_Extraction"
+			log = "[GetDateText]: [Root.GetName]: Decision remove MAN_Aluminium_Extraction target: [From.GetName]"
 			716 = {
 				set_state_flag = FNG_aluminium_mines_developed
 				add_resource = {
@@ -2359,10 +2276,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision HNN_Exploit_Hunan_Machinery_Factory1"
+			log = "[GetDateText]: [Root.GetName]: Decision HNN_Exploit_Hunan_Machinery_Factory1 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove HNN_Exploit_Hunan_Machinery_Factory1"
+			log = "[GetDateText]: [Root.GetName]: Decision remove HNN_Exploit_Hunan_Machinery_Factory1 target: [From.GetName]"
 			602 = {
 				set_state_flag = HNN_steel_mines_developed
 				add_resource = {
@@ -2421,10 +2338,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision LEP_improved_tungsten_extraction"
+			log = "[GetDateText]: [Root.GetName]: Decision LEP_improved_tungsten_extraction target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_improved_tungsten_extraction"
+			log = "[GetDateText]: [Root.GetName]: Decision remove LEP_improved_tungsten_extraction target: [From.GetName]"
 			1012 = {
 				set_state_flag = LEP_tungsten_mines_developed
 				add_resource = {
@@ -2483,10 +2400,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision LEC_to_the_coal_fields"
+			log = "[GetDateText]: [Root.GetName]: Decision LEC_to_the_coal_fields target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove LEC_to_the_coal_fields"
+			log = "[GetDateText]: [Root.GetName]: Decision remove LEC_to_the_coal_fields target: [From.GetName]"
 			609 = {
 				set_state_flag = LEC_coal_mines_developed
 				add_resource = {
@@ -2549,10 +2466,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision GXC_Fuguo_Coal_Mine"
+			log = "[GetDateText]: [Root.GetName]: Decision GXC_Fuguo_Coal_Mine target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove GXC_Fuguo_Coal_Mine"
+			log = "[GetDateText]: [Root.GetName]: Decision remove GXC_Fuguo_Coal_Mine target: [From.GetName]"
 			800 = {
 				set_state_flag = GXC_coal_mines_developed
 				add_resource = {
@@ -2619,10 +2536,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision QIE_expandmines1"
+			log = "[GetDateText]: [Root.GetName]: Decision QIE_expandmines1 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_expandmines1"
+			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_expandmines1 target: [From.GetName]"
 			614 = {
 				set_state_flag = QIE_steel_mines_developed
 				add_resource = {
@@ -2689,10 +2606,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision QIE_expandmines2"
+			log = "[GetDateText]: [Root.GetName]: Decision QIE_expandmines2 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_expandmines2"
+			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_expandmines2 target: [From.GetName]"
 			1060 = {
 				set_state_flag = QIE_steel_mines_developed
 				add_resource = {
@@ -2708,7 +2625,7 @@ prospect_for_resources = {
 	}
 
 	SQI_Improve_Jiangxi = {
-		icon = steel
+		icon = tungsten
 
 		allowed = {
 			is_chinese_tag = yes
@@ -2755,15 +2672,20 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_Improve_Jiangxi"
+			log = "[GetDateText]: [Root.GetName]: Decision SQI_Improve_Jiangxi target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SQI_Improve_Jiangxi"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SQI_Improve_Jiangxi target: [From.GetName]"
 			1044 = {
 				set_state_flag = SQI_steel_mines_developed
 				add_resource = {
 					type = tungsten
 					amount = 3
+				}
+				add_building_construction = {
+					type = infrastructure
+					level = 1
+					instant_build = yes
 				}
 			}
 		}
@@ -2821,10 +2743,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_Improve_Fujian"
+			log = "[GetDateText]: [Root.GetName]: Decision SQI_Improve_Fujian target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SQI_Improve_Fujian"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SQI_Improve_Fujian target: [From.GetName]"
 			1046 = {
 				set_state_flag = SQI_aluminium_mines_developed
 				add_resource = {
@@ -2889,10 +2811,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SHX_expand_coal_mines1"
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_expand_coal_mines1 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_expand_coal_mines1"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_expand_coal_mines1 target: [From.GetName]"
 			1015 = {
 				set_state_flag = SHX_coal_mines_developed
 				add_resource = {
@@ -2957,10 +2879,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SHX_expand_coal_mines2"
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_expand_coal_mines2 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_expand_coal_mines2"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_expand_coal_mines2 target: [From.GetName]"
 			1072 = {
 				set_state_flag = SHX_coal_mines_developed
 				add_resource = {
@@ -3020,10 +2942,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SHX_improve_metal_refining1"
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_improve_metal_refining1 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_improve_metal_refining1"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_improve_metal_refining1 target: [From.GetName]"
 			1015 = {
 				set_state_flag = SHX_coal_mines_developed2
 				add_resource = {
@@ -3088,10 +3010,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SHX_improve_metal_refining2"
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_improve_metal_refining2 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_improve_metal_refining2"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_improve_metal_refining2 target: [From.GetName]"
 			622 = {
 				set_state_flag = SHX_coal_mines_developed
 				add_resource = {
@@ -3150,10 +3072,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SHX_improve_metal_refining3"
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_improve_metal_refining3 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_improve_metal_refining3"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_improve_metal_refining3 target: [From.GetName]"
 			622 = {
 				set_state_flag = SHX_tungsten_mines_developed
 				add_resource = {
@@ -3213,10 +3135,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SHX_further_modernisation1"
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_further_modernisation1 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_further_modernisation1"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_further_modernisation1 target: [From.GetName]"
 			1072 = {
 				set_state_flag = SHX_steel_mines_developed
 				add_resource = {
@@ -3276,10 +3198,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SHX_further_modernisation2"
+			log = "[GetDateText]: [Root.GetName]: Decision SHX_further_modernisation2 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_further_modernisation2"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SHX_further_modernisation2 target: [From.GetName]"
 			1015 = {
 				set_state_flag = SHX_steel_mines_developed
 				add_resource = {
@@ -3338,10 +3260,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Jialing_Coal_Fields"
+			log = "[GetDateText]: [Root.GetName]: Decision SZC_Jialing_Coal_Fields target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Jialing_Coal_Fields"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Jialing_Coal_Fields target: [From.GetName]"
 			661 = {
 				set_state_flag = SZC_coal_mines_developed
 				add_resource = {
@@ -3400,10 +3322,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_The_Riches_Of_Xikang"
+			log = "[GetDateText]: [Root.GetName]: Decision SZC_The_Riches_Of_Xikang target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_The_Riches_Of_Xikang"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_The_Riches_Of_Xikang target: [From.GetName]"
 			601 = {
 				set_state_flag = SZC_coal_mines_developed
 				add_resource = {
@@ -3462,10 +3384,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Extract_Natural_Gas1"
+			log = "[GetDateText]: [Root.GetName]: Decision SZC_Extract_Natural_Gas1 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Extract_Natural_Gas1"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Extract_Natural_Gas1 target: [From.GetName]"
 			661 = {
 				set_state_flag = SZC_oil_wells_developed
 				add_resource = {
@@ -3524,10 +3446,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Extract_Natural_Gas2"
+			log = "[GetDateText]: [Root.GetName]: Decision SZC_Extract_Natural_Gas2 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Extract_Natural_Gas2"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Extract_Natural_Gas2 target: [From.GetName]"
 			650 = {
 				set_state_flag = SZC_oil_wells_developed
 				add_resource = {
@@ -3586,10 +3508,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Extract_Natural_Gas3"
+			log = "[GetDateText]: [Root.GetName]: Decision SZC_Extract_Natural_Gas3 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Extract_Natural_Gas3"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Extract_Natural_Gas3 target: [From.GetName]"
 			605 = {
 				set_state_flag = SZC_oil_wells_developed
 				add_resource = {
@@ -3648,14 +3570,14 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SIK_mineral_expedition"
+			log = "[GetDateText]: [Root.GetName]: Decision SIK_mineral_expedition target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SIK_mineral_expedition"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SIK_mineral_expedition target: [From.GetName]"
 			617 = {
 				set_state_flag = SIK_steel_mines_developed
 				add_resource = {
-					type = steel
+					type = oil
 					amount = 4
 				}
 			}
@@ -3710,10 +3632,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SIK_open_mineral_mining"
+			log = "[GetDateText]: [Root.GetName]: Decision SIK_open_mineral_mining target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SIK_open_mineral_mining"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SIK_open_mineral_mining target: [From.GetName]"
 			287 = {
 				set_state_flag = SIK_aluminium_mines_developed
 				add_resource = {
@@ -3772,10 +3694,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SIK_northern_gold"
+			log = "[GetDateText]: [Root.GetName]: Decision SIK_northern_gold target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SIK_northern_gold"
+			log = "[GetDateText]: [Root.GetName]: Decision remove SIK_northern_gold target: [From.GetName]"
 			618 = {
 				set_state_flag = SIK_tungsten_mines_developed
 				add_resource = {
@@ -3834,10 +3756,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision YUN_mining1"
+			log = "[GetDateText]: [Root.GetName]: Decision YUN_mining1 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove YUN_mining1"
+			log = "[GetDateText]: [Root.GetName]: Decision remove YUN_mining1 target: [From.GetName]"
 			816 = {
 				set_state_flag = YUN_steel_mines_developed
 				add_resource = {
@@ -3896,10 +3818,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision YUN_mining2"
+			log = "[GetDateText]: [Root.GetName]: Decision YUN_mining2 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove YUN_mining2"
+			log = "[GetDateText]: [Root.GetName]: Decision remove YUN_mining2 target: [From.GetName]"
 			325 = {
 				set_state_flag = YUN_aluminium_mines_developed
 				add_resource = {
@@ -3958,10 +3880,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision YUN_mining3"
+			log = "[GetDateText]: [Root.GetName]: Decision YUN_mining3 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove YUN_mining3"
+			log = "[GetDateText]: [Root.GetName]: Decision remove YUN_mining3 target: [From.GetName]"
 			816 = {
 				set_state_flag = YUN_chromium_mines_developed
 				add_resource = {
@@ -4020,10 +3942,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision YUN_mining4"
+			log = "[GetDateText]: [Root.GetName]: Decision YUN_mining4 target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove YUN_mining4"
+			log = "[GetDateText]: [Root.GetName]: Decision remove YUN_mining4 target: [From.GetName]"
 			816 = {
 				set_state_flag = YUN_tungsten_mines_developed
 				add_resource = {

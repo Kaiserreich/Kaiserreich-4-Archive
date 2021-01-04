@@ -5,20 +5,6 @@
 add_namespace = china_shared
 add_namespace = china_redoubt
 
-country_event = { #Fading Legitimacy!
-	id = china_shared.1
-	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.1" }
-	title = china_shared.1.t
-	desc = china_shared.1.d
-
-	is_triggered_only = yes
-
-	option = {
-		name = china_shared.1.a
-		add_political_power = -20
-	}
-}
-
 country_event = { #An United Front
 	id = china_shared.2
 	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.2" }
@@ -29,18 +15,16 @@ country_event = { #An United Front
 
 	option = {
 		name = china_shared.2.a
-		hidden_effect = {
-			every_other_country = {
-				limit = {
-					NOT = { tag = FNG }
-					is_possible_united_front_member = yes
-					is_valid_peace_target = yes
-				}
-				country_event = {
-					id = china_shared.3
-					days = 8
-					random = 120
-				}
+		every_other_country = {
+			limit = {
+				NOT = { tag = FNG }
+				is_possible_united_front_member = yes
+				is_valid_peace_target = yes
+			}
+			country_event = {
+				id = china_shared.3
+				days = 8
+				random = 120
 			}
 		}
 	}
@@ -92,7 +76,7 @@ country_event = { #A Call For Unity
 		}
 		set_country_flag = united_front_member
 		hidden_effect = {
-			FROM = {
+			FROM.FROM = {
 				country_event = china_shared.4
 			}
 			if = {
@@ -120,7 +104,7 @@ country_event = { #A Call For Unity
 					set_country_flag = { flag = chinese_ceasefire_receiver days = 10 value = 1 }
 					country_event = {
 						id = china_shared.6
-						days = 2
+						days = 4
 					}
 				}
 			}
@@ -277,13 +261,13 @@ country_event = { #FROM Offers A Ceasefire
 
 country_event = { #FROM Accepts Ceasefire
 	id = china_shared.7
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.7" }
 	title = china_shared.7.t
 	desc = china_shared.7.d
 
 	is_triggered_only = yes
 
 	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event china_shared.7"
 		hidden_effect = {
 			### peace out FROM and ROOT
 			FROM = {
@@ -338,37 +322,44 @@ country_event = { #Formation of the United Front
 		set_country_flag = united_front_member
 		set_global_flag = chinese_united_front_formed
 		save_global_event_target_as = chinese_united_front_leader
-		if = {
-			limit = { is_faction_leader = yes }
-			set_faction_name = "Chinese United Front"
-			for_each_scope_loop = {
-				array = ROOT.faction_members
-				set_country_flag = original_front_faction_member
-				set_country_flag = united_front_member
-			}
+		for_each_scope_loop = {
+			array = faction_members
+			set_country_flag = original_front_faction_member
+			set_country_flag = united_front_member
 		}
-		else = {
-			create_faction = united_front_faction
-		}
-		every_other_country = {
+		every_country = {
 			limit = {
 				is_chinese_tag = yes
 				is_faction_leader = yes
 				has_country_flag = united_front_member
-				NOT = { has_country_flag = original_front_faction_member }
 			}
-			save_faction_into_array = yes
+			set_country_flag = original_faction_leader
+			every_other_country = {
+				limit = {
+					is_subject = no
+					is_in_faction_with = PREV
+				}
+				set_variable = { original_faction_leader_tag = PREV }
+			}
 			dismantle_faction = yes
 		}
+		create_faction = united_front_faction
 		every_other_country = {
 			limit = {
 				is_chinese_tag = yes
+				is_subject = no
 				has_country_flag = united_front_member
-				NOT = { has_country_flag = original_front_faction_member }
+				NOT = { is_in_faction_with = ROOT }
 			}
 			ROOT = { add_to_faction = PREV }
 		}
 		setup_united_front_AI = yes
+		hidden_effect = {
+			random_other_country = {#bounce for flavor
+				limit = { is_ai = yes }
+				country_event = china_shared.15
+			}
+		}
 	}
 }
 
@@ -377,15 +368,6 @@ country_event = { #The United Front Fails
 	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.10" }
 	title = china_shared.10.t
 	desc = china_shared.10.d
-
-	trigger = {
-		NOT = {
-			any_of_scopes = {
-				array = global.china_tags_array
-				has_country_flag = united_front_member
-			}
-		}
-	}
 
 	is_triggered_only = yes
 
@@ -403,6 +385,11 @@ country_event = { #The United Front Collapses
 
 	trigger = {
 		has_global_flag = chinese_united_front_formed
+		NOT = {
+			any_allied_country = {
+				NOT = { has_country_flag = original_front_faction_member }
+			}
+		}
 	}
 
 	is_triggered_only = yes
@@ -415,20 +402,44 @@ country_event = { #The United Front Collapses
 			clear_global_event_target = chinese_united_front_leader
 			dismantle_faction = yes
 			clr_country_flag = united_front_member
-			china_reform_faction = yes
-			every_other_country = {
-				limit = {
-					has_country_flag = original_front_faction_member
+			if = {
+				limit = { has_country_flag = original_faction_leader }
+				china_reform_faction = yes
+				every_other_country = {
+					limit = {
+						has_country_flag = united_front_member
+						is_subject = no
+					}
+					clr_country_flag = united_front_member
+					if = {
+						limit = { has_country_flag = original_front_faction_member }
+						clr_country_flag = original_front_faction_member
+						set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
+						ROOT = { add_to_faction = PREV }
+					}
 				}
-				clr_country_flag = original_front_faction_member
-				clr_country_flag = united_front_member
-				set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
-				ROOT = { add_to_faction = PREV }
+			}
+			else_if = {
+				limit = { has_variable = original_faction_leader_tag }
+				var:original_faction_leader_tag = { china_reform_faction = yes }
+				every_other_country = {
+					limit = {
+						has_country_flag = united_front_member
+						is_subject = no
+					}
+					clr_country_flag = united_front_member
+					if = {
+						limit = { has_country_flag = original_front_faction_member }
+						clr_country_flag = original_front_faction_member
+						set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
+						var:original_faction_leader_tag = { add_to_faction = PREV }
+						clear_variable = original_faction_leader_tag
+					}
+				}
 			}
 			every_other_country = {
-				limit = { has_country_flag = was_chinese_faction_leader }
-				clr_country_flag = was_chinese_faction_leader
-				clear_array = THIS.chinese_faction_members
+				limit = { has_country_flag = original_faction_leader }
+				clr_country_flag = original_faction_leader
 			}
 			news_event = {
 				id = china_shared.14
@@ -457,6 +468,7 @@ country_event = { #FROM leaves the United Front
 
 news_event = { #The Chinese United Front
 	id = china_shared.13
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.13" }
 	title = china_shared.13.t
 
 	desc = {
@@ -492,12 +504,11 @@ news_event = { #The Chinese United Front
 	major = yes
 	show_major = {
 		NOT = {
-			tag = event_target:current_china_leader
+			tag = event_target:chinese_united_front_leader
 		}
 	}
 
 	immediate = {
-		log = "[GetDateText]: [Root.GetName]: event china_shared.13"
 		hidden_effect = {
 			every_state = {
 				limit = {
@@ -566,8 +577,8 @@ news_event = { #The Chinese United Front
 
 news_event = { #Collapse of the United Front
 	id = china_shared.14
-	title = china_shared.14.t
 	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.14" }
+	title = china_shared.14.t
 
 	desc = {
 		text = china_shared.14.d.CHI
@@ -594,7 +605,7 @@ news_event = { #Collapse of the United Front
 	major = yes
 	show_major = {
 		NOT = {
-			tag = event_target:current_china_leader
+			tag = event_target:chinese_united_front_leader
 		}
 	}
 
@@ -617,6 +628,68 @@ news_event = { #Collapse of the United Front
 		trigger = {
 			NOT = { tag = JAP }
 			is_chinese_tag = no
+		}
+	}
+}
+
+country_event = { #bounce
+	id = china_shared.15
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.15" }
+	title = china_shared.15.t
+	desc = china_shared.15.d
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = {
+		name = AI_OPTION
+		every_country = {
+			limit = {
+				is_han_chinese_tag = yes
+				is_working_with_JAP = no
+			}
+			country_event = {
+				id = china_shared.16
+				days = 70
+			}
+		}
+	}
+}
+
+country_event = { #Popularity of March of the Volunteers (flavor)
+	id = china_shared.16
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_shared.16" }
+	immediate = {
+		hidden_effect = {
+			set_country_flag = CHI_yyj_music_flag
+		}
+	}
+	title = china_shared.16.t
+	desc = china_shared.16.d
+
+	trigger = {
+		has_country_flag = united_front_member
+	}
+
+	is_triggered_only = yes
+
+	option = {#begruding
+		name = china_shared.16.a
+		trigger = {
+			NOT = {
+				has_socialist_government = yes
+				has_government = social_democrat
+			}
+		}
+	}
+
+	option = {#support
+		name = china_shared.16.b
+		trigger = {
+			OR = {
+				has_socialist_government = yes
+				has_government = social_democrat
+			}
 		}
 	}
 }
@@ -666,7 +739,7 @@ country_event = { #The Government Reaches Sichuan/Yunnan
 	desc = china_redoubt.2.d
 
 	trigger = {
-		is_in_faction_with = event_target:current_china_leader
+		is_in_faction_with = CHN
 	}
 
 	is_triggered_only = yes
@@ -702,9 +775,9 @@ country_event = { #The Government Returns Home
 		name = china_redoubt.3.a
 		if = {
 			limit = {
-				event_target:current_china_leader = { is_government_in_exile = yes }
+				CHN = { is_government_in_exile = yes }
 			}
-			end_exile = event_target:current_china_leader
+			end_exile = CHN
 		}
 		central_government_returns = yes
 	}
@@ -714,12 +787,12 @@ country_event = { #The Government Returns Home
 		trigger = { is_ai = no }
 		if = {
 			limit = {
-				event_target:current_china_leader = { is_government_in_exile = yes }
+				CHN = { is_government_in_exile = yes }
 			}
-			end_exile = event_target:current_china_leader
+			end_exile = CHN
 		}
 		central_government_returns = yes
-		event_target:current_china_leader = {
+		CHN = {
 			change_tag_from = ROOT
 		}
 	}
@@ -735,15 +808,11 @@ country_event = { #Ally Flees to the Redoubt
 		if = {
 			limit = { has_event_target = china_national_redoubt }
 			is_in_faction_with = event_target:china_national_redoubt
-			event_target:china_national_redoubt = {
-				has_capitulated = no
-			}
+			event_target:china_national_redoubt = { has_capitulated = no }
 		}
 		else = {
-			is_in_faction_with = event_target:current_china_leader
-			event_target:current_china_leader = {
-				has_capitulated = no
-			}
+			is_in_faction_with = CHN
+			CHN = { has_capitulated = no }
 		}
 	}
 
@@ -762,7 +831,7 @@ country_event = { #Ally Flees to the Redoubt
 			}
 		}
 		else = {
-			event_target:current_china_leader = {
+			CHN = {
 				country_event = {
 					id = china_redoubt.5
 					days = 2
@@ -785,7 +854,7 @@ country_event = { #Ally Flees to the Redoubt
 			}
 		}
 		else = {
-			event_target:current_china_leader = {
+			CHN = {
 				country_event = china_redoubt.5
 				change_tag_from = ROOT
 			}

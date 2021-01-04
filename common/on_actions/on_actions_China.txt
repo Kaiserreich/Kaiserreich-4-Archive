@@ -1,6 +1,7 @@
 on_actions = {
 	on_startup = {
 		effect = {
+			set_variable = { global.china_target_tag = QIE }
 			for_each_loop = {
 				array = global.china_tags_array
 				var:v = {
@@ -77,7 +78,7 @@ on_actions = {
 					value = 1
 				}
 			}
-
+			
 			#Set up Legation Council
 			add_to_array = { global.LEC_voters = GER }
 			add_to_array = { global.LEC_voters = JAP }
@@ -115,81 +116,27 @@ on_actions = {
 				SQI = {
 					clear_variable = sqi_german_control_var
 					clr_country_flag = SQI_German_Loan
-					remove_ideas = {
-						SQI_Tsingtau_Collaboration
-						SQI_Tsingtau_Collaboration1
-						SQI_Tsingtau_Collaboration2
-						SQI_Tsingtau_Collaboration3
-						SQI_Tsingtau_Collaboration4
-						SQI_Tsingtau_Collaboration5
-						SQI_Tsingtau_Collaboration6
-						SQI_Tsingtau_Collaboration7
-						SQI_Tsingtau_Collaboration8
-						SQI_Tsingtau_Collaboration9
-						SQI_Tsingtau_Collaboration10
-						SQI_Tsingtau_Collaboration11
-						SQI_Tsingtau_Collaboration12
-						SQI_Tsingtau_Collaboration13
-						SQI_Tsingtau_Collaboration14
-						SQI_Tsingtau_Collaboration15
-						SQI_Tsingtau_Collaboration16
-					}
+					remove_ideas_with_trait = SQI_German_Collaboration
 				}
 			}
-			if = {
+			else_if = {
 				limit = {
 					FROM = { tag = FNG }
 				}
 				SQI = {
 					clear_variable = sqi_japanese_control_var
 					clr_country_flag = SQI_Japanese_Loan
-					remove_ideas = {
-						SQI_Japan_Collaboration
-						SQI_Japan_Collaboration1
-						SQI_Japan_Collaboration2
-						SQI_Japan_Collaboration3
-						SQI_Japan_Collaboration4
-						SQI_Japan_Collaboration5
-						SQI_Japan_Collaboration6
-						SQI_Japan_Collaboration7
-						SQI_Japan_Collaboration8
-						SQI_Japan_Collaboration9
-						SQI_Japan_Collaboration10
-						SQI_Japan_Collaboration11
-						SQI_Japan_Collaboration12
-						SQI_Japan_Collaboration13
-						SQI_Japan_Collaboration14
-						SQI_Japan_Collaboration15
-						SQI_Japan_Collaboration16
-					}
+					remove_ideas_with_trait = SQI_Fengtian_Collaboration
 				}
 			}
-			if = {
+			else_if = {
 				limit = {
 					FROM = { tag = LEC }
 				}
 				SQI = {
 					clear_variable = sqi_legation_control_var
 					clr_country_flag = SQI_Legation_Loan
-					remove_ideas = {
-						SQI_Legation_Collaboration
-						SQI_Legation_Collaboration1
-						SQI_Legation_Collaboration2
-						SQI_Legation_Collaboration3
-						SQI_Legation_Collaboration4
-						SQI_Legation_Collaboration5
-						SQI_Legation_Collaboration6
-						SQI_Legation_Collaboration7
-						SQI_Legation_Collaboration8
-						SQI_Legation_Collaboration9
-						SQI_Legation_Collaboration10
-						SQI_Legation_Collaboration11
-						SQI_Legation_Collaboration12
-						SQI_Legation_Collaboration13
-						SQI_Legation_Collaboration14
-						SQI_Legation_Collaboration15
-						SQI_Legation_Collaboration16
-					}
+					remove_ideas_with_trait = SQI_Legation_Collaboration
 				}
 			}
 
@@ -200,7 +147,12 @@ on_actions = {
 				}
 				JAP = {
 					remove_ideas = FNG_mantetsu_profits
-					remove_dynamic_modifier = { modifier = FNG_mantetsu_profits_modifier }
+					if = {
+						limit = {
+							has_dynamic_modifier = { modifier = FNG_mantetsu_profits_modifier scope = FNG }
+						}
+						remove_dynamic_modifier = { modifier = FNG_mantetsu_profits_modifier }
+					}
 					add_timed_idea = {
 						idea = JAP_MANTETSU_COLLAPSE
 						days = 235
@@ -321,65 +273,18 @@ on_actions = {
 					}
 				}
 			}
-
-			#Disable the United Front AI if it was defeated
+			
+			#Move the China target
 			if = {
 				limit = {
-					has_global_flag = chinese_united_front_formed
-					event_target:current_china_leader = { tag = FROM }
+					FROM = { tag = CHN }
 				}
-				disable_united_front_AI = yes
-			}
-
-			#End the United Front if Japan is annexed
-
-			### Collapse the United Front, if it exists ###
-			if = {
-				limit = {
-					has_global_flag = chinese_united_front_formed
-					FROM = { tag = JAP }
-				}
-				disable_united_front_AI = yes
-				every_other_country = {
-					limit = { has_country_flag = was_chinese_faction_leader }
-					add_to_temp_array = { global.chinese_faction_leaders = THIS }
-				}
+				find_next_chinese_target = yes
+				
+				#Disable the United Front AI if it was defeated
 				if = {
-					limit = {
-						event_target:chinese_united_front_leader = {
-							all_allied_country = {
-								OR = {
-									tag = ROOT
-									is_subject_of = ROOT
-									has_country_flag = original_front_faction_member
-								}
-							}
-						}
-					}
-					event_target:chinese_united_front_leader = {
-						country_event = {
-							id = china_shared.11
-							days = 6
-						}
-					}
-				}
-				else = {
-					every_other_country = {
-						limit = {
-							is_in_faction_with = event_target:chinese_united_front_leader
-							OR = {
-								has_country_flag = was_chinese_faction_leader
-								NOT = {
-									any_of_scopes = {
-										array = global.chinese_faction_leaders
-										is_in_array = { chinese_faction_members = PREV }
-									}
-								}
-							}
-							NOT = { has_country_flag = original_front_faction_member }
-						}
-						activate_decision = leave_chinese_united_front
-					}
+					limit = { has_global_flag = chinese_united_front_formed }
+					disable_united_front_AI = yes
 				}
 			}
 
@@ -431,7 +336,12 @@ on_actions = {
 				}
 				JAP = {
 					remove_ideas = FNG_mantetsu_profits
-					remove_dynamic_modifier = { modifier = FNG_mantetsu_profits_modifier }
+					if = {
+						limit = {
+							has_dynamic_modifier = { modifier = FNG_mantetsu_profits_modifier scope = FNG }
+						}
+						remove_dynamic_modifier = { modifier = FNG_mantetsu_profits_modifier }
+					}
 				}
 			}
 
@@ -440,6 +350,50 @@ on_actions = {
 					FROM = { tag = ANQ }
 				}
 				CHI = { country_event = chi_for.11 }
+			}
+			
+			# Remove Qing's German influence
+			if = {
+				limit = {
+					FROM = { tag = GER }
+				}
+				QIE = {
+					if = {
+						limit = {
+							has_dynamic_modifier = { modifier = QIE_german_influence_dynamic_modifier }
+						}
+						clear_variable = var_PEKCOM_influence
+						remove_dynamic_modifier = { modifier = QIE_german_influence_dynamic_modifier }
+						set_political_party = {
+							ideology = market_liberal
+							popularity = 0
+						}
+					}
+				}
+			}
+			
+			# Remove the AOG idea
+			if = {
+				limit = {
+					FROM = {
+						OR = {
+							tag = LEP
+							tag = QIE
+						}
+					}
+				}
+				GEA = { country_event = Ostasien.210 }
+			}
+		}
+	}
+
+	# ROOT is capitulated country, FROM is winner
+	on_capitulation = {
+		effect = {
+			#Move the China target
+			if = {
+				limit = { tag = CHN }
+				find_next_chinese_target = yes
 			}
 		}
 	}
@@ -504,6 +458,32 @@ on_actions = {
 					FNG_JAP_hostile = no
 				}
 				FNG_break_with_japan = yes
+			}
+
+			# Fengtian + KMT vs Qing
+			if = {
+				limit = {
+					OR = {
+						tag = CHI
+						tag = FNG
+					}
+					FROM = { tag = QIE }
+				}
+				CHI = { country_event = { id = chi_fng.11 days = 2 } }
+				FNG = { country_event = { id = chi_fng.12 days = 2 } }
+			}
+			if = {
+				limit = {
+					tag = QIE
+					FROM = {
+						OR = {
+							tag = CHI
+							tag = FNG
+						}
+					}
+				}
+				CHI = { country_event = { id = chi_fng.11 days = 2 } }
+				FNG = { country_event = { id = chi_fng.12 days = 2 } }
 			}
 
 			#early war on a Zhao Hunan
@@ -611,6 +591,14 @@ on_actions = {
 			if = {
 				limit = { tag = SZC }
 				SZC_add_government_ministers = yes
+			} 
+			#Move the China target
+			if = {
+				limit = {
+					tag = CHN
+					is_subject = yes
+				}
+				find_next_chinese_target = yes
 			}
 		}
 	}
@@ -623,6 +611,12 @@ on_actions = {
 				country_event = ETS.100	#Temur
 				country_event = ETS.101	#Democratic
 			}
+			### Qing ###
+			if = {
+				limit = { tag = QIE }
+				country_event = qiecoup.32
+				country_event = qiecoup.33
+			}
 			### Liangguang ###
 			if = {
 				limit = { tag = GXC }
@@ -634,50 +628,6 @@ on_actions = {
 				limit = { tag = SZC }
 				country_event = sichuan.510
 				country_event = lngupc.30 #UPC
-			}
-		}
-	}
-
-	#FROM is country getting invited.
-	on_offer_join_faction = {
-		effect = {
-			if = {
-				limit = {
-					FROM = { tag = event_target:current_china_leader }
-				}
-				if = {
-					limit = { is_han_chinese_tag = yes }
-					save_global_event_target_as = event_target:current_china_leader
-				}
-				else = {
-					if = {
-						limit = { NOT = { country_exists = QIE } }
-						QIE = { save_global_event_target_as = event_target:current_china_leader }
-					}
-					else_if = {
-						limit = { NOT = { country_exists = FNG } }
-						FNG = { save_global_event_target_as = event_target:current_china_leader }
-					}
-					else_if = {
-						limit = { NOT = { country_exists = CHI } }
-						CHI = { save_global_event_target_as = event_target:current_china_leader }
-					}
-					else_if = {
-						limit = { NOT = { country_exists = GXC } }
-						GXC = { save_global_event_target_as = event_target:current_china_leader }
-					}
-					else_if = {
-						limit = { NOT = { country_exists = YUN } }
-						YUN = { save_global_event_target_as = event_target:current_china_leader }
-					}
-					else = {
-						random_scope_in_array = {
-							array = global.china_tags_array
-							limit = { exists = no }
-							save_global_event_target_as = event_target:current_china_leader
-						}
-					}
-				}
 			}
 		}
 	}
@@ -701,6 +651,11 @@ on_actions = {
 	#ROOT is winner #FROM is loser
 	on_peaceconference_ended = {
 		effect = {
+			#Legation Concession Ask
+			if = {
+				limit = { tag = LEC }
+				country_event = { id = lec.126 days = 2 }
+			}
 			# Sichuan events
 			if = {
 				limit = {
@@ -709,12 +664,36 @@ on_actions = {
 				}
 				ROOT = { country_event = sichuan.277 }
 			}
+			
+			if = {
+				limit = {
+					has_country_flag = NPA_revolt
+					FROM = { has_country_flag = NPA_revolt }
+				}
+				country_event = { id = npa.14 days = 1 }
+			}
 		}
 	}
 
 	#ROOT is new controller #FROM is old controller #FROM.FROM is state ID
 	on_state_control_changed = {
 		effect = {
+			if = { #Dihua and Aksu fall during Xinjiang war
+				limit = {
+					FROM = {
+						tag = SIK
+						has_idea = SIK_enemies_all_sides
+						NOT = {
+							controls_province = 4709
+							controls_province = 4682
+						}
+					}
+					FROM.FROM = { state = 617 }
+				}
+				FROM = {
+					force_capitulate = yes
+				}
+			}
 			# SZC-TIB peace deal
 			if = {
 				limit = {
@@ -731,6 +710,26 @@ on_actions = {
 					}
 				}
 				FROM = { country_event = sichuan.12 }
+			}
+			
+			# XSM-TIB+MON peace deal
+			if = {
+				limit = {
+					OR = {
+						tag = MON
+						tag = TIB
+						tag = XSM
+					}
+					has_war_with = FROM
+					FROM = {
+						OR = {
+							tag = MON
+							tag = TIB
+							tag = XSM
+						}
+					}
+				}
+				XSM = { country_event = mac.225 }
 			}
 
 			# BHC-CHI peace deal
@@ -769,28 +768,26 @@ on_actions = {
 						}
 					}
 					GEA = {
-						add_to_variable = { GEA_AOG_CITIES_FACTORIES = 3 }
-						add_to_variable = { GEA_AOG_CITIES = 0.03 }
-						subtract_from_variable = { GEA_AOG_CITIES_number = 1 }
+						subtract_from_variable = { GEA_AOG_CITIES = 0.03 }
+						add_to_variable = { GEA_AOG_CITIES_NUMBER = 1 }
 					}
 				}
 				else_if = {
 					limit = {
+						NOT = {
+							tag = LEP
+							tag = GEA
+						}
 						FROM = {
 							OR = {
 								tag = LEP
 								tag = GEA
 							}
 						}
-						NOT = {
-							tag = LEP
-							tag = GEA
-						}
 					}
 					GEA = {
-						subtract_from_variable = { GEA_AOG_CITIES_FACTORIES = 3 }
-						subtract_from_variable = { GEA_AOG_CITIES = 0.03 }
-						add_to_variable = { GEA_AOG_CITIES_NUMBER = 1 }
+						add_to_variable = { GEA_AOG_CITIES = 0.03 }
+						subtract_from_variable = { GEA_AOG_CITIES_number = 1 }
 					}
 				}
 			}
@@ -1099,12 +1096,7 @@ on_actions = {
 						}
 						has_war_with = FROM
 					}
-					FROM = {
-						OR = {
-							tag = event_target:current_china_leader
-							is_in_faction_with = event_target:current_china_leader
-						}
-					}
+					FROM = { is_ally_with = CHN }
 					FROM.FROM = {
 						OR = {
 							state = 608 #Beijing
@@ -1127,13 +1119,7 @@ on_actions = {
 			else_if = {
 				limit = {
 					has_global_flag = chinese_united_front_formed
-					ROOT = {
-						OR = {
-							tag = event_target:current_china_leader
-							is_in_faction_with = event_target:current_china_leader
-						}
-						has_war_with = FROM
-					}
+					ROOT = { is_ally_with = CHN }
 					FROM.FROM = {
 						has_state_flag = JAP_captures_this_state
 					}
@@ -1153,8 +1139,8 @@ on_actions = {
 
 			if = {
 				limit = {
+					tag = CHN
 					has_global_flag = chinese_united_front_formed
-					tag = event_target:current_china_leader
 					surrender_progress > 0.8
 					OR = {
 						is_in_faction_with = SZC
@@ -1189,8 +1175,8 @@ on_actions = {
 			if = {
 				limit = {
 					has_global_flag = chinese_united_front_formed
-					NOT = { tag = event_target:current_china_leader }
-					is_in_faction_with = event_target:current_china_leader
+					NOT = { tag = CHN }
+					is_in_faction_with = CHN
 					surrender_progress > 0.8
 					has_war_with = FROM
 					FROM = {
@@ -1209,11 +1195,31 @@ on_actions = {
 				}
 				country_event = china_redoubt.4
 			}
+
+			if = { #Capture of Luoyang
+				limit = {
+					tag = QIE
+					exists = yes
+					has_war = yes
+					NOT = {
+						has_country_flag = QIE_Wu_Peifu_dead
+						controls_province = 11931
+					}
+				}
+				country_event = {
+					id = qieflavor.28
+					hours = 3
+				}
+			}
 		}
 	}
 
 	on_war = { #FNG
 		effect = {
+			if = {
+				limit = { is_chinese_tag = yes }
+				country_event = qiedom.22 #Adds major status to prevent LEP capitulation upon QIE defeat
+			}
 			if = {
 				limit = { tag = FNG }
 				country_event = fngsystem.15
@@ -1223,17 +1229,6 @@ on_actions = {
 					country_event = { id = fengtian.1500 hours = 12 }
 				}
 			}
-		}
-	}
-
-	on_war = {
-		effect = {
-			if = {
-				limit = { is_chinese_tag = yes }
-				country_event = qiedom.22 #Adds major status to prevent LEP capitulation upon QIE defeat
-			}
-		}
-		effect = {
 			if = {
 				limit = {
 					is_in_faction_with = FNG
@@ -1254,6 +1249,13 @@ on_actions = {
 			if = {
 				limit = { has_country_flag = granted_major_status_during_war }
 				country_event = qiedom.23 #Removes major status on war's completion
+			}
+			if = {
+				limit = {
+					tag = SIK
+					has_idea = SIK_enemies_all_sides
+				}
+				remove_ideas = SIK_enemies_all_sides
 			}
 		}
 	}

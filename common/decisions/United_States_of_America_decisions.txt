@@ -195,6 +195,7 @@ foreign_politics = {
 		}
 
 		visible = {
+			is_subject = no
 			can_declare_war_on = FROM
 			FROM = {
 				OR = {
@@ -246,15 +247,105 @@ foreign_politics = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_attack_puerto_rico"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_attack_puerto_rico target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 12 value = 1 }
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_attack_puerto_rico"
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_attack_puerto_rico target: [From.GetName]"
 			declare_war_on = {
 				type = annex_everything
 				target = FROM
+			}
+		}
+	}
+	USA_protect_canada = {
+		icon = generic_prepare_civil_war
+
+		allowed = {
+			OR = {
+				tag = USA
+				tag = TEX
+				tag = CAL
+			}
+		}
+
+		available = {
+			FROM = {
+				any_home_area_neighbor_country = { is_in_faction_with = INT }
+			}
+		}
+
+		visible = {
+			is_subject = no
+			NOT = { has_global_flag = PSA_rockies_ceasefire }
+			FROM = {
+				has_war_with = INT
+				NOT = { is_in_faction_with = ROOT }
+			}
+		}
+
+		targets = { CAN }
+		target_root_trigger = {
+			has_global_flag = USA_civil_war_over_flag
+		}
+		target_trigger = {
+			FROM = {
+				has_war_with = INT
+				NOT = { is_in_faction_with = ROOT }
+			}
+		}
+		cost = 0
+		days_remove = 20
+		fire_only_once = yes
+		war_with_target_on_remove = yes
+
+		ai_will_do = {
+			factor = 1000
+			modifier = {
+				factor = 0
+				any_enemy_country = { is_neighbor_of = ROOT }
+			}
+			modifier = {
+				factor = 0
+				strength_ratio = { tag = INT ratio < 0.5 }
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = imminent_war
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision USA_protect_canada target: [From.GetName]"
+			add_ai_strategy = {
+				type = prepare_for_war # == tells AI USA to move troops to the Canadian border
+				id = FROM
+				value = 1000
+			}
+			hidden_effect = {
+				FROM = {
+					every_enemy_country = {
+						limit = { has_socialist_government = yes }
+						country_event = ustates.658
+					}
+				}
+			}
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_protect_canada target: [From.GetName]"
+			add_ai_strategy = {
+				type = prepare_for_war
+				id = FROM
+				value = -1000
+			}
+			FROM = { country_event = ustates.655 }
+			hidden_effect = {
+				every_other_country = {
+					limit = { has_country_flag = added_AI_strategies_@ROOT }
+					country_event = ustates.659
+				}
 			}
 		}
 	}
@@ -1930,7 +2021,7 @@ USA_rainbow_war_plans_decisions = {
 			}
 		}
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_join_entente"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_join_entente target: [From.GetName]"
 			FROM = { country_event = ustates.279 }
 		}
 	}
@@ -1995,7 +2086,7 @@ USA_rainbow_war_plans_decisions = {
 			}
 		}
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision CAL_join_japan"
+			log = "[GetDateText]: [Root.GetName]: Decision CAL_join_japan target: [From.GetName]"
 			FROM = { country_event = pacificstates.29 }
 		}
 	}
@@ -2058,7 +2149,7 @@ USA_rainbow_war_plans_decisions = {
 			}
 		}
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision TEX_join_germany"
+			log = "[GetDateText]: [Root.GetName]: Decision TEX_join_germany target: [From.GetName]"
 			FROM = { country_event = ustates.281 }
 		}
 	}
@@ -2572,119 +2663,182 @@ USA_rainbow_war_plans_decisions = {
 USA_deal_with_terrorists_decisions = {# deal with terrorists
 	USA_fight_socialist_terrorists = {# fight socialists
 		icon = GFX_decision_generic_industry
-		allowed = {
-			OR = {
-				tag = USA
-				tag = CAL
-			}
-		}
+
 		visible = {
-			OR = {
-				has_idea = USA_socialist_resistance1
-				has_idea = USA_socialist_resistance2
-				has_idea = USA_socialist_resistance3
-				has_idea = USA_socialist_resistance4
-			}
-			OR = {
-				has_completed_focus = USA_root_out_traitors
-				has_completed_focus = USA_destroy_radicalism
-				has_country_flag = USA_assassinated_reed
-				tag = CAL
-			}
+			has_country_flag = USA_can_purge_syndicalists
+			has_idea = USA_socialist_resistance1
 		}
 
 		cost = 25
-
-		days_re_enable = 10
 		days_remove = 100
+		fire_only_once = yes
 
 		ai_will_do = { factor = 100 }
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove USA_fight_socialist_terrorists"
-			if = {
-				limit = { has_idea = USA_socialist_resistance1 }
-				swap_ideas = {
-					remove_idea = USA_socialist_resistance1
-					add_idea = USA_socialist_resistance2
-				}
+			swap_ideas = {
+				remove_idea = USA_socialist_resistance1
+				add_idea = USA_socialist_resistance2
 			}
-			else_if = {
-				limit = { has_idea = USA_socialist_resistance2 }
-				swap_ideas = {
-					remove_idea = USA_socialist_resistance2
-					add_idea = USA_socialist_resistance3
-				}
+		}
+	}
+	USA_fight_socialist_terrorists2 = {# fight socialists
+		name = USA_fight_socialist_terrorists
+		icon = GFX_decision_generic_industry
+
+		visible = {
+			has_country_flag = USA_can_purge_syndicalists
+			has_idea = USA_socialist_resistance2
+		}
+
+		cost = 25
+		days_remove = 100
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_fight_socialist_terrorists2"
+			swap_ideas = {
+				remove_idea = USA_socialist_resistance2
+				add_idea = USA_socialist_resistance3
 			}
-			else_if = {
-				limit = { has_idea = USA_socialist_resistance3 }
-				swap_ideas = {
-					remove_idea = USA_socialist_resistance3
-					add_idea = USA_socialist_resistance4
-				}
+		}
+	}
+	USA_fight_socialist_terrorists3 = {# fight socialists
+		name = USA_fight_socialist_terrorists
+		icon = GFX_decision_generic_industry
+
+		visible = {
+			has_country_flag = USA_can_purge_syndicalists
+			has_idea = USA_socialist_resistance3
+		}
+
+		cost = 25
+		days_remove = 100
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_fight_socialist_terrorists3"
+			swap_ideas = {
+				remove_idea = USA_socialist_resistance3
+				add_idea = USA_socialist_resistance4
 			}
-			else_if = {
-				limit = { has_idea = USA_socialist_resistance4 }
-				remove_ideas = USA_socialist_resistance4
-			}
+		}
+	}
+	USA_fight_socialist_terrorists4 = {# fight socialists
+		name = USA_fight_socialist_terrorists
+		icon = GFX_decision_generic_industry
+
+		visible = {
+			has_country_flag = USA_can_purge_syndicalists
+			has_idea = USA_socialist_resistance4
+		}
+
+		cost = 25
+		days_remove = 100
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_fight_socialist_terrorists4"
+			remove_ideas = USA_socialist_resistance4
 		}
 	}
 
 	USA_fight_longist_terrorists = {# fight longists
 		icon = GFX_decision_generic_industry
-		allowed = {
-			OR = {
-				tag = USA
-				tag = CAL
-			}
-		}
+
 		visible = {
-			OR = {
-				has_idea = USA_longist_resistance1
-				has_idea = USA_longist_resistance2
-				has_idea = USA_longist_resistance3
-				has_idea = USA_longist_resistance4
-			}
-			OR = {
-				has_completed_focus = USA_root_out_traitors
-				has_completed_focus = USA_destroy_radicalism
-				has_country_flag = USA_assassinated_long
-				tag = CAL
-			}
+			has_country_flag = USA_can_purge_longists
+			has_idea = USA_longist_resistance1
 		}
 
 		cost = 25
-
-		days_re_enable = 10
 		days_remove = 100
+		fire_only_once = yes
 
 		ai_will_do = { factor = 100 }
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove USA_fight_longist_terrorists"
-			if = {
-				limit = { has_idea = USA_longist_resistance1 }
-				swap_ideas = {
-					remove_idea = USA_longist_resistance1
-					add_idea = USA_longist_resistance2
-				}
+			swap_ideas = {
+				remove_idea = USA_longist_resistance1
+				add_idea = USA_longist_resistance2
 			}
-			else_if = {
-				limit = { has_idea = USA_longist_resistance2 }
-				swap_ideas = {
-					remove_idea = USA_longist_resistance2
-					add_idea = USA_longist_resistance3
-				}
+		}
+	}
+
+	USA_fight_longist_terrorists2 = {# fight longists
+		name = USA_fight_longist_terrorists
+		icon = GFX_decision_generic_industry
+
+		visible = {
+			has_country_flag = USA_can_purge_longists
+			has_idea = USA_longist_resistance2
+		}
+
+		cost = 25
+		days_remove = 100
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_fight_longist_terrorists2"
+			swap_ideas = {
+				remove_idea = USA_longist_resistance2
+				add_idea = USA_longist_resistance3
 			}
-			else_if = {
-				limit = { has_idea = USA_longist_resistance3 }
-				swap_ideas = {
-					remove_idea = USA_longist_resistance3
-					add_idea = USA_longist_resistance4
-				}
+		}
+	}
+
+	USA_fight_longist_terrorists3 = {# fight longists
+		name = USA_fight_longist_terrorists
+		icon = GFX_decision_generic_industry
+
+		visible = {
+			has_country_flag = USA_can_purge_longists
+			has_idea = USA_longist_resistance3
+		}
+
+		cost = 25
+		days_remove = 100
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_fight_longist_terrorists3"
+			swap_ideas = {
+				remove_idea = USA_longist_resistance3
+				add_idea = USA_longist_resistance4
 			}
-			else_if = {
-				limit = { has_idea = USA_longist_resistance4 }
-				remove_ideas = USA_longist_resistance4
-			}
+		}
+	}
+
+	USA_fight_longist_terrorists4 = {# fight longists
+		name = USA_fight_longist_terrorists
+		icon = GFX_decision_generic_industry
+
+		visible = {
+			has_country_flag = USA_can_purge_longists
+			has_idea = USA_longist_resistance4
+		}
+
+		cost = 25
+		days_remove = 100
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_fight_longist_terrorists4"
+			remove_ideas = USA_longist_resistance4
 		}
 	}
 }
@@ -2693,8 +2847,7 @@ USA_deal_with_terrorists_decisions = {# deal with terrorists
 USA_progressive_policy_decisions = {# Progressive Policies
 	USA_progressive_desegregate_the_military = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_democrat }
+
 		cost = 100
 		fire_only_once = yes
 
@@ -2715,13 +2868,12 @@ USA_progressive_policy_decisions = {# Progressive Policies
 
 	USA_progressive_railroad_nationalization = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_democrat }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
 		ai_will_do = { factor = 60 }
+
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_progressive_railroad_nationalization"
 			country_event = ustates.164
@@ -2730,45 +2882,65 @@ USA_progressive_policy_decisions = {# Progressive Policies
 
 	USA_progressive_western_investment = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_democrat }
-		visible = { always = yes }
+		
+		available = {
+			391 = { is_owned_and_controlled_by = ROOT }
+			389 = { is_owned_and_controlled_by = ROOT }
+			390 = { is_owned_and_controlled_by = ROOT }
+			384 = { is_owned_and_controlled_by = ROOT }
+			392 = { is_owned_and_controlled_by = ROOT }
+			381 = { is_owned_and_controlled_by = ROOT }
+			388 = { is_owned_and_controlled_by = ROOT }
+			387 = { is_owned_and_controlled_by = ROOT }
+			379 = { is_owned_and_controlled_by = ROOT }
+			380 = { is_owned_and_controlled_by = ROOT }
+			382 = { is_owned_and_controlled_by = ROOT }
+			383 = { is_owned_and_controlled_by = ROOT }
+		}
+
 		cost = 50
 		fire_only_once = yes
 
 		ai_will_do = { factor = 60 }
+
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_progressive_western_investment"
-			391 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			389 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			390 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			384 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			392 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			381 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			388 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			387 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			379 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			380 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			382 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			383 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
+			391 = {	add_extra_state_shared_building_slots = 1 }
+			389 = {	add_extra_state_shared_building_slots = 1 }
+			390 = {	add_extra_state_shared_building_slots = 1 }
+			384 = {	add_extra_state_shared_building_slots = 1 }
+			392 = {	add_extra_state_shared_building_slots = 1 }
+			381 = {	add_extra_state_shared_building_slots = 1 }
+			388 = {	add_extra_state_shared_building_slots = 1 }
+			387 = {	add_extra_state_shared_building_slots = 1 }
+			379 = {	add_extra_state_shared_building_slots = 1 }
+			380 = {	add_extra_state_shared_building_slots = 1 }
+			382 = {	add_extra_state_shared_building_slots = 1 }
+			383 = {	add_extra_state_shared_building_slots = 1 }
 		}
 	}
 
 	USA_progressive_great_lakes_waterway = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
+
 		available = {
-			has_government = social_democrat
-			796 = { is_owned_and_controlled_by = USA }
-			466 = { is_owned_and_controlled_by = CAN }
-			832 = { is_owned_and_controlled_by = CAN }
-			739 = { is_owned_and_controlled_by = CAN }
-			276 = { is_owned_and_controlled_by = CAN }
+			796 = { is_owned_and_controlled_by = ROOT }
+			466 = { is_owned_and_controlled_by = FROM }
+			832 = { is_owned_and_controlled_by = FROM }
+			739 = { is_owned_and_controlled_by = FROM }
+			276 = { is_owned_and_controlled_by = FROM }
 		}
+
 		visible = {
-			country_exists = CAN
-			NOT = { has_war_with = CAN }
+			country_exists = FROM
+			NOT = { has_war_with = FROM }
 		}
+
+		targets = { CAN }
+		target_trigger = {
+			NOT = { has_war_with = FROM }
+		}
+
 		cost = 50
 		fire_only_once = yes
 
@@ -2776,17 +2948,13 @@ USA_progressive_policy_decisions = {# Progressive Policies
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_progressive_great_lakes_waterway"
-			CAN = {	country_event = ustates.165 }
+			FROM = { country_event = ustates.165 }
 		}
 	}
 
 	USA_progressive_medicare = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_democrat }
-		visible = {
-			NOT = { has_country_flag = USA_medicare_created }
-		}
+
 		cost = 100
 		fire_only_once = yes
 
@@ -2794,7 +2962,6 @@ USA_progressive_policy_decisions = {# Progressive Policies
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_progressive_medicare"
-			set_country_flag = USA_medicare_created
 			add_popularity = { ideology = social_democrat popularity = 0.03 }
 			add_tech_bonus = {
 				name = USA_progressive_medicare
@@ -2807,9 +2974,7 @@ USA_progressive_policy_decisions = {# Progressive Policies
 
 	USA_progressive_farming_subsides = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_democrat }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -2823,9 +2988,7 @@ USA_progressive_policy_decisions = {# Progressive Policies
 
 	USA_progressive_tariffs = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_democrat }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -2840,9 +3003,7 @@ USA_progressive_policy_decisions = {# Progressive Policies
 
 	USA_progressive_anti_trust = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_democrat }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -2856,9 +3017,7 @@ USA_progressive_policy_decisions = {# Progressive Policies
 
 	USA_progressive_anti_lynching_law = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_democrat }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -2872,9 +3031,7 @@ USA_progressive_policy_decisions = {# Progressive Policies
 
 	USA_progressive_minimum_wage = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_democrat }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -2888,46 +3045,42 @@ USA_progressive_policy_decisions = {# Progressive Policies
 
 	USA_progressive_public_owned_corporations = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
+		
 		available = {
-			has_government = social_democrat
 			num_of_civilian_factories_available_for_projects > 2
-			368 = { is_owned_and_controlled_by = USA }
+			has_full_control_of_state = 368
 		}
 		visible = {
-			368 = {
-				is_owned_and_controlled_by = USA
-				NOT = { has_state_flag = USA_tennesse_valley_authority }
-			}
+			NOT = { has_country_flag = USA_tennesse_valley_authority }
+			owns_state = 368
 		}
+
 		cost = 25
 		fire_only_once = yes
 		highlight_state_targets = { state = 368 }
 		modifier = { civilian_factory_use = 4 }
 		days_remove = 60
+
 		ai_will_do = { factor = 50 }
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_progressive_public_owned_corporations"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_progressive_public_owned_corporations target: [From.GetName]"
 			add_stability = -0.05
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_progressive_public_owned_corporations"
-			368 = {
-				set_state_flag = USA_tennesse_valley_authority
-				add_resource = {
-					type = aluminium
-					amount = 12
-				}
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_progressive_public_owned_corporations target: [From.GetName]"
+			set_country_flag = USA_tennesse_valley_authority
+			add_resource = {
+				type = aluminium
+				amount = 12
+				state = 368
 			}
 		}
 	}
 
 	USA_progressive_post_office_support = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_democrat }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -2943,8 +3096,7 @@ USA_progressive_policy_decisions = {# Progressive Policies
 USA_republican_policies = {# Republican Policies
 	USA_republican_desegregate_the_military = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_liberal }
+
 		cost = 100
 		fire_only_once = yes
 
@@ -2965,9 +3117,7 @@ USA_republican_policies = {# Republican Policies
 
 	USA_republican_anti_lynching_law = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_liberal }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -2981,9 +3131,7 @@ USA_republican_policies = {# Republican Policies
 
 	USA_republican_minimum_wage = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_liberal }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -2997,47 +3145,38 @@ USA_republican_policies = {# Republican Policies
 
 	USA_republican_energy_companies = {
 		icon = aluminium
-		allowed = { original_tag = USA }
+
 		available = {
-			has_government = social_liberal
 			num_of_civilian_factories_available_for_projects > 2
-			368 = { is_owned_and_controlled_by = USA }
+			has_full_control_of_state = 368
 		}
 		visible = {
-			368 = {
-				is_owned_by = USA
-				NOT = { has_state_flag = USA_tennesse_valley_authority }
-			}
+			NOT = { has_country_flag = USA_tennesse_valley_authority }
+			owns_state = 368
 		}
+
 		cost = 25
 		fire_only_once = yes
 		highlight_state_targets = { state = 368 }
 		days_remove = 60
 		modifier = { civilian_factory_use = 4 }
+
 		ai_will_do = { factor = 50 }
 
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_republican_energy_companies"
-		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_republican_energy_companies"
-			368 = {
-				set_state_flag = USA_tennesse_valley_authority
-				add_resource = {
-					type = aluminium
-					amount = 12
-				}
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_republican_energy_companies target: [From.GetName]"
+			set_country_flag = USA_tennesse_valley_authority
+			add_resource = {
+				type = aluminium
+				amount = 12
+				state = 368
 			}
 		}
 	}
 
 	USA_republican_highway = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_liberal }
-		visible = {
-			NOT = { has_country_flag = USA_national_highways }
-		}
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3045,21 +3184,32 @@ USA_republican_policies = {# Republican Policies
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_republican_highway"
-			set_country_flag = USA_national_highways
 			random_owned_controlled_state = {
-				limit = { is_in_home_area = yes	}
+				limit = {
+					is_in_home_area = yes
+					infrastructure < 10
+				}
 				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
 			}
 			random_owned_controlled_state = {
-				limit = { is_in_home_area = yes	}
+				limit = {
+					is_in_home_area = yes
+					infrastructure < 10
+				}
 				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
 			}
 			random_owned_controlled_state = {
-				limit = { is_in_home_area = yes	}
+				limit = {
+					is_in_home_area = yes
+					infrastructure < 10
+				}
 				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
 			}
 			random_owned_controlled_state = {
-				limit = { is_in_home_area = yes	}
+				limit = {
+					is_in_home_area = yes
+					infrastructure < 10
+				}
 				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
 			}
 		}
@@ -3067,11 +3217,7 @@ USA_republican_policies = {# Republican Policies
 
 	USA_republican_medicare = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_liberal }
-		visible = {
-			NOT = { has_country_flag = USA_medicare_created }
-		}
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3079,7 +3225,6 @@ USA_republican_policies = {# Republican Policies
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_republican_medicare"
-			set_country_flag = USA_medicare_created
 			add_popularity = { ideology = social_liberal popularity = 0.03 }
 			add_tech_bonus = {
 				name = USA_republican_medicare
@@ -3092,9 +3237,7 @@ USA_republican_policies = {# Republican Policies
 
 	USA_republican_immigration_act = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_liberal }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3108,9 +3251,7 @@ USA_republican_policies = {# Republican Policies
 
 	USA_republican_trade_liberalization = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_liberal }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3124,9 +3265,7 @@ USA_republican_policies = {# Republican Policies
 
 	USA_republican_anti_trust = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_liberal }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3141,9 +3280,7 @@ USA_republican_policies = {# Republican Policies
 
 	USA_republican_banking_act = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_liberal }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3157,24 +3294,26 @@ USA_republican_policies = {# Republican Policies
 
 	USA_republican_business_support = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_liberal }
-		visible = { always = yes }
 
 		cost = 50
-
 		fire_only_once = yes
 
 		ai_will_do = { factor = 40 }
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_republican_business_support"
 			random_owned_controlled_state = {
-				limit = { is_in_home_area = yes	}
+				limit = {
+					is_in_home_area = yes
+					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
+				}
 				add_extra_state_shared_building_slots = 1
 				add_building_construction = { type = industrial_complex	level = 1 instant_build = yes }
 			}
 			random_owned_controlled_state = {
-				limit = { is_in_home_area = yes	}
+				limit = {
+					is_in_home_area = yes
+					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
+				}
 				add_extra_state_shared_building_slots = 1
 				add_building_construction = { type = industrial_complex	level = 1 instant_build = yes }
 			}
@@ -3185,11 +3324,7 @@ USA_republican_policies = {# Republican Policies
 USA_liberal_democratic_policies = {# Liberal Democratic Policies
 	USA_liberal_highway = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = market_liberal }
-		visible = {
-			NOT = { has_country_flag = USA_national_highways }
-		}
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3199,19 +3334,31 @@ USA_liberal_democratic_policies = {# Liberal Democratic Policies
 			log = "[GetDateText]: [Root.GetName]: Decision USA_liberal_highway"
 			set_country_flag = USA_national_highways
 			random_owned_controlled_state = {
-				limit = { is_in_home_area = yes	}
+				limit = {
+					is_in_home_area = yes
+					infrastructure < 10
+				}
 				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
 			}
 			random_owned_controlled_state = {
-				limit = { is_in_home_area = yes	}
+				limit = {
+					is_in_home_area = yes
+					infrastructure < 10
+				}
 				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
 			}
 			random_owned_controlled_state = {
-				limit = { is_in_home_area = yes	}
+				limit = {
+					is_in_home_area = yes
+					infrastructure < 10
+				}
 				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
 			}
 			random_owned_controlled_state = {
-				limit = { is_in_home_area = yes	}
+				limit = {
+					is_in_home_area = yes
+					infrastructure < 10
+				}
 				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
 			}
 		}
@@ -3219,9 +3366,7 @@ USA_liberal_democratic_policies = {# Liberal Democratic Policies
 
 	USA_liberal_trade_liberalization = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = market_liberal }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3235,9 +3380,7 @@ USA_liberal_democratic_policies = {# Liberal Democratic Policies
 
 	USA_liberal_business_support = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = market_liberal }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3246,12 +3389,18 @@ USA_liberal_democratic_policies = {# Liberal Democratic Policies
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_liberal_business_support"
 			random_owned_controlled_state = {
-				limit = { is_in_home_area = yes	}
+				limit = {
+					is_in_home_area = yes
+					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
+				}
 				add_extra_state_shared_building_slots = 1
 				add_building_construction = { type = industrial_complex	level = 1 instant_build = yes }
 			}
 			random_owned_controlled_state = {
-				limit = { is_in_home_area = yes	}
+				limit = {
+					is_in_home_area = yes
+					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
+				}
 				add_extra_state_shared_building_slots = 1
 				add_building_construction = { type = industrial_complex	level = 1 instant_build = yes }
 			}
@@ -3260,9 +3409,7 @@ USA_liberal_democratic_policies = {# Liberal Democratic Policies
 
 	USA_liberal_banking_act = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = market_liberal }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3276,9 +3423,7 @@ USA_liberal_democratic_policies = {# Liberal Democratic Policies
 
 	USA_liberal_gospel_of_wealth = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = market_liberal }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3292,9 +3437,7 @@ USA_liberal_democratic_policies = {# Liberal Democratic Policies
 
 	USA_liberal_liberal_tax = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = market_liberal }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3310,9 +3453,7 @@ USA_liberal_democratic_policies = {# Liberal Democratic Policies
 USA_conservative_democratic_policies = {# Conservative Democratic Policies
 	USA_conservative_social_hygine = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_conservative }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3326,9 +3467,21 @@ USA_conservative_democratic_policies = {# Conservative Democratic Policies
 
 	USA_conservative_southern_investment = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_conservative }
-		visible = { always = yes }
+		
+		available = {
+			363 = {	is_owned_and_controlled_by = ROOT }
+		    364 = {	is_owned_and_controlled_by = ROOT }
+		    365 = {	is_owned_and_controlled_by = ROOT }
+		    366 = {	is_owned_and_controlled_by = ROOT }
+		    367 = {	is_owned_and_controlled_by = ROOT }
+		    368 = {	is_owned_and_controlled_by = ROOT }
+		    372 = {	is_owned_and_controlled_by = ROOT }
+		    371 = {	is_owned_and_controlled_by = ROOT }
+		    379 = {	is_owned_and_controlled_by = ROOT }
+		    362 = {	is_owned_and_controlled_by = ROOT }
+		    370 = {	is_owned_and_controlled_by = ROOT }
+		}
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3336,25 +3489,23 @@ USA_conservative_democratic_policies = {# Conservative Democratic Policies
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_conservative_southern_investment"
-			363 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			364 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			365 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			366 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			367 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			368 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			372 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			371 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			379 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			362 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
-			370 = {	if = { limit = {is_owned_and_controlled_by = USA }	add_extra_state_shared_building_slots = 1 } }
+			363 = { add_extra_state_shared_building_slots = 1 }
+			364 = { add_extra_state_shared_building_slots = 1 }
+			365 = { add_extra_state_shared_building_slots = 1 }
+			366 = { add_extra_state_shared_building_slots = 1 }
+			367 = { add_extra_state_shared_building_slots = 1 }
+			368 = { add_extra_state_shared_building_slots = 1 }
+			372 = { add_extra_state_shared_building_slots = 1 }
+			371 = { add_extra_state_shared_building_slots = 1 }
+			379 = { add_extra_state_shared_building_slots = 1 }
+			362 = { add_extra_state_shared_building_slots = 1 }
+			370 = { add_extra_state_shared_building_slots = 1 }
 		}
 	}
 
 	USA_conservative_moral_education = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_conservative }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3368,9 +3519,7 @@ USA_conservative_democratic_policies = {# Conservative Democratic Policies
 
 	USA_conservative_tarrifs = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_conservative }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 
@@ -3384,9 +3533,7 @@ USA_conservative_democratic_policies = {# Conservative Democratic Policies
 
 	USA_conservative_gospel_of_wealth = {
 		icon = GFX_decision_generic_independence
-		allowed = { original_tag = USA }
-		available = { has_government = social_conservative }
-		visible = { always = yes }
+
 		cost = 50
 		fire_only_once = yes
 

@@ -5,7 +5,11 @@ FROM_send_volunteers_to_ROOT = {
 	FROM = {
 		if = {
 			limit = {
-				NOT = { has_country_flag = sent_volunteers_@ROOT }
+				NOT = { 
+					has_country_flag = sent_volunteers_@ROOT
+					has_country_flag = imminent_war
+					has_variable = potential_and_current_enemies^num #is justifying/being justified against
+				}
 			}
 
 			#unlock volunteers diplo action
@@ -91,7 +95,11 @@ FROM_send_volunteers_to_ROOT = {
 send_volunteers_to_TARGET = {
 	if = {
 		limit = {
-			NOT = { has_country_flag = sent_volunteers_@event_target:volunteer_target }
+			NOT = {
+				has_country_flag = sent_volunteers_@event_target:volunteer_target
+				has_country_flag = imminent_war
+				has_variable = potential_and_current_enemies^num #is justifying/being justified against
+			}
 		}
 
 		#unlock volunteers diplo action
@@ -302,7 +310,12 @@ clear_volunteers_to_PREV = {
 
 clear_all_volunteers = {
 	every_country = {
-		limit = { has_country_flag = sent_volunteers_@PREV }
+		limit = {
+			OR = {
+				ROOT = { has_volunteers_amount_from = { tag = PREV count > 0 } }
+				has_country_flag = sent_volunteers_@PREV
+			}
+		}
 		recall_volunteers_from = PREV
 		clear_volunteers_to_PREV = yes
 	}
@@ -311,7 +324,10 @@ clear_all_volunteers = {
 clear_all_sent_volunteers = {
 	every_country = {
 		limit = {
-			ROOT = { has_country_flag = sent_volunteers_@PREV }
+			OR = {
+				has_volunteers_amount_from = { tag = ROOT count > 0 }
+				ROOT = { has_country_flag = sent_volunteers_@PREV }
+			}
 		}
 		ROOT = {
 			recall_volunteers_from = PREV
@@ -336,7 +352,7 @@ setup_decision_attack_AI = {
 			}
 			if = {
 				limit = { is_in_faction = yes }
-				var:faction_leader = {
+				faction_leader = {
 					set_variable = { ROOT.ai_strategy_target_@FROM = THIS }
 					add_ai_strategy = {
 						type = prepare_for_war
@@ -392,12 +408,46 @@ clear_decision_attack_AI = {
 ### Chinese United Front ###
 setup_united_front_AI = {
 	every_country = {
-		limit = { is_in_faction_with = ROOT }
+		limit = {
+			is_chinese_tag = yes
+			is_in_faction_with = ROOT
+		}
 		setup_united_front_AI_PREV = yes
 		if = {
-			limit = { is_major = no }
+			limit = {
+				is_major = no
+				NOT = {
+					tag = SIK
+					tag = TAN
+				}
+			}
 			set_country_flag = united_front_major
 			set_major = yes
+		}
+		if = {
+			limit = { country_exists = GEA }
+			GEA = {
+				set_country_flag = united_front_AI_supporting_@PREV
+				add_ai_strategy = {
+					type = send_lend_lease_desire
+					id = PREV
+					value = 100
+				}
+			}
+		}
+		if = {
+			limit = {
+				country_exists = RUS
+				RUS = { is_subject = no }
+			}
+			RUS = {
+				set_country_flag = united_front_AI_supporting_@PREV
+				add_ai_strategy = {
+					type = send_lend_lease_desire
+					id = PREV
+					value = 100
+				}
+			}
 		}
 	}
 }
@@ -405,7 +455,10 @@ setup_united_front_AI = {
 setup_united_front_AI_PREV = {
 	hidden_effect = {
 		every_country = {
-			limit = { is_in_faction_with = PREV }
+			limit = {
+				is_chinese_tag = yes
+				is_in_faction_with = PREV
+			}
 			if = {
 				limit = {
 					NOT = { has_country_flag = united_front_AI_@PREV }
@@ -413,7 +466,7 @@ setup_united_front_AI_PREV = {
 				set_country_flag = united_front_AI_@PREV
 				add_ai_strategy = {
 					type = spare_unit_factor
-					value = 12
+					value = 20
 				}
 				add_ai_strategy = {
 					type = protect
@@ -422,6 +475,16 @@ setup_united_front_AI_PREV = {
 				}
 				add_ai_strategy = {
 					type = support
+					id = PREV
+					value = 200
+				}
+				add_ai_strategy = {
+					type = send_lend_lease_desire
+					id = PREV
+					value = 200
+				}
+				add_ai_strategy = {
+					type = force_defend_ally_borders
 					id = PREV
 					value = 200
 				}
@@ -482,6 +545,16 @@ disable_united_front_AI = {
 							id = PREV
 							value = -200
 						}
+						add_ai_strategy = {
+							type = send_lend_lease_desire
+							id = PREV
+							value = -200
+						}
+						add_ai_strategy = {
+							type = force_defend_ally_borders
+							id = PREV
+							value = -200
+						}
 					}
 					if = {
 						limit = {
@@ -497,6 +570,15 @@ disable_united_front_AI = {
 							type = contain
 							id = PREV
 							value = -200
+						}
+					}
+					if = {
+						limit = { has_country_flag = united_front_AI_supporting_@PREV }
+						clr_country_flag = united_front_AI_supporting_@PREV
+						add_ai_strategy = {
+							type = send_lend_lease_desire
+							id = PREV
+							value = -100
 						}
 					}
 				}

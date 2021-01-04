@@ -46,7 +46,12 @@ ROM_reconquest_category = {
 				tooltip = ROM_transylvanian_resistance_tooltip
 				hidden_effect = {
 					force_enable_resistance = { occupier = var:THIS.owner }
-					start_resistance = TRS
+					if = {
+						limit = {
+							84 = {  has_active_resistance = no }
+						}
+						start_resistance = TRS
+					}
 					add_dynamic_modifier = { modifier = ROM_transylvanian_resistance }
 					set_variable = { ROM_transylvanian_resistance_target = 0 }
 					set_variable = { ROM_transylvanian_resistance_activity = 0 }
@@ -683,7 +688,7 @@ ROM_reconquest_category = {
 						strength_ratio = { tag = ROOT ratio > 1.0 }
 						AND = {
 							is_in_faction = yes
-							var:faction_leader = {
+							faction_leader = {
 								is_faction_leader = yes
 								surrender_progress < 0.10
 								strength_ratio = { tag = ROOT ratio > 1.0 }
@@ -702,14 +707,14 @@ ROM_reconquest_category = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision ROM_start_the_uprising"
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_start_the_uprising target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 30 value = 1 }
 			setup_decision_attack_AI = yes
 			hidden_effect = { country_event = romania.48 }
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_start_the_uprising"
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_start_the_uprising target: [From.GetName]"
 			clear_decision_attack_AI = yes
 			country_event = romania.46
 			FROM = { country_event = romania.50 }
@@ -793,8 +798,8 @@ ROM_great_game_czc_category = {
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_harass_political_enemies"
-			add_to_variable = { ROM.captain_influence = 1 }
 			custom_effect_tooltip = ROM_pol_cap
+			ROM_increase_captain = yes
 			random_list = {
 				25 = {
 					modifier = {
@@ -858,7 +863,7 @@ ROM_great_game_czc_category = {
 					popularity = 0.02
 				}
 			}
-			if = {
+			else_if = {
 				limit = { national_populist > 0.6 }
 				add_popularity = {
 					ideology = national_populist
@@ -958,18 +963,324 @@ ROM_great_game_czc_category = {
 }
 
 #Variables:
-#ROM.IG_CZC: Codreanu's grip
-#ROM.IG_OG: Old Guard
-#ROM.IG_CML: Legionary Worker's Corps
-#ROM.IG_CNTZ: Cantacuzino's boys
+#ROM_IG_CZC: Codreanu's grip
+#ROM_IG_OG: Old Guard
+#ROM_IG_CML: Legionary Worker's Corps
+#ROM_IG_CNTZ: Cantacuzino's boys
 
 ROM_legion_category = {
+
+	ROM_legionary_stability_mission = {
+		icon = eng_blackshirt_march
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			OR = {
+				has_country_flag = ROM_CZC_centralized
+				has_idea = ROM_Horia_Sima_hog_npo
+				has_idea = ROM_Ion_Mota_hog_npo
+				has_idea = ROM_Alexandru_Cantacuzino_hog_npo
+			}
+		}
+
+		is_good = no
+		fire_only_once = yes
+		days_mission_timeout = 480
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout ROM_legionary_stability_mission"
+			custom_effect_tooltip = ROM_member_bleed_tt
+			country_event = romania.212
+			add_stability = -0.1
+			set_temp_variable = { ideology_change_var = -20 }
+			change_ruling_party_popularity = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_legionary_stability_mission"
+			add_political_power = 100
+			set_temp_variable = { ideology_change_var = 10 }
+			change_ruling_party_popularity = yes
+			set_country_flag = ROM_stable_legion
+		}
+	}
+	
+	ROM_secure_control = {
+		icon = oppression
+		
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = ROM_secure_tt
+				check_variable = { ROM_IG_CZC > ROM_IG_OG }
+				check_variable = { ROM_IG_CZC > ROM_IG_CML }
+				check_variable = { ROM_IG_CZC > ROM_IG_CNTZ }
+			}
+			count_triggers = {
+				amount = 3
+				has_completed_focus = ROM_clime-groza_comission
+				has_completed_focus = ROM_legionary_industrialization
+				has_completed_focus = ROM_obligatory_camp_service
+				has_completed_focus = ROM_legionary_cooperatives
+				has_completed_focus = ROM_agrarian_price_controls
+				has_completed_focus = ROM_spiritual-national_guide
+			}
+		}
+		
+		visible = { has_completed_focus = ROM_captain_triumphant }
+		
+		cost = 5
+		days_remove = 5
+		fire_only_once = yes
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_secure_control"
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_secure_control"
+			country_event = romania.193
+		}
+	}
+	
+	ROM_appoint_old_guard = {
+		icon = generic_nationalism
+		
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = ROM_appoint_OG_tt
+				check_variable = { ROM_IG_OG > ROM_IG_CZC }
+				check_variable = { ROM_IG_OG > ROM_IG_CML }
+				check_variable = { ROM_IG_OG > ROM_IG_CNTZ } 
+			}
+			has_completed_focus = ROM_agrarian_base
+		}
+		
+		visible = { has_completed_focus = ROM_captain_triumphant }
+		cost = 5
+		days_remove = 5
+		fire_only_once = yes
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_appoint_old_guard"
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_appoint_old_guard"
+			country_event = romania.190
+		}
+	}
+	ROM_appoint_CML = {
+		icon = generic_construction
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = ROM_appoint_CML_tt
+				check_variable = { ROM_IG_CML > ROM_IG_CZC }
+				check_variable = { ROM_IG_CML > ROM_IG_OG }
+				check_variable = { ROM_IG_CML > ROM_IG_CNTZ } 
+			}
+			has_completed_focus = ROM_from_camps_to_factories
+		}
+		visible = { has_completed_focus = ROM_captain_triumphant }
+		cost = 5
+		days_remove = 5
+		fire_only_once = yes
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_appoint_CML"
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_appoint_CML"
+			country_event = romania.191
+		}
+	}
+	ROM_appoint_radicals = {
+		icon = generic_civil_support
+		available = { 
+			custom_trigger_tooltip = {
+				tooltip = ROM_appoint_CNTZ_tt
+				check_variable = { ROM_IG_CNTZ > ROM_IG_CZC }
+				check_variable = { ROM_IG_CNTZ > ROM_IG_OG } 
+				check_variable = { ROM_IG_CNTZ > ROM_IG_CML }
+			}
+			has_completed_focus = ROM_spiritual-national_guide
+		}
+		visible = { has_completed_focus = ROM_captain_triumphant }
+		cost = 5
+		days_remove = 5
+		fire_only_once = yes
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_appoint_radicals"
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_appoint_radicals"
+			country_event = romania.192
+		}
+	}
+	
+	ROM_integrating_TRS_guard = {
+		icon = generic_political_discourse
+		available = { always = no }
+		visible = {
+			has_completed_focus = ROM_captain_triumphant 
+			has_idea = ROM_Corneliu_Codreanu_hog_npo
+		}
+		cost = 5
+		days_remove = 120
+		fire_only_once = yes
+
+		modifier = {
+			political_power_gain = -0.05
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision integrating_TRS_guard"
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove integrating_TRS_guard"
+			if = {
+				limit = { has_country_flag = ROM_Mota_TRS }
+				country_event = romania.208
+			}
+			else_if = {
+				limit = { has_country_flag = ROM_Sima_TRS }
+				country_event = romania.209
+			}
+			set_temp_variable = { ideology_change_var = 5 }
+			change_ruling_party_popularity = yes
+		}
+	}
+	
+	ROM_internal_intelligence = {
+		icon = recruit_operative
+		available = { always = no }
+		visible = { has_completed_focus = ROM_captain_triumphant }
+		cost = 5
+		days_remove = 50
+		fire_only_once = yes
+
+		modifier = { civilian_factory_use = 2 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_internal_intelligence"
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_internal_intelligence"
+			add_ideas = ROM_SSI
+			ROM_IG_CNTZ = yes
+		}
+	}
+	
+	ROM_legionary_police = {
+		icon = generic_intelligence_operation
+		available = { always = no }
+		visible = { has_completed_focus = ROM_captain_triumphant }
+		cost = 5
+		days_remove = 60
+		fire_only_once = yes
+
+		modifier = { civilian_factory_use = 2 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_legionary_police"
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_legionary_police"
+			add_political_power = 60
+			add_stability = 0.06
+			ROM_IG_CNTZ = yes
+		}
+	}
+	
+	ROM_restrict_membership = {
+		icon = eng_trade_unions_demand
+
+		visible = { has_completed_focus = ROM_captain_triumphant }
+		cost = 40
+		days_remove = 30
+		fire_only_once = no
+		days_re_enable = 100
+
+		ai_will_do = {
+			factor = 10
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_restrict_membership"
+			set_temp_variable = { ideology_change_var = -5 }
+			change_ruling_party_popularity = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_restrict_membership"
+			ROM_IG_CZC = yes
+		}
+	}
+	
+	ROM_public_works = {
+		icon = hol_drain_water_lines
+
+		visible = { has_completed_focus = ROM_captain_triumphant }
+		cost = 10
+		days_remove = 30
+		fire_only_once = no
+		days_re_enable = 70
+
+		modifier = {
+			civilian_factory_use = 3
+		}
+
+		ai_will_do = {
+			factor = 10
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_public_works"
+			add_manpower = -2100
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_public_works"
+			ROM_IG_CZC = yes
+		}
+	}
+	
+	ROM_tour_the_country = {
+		icon = eng_propaganda_campaigns
+
+		visible = { has_completed_focus = ROM_captain_triumphant }
+		cost = 50
+		days_remove = 30
+		fire_only_once = no
+		days_re_enable = 60
+
+		ai_will_do = {
+			factor = 10
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_tour_the_country"
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_tour_the_country"
+			ROM_IG_CZC = yes
+			set_temp_variable = { ideology_change_var = 0.02 }
+			change_ruling_party_popularity = yes
+		}
+	}
 
 	ROM_rein_in_factions = {
 		icon = oppression
 
-		cost = 25
-		days_remove = 30
+		cost = 60
+		days_remove = 35
 		fire_only_once = no
 		days_re_enable = 60
 
@@ -982,14 +1293,14 @@ ROM_legion_category = {
 			modifier = {
 				factor = 2
 				OR = {
-					check_variable = { ROM.IG_CZC < ROM.IG_OG }
-					check_variable = { ROM.IG_CZC < ROM.IG_CML }
-					check_variable = { ROM.IG_CZC < ROM.IG_CNTZ }
+					check_variable = { ROM_IG_CZC < ROM_IG_OG }
+					check_variable = { ROM_IG_CZC < ROM_IG_CML }
+					check_variable = { ROM_IG_CZC < ROM_IG_CNTZ }
 				}
 			}
 			modifier = {
 				factor = 0
-				has_political_power < 50
+				has_political_power < 30
 			}
 			modifier = {
 				factor = 0
@@ -999,8 +1310,6 @@ ROM_legion_category = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision ROM_rein_in_factions"
-			add_to_variable = { ROM.captain_influence = 1 }
-			custom_effect_tooltip = ROM_pol_cap_d
 			add_popularity = {
 				ideology = national_populist
 				popularity = -0.04
@@ -1009,19 +1318,21 @@ ROM_legion_category = {
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_rein_in_factions"
+			custom_effect_tooltip = ROM_pol_cap_d
+			ROM_increase_king = yes
 			ROM_IG_CZC = yes
 		}
 	}
 	ROM_IG_old_guard = {
 		icon = soldierly_discipline
 
-		cost = 25
+		cost = 10
 		days_remove = 120
 		fire_only_once = no
 		days_re_enable = 60
 
 		modifier = {
-			production_speed_buildings_factor = 0.05
+			production_speed_buildings_factor = 0.1
 		}
 
 		ai_will_do = {
@@ -1034,21 +1345,21 @@ ROM_legion_category = {
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_IG_old_guard"
-			ROM_IG_OG = yes
-			add_manpower = 1200
+			ROM_IG_OG3 = yes
+			add_manpower = 1100
+			ROM_check_factions = yes
 		}
 	}
 	ROM_IG_CML_support = {
 		icon = ger_military_buildup
 
-		cost = 25
+		cost = 10
 		days_remove = 120
 		fire_only_once = no
 		days_re_enable = 60
 
 		modifier = {
 			industrial_capacity_factory = 0.1
-			consumer_goods_factor = 0.02
 		}
 
 		ai_will_do = {
@@ -1061,7 +1372,8 @@ ROM_legion_category = {
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_IG_CML_support"
-			ROM_IG_CML = yes
+			ROM_IG_CML3 = yes
+			ROM_check_factions = yes
 		}
 	}
 	ROM_IG_radicals = {
@@ -1071,7 +1383,7 @@ ROM_legion_category = {
 			NOT = { has_country_flag = ROM_assassins_punished }
 		}
 
-		cost = 25
+		cost = 10
 		fire_only_once = no
 		days_remove = 120
 		days_re_enable = 60
@@ -1098,13 +1410,14 @@ ROM_legion_category = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_IG_radicals"
-			add_stability = -0.04
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_IG_radicals"
+			add_stability = -0.02
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_IG_radicals"
-			ROM_IG_CNTZ = yes
+			ROM_IG_CNTZ3 = yes
+			ROM_check_factions = yes
 		}
 	}
 }
@@ -1437,7 +1750,7 @@ ROM_reunion_category = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		remove_effect = {
@@ -1455,6 +1768,10 @@ ROM_reunion_category = {
 					remove_idea = ROM_unionist_zeal2
 					add_idea = ROM_reintegration1
 				}
+			}
+			else_if = {
+				limit = { is_subject = yes }
+				add_ideas = ROM_reintegration1
 			}
 			hidden_effect = {
 				country_event = {
@@ -1499,7 +1816,7 @@ ROM_reunion_category = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		remove_effect = {
@@ -1523,6 +1840,13 @@ ROM_reunion_category = {
 		available = {
 			has_country_flag = ROM_monetary_union_completed
 			has_country_flag = ROM_undo_foreign_influence_completed
+			NOT = {
+				OR = {
+					has_idea = ROM_great_game
+					has_idea = ROM_great_game_czc
+					has_idea = ROM_great_game_carol
+				}
+			}
 		}
 
 		visible = {
@@ -1551,11 +1875,15 @@ ROM_reunion_category = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_integrate_state_decision target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_integrate_bucovina_decision target: [From.GetName]"
+			if = {
+				limit = { has_completed_focus = ROM_renew_pride }
+				country_event = romania.215
+			 }
 			FROM = {
 				if = {
 					limit = { is_claimed_by = ROOT }
@@ -1585,11 +1913,11 @@ ROM_reunion_category = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_integrate_szeklerland"
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_integrate_szeklerland target: [From.GetName]"
 			set_country_flag = ROM_pacification_of_szeklerland
 			789 = {
 				effect_tooltip = {
@@ -1638,11 +1966,12 @@ ROM_reunion_category = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_romanianization_of_szeklerland"
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_romanianization_of_szeklerland target: [From.GetName]"
+			add_stability = 0.03
 			789 = {
 				if = {
 					limit = { is_claimed_by = ROM }
@@ -1684,7 +2013,7 @@ ROM_reunion_category = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		remove_effect = {
@@ -1732,7 +2061,7 @@ ROM_reunion_category = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		remove_effect = {
@@ -1775,7 +2104,7 @@ ROM_reunion_category = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		remove_effect = {
@@ -1817,7 +2146,7 @@ ROM_reunion_category = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		remove_effect = {
@@ -1852,7 +2181,7 @@ ROM_reunion_category = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		remove_effect = {
@@ -1891,17 +2220,17 @@ ROM_reunion_category = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision ROM_reorganize_udr"
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_reorganize_UDR"
 			custom_effect_tooltip = ROM_udr_tooltip
 			set_country_flag = ROM_UDR
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_reorganize_udr"
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_reorganize_UDR"
 			82 = {
 				add_extra_state_shared_building_slots = 1
 				add_building_construction = {
@@ -1921,7 +2250,7 @@ ROM_reunion_category = {
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		modifier = {
@@ -1948,7 +2277,7 @@ ROM_reunion_category = {
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 		}
 
 		remove_effect = {
@@ -2021,7 +2350,7 @@ ROM_foreign_policy = {
 				factor = 0
 				FROM = {
 					is_in_faction = yes
-					var:faction_leader = {
+					faction_leader = {
 						surrender_progress < 0.20
 					}
 				}
@@ -2180,7 +2509,7 @@ ROM_foreign_policy = {
 				factor = 0
 				FROM = {
 					is_in_faction = yes
-					var:faction_leader = {
+					faction_leader = {
 						surrender_progress < 0.20
 					}
 				}
@@ -2296,7 +2625,7 @@ ROM_foreign_policy = {
 				factor = 0
 				FROM = {
 					is_in_faction = yes
-					var:faction_leader = {
+					faction_leader = {
 						surrender_progress < 0.20
 					}
 				}
@@ -2451,7 +2780,7 @@ ROM_foreign_policy = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision ROM_russian_trade target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_trade_decision target: [From.GetName]"
 			set_country_flag = ROM_trade_negotiations
 			FROM = {
 				country_event = romania.114
@@ -2532,7 +2861,7 @@ ROM_foreign_policy = {
 		ai_will_do = {
 			factor = 0
 			modifier = {
-				add = 10
+				add = 5
 				has_completed_focus = ROM_entente
 				NOT = {
 					FROM = { tag = ENT }
@@ -2543,15 +2872,10 @@ ROM_foreign_policy = {
 				FROM = { tag = SER }
 				has_completed_focus = ROM_green_prince_stands_up
 			}
-			modifier = {
-				add = 10
-				FROM = { tag = SER }
-				has_completed_focus = ROM_carlist_restoration
-			}
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision ROM_leave_russia target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_leave_faction target: [From.GetName]"
 			leave_faction = yes
 			FROM = { country_event = romania.113 }
 		}
@@ -2627,11 +2951,7 @@ ROM_foreign_policy = {
 			}
 			modifier = {
 				factor = 0
-				84 = {
-					NOT = {
-						is_core_of = ROM
-					}
-				}
+				NOT = { has_completed_focus = ROM_renew_pride }
 			}
 			modifier = {
 				factor = 0
@@ -2640,6 +2960,13 @@ ROM_foreign_policy = {
 			modifier = {
 				factor = 10
 				has_completed_focus = ROM_carlist_restoration
+			}
+			modifier = {
+				factor = 0
+				FRA = {
+					has_war_with = CAN
+					NOT = { has_war_with = GER }
+				}
 			}
 			modifier = {
 				factor = 2
@@ -2846,7 +3173,7 @@ ROM_foreign_policy = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision ROM_negotiate_with_Russia"
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_negotiate_with_Russia target: [From.GetName]"
 			FROM = {
 				country_event = romania.144
 			}
@@ -2905,9 +3232,208 @@ ROM_foreign_policy = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision ROM_negotiate_with_Germany"
+			log = "[GetDateText]: [Root.GetName]: Decision ROM_negotiate_with_Germany target: [From.GetName]"
 			FROM = {
 				country_event = romania.147
+			}
+		}
+	}
+}
+
+ROM_king_category = {
+
+	ROM_carol_public_works = {
+		icon = eng_ally_imperialist_coup
+
+		allowed = { tag = ROM }
+
+		cost = 75
+		days_remove = 120
+		fire_only_once = no
+
+		ai_will_do = {
+			factor = 2
+		}
+
+		modifier = {
+			stability_factor = 0.08
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_carol_public_works"
+		}
+	}
+	ROM_military_parades = {
+		icon = generic_military
+
+		allowed = { tag = ROM }
+
+		cost = 50
+		days_remove = 60
+		fire_only_once = no
+
+		ai_will_do = {
+			factor = 2
+		}
+
+		modifier = {
+			stability_factor = 0.02
+			max_command_power = -30
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_military_parades"
+			add_war_support = 0.04
+		}
+	}
+	ROM_royal_academy_fund = {
+		icon = generic_research
+
+		allowed = { tag = ROM }
+
+		cost = 50
+		days_remove = 120
+		fire_only_once = no
+
+		ai_will_do = {
+			factor = 2
+		}
+
+		modifier = {
+			research_speed_factor = 0.05
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_royal_academy_fund"
+		}
+	}
+	ROM_fund_radio_romania = {
+		icon = hol_radio_oranje
+
+		allowed = { tag = ROM }
+
+		cost = 50
+		days_remove = 90
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 2
+		}
+
+		modifier = {
+			production_speed_radar_station_factor = 0.5
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_statue_of_the_king"
+			set_temp_variable = { ideology_change_var = 3 }
+			change_ruling_party_popularity = yes
+		}
+	}
+	ROM_nice_holiday = {
+		icon = decision_oasis
+
+		allowed = { tag = ROM }
+		visible = { 
+			FRA = { exists = no }
+			NFA = { NOT = { has_war_with = ROM } }
+		}
+
+		cost = 75
+		days_remove = 30
+		fire_only_once = yes
+		days_re_enable = 365
+
+		ai_will_do = {
+			factor = 2
+		}
+
+		modifier = {
+			political_power_gain = -0.1
+			paternal_autocrat_drift = 0.1
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_statue_of_the_king"
+			NFA = {
+				add_opinion_modifier = {
+					target = ROM
+					modifier = BRA_royal_visit
+				}
+			}
+		}
+	}
+	ROM_portugal_holiday = {
+		icon = decision_oasis
+
+		allowed = { tag = ROM }
+		visible = { 
+			POR = {
+				exists = yes 
+				has_socialist_government = no
+				NOT = { has_war_with = ROM }
+				surrender_progress < 0
+			} 
+		}
+
+		cost = 75
+		days_remove = 30
+		fire_only_once = no
+		days_re_enable = 365
+
+		ai_will_do = {
+			factor = 2
+		}
+
+		modifier = {
+			political_power_gain = -0.1
+			paternal_autocrat_drift = 0.1
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_statue_of_the_king"
+			POR = {
+				add_opinion_modifier = {
+					target = ROM
+					modifier = BRA_royal_visit
+				}
+			}
+		}
+	}
+	ROM_rio_holiday = {
+		icon = decision_oasis
+
+		allowed = { tag = ROM }
+		visible = { 
+			BRA = {
+				exists = yes 
+				has_socialist_government = no
+				NOT = { has_war_with = ROM }
+				surrender_progress < 0
+			} 
+		}
+
+		cost = 75
+		days_remove = 60
+		fire_only_once = no
+		days_re_enable = 365
+
+		ai_will_do = {
+			factor = 2
+		}
+
+		modifier = {
+			political_power_gain = -0.1
+			paternal_autocrat_drift = 0.1
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ROM_statue_of_the_king"
+			BRA = {
+				add_opinion_modifier = {
+					target = ROM
+					modifier = BRA_royal_visit
+				}
 			}
 		}
 	}
@@ -2936,7 +3462,7 @@ political_actions = {
 		fire_only_once = no
 
 		ai_will_do = {
-			factor = 10
+			factor = 1000
 		}
 
 		remove_effect = {
