@@ -8,12 +8,27 @@ CSA_international_decisions = {# Foreign Policy Stuff
 		icon = generic_research
 
 		available = {
-			OR = {
-				has_war = no
-				custom_trigger_tooltip = {
-					tooltip = CSA_same_wars_as_Intl
-					has_war = yes
-					any_enemy_country = { has_war_with = FROM }
+			if = {
+				limit = {
+					NOT = { has_completed_focus = CSA_good_soldier }
+					country_exists = CAL
+					CAL = { is_in_faction_with = ENT }
+				}
+				has_war_with = CAL
+			}
+			else = {
+				has_completed_focus = CSA_good_soldier
+				OR = {
+					has_war = no
+					custom_trigger_tooltip = {
+						tooltip = USA_same_wars_as_FROM
+						has_war = yes
+						NOT = {
+							any_enemy_country = {
+								NOT = { has_war_with = FROM }
+							}
+						}
+					}
 				}
 			}
 		}
@@ -21,26 +36,26 @@ CSA_international_decisions = {# Foreign Policy Stuff
 		visible = {
 			is_in_faction = no
 			is_subject = no
-			NOT = { has_war_with = FROM }
+			NOT = { has_completed_focus = CSA_free_the_west }
 			FROM = {
 				has_socialist_government = yes
 				is_faction_leader = yes
 				has_capitulated = no
+				NOT = { has_war_with = ROOT }
 			}
 		}
 
 		targets = { INT }
 		target_root_trigger = {
-			has_completed_focus = CSA_good_soldier
 			is_in_faction = no
 			is_subject = no
 		}
 		target_trigger = {
-			NOT = { has_war_with = FROM }
 			FROM = {
 				has_socialist_government = yes
 				is_faction_leader = yes
 				has_capitulated = no
+				NOT = { has_war_with = ROOT }
 			}
 		}
 
@@ -56,6 +71,12 @@ CSA_international_decisions = {# Foreign Policy Stuff
 					has_socialist_government = yes
 					surrender_progress > 0.30
 				}
+			}
+			modifier = {
+				factor = 0
+				has_war_with = CAL
+				has_war_with = ENT
+				surrender_progress < 0.2
 			}
 		}
 		complete_effect = {
@@ -173,6 +194,7 @@ CSA_expanding_the_revolution_decisions = {# Expanding the Revolution
 			is_subject = no
 		}
 		visible = {
+			has_completed_focus = CSA_look_to_the_south
 			can_declare_war_on = FROM
 			FROM = {
 				OR = {
@@ -266,7 +288,7 @@ CSA_expanding_the_revolution_decisions = {# Expanding the Revolution
 			}
 			modifier = {
 				factor = 0
-				has_army_manpower = { size < 250000 }
+				has_army_manpower = { size < 100000 }
 			}
 			# don't attack a faction leader Canada unless we're much stronger or they're at war
 			modifier = {
@@ -303,7 +325,6 @@ CSA_expanding_the_revolution_decisions = {# Expanding the Revolution
 			modifier = {
 				factor = 0
 				FROM = {
-					is_in_faction = no
 					strength_ratio = { tag = CSA ratio > 0.5 }
 				}
 			}
@@ -311,12 +332,8 @@ CSA_expanding_the_revolution_decisions = {# Expanding the Revolution
 				factor = 0
 				FROM = {
 					is_in_faction = yes
-					OR = {
-						strength_ratio = { tag = CSA ratio > 0.5 }
-						any_allied_country = {
-							is_faction_leader = yes
-							strength_ratio = { tag = CSA ratio > 1.0 }
-						}
+					var:faction_leader = {
+						strength_ratio = { tag = CSA ratio > 1.0 }
 					}
 				}
 			}
@@ -380,7 +397,7 @@ CSA_deal_with_terrorists_decisions = {# Dealing with reactionary terrorists
 	CSA_destroy_federalist_decision = {# Destroy capitalists
 		icon = GFX_decision_generic_industry
 		visible = {
-			has_completed_focus = CSA_transformitive_justice
+			has_completed_focus = CSA_transformative_justice
 			OR = {
 				has_idea = USA_federalist_resistance1
 				has_idea = USA_federalist_resistance2
@@ -429,6 +446,225 @@ CSA_deal_with_terrorists_decisions = {# Dealing with reactionary terrorists
 	}
 }
 
+@CSA_economic_development_decision_cost = 40
+@CSA_economic_development_decision_time = 90
+
+CSA_economic_development_decisions = {
+	CSA_industrial_research_expansion = {
+		icon = generic_research
+		
+		visible = {
+			OR = {
+				has_completed_focus = CSA_public_owned_enterprise
+				has_completed_focus = CSA_industrial_unionism
+				has_completed_focus = CSA_price_controls
+				has_completed_focus = CSA_decentralized_planning
+			}
+		}
+		
+		cost = @CSA_economic_development_decision_cost
+		days_remove = @CSA_economic_development_decision_time
+		on_map_mode = map_only
+		fire_only_once = yes
+		
+		ai_will_do = {
+			factor = 10
+		}
+		
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove CSA_agricultural_investments"
+			add_tech_bonus = {
+				name = CSA_industrial_research_expansion
+				bonus = 1
+				uses = 2
+				category = industry
+			}
+		}
+	}
+	CSA_infrastructure_expansion = {
+		icon = train
+		
+		available = {
+			FROM = { is_core_of = ROOT }
+		}
+		
+		visible = {
+			FROM = {
+				is_owned_and_controlled_by = ROOT
+				free_building_slots = { building = infrastructure size > 0 }
+			}
+		}
+		
+		state_target = yes
+		targets = { 261 360 361 362 375 386 392 395 396 833 }
+		target_root_trigger = {
+			OR = {
+				has_completed_focus = CSA_social_dividends
+				has_completed_focus = CSA_syndicalist_economics
+				has_completed_focus = CSA_state_quotas
+				has_completed_focus = CSA_nat_syndicalist_econ
+			}
+		}
+		target_trigger = {
+			FROM = {
+				is_owned_and_controlled_by = ROOT
+				free_building_slots = { building = infrastructure size > 0 }
+			}
+		}
+		
+		cost = @CSA_economic_development_decision_cost
+		days_remove = @CSA_economic_development_decision_time
+		fire_only_once = yes
+		
+		ai_will_do = {
+			factor = 10
+		}
+		
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision CSA_infratructure_expansion target: [From.GetName]"
+			add_to_variable = { CSA_infrastructure_expansion_count = 1 }
+		}
+		
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove CSA_infratructure_expansion target: [From.GetName]"
+			FROM = {
+				if = {
+					limit = {
+						free_building_slots = { building = infrastructure size < 2 }
+					}
+					add_building_construction = {
+						type = infrastructure
+						level = 1
+						instant_build = yes
+					}
+				}
+				else = {
+					add_building_construction = {
+						type = infrastructure
+						level = 2
+						instant_build = yes
+					}
+				}
+			}
+		}
+	}
+	CSA_agricultural_investments = {
+		icon = generic_agriculture
+		
+		available = {
+			FROM = { is_core_of = ROOT }
+		}
+		
+		visible = {
+			FROM = { is_owned_and_controlled_by = ROOT }
+		}
+		
+		state_target = yes
+		targets = { 357 372 374 382 383 384 385 388 389 390 }
+		target_root_trigger = {
+			OR = {
+				has_completed_focus = CSA_mutualism
+				has_completed_focus = CSA_agricultural_unions
+				has_completed_focus = CSA_state_farms
+				has_completed_focus = CSA_collective_farming
+			}
+		}
+		target_trigger = {
+			FROM = { is_owned_and_controlled_by = ROOT }
+		}
+		
+		cost = @CSA_economic_development_decision_cost
+		days_remove = @CSA_economic_development_decision_time
+		fire_only_once = yes
+		
+		ai_will_do = {
+			factor = 10
+			modifier = {
+				factor = 0.1
+				FROM = {
+					free_building_slots = { building = industrial_complex size > 0 include_locked = no }
+				}
+			}
+		}
+		
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision CSA_infratructure_expansion target: [From.GetName]"
+			add_to_variable = { CSA_agricultural_investments_count = 1 }
+		}
+		
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove CSA_agricultural_investments target: [From.GetName]"
+			FROM = { increase_state_category_by_one_level = yes }
+		}
+	}
+	CSA_industrial_development = {
+		icon = generic_construction
+		
+		available = {
+			FROM = { is_core_of = ROOT }
+		}
+		
+		visible = {
+			FROM = { is_owned_and_controlled_by = ROOT }
+		}
+		
+		state_target = yes
+		targets = { 362 363 368 371 373 375 }
+		target_root_trigger = {
+			OR = {
+				has_completed_focus = CSA_workers_cooperatives
+				has_completed_focus = CSA_workers_self_managment
+				has_completed_focus = CSA_control_unions
+				has_completed_focus = CSA_union_managment
+			}
+		}
+		target_trigger = {
+			FROM = { is_owned_and_controlled_by = ROOT }
+		}
+		
+		cost = @CSA_economic_development_decision_cost
+		days_remove = @CSA_economic_development_decision_time
+		fire_only_once = yes
+		
+		ai_will_do = {
+			factor = 10
+			modifier = {
+				factor = 0.1
+				FROM = {
+					free_building_slots = { building = industrial_complex size > 0 include_locked = no }
+				}
+			}
+		}
+		
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision CSA_infratructure_expansion target: [From.GetName]"
+			add_to_variable = { CSA_industrial_development_count = 1 }
+		}
+		
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove CSA_industrial_development target: [From.GetName]"
+			FROM = {
+				add_extra_state_shared_building_slots = 2
+				if = {
+					limit = { is_coastal = yes }
+					add_building_construction = {
+						type = dockyard
+						level = 2
+						instant_build = yes
+					}
+				}
+				else = {
+					add_building_construction = {
+						type = industrial_complex
+						level = 1
+						instant_build = yes
+					}
+				}
+			}
+		}
+	}
+}
+
 foreign_influence = {
 	CSA_delay_canadian_intervention = {
 		icon = generic_civil_support
@@ -444,6 +680,7 @@ foreign_influence = {
 		}
 
 		visible = {
+			has_country_flag = CSA_can_delay_canada
 			is_subject = no
 			FROM = {
 				exists = yes

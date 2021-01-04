@@ -1,179 +1,272 @@
-foreign_politics = {
-	POL_join_belgrade_pact = {
-		name = ITA_join_belgrade_pact
-		icon = generic_political_discourse
-
-		allowed = { tag = POL }
-
-		available = {
-			OR = {
-				has_war = no
-				custom_trigger_tooltip = {
-					tooltip = USA_same_wars_as_FROM
-					any_enemy_country = { has_war_with = FROM }
-				}
-			}
-		}
-
-		visible = {
-			has_global_flag = balkan_war_ended
-			OR = {
-				POL_sikorski_in_power = yes
-				has_government = national_populist
-			}
-			is_in_faction = no
-			is_subject = no
-			FROM = {
-				is_faction_leader = yes
-				NOT = { has_war_with = ROOT }
-			}
-		}
-
-		targets = { SER }
-		target_root_trigger = {
-			has_global_flag = balkan_war_ended
-			has_completed_focus = POL_a_firm_hand
-			OR = {
-				POL_sikorski_in_power = yes
-				has_government = national_populist
-			}
-			is_in_faction = no
-			is_subject = no
-		}
-		target_trigger = {
-			FROM = {
-				is_faction_leader = yes
-				NOT = { has_war_with = ROOT }
-			}
-		}
-
-		cost = 0
-		fire_only_once = yes
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision POL_join_belgrade_pact target: [From.GetName]"
-			FROM = { country_event = sic.37 }
-		}
-
-		ai_will_do = {
-			factor = 5
-			modifier = {
-				factor = 0
-				FROM = { surrender_progress > 0.20 }
-			}
-			modifier = {
-				factor = 5
-				FROM = { has_war_with = AUS }
-			}
-		}
-	}
+POL_foreign_policy_decisions = {
 	POL_seize_galicia = {
-		icon = generic_political_discourse
-
-		allowed = { tag = POL }
-
+		icon = generic_prepare_civil_war
+		
 		visible = {
-			POL_has_republican_government = yes
-			is_subject = no
-			is_in_faction = no
 			can_declare_war_on = FROM
+			FROM = { owns_state = 91 }
+			has_completed_focus = POL_opportunism
 		}
-
-		targets = { GAL }
-		target_root_trigger = {
-			POL_has_republican_government = yes
-			is_subject = no
-			is_in_faction = no
-			AUS = {
-				OR = {
-					has_war_with = GAL
-					has_war_with = HUN
-				}
-			}
-		}
+		
+		targets = { 91.OWNER }
+		target_root_trigger = { has_completed_focus = POL_opportunism }
 		target_trigger = {
 			can_declare_war_on = FROM
+			FROM = { owns_state = 91 }
 		}
 
-		cost = 0
+		cost = 20
+		days_remove = 10
 		fire_only_once = yes
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_galicia target: [From.GetName]"
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
-			}
-		}
+		war_with_target_on_remove = yes
 
 		ai_will_do = {
-			factor = 5
+			factor = 10
 			modifier = {
 				factor = 0
 				has_war = yes
 			}
 			modifier = {
 				factor = 0
-				FROM = {
-					is_subject = yes
-					overlord = {
-						strength_ratio = {
-							tag = ROOT
-							ratio > 1.2
-						}
+				FROM = { is_ally_with = AUS }
+				is_in_faction = yes
+				var:faction_leader = {
+					NOT = { has_war_with = AUS }
+				}
+			}
+			modifier = {
+				factor = 0
+				FROM = { is_ally_with = AUS }
+				AUS = {
+					is_subject = no
+					is_faction_leader = yes
+					surrender_progress < 0.10
+					NOT = {
+						any_enemy_country = { is_actual_major = yes }
+					}
+				}
+				NOT = {
+					count_triggers = {
+						amount = 2
+						SER = { has_country_flag = waiting_to_attack_austria }
+						ROM = { has_country_flag = waiting_to_attack_austria }
+						ITA = { has_country_flag = waiting_to_attack_austria }
 					}
 				}
 			}
-		}
-	}
-	POL_integrate_galicia = {
-		icon = generic_political_discourse
-
-		allowed = { tag = POL }
-
-		visible = {
-			FROM = { is_owned_and_controlled_by = ROOT }
-		}
-
-		cost = 25
-		days_remove = 200
-		fire_only_once = yes
-
-		state_target = yes
-		targets = { 88 89 91 }
-		target_root_trigger = {
-			NOT = { country_exists = GAL }
-		}
-		target_trigger = {
-			FROM = { is_owned_and_controlled_by = ROOT }
-		}
-
-		modifier = {
-			political_power_cost = 0.1
+			modifier = {
+				factor = 5
+				FROM = { is_ally_with = AUS }
+				OR = {
+					AUS = { has_war_with = HUN }
+					count_triggers = {
+						amount = 2
+						SER = { has_country_flag = waiting_to_attack_austria }
+						ROM = { has_country_flag = waiting_to_attack_austria }
+						ITA = { has_country_flag = waiting_to_attack_austria }
+					}
+				}
+			}
+			modifier = {
+				factor = 5
+				has_country_flag = waiting_to_attack_austria
+			}
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_galicia target: [From.GetName]"
-			hidden_effect = {
-				79 = {
-					owner = {
-						country_event = {
-							id = poland.117
-							days = 2
-						}
+			setup_decision_attack_AI = yes
+			FROM = {
+				if = {
+					limit = { is_subject = yes }
+					overlord = {
+						set_temp_variable = { global.GAL_target = THIS }
+					}
+				}
+				else = {
+					set_temp_variable = { GAL_target = THIS }
+				}
+			}
+			var:GAL_target = {
+				country_event = { id = poland.177 days = 5 }
+			}
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_galicia target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+	}
+	POL_seize_brzesc = {
+		icon = generic_prepare_civil_war
+		
+		visible = {
+			can_declare_war_on = FROM
+			FROM = { owns_state = 93 }
+			has_completed_focus = POL_opportunism
+		}
+		
+		targets = { 93.OWNER }
+		target_root_trigger = { has_completed_focus = POL_opportunism }
+		target_trigger = {
+			can_declare_war_on = FROM
+			FROM = { owns_state = 93 }
+		}
+
+		cost = 20
+		days_remove = 10
+		fire_only_once = yes
+		war_with_target_on_remove = yes
+
+		ai_will_do = {
+			factor = 10
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+			modifier = {
+				factor = 0
+				FROM = { is_in_faction_with = GER }
+				is_in_faction = yes
+				var:faction_leader = {
+					NOT = { has_war_with = GER }
+				}
+			}
+			modifier = {
+				factor = 0
+				FROM = { is_in_faction_with = GER }
+				GER = {
+					NOT = {
+						any_enemy_country = { is_actual_major = yes }
 					}
 				}
 			}
 		}
 
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove POL_seize_galicia target: [From.GetName]"
-			hidden_effect = { remove_state_claim = FROM }
-			add_state_core = FROM
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_brzesc target: [From.GetName]"
+			setup_decision_attack_AI = yes
 		}
 
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_brzesc target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			declare_war_on = {
+				type = annex_everything
+				target = 93.owner
+			}
+		}
+	}
+	POL_reclaim_vilnius = {
+		icon = generic_prepare_civil_war
+		
+		visible = {
+			can_declare_war_on = FROM
+			FROM = { owns_state = 96 }
+			has_completed_focus = POL_opportunism
+		}
+		
+		targets = { 96.OWNER }
+		target_root_trigger = { has_completed_focus = POL_opportunism }
+		target_trigger = {
+			can_declare_war_on = FROM
+			FROM = { owns_state = 96 }
+		}
+
+		cost = 20
+		days_remove = 10
+		fire_only_once = yes
+		war_with_target_on_remove = yes
+
 		ai_will_do = {
-			factor = 100
+			factor = 10
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+			modifier = {
+				factor = 0
+				FROM = { is_in_faction_with = GER }
+				is_in_faction = yes
+				var:faction_leader = {
+					NOT = { has_war_with = GER }
+				}
+			}
+			modifier = {
+				factor = 0
+				FROM = { is_in_faction_with = GER }
+				GER = {
+					NOT = {
+						any_enemy_country = { is_actual_major = yes }
+					}
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_brzesc target: [From.GetName]"
+			setup_decision_attack_AI = yes
+			FROM = {
+				country_event = { id = poland.181 days = 4 }
+			}
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_brzesc target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+	}
+	POL_crush_germany = {
+		icon = generic_prepare_civil_war
+		
+		visible = {
+			can_declare_war_on = FROM
+			has_completed_focus = POL_opportunism
+		}
+		
+		targets = { GER }
+		target_root_trigger = { has_completed_focus = POL_opportunism }
+		target_trigger = {
+			can_declare_war_on = FROM
+		}
+
+		cost = 20
+		days_remove = 10
+		fire_only_once = yes
+		war_with_target_on_remove = yes
+
+		ai_will_do = {
+			factor = 10
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+			modifier = {
+				factor = 0
+				is_in_faction = yes
+				var:faction_leader = {
+					NOT = { has_war_with = FROM }
+				}
+			}
+			modifier = {
+				factor = 0
+				NOT = {
+					FROM = {
+						any_enemy_country = { is_actual_major = yes }
+					}
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_brzesc target: [From.GetName]"
+			setup_decision_attack_AI = yes
+			country_event = poland.188
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_seize_brzesc target: [From.GetName]"
+			clear_decision_attack_AI = yes
 		}
 	}
 	POL_occupy_poznan = {
@@ -186,18 +279,29 @@ foreign_politics = {
 		}
 
 		visible = {
+			GER = { has_war_with = FRA }
+			can_declare_war_on = FROM
 			is_subject = no
 			POL_king_fryderyk = no
 			POL_king_karol = no
 			POL_king_mendog = no
+			NOT = { has_completed_focus = POL_opportunism }
+			OR = {
+				67 = { is_owned_and_controlled_by = FROM }
+				87 = { is_owned_and_controlled_by = FROM }
+				776 = { is_owned_and_controlled_by = FROM }
+				777 = { is_owned_and_controlled_by = FROM }
+			}
 		}
 
 		targets = { GER }
 		target_root_trigger = {
-			is_subject = no
+			NOT = { has_completed_focus = POL_opportunism }
+			GER = { has_war_with = FRA }
 			POL_king_fryderyk = no
 			POL_king_karol = no
 			POL_king_mendog = no
+			is_subject = no
 		}
 		target_trigger = {
 			can_declare_war_on = FROM
@@ -222,6 +326,350 @@ foreign_politics = {
 					days = 2
 				}
 			}
+		}
+	}
+	POL_alliance_with_ukraine = {
+		icon = generic_prepare_civil_war
+
+		available = {
+			OR = {
+				has_war = no
+				custom_trigger_tooltip = {
+					tooltip = USA_same_wars_as_FROM
+					has_war = yes
+					NOT = {
+						any_enemy_country = {
+							NOT = { has_war_with = FROM }
+						}
+					}
+				}
+			}
+		}
+
+		visible = {
+			is_in_faction = no
+			has_socialist_government = yes
+			FROM = {
+				exists = yes
+				is_subject = no
+				is_in_faction = no
+				has_socialist_government = yes
+				NOT = { has_war_with = ROOT }
+			}
+			has_completed_focus = POL_victory_of_the_people
+		}
+		
+		targets = { UKR }
+		target_root_trigger = { has_completed_focus = POL_victory_of_the_people }
+		target_trigger = {
+			FROM = {
+				is_subject = no
+				is_in_faction = no
+				has_socialist_government = yes
+			}
+		}
+
+		cost = 20
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				FROM = { surrender_progress > 0.30 }
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_alliance_with_ukraine"
+			FROM = { country_event = poland.55 }
+		}
+	}
+	POL_join_internationale = {
+		icon = generic_prepare_civil_war
+
+		available = {
+			OR = {
+				has_war = no
+				custom_trigger_tooltip = {
+					tooltip = USA_same_wars_as_FROM
+					has_war = yes
+					NOT = {
+						any_enemy_country = {
+							NOT = { has_war_with = FROM }
+						}
+					}
+				}
+			}
+		}
+
+		visible = {
+			is_in_faction = no
+			has_socialist_government = yes
+			FROM = {
+				has_socialist_government = yes
+				is_faction_leader = yes
+				NOT = { has_war_with = ROOT }
+			}
+			OR = {
+				has_completed_focus = POL_radek_reforms
+				has_completed_focus = POL_luxembourg_world_revolution
+				has_completed_focus = POL_leninist_plan
+			}
+		}
+		
+		targets = { INT }
+		target_root_trigger = {
+			OR = {
+				has_completed_focus = POL_radek_reforms
+				has_completed_focus = POL_luxembourg_world_revolution
+				has_completed_focus = POL_leninist_plan
+			}
+			has_socialist_government = yes
+		}
+		target_trigger = {
+			FROM = {
+				has_socialist_government = yes
+				is_faction_leader = yes
+			}
+		}
+
+		cost = 20
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				FROM = { surrender_progress > 0.30 }
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_join_internationale"
+			FROM = { country_event = poland.161 }
+		}
+	}
+	POL_join_austria = {
+		icon = generic_prepare_civil_war
+
+		available = {
+			OR = {
+				has_war = no
+				custom_trigger_tooltip = {
+					tooltip = USA_same_wars_as_FROM
+					has_war = yes
+					NOT = {
+						any_enemy_country = {
+							NOT = { has_war_with = FROM }
+						}
+					}
+				}
+			}
+		}
+
+		visible = {
+			is_in_faction = no
+			FROM = {
+				is_faction_leader = yes
+				NOT = { has_war_with = ROOT }
+			}
+			has_completed_focus = POL_von_habsburg
+		}
+		
+		targets = { AUS }
+		target_root_trigger = {
+			has_completed_focus = POL_von_habsburg
+		}
+		target_trigger = {
+			FROM = { is_faction_leader = yes }
+		}
+
+		cost = 20
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				FROM = { surrender_progress > 0.30 }
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_join_austria"
+			FROM = { country_event = poland.129 }
+		}
+	}
+	POL_detente_with_germany = {
+		icon = generic_prepare_civil_war
+
+		available = {
+			OR = {
+				has_war = no
+				custom_trigger_tooltip = {
+					tooltip = USA_same_wars_as_FROM
+					has_war = yes
+					NOT = {
+						any_enemy_country = {
+							NOT = { has_war_with = FROM }
+						}
+					}
+				}
+			}
+		}
+
+		visible = {
+			is_in_faction = no
+			FROM = {
+				is_faction_leader = yes
+				NOT = { has_war_with = ROOT }
+			}
+			has_completed_focus = POL_join_international_community
+		}
+		
+		targets = { GER }
+		target_root_trigger = {
+			has_completed_focus = POL_join_international_community
+		}
+		target_trigger = {
+			FROM = { is_faction_leader = yes }
+		}
+
+		cost = 20
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 20
+			modifier = {
+				factor = 0
+				FROM = { surrender_progress > 0.30 }
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_detente_with_germany"
+			FROM = { country_event = poland.146 }
+		}
+	}
+	POL_look_to_russia = {
+		icon = generic_prepare_civil_war
+
+		available = {
+			OR = {
+				has_war = no
+				custom_trigger_tooltip = {
+					tooltip = USA_same_wars_as_FROM
+					has_war = yes
+					NOT = {
+						any_enemy_country = {
+							NOT = { has_war_with = FROM }
+						}
+					}
+				}
+			}
+		}
+
+		visible = {
+			is_in_faction = no
+			FROM = {
+				is_faction_leader = yes
+				NOT = { has_war_with = ROOT }
+			}
+			has_completed_focus = POL_join_international_community
+		}
+		
+		targets = { RUS }
+		target_root_trigger = {
+			has_completed_focus = POL_join_international_community
+		}
+		target_trigger = {
+			FROM = { is_faction_leader = yes }
+		}
+
+		cost = 20
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 20
+			modifier = {
+				factor = 0
+				FROM = { surrender_progress > 0.30 }
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_look_to_russia"
+			FROM = { country_event = poland.149 }
+		}
+	}
+	POL_join_entente = {
+		name = GRE_join_entente
+		icon = generic_agreement
+
+		available = {
+			any_neighbor_country = { is_in_faction_with = FROM }
+			OR = {
+				has_war = no
+				custom_trigger_tooltip = {
+					tooltip = GRE_same_wars_as_entente
+					has_war = yes
+					NOT = {
+						any_enemy_country = {
+							NOT = { has_war_with = FROM }
+						}
+					}
+				}
+			}
+		}
+
+		visible = {
+			NOT = { country_exists = GAL }
+			is_in_faction = no
+			has_socialist_government = no
+			FROM = {
+				is_faction_leader = yes
+				NOT = { has_war_with = ROOT }
+			}
+		}
+
+		targets = { ENT }
+		target_root_trigger = {
+			NOT = { country_exists = GAL }
+			is_in_faction = no
+			has_socialist_government = no
+		}
+		target_trigger = {
+			FROM = {
+				is_faction_leader = yes
+				NOT = { has_war_with = ROOT }
+			}
+		}
+
+		cost = 20
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 5
+			modifier = {
+				factor = 0
+				FROM = { surrender_progress > 0.20 }
+			}
+			modifier = {
+				factor = 0
+				any_neighbor_country = { is_in_faction_with = GER }
+				FROM = { has_war_with = GER }
+			}
+			modifier = {
+				factor = 0
+				any_neighbor_country = { is_in_faction_with = AUS }
+				FROM = { has_war_with = AUS }
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision POL_join_entente target: [From.GetName]"
+			FROM = { country_event = sic.31 }
 		}
 	}
 }

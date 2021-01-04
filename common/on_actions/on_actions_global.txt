@@ -162,19 +162,19 @@ on_actions = {
 		effect = {
 			log = "[GetDateText] [From.GetName]: on_operative_detected_during_operation OPERATIVE: [This.GetName]"
 			random_list = {
-				40 = {
+				45 = {
 					force_operative_leader_into_hiding = 45
 					operative_leader_event = {
 						id = lar_operative_event.2
 						set_from_from = FROM
 					}
 				}
-				35 = {
+				25 = {
 					capture_operative = {
 						captured_by = FROM
 					}
 				}
-				20 = {
+				25 = {
 					harm_operative_leader = 90
 					operative_leader_event = {
 						id = lar_operative_event.4
@@ -242,6 +242,24 @@ on_actions = {
 
 	on_weekly = {
 		effect = {
+			# unit limit calculations
+			if = {
+				limit = {
+					NOT = { has_global_flag = KR_no_unit_limits }
+				}
+				calculate_maximum_divisions = yes
+			}
+			if = {
+				limit = {
+					NOT = {
+						has_global_flag = KR_no_unit_limits
+						has_global_flag = KR_unit_limits_ai_only
+					}
+				}
+				country_event = kr.political.122
+			}
+			
+			# update intelligence agency AI
 			if = {
 				limit = {
 					has_intelligence_agency = yes
@@ -275,6 +293,9 @@ on_actions = {
 			}
 			
 			every_country = {
+				# unit limit calculations
+				calculate_maximum_divisions = yes
+
 				#Opinion Modifiers Setup
 				country_event = kr.political.40
 
@@ -284,12 +305,18 @@ on_actions = {
 				country_event = kr.political.54
 			}
 			
+			# Set up news events settings
+			set_global_flag = NEWS_ALL
+
 			#Party Popularity Setup
 			for_each_scope_loop = {
 				array = countries
 				if = {
-					limit = { has_party_popularity_disabled = no }
-					add_dynamic_modifier = { modifier = party_popularity_dynamic_modifier }
+					limit = { has_variable = political_power_ideology }
+					map_party_popularity_PP_gain_to_ideology = yes
+				}
+				else = {
+					default_party_popularity_PP_gain = yes
 				}
 			}
 
@@ -298,7 +325,7 @@ on_actions = {
 				array = global.players
 				set_country_flag = show_welcome_splash
 			}
-			
+
 			#Events
 			random_scope_in_array = {
 				array = global.players
@@ -325,7 +352,7 @@ on_actions = {
 			ROOT = { set_country_flag = had_war }
 		}
 	}
-	
+
 	#ROOT is new controller #FROM is old controller #FROM.FROM is state ID
 	on_state_control_changed = {
 		effect = {
@@ -380,6 +407,7 @@ on_actions = {
 			}
 
 			FROM = {
+				end_coalition = yes
 				clr_country_flag = KR_can_raise_autonomy_level
 				#clr_country_flag = KR_can_lower_autonomy_level
 				#clr_country_flag = KR_can_be_annexed
@@ -445,6 +473,7 @@ on_actions = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] on_government_change"
 			mark_focus_tree_layout_dirty = yes
+			end_coalition = yes
 			country_event = kr.political.41 #opinion modifiers
 			country_event = kr.political.12 #puppet ministers
 
@@ -491,33 +520,11 @@ on_actions = {
 						is_in_faction = yes
 						is_faction_leader = no
 						NOT = {
-							any_allied_country = {
-								is_faction_leader = yes
-								has_war_with = PREV.PREV
-							}
+							var:faction_leader = { has_war_with = PREV.PREV }
 						}
 					}
-					if = {
-						limit = { is_subject = yes }
-						overlord = {
-							random_other_country = {
-								limit = {
-									is_faction_leader = yes
-									is_in_faction_with = PREV
-								}
-								save_event_target_as = factionhead
-							}
-						}
-					}
-					else = {
-						random_other_country = {
-							limit = {
-								is_faction_leader = yes
-								is_in_faction_with = PREV
-							}
-							save_event_target_as = factionhead
-						}
-					}
+					var:faction_leader = { save_event_target_as = factionhead }
+					log = "--- [This.GetName] is in a war with [From.GetName] but their faction leader [factionhead.GetName] is not"
 					country_event = { id = kr.political.208 hours = 1 }
 					leave_faction = yes
 				}
@@ -899,20 +906,14 @@ on_actions = {
 	on_exile_government_reinstated = {
 		effect = {
 			From = {
-				set_temp_variable = { exile_tag_check = ROOT.id }
 				every_army_leader = {
-					limit = {
-						OR = {
-							is_exiled_leader_from = ROOT
-							check_variable = { exile_tag = exile_tag_check }
-						}
-					}
+					limit = { is_exiled_leader_from = Root }
 					set_nationality = Root
 				}
 			}
 			Root = {
 				every_army_leader = {
-					limit = { is_exiled_leader_from = ROOT }
+					limit = { is_exiled_leader_from = Root }
 					remove_unit_leader_trait = exiled_leader
 					remove_exile_tag = yes
 				}
@@ -923,8 +924,10 @@ on_actions = {
 	on_war = {
 		effect = {
 			log = "[GetDateText]: [From.GetName]: on_war"
+			# Start of the Second Weltkrieg
+			country_event = ai_events.201
+			
 			# World tension events
-			country_event = worldtension.1
 			country_event = worldtension.2
 			country_event = worldtension.3
 			country_event = worldtension.4
@@ -932,8 +935,17 @@ on_actions = {
 
 			# Volunteers
 			every_other_country = {
-				country_event = ai.volunteers.1
+				country_event = ai_events.100
 			}
+		}
+	}
+
+	#ROOT = attacking side
+	#FROM = defending side
+	#fired when two countries end up at war with each other (on_war is fired when a country goes to war against anyone and is not fired again when it enters war against another country unless it went to peace first)
+	on_war_relation_added = {
+		effect = {
+			log = "[GetDateText]: on_war_relation_added attacker: [Root.GetName] defender: [From.GetName]"
 		}
 	}
 
@@ -946,8 +958,18 @@ on_actions = {
 					is_ai = yes
 					NOT = { has_country_flag = has_demobilization_check }
 				}
-				set_country_flag = { flag = has_demobilization_check days = 30 value = 1 }
-				country_event = { id = kr.political.120 days = 30 }
+				set_country_flag = { flag = has_demobilization_check days = 6 value = 1 }
+				country_event = { id = kr.political.120 days = 6 }
+			}
+			
+			#Reduce units check for the AI
+			if = {
+				limit = {
+					is_ai = yes
+					NOT = { has_country_flag = has_reduce_units_check }
+				}
+				set_country_flag = has_reduce_units_check
+				country_event = { id = kr.political.121 days = 7 random = 72 }
 			}
 
 			# Independence
@@ -959,12 +981,39 @@ on_actions = {
 				limit = { has_country_flag = KR_independence_war_overlord }
 				clr_country_flag = KR_independence_war_overlord
 			}
+			
+			# Italian countries
+			if = {
+				limit = { is_italian_tag = yes }
+				clr_country_flag = ITA_recent_peace
+				set_country_flag = ITA_recent_peace
+			}
 
 			# Volunteers
 			every_other_country = {
-				country_event = ai.volunteers.2
+				country_event = ai_events.101
 			}
 		}
 	}
 
+	# ROOT is country, this is ran for every country
+	on_daily = {
+		effect = {
+			if = {
+				limit = { has_variable = coalition_partners^num }
+				set_variable = { coalition_pp_gain = 0 }
+				for_each_loop = {
+					array = coalition_partners
+					add_to_variable = { coalition_pp_gain = party_popularity@var:v }
+				}
+				if = {
+					limit = { has_variable = coalition_stability }
+					multiply_variable = { coalition_pp_gain = coalition_stability }
+				}
+				else = {
+					divide_variable = { coalition_pp_gain = 2 }
+				}
+			}
+		}
+	}
 }

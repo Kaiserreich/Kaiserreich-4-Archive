@@ -85,7 +85,7 @@ decrease_mobilisation = {
 	}
 }
 
-disband_ten_percent_units = {
+disband_twenty_percent_units = {
 	save_event_target_as = disband_country
 	XXB = {
 		set_temp_variable = {
@@ -106,7 +106,7 @@ disband_ten_percent_units = {
 	transfer_units_fraction = {
 		target = XXB
 		size = 0
-		army_ratio = 0.1
+		army_ratio = 0.2
 		keep_unit_leaders_trigger = {
 			always = yes
 		}
@@ -155,5 +155,88 @@ disband_ten_percent_units = {
 	annex_country = {
 		target = XXB
 	}
+}
+
+calculate_maximum_divisions = {
+	# base upper division limit = number of factories
+	set_variable = { net_factory_count = num_of_factories } #NOTE: doing this separately for the player-facing tooltip
+	set_variable = { max_divisions = net_factory_count }
+	
+	# base lower division limit is either max manpower/35 (for countries with very high manpower but low factories)
+	# or the number of owned states or 5, whichever of the three numbers is higher
+	set_variable = { lower_limit_from_manpower = max_available_manpower_k }
+	divide_variable = { lower_limit_from_manpower = 35 }
+	round_variable = lower_limit_from_manpower
+	set_variable = { lower_limit_from_states = num_owned_states }
+	
+	set_variable = { lower_limit = lower_limit_from_manpower }
+	clamp_variable = {
+		var = lower_limit
+		min = lower_limit_from_states
+		max = 1000
+	}
+	clamp_variable = {
+		var = lower_limit
+		min = 5
+		max = 1000
+	}
+	
+	# +15% for majors
+	if = {
+		limit = { is_major = yes }
+		multiply_variable = { max_divisions = 1.15 }
+	}
+	# +5% if WT is 70% or higher
+	if = {
+		limit = { threat > 0.69 }
+		multiply_variable = { max_divisions = 1.05 }
+	}
+
+	# the upper and lower limit is then adjusted according to the economy law, overriding the base
+	set_variable = { upper_limit_from_factory_mult = modifier@unit_limit_factory_bonus }
+	multiply_variable = { upper_limit_from_factory_mult = 100 }
+	
+	set_temp_variable = { economy_mult = 1 }
+	add_to_temp_variable = { economy_mult = modifier@unit_limit_factory_bonus }
+	multiply_variable = { max_divisions = economy_mult }
+	
+	set_variable = { net_max_divisions = max_divisions }
+	round_variable = net_max_divisions
+	set_variable = { upper_limit = modifier@unit_limit_max }
+	if = {
+		limit = { check_variable = { lower_limit > upper_limit } }
+		set_variable = { max_divisions = upper_limit }
+	}
+	else = {
+		clamp_variable = {
+			var = max_divisions
+			min = lower_limit
+			max = upper_limit
+		}
+	}
+	
+	# add any specific bonuses to the limit
+	set_variable = { upper_limit_unit_bonus = modifier@unit_limit_bonus }
+	add_to_variable = { max_divisions = upper_limit_unit_bonus }
+	
+	round_variable = max_divisions
+}
+
+calculate_mobilisation_penalty = {
+	set_variable = { mobilisation_penalty_var = num_divisions }
+	divide_variable = { mobilisation_penalty_var = max_divisions }
+	subtract_from_variable = { mobilisation_penalty_var = 1 }
+	
+	divide_variable = { mobilisation_penalty_var = 4 }
+	clamp_variable = {
+		var = mobilisation_penalty_var
+		min = -0.25
+		max = 0.25
+	}
+	
+	set_variable = { mobilisation_penalty_var_positive = mobilisation_penalty_var }
+	
+	#for negative effects
+	multiply_variable = { mobilisation_penalty_var = -1 }
 }
 

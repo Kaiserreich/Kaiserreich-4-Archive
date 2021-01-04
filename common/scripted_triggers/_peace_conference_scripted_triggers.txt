@@ -6,7 +6,6 @@ is_important_state = {
 		state = 753 #Suez Canal
 		state = 685 #Panama Canal
 		state = 773 #Bosphorous
-		state = 347 #Dardanelles
 		state = 116 #Malta
 		state = 336 #Singapore
 	}
@@ -26,10 +25,9 @@ is_paired_impassable_state = {
 		state = 926 #Sermersuaq
 		state = 967 #Mauritanian Desert
 		state = 1009 #Kufra
-		state = 1030 #Amazonas Jungle
-		state = 1031 #Roraima Jungle
-		state = 1032 #Mato Grosso Jungle
-		state = 1033 #Para Jungle
+		state = 1030 #Western Amazonas
+		state = 1031 #Northern Amazonas
+		state = 1033 #Southern Amazonas
 		state = 1036 #Bolivar Jungle
 		state = 1037 #East Guyana Jungle
 		state = 1038 #Suriname Jungle
@@ -105,6 +103,22 @@ is_european_france = {
 		region = 19 #Northrn France
 		region = 20 #Southern France
 		region = 164 #Western France
+	}
+}
+
+is_occitania = {
+	OR = {
+		state = 19 #Aquitaine
+		state = 21 #Provence
+		state = 22 #Languedoc
+		state = 26 #Auvergne
+		state = 25 #Limousin
+		state = 31 #Garonne
+		state = 32 #Rhone
+		state = 762 #Nice
+		state = 763 #Alpes
+		state = 817 #Rousillon
+		state = 984 #Pyrennes
 	}
 }
 
@@ -280,16 +294,6 @@ is_siberia = {
 	}
 }
 
-is_caribbean_fed = {
-	OR = {
-		state = 311 #Belize
-		state = 690 #Bahamas
-		state = 696 #Bermuda
-		region = 53 #Caribbean Sea
-		region = 200 #Guyana Plateau
-	}
-}
-
 is_guyana = {
 	OR = {
 		state = 309 #Suriname
@@ -300,6 +304,22 @@ is_guyana = {
 		state = 1039 #West Guyana Jungle
 		state = 1078 #Mabaruma
 		state = 1079 #Mabaruma Jungle
+	}
+}
+
+is_caribbean_fed = {
+	OR = {
+		state = 308 #Leeward Islands
+		state = 311 #Belize
+		state = 689 #Jamaica
+		state = 690 #Bahamas
+		state = 691 #Trinidad
+		state = 692 #Windward Islands
+		state = 694 #French Caribbean
+		state = 695 #Curacao
+		state = 696 #Bermuda
+		state = 1077 #St. Martin
+		is_guyana = yes
 	}
 }
 
@@ -695,11 +715,10 @@ ROOT_is_restriction_exception = {
 				TEX = { at_conference_no_war_with_ROOT = yes }
 			}
 		}
-		# Greece, Romania, and Royalist Romania will restrict themselves if dividing up Bulgaria/Ottomans with Serbia
+		# Greece and Romania will restrict themselves if dividing up Bulgaria/Ottomans with Serbia
 		AND = {
 			OR = {
 				tag = ROM
-				tag = RRM
 				tag = GRE
 			}
 			OR = {
@@ -850,11 +869,10 @@ PREV_is_restriction_exception = {
 				TEX = { at_conference_no_war_with_PREV = yes }
 			}
 		}
-		# Greece, Romania, and Royalist Romania will restrict themselves if dividing up Bulgaria/Ottomans with Serbia
+		# Greece and Romania will restrict themselves if dividing up Bulgaria/Ottomans with Serbia
 		AND = {
 			OR = {
 				tag = ROM
-				tag = RRM
 				tag = GRE
 			}
 			OR = {
@@ -927,8 +945,7 @@ restrict_territorial_ambitions_PREV = {
 		AND = {
 			is_in_faction = yes
 			is_faction_leader = no
-			any_allied_country = {
-				is_faction_leader = yes
+			var:faction_leader = {
 				is_actual_major = yes
 				at_conference_no_war_with_PREV = yes
 			}
@@ -989,10 +1006,16 @@ restrict_territorial_ambitions_ROOT = {
 		AND = {
 			is_in_faction = yes
 			is_faction_leader = no
-			any_allied_country = {
-				is_faction_leader = yes
+			var:faction_leader = {
 				is_actual_major = yes
 				at_conference_no_war_with_ROOT = yes
+			}
+			NOT = {
+				AND = {
+					is_in_europe = yes
+					is_actual_major = yes
+					var:global.eval_state = { is_on_continent = africa }
+				}
 			}
 		}
 		# is not a major and a major is at the conference
@@ -1571,8 +1594,6 @@ is_willing_to_take_state_ROOT = {
 	rule_stay_out_of_america_ROOT = no
 	rule_stay_out_of_alands_ROOT = no
 	rule_BHC_stay_out_of_siam_ROOT = no
-	rule_let_ROM_finish_civil_war_ROOT = no
-	rule_let_RRM_finish_civil_war_ROOT = no
 	rule_let_KUR_take_cores_ROOT = no
 	rule_SQI_split_up_LEP_ROOT = no
 	rule_ANQ_split_up_LEP_ROOT = no
@@ -1625,8 +1646,6 @@ is_willing_to_take_state_PREV = {
 	rule_stay_out_of_america_PREV = no
 	rule_stay_out_of_alands_PREV = no
 	rule_BHC_stay_out_of_siam_PREV = no
-	rule_let_ROM_finish_civil_war_PREV = no
-	rule_let_RRM_finish_civil_war_PREV = no
 	rule_let_KUR_take_cores_PREV = no
 	rule_SQI_split_up_LEP_PREV = no
 	rule_ANQ_split_up_LEP_PREV = no
@@ -1985,7 +2004,10 @@ rule_needs_connection_ROOT = {
 							var:global.eval_state = { is_claim_or_core_or_ambition_of_PREV = yes }
 							can_reach_state = yes
 						}
-						restrict_territorial_ambitions_PREV = no
+						AND = {
+							restrict_territorial_ambitions_PREV = no
+							var:global.eval_state = { is_adjacent_to_PREV_or_coastal = yes }
+						}
 					}
 					is_willing_to_take_state_PREV = yes
 				}
@@ -2107,6 +2129,10 @@ rule_dont_take_land_other_continents_ROOT = {
 		OR = {
 			same_continent_as_state_FROM = yes
 			is_exception_to_taking_states_on_other_continents = yes
+			AND = {
+				restrict_territorial_ambitions_PREV = no
+				ROOT = { restrict_territorial_ambitions_ROOT = yes }
+			}
 		}
 		OR = {
 			restrict_territorial_ambitions_PREV = no
@@ -2129,6 +2155,10 @@ rule_dont_take_land_other_continents_PREV = {
 		OR = {
 			same_continent_as_state_FROM = yes
 			is_exception_to_taking_states_on_other_continents = yes
+			AND = {
+				restrict_territorial_ambitions_PREV = no
+				PREV = { restrict_territorial_ambitions_PREV = yes }
+			}
 		}
 		OR = {
 			restrict_territorial_ambitions_PREV = no
@@ -2293,19 +2323,15 @@ rule_dont_take_impassable_states_ROOT = {
 					}
 					AND = {
 						state = 898 #Para
-						PREV = { state = 1033 } #Para Jungle
-					}
-					AND = {
-						state = 280 #Mato Grosso
-						PREV = { state = 1032 } #Mato Grosso Jungle
-					}
-					AND = {
-						state = 899 #Roraima
-						PREV = { state = 1031 } #Roraima Jungle
+						PREV = { state = 1033 } #Southern Amazonas
 					}
 					AND = {
 						state = 495 #Amazonas
-						PREV = { state = 1030 } #Amazonas Jungle
+						PREV = { state = 1031 } #Northern Amazonas
+					}
+					AND = {
+						state = 495 #Amazonas
+						PREV = { state = 1030 } #Western Amazonas
 					}
 					AND = {
 						state = 663 #Jaghbub
@@ -2416,19 +2442,15 @@ rule_dont_take_impassable_states_PREV = {
 					}
 					AND = {
 						state = 898 #Para
-						PREV = { state = 1033 } #Para Jungle
-					}
-					AND = {
-						state = 280 #Mato Grosso
-						PREV = { state = 1032 } #Mato Grosso Jungle
-					}
-					AND = {
-						state = 899 #Roraima
-						PREV = { state = 1031 } #Roraima Jungle
+						PREV = { state = 1033 } #Southern Amazonas
 					}
 					AND = {
 						state = 495 #Amazonas
-						PREV = { state = 1030 } #Amazonas Jungle
+						PREV = { state = 1031 } #Northern Amazonas
+					}
+					AND = {
+						state = 495 #Amazonas
+						PREV = { state = 1030 } #Western Amazonas
 					}
 					AND = {
 						state = 663 #Jaghbub
@@ -2459,12 +2481,12 @@ rule_dont_take_impassable_states_PREV = {
 						PREV = { state = 860 } #Malian Desert
 					}
 					AND = {
-						state = 466 #Quebec
-						PREV = { state = 683 } #New Quebec
-					}
-					AND = {
 						state = 292 #Nejd
 						PREV = { state = 678 } #Rub Al Khali
+					}
+					AND = {
+						state = 466 #Quebec
+						PREV = { state = 683 } #New Quebec
 					}
 					AND = {
 						state = 573 #Zlatoust
@@ -3306,7 +3328,7 @@ rule_stay_out_of_alands_ROOT = {
 		OR = {
 			tag = RUS
 			tag = SOV
-			is_claim_or_core_or_ambition_of_PREV = yes
+			var:global.eval_state = { is_claim_or_core_or_ambition_of_PREV = yes }
 		}
 		at_conference_no_war_with_ROOT = yes
 		at_conference_has_war_with_owner = yes
@@ -3330,7 +3352,7 @@ rule_stay_out_of_alands_PREV = {
 		OR = {
 			tag = RUS
 			tag = SOV
-			is_claim_or_core_or_ambition_of_PREV = yes
+			var:global.eval_state = { is_claim_or_core_or_ambition_of_PREV = yes }
 		}
 		at_conference_no_war_with_PREV = yes
 		at_conference_has_war_with_owner = yes
@@ -3341,7 +3363,7 @@ rule_stay_out_of_alands_PREV = {
 rule_BHC_stay_out_of_siam_ROOT = {
 	tag = BHC
 	SIA = { at_conference_has_war_with_ROOT = yes }
-	BUR = {
+	BRM = {
 		at_conference_no_war_with_ROOT = yes
 		is_willing_to_take_state_PREV = yes
 	}
@@ -3357,7 +3379,7 @@ rule_BHC_stay_out_of_siam_ROOT = {
 rule_BHC_stay_out_of_siam_PREV = {
 	tag = BHC
 	SIA = { at_conference_has_war_with_PREV = yes }
-	BUR = {
+	BRM = {
 		at_conference_no_war_with_PREV = yes
 		is_willing_to_take_state_PREV = yes
 	}
@@ -3367,46 +3389,6 @@ rule_BHC_stay_out_of_siam_PREV = {
 			num_owned_neighbour_states = { count > 0 owner = PREV }
 			num_claimed_peace_conference_neighbour_states = { count > 0 owner = PREV }
 		}
-	}
-}
-
-rule_let_ROM_finish_civil_war_ROOT = {
-	RRM = { at_conference_has_war_with_ROOT = yes }
-	ROM = { at_conference_no_war_with_ROOT = yes }
-	var:global.eval_state = {
-		is_claim_or_core_of_ROOT = no
-		is_core_of = RRM
-		is_owned_by = RRM
-	}
-}
-
-rule_let_ROM_finish_civil_war_PREV = {
-	RRM = { at_conference_has_war_with_PREV = yes }
-	ROM = { at_conference_no_war_with_PREV = yes }
-	var:global.eval_state = {
-		is_claim_or_core_of_PREV = no
-		is_core_of = RRM
-		is_owned_by = RRM
-	}
-}
-
-rule_let_RRM_finish_civil_war_ROOT = {
-	ROM = { at_conference_has_war_with_ROOT = yes }
-	RRM = { at_conference_no_war_with_ROOT = yes }
-	var:global.eval_state = {
-		is_claim_or_core_of_ROOT = no
-		is_core_of = ROM
-		is_owned_by = ROM
-	}
-}
-
-rule_let_RRM_finish_civil_war_PREV = {
-	ROM = { at_conference_has_war_with_PREV = yes }
-	RRM = { at_conference_no_war_with_PREV = yes }
-	var:global.eval_state = {
-		is_claim_or_core_of_PREV = no
-		is_core_of = ROM
-		is_owned_by = ROM
 	}
 }
 

@@ -4,32 +4,33 @@
 
 # removes the country in scope from all wars (separately - it won't end the wars)
 separate_peace_all_wars = {
-	custom_effect_tooltip = KR_separate_peace
-	hidden_effect = {
-		save_event_target_as = peace_country
+	if = {
+		limit = { has_war = yes }
+		custom_effect_tooltip = KR_separate_peace
+		hidden_effect = {
+			save_event_target_as = peace_country
 
-		# first peace out with faction leaders
-		every_country = {
-			limit = {
-				is_faction_leader = yes
-				has_war_with = event_target:peace_country
+			# first peace out with faction leaders
+			every_enemy_country = {
+				limit = {
+					is_faction_leader = yes
+				}
+				event_target:peace_country = { white_peace = PREV }
 			}
-			event_target:peace_country = { white_peace = PREV }
-		}
 
-		# then all non-puppets who aren't in factions
-		every_country = {
-			limit = {
-				is_in_faction = no
-				is_subject = no
-				has_war_with = event_target:peace_country
+			# then all non-puppets who aren't in factions
+			every_enemy_country = {
+				limit = {
+					is_in_faction = no
+					is_subject = no
+				}
+				event_target:peace_country = { white_peace = PREV }
 			}
-			event_target:peace_country = { white_peace = PREV }
 		}
 	}
 }
 
-# forces a country to surrender (mechanically by lowering their surrender limit to 0%
+# forces a country to surrender (mechanically by lowering their surrender limit to 0%)
 force_capitulate = {
 	hidden_effect = {
 		add_timed_idea = {
@@ -39,7 +40,7 @@ force_capitulate = {
 	}
 }
 
-# removes all current ministers for the country in scope (including lobe, lama, kcap) - no tooltips displayed
+# removes all current ministers for the country in scope (including lobe, lama, kcap, boss, naaf) - no tooltips displayed
 remove_all_minister_types = {
 	hidden_effect = {
 		remove_ideas_with_trait = head_of_government
@@ -49,6 +50,8 @@ remove_all_minister_types = {
 		remove_ideas_with_trait = leader_of_the_british_exiles
 		remove_ideas_with_trait = land_marshal_of_liv_ord
 		remove_ideas_with_trait = knight_captain_of_liv_ord
+		remove_ideas_with_trait = underworld_boss
+		remove_ideas_with_trait = minister_of_native_affairs
 	}
 }
 
@@ -298,42 +301,24 @@ restore_previous_government_type = {
 	}
 }
 
-force_recalculate_factories = {
-	hidden_effect = {
-		if = {
-			limit = { has_idea = undisturbed_isolation }
-			add_ideas = isolation
-			add_ideas = undisturbed_isolation
+# this is used in scripted peace events to ensure that all states
+# currently controlled by countries not at war with the state's owner
+# have control restored to the owner - this is needed to avoid a peace conference bug
+# which would draw the owner into a peace conference and be annexed
+restore_control_of_all_non_enemy_states = {
+	every_state = {
+		limit = {
+			owner = {
+				NOT = { controls_state = PREV }
+				PREV = {
+					controller = {
+						NOT = { has_war_with = PREV.PREV }
+					}
+				}
+			}
 		}
-		else_if = {
-			limit = { has_idea = isolation }
-			add_ideas = civilian_economy
-			add_ideas = isolation
-		}
-		else_if = {
-			limit = { has_idea = civilian_economy }
-			add_ideas = low_economic_mobilisation
-			add_ideas = civilian_economy
-		}
-		else_if = {
-			limit = { has_idea = low_economic_mobilisation }
-			add_ideas = partial_economic_mobilisation
-			add_ideas = low_economic_mobilisation
-		}
-		else_if = {
-			limit = { has_idea = partial_economic_mobilisation }
-			add_ideas = war_economy
-			add_ideas = partial_economic_mobilisation
-		}
-		else_if = {
-			limit = { has_idea = war_economy }
-			add_ideas = tot_economic_mobilisation
-			add_ideas = war_economy
-		}
-		else_if = {
-			limit = { has_idea = tot_economic_mobilisation }
-			add_ideas = war_economy
-			add_ideas = tot_economic_mobilisation
+		owner = {
+			set_state_controller = PREV
 		}
 	}
 }
@@ -411,56 +396,101 @@ clear_embargo_FROM = {
 }
 
 destroy_all_ships = {
-    destroy_ships = {
-        type = ship_hull_light
-        count = all
-    }
-    destroy_ships = {
-        type = ship_hull_cruiser
-        count = all
-    }
 	destroy_ships = {
-        type = ship_hull_cruiser_panzerschiff
-        count = all
-    }
-    destroy_ships = {
-        type = ship_hull_cruiser_coastal_defense_ship
-        count = all
-    }
+		type = ship_hull_light
+		count = all
+	}
 	destroy_ships = {
-        type = ship_hull_pre_dreadnought
-        count = all
-    }
-    destroy_ships = {
-        type = ship_hull_heavy
-        count = all
-    }
+		type = ship_hull_cruiser
+		count = all
+	}
 	destroy_ships = {
-        type = ship_hull_super_heavy_1
-        count = all
-    }
+		type = ship_hull_cruiser_panzerschiff
+		count = all
+	}
 	destroy_ships = {
-        type = ship_hull_submarine
-        count = all
-    }
+		type = ship_hull_cruiser_coastal_defense_ship
+		count = all
+	}
 	destroy_ships = {
-        type = ship_hull_cruiser_submarine
-        count = all
-    }
+		type = ship_hull_pre_dreadnought
+		count = all
+	}
 	destroy_ships = {
-        type = ship_hull_carrier
-        count = all
-    }
+		type = ship_hull_heavy
+		count = all
+	}
 	destroy_ships = {
-        type = ship_hull_carrier_conversion_bb
-        count = all
-    }
+		type = ship_hull_super_heavy_1
+		count = all
+	}
 	destroy_ships = {
-        type = ship_hull_carrier_conversion_ca
-        count = all
-    }
+		type = ship_hull_submarine
+		count = all
+	}
 	destroy_ships = {
-        type = ship_hull_carrier_conversion_dng
-        count = all
-    }
+		type = ship_hull_cruiser_submarine
+		count = all
+	}
+	destroy_ships = {
+		type = ship_hull_carrier
+		count = all
+	}
+	destroy_ships = {
+		type = ship_hull_carrier_conversion_bb
+		count = all
+	}
+	destroy_ships = {
+		type = ship_hull_carrier_conversion_ca
+		count = all
+	}
+	destroy_ships = {
+		type = ship_hull_carrier_conversion_dng
+		count = all
+	}
+}
+
+# use in a state scope
+# has no effect for gigalopoli, enclaves, islands or wastelands
+increase_state_category_by_one_level = {
+	if = {
+		limit = { has_state_category = one }
+		set_state_category = two
+	}
+	else_if = {
+		limit = { has_state_category = two }
+		set_state_category = three
+	}
+	else_if = {
+		limit = { has_state_category = three }
+		set_state_category = four
+	}
+	else_if = {
+		limit = { has_state_category = four }
+		set_state_category = five
+	}
+	else_if = {
+		limit = { has_state_category = five }
+		set_state_category = six
+	}
+	else_if = {
+		limit = { has_state_category = six }
+		set_state_category = seven
+	}
+	else_if = {
+		limit = { has_state_category = seven }
+		set_state_category = eight
+	}
+	else_if = {
+		limit = { has_state_category = eight }
+		set_state_category = nine
+	}
+	else_if = {
+		limit = { has_state_category = nine }
+		set_state_category = eleven
+	}
+	else_if = {
+		limit = { has_state_category = eleven }
+		set_state_category = twelve
+	}
 }

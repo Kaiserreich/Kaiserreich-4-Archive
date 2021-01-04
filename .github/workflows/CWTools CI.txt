@@ -1,0 +1,66 @@
+name: CWTools CI
+
+on:
+  push:
+    branches:    
+    - master
+    paths:
+    - '**/*.txt'
+    - '**/*.yml'
+    - '**/*.gfx'
+    - '**/*.gui'
+    - '!.**'
+    - '!interface/credits.txt'
+    - '!common/ideas/_Ministers_ideas.txt'
+    - '!common/dynamic_modifiers/Vanilla_dynamic_modifiers.txt'
+    - '!common/scripted_effects/_collaboration_scripted_effects.txt'
+    - '!common/scripted_triggers/_peace_conference_scripted_triggers.txt'
+    - '!common/ideas/_General_ideas.txt'
+    - '!common/scripted_effects/China_scripted_effects.txt'
+    - '!common/national_focus/Russian_Socialist_Republic.txt'
+    - '!common/national_focus/Sichuan.txt'
+    - '!common/national_focus/Arabia.txt'
+    - '!common/national_focus/Poland_KR.txt'
+    - '!common/national_focus/Polish_Lithuanian_Commonwealth.txt'
+    - '!events/American_Civil_War.txt'
+    - '!events/Canada.txt'
+    - '!common/national_focus/Russia.txt'
+    - '!events/United_States_of_America.txt'
+    - '!common/decisions/United_States_of_America_decisions.txt'
+    - '!common/decisions/American_Civil_War_decisions.txt'
+    - '!common/intelligence_agency_upgrades/KR_intelligence_agency_upgrades.txt'
+    - '!common/scripted_effects/_operation_strat_effects.txt'
+    - '!common/operations/00_operations.txt'
+    - '!common/unit_leader/00_traits_vanilla_operative.txt'
+    - '!common/on_actions/on_actions_China.txt'
+    - '!common/operations/Fengtian_operations.txt'
+    - '!events\Annexations.txt'
+
+jobs:
+  cwtools_job:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.KR_DEV_REPO_TOKEN }}
+    steps:
+    - name: Clone from last commit
+      run: |
+        BEFORE=$(cat "$GITHUB_EVENT_PATH" | jq -r '.before')
+        BEFORE_PAYLOAD=$(curl -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_REPOSITORY/commits/$BEFORE")
+        BEFORE_DATE=$(jq -r '.commit.committer.date' <<< "$BEFORE_PAYLOAD")
+        echo "Date of before commit $BEFORE: $BEFORE_DATE"
+        git clone --progress --verbose --single-branch --shallow-since="$BEFORE_DATE" "https://$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" "$GITHUB_WORKSPACE"
+        cd $GITHUB_WORKSPACE
+    - uses: cwtools/cwtools-action@v1.0.0
+      with:
+        game: hoi4
+        locLanguages: "english"
+        suppressedOffenceCategories: '{"failure":["CW226"], "warning":[], "notice":[]}' # suppress CW226 localisation commands
+        suppressedFiles: '[ "interface/credits.txt", "common/ideas/_Ministers_ideas.txt", "common/dynamic_modifiers/Vanilla_dynamic_modifiers.txt", "common/scripted_effects/_collaboration_scripted_effects.txt", "common/scripted_triggers/_peace_conference_scripted_triggers.txt", "common/ideas/_General_ideas.txt", "common/scripted_effects/China_scripted_effects.txt", "common/national_focus/Russian_Socialist_Republic.txt", "common/national_focus/Sichuan.txt", "common/national_focus/Arabia.txt", "common/national_focus/Poland_KR.txt", "common/national_focus/Polish_Lithuanian_Commonwealth.txt", "events/American_Civil_War.txt", "events/Canada.txt", "common/national_focus/Russia.txt", "events/United_States_of_America.txt", "common/decisions/United_States_of_America_decisions.txt", "common/decisions/American_Civil_War_decisions.txt", "common/intelligence_agency_upgrades/KR_intelligence_agency_upgrades.txt", "common/scripted_effects/_operation_strat_effects.txt", "common/operations/00_operations.txt", "common/unit_leader/00_traits_vanilla_operative.txt", "common/on_actions/on_actions_China.txt", "common/operations/Fengtian_operations.txt", "events/Annexations.txt" ]'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload output.json
+      if: always()
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: cwtools_output
+        path: output.json

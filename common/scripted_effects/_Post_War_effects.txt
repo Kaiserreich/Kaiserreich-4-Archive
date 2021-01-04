@@ -245,7 +245,7 @@ take_occupied_states_in_africa = {
 					state = 544
 					state = 954
 					state = 950
-					is_core_of = MOZ
+					is_core_of = MZB
 				}
 			}
 			every_state = {
@@ -254,7 +254,7 @@ take_occupied_states_in_africa = {
 						state = 544
 						state = 954
 						state = 950
-						is_core_of = MOZ
+						is_core_of = MZB
 					}
 					is_owned_by_GER_or_MAF = yes
 				}
@@ -318,22 +318,13 @@ take_occupied_states_in_africa = {
 		}
 		#Gabon
 		if = {
-			limit = {
-				OR = {
-					state = 539 #Gabon
-					state = 973 #South New Cameroon
+			limit = { state = 539 } #Gabon
+			539 = {
+				if = {
+					limit = { is_owned_by_GER_or_MAF = yes }
+					set_state_flag = GER_capitulation_transfer
+					event_target:new_controller = { transfer_state = PREV }
 				}
-			}
-			every_state = {
-				limit = {
-					OR = {
-						state = 539 #Gabon
-						state = 973 #South New Cameroon
-					}
-					is_owned_by_GER_or_MAF = yes
-				}
-				set_state_flag = GER_capitulation_transfer
-				event_target:new_controller = { transfer_state = PREV }
 			}
 		}
 		#Congo
@@ -382,17 +373,21 @@ take_occupied_states_in_africa = {
 		if = {
 			limit = {
 				OR = {
-					state = 913 #Bornu
+					state = 558 #Southern Nigeria
+					state = 662 #Northern Nigeria
 					state = 878 #Hausaland
-					state = 558 #Nigeria
+					state = 913 #Bornu
+					state = 973 #Lagos
 				}
 			}
 			every_state = {
 				limit = {
 					OR = {
-						state = 913 #Bornu
+						state = 558 #Southern Nigeria
+						state = 662 #Northern Nigeria
 						state = 878 #Hausaland
-						state = 558 #Nigeria
+						state = 913 #Bornu
+						state = 973 #Lagos
 					}
 					is_owned_by_GER_or_MAF = yes
 				}
@@ -478,10 +473,10 @@ germany_flees_to_africa = {
 				tag = NGR
 				tag = CEA
 				tag = GAB
-				tag = NAM
+				tag = NMB
 				tag = UGA
 				tag = ANG
-				tag = MOZ
+				tag = MZB
 				tag = BOT
 				tag = ZIM
 				tag = ZAM
@@ -695,7 +690,7 @@ germany_flees_to_africa = {
 				AND = {
 					OR = {
 						is_core_of = ANG
-						is_core_of = MOZ
+						is_core_of = MZB
 					}
 					NOT = { is_owned_by = GEX }
 				}
@@ -757,6 +752,34 @@ germany_capitulates = {
 			set_autonomy = { target = PREV autonomy_state = autonomy_free }
 		}
 	}
+	
+	# let Austria reform the Donau-Adriabund, if it's currently in the Reichspakt
+	if = {
+		limit = {
+			AUS = {
+				is_in_faction_with = ROOT
+				has_country_flag = AUS_intervened_in_weltkrieg
+				has_capitulated = no
+			}
+		}
+		AUS = {
+			leave_faction = yes
+			create_faction = austrian_sphere
+			clr_country_flag = AUS_intervened_in_weltkrieg
+			set_country_flag = former_reichspakt_member
+			country_event = { id = aus.tree.4016 hours = 8 }
+		}
+		every_other_country = {
+			limit = {
+				is_subject = no
+				is_in_faction_with = ROOT
+				has_country_flag = AUS_former_faction_member
+			}
+			clr_country_flag = AUS_former_faction_member
+			set_country_flag = former_reichspakt_member
+			AUS = { add_to_faction = PREV }
+		}
+	}
 
 	# dissolve the Reichspakt
 	every_other_country = {
@@ -783,20 +806,7 @@ germany_capitulates = {
 	}
 
 	# release all occupied states
-	every_country = {
-		limit = { has_war_with = GER }
-		every_owned_state = {
-			limit = {
-				OR = {
-					is_controlled_by = GER
-					controller = {
-						NOT = { has_war_with = PREV.PREV }
-					}
-				}
-			}
-			owner = { set_state_controller = PREV }
-		}
-	}
+	restore_control_of_all_non_enemy_states = yes
 
 	# get rid of specific states, if Germany still has them
 	every_owned_state = {
@@ -834,7 +844,6 @@ germany_capitulates = {
 				controls_state = 285 #New South Wales
 			}
 			OR = {
-				state = 712 #Cocos Islands
 				state = 711 #Christmas Island
 				state = 757 #Kaiser Wilhelmsland
 				state = 737 #Bismark Archipelago
@@ -860,7 +869,6 @@ germany_capitulates = {
 				is_owned_and_controlled_by = GEA
 			}
 			OR = {
-				state = 712 #Cocos Islands
 				state = 711 #Christmas Island
 				state = 757 #Kaiser-Wilhelmsland
 				state = 737 #Bismark Archipelago
@@ -924,19 +932,6 @@ germany_capitulates = {
 		else_if = {
 			limit = { country_exists = ETH }
 			ETH = { transfer_state = 268 }
-		}
-	}
-	if = {
-		limit = {
-			861 = { is_owned_and_controlled_by = GER } #Djibouti
-		}
-		if = {
-			limit = { country_exists = SOM }
-			SOM = { transfer_state = 861 }
-		}
-		else_if = {
-			limit = { country_exists = ETH }
-			ETH = { transfer_state = 861 }
 		}
 	}
 	if = {
@@ -1200,42 +1195,32 @@ white_peace_with_ROOT = {
 		limit = { has_country_flag = KR_war_skip }
 		clr_country_flag = KR_war_skip
 		country_event = { id = kr.political.205 hours = 2 }
-		else = {
-			white_peace = ROOT
-		}
+	}
+	else = {
+		white_peace = ROOT
 	}
 
 	hidden_effect = {
 		# now double-check to ensure all faction members are peaced out
-		every_country = {
+		every_enemy_country = {
 			limit = {
-				is_in_faction_with = event_target:peace_country
-				has_war_with = ROOT
+				OR = {
+					is_in_faction_with = event_target:peace_country
+					is_subject_of = event_target:peace_country
+				}
 			}
 			country_event = { id = kr.political.205 hours = 2 }
 		}
-		every_country = {
-			limit = {
-				is_in_faction_with = ROOT
-				has_war_with = event_target:peace_country
+		event_target:peace_country = {
+			every_enemy_country = {
+				limit = {
+					OR = {
+						is_in_faction_with = ROOT
+						is_subject_of = ROOT
+					}
+				}
+				country_event = { id = kr.political.206 hours = 2 }
 			}
-			country_event = { id = kr.political.206 hours = 2 }
-		}
-
-		# and double-check to ensure all puppets are peaced out
-		every_country = {
-			limit = {
-				is_subject_of = ROOT
-				has_war_with = event_target:peace_country
-			}
-			country_event = { id = kr.political.206 hours = 2 }
-		}
-		every_country = {
-			limit = {
-				is_subject_of = event_target:peace_country
-				has_war_with = ROOT
-			}
-			country_event = { id = kr.political.205 hours = 2 }
 		}
 	}
 }
@@ -1319,35 +1304,27 @@ white_peace_with_TARGET = {
 
 	hidden_effect = {
 		# now double-check to ensure all faction members are peaced out
-		every_country = {
-			limit = {
-				is_in_faction_with = event_target:peace_country
-				has_war_with = event_target:white_peace_receiver
+		event_target:white_peace_receiver = {
+			every_enemy_country = {
+				limit = {
+					OR = {
+						is_in_faction_with = event_target:peace_country
+						is_subject_of = event_target:peace_country
+					}
+				}
+				country_event = { id = kr.political.207 hours = 2 }
 			}
-			country_event = { id = kr.political.207 hours = 2 }
 		}
-		every_country = {
-			limit = {
-				is_in_faction_with = event_target:white_peace_receiver
-				has_war_with = event_target:peace_country
+		event_target:peace_country = {
+			every_enemy_country = {
+				limit = {
+					OR = {
+						is_in_faction_with = event_target:white_peace_receiver
+						is_subject_of = event_target:white_peace_receiver
+					}
+				}
+				country_event = { id = kr.political.206 hours = 2 }
 			}
-			country_event = { id = kr.political.206 hours = 2 }
-		}
-
-		# and double-check to ensure all puppets are peaced out
-		every_country = {
-			limit = {
-				is_subject_of = event_target:white_peace_receiver
-				has_war_with = event_target:peace_country
-			}
-			country_event = { id = kr.political.206 hours = 2 }
-		}
-		every_country = {
-			limit = {
-				is_subject_of = event_target:peace_country
-				has_war_with = event_target:white_peace_receiver
-			}
-			country_event = { id = kr.political.207 hours = 2 }
 		}
 	}
 }
