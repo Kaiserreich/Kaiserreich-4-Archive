@@ -52,7 +52,6 @@ NDefines.NGraphics.POLITICAL_GRID_SMALL_BOX_LIMIT = 12						-- Vanilla is 6
 NDefines.NGraphics.VICTORY_POINT_MAP_ICON_TEXT_CUTOFF = {300, 500, 800}  	-- Vanilla is 100, 250, 500
 NDefines.NGraphics.VICTORY_POINTS_DISTANCE_CUTOFF = {300, 500, 1000} 		-- Vanilla is 300, 500, 1500
 NDefines.NMilitary.DIG_IN_FACTOR = 0.01										-- Vanilla is 0.02
-NDefines.NAI.VP_LEVEL_IMPORTANCE_HIGH = 25									-- Vanilla is 100
 NDefines.NAI.ORG_UNIT_NORMAL = 0.60											-- Vanilla is 0.35
 NDefines.NAI.STR_UNIT_NORMAL = 0.60											-- Vanilla is 0.4
 NDefines.NAI.ORG_UNIT_WEAK = 0.45											-- Vanilla is 0.15

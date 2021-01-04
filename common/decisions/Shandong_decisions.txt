@@ -25,7 +25,7 @@ political_actions = {
 				has_capitulated = no
 			}
 		}
-		
+
 		targets = { QIE }
 		target_trigger = {
 			FROM = {
@@ -37,7 +37,7 @@ political_actions = {
 
 		cost = freedec?0
 		fire_only_once = yes
-		
+
 		ai_will_do = {
 			factor = 1000
 			modifier = {
@@ -58,30 +58,50 @@ political_actions = {
 
 SQI_war_intervention_decisions = {
 	SQI_intervene_LEP = {
-		war_with_target_on_complete = yes
 		icon = generic_civil_support
-		targets = { LEP }
-		visible = {
-			is_valid_war_target_in_decision_visible = yes
-			NOT = {
-				is_in_faction_with = QIE
-			}
-			LEP = {
-				OR = {
-					has_war_with = ANQ
-					has_war_with = CHI
-				}
-			}
-		}
+
 		available = {
-			is_valid_war_target_in_decision_available = yes
-			NOT = { has_country_flag = SQI_Zheyuan_beat_Zongchang }
+			is_neighbor_of = FROM
 		}
 
-		fire_only_once = no
-		cancel_if_not_visible = yes
-		days_re_enable = 30
+		visible = {
+			NOT = { has_country_flag = SQI_Zheyuan_beat_Zongchang }
+			is_in_faction = no
+			can_declare_war_on = FROM
+			FROM = { has_war = yes }
+		}
+
+		targets = { LEP }
+		target_root_trigger = {
+			NOT = { has_country_flag = SQI_Zheyuan_beat_Zongchang }
+			is_in_faction = no
+		}
+		target_trigger = {
+			can_declare_war_on = FROM
+			FROM = { has_war = yes }
+		}
+
 		cost = 5
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+		war_with_target_on_complete = yes
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = imminent_war
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SQI_intervene_LEP target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 20 value = 1 }
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SQI_intervene_LEP target: [From.GetName]"
@@ -95,29 +115,21 @@ SQI_war_intervention_decisions = {
 				}
 				add_claim_by = ROOT
 			}
+			add_war_support = 0.10
+			declare_war_on = { target = FROM type = annex_everything }
 			if = {
-				limit = { FROM = { is_subject_of = ROOT } }
-				annex_country = { target = FROM }
-			}
-			else_if = {
-				limit = { FROM = { is_valid_war_target = yes } }
-				add_war_support = 0.10
-				declare_war_on = { target = FROM type = annex_everything }
-				if = {
-					limit = {
-						FROM = {
-							OR = {
-								owns_state = 598
-								owns_state = 1047
-								owns_state = 1075
-							}
+				limit = {
+					FROM = {
+						OR = {
+							owns_state = 598
+							owns_state = 1047
+							owns_state = 1075
 						}
 					}
-					activate_mission = SQI_intervene_jiangsu
 				}
+				activate_mission = SQI_intervene_jiangsu
 			}
 		}
-		ai_will_do = { factor = 100 }
 	}
 	SQI_intervene_jiangsu = {
 		icon = generic_ignite_civil_war
@@ -186,120 +198,94 @@ SQI_war_intervention_decisions = {
 		}
 	}
 	SQI_intervene_southeast = {
-		war_with_target_on_remove = yes
 		icon = generic_prepare_civil_war
-		targets = { CHI ANQ }
+
+		available = {
+			is_neighbor_of = FROM
+		}
+
 		visible = {
-			is_valid_war_target_in_decision_visible = yes
+			is_subject = no
 			NOT = {
-				FROM = {
-					has_country_flag = ANQ_is_projapan
-				}
+				has_country_flag = SQI_Zheyuan_beat_Zongchang
+				has_country_flag = SQI_Zongchang_beat_Tianran
+			}
+			can_declare_war_on = FROM
+			FROM = {
+				has_country_flag = ANQ_is_projapan
+			}
+		}
+
+		targets = { CHI ANQ }
+		target_root_trigger = {
+			is_subject = no
+			NOT = {
+				has_country_flag = SQI_Zheyuan_beat_Zongchang
 				has_country_flag = SQI_Zongchang_beat_Tianran
 			}
 		}
-		available = {
-			is_valid_war_target_in_decision_available = yes
-			NOT = { has_country_flag = SQI_Zheyuan_beat_Zongchang }
+		target_trigger = {
+			can_declare_war_on = FROM
+			FROM = {
+				has_country_flag = ANQ_is_projapan
+			}
 		}
 
-		fire_only_once = no
-		cancel_if_not_visible = yes
 		cost = 40
 		days_remove = 15
-		days_re_enable = 30
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
+
+		ai_will_do = {
+			factor = 20
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+			modifier = {
+				factor = 0
+				strength_ratio = {
+					tag = FROM
+					ratio < 0.7
+				}
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = imminent_war
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SQI_intervene_southeast target: [From.GetName]"
-			set_country_flag = { flag = SQI_preparing_attack days = 30 value = 1 }
+			set_country_flag = { flag = imminent_war days = 20 value = 1 }
 		}
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove SQI_intervene_southeast target: [From.GetName]"
-			if = {
-				limit = { FROM = { is_subject_of = ROOT } }
-				annex_country = { target = FROM }
+			add_war_support = 0.05
+			declare_war_on = {
+				target = FROM
+				type = annex_everything
 			}
-			else_if = {
-				limit = { FROM = { is_valid_war_target = yes } }
-				add_war_support = 0.05
-				declare_war_on = { target = FROM type = annex_everything }
-				if = {
-					limit = {
-						FROM = {
-							OR = {
-								owns_state = 598
-								owns_state = 1047
-								owns_state = 1075
-							}
+			if = {
+				limit = {
+					FROM = {
+						OR = {
+							owns_state = 598
+							owns_state = 1047
+							owns_state = 1075
 						}
 					}
-					activate_mission = SQI_intervene_jiangsu
 				}
-			}
-		}
-		ai_will_do = {
-			factor = 20
-			# Do not commit suicide
-			modifier = {
-				factor = 0
-				OR = {
-					will_not_commit_suicide = yes
-					any_home_area_neighbor_country = {
-						is_chinese_tag = yes
-						NOT = { tag = LEP }
-						NOT = { tag = ANQ }
-						NOT = { tag = CHI }
-						has_war_with = ROOT
-					}
-					AND = {
-						FROM = { tag = CHI }
-						has_wargoal_against = ANQ
-					}
-					AND = {
-						FROM = { tag = ANQ }
-						has_wargoal_against = CHI
-					}
-					has_country_flag = SQI_preparing_attack
-				}
-			}
-			# Priority against LEP
-			modifier = {
-				factor = 0
-				LEP = { is_neighbor_of = ROOT }
-			}
-			# Priority against CHI if it is at war with ANQ
-			modifier = {
-				factor = 2.5
-				FROM = {
-					tag = CHI
-					has_war_with = ANQ
-					is_neighbor_of = ROOT
-				}
-			}
-			# Priority against CHI if it is at war with ANQ
-			modifier = {
-				factor = 0.5
-				FROM = {
-					tag = ANQ
-					has_war_with = CHI
-					is_neighbor_of = ROOT
-				}
+				activate_mission = SQI_intervene_jiangsu
 			}
 		}
 	}
 	SQI_intervene_southwest = {
-		war_with_target_on_remove = yes
 		icon = generic_prepare_civil_war
-		targets = { HNN GXC }
-		visible = {
-			is_valid_war_target_in_decision_visible = yes
-			LEP = { exists = no }
-			ANQ = { exists = no }
-			CHI = { exists = no }
-		}
 		available = {
-			is_valid_war_target_in_decision_available = yes
-			NOT = { has_country_flag = SQI_Zheyuan_beat_Zongchang }
+			is_neighbor_of = FROM
 			custom_trigger_tooltip = {
 				tooltip = SQI_intervene_southwest_tt_1
 				596 = { # Qiantang
@@ -337,79 +323,68 @@ SQI_war_intervention_decisions = {
 			}
 		}
 
-		fire_only_once = no
-		cancel_if_not_visible = yes
+		visible = {
+			is_subject = no
+			can_declare_war_on = FROM
+			NOT = { has_country_flag = SQI_Zheyuan_beat_Zongchang }
+		}
+
+		targets = { HNN GXC }
+		target_root_trigger = {
+			is_subject = no
+			NOT = {
+				has_country_flag = SQI_Zheyuan_beat_Zongchang
+				country_exists = LEP
+				country_exists = ANQ
+				country_exists = CHI
+			}
+		}
+		target_trigger = {
+			can_declare_war_on = FROM
+		}
+
 		cost = 40
 		days_remove = 15
-		days_re_enable = 30
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
+
+		ai_will_do = {
+			factor = 20
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+			modifier = {
+				factor = 0
+				strength_ratio = {
+					tag = FROM
+					ratio < 0.7
+				}
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = imminent_war
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SQI_intervene_southwest target: [From.GetName]"
-			set_country_flag = { flag = SQI_preparing_attack days = 30 value = 1 }
+			set_country_flag = { flag = imminent_war days = 20 value = 1 }
 		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove SQI_intervene_southwest target: [From.GetName]"
-			if = {
-				limit = { FROM = { is_subject_of = ROOT } }
-				annex_country = { target = FROM }
-			}
-			else_if = {
-				limit = { FROM = { is_valid_war_target = yes } }
-				create_wargoal = { type = annex_everything target = FROM }
-			}
-		}
-		ai_will_do = {
-			factor = 20
-			# Do not commit suicide
-			modifier = {
-				factor = 0
-				OR = {
-					will_not_commit_suicide = yes
-					any_home_area_neighbor_country = {
-						is_chinese_tag = yes
-						has_war_with = ROOT
-					}
-					AND = {
-						FROM = { tag = GXC }
-						has_wargoal_against = HNN
-					}
-					AND = {
-						FROM = { tag = HNN }
-						has_wargoal_against = GXC
-					}
-					has_country_flag = SQI_preparing_attack
-				}
-			}
-			# Priority against HNN if Liangguang is in a civil war
-			modifier = {
-				factor = 2.5
-				FROM = { tag = HNN }
-				GXC = { has_country_flag = GXC_had_civil_war }
-			}
-			# Priority against HNN if it is at war with YUN or SZC
-			modifier = {
-				factor = 2.5
-				FROM = {
-					tag = HNN
-					OR = {
-						has_war_with = YUN
-						has_war_with = SZC
-					}
-				}
+			declare_war_on = {
+				type = annex_everything
+				target = FROM
 			}
 		}
 	}
 	SQI_unify_the_country = {
-		war_with_target_on_remove = yes
 		icon = generic_prepare_civil_war
-		targets = { HNN YUN GXC SZC XSM SHX }
-		visible = {
-			is_valid_war_target_in_decision_visible = yes
-			has_country_flag = SQI_national_government
-		}
+
 		available = {
-			is_valid_war_target_in_decision_available = yes
-			NOT = { has_country_flag = SQI_Zheyuan_beat_Zongchang }
+			is_neighbor_of = FROM
 			custom_trigger_tooltip = {
 				tooltip = SQI_intervene_southwest_tt_1
 				596 = { # Qiantang
@@ -439,50 +414,58 @@ SQI_war_intervention_decisions = {
 			}
 		}
 
-		fire_only_once = no
-		cancel_if_not_visible = yes
+		visible = {
+			has_country_flag = SQI_national_government
+			NOT = { has_country_flag = SQI_Zheyuan_beat_Zongchang }
+			is_subject = no
+			can_declare_war_on = FROM
+		}
+
+		targets = { HNN YUN GXC SZC XSM SHX }
+		target_root_trigger = {
+			has_country_flag = SQI_national_government
+			NOT = { has_country_flag = SQI_Zheyuan_beat_Zongchang }
+			is_subject = no
+		}
+		target_trigger = {
+			can_declare_war_on = FROM
+		}
+
 		cost = 40
 		days_remove = 15
-		days_re_enable = 30
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
+
+		ai_will_do = {
+			factor = 20
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+			modifier = {
+				factor = 0
+				strength_ratio = {
+					tag = FROM
+					ratio < 0.7
+				}
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = imminent_war
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SQI_unify_the_country target: [From.GetName]"
-			set_country_flag = { flag = SQI_preparing_attack days = 30 value = 1 }
+			set_country_flag = { flag = imminent_war days = 20 value = 1 }
 		}
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove SQI_unify_the_country target: [From.GetName]"
-			if = {
-				limit = { is_ai = no }
-				create_wargoal = { type = annex_everything target = FROM }
-			}
-			else = {
-				declare_war_on = { target = FROM type = annex_everything }
-			}
-		}
-		ai_will_do = {
-			factor = 20
-			# Do not commit suicide
-			modifier = {
-				factor = 0
-				OR = {
-					will_not_commit_suicide = yes
-					any_home_area_neighbor_country = {
-						is_chinese_tag = yes
-						has_war_with = ROOT
-					}
-					has_wargoal_against = HNN
-					has_wargoal_against = YUN
-					has_wargoal_against = GXC
-					has_wargoal_against = SZC
-					has_wargoal_against = XSM
-					has_wargoal_against = SHX
-					has_country_flag = SQI_preparing_attack
-				}
-			}
-			# Priority against tags at war
-			modifier = {
-				factor = 2.5
-				FROM = { has_war = yes }
+			declare_war_on = {
+				type = annex_everything
+				target = FROM
 			}
 		}
 	}

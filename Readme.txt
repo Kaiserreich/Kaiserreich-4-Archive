@@ -1,5 +1,5 @@
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This is beta version 0.11 - 'The Long Road Home'.
+This is beta version 0.11.1.
 This version is compatible with 1.8.1, it may work with later hot fixes, but it is not guaranteed.
 
 Manual Installation Instructions
@@ -22,4 +22,4 @@ http://kaiserreich.wikia.com/wiki/Progress_Reports
 
 Please note the only legitimate places to get Kaiserreich from are the Steam workshop (http://steamcommunity.com/sharedfiles/filedetails/?id=1521695605) and the Paradox forums (https://forum.paradoxplaza.com/forum/index.php?threads/kaiserreich-info-download.996902/), if you acquired this from any other source please bring it to the attention of the team.
 
-- The KR4 Team
+- The KR4 Team, full credits list found in \interface\credits.txt
