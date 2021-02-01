@@ -1361,6 +1361,7 @@ country_event = { # Austria annexes Udine if ITA is annexed by SRI
 			limit = { tag = AUS }
 			OR = {
 				controls_state = 759
+				488 = { is_owned_and_controlled_by = AUS }
 				736 = { is_owned_and_controlled_by = AUS }
 				835 = { is_owned_and_controlled_by = AUS }
 				153 = { is_owned_and_controlled_by = AUS }
@@ -2667,11 +2668,17 @@ country_event = { # Venetian Navy captured
 	trigger = {
 		has_war_with = VNC
 	}
+	
+	immediate = {
+		hidden_effect = {
+			VNC = { transfer_navy = { target = ITA } }
+		}
+	}
 
 	option = {
 		name = ita.69.a
-		VNC = {
-			transfer_navy = { target = ITA }
+		effect_tooltip = {
+			VNC = { transfer_navy = { target = ITA } }
 		}
 	}
 }
@@ -3719,22 +3726,36 @@ country_event = { # Austria is losing the war
 		tag = AUS
 		is_valid_peace_target = yes
 		has_war_with = ITA
-		surrender_progress > 0.40
 		OR = {
-			owns_state = 783
-			owns_state = 736
+			surrender_progress > 0.40
+			NOT = { has_full_control_of_state = 4 } #Vienna
+		}
+		OR = {
+			owns_state = 488 #Trieste
+			owns_state = 736 #Istria
+			owns_state = 783 #Trentino
+			owns_state = 39 #Southern Tyrol
+		}
+		if = {
+			limit = { owns_state = 488 }
+			488 = { is_controlled_by = ITA }
+		}
+		if = {
+			limit = { owns_state = 736 }
+			736 = { is_controlled_by = ITA }
 		}
 		if = {
 			limit = { owns_state = 783 }
 			783 = { is_controlled_by = ITA }
 		}
 		if = {
-			limit = { owns_state = 736 }
-			736 = { is_controlled_by = ITA }
+			limit = { owns_state = 39 }
+			39 = { is_controlled_by = ITA }
 		}
 		OR = {
 			836 = { is_controlled_by = ITA }
 			835 = { is_controlled_by = ITA }
+			NOT = { has_full_control_of_state = 4 } #Vienna
 		}
 		OR = {
 			is_faction_leader = yes
@@ -3760,7 +3781,7 @@ country_event = { # Austria is losing the war
 	}
 
 	mean_time_to_happen = {
-		days = 5
+		days = 1
 	}
 
 	option = {
@@ -3778,13 +3799,83 @@ country_event = { # Italy receives peace proposal
 	id = ita.121
 	immediate = { log = "[GetDateText]: [Root.GetName]: event ita.121" }
 	title = ita.121.t
-	desc = ita.121.d
 	picture = GFX_report_event_generic_panzer_attack
+	
+	desc = {
+		text = ita.121.d.nogermany
+		trigger = {
+			NOT = {
+				GER = {
+					is_faction_leader = yes
+					can_declare_war_on = ITA
+					NOT = { has_war_with = AUS }
+					OR = {
+						has_war = no
+						surrender_progress < 0.20
+					}
+				}
+			}
+		}
+	}
+	desc = {
+		text = ita.121.d.germanycanlimited
+		trigger = {
+			GER = {
+				is_faction_leader = yes
+				can_declare_war_on = ITA
+				NOT = { has_war_with = AUS }
+				OR = {
+					has_war = no
+					surrender_progress < 0.20
+				}
+			}
+			OR = {
+				783 = { owned_by_austria_or_puppet = yes } #Trentino
+				488 = { owned_by_austria_or_puppet = yes } #Trieste
+			}
+		}
+	}
+	desc = {
+		text = ita.121.d.germanycannotlimited
+		trigger = {
+			GER = {
+				is_faction_leader = yes
+				can_declare_war_on = ITA
+				NOT = { has_war_with = AUS }
+				OR = {
+					has_war = no
+					surrender_progress < 0.20
+				}
+			}
+			NOT = {
+				783 = { owned_by_austria_or_puppet = yes } #Trentino
+				488 = { owned_by_austria_or_puppet = yes } #Trieste
+			}
+		}
+	}
 
 	is_triggered_only = yes
 
 	option = {
-		name = ita.121.a #Let's end this now
+		name = ita.121.a #We will keep our demands limited
+		trigger = {
+			GER = {
+				is_faction_leader = yes
+				can_declare_war_on = ITA
+				NOT = { has_war_with = AUS }
+				OR = {
+					has_war = no
+					surrender_progress < 0.20
+				}
+			}
+			OR = {
+				783 = { owned_by_austria_or_puppet = yes } #Trentino
+				488 = { owned_by_austria_or_puppet = yes } #Trieste
+			}
+		}
+		ai_chance = {
+			base = 50
+		}
 		add_political_power = 50
 		AUS = { white_peace_with_ROOT = yes }
 
@@ -3793,8 +3884,14 @@ country_event = { # Italy receives peace proposal
 				OR = {
 					is_claimed_by = ITA
 					is_core_of = ITA
+					state = 488 #Trieste
 					state = 783 #Trentino
-					state = 736 #Austrian Littoral
+				}
+				NOT = {
+					state = 39 #Southern Tyrol
+					state = 736 #Istria
+					state = 103 #Lika
+					state = 163 #Dalmatia
 				}
 				OR = {
 					is_owned_by = AUS
@@ -3805,10 +3902,116 @@ country_event = { # Italy receives peace proposal
 		}
 	}
 	option = {
-		name = ita.121.b #We will wipe them out completely
-		trigger = { is_ai = no }
+		name = ita.121.b #No, we will push for all our claims
+		trigger = {
+			GER = {
+				is_faction_leader = yes
+				can_declare_war_on = ITA
+				NOT = { has_war_with = AUS }
+				OR = {
+					has_war = no
+					surrender_progress < 0.20
+				}
+			}
+			OR = {
+				783 = { owned_by_austria_or_puppet = yes } #Trentino
+				488 = { owned_by_austria_or_puppet = yes } #Trieste
+			}
+		}
+		ai_chance = {
+			base = 40
+			modifier = {
+				factor = 0
+				NOT = {
+					736 = { owned_by_austria_or_puppet = yes }
+					39 = { owned_by_austria_or_puppet = yes }
+				}
+			}
+			modifier = {
+				factor = 2
+				GER = {
+					has_war_with = FRA
+					OR = {
+						has_war_with = RUS
+						has_war_with = SOV
+					}
+				}
+			}
+		}
+		custom_effect_tooltip = ITA_germany_may_intervene
+		hidden_effect = {
+			AUS = { country_event = ita.130 }
+		}
+	}
+	option = {
+		name = ita.121.c #Let us end this now
+		trigger = {
+			OR = {
+				NOT = {
+					GER = {
+						is_faction_leader = yes
+						can_declare_war_on = ITA
+						NOT = { has_war_with = AUS }
+						OR = {
+							has_war = no
+							surrender_progress < 0.20
+						}
+					}
+				}
+				NOT = {
+					783 = { owned_by_austria_or_puppet = yes } #Trentino
+					488 = { owned_by_austria_or_puppet = yes } #Trieste
+				}
+			}
+		}
+		ai_chance = {
+			base = 10
+		}
+		add_political_power = 50
+		AUS = { white_peace_with_ROOT = yes }
+
+		if = {
+			limit = {
+				NOT = {
+					GER = {
+						is_faction_leader = yes
+						OR = {
+							has_war = no
+							surrender_progress < 0.20
+						}
+						NOT = {
+							has_war_with = AUS
+							has_war_with = ITA
+						}
+					}
+				}
+			}
+			every_state = {
+				limit = {
+					OR = {
+						is_claimed_by = ITA
+						is_core_of = ITA
+						state = 488 #Trieste
+						state = 783 #Trentino
+						state = 39 #Southern Tyrol
+						state = 736 #Istria
+					}
+					OR = {
+						is_owned_by = AUS
+						owner = { is_subject_of = AUS }
+					}
+				}
+				ITA = { transfer_state = PREV }
+			}
+		}
+	}
+	option = {
+		name = ita.121.d #We will wipe them out completely
+		ai_chance = {
+			base = 0
+		}
 		add_stability = -0.10
-		add_war_support = -0.10
+		add_war_support = -0.20
 		if = {
 			limit = { has_global_flag = KR_italy_balance }
 			custom_effect_tooltip = SRI_balance_will_be_broken
@@ -3818,23 +4021,19 @@ country_event = { # Italy receives peace proposal
 
 		if = {
 			limit = {
-				is_valid_peace_target = yes
 				GER = {
 					is_faction_leader = yes
-					can_declare_war_on = ROOT
-					surrender_progress < 0.50
-				}
-				AUS = {
-					is_ai = yes
-					NOT = { has_war_with = GER }
-					is_valid_peace_target = yes
+					can_declare_war_on = ITA
+					NOT = { has_war_with = AUS }
+					OR = {
+						has_war = no
+						surrender_progress < 0.20
+					}
 				}
 			}
 			custom_effect_tooltip = SRI_germany_may_intervene
 			hidden_effect = {
-				GER = {
-					country_event = { id = ita.127 days = 3 }
-				}
+				GER = { country_event = ita.127 }
 			}
 		}
 	}
@@ -4103,24 +4302,6 @@ country_event = { # Germany gets chance to intervene against crazy player
 
 	is_triggered_only = yes
 
-	trigger = {
-		is_faction_leader = yes
-		can_declare_war_on = FROM
-		if = {
-			limit = { has_war = yes }
-			surrender_progress < 0.50
-		}
-		AUS = {
-			is_ai = yes
-			NOT = { has_war_with = ROOT }
-			has_war_with = FROM
-			is_valid_peace_target = yes
-		}
-		FROM = {
-			is_valid_peace_target = yes
-		}
-	}
-
 	option = {
 		name = ita.127.a #Of course we will help them!
 		ai_chance = {
@@ -4129,11 +4310,6 @@ country_event = { # Germany gets chance to intervene against crazy player
 				factor = 0.5
 				has_war = yes
 				surrender_progress > 0
-			}
-			modifier = {
-				factor = 0.5
-				has_war = yes
-				surrender_progress > 0.20
 			}
 		}
 		add_to_war = {
@@ -4170,6 +4346,14 @@ country_event = { # Germany gets chance to intervene against crazy player
 				factor = 0.5
 				has_war = no
 			}
+			modifier = {
+				factor = 2
+				has_war_with = FRA
+				OR = {
+					has_war_with = RUS
+					has_war_with = SOV
+				}
+			}
 		}
 	}
 }
@@ -4186,6 +4370,217 @@ country_event = { # player informed of intervention
 		name = ita.128.a
 	}
 }
+country_event = { # Austria informed of Italy pushing full claims
+	id = ita.130
+	immediate = { log = "[GetDateText]: [Root.GetName]: event ita.130" }
+	title = ita.130.t
+	desc = ita.130.d
+	picture = GFX_report_event_generic_panzer_attack
+
+	is_triggered_only = yes
+	
+	option = {
+		name = ita.130.a #We will appeal to Germany
+		ai_chance = {
+			base = 75
+		}
+		add_political_power = -100
+		add_stability = -0.05
+		GER = { country_event = ita.132 }
+	}
+	option = {
+		name = ita.130.b #Give them whatever they want
+		ai_chance = {
+			base = 25
+		}
+		ITA = { country_event = ita.131 }
+	}
+}
+country_event = { # No German Intervention
+	id = ita.131
+	immediate = { log = "[GetDateText]: [Root.GetName]: event ita.131" }
+	title = ita.131.t
+	desc = ita.131.d
+	picture = GFX_report_event_generic_panzer_attack
+
+	is_triggered_only = yes
+	
+	option = {
+		name = ita.131.a
+		add_political_power = 50
+		AUS = { white_peace_with_ROOT = yes }
+		every_state = {
+			limit = {
+				OR = {
+					is_claimed_by = ITA
+					is_core_of = ITA
+					state = 488 #Trieste
+					state = 783 #Trentino
+					state = 39 #Southern Tyrol
+					state = 736 #Istria
+				}
+				OR = {
+					is_owned_by = AUS
+					owner = { is_subject_of = AUS }
+				}
+			}
+			ITA = { transfer_state = PREV }
+		}
+	}
+}
+country_event = { # Germany asked to intervene
+	id = ita.132
+	immediate = { log = "[GetDateText]: [Root.GetName]: event ita.132" }
+	title = ita.132.t
+	desc = ita.132.d
+	picture = GFX_report_event_generic_panzer_attack
+
+	is_triggered_only = yes
+	
+	option = {
+		name = ita.132.a #They must back down or it's war!
+		ai_chance = {
+			base = 80
+			modifier = {
+				factor = 0
+				has_war = yes
+				surrender_progress > 0.10
+			}
+			modifier = {
+				factor = 0.5
+				OR = {
+					AND = {
+						has_war_with = FRA
+						FRA = { surrender_progress < 0.10 }
+					}
+					AND = {
+						has_war_with = RUS
+						RUS = { surrender_progress < 0.10 }
+					}
+				}
+			}
+		}
+		add_political_power = 50
+		AUS = {
+			add_opinion_modifier = { target = ROOT modifier = KR_approves_of_govt }
+			country_event = ita.134
+		}
+	}
+	option = {
+		name = ita.132.b #Austria is on their own
+		ai_chance = {
+			base = 20
+			modifier = {
+				factor = 0.5
+				has_war = no
+			}
+		}
+		add_political_power = -50
+		AUS = {
+			add_opinion_modifier = { target = ROOT modifier = KR_disapproves_of_govt }
+			country_event = ita.133
+		}
+	}
+}
+country_event = { # Germany refused to intervene
+	id = ita.133
+	immediate = { log = "[GetDateText]: [Root.GetName]: event ita.133" }
+	title = ita.133.t
+	desc = ita.133.d
+	picture = GFX_report_event_generic_panzer_attack
+
+	is_triggered_only = yes
+	
+	option = {
+		name = ita.133.a
+		ITA = { country_event = ita.131 }
+	}
+}
+country_event = { # Germany agreed to intervene
+	id = ita.134
+	immediate = { log = "[GetDateText]: [Root.GetName]: event ita.134" }
+	title = ita.134.t
+	desc = ita.134.d
+	picture = GFX_report_event_generic_panzer_attack
+
+	is_triggered_only = yes
+	
+	option = {
+		name = ita.134.a
+		ITA = { country_event = ita.135 }
+	}
+}
+country_event = { # Germany intervened in peace talks
+	id = ita.135
+	immediate = { log = "[GetDateText]: [Root.GetName]: event ita.135" }
+	title = ita.135.t
+	desc = ita.135.d
+	picture = GFX_report_event_generic_panzer_attack
+
+	is_triggered_only = yes
+	
+	option = {
+		name = ita.135.a #Very well, we accept their terms
+		add_political_power = -50
+		add_stability = -0.05
+		AUS = { white_peace_with_ROOT = yes }
+		every_state = {
+			limit = {
+				OR = {
+					is_claimed_by = ITA
+					is_core_of = ITA
+					state = 488 #Trieste
+					state = 783 #Trentino
+				}
+				NOT = {
+					state = 39 #Southern Tyrol
+					state = 736 #Istria
+					state = 103 #Lika
+					state = 163 #Dalmatia
+				}
+				OR = {
+					is_owned_by = AUS
+					owner = { is_subject_of = AUS }
+				}
+			}
+			ITA = { transfer_state = PREV }
+		}
+	}
+	option = {
+		name = ita.135.b #Never!
+		trigger = { is_ai = no }
+		if = {
+			limit = { has_global_flag = KR_italy_balance }
+			custom_effect_tooltip = SRI_balance_will_be_broken
+			clr_global_flag = KR_italy_balance
+		}
+		add_war_support = 0.10
+		GER = {
+			add_to_war = {
+				targeted_alliance = AUS
+				enemy = ROOT
+			}
+		}
+		hidden_effect = {
+			every_country = {
+				limit = {
+					is_in_faction_with = GER
+					is_in_europe = yes
+				}
+				every_country = {
+					limit = {
+						OR = {
+							tag = AUS
+							is_subject_of = AUS
+						}
+					}
+					give_military_access = PREV
+				}
+			}
+		}
+	}
+}
+
 
 ### New Events ###
 country_event = { # Austria withdraws from ITA after Black Monday
@@ -5299,13 +5694,7 @@ country_event = {
 			limit = {
 				is_claimed_by = ROOT
 				is_core_of = LBA
-				owner = {
-					OR = {
-						tag = FROM
-						is_subject_of = FROM
-						is_in_faction_with = FROM
-					}
-				}
+				owner = { is_ally_with = FROM }
 			}
 			ROOT = { transfer_state = PREV }
 		}
@@ -5497,6 +5886,15 @@ country_event = {
 
 	option = {
 		name = ita.184.a
+		every_other_country = {
+			limit = { is_subject_of = ROOT }
+			ROOT = {
+				set_autonomy = {
+					target = PREV
+					autonomy_state = autonomy_free
+				}
+			}
+		}
 		if = {
 			limit = { is_subject = yes }
 			overlord = {

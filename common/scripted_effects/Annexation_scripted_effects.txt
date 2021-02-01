@@ -70,6 +70,18 @@ transfer_state_and_add_claim = {
 }
 
 # state scope
+remove_claim_and_add_core_of_ROOT = {
+	if = {
+		limit = { is_claimed_by = ROOT }
+		remove_claim_by = ROOT
+	}
+	if = {
+		limit = { NOT = { is_core_of = ROOT } }
+		add_core_of = ROOT
+	}
+}
+
+# state scope
 remove_claim_and_add_core_of_target = {
 	if = {
 		limit = { is_claimed_by = var:tag_to_release }
@@ -318,10 +330,54 @@ release_france = {
 		add_core_of = var:tag_to_release
 		if = {
 			limit = { is_owned_and_controlled_by = ROOT }
-			var:tag_to_release = { transfer_state = PREV }
+			if = {
+				limit = {
+					OR = {
+						state = 762 #Nice
+						state = 735 #Savoy
+						state = 943 #Upper Savoy
+					}
+					is_owned_and_controlled_by = ROOT
+					ROOT = { is_italian_tag = yes }
+					var:158.owner = {
+						is_subject_of = ROOT
+						is_italian_tag = yes
+					}
+				}
+				var:158.owner = { transfer_state = PREV }
+			}
+			else = {
+				var:tag_to_release = { transfer_state = PREV }
+			}
 		}
 	}
 	puppet_released_tag = yes
+}
+
+release_france_nfa = { #Only for the Entente releasing NFA again
+	16 = {
+		add_core_of = var:tag_to_release
+	}
+	every_state = {
+		limit = {
+			is_european_france = yes
+			is_claim_or_core_of_ROOT = no
+			if = {
+				limit = {
+					ROOT = { is_italian_tag = yes }
+				}
+				NOT = {
+					state = 762 #Nice
+					state = 735 #Savoy
+					state = 943 #Upper Savoy
+				}
+			}
+		}
+		if = {
+			limit = { is_owned_and_controlled_by = ROOT }
+			var:tag_to_release = { transfer_state = PREV }
+		}
+	}
 }
 
 release_spain = {
@@ -662,32 +718,48 @@ setup_romanian_puppet_leaders = {
 	}
 }
 
-puppet_RUS_setup = {
+puppet_russia_setup = {
 	var:tag_to_release = {
 		if = {
-			limit = { has_cosmetic_tag = RUS_empire }
-			kill_ideology_leader = social_democrat
-			kill_ideology_leader = social_liberal
-			kill_ideology_leader = market_liberal
-			kill_ideology_leader = social_conservative
-			kill_ideology_leader = authoritarian_democrat
-			kill_ideology_leader = paternal_autocrat
-		}
-	}
-}
-
-puppet_SOV_setup = {
-	var:tag_to_release = {
-		if = {
-			limit = {
-				tag = SOV
-				NOT = { has_completed_focus = SOV_Rebuild_The_Country }
+			limit = { tag = RUS }
+			if = {
+				limit = { has_cosmetic_tag = RUS_empire }
+				drop_cosmetic_tag = yes
+				kill_ideology_leader = social_democrat
+				kill_ideology_leader = social_liberal
+				kill_ideology_leader = market_liberal
+				kill_ideology_leader = social_conservative
+				kill_ideology_leader = authoritarian_democrat
+				kill_ideology_leader = paternal_autocrat
 			}
-			add_ideas = SOV_aftermath_of_the_civil_war_1
-			unlock_national_focus = SOV_Mobilise_Urban_Militias
-			unlock_national_focus = SOV_Krasnaya_Gvardiya_Units
-			unlock_national_focus = SOV_Rally_The_Defectors
-			unlock_national_focus = SOV_The_War_Effort
+			if = {
+				limit = {
+					ROOT = { is_germany_or_splinter_tag = yes }
+					NOT = { has_country_leader = { name = "Pavel Bermondt-Avalov" ruling_only = yes } }
+				}
+				meta_effect = {
+					text = {
+						create_country_leader = {
+							name = "Pavel Bermondt-Avalov"
+							picture = "gfx/leaders/RUS/Portrait_RUS_Pavel_Bermondt_Avalov.tga"
+							ideology = [OVERLORD_IDEOLOGY]
+						}
+					}
+					OVERLORD_IDEOLOGY = "[ROOT.GetRulingIdeologySubtype]"
+				}
+				set_country_flag = was_puppeted
+			}
+		}
+		else_if = {
+			limit = { tag = SOV }
+			if = {
+				limit = { NOT = { has_completed_focus = SOV_Rebuild_The_Country } }
+				add_ideas = SOV_aftermath_of_the_civil_war_1
+				unlock_national_focus = SOV_Mobilise_Urban_Militias
+				unlock_national_focus = SOV_Krasnaya_Gvardiya_Units
+				unlock_national_focus = SOV_Rally_The_Defectors
+				unlock_national_focus = SOV_The_War_Effort
+			}
 		}
 	}
 }
@@ -798,6 +870,12 @@ remove_all_russian_cores = {
 								owns_state = 570 #Novo-Nikolayevsk
 								owns_state = 653 #Ekaterinburg
 							}
+						}
+					}
+					AND = {
+						is_russian_far_east = yes
+						var:tag_to_release = {
+							NOT = { owns_state = 408 } #Vladivostok
 						}
 					}
 				}
@@ -1326,6 +1404,7 @@ setup_puppet_leader_MON = {
 transfer_iraq = {
 	every_owned_state = {
 		limit = {
+			is_claim_or_core_of_ROOT = no
 			OR = {
 				region = 239 #Mesopotamia
 				AND = {

@@ -146,22 +146,14 @@ on_actions = {
 				set_state_flag = nfa_state_colonial_resistance_flag
 				force_update_dynamic_modifier = yes
 			}
-			975 = { #Add a full garrison to South Chad
-				set_garrison_strength = 1.0
-				add_dynamic_modifier = { modifier = NFA_colonial_resistance }
-				set_variable = { NFA_colonial_resistance_target_var = 0.25 }
-				set_variable = { NFA_colonial_resistance_compliance_var = -0.02 }
-				set_state_flag = nfa_state_colonial_resistance_flag
-				force_update_dynamic_modifier = yes
-			}
-			
+
 			# Malta has full compliance #
 			116 = {
 				set_compliance = 100
 				set_resistance = 0
 				set_garrison_strength = 1.0
 			}
-			
+
 			# Transsaharian Railroad #
 			set_global_flag = TRANSSAHARIAN_ROUTE_DISABLED
 
@@ -170,19 +162,41 @@ on_actions = {
 				set_temp_variable = { coalition_partner_var = token:authoritarian_democrat }
 				add_to_coalition = yes
 			}
-			
+
 			for_each_scope_loop = {
-                array = FRA.owned_states
+				array = FRA.owned_states
 				add_to_array = { NFA.coring_states_array = THIS }
-				add_to_array = { NFA.rebirth_coring_states_array = THIS }
 			}
 			add_to_array = { NFA.coring_states_array = 28.id } #Add Alsace Lorraine to the coring array
 			add_to_array = { NFA.coring_states_array = 29.id } #Add Dunkirk to the coring array
-			add_to_array = { NFA.coring_states_array = 779.id } #Add Nancy to the coring array
 			add_to_array = { NFA.coring_states_array = 943.id } #Add Upper Savoy to the coring array
 		}
 	}
-	
+
+	on_startup = {
+		effect = {
+			# Add the starting zawiya dynamic modifiers
+			448 = { #Tripoli
+				add_dynamic_modifier = { modifier = lba_senussi_zawiya_modifier }
+			}
+			273 = { #Fezzan
+				add_dynamic_modifier = { modifier = lba_senussi_zawiya_modifier }
+			}
+			514 = { #Sahara
+				add_dynamic_modifier = { modifier = lba_senussi_zawiya_modifier }
+			}
+			910 = { #Niger Desert
+				add_dynamic_modifier = { modifier = lba_senussi_zawiya_modifier }
+			}
+			515 = { #WADai
+				add_dynamic_modifier = { modifier = lba_senussi_zawiya_modifier }
+			}
+			452 = { #Mersa Matruh - This shouldn't do anything as this is always an Egypt core but consistency is key
+				add_dynamic_modifier = { modifier = lba_senussi_zawiya_modifier }
+			}		
+		}
+	}
+
 	on_government_change = {
 		effect = {
 			if = {
@@ -198,6 +212,19 @@ on_actions = {
 	#ROOT is winner #FROM is loser
 	on_peaceconference_ended = {
 		effect = {
+			# Set up rebirth array
+			if = {
+				limit = {
+					tag = NFA
+					NOT = { has_country_flag = NFA_rebirth_array_created }
+					FROM = { tag = FRA }
+				}
+				set_country_flag = NFA_rebirth_array_created
+				every_owned_state = {
+					limit = { is_core_of = FRA }
+					add_to_array = { ROOT.rebirth_coring_states_array = THIS }
+				}
+			}
 			# Congress of Lyon if GER doesn't own Paris
 			if = {
 				limit = {
@@ -209,8 +236,7 @@ on_actions = {
 						is_core_of = FRA #Grab previous Commune Cores
 						is_controlled_by = ROOT #But only the ones controlled by GER
 						NOT = {
-							state = 779 #Not Nancy
-							state = 779 #Not Dunkirk
+							state = 28 #Not Dunkirk
 							has_state_flag = has_NFA_fra_resist_15
 						}
 					}
@@ -226,10 +252,7 @@ on_actions = {
 						NOT = { owns_state = 16 } #If GER owns Paris, they should get the annexation decision normally
 						any_owned_state = {
 							is_european_france = yes
-							NOT = {
-								state = 29 #Dunkirk doesn't count
-								state = 779 #Nancy doesn't count
-							}
+							NOT = { state = 29 } #Dunkirk doesn't count
 						}
 					}
 					country_event = { id = annex.157 days = 3 random_days = 1 }
@@ -275,81 +298,25 @@ on_actions = {
 			}
 			# Put the colonial resistance dynamic modifier back on
 			if = {
-				limit = {
-					tag = NFA
-					NOT = { has_country_flag = nfa_resistance_cancelled_algiers_AF }
-					FROM = {
-						OR = {
-							tag = TUN
-							tag = MLI
-							tag = MRT
-							tag = GNA
-							tag = SIE
-							tag = SEN
-							tag = BFA
-							tag = NGR
-							tag = WAD
-							tag = ALG #in case those get added in the future
-							tag = TUA #in case those get added in the future
-						}
-					}
-				}
+				limit = { tag = NFA }
 				every_owned_state = {
-					limit = {
-						OR = {
-							has_state_flag = nfa_state_colonial_resistance_flag
-							has_state_flag = nfa_state_colonial_exploitation_flag
-						}
-						NOT = {
-							is_core_of = NFA
-							has_dynamic_modifier = { modifier = NFA_colonial_resistance }
-							has_dynamic_modifier = { modifier = NFA_Colonial_Exploitation }
-						}
-					}
 					if = {
-						limit = { has_state_flag = nfa_state_colonial_resistance_flag }
+						limit = {
+							has_state_flag = nfa_state_colonial_resistance_flag
+							NOT = { has_dynamic_modifier = { modifier = NFA_colonial_resistance } }
+						}
 						add_dynamic_modifier = { modifier = NFA_colonial_resistance }
-						set_variable = { NFA_colonial_resistance_target_var = 0.25 }
 					}
 					else_if = {
-						limit = { has_state_flag = nfa_state_colonial_exploitation_flag }
-						add_dynamic_modifier = { modifier = NFA_colonial_resistance }
-						set_variable = { NFA_colonial_resistance_target_var = 0.4 }
-					}
-					set_variable = { NFA_colonial_resistance_compliance_var = -0.01 }
-					if = {
 						limit = {
-							OR = { #Those states get reduced compliance gain
-								state = 515
-								state = 975
-								state = 809
-								state = 557
-								state = 910
-								state = 911
-								state = 860
-								state = 967
-								state = 514
-							}
+							has_state_flag = nfa_state_colonial_exploitation_flag
+							NOT = { has_dynamic_modifier = { modifier = NFA_Colonial_Exploitation } }
 						}
-						subtract_from_variable = { NFA_colonial_resistance_compliance_var = 0.01 }
+						add_dynamic_modifier = { modifier = NFA_Colonial_Exploitation }
 					}
-					if = {
-						limit = {
-							ROOT = { has_completed_focus = NATFRA_Promote_Autonomy } #If you did the promote autonomy focus
-						}
-						subtract_from_variable = { NFA_colonial_resistance_target_var = 0.1 }
-						subtract_from_variable = { NFA_colonial_resistance_compliance_var = 0.01 }
-					}
-					if = {
-						limit = {
-							ROOT = { has_completed_focus = NATFRA_Civ_Mission } #If you did the civilising mission focus
-						}
-						add_to_variable = { NFA_colonial_resistance_target_var = 0.05 }
-						add_to_variable = { NFA_colonial_resistance_compliance_var = 0.01 }
-					}
-					force_update_dynamic_modifier = yes
 				}
 			}
+
 			#Resistance in former colonies
 			if = {
 				limit = {
@@ -383,6 +350,34 @@ on_actions = {
 					}
 				}
 				NFA_Resistance_Policy_on_colony_states = yes
+			}
+		}
+	}
+	
+	#ROOT is new controller #FROM is old controller #FROM.FROM is state ID
+	on_state_control_changed = {
+		effect = {
+			# Set up rebirth array (failsafe)
+			if = {
+				limit = {
+					tag = NFA
+					NOT = { has_country_flag = NFA_rebirth_array_created }
+					FROM.FROM = {
+						OR = {
+							state = 16 #Paris
+							state = 21 #Provence
+						}
+						is_owned_by = ROOT
+					}
+				}
+				set_country_flag = NFA_rebirth_array_created
+				every_owned_state = {
+					limit = {
+						is_core_of = FRA
+						NOT = { is_in_array = { ROOT.rebirth_coring_states_array = THIS } }
+					}
+					add_to_array = { ROOT.rebirth_coring_states_array = THIS }
+				}
 			}
 		}
 	}
