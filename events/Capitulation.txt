@@ -557,10 +557,68 @@ country_event = {
 	hidden = yes
 
 	immediate = {
-		# First European faction leaders peace out with any non-neighbors outside of Europe
+		# First non-Russian European faction leaders peace out with any non-neighbors outside of Europe
 		if = {
 			limit = {
 				is_in_europe = yes
+				is_faction_leader = yes
+				NOT = { tag = RUS }
+			}
+			every_country = {
+				limit = {
+					has_country_flag = former_reichspakt_member
+					is_valid_peace_target = yes
+					has_war_with = ROOT
+					is_in_europe = no
+					NOT = {
+						tag = GER
+						has_capitulated = yes
+						is_actual_neighbor_of_ROOT_or_ally = yes
+						any_owned_state = {
+							is_coastal = yes
+							is_controlled_by_ROOT_or_ally = yes
+						}
+						any_country = {
+							is_subject_of = PREV
+							is_in_europe = yes
+							OR = {
+								is_actual_neighbor_of_ROOT_or_ally = yes
+								any_owned_state = {
+									is_coastal = yes
+									is_controlled_by_ROOT_or_ally = yes
+								}
+							}
+						}
+						any_country = {
+							is_subject_of = PREV
+							is_in_europe = no
+							any_owned_state = {
+								is_controlled_by_ROOT_or_ally = yes
+							}
+						}
+						AND = {
+							is_in_faction = yes
+							any_country = {
+								is_in_faction_with = PREV
+								is_valid_peace_target = no
+								OR = {
+									is_actual_neighbor_of_ROOT_or_ally = yes
+									any_owned_state = {
+										is_coastal = yes
+										is_controlled_by_ROOT_or_ally = yes
+									}
+								}
+							}
+						}
+					}
+				}
+				white_peace_with_ROOT = yes
+			}
+		}
+		# Then deal with Russia specifically
+		else_if = {
+			limit = {
+				tag = RUS
 				is_faction_leader = yes
 			}
 			every_country = {
@@ -568,38 +626,10 @@ country_event = {
 					has_country_flag = former_reichspakt_member
 					is_valid_peace_target = yes
 					has_war_with = ROOT
-					OR = {
-						is_in_europe = no
-						AND = {
-							ROOT = { tag = RUS }
-							NOT = {
-								is_actual_neighbor_of_ROOT_or_ally = yes
-								any_owned_state = {
-									any_neighbor_state = {
-										owner = {
-											is_actual_neighbor_of_ROOT_or_ally = yes
-										}
-									}
-								}
-							}
-						}
-					}
+					is_actual_neighbor_of_ROOT_or_ally = no
 					NOT = {
 						tag = GER
 						has_capitulated = yes
-						is_in_europe = yes
-						AND = {
-							tag = AUS
-							ROOT = {
-								OR = {
-									tag = SER
-									tag = ROM
-									tag = POL
-									tag = ITA
-								}
-							}
-						}
-						is_actual_neighbor_of_ROOT_or_ally = yes
 						any_owned_state = {
 							is_coastal = yes
 							is_controlled_by_ROOT_or_ally = yes
@@ -616,10 +646,9 @@ country_event = {
 						}
 						AND = {
 							is_in_faction = yes
-							is_faction_leader = yes
 							any_country = {
 								is_in_faction_with = PREV
-								is_faction_leader = no
+								is_valid_peace_target = no
 								OR = {
 									is_actual_neighbor_of_ROOT_or_ally = yes
 									any_owned_state = {
@@ -645,10 +674,10 @@ country_event = {
 					has_country_flag = former_reichspakt_member
 					is_valid_peace_target = yes
 					has_war_with = ROOT
+					is_in_asia = no
 					NOT = {
 						tag = GER
 						has_capitulated = yes
-						is_in_asia = yes
 						AND = {
 							tag = HOL
 							ROOT = { tag = INS }
@@ -660,11 +689,26 @@ country_event = {
 						}
 						any_country = {
 							is_subject_of = PREV
+							is_in_asia = yes
 							OR = {
 								is_actual_neighbor_of_ROOT_or_ally = yes
 								any_owned_state = {
 									is_coastal = yes
 									is_controlled_by_ROOT_or_ally = yes
+								}
+							}
+						}
+						AND = {
+							is_in_faction = yes
+							any_country = {
+								is_in_faction_with = PREV
+								is_valid_peace_target = no
+								OR = {
+									is_actual_neighbor_of_ROOT_or_ally = yes
+									any_owned_state = {
+										is_coastal = yes
+										is_controlled_by_ROOT_or_ally = yes
+									}
 								}
 							}
 						}
@@ -715,10 +759,9 @@ country_event = {
 						}
 						AND = {
 							is_in_faction = yes
-							is_faction_leader = yes
 							any_country = {
 								is_in_faction_with = PREV
-								is_faction_leader = no
+								is_valid_peace_target = no
 								OR = {
 									is_actual_neighbor_of_ROOT_or_ally = yes
 									any_owned_state = {
@@ -1250,6 +1293,7 @@ country_event = {
 		tag = FRA
 		has_capitulated = yes
 		is_in_faction = yes
+		NOT = { var:16.controller = { is_ally_with = ROOT } }
 		if = {
 			limit = { has_dlc = "Man the Guns" }
 			is_government_in_exile = yes
@@ -1267,6 +1311,15 @@ country_event = {
 
 	option = {
 		name = capt.42.a
+		every_other_country = {
+			limit = { is_subject_of = ROOT }
+			ROOT = {
+				set_autonomy = {
+					target = PREV
+					autonomy_state = autonomy_free
+				}
+			}
+		}
 		if = {
 			limit = { is_faction_leader = yes }
 			dismantle_faction = yes
@@ -1297,19 +1350,16 @@ country_event = {
 				limit = {
 					has_capitulated = no
 					is_in_europe = no
+					is_valid_peace_target = yes
 					NOT = {
+						is_neighbor_of = ROOT #being invaded
 						AND = {
-							tag = AST
-							has_war_with = NZL
+							tag = NZL
+							AST = { is_in_faction_with = ROOT }
 						}
-						any_owned_state = {
-							OR = {
-								is_core_of = PREV
-								is_coastal = yes
-							}
-							any_neighbor_state = {
-								is_owned_by_ROOT_or_ally = yes
-							}
+						AND = {
+							is_ally_with = ENT
+							ROOT = { is_in_europe = yes }
 						}
 					}
 				}
@@ -1326,19 +1376,12 @@ country_event = {
 				limit = {
 					has_capitulated = no
 					is_in_asia = no
+					is_valid_peace_target = yes
 					NOT = {
+						is_neighbor_of = ROOT #being invaded
 						AND = {
-							tag = AST
-							has_war_with = NZL
-						}
-						any_owned_state = {
-							OR = {
-								is_core_of = PREV
-								is_coastal = yes
-							}
-							any_neighbor_state = {
-								is_owned_by_ROOT_or_ally = yes
-							}
+							tag = NZL
+							AST = { is_in_faction_with = ROOT }
 						}
 					}
 				}
@@ -1350,24 +1393,17 @@ country_event = {
 			every_enemy_country = {
 				limit = {
 					has_capitulated = no
-					is_in_asia = no
+					is_valid_peace_target = yes
 					NOT = {
+						is_neighbor_of = ROOT #being invaded
+						same_continent_as_ROOT = yes
 						AND = {
-							same_continent_as_ROOT = yes
-							NOT = { tag = HAW }
+							tag = NZL
+							AST = { is_in_faction_with = ROOT }
 						}
 						AND = {
-							tag = AST
-							has_war_with = NZL
-						}
-						any_owned_state = {
-							OR = {
-								is_core_of = PREV
-								is_coastal = yes
-							}
-							any_neighbor_state = {
-								is_owned_by_ROOT_or_ally = yes
-							}
+							is_ally_with = ENT
+							ROOT = { is_in_europe = yes }
 						}
 					}
 				}

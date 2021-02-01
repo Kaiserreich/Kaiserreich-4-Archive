@@ -728,7 +728,7 @@ country_event = { #Elections of [GetYear]
 	immediate = { log = "[GetDateText]: [Root.GetName]: event serbia.22" }
 	title = serbia.22.t
 	desc = serbia.22.d
-	
+
 	trigger = {
 		has_socialist_government = no
 	}
@@ -1268,15 +1268,60 @@ country_event = { #The War Against Austria
 		name = serbia.34.a
 		trigger = {
 			tag = ITA
+			NOT = { is_in_faction_with = SER }
+			is_subject = no
+			OR = {
+				AND = {
+					488 = { owned_by_austria_or_puppet = yes }
+					can_declare_war_on = 488.owner
+				}
+				AND = {
+					736 = { owned_by_austria_or_puppet = yes }
+					can_declare_war_on = 736.owner
+				}
+				AND = {
+					783 = { owned_by_austria_or_puppet = yes }
+					can_declare_war_on = 783.owner
+				}
+			}
 		}
-		declare_war_on = {
-			target = 736.owner
-			type = annex_everything
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				surrender_progress > 0
+			}
+			modifier = {
+				factor = 0
+				enemies_strength_ratio > 0.7
+			}
+		}
+		if = {
+			limit = { can_declare_war_on = 488.owner }
+			declare_war_on = {
+				target = 488.owner
+				type = annex_everything
+			}
 		}
 		if = {
 			limit = {
 				var:736.owner = {
-					NOT = { tag = var:783.owner }
+					NOT = { tag = var:488.owner }
+				}
+				can_declare_war_on = 736.owner
+			}
+			declare_war_on = {
+				target = 736.owner
+				type = annex_everything
+			}
+		}
+		if = {
+			limit = {
+				var:783.owner = {
+					NOT = {
+						tag = var:488.owner
+						tag = var:736.owner
+					}
 				}
 				can_declare_war_on = 783.owner
 			}
@@ -1287,7 +1332,7 @@ country_event = { #The War Against Austria
 		}
 		if = {
 			limit = {
-				var:736.owner = { tag = AUS }
+				var:488.owner = { tag = AUS }
 				can_declare_war_on = HUN
 				HUN = { has_war_with = AUS }
 			}
@@ -1302,6 +1347,21 @@ country_event = { #The War Against Austria
 		name = serbia.34.a
 		trigger = {
 			tag = POL
+			NOT = { is_in_faction_with = SER }
+			is_subject = no
+			91 = { owned_by_austria_or_puppet = yes }
+			can_declare_war_on = 91.owner
+		}
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				surrender_progress > 0
+			}
+			modifier = {
+				factor = 0
+				enemies_strength_ratio > 0.7
+			}
 		}
 		declare_war_on = {
 			target = 91.owner #Lwow
@@ -1324,7 +1384,21 @@ country_event = { #The War Against Austria
 		name = serbia.34.a
 		trigger = {
 			tag = ROM
+			is_subject = no
 			NOT = { is_in_faction_with = SER }
+			84 = { owned_by_austria_or_puppet = yes }
+			can_declare_war_on = 84.owner
+		}
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				surrender_progress > 0
+			}
+			modifier = {
+				factor = 0
+				enemies_strength_ratio > 0.7
+			}
 		}
 		declare_war_on = {
 			target = 84.owner #Transylvania
@@ -1346,6 +1420,9 @@ country_event = { #The War Against Austria
 		name = serbia.34.a
 		trigger = {
 			is_in_faction_with = SER
+		}
+		ai_chance = {
+			base = 100
 		}
 		effect_tooltip = {
 			declare_war_on = {
@@ -1379,9 +1456,55 @@ country_event = { #The War Against Austria
 
 	option = {
 		name = serbia.34.b
-		trigger = {
-			is_ai = no
-			is_subject = no
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 100
+				surrender_progress > 0
+			}
+			modifier = {
+				add = 100
+				enemies_strength_ratio > 0.7
+			}
+			modifier = {
+				add = 100
+				NOT = { is_in_faction_with = SER }
+				is_subject = yes
+			}
+			modifier = {
+				add = 100
+				tag = ITA
+				NOT = {
+					AND = {
+						488 = { owned_by_austria_or_puppet = yes }
+						can_declare_war_on = 488.owner
+					}
+					AND = {
+						736 = { owned_by_austria_or_puppet = yes }
+						can_declare_war_on = 736.owner
+					}
+					AND = {
+						783 = { owned_by_austria_or_puppet = yes }
+						can_declare_war_on = 783.owner
+					}
+				}
+			}
+			modifier = {
+				add = 100
+				tag = POL
+				OR = {
+					91 = { owned_by_austria_or_puppet = no }
+					NOT = { can_declare_war_on = 91.owner }
+				}
+			}
+			modifier = {
+				add = 100
+				tag = ROM
+				OR = {
+					84 = { owned_by_austria_or_puppet = no }
+					NOT = { can_declare_war_on = 84.owner }
+				}
+			}
 		}
 		add_war_support = -0.2
 		if = {
@@ -1848,9 +1971,25 @@ country_event = { #Fighter-Bombers or Bombers
 	option = { #Smuggled Italian planes
 		name = serbia.52.c
 		trigger = {
-			NOT = {
-				has_idea = SER_russian_aerial_expertise
-				has_idea = SER_french_aerial_expertise
+			if = {
+				limit = { has_idea = SER_french_aerial_expertise }
+				OR = {
+					NOT = { country_exists = NFA }
+					has_war_with = NFA
+				}
+			}
+			else_if = {
+				limit = { has_idea = SER_russian_aerial_expertise }
+				OR = {
+					NOT = { country_exists = RUS }
+					has_war_with = RUS
+				}
+			}
+			else = {
+				NOT = {
+					has_idea = SER_russian_aerial_expertise
+					has_idea = SER_french_aerial_expertise
+				}
 			}
 		}
 		if = {
