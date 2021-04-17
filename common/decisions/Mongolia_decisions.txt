@@ -11,21 +11,6 @@ MON_foreign_policy_decisions = {
 			tag = MON
 			is_subject = no
 			has_socialist_government = no
-			has_global_flag = northwest_conflict_ended
-			NOT = {
-				OR = {
-					AND = {
-						has_government = paternal_autocrat
-						has_country_flag = MON_russia_friends_flag
-					}
-					AND = {
-						has_government = paternal_autocrat
-						NOT = {
-							has_completed_focus = MON_look_at_russia_policy
-						}
-					}
-				}
-			}
 			TIB = {
 				has_socialist_government = no
 				is_subject = no
@@ -34,26 +19,17 @@ MON_foreign_policy_decisions = {
 
 		visible = {
 			tag = MON
-			is_subject = no
-			has_socialist_government = no
+			country_exists = TIB
 			has_global_flag = northwest_conflict_ended
 			NOT = {
-				OR = {
-					AND = {
-						has_government = paternal_autocrat
-						has_country_flag = MON_russia_friends_flag
-					}
-					AND = {
-						has_government = paternal_autocrat
-						NOT = {
-							has_completed_focus = MON_look_at_russia_policy
-						}
-					}
+				AND = {
+					has_government = paternal_autocrat
+					has_country_flag = MON_russia_friends_flag
 				}
-			}
-			TIB = {
-				has_socialist_government = no
-				is_subject = no
+				AND = {
+					has_government = paternal_autocrat
+					NOT = { has_completed_focus = MON_look_at_russia_policy }
+				}
 			}
 		}
 
@@ -86,18 +62,11 @@ MON_foreign_policy_decisions = {
 			tag = MON
 			has_war = no
 			is_subject = no
-			TIB = {
-				has_war_with = XSM
-			}
+			can_declare_war_on = XSM
 		}
 
 		visible = {
-			tag = MON
-			has_war = no
-			is_subject = no
-			TIB = {
-				has_war_with = XSM
-			}
+			TIB = { has_war_with = XSM }
 		}
 
 		fire_only_once = yes
@@ -128,13 +97,9 @@ MON_foreign_policy_decisions = {
 
 		available = {
 			is_subject = no
-			owns_state = 348
-			owns_state = 616
-			owns_state = 621
 		}
 
 		visible = {
-			is_subject = no
 			owns_state = 348
 			owns_state = 616
 			owns_state = 621
@@ -167,7 +132,6 @@ MON_foreign_policy_decisions = {
 		}
 	}
 	MON_intervene_in_jap_chi_war_decision = {
-
 		icon = generic_prepare_civil_war
 
 		allowed = {
@@ -175,109 +139,112 @@ MON_foreign_policy_decisions = {
 		}
 
 		available = {
-			has_war = no
-			is_subject = no
-			NOT = {
-				has_war_with = JAP
-			}
-			JAP = {
-				OR = {
-					has_war_with = FNG
-					has_war_with = QIE
-					has_war_with = GXC
-					has_war_with = YUN
-					has_war_with = CHI
-				}
-			}
+			can_declare_war_on = FROM
 		}
 
 		visible = {
-			has_war = no
 			is_subject = no
-			NOT = {
-				has_war_with = JAP
+			OR = {
+				is_in_faction = no
+				is_faction_leader = yes
 			}
 			JAP = {
-				OR = {
-					has_war_with = FNG
-					has_war_with = QIE
-					has_war_with = GXC
-					has_war_with = YUN
-					has_war_with = CHI
+				NOT = {
+					has_war_with = ROOT
+					has_global_flag = JAP_Fading_Sun
+				}
+			}
+			FROM = {
+				has_war_with = JAP
+				has_capitulated = no
+				is_neighbor_of = ROOT
+				NOT = { has_war_with = ROOT }
+			}
+		}
+
+		cancel_trigger = {
+			OR = {
+				NOT = { can_declare_war_on = FROM }
+				FROM = {
+					NOT = { has_war_with = JAP }
 				}
 			}
 		}
 
 		cost = 0
-
+		fire_only_once = no
 		days_remove = 15
 
 		war_with_target_on_remove = yes
+
+		target_array = global.china_tags_array
+		target_root_trigger = {
+			is_subject = no
+		}
+		target_trigger = {
+			can_declare_war_on = FROM
+			FROM = {
+				has_war_with = JAP
+				has_capitulated = no
+				is_neighbor_of = ROOT
+				NOT = { has_war_with = ROOT }
+			}
+		}
 
 		ai_will_do = {
 			factor = 50
 			modifier = {
 				factor = 0
-				is_in_faction_with = RUS
+				has_country_flag = imminent_war
+			}
+			modifier = {
+				factor = 0
+				has_war = yes
+				NOT = {
+					any_enemy_country = {
+						is_neighbor_of = ROOT
+						has_capitulated = no
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					NOT = {
+						any_owned_state = { is_claim_or_core_of_ROOT = yes }
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				JAP = { surrender_progress > 0.20 }
+			}
+			modifier = {
+				factor = 0
+				NOT = {
+					strength_ratio = { tag = FROM ratio > 1.0 }
+					FROM = { surrender_progress > 0.20 }
+					FROM = {
+						is_in_faction = yes
+						strength_ratio = { tag = ROOT ratio < 2.50 }
+						faction_leader = { surrender_progress > 0.20 }
+					}
+				}
 			}
 		}
 
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision MON_intervene_in_jap_chi_war_decision target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 16 value = 1 }
+			FROM = { country_event = kr.political.30 } #warning event
+			setup_decision_attack_AI = yes
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove MON_intervene_in_jap_chi_war_decision"
-			if = {
-				limit = {
-					JAP = {
-						has_war_with = FNG
-					}
-				}
-				declare_war_on = {
-					target = FNG
-					type = annex_everything
-				}
-			}
-			if = {
-				limit = {
-					JAP = {
-						has_war_with = QIE
-					}
-				}
-				declare_war_on = {
-					target = QIE
-					type = annex_everything
-				}
-			}
-			if = {
-				limit = {
-					JAP = {
-						has_war_with = GXC
-					}
-				}
-				declare_war_on = {
-					target = GXC
-					type = annex_everything
-				}
-			}
-			if = {
-				limit = {
-					JAP = {
-						has_war_with = YUN
-					}
-				}
-				declare_war_on = {
-					target = YUN
-					type = annex_everything
-				}
-			}
-			if = {
-				limit = {
-					JAP = {
-						has_war_with = CHI
-					}
-				}
-				declare_war_on = {
-					target = CHI
-					type = annex_everything
-				}
+			clear_decision_attack_AI = yes
+			declare_war_on = {
+				target = FROM
+				type = annex_everything
 			}
 		}
 	}
@@ -291,12 +258,12 @@ MON_western_rebellion_decisions = {
 			original_tag = MON
 		}
 
+		fire_only_once = no
 		days_remove = 20
-
 		cost = 25
 
 		ai_will_do = {
-			factor = 25
+			factor = 100
 		}
 
 		complete_effect = {
@@ -309,14 +276,29 @@ MON_western_rebellion_decisions = {
 	MON_the_offer_decision = {
 		icon = hol_exchange_intelligence_data
 
-		allowed = { original_tag = MON }
+		visible = {
+			MON_has_regular_govt = yes
+		}
 
 		cost = 0
-
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 20
+			factor = 50
+			modifier = {
+				factor = 0
+				MON_ruling_party_has_highest_pop = no
+			}
+			modifier = {
+				factor = 0
+				MON_ruling_party_has_highest_pop = yes
+				MON_any_group_within_5_pop = yes
+			}
+			modifier = {
+				factor = 2
+				MON_ruling_party_has_highest_pop = yes
+				MON_any_group_within_10_pop = no
+			}
 		}
 
 		complete_effect = {
@@ -332,9 +314,8 @@ MON_western_rebellion_decisions = {
 		}
 
 		visible = {
-			NOT = {
-				has_country_flag = MON_bandits_occupy_tuva
-			}
+			owns_state = 329
+			NOT = { has_country_flag = MON_bandits_occupy_tuva }
 		}
 
 		cost = 0
@@ -347,6 +328,10 @@ MON_western_rebellion_decisions = {
 
 		ai_will_do = {
 			factor = 20
+			modifier = {
+				factor = 0
+				has_stability < 0.25
+			}
 		}
 
 		complete_effect = {
@@ -364,6 +349,7 @@ MON_western_rebellion_decisions = {
 
 		visible = {
 			has_country_flag = MON_bandits_occupy_tuva
+			owns_state = 329
 		}
 
 		custom_cost_text = SZC_15_CP
@@ -378,7 +364,7 @@ MON_western_rebellion_decisions = {
 		}
 
 		ai_will_do = {
-			factor = 25
+			base = 25
 			modifier = {
 				add = ROOT.command_power
 			}
@@ -400,6 +386,7 @@ MON_western_rebellion_decisions = {
 		}
 
 		visible = {
+			owns_state = 1084
 			has_country_flag = MON_bandits_occupy_uliastai
 		}
 
@@ -415,7 +402,7 @@ MON_western_rebellion_decisions = {
 		}
 
 		ai_will_do = {
-			factor = 25
+			base = 25
 			modifier = {
 				add = ROOT.command_power
 			}
@@ -440,6 +427,10 @@ MON_chaos_in_capital_decisions = {
 			original_tag = MON
 		}
 
+		available = {
+			has_stability > 0
+		}
+
 		visible = {
 			has_government = paternal_autocrat
 		}
@@ -449,7 +440,7 @@ MON_chaos_in_capital_decisions = {
 		days_remove = 25
 
 		ai_will_do = {
-			factor = 25
+			factor = 50
 		}
 
 		complete_effect = {
@@ -468,9 +459,16 @@ MON_chaos_in_capital_decisions = {
 			original_tag = MON
 		}
 
+		available = {
+			has_stability > 0
+		}
+
 		visible = {
-			NOT = {
-				has_government = social_democrat
+			MON_has_regular_govt = yes
+			NOT = { has_government = social_democrat }
+			OR = {
+				check_variable = { ROOT.party_popularity@social_democrat > 0.05 }
+				check_variable = { ROOT.party_popularity@social_democrat > ROOT.party_popularity@ruling_party }
 			}
 		}
 
@@ -479,7 +477,23 @@ MON_chaos_in_capital_decisions = {
 		days_remove = 30
 
 		ai_will_do = {
-			factor = 5
+			factor = 10
+			modifier = {
+				factor = 0
+				MON_socdem_within_10_pop = no
+			}
+			modifier = {
+				factor = 5
+				MON_socdem_within_5_pop = yes
+			}
+			modifier = {
+				factor = 2
+				check_variable = {
+					var = ROOT.party_popularity@social_democrat
+					value = ROOT.party_popularity@ruling_party
+					compare = greater_than
+				}
+			}
 		}
 
 		complete_effect = {
@@ -499,8 +513,11 @@ MON_chaos_in_capital_decisions = {
 		}
 
 		visible = {
-			NOT = {
-				has_government = authoritarian_democrat
+			MON_has_regular_govt = yes
+			NOT = { has_government = authoritarian_democrat }
+			OR = {
+				check_variable = { ROOT.party_popularity@authoritarian_democrat > 0.05 }
+				check_variable = { ROOT.party_popularity@authoritarian_democrat > ROOT.party_popularity@ruling_party }
 			}
 		}
 
@@ -509,7 +526,23 @@ MON_chaos_in_capital_decisions = {
 		days_remove = 30
 
 		ai_will_do = {
-			factor = 5
+			factor = 10
+			modifier = {
+				factor = 0
+				MON_authdem_within_10_pop = no
+			}
+			modifier = {
+				factor = 5
+				MON_authdem_within_5_pop  = yes
+			}
+			modifier = {
+				factor = 2
+				check_variable = {
+					var = ROOT.party_popularity@authoritarian_democrat
+					value = ROOT.party_popularity@ruling_party
+					compare = greater_than
+				}
+			}
 		}
 
 		complete_effect = {
@@ -527,10 +560,13 @@ MON_chaos_in_capital_decisions = {
 			original_tag = MON
 		}
 
+		available = {
+			has_stability > 0
+		}
+
 		visible = {
-			NOT = {
-				has_government = social_democrat
-			}
+			MON_has_regular_govt = yes
+			NOT = { has_government = social_democrat }
 		}
 
 		cost = 15
@@ -538,7 +574,23 @@ MON_chaos_in_capital_decisions = {
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 5
+			factor = 10
+			modifier = {
+				factor = 0
+				MON_socdem_within_10_pop = no
+			}
+			modifier = {
+				factor = 5
+				MON_socdem_within_5_pop = yes
+			}
+			modifier = {
+				factor = 2
+				check_variable = {
+					var = ROOT.party_popularity@social_democrat
+					value = ROOT.party_popularity@ruling_party
+					compare = greater_than
+				}
+			}
 		}
 
 		complete_effect = {
@@ -562,15 +614,31 @@ MON_chaos_in_capital_decisions = {
 		}
 
 		visible = {
-			NOT = {
-				has_government = authoritarian_democrat
-			}
+			MON_has_regular_govt = yes
+			NOT = { has_government = authoritarian_democrat }
 		}
 
 		days_remove = 30
 
 		ai_will_do = {
-			factor = 5
+			factor = 10
+			modifier = {
+				factor = 0
+				has_political_power > 25
+			}
+			modifier = {
+				factor = 0
+				MON_ruling_party_has_highest_pop = yes
+				MON_any_group_within_5_pop = no
+			}
+			modifier = {
+				factor = 0
+				MON_authdem_within_10_pop = yes
+			}
+			modifier = {
+				factor = 5
+				MON_ruling_party_has_highest_pop = no
+			}
 		}
 
 		complete_effect = {
@@ -590,15 +658,31 @@ MON_chaos_in_capital_decisions = {
 		}
 
 		visible = {
-			NOT = {
-				has_government = national_populist
-			}
+			MON_has_regular_govt = yes
+			NOT = { has_government = national_populist }
 		}
 
 		days_remove = 30
 
 		ai_will_do = {
-			factor = 5
+			factor = 10
+			modifier = {
+				factor = 0
+				has_political_power > 25
+			}
+			modifier = {
+				factor = 0
+				MON_ruling_party_has_highest_pop = yes
+				MON_any_group_within_5_pop = no
+			}
+			modifier = {
+				factor = 0
+				MON_natpop_within_10_pop = yes
+			}
+			modifier = {
+				factor = 5
+				MON_ruling_party_has_highest_pop = no
+			}
 		}
 
 		complete_effect = {

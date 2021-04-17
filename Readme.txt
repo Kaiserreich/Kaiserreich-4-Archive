@@ -1,6 +1,6 @@
-###################################################
-### Kaiserreich Beta 0.16 - 'Hindsight is 2020' ###
-###################################################
+#####################################################
+### Kaiserreich Beta 0.16.1 - 'Hindsight is 2020' ###
+#####################################################
 
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
 This version is designed for Hearts of Iron IV version 1.10.3. It may work with later hot fixes but it isn't guaranteed.

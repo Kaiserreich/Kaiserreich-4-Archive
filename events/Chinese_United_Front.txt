@@ -74,6 +74,7 @@ country_event = { #A Call For Unity
 				NOT = { has_country_flag = ANQ_panasian_path }
 			}
 		}
+		set_global_flag = united_front_will_form
 		set_country_flag = united_front_member
 		hidden_effect = {
 			FROM.FROM = {
@@ -212,8 +213,16 @@ country_event = { #FROM Offers A Ceasefire
 			}
 		}
 		set_country_flag = united_front_member
+		set_country_flag = united_front_ceasefire_done
 		chinese_united_front_ceasefire = yes
-		FROM = {
+
+		### peace out any future UF members
+		every_enemy_country = {
+			limit = {
+				is_valid_peace_target = yes
+				is_possible_united_front_member = yes
+			}
+			white_peace_with_TARGET = yes
 			country_event = china_shared.7
 		}
 		if = {
@@ -266,26 +275,6 @@ country_event = { #FROM Accepts Ceasefire
 	desc = china_shared.7.d
 
 	is_triggered_only = yes
-
-	immediate = {
-		hidden_effect = {
-			### peace out FROM and ROOT
-			FROM = {
-				save_event_target_as = white_peace_receiver
-				white_peace_with_ROOT = yes
-
-
-				### peace out any future UF members
-				every_enemy_country = {
-					limit = {
-						is_valid_peace_target = yes
-						has_country_flag = united_front_member
-					}
-					white_peace_with_TARGET = yes
-				}
-			}
-		}
-	}
 
 	option = {
 		name = china_shared.7.a
@@ -387,7 +376,7 @@ country_event = { #The United Front Collapses
 		has_global_flag = chinese_united_front_formed
 		NOT = {
 			any_allied_country = {
-				NOT = { has_country_flag = original_front_faction_member }
+				NOT = { has_country_flag = original_faction_leader }
 			}
 		}
 	}
@@ -900,5 +889,85 @@ country_event = { #Ally Returns Home
 	option = {
 		name = china_redoubt.6.a
 		end_exile = FROM
+	}
+}
+
+country_event = { #Chinese requests equipment
+	id = china_redoubt.7
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_redoubt.7" }
+	title = china_redoubt.7.t
+	desc = china_redoubt.7.d
+
+	is_triggered_only = yes
+
+	option = {
+		name = china_redoubt.7.a
+		ai_chance = {
+			base = 75
+			modifier = {
+				factor = 0
+				stockpile_ratio = { archetype = var:FROM.china_requested_equipment ratio < 1.3 }
+			}
+		}
+		FROM = {
+			country_event = { id = china_redoubt.8 days = 3 }
+		}
+		effect_tooltip = {
+			send_equipment = {
+				type = var:FROM.china_requested_equipment
+				amount = var:FROM.china_requested_quantity
+				target = FROM
+			}
+		}
+	}
+
+	option = {
+		name = china_redoubt.7.b
+		ai_chance = {
+			base = 25
+		}
+		FROM = {
+			country_event = { id = china_redoubt.9 days = 3 }
+		}
+	}
+}
+
+country_event = { #Country sends equipment
+	id = china_redoubt.8
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_redoubt.8" }
+	title = china_redoubt.8.t
+	desc = china_redoubt.8.d
+
+	is_triggered_only = yes
+
+	option = {
+		name = china_redoubt.8.a
+		clr_country_flag = china_awaiting_request
+		FROM = {
+			send_equipment = {
+				type = var:ROOT.china_requested_equipment
+				amount = var:ROOT.china_requested_quantity
+				target = ROOT
+			}
+		}
+		clear_variable = ROOT.china_requested_equipment
+		clear_variable = ROOT.china_requested_quantity
+	}
+}
+
+country_event = { #Country refuses equipment
+	id = china_redoubt.9
+	immediate = { log = "[GetDateText]: [Root.GetName]: event china_redoubt.9" }
+	title = china_redoubt.9.t
+	desc = china_redoubt.9.d
+
+	is_triggered_only = yes
+
+	option = {
+		name = china_redoubt.9.a
+		clr_country_flag = china_awaiting_request
+		set_country_flag = { flag = china_request_refused_@FROM days = 180 value = 1 }
+		clear_variable = ROOT.china_requested_equipment
+		clear_variable = ROOT.china_requested_quantity
 	}
 }
