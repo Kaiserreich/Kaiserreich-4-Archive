@@ -193,7 +193,7 @@ on_actions = {
 			}
 			452 = { #Mersa Matruh - This shouldn't do anything as this is always an Egypt core but consistency is key
 				add_dynamic_modifier = { modifier = lba_senussi_zawiya_modifier }
-			}		
+			}
 		}
 	}
 
@@ -221,7 +221,10 @@ on_actions = {
 				}
 				set_country_flag = NFA_rebirth_array_created
 				every_owned_state = {
-					limit = { is_core_of = FRA }
+					limit = {
+						is_core_of = FRA
+						is_european_france = yes
+					}
 					add_to_array = { ROOT.rebirth_coring_states_array = THIS }
 				}
 			}
@@ -353,30 +356,53 @@ on_actions = {
 			}
 		}
 	}
-	
+
 	#ROOT is new controller #FROM is old controller #FROM.FROM is state ID
 	on_state_control_changed = {
 		effect = {
 			# Set up rebirth array (failsafe)
 			if = {
-				limit = {
-					tag = NFA
-					NOT = { has_country_flag = NFA_rebirth_array_created }
-					FROM.FROM = {
-						OR = {
-							state = 16 #Paris
-							state = 21 #Provence
+				limit = { tag = NFA }
+				if = {
+					limit = {
+						NOT = { has_country_flag = NFA_rebirth_array_created }
+						FROM.FROM = {
+							OR = {
+								state = 16 #Paris
+								state = 21 #Provence
+							}
+							is_owned_by = ROOT
 						}
-						is_owned_by = ROOT
+					}
+					set_country_flag = NFA_rebirth_array_created
+					every_owned_state = {
+						limit = {
+							is_core_of = FRA
+							is_european_france = yes
+							NOT = { is_in_array = { ROOT.rebirth_coring_states_array = THIS } }
+						}
+						add_to_array = { ROOT.rebirth_coring_states_array = THIS }
 					}
 				}
-				set_country_flag = NFA_rebirth_array_created
-				every_owned_state = {
+				else_if = {
 					limit = {
-						is_core_of = FRA
-						NOT = { is_in_array = { ROOT.rebirth_coring_states_array = THIS } }
+						FROM.FROM = {
+							NOT = { is_owned_by = ROOT }
+							is_in_array = { ROOT.rebirth_coring_states_array = THIS }
+						}
+						is_in_array = { ROOT.rebirth_coring_states_array = FROM.FROM }
 					}
-					add_to_array = { ROOT.rebirth_coring_states_array = THIS }
+					remove_from_array = { ROOT.rebirth_coring_states_array = FROM.FROM }
+				}
+				else_if = {
+					limit = {
+						FROM.FROM = {
+							is_european_france = yes
+							is_owned_by = ROOT
+							NOT = { is_in_array = { ROOT.rebirth_coring_states_array = THIS } }
+						}
+					}
+					add_to_array = { ROOT.rebirth_coring_states_array = FROM.FROM }
 				}
 			}
 		}

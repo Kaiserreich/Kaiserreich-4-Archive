@@ -4252,6 +4252,11 @@ country_event = { # politics stuff - Germany is dead
 	}
 	option = { #Just give up to the Chinese
 		name = lec.101.c
+		trigger = {
+			NOT = {
+				controls_state = 613
+			}
+		}
 		ai_chance = {
 			base = 10
 		}
@@ -4362,6 +4367,24 @@ country_event = { # politics stuff - Germany is dead
 				}
 			}
 		}
+	}
+	option = {	#We are China now!
+		name = lec.131.f
+		trigger = {
+			controls_state = 613
+		}
+		ai_chance = {
+			base = 1000
+		}
+		set_politics = {
+			ruling_party = social_liberal
+			elections_allowed = no
+		}
+		add_popularity = {
+			ideology = social_liberal
+			popularity = 0.05
+		}
+		lec_chinese_rise = yes
 	}
 }
 
@@ -5649,7 +5672,7 @@ country_event = { #Japan falls
 		if = {
 			limit = { has_idea = LEC_supply_lines_idea }
 			remove_ideas = LEC_supply_lines_idea
-		}	
+		}
 		if = {
 			limit = { has_idea = LEC_TMKKD_idea }
 			remove_ideas = LEC_TMKKD_idea
@@ -5756,7 +5779,7 @@ country_event = { # politics stuff - Japan is dead
 		}
 	}
 	option = {	#Germans
-		name = lec.131.b
+		name = lec.131.c
 		trigger = {
 			GER = {
 				exists = yes
@@ -5801,6 +5824,13 @@ country_event = { # politics stuff - Japan is dead
 		name = lec.131.e
 		ai_chance = {
 			base = 10
+		}
+		trigger = {
+			613 = {
+				controller = {
+					is_chinese_tag = yes
+				}
+			}
 		}
 		custom_effect_tooltip = LEC_surrender_to_china
 		set_country_flag = LEC_dead_to_china
@@ -5910,6 +5940,25 @@ country_event = { # politics stuff - Japan is dead
 			}
 		}
 	}
+
+	option = {	#We are China now!
+		name = lec.131.f
+		trigger = {
+			controls_state = 613
+		}
+		ai_chance = {
+			base = 1000
+		}
+		set_politics = {
+			ruling_party = social_liberal
+			elections_allowed = no
+		}
+		add_popularity = {
+			ideology = social_liberal
+			popularity = 0.05
+		}
+		lec_chinese_rise = yes
+	}
 }
 
 country_event = { #The Americans return
@@ -6010,6 +6059,187 @@ country_event = { #The LEC was ended
 		name = lec.137.a
 		add_political_power = -5
 		set_country_flag = LEC_dead_clumsy_coding
+		if = {
+			limit = { is_in_array = { global.LEC_voters = ROOT } }
+			remove_from_array = { global.LEC_voters = ROOT }
+		}
+		if = {
+			limit = { has_country_flag = legation_council_member }
+			clr_country_flag = legation_council_member
+		}
+		if = {
+			limit = { has_country_flag = legation_council_vote }
+			clr_country_flag = legation_council_vote
+		}
+		if = {
+			limit = { has_idea = LEC_generic_open_door }
+			remove_ideas = { LEC_generic_open_door }
+		}
+		if = {
+			limit = { has_idea = LEC_better_open_door }
+			remove_ideas = { LEC_better_open_door }
+		}
+		if = {
+			limit = { has_idea = LEC_USA_open_door }
+			remove_ideas = { LEC_USA_open_door }
+		}
+		if = {
+			limit = { has_idea = LEC_GER_open_door }
+			remove_ideas = { LEC_GER_open_door }
+		}
+	}
+}
+
+country_event = { #Conscription vote
+	id = lec.138
+	immediate = { log = "[GetDateText]: [Root.GetName]: event lec.138" }
+	title = lec.138.t
+	desc = lec.138.d
+	fire_only_once = yes
+	picture = GFX_report_event_JAP_parade_shanghai
+	is_triggered_only = yes
+	option = {	#Of course!
+		name = lec.138.a
+		set_global_flag = legation_vote_ongoing
+		every_country = {
+			limit = {
+				OR = {
+					tag = LEC
+					has_country_flag = legation_council_vote
+					has_country_flag = legation_council_member
+				}
+			}
+			activate_mission = LEC_vote_timer
+		}
+		country_event = {
+			id = lec.140
+			days = 15
+		}
+		for_each_scope_loop = {
+			array = global.LEC_voters
+			THIS = {
+				country_event = lec.139
+			}
+		}
+	}
+}
+
+country_event = { #Legation conscription? - voting
+	id = lec.139
+	immediate = { log = "[GetDateText]: [Root.GetName]: event lec.139" }
+	title = lec.139.t
+	desc = lec.139.d
+	picture = GFX_report_event_JAP_parade_shanghai
+	is_triggered_only = yes
+	option = {	#Time to vote
+		name = lec.139.a
+	}
+}
+
+country_event = { #Legation conscription? - Result
+	id = lec.140
+	immediate = { log = "[GetDateText]: [Root.GetName]: event lec.140" }
+	title = lec.140.t
+	desc = lec.140.d
+	fire_only_once = yes
+	picture = GFX_report_event_TIB_army_2
+	is_triggered_only = yes
+	option = {	#Approved!
+		name = lec.140.a
+		clr_country_flag = cannot_have_conscription
+		set_country_flag = cannot_have_extensive_conscription
+		clear_variable = global.legations_yes_votes
+		clear_variable = global.legations_no_votes
+		clear_variable = global.legations_abstain_votes
+		clr_global_flag = LEC_conscription_vote
+		clr_global_flag = legation_vote_ongoing
+		add_ideas = limited_conscription
+		for_each_scope_loop = {
+			array = global.LEC_voters
+			THIS = {
+				if = {
+					limit = {
+						has_country_flag = LEC_we_voted_this_time
+					}
+					clr_country_flag = LEC_we_voted_this_time
+				}
+			}
+		}
+
+		for_each_scope_loop = {
+			array = global.LEC_voters
+			THIS = {
+				country_event = lec.141
+			}
+		}
+
+		trigger = {
+			check_variable = { global.legations_yes_votes > global.legations_no_votes }
+			check_variable = { global.legations_yes_votes > 0 }
+		}
+	}
+	option = {	#Denied!
+		name = lec.140.b
+		add_political_power = -75
+		clear_variable = global.legations_yes_votes
+		clear_variable = global.legations_no_votes
+		clear_variable = global.legations_abstain_votes
+		clr_global_flag = LEC_conscription_vote
+		clr_global_flag = legation_vote_ongoing
+		for_each_scope_loop = {
+			array = global.LEC_voters
+			THIS = {
+				if = {
+					limit = {
+						has_country_flag = LEC_we_voted_this_time
+					}
+					clr_country_flag = LEC_we_voted_this_time
+				}
+			}
+		}
+		for_each_scope_loop = {
+			array = global.LEC_voters
+			THIS = {
+				country_event = lec.27
+			}
+		}
+		trigger = {
+			NOT = {
+				check_variable = { global.legations_yes_votes > global.legations_no_votes }
+			}
+		}
+	}
+}
+
+country_event = { #The expats protest
+	id = lec.141
+	immediate = { log = "[GetDateText]: [Root.GetName]: event lec.141" }
+	title = lec.141.t
+	desc = lec.141.d
+	picture = GFX_report_event_AST_protest2
+	is_triggered_only = yes
+	option = {	#too bad
+		name = lec.141.a
+		add_political_power = -15
+	}
+}
+
+country_event = { #At war with LEC
+	id = lec.142
+	immediate = { log = "[GetDateText]: [Root.GetName]: event lec.142" }
+	title = lec.142.t
+	desc = lec.142.d
+	picture = GFX_report_event_generic_diplomacy4
+	trigger = {
+		OR = {
+			has_country_flag = legation_council_member
+			has_country_flag = legation_council_vote
+		}
+	}
+	is_triggered_only = yes
+	option = {	#ehhh whatever
+		name = lec.142.a
+		add_political_power = -5
 		if = {
 			limit = { is_in_array = { global.LEC_voters = ROOT } }
 			remove_from_array = { global.LEC_voters = ROOT }
@@ -9654,6 +9884,10 @@ country_event = { #Vote on American Vote Restoration?
 		name = lecyankded.23.c
 		ai_chance = {
 			base = 5
+			modifier = {
+				factor = 0
+				has_government = market_liberal
+			}
 		}
 		add_political_power = -25
 		for_each_scope_loop = {
