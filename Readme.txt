@@ -1,6 +1,6 @@
-#######################################################
-### Kaiserreich Beta 0.17 - 'Springtime for Kaiser' ###
-#######################################################
+###############################
+### Kaiserreich Beta 0.17.1 ###
+###############################
 
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
 This version is designed for Hearts of Iron IV version 1.10.

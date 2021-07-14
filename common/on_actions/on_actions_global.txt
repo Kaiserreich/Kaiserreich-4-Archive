@@ -296,16 +296,22 @@ on_actions = {
 				}
 			}
 
-			#resource logging
-			#log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];oil;[?resource_consumed@oil];[?resource_produced@oil];[?resource_exported@oil];[?resource_imported@oil];[?resource@oil]"
-			#log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];aluminium;[?resource_consumed@aluminium];[?resource_produced@aluminium];[?resource_exported@aluminium];[?resource_imported@aluminium];[?resource@aluminium]"
-			#log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];rubber;[?resource_consumed@rubber];[?resource_produced@rubber];[?resource_exported@rubber];[?resource_imported@rubber];[?resource@rubber]"
-			#log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];tungsten;[?resource_consumed@tungsten];[?resource_produced@tungsten];[?resource_exported@tungsten];[?resource_imported@tungsten];[?resource@tungsten]"
-			#log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];steel;[?resource_consumed@steel];[?resource_produced@steel];[?resource_exported@steel];[?resource_imported@steel];[?resource@steel]"
-			#log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];chromium;[?resource_consumed@chromium];[?resource_produced@chromium];[?resource_exported@chromium];[?resource_imported@chromium];[?resource@chromium]"
+			if = {
+				limit = { is_debug = yes }				
+				#resource logging
+				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];oil;[?resource_consumed@oil];[?resource_produced@oil];[?resource_exported@oil];[?resource_imported@oil];[?resource@oil]"
+				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];aluminium;[?resource_consumed@aluminium];[?resource_produced@aluminium];[?resource_exported@aluminium];[?resource_imported@aluminium];[?resource@aluminium]"
+				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];rubber;[?resource_consumed@rubber];[?resource_produced@rubber];[?resource_exported@rubber];[?resource_imported@rubber];[?resource@rubber]"
+				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];tungsten;[?resource_consumed@tungsten];[?resource_produced@tungsten];[?resource_exported@tungsten];[?resource_imported@tungsten];[?resource@tungsten]"
+				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];steel;[?resource_consumed@steel];[?resource_produced@steel];[?resource_exported@steel];[?resource_imported@steel];[?resource@steel]"
+				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];chromium;[?resource_consumed@chromium];[?resource_produced@chromium];[?resource_exported@chromium];[?resource_imported@chromium];[?resource@chromium]"
 
-			#economy logging
-			#log = "KR_Economy_Metrics;[GetDateText];[Root.GetTag];[?num_of_available_civilian_factories];[?num_of_available_military_factories];[?num_of_available_naval_factories];[?num_of_civilian_factories];[?num_of_military_factories];[?num_of_naval_factories];[?num_of_factories]"
+				#economy logging
+				log = "KR_Economy_Metrics;[GetDateText];[Root.GetTag];[?num_of_available_civilian_factories];[?num_of_available_military_factories];[?num_of_available_naval_factories];[?num_of_civilian_factories];[?num_of_military_factories];[?num_of_naval_factories];[?num_of_factories]"
+
+				#unit limits logging
+				log = "KR_Unit_Limit_Metrics;[GetDateText];[Root.GetTag];[?num_actual_divisions];[?max_divisions]"
+			}
 		}
 	}
 
@@ -626,6 +632,11 @@ on_actions = {
 				limit = {
 					is_ai = no
 					OR = {
+						#Japanese Treaty Territories
+						FROM = {
+							original_tag = JAP
+							NOT = { tag = JAP }
+						}
 						#Siam
 						AND = {
 							tag = SIA
@@ -1111,19 +1122,51 @@ on_actions = {
 		}
 	}
 
-	on_army_leader_daily = {}
+	# From is owner country
+	on_army_leader_daily = {
+		effect = {
+			if = {
+				limit = {
+					check_variable = { random < 0.02 }
+					NOT = {
+						has_trait = sick
+						has_unit_leader_flag = recently_sick
+					}
+					set_temp_variable = { temp = sum_unit_terrain_modifier@sickness_chance }
+					divide_temp_variable = { temp = num_units }
+					check_variable = { temp > 0.75 }
+				}
+				set_unit_leader_flag = { flag = recently_sick value = 1 days = 180 }
+				add_timed_unit_leader_trait = {
+					trait = sick
+					days = 30
+				}
+				unit_leader_event = unit_leader.1
+			}
+		}
+	}
 
 	# From is owner country
 	on_army_leader_won_combat = {
 		effect = {
 			if = {
 				limit = {
-					NOT = { has_unit_leader_flag = recent_leader_event }
-					check_variable = { random < 0.05 }
+					NOT = {
+						has_trait = wounded
+						has_unit_leader_flag = recently_wounded
+					}
+					set_temp_variable = { chance = 0.001 }
+					set_temp_variable = { factor = 1 }
+					add_to_temp_variable = { factor = leader_modifier@wounded_chance_factor } 
+					multiply_temp_variable = { chance = factor }
+					check_variable = { random < chance }
 				}
-				log = "[GetDateText] [Root.GetName] on_army_leader_won_combat FROM = [From.GetName]"
-				set_unit_leader_flag = unit_leader_event
-				unit_leader_event = { id = unit_leader.10 }
+				set_unit_leader_flag = { flag = recently_wounded value = 1 days = 360 }
+				add_timed_unit_leader_trait = {
+					trait = wounded
+					days = 90
+				}
+				unit_leader_event = unit_leader.2
 			}
 		}
 	}
@@ -1133,12 +1176,22 @@ on_actions = {
 		effect = {
 			if = {
 				limit = {
-					NOT = { has_unit_leader_flag = recent_leader_event }
-					check_variable = { random < 0.06 }
+					NOT = {
+						has_trait = wounded
+						has_unit_leader_flag = recently_wounded
+					}
+					set_temp_variable = { chance = 0.005 }
+					set_temp_variable = { factor = 1 }
+					add_to_temp_variable = { factor = leader_modifier@wounded_chance_factor } 
+					multiply_temp_variable = { chance = factor }
+					check_variable = { random < chance }
 				}
-				log = "[GetDateText] [Root.GetName] on_army_leader_lost_combat FROM = [From.GetName]"
-				set_unit_leader_flag = unit_leader_event
-				unit_leader_event = { id = unit_leader.10 }
+				set_unit_leader_flag = { flag = recently_wounded value = 1 days = 360 }
+				add_timed_unit_leader_trait = {
+					trait = wounded
+					days = 90
+				}
+				unit_leader_event = unit_leader.2
 			}
 		}
 	}
