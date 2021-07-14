@@ -3,7 +3,7 @@
 # we're also including a number of tags which should act like majors even if they're not in that category
 is_actual_major = {
 	custom_trigger_tooltip = {
-		tooltip = is_actual_major_tt
+		tooltip = is_actual_major
 		is_major = yes
 
 		# rank the majors according to their num_of_factories
@@ -46,70 +46,49 @@ is_actual_major = {
 			tag = CSA
 			tag = TEX
 			tag = PSA
-			AND = {
-				tag = CAN
-				is_faction_leader = yes
-			}
+			tag = ENT
+		}
+	}
+}
+
+is_actual_major_without_exceptions = {
+	custom_trigger_tooltip = {
+		tooltip = is_actual_major_without_exceptions
+		is_major = yes
+
+		# rank the majors according to their num_of_factories
+		clear_temp_array = global.actual_majors
+		get_sorted_scored_countries_temp = {
+			scorer = actual_majors_score
+			array = global.actual_majors
+		}
+
+		# limit that ranking to the top 7
+		resize_temp_array = { global.actual_majors = 7 }
+
+		# now figure out what 70% of the average of those 7 is, with a minimum of 35
+		set_temp_variable = { global.factory_average = 0 }
+		all_of_scopes = {
+			array = global.actual_majors
+			add_to_temp_variable = { global.factory_average = THIS.num_of_factories }
+		}
+		divide_temp_variable = { global.factory_average = 7 }
+		multiply_temp_variable = { global.factory_average = 0.7 }
+		clamp_temp_variable = { var = global.factory_average min = 35 }
+
+		OR = {
+			# is actually in the top 7
+			is_in_array = { global.actual_majors = THIS }
+			# has more than 70% of the average of the top 7
+			check_variable = { num_of_factories > global.factory_average }
+			# is in the list of "always acts like a major" countries
 		}
 	}
 }
 
 # checks whether the country in scope has the same government as ROOT (the country running the event/focus)
 has_same_government_as_ROOT = {
-	OR = {
-		AND = {
-			has_government = totalist
-			ROOT = { has_government = totalist }
-		}
-		AND = {
-			has_government = syndicalist
-			ROOT = { has_government = syndicalist }
-		}
-		AND = {
-			has_government = radical_socialist
-			ROOT = { has_government = radical_socialist }
-		}
-		AND = {
-			has_government = social_democrat
-			has_country_flag = soc_dems_are_socialists
-			ROOT = {
-				has_government = social_democrat
-				has_country_flag = soc_dems_are_socialists
-			}
-		}
-		AND = {
-			has_government = social_democrat
-			NOT = { has_country_flag = soc_dems_are_socialists }
-			ROOT = {
-				has_government = social_democrat
-				NOT = { has_country_flag = soc_dems_are_socialists }
-			}
-		}
-		AND = {
-			has_government = social_liberal
-			ROOT = { has_government = social_liberal }
-		}
-		AND = {
-			has_government = market_liberal
-			ROOT = { has_government = market_liberal }
-		}
-		AND = {
-			has_government = social_conservative
-			ROOT = { has_government = social_conservative }
-		}
-		AND = {
-			has_government = authoritarian_democrat
-			ROOT = { has_government = authoritarian_democrat }
-		}
-		AND = {
-			has_government = paternal_autocrat
-			ROOT = { has_government = paternal_autocrat }
-		}
-		AND = {
-			has_government = national_populist
-			ROOT = { has_government = national_populist }
-		}
-	}
+	has_government = var:ROOT.current_party_ideology_group
 }
 
 # checks for these three government types for the country in scope
@@ -120,10 +99,6 @@ has_socialist_government = {
 			has_government = totalist
 			has_government = syndicalist
 			has_government = radical_socialist
-			AND = {
-				has_government = social_democrat
-				has_country_flag = soc_dems_are_socialists
-			}
 		}
 	}
 }
@@ -133,10 +108,7 @@ has_elected_government = {
 	custom_trigger_tooltip = {
 		tooltip = KR_is_elected
 		OR = {
-			AND = {
-				has_government = social_democrat
-				NOT = { has_country_flag = soc_dems_are_socialists }
-			}
+			has_government = social_democrat
 			has_government = social_liberal
 			has_government = market_liberal
 			has_government = social_conservative
@@ -149,10 +121,7 @@ has_democratic_government = {
 	custom_trigger_tooltip = {
 		tooltip = KR_is_democratic
 		OR = {
-			AND = {
-				has_government = social_democrat
-				NOT = { has_country_flag = soc_dems_are_socialists }
-			}
+			has_government = social_democrat
 			has_government = social_liberal
 			has_government = market_liberal
 			has_government = social_conservative
@@ -199,10 +168,7 @@ has_left_democratic_government = {
 		tooltip = KR_left_wing_democracy
 		OR = {
 			has_government = social_liberal
-			AND = {
-				has_government = social_democrat
-				NOT = { has_country_flag = soc_dems_are_socialists }
-			}
+			has_government = social_democrat
 		}
 	}
 }
@@ -261,12 +227,7 @@ is_ally_of_ROOT = {
 	custom_trigger_tooltip = {
 		tooltip = KR_is_an_ally
 		NOT = { tag = ROOT }
-		exists = yes
-		OR = {
-			is_in_faction_with = ROOT
-			is_subject_of = ROOT
-			ROOT = { is_subject_of = PREV }
-		}
+		is_ally_with = ROOT
 	}
 }
 
@@ -274,12 +235,7 @@ is_ally_of_PREV = {
 	custom_trigger_tooltip = {
 		tooltip = KR_is_an_ally
 		NOT = { tag = PREV }
-		exists = yes
-		OR = {
-			is_in_faction_with = PREV
-			is_subject_of = PREV
-			PREV = { is_subject_of = PREV }
-		}
+		is_ally_with = PREV
 	}
 }
 
@@ -426,11 +382,11 @@ has_coalition = {
 	has_variable = coalition_partners^num
 }
 
-# requires a temp variable coalition_partner_to_check
-has_coalition_with = {
+# requires a temp variable coalition_target
+has_coalition_with_target = {
 	custom_trigger_tooltip = {
-		tooltip = has_coalition_with
-		is_in_array = { coalition_partners = coalition_partner_to_check }
+		tooltip = has_coalition_with_target
+		is_in_array = { coalition_partners = coalition_target }
 	}
 }
 
@@ -449,3 +405,67 @@ is_valid_state_for_development = {
 		has_state_category = zero_island
 	}
 }
+
+prefer_home_area_states_unless_filled = {
+	OR = {
+		is_in_home_area = yes
+		NOT = {
+			owner = {
+				any_owned_state = {
+					free_building_slots = {
+						building = industrial_complex
+						size > 0
+						include_locked = yes
+					}
+					is_in_home_area = yes
+				}
+			}
+		}
+	}
+}
+
+prefer_home_area_states_unless_filled_infrastructure = {
+	OR = {
+		is_in_home_area = yes
+		NOT = {
+			owner = {
+				any_owned_state = {
+					is_in_home_area = yes
+					infrastructure < 10
+				}
+			}
+		}
+	}
+}
+
+prefer_home_area_states_unless_filled_dockyard = {
+	OR = {
+		is_in_home_area = yes
+		NOT = {
+			owner = {
+				any_owned_state = {
+					free_building_slots = {
+						building = dockyard
+						size > 0
+						include_locked = yes
+					}
+					is_in_home_area = yes
+				}
+			}
+		}
+	}
+}
+
+has_returned_all_expeditionary_forces_of_puppets = {
+	if = {
+		limit = { num_subjects > 0 }
+		custom_trigger_tooltip = {
+			tooltip = returned_all_expeditionary_forces_of_puppets
+			all_of_scopes = {
+				array = subjects
+				ROOT = { received_expeditionary_forces = { sender = PREV value < 1 } }
+			}
+		}
+	}
+}
+

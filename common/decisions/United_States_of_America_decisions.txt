@@ -430,14 +430,14 @@ USA_new_monroe_doctrine = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_attack_canada"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_attack_canada target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 35 value = 1 }
 			FROM = { country_event = kr.political.30 } #warning event
 			setup_decision_attack_AI = yes
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_attack_canada"
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_attack_canada target: [From.GetName]"
 			clear_decision_attack_AI = yes
 			declare_war_on = {
 				type = annex_everything
@@ -523,14 +523,14 @@ USA_new_monroe_doctrine = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_attack_mexico"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_attack_mexico target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 35 value = 1 }
 			FROM = { country_event = kr.political.30 } #warning event
 			setup_decision_attack_AI = yes
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_attack_mexico"
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_attack_mexico target: [From.GetName]"
 			clear_decision_attack_AI = yes
 			declare_war_on = {
 				type = annex_everything
@@ -616,14 +616,14 @@ USA_new_monroe_doctrine = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_attack_phillipines"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_attack_phillipines target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 35 value = 1 }
 			FROM = { country_event = kr.political.30 } #warning event
 			setup_decision_attack_AI = yes
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_attack_phillipines"
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_attack_phillipines target: [From.GetName]"
 			clear_decision_attack_AI = yes
 			declare_war_on = {
 				type = annex_everything
@@ -1318,14 +1318,10 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 		}
 		available = {
 			is_subject = no
-			HAW = {
-				is_subject = no
-				is_in_faction = no
-			}
 			797 = { is_owned_and_controlled_by = ROOT } #San Francisco
 		}
 		visible = {
-			can_declare_war_on = HAW
+			country_exists = FROM
 			has_global_flag = USA_civil_war_over_flag
 			NOT = {
 				count_triggers = {
@@ -1338,21 +1334,132 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 			}
 			if = {
 				limit = { tag = CSA }
-				HAW = { has_socialist_government = no }
+				FROM = { has_socialist_government = no }
 			}
 		}
-		fire_only_once = yes
+
+		cancel_trigger = {
+			NOT = { country_exists = FROM }
+		}
+
 		cost = 80
+		days_remove = 25
+		fire_only_once = yes
+		war_with_target_on_remove = yes
+
+		targets = { HAW }
+		target_root_trigger = { has_global_flag = USA_civil_war_over_flag }
+
 		ai_will_do = {
-			factor = 2
+			factor = 200
 			modifier = {
 				factor = 0
-				has_war = yes
+				FROM = { is_in_faction = yes }
+				OR = {
+					has_country_flag = imminent_war
+					enemies_strength_ratio > 0.5
+					surrender_progress > 0
+					strength_ratio = { tag = FROM ratio < 1.2 }
+					FROM = {
+						is_in_faction = yes
+						faction_leader = {
+							OR = {
+								strength_ratio = { tag = ROOT ratio > 0.7 }
+								naval_strength_comparison = {
+									other = ROOT
+									ratio > 1
+									sub_unit_def_weights = {
+										submarine = 0.2
+										destroyer = 0.25
+										light_cruiser = 0.5
+										heavy_cruiser = 0.6
+										battle_cruiser = 0.8
+										battleship = 1
+										carrier = 1.25
+									}
+								}
+							}
+							OR = {
+								enemies_strength_ratio < 0.3
+								surrender_progress < 0.20
+							}
+						}
+					}
+					FROM = {
+						is_subject = yes
+						overlord = {
+							OR = {
+								strength_ratio = { tag = ROOT ratio > 0.7 }
+								naval_strength_comparison = {
+									other = ROOT
+									ratio > 1
+									sub_unit_def_weights = {
+										submarine = 0.2
+										destroyer = 0.25
+										light_cruiser = 0.5
+										heavy_cruiser = 0.6
+										battle_cruiser = 0.8
+										battleship = 1
+										carrier = 1.25
+									}
+								}
+							}
+							OR = {
+								enemies_strength_ratio < 0.3
+								surrender_progress < 0.20
+							}
+						}
+					}
+				}
 			}
 		}
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled USA_reclaim_hawaii_decision target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_reclaim_hawaii_decision"
-			HAW = {	country_event = ustates.276 }
+			log = "[GetDateText]: [Root.GetName]: Decision USA_reclaim_hawaii_decision target: [From.GetName]"
+			if = {
+				limit = {
+					HAW = {
+						OR = {
+							is_subject = yes
+							AND = {
+								is_in_faction = no
+								NOT = { is_in_faction_with = ROOT }
+							}
+						}
+					}
+				}
+				set_country_flag = { flag = imminent_war days = 35 value = 1 }
+				FROM = { country_event = kr.political.30 } #warning event
+				setup_decision_attack_AI = yes
+			}
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_reclaim_hawaii_decision target: [From.GetName]"
+			if = {
+				limit = {
+					HAW = {
+						is_subject = no
+						OR = {
+							is_in_faction = no
+							is_in_faction_with = ROOT
+						}
+					}
+				}
+				HAW = {	country_event = ustates.276 }
+			}
+			else = {
+				clear_decision_attack_AI = yes
+				declare_war_on = {
+					target = HAW
+					type = annex_everything
+				}
+			}
 		}
 	}
 
@@ -1445,7 +1552,7 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 			if = {
 				limit = { has_country_flag = ACW_denver_made_capital }
 				clr_country_flag = ACW_denver_made_capital
-				set_victory_points = { province = 1827 value = 15 }
+				set_victory_points = { province = 1827 value = 20 }
 			}
 		}
 	}
@@ -1499,7 +1606,11 @@ USA_rainbow_war_plans_decisions = {
 			modifier = {
 				factor = 0
 				FROM = {
-					any_owned_state = { is_claim_or_core_of_ROOT = yes }
+					any_owned_state = {
+						is_claim_or_core_of_ROOT = yes
+						is_mainland_america = yes
+						is_new_england = no
+					}
 				}
 			}
 			modifier = {
@@ -1765,14 +1876,14 @@ USA_rainbow_war_plans_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_war_plan_orange"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_war_plan_orange target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 35 value = 1 }
 			FROM = { country_event = kr.political.30 } #warning event
 			setup_decision_attack_AI = yes
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_war_plan_orange"
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_war_plan_orange target: [From.GetName]"
 			clear_decision_attack_AI = yes
 			declare_war_on = {
 				type = annex_everything
@@ -1790,6 +1901,7 @@ USA_rainbow_war_plans_decisions = {
 				tag = TEX
 			}
 		}
+
 		available = {
 			is_subject = no
 			if = {
@@ -1903,14 +2015,14 @@ USA_rainbow_war_plans_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_war_plan_gold"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_war_plan_gold target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 35 value = 1 }
 			FROM = { country_event = kr.political.30 } #warning event
 			setup_decision_attack_AI = yes
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_war_plan_gold"
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_war_plan_gold target: [From.GetName]"
 			clear_decision_attack_AI = yes
 			declare_war_on = {
 				type = annex_everything
@@ -1928,6 +2040,7 @@ USA_rainbow_war_plans_decisions = {
 				tag = TEX
 			}
 		}
+
 		available = {
 			is_subject = no
 			if = {
@@ -2033,14 +2146,14 @@ USA_rainbow_war_plans_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_war_plan_black"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_war_plan_black target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 35 value = 1 }
 			FROM = { country_event = kr.political.30 } #warning event
 			setup_decision_attack_AI = yes
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_war_plan_black"
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_war_plan_black target: [From.GetName]"
 			clear_decision_attack_AI = yes
 			declare_war_on = {
 				type = annex_everything
@@ -2169,14 +2282,14 @@ USA_rainbow_war_plans_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_war_plan_red"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_war_plan_red target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 35 value = 1 }
 			FROM = { country_event = kr.political.30 } #warning event
 			setup_decision_attack_AI = yes
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_war_plan_red"
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_war_plan_red target: [From.GetName]"
 			clear_decision_attack_AI = yes
 			declare_war_on = {
 				type = annex_everything
@@ -2194,6 +2307,7 @@ USA_rainbow_war_plans_decisions = {
 				tag = TEX
 			}
 		}
+
 		available = {
 			is_subject = no
 			if = {
@@ -2218,6 +2332,11 @@ USA_rainbow_war_plans_decisions = {
 					}
 				}
 			}
+		}
+
+		visible = {
+			can_declare_war_on = FROM
+			FROM = { is_faction_leader = yes }
 		}
 
 		targets = { RUS }
@@ -2289,14 +2408,14 @@ USA_rainbow_war_plans_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_war_plan_blue"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_war_plan_blue target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 35 value = 1 }
 			FROM = { country_event = kr.political.30 } #warning event
 			setup_decision_attack_AI = yes
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_war_plan_blue"
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_war_plan_blue target: [From.GetName]"
 			clear_decision_attack_AI = yes
 			declare_war_on = {
 				type = annex_everything
@@ -2347,10 +2466,11 @@ USA_rainbow_war_plans_decisions = {
 			}
 		}
 
+		target_array = global.majors
+		target_array = faction_members
 		target_root_trigger = {
 			has_country_flag = USA_work_with_allies_unlocked
 		}
-
 		target_trigger = {
 			FROM = {
 				has_socialist_government = no

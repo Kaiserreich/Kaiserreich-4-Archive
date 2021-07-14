@@ -15,6 +15,26 @@ MAF_collapse = {
 		news_event = { id = worldnews.120 days = 1 }
 	}
 
+	# The DKAEB railway goes away
+	268 = { #Djibouti
+		MAF_remove_DKAEB = yes
+	}
+	969 = { #Rift Valley
+		MAF_remove_DKAEB = yes
+	}
+	548 = { #Uganda
+		MAF_remove_DKAEB = yes
+	}
+	977 = { #Kivu
+		MAF_remove_DKAEB = yes
+	}
+	949 = { #Maniema
+		MAF_remove_DKAEB = yes
+	}
+	879 = { #Katanga
+		MAF_remove_DKAEB = yes
+	}
+
 	# First give away any owned states to their controller, if we're at war
 	every_owned_state = {
 		limit = { NOT = { is_controlled_by = MAF } }
@@ -80,7 +100,10 @@ MAF_collapse = {
 	if = {
 		limit = {
 			owns_state = 954
-			POR = { owns_state = 950 }
+			POR = {
+				owns_state = 950
+				surrender_progress < 0.5
+			}
 		}
 		POR = {
 			transfer_state = 954
@@ -90,7 +113,10 @@ MAF_collapse = {
 	if = {
 		limit = {
 			owns_state = 544
-			POR = { owns_state = 950 }
+			POR = {
+				owns_state = 950
+				surrender_progress < 0.5
+			}
 		}
 		POR = {
 			transfer_state = 544
@@ -100,7 +126,10 @@ MAF_collapse = {
 	if = {
 		limit = {
 			owns_state = 914
-			POR = { owns_state = 540 }
+			POR = {
+				owns_state = 540
+				surrender_progress < 0.5
+			}
 		}
 		POR = {
 			transfer_state = 914
@@ -110,7 +139,10 @@ MAF_collapse = {
 	if = {
 		limit = {
 			owns_state = 916
-			POR = { owns_state = 540 }
+			POR = {
+				owns_state = 540
+				surrender_progress < 0.5
+			}
 		}
 		POR = {
 			transfer_state = 916
@@ -120,7 +152,10 @@ MAF_collapse = {
 	if = {
 		limit = {
 			owns_state = 705
-			POR = { owns_state = 540 }
+			POR = {
+				owns_state = 540
+				surrender_progress < 0.5
+			}
 		}
 		POR = {
 			transfer_state = 705
@@ -130,7 +165,10 @@ MAF_collapse = {
 	if = {
 		limit = {
 			owns_state = 959
-			POR = { owns_state = 540 }
+			POR = {
+				owns_state = 540
+				surrender_progress < 0.5
+			}
 		}
 		POR = {
 			transfer_state = 959
@@ -142,7 +180,10 @@ MAF_collapse = {
 	if = {
 		limit = {
 			owns_state = 892
-			SOM = { owns_state = 559 }
+			SOM = {
+				owns_state = 559
+				surrender_progress < 0.5
+			}
 		}
 		SOM = {
 			transfer_state = 892
@@ -155,8 +196,9 @@ MAF_collapse = {
 		limit = {
 			owns_state = 807
 			LIB = {
-				owns_state = 966
+				owns_state = 298
 				has_war_with = MAF
+				surrender_progress < 0.5
 			}
 		}
 		LIB = {
@@ -170,6 +212,7 @@ MAF_collapse = {
 			LIB = {
 				owns_state = 807
 				has_war_with = MAF
+				surrender_progress < 0.5
 			}
 		}
 		LIB = {
@@ -483,6 +526,7 @@ MAF_collapse = {
 		CAR = {
 			load_oob = CAR
 			add_to_array = { global.MAF_collapse_tags = THIS }
+			country_event = cea.1
 		}
 	}
 	every_owned_state = {
@@ -723,14 +767,11 @@ MAF_collapse = {
 	}
 
 	# Release LIB if they got annexed before
-	every_owned_state = {
+	if = {
 		limit = {
-			OR = {
-				state = 298
-				state = 966
-			}
+			owns_state = 298
 		}
-		LIB = { transfer_state = PREV }
+		LIB = { transfer_state = 298 }
 	}
 	if = {
 		limit = {
@@ -739,7 +780,6 @@ MAF_collapse = {
 		}
 		LIB = {
 			add_state_core = 298
-			add_state_core = 966
 			add_to_array = { global.MAF_collapse_tags = THIS }
 		}
 	}
@@ -1042,3 +1082,82 @@ MAF_mau_mau_revolt = {
 		set_temp_variable = { KIK = THIS }
 	}
 }
+
+#start of MAF-POR Bush war scripted effect - I made it so it could fire from pretty much every tag, mostly for convenience
+MAF_start_bush_war = {
+	hidden_effect = {
+		MAF = {
+			set_global_flag = MAF_POR_border_war
+			set_country_flag = crisis_in_progress
+			declare_war_on = {
+				target = POR
+				type = annex_everything
+			}
+			activate_mission = MAF_Bush_War_mission
+		}
+		POR = {
+			set_country_flag = crisis_in_progress
+			activate_mission = POR_Bush_War_mission
+		}
+		news_event = worldnews.180
+	}
+	custom_effect_tooltip = MAF_Bush_War_start_tt
+}
+
+MAF_end_bush_war = {
+	hidden_effect = {
+		MAF = {
+			clr_country_flag = crisis_in_progress
+			remove_mission = MAF_Bush_War_mission
+			remove_ideas = MAF_border_shit_show
+		}
+		POR = {
+			clr_country_flag = crisis_in_progress
+			remove_mission = POR_Bush_War_mission
+		}
+		clr_global_flag = MAF_POR_border_war
+	}
+}
+
+MAF_decide_stalemate_advantage = {
+	if = {
+		limit = {
+			count_triggers = { # MAF gets the priority in this scenario due to both need to occupy less land, and being more likely to actually achive this as AI
+				amount = 2
+				540 = { #Central Angola
+					is_owned_by = POR
+					is_controlled_by = MAF
+				}
+				544 = { #Zambezia
+					is_owned_by = POR
+					is_controlled_by = MAF
+				}
+				917 = { #Southern Angola
+					is_owned_by = POR
+					is_controlled_by = MAF
+				}
+				950 = { #Inhambane-Gaza
+					is_owned_by = POR
+					is_controlled_by = MAF
+				}
+			}
+		}
+		custom_effect_tooltip = MAF_Bush_War_MAF_advantage_tt
+		country_event = mittel.422 #Bush War stalemate, German Advantage
+	}
+	else_if = { #POR's advantage is the second one to be checked.
+		limit = {
+			MAF = {
+				surrender_progress > 0.3
+			}
+		}
+		custom_effect_tooltip = MAF_Bush_War_POR_advantage_tt
+		POR = { country_event = mittel.425 } #Bush War stalemate, Portuguese Advantage
+	}
+	else = {
+		custom_effect_tooltip = MAF_Bush_War_NO_advantage_tt
+		MAF = { country_event = mittel.429 } #Bush War stalemate, nobodies advantage
+	}
+}
+
+

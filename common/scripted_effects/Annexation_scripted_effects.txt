@@ -1,25 +1,3 @@
-# from released country's scope
-syndicalist_socdem_government_change = {
-	if = {
-		limit = {
-			ROOT = {
-				has_government = social_democrat
-				has_country_flag = soc_dems_are_socialists
-			}
-		}
-		hidden_effect = {
-			set_politics = {
-				ruling_party = radical_socialist
-				elections_allowed = no
-			}
-			add_popularity = {
-				ideology = radical_socialist
-				popularity = 0.4
-			}
-		}
-	}
-}
-
 occupy_small_country = {
 	add_political_power = -25
 	add_stability = -0.025
@@ -64,7 +42,7 @@ transfer_state_and_add_core = {
 
 # state scope
 transfer_state_and_add_claim = {
-	remove_claim_and_add_claim_of_target = yes
+	add_claim_of_target = yes
 	var:tag_to_release = { transfer_state = PREV }
 	ROOT = { recheck_annexations = yes }
 }
@@ -79,6 +57,7 @@ remove_claim_and_add_core_of_ROOT = {
 		limit = { NOT = { is_core_of = ROOT } }
 		add_core_of = ROOT
 	}
+	ROOT = { recheck_annexations = yes }
 }
 
 # state scope
@@ -91,10 +70,25 @@ remove_claim_and_add_core_of_target = {
 		limit = { NOT = { is_core_of = var:tag_to_release } }
 		add_core_of = var:tag_to_release
 	}
+	ROOT = { recheck_annexations = yes }
 }
 
 # state scope
-remove_claim_and_add_claim_of_target = {
+add_claim_of_ROOT = {
+	if = {
+		limit = {
+			NOT = {
+				is_claimed_by = ROOT
+				is_core_of = ROOT
+			}
+		}
+		add_claim_by = ROOT
+	}
+	ROOT = { recheck_annexations = yes }
+}
+
+# state scope
+add_claim_of_target = {
 	if = {
 		limit = {
 			NOT = {
@@ -104,6 +98,33 @@ remove_claim_and_add_claim_of_target = {
 		}
 		add_claim_by = var:tag_to_release
 	}
+	ROOT = { recheck_annexations = yes }
+}
+
+# state scope
+add_claim_of_target_and_transfer_if_owned = {
+	add_claim_of_target = yes
+	if = {
+		limit = {
+			is_owned_by = ROOT
+			is_claim_or_core_of_ROOT = no
+		}
+		var:tag_to_release = { transfer_state = PREV }
+	}
+	ROOT = { recheck_annexations = yes }
+}
+
+# state scope
+add_core_of_target_and_transfer_if_owned = {
+	remove_claim_and_add_core_of_target = yes
+	if = {
+		limit = {
+			is_owned_by = ROOT
+			is_claim_or_core_of_ROOT = no
+		}
+		var:tag_to_release = { transfer_state = PREV }
+	}
+	ROOT = { recheck_annexations = yes }
 }
 
 # global scope
@@ -283,12 +304,12 @@ puppet_released_tag = {
 	puppet = var:tag_to_release
 	var:tag_to_release = {
 		drop_cosmetic_tag = yes
-		syndicalist_socdem_government_change = yes
 		mark_focus_tree_layout_dirty = yes
 		remove_all_minister_types = yes
 		hidden_effect = {
 			set_puppet_minister = yes
 			transfer_technology_without_doctrines = yes
+			remove_ideas = ready_to_surrender
 		}
 	}
 	recheck_annexations = yes
@@ -298,7 +319,6 @@ puppet_released_tag = {
 puppet_released_tag_nocosmetic = {
 	puppet = var:tag_to_release
 	var:tag_to_release = {
-		syndicalist_socdem_government_change = yes
 		mark_focus_tree_layout_dirty = yes
 		remove_all_minister_types = yes
 		hidden_effect = {
@@ -327,7 +347,15 @@ release_france = {
 				}
 			}
 		}
-		add_core_of = var:tag_to_release
+		if = {
+			limit = {
+				OR = {
+					state = 16 #Paris
+					var:tag_to_release = { NOT = { tag = NFA } }
+				}
+			}
+			add_core_of = var:tag_to_release
+		}
 		if = {
 			limit = { is_owned_and_controlled_by = ROOT }
 			if = {
@@ -352,32 +380,6 @@ release_france = {
 		}
 	}
 	puppet_released_tag = yes
-}
-
-release_france_nfa = { #Only for the Entente releasing NFA again
-	16 = {
-		add_core_of = var:tag_to_release
-	}
-	every_state = {
-		limit = {
-			is_european_france = yes
-			is_claim_or_core_of_ROOT = no
-			if = {
-				limit = {
-					ROOT = { is_italian_tag = yes }
-				}
-				NOT = {
-					state = 762 #Nice
-					state = 735 #Savoy
-					state = 943 #Upper Savoy
-				}
-			}
-		}
-		if = {
-			limit = { is_owned_and_controlled_by = ROOT }
-			var:tag_to_release = { transfer_state = PREV }
-		}
-	}
 }
 
 release_spain = {
@@ -585,6 +587,23 @@ setup_puppet_baltic_union = {
 				BAT_byzantine_government_2
 				BAT_byzantine_government_3
 				BAT_byzantine_government_4
+				BAT_constitution_idea
+				BAT_pessimism
+				BAT_conscription_squads_idea
+				BAT_commissars
+				BAT_charity_organizations
+				BAT_landpolizeibehorden_idea
+				BAT_female_heir_idea
+				BAT_male_heir_idea
+				BAT_rechtsstaat_1
+				BAT_rechtsstaat_2
+				BAT_rigaer_rat
+				BAT_rigaer_landtag
+				BAT_secret_police
+				BAT_meritocracy_1
+				BAT_meritocracy_2
+				BAT_revanchism_1
+				BAT_revanchism_2
 			}
 			1091 = {
 				create_unit = {
@@ -748,6 +767,15 @@ puppet_russia_setup = {
 					OVERLORD_IDEOLOGY = "[ROOT.GetRulingIdeologySubtype]"
 				}
 				set_country_flag = was_puppeted
+			}
+			if = {
+				limit = {
+					OR = {
+						has_completed_focus = RUS_Restore_The_Monarchy
+						has_completed_focus = RUS_A_Firm_Hand
+					}
+				}
+				unlock_national_focus = RUS_The_Republic_Survives
 			}
 		}
 		else_if = {
@@ -1411,7 +1439,7 @@ transfer_iraq = {
 				AND = {
 					state = 677 #Aleppo
 					NOT = {
-						ROOT = { is_ally_with = SYR }
+						SYR = { is_ally_with = ROOT }
 						554 = { is_valid_annexation_state = yes } #Syria
 					}
 				}
@@ -1460,3 +1488,4 @@ transfer_sinai_if_annexation_unavailable = {
 		}
 	}
 }
+

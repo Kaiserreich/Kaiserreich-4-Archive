@@ -1,9 +1,10 @@
-#####################################################
-### Kaiserreich Beta 0.16.1 - 'Hindsight is 2020' ###
-#####################################################
+#######################################################
+### Kaiserreich Beta 0.17 - 'Springtime for Kaiser' ###
+#######################################################
 
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This version is designed for Hearts of Iron IV version 1.10.3. It may work with later hot fixes but it isn't guaranteed.
+This version is designed for Hearts of Iron IV version 1.10.
+It should be compatible with all hotfixes but it isn't guaranteed.
 
 Manual Installation Instructions
 1) Download the mod
@@ -11,8 +12,6 @@ Manual Installation Instructions
 3) Extract the .zip to 'Documents\Paradox Interactive\Hearts of Iron IV\mod'
 4) Move Kaiserreich.mod out of 'Hearts of Iron IV\mod\Kaiserreich' and into 'Hearts of Iron IV\mod'
 5) Enable the mod in the Launcher mod menu and enjoy!
-
-Don't worry about Kaiserreich Dev Build.mod, sadly it doesn't unlock super secret new features it just lets us run release and dev versions together more easily for testing.
 
 FAQ:
 https://kaiserreich.fandom.com/wiki/FAQ
