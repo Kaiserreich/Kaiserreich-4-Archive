@@ -7,6 +7,17 @@
 ### When adding new rules, please follow the order of triggers - first global (when the rule should apply), then FROM triggers (who should receive the volunteers), then ROOT triggers (who should send them)
 
 willing_to_send_volunteers_to_FROM = {
+	if = {
+		limit = { tag = SRI }
+		NOT = {
+			country_exists = ITA
+			country_exists = SIC
+		}
+	}
+	OR = {
+		any_owned_state = { is_coastal = yes }
+		is_neighbor_of = FROM
+	}
 	OR = {
 		spanish_civil_war_volunteers = yes
 		american_civil_war_volunteers = yes
@@ -27,15 +38,7 @@ willing_to_send_volunteers_to_FROM = {
 		league_collapse_volunteers = yes
 		northwest_war_volunteers = yes
 		GEA_zhili_volunteers = yes
-	}
-	NOT = {
-		AND = {
-			tag = SRI
-			OR = {
-				country_exists = ITA
-				country_exists = SIC
-			}
-		}
+		ANQ_volunteers = yes
 	}
 }
 
@@ -70,25 +73,10 @@ spanish_civil_war_volunteers = {
 
 american_civil_war_volunteers = {
 	NOT = { has_global_flag = USA_civil_war_over_flag }
+	has_socialist_government = yes
 	num_of_military_factories > 8
-	OR = {
-		AND = {
-			FROM = { tag = CSA }
-			has_socialist_government = yes
-		}
-		AND = {
-			FROM = { tag = USA }
-			has_country_flag = sent_volunteers_USA
-		}
-		AND = {
-			FROM = { tag = TEX }
-			has_country_flag = sent_volunteers_TEX
-		}
-		AND = {
-			FROM = { tag = PSA }
-			has_country_flag = sent_volunteers_PSA
-		}
-	}
+	FROM = { tag = CSA }
+	### USA, PSA and TEX volunteers are handled by ACW support decisions
 }
 
 russian_civil_war_volunteers = {
@@ -628,6 +616,25 @@ GEA_zhili_volunteers = {
 	tag = GEA
 }
 
+ANQ_volunteers = {
+	tag = ANQ
+	has_country_flag = ANQ_peace
+	OR = {
+		has_completed_focus = ANQ_deepen_army_cooperation
+		has_completed_focus = ANQ_republican_focus
+	}
+	OR = {
+		AND = {
+			is_ruled_by_pro_fengtian = yes
+			FROM = { is_ruled_by_pro_fengtian = yes }
+		}
+		AND = {
+			is_ruled_by_pro_zhili = yes
+			FROM = { is_ruled_by_pro_zhili = yes }
+		}
+	}
+}
+
 #### OTHER AI TRIGGERS ####
 
 has_unattained_important_goals = {
@@ -808,6 +815,86 @@ needs_cheap_infantry = {
 		AND = {
 			tag = INR
 			has_war_with = HND
+		}
+	}
+}
+
+### Common AI checks, for use in attack decisions
+ROOT_is_threatened = {
+	OR = {
+		enemies_strength_ratio > 0.5
+		surrender_progress > 0
+		has_country_flag = imminent_war
+	}
+}
+
+is_stronger_than_ROOT_and_not_vulnerable = {
+	FROM = {
+		strength_ratio = { tag = ROOT ratio > 1 }
+		OR = {
+			enemies_strength_ratio < 1
+			surrender_progress < 0.1
+		}
+	}
+}
+
+faction_leader_is_stronger_than_ROOT_and_not_vulnerable = {
+	if = {
+		limit = { has_war = yes }
+		FROM = {
+			is_in_faction = yes
+			is_faction_leader = no
+			faction_leader = {
+				is_actual_major = yes
+				OR = {
+					enemies_strength_ratio < 1.5
+					surrender_progress < 0.2
+				}
+			}
+		}
+	}
+	else = {
+		FROM = {
+			is_in_faction = yes
+			is_faction_leader = no
+			faction_leader = {
+				strength_ratio = { tag = ROOT ratio > 0.7 }
+				OR = {
+					enemies_strength_ratio < 1
+					surrender_progress < 0.2
+				}
+			}
+		}
+	}
+}
+
+overlord_is_stronger_than_ROOT_and_not_vulnerable = {
+	FROM = {
+		is_subject = yes
+		overlord = {
+			strength_ratio = { tag = ROOT ratio > 0.8 }
+			OR = {
+				enemies_strength_ratio < 1
+				surrender_progress < 0.2
+			}
+		}
+	}
+}
+
+guarantor_is_stronger_than_ROOT_and_not_vulnerable = {
+	FROM = {
+		has_guarantor = yes
+		any_of_scopes = {
+			array = guarantor_array
+			has_guaranteed = PREV
+			OR = {
+				strength_ratio = { tag = ROOT ratio > 0.8 }
+				is_in_faction = yes
+			}
+			OR = {
+				enemies_strength_ratio < 1
+				surrender_progress < 0.2
+			}
 		}
 	}
 }

@@ -1010,7 +1010,7 @@ focus_tree = {
 	}
 	focus = {
 		id = MOR_royal_naval_aviators
-		icon = GFX_goal_generic_air_naval_bomber
+		icon = GFX_goal_generic_air_naval_bomber_new
 		cost = 8
 		prerequisite = {
 			focus = MOR_dockyards_of_casablanca
@@ -1058,7 +1058,7 @@ focus_tree = {
 	}
 	focus = {
 		id = MOR_control_the_skies_of_africa
-		icon = GFX_goal_generic_CAS
+		icon = GFX_goal_generic_air_fighter_new
 		cost = 8
 		prerequisite = {
 			focus = MOR_modernize_our_aircraft_inventory
@@ -1078,7 +1078,7 @@ focus_tree = {
 	}
 	focus = {
 		id = MOR_the_war_on_the_skies
-		icon = GFX_goal_generic_CAS
+		icon = GFX_goal_generic_air_CAS_new
 		cost = 8
 		prerequisite = {
 			focus = MOR_airbase_expansion
@@ -1263,25 +1263,14 @@ focus_tree = {
 		}
 		available = {
 			country_exists = LBA
+			NOT = { has_war_with = LBA }
+			LBA = { is_subject = no }
 		}
-		bypass = {
-			NOT = { country_exists = LBA }
-			has_war_with = LBA
-		}
+		bypass_if_unavailable = yes
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus MOR_border_treaty_with_libya"
-			if = {
-				limit = {
-					country_exists = LBA
-				}
-				"LBA" = {
-					if = {
-						limit = { country_exists = MOR }
-						diplomatic_relation = { country = MOR relation = non_aggression_pact }
-						give_military_access = MOR
-					}
-				}
-			}
+			diplomatic_relation = { country = LBA relation = non_aggression_pact }
+			LBA = { give_military_access = MOR }
 		}
 		x = 1
 		y = 2
@@ -1296,17 +1285,14 @@ focus_tree = {
 		}
 		available = {
 			country_exists = EGY
+			NOT = { has_war_with = EGY }
 		}
-		bypass = {
-			NOT = { country_exists = EGY }
-			has_war_with = EGY
-		}
+		bypass_if_unavailable = yes
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus MOR_egyptian_imports"
 			random_owned_controlled_state = {
-				prioritize = {
-					461
-				}
+				limit = { is_core_of = ROOT }
+				prioritize = { 461 }
 				add_extra_state_shared_building_slots = 1
 				add_building_construction = {
 					type = industrial_complex
@@ -1355,30 +1341,19 @@ focus_tree = {
 		relative_position_id = MOR_off_with_the_german_yoke
 	}
 	focus = {
-		id = MOR_prepare_to_strike_the_french
-		icon = GFX_goal_generic_major_war
+		id = MOR_the_timbuktu_claim
+		icon = GFX_goal_generic_forceful_treaty
 		cost = 8
 		prerequisite = {
 			focus = MOR_prepare_our_defenses
 		}
-		available =  {
-			has_war = no
+		available = {
 			is_subject = no
-			NFA = {
-				exists = yes
-				is_subject = no
-				NOT = {
-					is_in_faction_with = MOR
-				}
-			}
 		}
-		will_lead_to_war_with = NFA
 		completion_reward = {
-			log = "[GetDateText]: [Root.GetName]: Focus MOR_prepare_to_strike_the_french"
-			create_wargoal = {
-				type = annex_everything
-				target = NFA
-			}
+			log = "[GetDateText]: [Root.GetName]: Focus MOR_the_timbuktu_claim"
+			add_state_claim = 556 #Timbuktu
+			add_state_claim = 557 #Mauritania
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION }
 		x = 3
@@ -1386,48 +1361,81 @@ focus_tree = {
 		relative_position_id = MOR_off_with_the_german_yoke
 	}
 	focus = {
-		id = MOR_the_timbuktu_claim
-		icon = GFX_goal_generic_forceful_treaty
-		cost = 8
-		prerequisite = {
-			focus = MOR_egyptian_imports
-		}
-		available = {
-			NOT = { owns_state = 556 }
-			is_subject = no
-		}
-		completion_reward = {
-			log = "[GetDateText]: [Root.GetName]: Focus MOR_the_timbuktu_claim"
-			add_state_claim = 556 #Timbuktu
-			country_event = mor.200
-		}
-		search_filters = { FOCUS_FILTER_ANNEXATION }
-		x = 1
-		y = 4
-		relative_position_id = MOR_off_with_the_german_yoke
-	}
-	focus = {
-		id = MOR_the_war_for_africas_soul
+		id = MOR_prepare_to_strike_the_french
 		icon = GFX_goal_generic_major_war
 		cost = 8
 		prerequisite = {
-			focus = MOR_prepare_to_strike_the_french
-		}
-		prerequisite = {
 			focus = MOR_egyptian_imports
 		}
+		prerequisite = {
+			focus = MOR_the_timbuktu_claim
+		}
 		available = {
-			has_war_with = NFA
+			is_subject = no
+			can_declare_war_on = NFA
 		}
 		will_lead_to_war_with = NFA
+		ai_will_do = {
+			factor = 1
+			modifier = {
+				factor = 0
+				enemies_strength_ratio > 0.5
+			}
+			modifier = {
+				factor = 0
+				surrender_progress > 0
+			}
+			modifier = {
+				factor = 0
+				NFA = {
+					strength_ratio = { tag = ROOT ratio > 0.8 }
+					OR = {
+						enemies_strength_ratio < 1
+						surrender_progress < 0.2
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				NFA = {
+					is_in_faction = yes
+					is_faction_leader = no
+					faction_leader = {
+						strength_ratio = { tag = ROOT ratio > 0.6 }
+						OR = {
+							enemies_strength_ratio < 1
+							surrender_progress < 0.2
+						}
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				NFA = {
+					is_subject = yes
+					overlord = {
+						strength_ratio = { tag = ROOT ratio > 0.6 }
+						OR = {
+							enemies_strength_ratio < 1
+							surrender_progress < 0.2
+						}
+					}
+				}
+			}
+		}
 		completion_reward = {
-			log = "[GetDateText]: [Root.GetName]: Focus MOR_the_war_for_africas_soul"
+			log = "[GetDateText]: [Root.GetName]: Focus MOR_prepare_to_strike_the_french"
+			declare_war_on = {
+				type = annex_everything
+				target = NFA
+			}
 			add_timed_idea = {
 				idea = MOR_War_For_Africa_Soul
 				days = 100
 			}
 		}
-		x = 3
+		search_filters = { FOCUS_FILTER_ANNEXATION }
+		x = 2
 		y = 4
 		relative_position_id = MOR_off_with_the_german_yoke
 	}
@@ -1674,3 +1682,4 @@ focus_tree = {
 		relative_position_id = MOR_the_commune_of_morocco
 	}
 }
+

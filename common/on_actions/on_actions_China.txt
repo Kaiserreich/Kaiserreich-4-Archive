@@ -115,18 +115,21 @@ on_actions = {
 				}
 				SQI = {
 					clear_variable = sqi_german_control_var
-					clr_country_flag = SQI_German_Loan
 					remove_ideas_with_trait = SQI_German_Collaboration
 				}
 			}
 			else_if = {
 				limit = {
-					FROM = { tag = FNG }
+					FROM = {
+						OR = {
+							tag = FNG
+							tag = JAP
+						}
+					}
 				}
 				SQI = {
 					clear_variable = sqi_japanese_control_var
-					clr_country_flag = SQI_Japanese_Loan
-					remove_ideas_with_trait = SQI_Fengtian_Collaboration
+					remove_ideas_with_trait = SQI_Japan_Collaboration
 				}
 			}
 			else_if = {
@@ -135,7 +138,6 @@ on_actions = {
 				}
 				SQI = {
 					clear_variable = sqi_legation_control_var
-					clr_country_flag = SQI_Legation_Loan
 					remove_ideas_with_trait = SQI_Legation_Collaboration
 				}
 			}
@@ -421,6 +423,21 @@ on_actions = {
 				limit = { tag = CHN }
 				find_next_chinese_target = yes
 			}
+			#Restore Beijing VPs if QIE lost
+			if = {
+				limit = {
+					ROOT = {
+						tag = QIE
+					}
+					has_global_flag = QIE_withdrew_to_wuhan
+				}
+				FROM = {
+					clr_global_flag = QIE_withdrew_to_wuhan
+					country_event = {
+						id = qiefor.145
+					}
+				}
+			}
 		}
 	}
 
@@ -448,10 +465,10 @@ on_actions = {
 			# China attacking LEC
 			if = {
 				limit = {
-					ROOT = { is_chinese_tag = yes }
+					is_chinese_tag = yes
 					FROM = { tag = LEC }
 				}
-				ROOT = { set_country_flag = LEC_war }
+				set_country_flag = LEC_war
 				every_other_country = {
 					limit = {
 						OR = {
@@ -460,16 +477,14 @@ on_actions = {
 							has_guaranteed = LEC #guarantors
 							any_allied_country = { has_guaranteed = LEC } #allies of guarantors
 						}
-						NOT = { is_ally_with = JAP }
+						NOT = { JAP = { is_ally_with = PREV } }
 					}
-					add_to_array = { LEC.LEC_war_backers = THIS }
+					set_country_flag = LEC_war_backer
 				}
 			}
 			# LEC council member at war with LEC
 			if = {
-				limit = {
-					ROOT = { has_war_with = LEC }
-				}
+				limit = { FROM = { tag = LEC } }
 				country_event = lec.142
 			}
 
@@ -491,6 +506,20 @@ on_actions = {
 					FNG_JAP_hostile = no
 				}
 				FNG_break_with_japan = yes
+			}
+			if = {
+				limit = {
+					tag = JAP
+					FROM = {
+						is_chinese_tag = yes
+						is_in_faction_with = FNG
+					}
+					FNG = { is_faction_leader = yes }
+				}
+				FNG = {
+					set_country_flag = FNG_jap_attack_ally
+					country_event = fengtian.77
+				}
 			}
 
 			# Fengtian + KMT vs Qing
@@ -616,6 +645,40 @@ on_actions = {
 					}
 				}
 			}
+			if = {
+				limit = {
+					ROOT =	{
+						OR = {
+							tag = JAP
+							tag = ANQ
+						}
+					}
+					FROM =	{
+						OR = {
+							tag = JAP
+							tag = ANQ
+						}
+					}
+				}
+				ANQ = { ANQ_break_relations_japan = yes }
+			}
+			if = {
+				limit = {
+					ROOT =	{
+						OR = {
+							tag = FNG
+							tag = ANQ
+						}
+					}
+					FROM =	{
+						OR = {
+							tag = FNG
+							tag = ANQ
+						}
+					}
+				}
+				ANQ = { ANQ_break_relations_fengtian = yes }
+			}
 		}
 	}
 
@@ -670,8 +733,12 @@ on_actions = {
 		effect = {
 			#Legation Concession Ask
 			if = {
-				limit = { tag = LEC }
-				country_event = { id = lec.126 days = 2 }
+				limit = {
+					tag = LEC
+					NOT = { has_country_flag = LEC_asking_for_concessions }
+				}
+				set_country_flag = { flag = LEC_asking_for_concessions days = 24 value = 1 }
+				country_event = { id = lec.126 days = 12 }
 			}
 			# Sichuan events
 			if = {
@@ -737,6 +804,84 @@ on_actions = {
 					id = fngconf.82
 					hours = 3
 					random_hours = 24
+				}
+			}
+
+			#Restore Beijing VPs if QIE won
+			if = {
+				limit = {
+					ROOT = {
+						tag = QIE
+						has_global_flag = QIE_withdrew_to_wuhan
+					}
+				}
+				ROOT = {
+					clr_global_flag = QIE_withdrew_to_wuhan
+					country_event = {
+						id = qiefor.146
+					}
+				}
+			}
+
+			#Return Eastern Shanxi (615) to SHX after QIE victory
+			if = {
+				limit = {
+					has_global_flag = SHX_deal_QIE
+					has_global_flag = SHX_deal_QIE_immediate
+					ROOT = {
+						tag = QIE
+					}
+					OR = {
+						FROM = {
+							OR = {
+								tag = FNG
+								tag = JAP
+							}
+						}
+						AND = {
+							FROM = {
+								is_chinese_tag = yes
+							}
+							FNG = {
+								exists = no
+							}
+						}
+					}
+				}
+				QIE = {
+					country_event = {
+						id = qiefor.149
+						days = 2
+					}
+				}
+			}
+
+			#Split QIE-SHX if Feng Yuxiang has come to power.
+			if = {
+				limit = {
+					has_global_flag = SHX_deal_QIE
+					SHX = {
+						is_in_faction = yes
+						QIE = {
+							is_faction_leader = yes
+						}
+						has_country_leader = {
+							name = "Feng Yuxiang"
+							ruling_only = yes
+						}
+					}
+				}
+				QIE = {
+					country_event = {
+						id = qiefor.143
+						hours = 1
+					}
+				}
+				SHX = {
+					country_event = {
+						id = qiefor.144
+						hours = 1
+					}
 				}
 			}
 
@@ -921,7 +1066,7 @@ on_actions = {
 			# Zhili Remnant events
 			if = {
 				limit = {
-					tag = ZHL
+					has_completed_focus = SZC_The_Zhilis_Last_Stand
 					has_war_with = QIE
 					FROM.FROM = { state = 607 } #Luoyang
 				}
@@ -929,7 +1074,7 @@ on_actions = {
 			}
 			else_if = {
 				limit = {
-					tag = ZHL
+					has_completed_focus = SZC_The_Zhilis_Last_Stand
 					has_war_with = QIE
 					FROM.FROM = { state = 1048 } #Wuhan
 				}
@@ -937,7 +1082,7 @@ on_actions = {
 			}
 			else_if = {
 				limit = {
-					tag = ZHL
+					has_completed_focus = SZC_The_Zhilis_Last_Stand
 					has_war_with = QIE
 					FROM.FROM = { state = 608 } #Beijing
 				}
@@ -1109,9 +1254,11 @@ on_actions = {
 			# Fengtian events
 			if = {
 				limit = {
-					country_exists = FNG
-					is_ally_with = FNG
 					FROM = { tag = QIE }
+					FNG = {
+						exists = yes
+						is_ally_with = ROOT
+					}
 				}
 				LEP = { country_event = { id = lep.200 days = 10 } }
 				FNG = { country_event = { id = lep.205 hours = 6 } }
@@ -1169,7 +1316,7 @@ on_actions = {
 						}
 						has_war_with = FROM
 					}
-					FROM = { is_ally_with = CHN }
+					CHN = { is_ally_with = FROM }
 					FROM.FROM = {
 						OR = {
 							state = 608 #Beijing
@@ -1192,7 +1339,7 @@ on_actions = {
 			else_if = {
 				limit = {
 					has_global_flag = chinese_united_front_formed
-					ROOT = { is_ally_with = CHN }
+					CHN = { is_ally_with = ROOT }
 					FROM.FROM = {
 						has_state_flag = JAP_captures_this_state
 					}
@@ -1226,7 +1373,7 @@ on_actions = {
 					has_war_with = FROM
 					FROM = {
 						OR = {
-							is_ally_with = JAP
+							JAP = { is_ally_with = PREV }
 							AND = {
 								tag = FNG
 								FNG_JAP_hostile = no
@@ -1258,7 +1405,7 @@ on_actions = {
 					has_war_with = FROM
 					FROM = {
 						OR = {
-							is_ally_with = JAP
+							JAP = { is_ally_with = PREV }
 							AND = {
 								tag = FNG
 								FNG_JAP_hostile = no
@@ -1275,18 +1422,11 @@ on_actions = {
 
 			if = { #Capture of Luoyang
 				limit = {
-					tag = QIE
-					exists = yes
-					has_war = yes
-					NOT = {
-						has_country_flag = QIE_Wu_Peifu_dead
-						controls_province = 11931
-					}
+					is_chinese_tag = yes
+					FROM = { tag = QIE }
+					FROM.FROM = { state = 607 }
 				}
-				country_event = {
-					id = qieflavor.28
-					hours = 3
-				}
+				country_event = { id = qieflavor.28 hours = 3 }
 			}
 		}
 	}
@@ -1306,16 +1446,115 @@ on_actions = {
 					country_event = { id = fengtian.1500 hours = 12 }
 				}
 			}
+		}
+	}
+
+	#ROOT = attacking side
+	#FROM = defending side
+	#fired when two countries end up at war with each other (on_war is fired when a country goes to war against anyone and is not fired again when it enters war against another country unless it went to peace first)
+	on_war_relation_added = {
+		effect = {
 			if = {
 				limit = {
-					is_in_faction_with = FNG
-					is_chinese_tag = yes
-					has_war_with = JAP
-					FNG_JAP_hostile = no
+					OR = {
+						has_subject = LEC #overlord
+						is_in_faction_with = LEC #allies
+						has_guaranteed = LEC #guarantors
+						any_allied_country = { has_guaranteed = LEC } #allies of guarantors
+					}
+					FROM = {
+						has_war_with = LEC
+						is_chinese_tag = yes
+					}
 				}
-				FNG = {
-					set_country_flag = FNG_jap_attack_ally
-					country_event = fengtian.77
+				set_country_flag = LEC_war_backer
+			}
+			else_if = {
+				limit = {
+					has_war_with = LEC
+					is_chinese_tag = yes
+					FROM = {
+						OR = {
+							has_subject = LEC #overlord
+							is_in_faction_with = LEC #allies
+							has_guaranteed = LEC #guarantors
+							any_allied_country = { has_guaranteed = LEC } #allies of guarantors
+						}
+					}
+				}
+				FROM = { set_country_flag = LEC_war_backer }
+			}
+			if = {
+				limit = {
+					tag = ENT
+					FROM = { is_han_chinese_tag = yes }
+				}
+				FROM = { set_country_flag = CHI_war_vs_ENT }
+			}
+			else_if = {
+				limit = {
+					FROM = { tag = ENT }
+					is_han_chinese_tag = yes
+				}
+				set_country_flag = CHI_war_vs_ENT
+			}
+
+			if = {
+				limit = { tag = SQI }
+				if = {
+					limit = {
+						FROM = { tag = GEA }
+					}
+					clear_variable = sqi_german_control_var
+					remove_ideas_with_trait = SQI_German_Collaboration
+				}
+				else_if = {
+					limit = {
+						FROM = {
+							OR = {
+								tag = FNG
+								tag = JAP
+							}
+						}
+					}
+					clear_variable = sqi_japanese_control_var
+					remove_ideas_with_trait = SQI_Japan_Collaboration
+				}
+				else_if = {
+					limit = {
+						FROM = { tag = LEC }
+					}
+					clear_variable = sqi_legation_control_var
+					remove_ideas_with_trait = SQI_Legation_Collaboration
+				}
+			}
+			else_if = {
+				limit = { FROM = { tag = SQI } }
+				if = {
+					limit = { tag = GEA }
+					FROM = {
+						clear_variable = sqi_german_control_var
+						remove_ideas_with_trait = SQI_German_Collaboration
+					}
+				}
+				else_if = {
+					limit = {
+						OR = {
+							tag = FNG
+							tag = JAP
+						}
+					}
+					FROM = {
+						clear_variable = sqi_japanese_control_var
+						remove_ideas_with_trait = SQI_Japan_Collaboration
+					}
+				}
+				else_if = {
+					limit = { tag = LEC }
+					FROM = {
+						clear_variable = sqi_legation_control_var
+						remove_ideas_with_trait = SQI_Legation_Collaboration
+					}
 				}
 			}
 		}
@@ -1323,10 +1562,7 @@ on_actions = {
 
 	on_peace = {
 		effect = {
-			if = {
-				limit = { has_country_flag = granted_major_status_during_war }
-				country_event = qiedom.23 #Removes major status on war's completion
-			}
+			clr_country_flag = LEC_war_backer
 			if = {
 				limit = {
 					tag = SIK
@@ -1337,3 +1573,4 @@ on_actions = {
 		}
 	}
 }
+

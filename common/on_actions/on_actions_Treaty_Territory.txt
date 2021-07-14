@@ -1,0 +1,174 @@
+on_actions = {
+	#ROOT is attacker, FROM is defender
+	on_declare_war = {
+		effect = {
+			# war between leasee/controller and holder
+			if = {
+				limit = {
+					OR = {
+						AND = {
+							tag = GTM
+							FROM = { owns_state = 820 }
+						}
+						AND = {
+							tag = MSN
+							FROM = { owns_state = 318 }
+						}
+						AND = {
+							tag = SAM
+							FROM = { owns_state = 319 }
+						}
+					}
+				}
+				FROM = {
+					country_event = {
+						id = treatyport.1
+						days = 1
+					}
+				}
+				ROOT = {
+					country_event = {
+						id = treatyport.2
+						days = 1
+					}
+				}
+			}
+			else_if = {
+				limit = {
+					OR = {
+						AND = {
+							owns_state = 820
+							FROM = { tag = GTM }
+						}
+						AND = {
+							owns_state = 318
+							FROM = { tag = MSN }
+						}
+						AND = {
+							owns_state = 319
+							FROM = { tag = SAM }
+						}
+					}
+				}
+				FROM = {
+					country_event = {
+						id = treatyport.2
+						days = 1
+					}
+				}
+				ROOT = {
+					country_event = {
+						id = treatyport.1
+						days = 1
+					}
+				}
+			}
+		}
+	}
+
+	#ROOT is new controller #FROM is old controller #FROM.FROM is state ID
+	on_state_control_changed = {
+		effect = {
+			if = { #enclaved seized by a third party
+				limit = {
+					OR = {
+						AND = {
+							FROM = { has_idea = gitmo_lease_idea }
+							FROM.FROM = { state = 820 }
+						}
+						AND = {
+							FROM = { has_idea = mole_lease_idea }
+							FROM.FROM = { state = 318 }
+						}
+						AND = {
+							FROM = { has_idea = samana_lease_idea }
+							FROM.FROM = { state = 319 }
+						}
+					}
+				}
+				FROM.FROM = { save_event_target_as = treaty_target_temp }
+				FROM = { country_event = treatyport.3 }
+			}
+			else_if = { #returning an enclave
+				limit = {
+					OR = {
+						AND = {
+							FROM.FROM = {
+								state = 820
+								is_owned_by = ROOT
+								is_core_of = ROOT
+							}
+							var:wantsgitmoback = {
+								exists = yes
+								NOT = {
+									has_war_with = ROOT
+								}
+							}
+						}
+						AND = {
+							FROM.FROM = {
+								state = 318
+								is_owned_by = ROOT
+								is_core_of = ROOT
+							}
+							var:wantsmoleback = {
+								exists = yes
+								NOT = {
+									has_war_with = ROOT
+								}
+							}
+						}
+						AND = {
+							FROM.FROM = {
+								state = 319
+								is_owned_by = ROOT
+								is_core_of = ROOT
+							}
+							var:wantssamanaback = {
+								exists = yes
+								NOT = {
+									has_war_with = ROOT
+								}
+							}
+						}
+					}
+				}
+				FROM.FROM = { save_event_target_as = treaty_target_temp2 }
+				country_event = treatyport.5
+			}
+			else_if = { #renouncing return of the enclave
+				limit = {
+					OR = {
+						AND = {
+							FROM.FROM = {
+								state = 820
+								is_core_of = ROOT
+								is_owned_by = ROOT
+							}
+							has_war_with = var:wantsgitmoback
+						}
+						AND = {
+							FROM.FROM = {
+								state = 318
+								is_core_of = ROOT
+								is_owned_by = ROOT
+							}
+							has_war_with = var:wantsmoleback
+						}
+						AND = {
+							FROM.FROM = {
+								state = 319
+								is_core_of = ROOT
+								is_owned_by = ROOT
+							}
+							has_war_with = var:wantssamanaback
+						}
+					}
+				}
+				FROM.FROM = { save_event_target_as = treaty_target_temp2 }
+				country_event = treatyport.7
+			}
+		}
+	}
+}
+

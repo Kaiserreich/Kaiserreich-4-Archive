@@ -260,43 +260,48 @@ SWE_geopolitical_actions = {
 		allowed = {
 			original_tag = SWE
 		}
+
 		available = {
 			is_subject = no
-			FIN = {
-				surrender_progress > 0.7
-			}
-			145 = {
-				is_owned_and_controlled_by = FIN
-			}
+			is_in_faction = no
+			FIN = { surrender_progress > 0.7 }
 		}
+
 		visible = {
-			can_declare_war_on = FIN
-			145 = { is_owned_and_controlled_by = FIN }
+			can_declare_war_on = FROM
+			145 = { is_owned_and_controlled_by = FROM }
 			NOT = {
 				AND = {
 					OR = {
 						has_government = syndicalist
 						has_government = radical_socialist
 					}
-					FIN = {
-						has_socialist_government = yes
-					}
+					FIN = { has_socialist_government = yes }
 				}
 			}
 		}
-		fire_only_once = yes
+
+		cancel_trigger = {
+			OR = {
+				NOT = { can_declare_war_on = FROM }
+				145 = { is_owned_and_controlled_by = ROOT }
+			}
+		}
+
 		cost = 25
+		days_remove = 10
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
+
+		targets = { FIN }
+		target_trigger = {
+			can_declare_war_on = FROM
+			145 = { is_owned_and_controlled_by = FROM }
+		}
+
 		ai_will_do = {
 			factor = 10
-			modifier = {
-				factor = 0
-				OR = {
-					has_war = yes
-					check_variable = { swe_operation_radde_danmark_time > 0 }
-					check_variable = { swe_subjugate_finland_time > 0 }
-					check_variable = { swe_subjugate_norway_time > 0 }
-				}
-			}
 			modifier = { #No seizing Åland from allies if liberal or socdem
 				factor = 0
 				is_in_faction_with = FIN
@@ -319,11 +324,53 @@ SWE_geopolitical_actions = {
 					has_war_with = RUS
 				}
 			}
+			modifier = {
+				factor = 0
+				surrender_progress > 0
+			}
+			modifier = {
+				factor = 0
+				strength_ratio = { tag = FROM ratio < 0.8 }
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = yes
+					any_allied_country = {
+						strength_ratio = { tag = ROOT ratio > 0.7 }
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					is_subject = yes
+					overlord = {
+						strength_ratio = { tag = ROOT ratio > 0.7 }
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = imminent_war
+			}
 		}
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled swe_seize_aland target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision swe_seize_aland"
+			log = "[GetDateText]: [Root.GetName]: Decision swe_seize_aland target: [From.GetName]"
 			transfer_state = 145
-			FIN = { country_event = { id = swe.111 } }
+			FROM = { country_event = swe.111 }
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove swe_seize_aland target: [From.GetName]"
+			clear_decision_attack_AI = yes
 		}
 	}
 
@@ -751,16 +798,17 @@ SWE_fix_black_monday_category = {
 				}
 			}
 		}
-		days_re_enable = 1
-		days_remove = 5
+		days_remove = 30
 		cost = 25
+		modifier = {
+			consumer_goods_factor = 0.05
+		}
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SWE_counter_inflation"
 			custom_effect_tooltip = SWE_tt_lower_inflation
 			subtract_from_variable = { var = swe_var_inflation value = 0.05 }
 			SWE_inflation_events = yes
 		}
-		fire_only_once = yes
 		ai_will_do = {
 			base = 10
 			modifier = {
@@ -930,7 +978,7 @@ SWE_fix_black_monday_category = {
 		days_remove = 365
 
 		modifier = {
-			production_factory_max_efficiency_factor  = -0.25
+			production_factory_max_efficiency_factor = -0.25
 			army_org_Factor = -0.1
 		}
 		cost = 25
@@ -1020,6 +1068,7 @@ SWE_fix_black_monday_category = {
 		}
 		available = {
 			NOT = {
+				has_government = social_democrat
 				has_completed_focus = SWE_public_healthcare
 				has_completed_focus = SWE_education_reforms
 			}
@@ -1028,20 +1077,16 @@ SWE_fix_black_monday_category = {
 		days_remove = 365
 
 		modifier = {
-			stability_factor = -0.25
+			stability_factor = -0.15
 			MONTHLY_POPULATION = -0.1
 		}
-		cost = 25
+		cost = 50
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SWE_cut_welfare"
 			custom_effect_tooltip = SWE_tt_saved_money_goes_to_free_budget_welfare
 			add_to_variable = { var = swe_var_budget value = 5 }
-			if = {
-				limit = {
-					has_government = market_liberal
-				}
-				add_popularity = { ideology = market_liberal popularity = -0.05 }
-			}
+			set_temp_variable = { ideology_change_var = -0.1 }
+			change_ruling_party_popularity = yes
 		}
 		ai_will_do = {
 			base = 10
@@ -1091,16 +1136,6 @@ SWE_fix_black_monday_category = {
 			custom_effect_tooltip = SWE_tt_unemployment_lowered_two_percent
 			add_to_variable = { var = swe_var_unemployment value = -0.02 }
 			SWE_unemployment_events = yes
-			random_owned_controlled_state = {
-				limit = {
-					infrastructure < 9
-				}
-				add_building_construction = {
-					type = infrastructure
-					level = 1
-					instant_build = yes
-				}
-			}
 		}
 		ai_will_do = {
 			base = 10
@@ -1197,8 +1232,8 @@ SWE_fix_black_monday_category = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SWE_nationalize_company"
 			add_to_variable = { var = swe_var_budget value = -5 }
-			custom_effect_tooltip = SWE_tt_unemployment_lowered_two_percent
-			add_to_variable = { var = swe_var_unemployment value = -0.02 }
+			custom_effect_tooltip = SWE_tt_unemployment_lowered_three_percent
+			add_to_variable = { var = swe_var_unemployment value = -0.03 }
 			SWE_unemployment_events = yes
 		}
 		ai_will_do = {
@@ -1315,3 +1350,4 @@ SWE_fix_black_monday_category = {
 		}
 	}
 }
+

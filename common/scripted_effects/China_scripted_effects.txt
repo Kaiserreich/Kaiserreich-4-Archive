@@ -182,28 +182,31 @@ remove_claim_by_ROOT_and_add_core_of_ROOT = {
 
 remove_cores_of_dead_tags = {
 	hidden_effect = {
-		if = {
+		every_state = {
 			limit = {
-				OR = {
-					is_han_chinese_tag = yes
-					tag = TAN
+				any_of = {
+					array = global.china_tags_array
+					OR = {
+						is_claimed_by = var:v
+						is_core_of = var:v
+					}
+					var:v = {
+						exists = no
+						can_become_china = yes
+					}
 				}
 			}
-			for_each_loop = {
+			for_each_scope_loop = {
 				array = global.china_tags_array
-				var:v = {
+				if = {
+					limit = {
+						exists = no
+						can_become_china = yes
+					}
+					remove_state_claim = PREV
 					if = {
-						limit = {
-							exists = no
-							is_non_han_chinese_tag = no
-						}
-						for_each_loop = {
-							array = ROOT.owned_states
-							var:v = {
-								remove_claim_by = PREV
-								remove_core_of = PREV
-							}
-						}
+						limit = { check_variable = { PREV.core_countries^num > 1 } }
+						remove_state_core = PREV
 					}
 				}
 			}
@@ -649,61 +652,6 @@ transfer_all_unit_leaders_to_FROM = {
 	every_unit_leader = {
 		limit = { has_unit_leader_flag = CHI_original_unit_leader }
 		set_nationality = FROM
-	}
-}
-
-central_government_flees_to_redoubt = {
-	set_global_flag = china_central_government_flees
-	set_country_flag = is_national_redoubt
-	hidden_effect = {
-		get_current_government_type = yes
-		set_party_name = {
-			ideology = var:CHN.current_party_ideology_group
-			name = "Central Government"
-			long_name = "The Central Government"
-		}
-		set_politics = {
-			ruling_party = var:CHN.current_party_ideology_group
-			elections_allowed = no
-		}
-		meta_effect = {
-			text = {
-				create_country_leader = {
-					name = "[LEADER_TAG]"
-					desc = ""
-					picture = "[PORTRAIT_TAG]"
-					expire = "1965.1.1"
-					ideology = [IDEOLOGY_SUBTYPE_TAG]
-				}
-				set_cosmetic_tag = [COSMETIC_TAG]
-			}
-			IDEOLOGY_TAG = "[CHN.GetRulingIdeologyId]"
-			IDEOLOGY_SUBTYPE_TAG = "[CHN.GetRulingIdeologySubtype]"
-			LEADER_TAG = "[CHN.GetLeader]"
-			PORTRAIT_TAG = "[CHN.GetChineseLeaderPortrait]"
-			COSMETIC_TAG = "[CHN.GetRedoubtCosmeticTag]"
-		}
-	}
-}
-central_government_returns = {
-	clr_global_flag = china_central_government_flees
-	clr_country_flag = is_national_redoubt
-	hidden_effect = {
-		kill_country_leader = yes
-		drop_cosmetic_tag = yes
-		meta_effect = {
-			text = {
-				set_party_name = {
-					ideology = [IDEOLOGY_TAG]
-					name = [PARTY_NAME_TAG]
-					long_name = [LONG_NAME_TAG]
-				}
-			}
-			IDEOLOGY_TAG = "[This.GetRulingIdeologyId]"
-			PARTY_NAME_TAG = "[This.GetTag]_[This.GetRulingIdeologyId]_party"
-			LONG_NAME_TAG = "[This.GetTag]_[This.GetRulingIdeologyId]_party_long"
-		}
-		restore_previous_government_type = yes
 	}
 }
 
