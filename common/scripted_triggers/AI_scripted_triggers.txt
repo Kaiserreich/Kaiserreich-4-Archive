@@ -58,10 +58,7 @@ spanish_civil_war_volunteers = {
 		}
 		AND = {
 			FROM = { tag = SPA }
-			OR = {
-				tag = RUS
-				tag = GER
-			}
+			tag = GER
 		}
 		AND = {
 			FROM = { tag = SWF }
@@ -713,11 +710,17 @@ has_unattained_important_goals = {
 				country_exists = RAJ
 			}
 		}
-		# China won't demobilize so long as a hostile Japan exists
+		# China won't demobilize so long as Japan holds Korea
 		AND = {
 			is_chinese_tag = yes
 			country_exists = JAP
-			NOT = { has_global_flag = JAP_Fading_Sun }
+			JAP = {
+				is_faction_leader = yes
+				OR = {
+					owns_state = 525
+					owns_state = 527
+				}
+			}
 			is_subject = no
 		}
 		# Italy won't demobilize so long as SRI exists
@@ -819,7 +822,57 @@ needs_cheap_infantry = {
 	}
 }
 
+### Technology AI checks
+anti_submarine_strategy_required_trigger = {
+	OR = {
+		convoy_threat > 0.3
+		AND = {
+			has_war = yes
+			any_enemy_country = {
+				has_navy_size = {
+					type = submarine
+					size > 30
+				}
+			}
+		}
+	}
+}
+
+ai_air_doctrine_tier_1_trigger = {
+	OR = {
+		has_tech = naval_strike_tactics
+		has_tech = direct_ground_support
+		has_tech = low_echelon_support
+	}
+}
+
+ai_air_doctrine_tier_2_trigger = {
+	OR = {
+		has_tech = multialtitude_flying
+		has_tech = hunt_and_destroy
+		has_tech = operational_destruction
+	}
+}
+
+ai_is_naval_invader_trigger = {
+	OR = {
+		tag = CAN
+		tag = NFA
+		tag = JAP
+		tag = GBR
+		tag = ENG
+		tag = SRD
+	}
+}
+
 ### Common AI checks, for use in attack decisions
+ROOT_is_threatened_cautious = {
+	OR = {
+		has_war = yes
+		has_country_flag = imminent_war
+	}
+}
+
 ROOT_is_threatened = {
 	OR = {
 		enemies_strength_ratio > 0.5
@@ -828,74 +881,177 @@ ROOT_is_threatened = {
 	}
 }
 
+#on the target's scope
 is_stronger_than_ROOT_and_not_vulnerable = {
-	FROM = {
+	strength_ratio = { tag = ROOT ratio > 1 }
+	enemies_strength_ratio < 1
+	surrender_progress < 0.1
+}
+
+#on the target's scope
+is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = {
+	OR = {
 		strength_ratio = { tag = ROOT ratio > 1 }
-		OR = {
+		AND = {
+			naval_strength_comparison = {
+				other = ROOT
+				ratio > 1
+				sub_unit_def_weights = {
+					submarine = 0.75
+					destroyer = 0.75
+					light_cruiser = 0.75
+					heavy_cruiser = 1
+					battle_cruiser = 1
+					battleship = 1
+					carrier = 1
+				}
+			}
+			enemies_naval_strength_ratio < 0.8
+		}
+	}
+	enemies_strength_ratio < 1
+	surrender_progress < 0.1
+}
+
+#on the target's scope
+faction_leader_is_stronger_than_ROOT_and_not_vulnerable = {
+	if = {
+		limit = { ROOT = { has_war = yes } }
+		is_in_faction = yes
+		is_faction_leader = no
+		faction_leader = {
+			OR = {
+				strength_ratio = { tag = ROOT ratio > 0.7 }
+				is_actual_major = yes
+			}
+			enemies_strength_ratio < 1.5
+			surrender_progress < 0.2
+		}
+	}
+	else = {
+		is_in_faction = yes
+		is_faction_leader = no
+		faction_leader = {
+			strength_ratio = { tag = ROOT ratio > 0.7 }
+			enemies_strength_ratio < 1
+			surrender_progress < 0.2
+		}
+	}
+}
+
+#on the target's scope
+faction_leader_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = {
+	if = {
+		limit = { ROOT = { has_war = yes } }
+		is_in_faction = yes
+		is_faction_leader = no
+		faction_leader = {
+			OR = {
+				strength_ratio = { tag = ROOT ratio > 0.7 }
+				naval_strength_comparison = {
+					other = ROOT
+					ratio > 0.8
+					sub_unit_def_weights = {
+						submarine = 0.75
+						destroyer = 0.75
+						light_cruiser = 0.75
+						heavy_cruiser = 1
+						battle_cruiser = 1
+						battleship = 1
+						carrier = 1
+					}
+				}
+				is_actual_major = yes
+			}
+			enemies_strength_ratio < 1.5
+			surrender_progress < 0.2
+		}
+	}
+	else = {
+		is_in_faction = yes
+		is_faction_leader = no
+		faction_leader = {
+			OR = {
+				strength_ratio = { tag = ROOT ratio > 0.8 }
+				AND = {
+					naval_strength_comparison = {
+						other = ROOT
+						ratio > 1
+						sub_unit_def_weights = {
+							submarine = 0.75
+							destroyer = 0.75
+							light_cruiser = 0.75
+							heavy_cruiser = 1
+							battle_cruiser = 1
+							battleship = 1
+							carrier = 1
+						}
+					}
+					enemies_naval_strength_ratio < 0.8
+				}
+			}
 			enemies_strength_ratio < 1
 			surrender_progress < 0.1
 		}
 	}
 }
 
-faction_leader_is_stronger_than_ROOT_and_not_vulnerable = {
-	if = {
-		limit = { has_war = yes }
-		FROM = {
-			is_in_faction = yes
-			is_faction_leader = no
-			faction_leader = {
-				is_actual_major = yes
-				OR = {
-					enemies_strength_ratio < 1.5
-					surrender_progress < 0.2
-				}
-			}
-		}
-	}
-	else = {
-		FROM = {
-			is_in_faction = yes
-			is_faction_leader = no
-			faction_leader = {
-				strength_ratio = { tag = ROOT ratio > 0.7 }
-				OR = {
-					enemies_strength_ratio < 1
-					surrender_progress < 0.2
-				}
-			}
-		}
-	}
-}
-
+#on the target's scope
 overlord_is_stronger_than_ROOT_and_not_vulnerable = {
-	FROM = {
-		is_subject = yes
-		overlord = {
-			strength_ratio = { tag = ROOT ratio > 0.8 }
-			OR = {
-				enemies_strength_ratio < 1
-				surrender_progress < 0.2
-			}
-		}
+	is_subject = yes
+	overlord = {
+		strength_ratio = { tag = ROOT ratio > 0.8 }
+		enemies_strength_ratio < 1
+		surrender_progress < 0.1
 	}
 }
 
-guarantor_is_stronger_than_ROOT_and_not_vulnerable = {
-	FROM = {
-		has_guarantor = yes
-		any_of_scopes = {
-			array = guarantor_array
-			has_guaranteed = PREV
-			OR = {
-				strength_ratio = { tag = ROOT ratio > 0.8 }
-				is_in_faction = yes
-			}
-			OR = {
-				enemies_strength_ratio < 1
-				surrender_progress < 0.2
+#on the target's scope
+overlord_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = {
+	is_subject = yes
+	overlord = {
+		OR = {
+			strength_ratio = { tag = ROOT ratio > 0.8 }
+			AND = {
+				naval_strength_comparison = {
+					other = ROOT
+					ratio > 1
+					sub_unit_def_weights = {
+						submarine = 0.75
+						destroyer = 0.75
+						light_cruiser = 0.75
+						heavy_cruiser = 1
+						battle_cruiser = 1
+						battleship = 1
+						carrier = 1
+					}
+				}
+				enemies_naval_strength_ratio < 0.8
 			}
 		}
+		enemies_strength_ratio < 1
+		surrender_progress < 0.1
+	}
+}
+
+#on the target's scope
+guarantor_is_stronger_than_ROOT_and_not_vulnerable = {
+	has_guarantor = yes
+	any_of_scopes = {
+		array = guarantor_array
+		has_guaranteed = PREV
+		OR = {
+			AND = {
+				strength_ratio = { tag = ROOT ratio > 0.8 }
+				enemies_strength_ratio < 1
+			}
+			AND = {
+				is_in_faction = yes
+				is_faction_leader = no
+				faction_leader = { enemies_strength_ratio < 1 }
+			}
+		}
+		surrender_progress < 0.1
 	}
 }
 

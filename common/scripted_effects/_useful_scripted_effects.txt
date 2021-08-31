@@ -18,11 +18,30 @@ separate_peace_all_wars = {
 				event_target:peace_country = { white_peace = PREV }
 			}
 
+			# then all non-puppets whose faction leaders aren't in the war
+			every_enemy_country = {
+				limit = {
+					is_subject = no
+					is_in_faction = yes
+					faction_leader = { NOT = { has_war_with = ROOT } }
+				}
+				event_target:peace_country = { white_peace = PREV }
+			}
+
 			# then all non-puppets who aren't in factions
 			every_enemy_country = {
 				limit = {
-					is_in_faction = no
 					is_subject = no
+					is_in_faction = no
+				}
+				event_target:peace_country = { white_peace = PREV }
+			}
+
+			# then all puppets whose overlords aren't in the war
+			every_enemy_country = {
+				limit = {
+					is_subject = yes
+					overlord = { NOT = { has_war_with = ROOT } }
 				}
 				event_target:peace_country = { white_peace = PREV }
 			}
@@ -126,6 +145,25 @@ copy_government_of_ROOT = {
 	}
 }
 
+# changes the government of the country in scope to that of PREV
+copy_government_of_PREV = {
+	set_politics = { ruling_party = var:PREV.current_party_ideology_group }
+	hidden_effect = {
+		set_popularities = {
+			totalist = PREV.party_popularity_100@totalist
+			syndicalist = PREV.party_popularity_100@syndicalist
+			radical_socialist = PREV.party_popularity_100@radical_socialist
+			social_democrat = PREV.party_popularity_100@social_democrat
+			social_liberal = PREV.party_popularity_100@social_liberal
+			market_liberal = PREV.party_popularity_100@market_liberal
+			social_conservative = PREV.party_popularity_100@social_conservative
+			authoritarian_democrat = PREV.party_popularity_100@authoritarian_democrat
+			paternal_autocrat = PREV.party_popularity_100@paternal_autocrat
+			national_populist = PREV.party_popularity_100@national_populist
+		}
+	}
+}
+
 # the following effects are excellent for preserving a puppet's government so it doesn't change to the overlord
 # use the first command in the scope of the about-to-be-puppeted country right before the puppet command is executed
 # and then the second, also in the scope of the puppet, right after
@@ -143,7 +181,21 @@ get_current_government_type = {
 	add_to_array = { original_popularities = party_popularity_100@social_conservative }
 	add_to_array = { original_popularities = party_popularity_100@authoritarian_democrat }
 	add_to_array = { original_popularities = party_popularity_100@paternal_autocrat }
-	add_to_array = { original_popularities = party_popularity_100@national_populist }
+
+	set_temp_variable = { sum = 100 }
+	for_each_loop = {
+		array = original_popularities
+		subtract_from_temp_variable = { sum = v }
+	}
+	add_to_array = { original_popularities = sum } #last value (natpop), calculated directly to avoid rounding errors
+
+	if = {
+		limit = { has_coalition = yes }
+		for_each_loop = {
+			array = coalition_partners
+			add_to_array = { original_coalitions = v }
+		}
+	}
 }
 
 restore_previous_government_type = {
@@ -169,6 +221,16 @@ restore_previous_government_type = {
 				national_populist = original_popularities^9
 			}
 			clear_array = original_popularities
+		}
+
+		if = {
+			limit = { check_variable = { original_coalitions^num > 0 } }
+			for_each_loop = {
+				array = original_coalitions
+				set_temp_variable = { coalition_partner_var = v }
+				add_to_coalition = yes
+			}
+			clear_array = original_coalitions
 		}
 	}
 }
@@ -462,10 +524,6 @@ destroy_all_ships = {
 	}
 	destroy_ships = {
 		type = ship_hull_carrier_conversion_ca
-		count = all
-	}
-	destroy_ships = {
-		type = ship_hull_carrier_conversion_dng
 		count = all
 	}
 }

@@ -67,11 +67,13 @@ NDefines.NDiplomacy.TENSION_SIZE_FACTOR = 0									-- Vanilla is 1.0
 -- Peace Conference
 NDefines.NDiplomacy.BASE_PEACE_PUPPET_FACTOR = 0							-- Vanilla is 100
 NDefines.NDiplomacy.BASE_PEACE_LIBERATE_FACTOR = 0							-- Vanilla is 100
-NDefines.NDiplomacy.PEACE_SCORE_PER_PASS = 0.75								-- Vanilla is 0.2
-NDefines.NCountry.STATE_OCCUPATION_COST_MULTIPLIER = 0.25					-- Vanilla is 0.01
+NDefines.NDiplomacy.PEACE_SCORE_PER_PASS = 1.0								-- Vanilla is 0.2
+NDefines.NDiplomacy.PEACE_MIN_SCORE = 0.5									-- Vanilla is 0.3
+NDefines.NCountry.STATE_OCCUPATION_COST_MULTIPLIER = 0.10					-- Vanilla is 0.01
 
 -- Air
-NDefines.NAir.NAVAL_STRIKE_DETECTION_BALANCE_FACTOR = 0.1                    -- Vanilla is 0.7
+NDefines.NAir.NAVAL_STRIKE_DAMAGE_TO_STR = 1.0								-- Vanilla is 2.0
+NDefines.NAir.NAVAL_STRIKE_DAMAGE_TO_ORG = 1.25								-- Vanilla is 2.5
 
 -- Volunteers
 NDefines.NAI.SEND_VOLUNTEER_EVAL_BASE_DISTANCE = 1000.0  					-- Vanilla is 175.0
@@ -129,3 +131,4 @@ NDefines.NAI.MIN_FIELD_STRENGTH_TO_BUILD_UNITS = 0.6						-- Vanilla is 0.7
 NDefines.NAI.MIN_MANPOWER_TO_BUILD_UNITS = 0.6								-- Vanilla is 0.7
 NDefines.NAI.UPGRADE_DIVISION_RELUCTANCE = 14								-- Vanilla is 7
 NDefines.NAI.VARIANT_UPGRADE_MIN_XP = 1000									-- Vanilla is 50
+

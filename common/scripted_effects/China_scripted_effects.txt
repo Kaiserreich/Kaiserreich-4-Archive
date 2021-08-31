@@ -266,238 +266,6 @@ china_reform_faction = {
 	}
 }
 
-chinese_united_front_ceasefire = {
-	custom_effect_tooltip = china_ceasefire_occupation_transfer
-	hidden_effect = {
-		### create array of all occupied states in territory belonging to FROM, its puppets and faction members, or any future UF members
-		for_each_scope_loop = {
-			array = ROOT.controlled_states
-			if = {
-				limit = {
-					owner = {
-						NOT = { tag = ROOT }
-						is_chinese_tag = yes
-						OR = {
-							is_ally_with = FROM
-							has_country_flag = united_front_member
-						}
-					}
-				}
-				add_to_temp_array = { global.ROOT_ceasefire_states = THIS }
-			}
-		}
-		for_each_scope_loop = {
-			array = ROOT.subjects
-			for_each_scope_loop = {
-				array = THIS.controlled_states
-				if = {
-					limit = {
-						owner = {
-							NOT = { tag = PREV.PREV }
-							is_chinese_tag = yes
-							OR = {
-								is_ally_with = FROM
-								has_country_flag = united_front_member
-							}
-						}
-					}
-					add_to_temp_array = { global.ROOT_ceasefire_states = THIS }
-				}
-			}
-		}
-		for_each_scope_loop = {
-			array = ROOT.faction_members
-			for_each_scope_loop = {
-				array = THIS.controlled_states
-				if = {
-					limit = {
-						owner = {
-							NOT = { tag = PREV.PREV }
-							is_chinese_tag = yes
-							OR = {
-								is_ally_with = FROM
-								has_country_flag = united_front_member
-							}
-						}
-					}
-					add_to_temp_array = { global.ROOT_ceasefire_states = THIS }
-				}
-			}
-		}
-
-		### create array of all occupied states in territory belonging to ROOT, its puppets and faction members
-		for_each_scope_loop = {
-			array = FROM.controlled_states
-			if = {
-				limit = {
-					owner = {
-						NOT = { tag = FROM }
-						is_chinese_tag = yes
-						is_ally_with = ROOT
-					}
-				}
-				add_to_temp_array = { global.FROM_ceasefire_states = THIS }
-			}
-		}
-		for_each_scope_loop = {
-			array = FROM.subjects
-			for_each_scope_loop = {
-				array = THIS.controlled_states
-				if = {
-					limit = {
-						owner = {
-							NOT = { tag = PREV.PREV }
-							is_chinese_tag = yes
-							is_ally_with = ROOT
-						}
-					}
-					add_to_temp_array = { global.FROM_ceasefire_states = THIS }
-				}
-			}
-		}
-		for_each_scope_loop = {
-			array = FROM.faction_members
-			for_each_scope_loop = {
-				array = THIS.controlled_states
-				if = {
-					limit = {
-						owner = {
-							NOT = { tag = PREV.PREV }
-							is_chinese_tag = yes
-							is_ally_with = ROOT
-						}
-					}
-					add_to_temp_array = { global.FROM_ceasefire_states = THIS }
-				}
-			}
-		}
-
-		### manual override for lake states
-		every_state = {
-			limit = {
-				OR = {
-					state = 598 #Huaiyang
-					state = 604 #Xining
-					state = 613 #Jinling
-					state = 1044 #Yuzhang
-				}
-			}
-			if = {
-				limit = {
-					controller = {
-						is_ally_with = ROOT
-					}
-					owner = {
-						OR = {
-							is_ally_with = FROM
-							has_country_flag = united_front_member
-						}
-					}
-				}
-				add_to_temp_array = { global.ROOT_ceasefire_states = THIS }
-			}
-			if = {
-				limit = {
-					controller = {
-						OR = {
-							is_ally_with = FROM
-							has_country_flag = united_front_member
-						}
-					}
-					owner = {
-						is_ally_with = ROOT
-					}
-				}
-				add_to_temp_array = { global.FROM_ceasefire_states = THIS }
-			}
-		}
-
-		### ROOT vs FROM ###
-		### loop through the states, transferring any bordering controlled states until all possible ones are transferred
-		if = {
-			limit = {
-				check_variable = { global.ROOT_ceasefire_states^num > 0 }
-			}
-			while_loop_effect = {
-				limit = {
-					any_of_scopes = {
-						array = global.ROOT_ceasefire_states
-						num_owned_neighbour_states = {
-							owner = ROOT
-							count > 0
-						}
-					}
-				}
-				for_each_scope_loop = {
-					array = global.ROOT_ceasefire_states
-					### if the state borders ROOT's territory, transfer it to ROOT
-					if = {
-						limit = {
-							num_owned_neighbour_states = {
-								owner = ROOT
-								count > 0
-							}
-						}
-						ROOT = { transfer_state = PREV }
-						add_to_temp_array = { global.ROOT_ceasefire_states_to_remove = THIS }
-					}
-				}
-
-				### remove any evaluated states from the array
-				for_each_loop = {
-					array = global.ROOT_ceasefire_states_to_remove
-					remove_from_temp_array = { global.ROOT_ceasefire_states = v }
-				}
-			}
-		}
-
-		### FROM vs ROOT ###
-		### loop through the states, transferring any bordering controlled states until all possible ones are transferred
-		if = {
-			limit = {
-				check_variable = { global.FROM_ceasefire_states^num > 0 }
-			}
-			while_loop_effect = {
-				limit = {
-					any_of_scopes = {
-						array = global.FROM_ceasefire_states
-						num_owned_neighbour_states = {
-							owner = FROM
-							count > 0
-						}
-					}
-				}
-				for_each_scope_loop = {
-					array = global.FROM_ceasefire_states
-					### if the state borders FROM's territory, transfer it to FROM
-					if = {
-						limit = {
-							num_owned_neighbour_states = {
-								owner = FROM
-								count > 0
-							}
-						}
-						FROM = { transfer_state = PREV }
-						add_to_temp_array = { global.FROM_ceasefire_states_to_remove = THIS }
-					}
-				}
-
-				### remove any evaluated states from the array
-				for_each_loop = {
-					array = global.FROM_ceasefire_states_to_remove
-					remove_from_temp_array = { global.FROM_ceasefire_states = v }
-				}
-			}
-			for_each_scope_loop = {
-				array = global.FROM_ceasefire_states
-				owner = {
-					set_state_controller = PREV
-				}
-			}
-		}
-	}
-}
-
 set_potential_national_government = {
 	if = {
 		limit = {
@@ -695,6 +463,9 @@ LEP_league_war_find_victor = {
 			}
 		}
 		set_variable = { LEP.LEP_league_war_victor = SQI }
+		SQI = {
+			country_event = { id = shandong.11037 days = 2 }
+		}
 	}
 	else_if = {
 		limit = {
@@ -705,15 +476,14 @@ LEP_league_war_find_victor = {
 			}
 			OR = {
 				NOT = { country_exists = SQI }
+				SQI = { is_in_faction = yes }
+				SQI = { is_subject = yes }
 				has_global_flag = LEP_collapse_SQI_out
 			}
 		}
 		set_variable = { LEP.LEP_league_war_victor = LEP }
 		LEP = {
-			country_event = {
-				id = lep.100
-				days = 2
-			}
+			country_event = { id = lep.100 days = 2 }
 		}
 	}
 	else_if = {
@@ -729,6 +499,9 @@ LEP_league_war_find_victor = {
 			}
 		}
 		set_variable = { LEP.LEP_league_war_victor = CHI }
+		CHI = {
+			country_event = { id = chi_dom.11 days = 2 }
+		}
 	}
 	else_if = {
 		limit = {
@@ -745,15 +518,18 @@ LEP_league_war_find_victor = {
 		set_variable = { LEP.LEP_league_war_victor = ANQ }
 		ANQ = {
 			set_country_flag = ANQ_feng_aid_undecided
-			country_event = {
-				id = anq.64
-				days = 4
-			}
+			country_event = { id = anq.64 days = 4 }
 		}
 	}
 	if = {
 		limit = { has_variable = LEP.LEP_league_war_victor }
 		set_global_flag = LEP_league_war_over
 		clr_global_flag = LEP_war
+		if = {
+			limit = { has_global_flag = LEP_wuxi_vp_increased }
+			clr_global_flag = LEP_wuxi_vp_increased
+			add_victory_points = { province = 10076 value = -10 }
+		}
 	}
 }
+

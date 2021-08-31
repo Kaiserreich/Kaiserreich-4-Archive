@@ -32,7 +32,7 @@ political_actions = {
 		fire_only_once = no
 
 		state_target = yes
-		targets = { 281 321 445 733 818 858 888 897 }
+		targets = { 281 321 445 733 818 858 888 }
 		target_trigger = {
 			FROM = {
 				is_owned_and_controlled_by = ROOT
@@ -387,9 +387,16 @@ political_actions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision RAJ_join_the_fray target: [From.GetName]"
-			set_country_flag = { flag = RAJ_impending_war days = 35 value = 1 }
+			set_country_flag = { flag = RAJ_impending_war_@FROM days = 35 value = 1 }
 			add_war_support = 0.10
-			FROM = { country_event = kr.political.30 } #warning event
+			FROM = {
+				country_event = kr.political.30
+				save_event_target_as = attack_target
+			}
+			every_other_country = {
+				limit = { is_ally_with = ROOT }
+				country_event = kr.political.32
+			}
 			setup_decision_attack_AI = yes
 		}
 		remove_effect = {
@@ -410,12 +417,16 @@ political_actions = {
 			factor = 100
 			modifier = {
 				factor = 0
-				has_country_flag = RAJ_impending_war
+				OR = {
+					has_country_flag = RAJ_impending_war_RAJ
+					has_country_flag = RAJ_impending_war_HND
+					has_country_flag = RAJ_impending_war_PRF
+				}
 			}
 			modifier = {
 				factor = 0
 				FROM = { is_guaranteed_by = JAP }
-				NOT = { has_global_flag = JAP_Fading_Sun }
+				JAP = { is_faction_leader = yes }
 			}
 			modifier = {
 				factor = 0
@@ -528,6 +539,156 @@ political_actions = {
 					strength_ratio = { tag = RAJ ratio < 1.0 }
 				}
 			}
+		}
+	}
+}
+
+operations = {
+	NEP_hold_out_vs_india = {
+		icon = generic_ignite_civil_war
+
+		allowed = { tag = NEP }
+
+		activation = {
+			has_war_with = FROM
+			is_valid_peace_target = yes
+			has_capitulated = no
+		}
+
+		available = {
+			has_capitulated = yes
+		}
+
+		cancel_trigger = {
+			OR = {
+				is_valid_peace_target = no
+				NOT = { has_war_with = FROM }
+			}
+		}
+
+		is_good = yes
+		fire_only_once = no
+		days_mission_timeout = 180
+
+		targets = { HND PRF RAJ }
+		target_trigger = {
+			FROM = {
+				has_war_with = ROOT
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout NEP_hold_out_vs_india"
+			effect_tooltip = {
+				FROM = { country_event = nepal.20 }
+			}
+		}
+	}
+
+	NEP_defeat_nepal = {
+		icon = generic_ignite_civil_war
+
+		allowed = {
+			OR = {
+				tag = HND
+				tag = RAJ
+				tag = PRF
+			}
+		}
+
+		activation = {
+			has_war_with = NEP
+			NEP = {
+				is_valid_peace_target = yes
+				has_capitulated = no
+			}
+		}
+
+		available = {
+			NEP = {
+				has_capitulated = yes
+			}
+		}
+
+		cancel_trigger = {
+			OR = {
+				NEP = { is_valid_peace_target = no }
+				NOT = { has_war_with = NEP }
+			}
+		}
+
+		is_good = no
+		fire_only_once = no
+		days_mission_timeout = 180
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout NEP_defeat_nepal"
+			country_event = nepal.20
+		}
+	}
+
+	NEP_defeat_india = {
+		icon = generic_ignite_civil_war
+
+		allowed = { tag = NEP }
+
+		available = {
+			if = {
+				limit = {
+					FROM = { tag = RAJ }
+				}
+				OR = {
+					controls_state = 439 #Delhi
+					surrender_progress > 0.40
+				}
+			}
+			else = {
+				OR = {
+					controls_state = 431 #Calcutta
+					surrender_progress > 0.40
+				}
+			}
+			surrender_progress < 0.20
+		}
+
+		visible = {
+			has_war_with = FROM
+			is_valid_peace_target = yes
+		}
+
+		fire_only_once = yes
+		cost = 0
+
+		targets = { RAJ HND }
+		target_trigger = {
+			FROM = {
+				has_war_with = ROOT
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision NEP_defeat_india target: [From.GetName]"
+			add_political_power = 100
+			add_stability = 0.10
+			if = {
+				limit = {
+					FROM = { is_valid_peace_target = yes }
+				}
+				FROM = { country_event = nepal.10 }
+			}
+			else_if = {
+				limit = {
+					FROM = { is_in_faction = yes }
+				}
+				var:FROM.faction_leader = { country_event = nepal.10 }
+			}
+			else = {
+				var:FROM.overlord = { country_event = nepal.10 }
+			}
+		}
+
+		ai_will_do = {
+			factor = 100
 		}
 	}
 }

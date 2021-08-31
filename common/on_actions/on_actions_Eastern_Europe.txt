@@ -1,29 +1,8 @@
 on_actions = {
-	on_startup = {
-		effect = {
-			ROM = {
-				give_resource_rights = { state = 46 receiver = GER }
-			}
-
-			# Setup starting Intermarium members
-			add_to_array = { global.MIE_tags_array = BAT }
-			add_to_array = { global.MIE_tags_array = LIT }
-			add_to_array = { global.MIE_tags_array = WHR }
-			add_to_array = { global.MIE_tags_array = UKR }
-
-			#Set BAT as the leader of Intermarium
-			BAT = { save_global_event_target_as = MIE_leader }
-
-			#Set global equipments
-			set_variable = { global.MIE_infantry_equipment = 0 }
-			set_variable = { global.MIE_support_equipment = 0 }
-			set_variable = { global.MIE_artillery_equipment = 0 }
-		}
-	}
-
 	#ROOT is winner #FROM gets annexed - For civil wars on_civil_war_end is also fired
 	on_annex = {
 		effect = {
+			FROM = { MIE_remove_from_intermarium = yes }
 			if = {
 				limit = {
 					ROOT = { tag = POL }
@@ -36,39 +15,24 @@ on_actions = {
 			}
 			if = {
 				limit = {
-					is_in_array = { global.MIE_tags_array = FROM }
-				}
-				remove_from_array = { global.MIE_tags_array = FROM }
-				FROM = {
-					if = {
-						limit = {
-							has_idea = MIE_contributions
-						}
-						remove_ideas = MIE_contributions
-						add_to_variable = { global.MIE_infantry_equipment_monthly = -20 }
-						add_to_variable = { global.MIE_support_equipment_monthly = -10 }
-						add_to_variable = { global.MIE_artillery_equipment_monthly = -10 }
-					}
-					if = {
-						limit = {
-							has_idea = MIE_joint_air_command_1
-						}
-						remove_ideas = MIE_joint_air_command_1
-					}
-					else_if = {
-						limit = {
-							has_idea = MIE_joint_air_command_2
-						}
-						remove_ideas = MIE_joint_air_command_2
-					}
-				}
-			}
-			if = {
-				limit = {
 					FROM = { tag = BAT }
 				}
-				LAT = { remove_ideas = LAT_EST_roads_to_riga }
-				EST = { remove_ideas = LAT_EST_roads_to_riga }
+				LAT = {
+					remove_ideas = {
+						LAT_EST_roads_to_riga_1
+						LAT_EST_roads_to_riga_2
+						LAT_EST_roads_to_riga_3
+						LAT_EST_roads_to_riga_4
+					}
+				}
+				EST = {
+					remove_ideas = {
+						LAT_EST_roads_to_riga_1
+						LAT_EST_roads_to_riga_2
+						LAT_EST_roads_to_riga_3
+						LAT_EST_roads_to_riga_4
+					}
+				}
 			}
 			if = {
 				limit = {
@@ -153,86 +117,19 @@ on_actions = {
 
 			### Transfer MIE ownership
 			if = {
+				limit = { tag = MIE }
+				MIE_move_to_next_intermarium_leader = yes
+			}
+
+			### Russia is defeated, disband MIE
+			if = {
 				limit = {
-					tag = MIE
-				}
-				delete_unit = { id = 177013 }
-				if = {
-					limit = {
-						POL = {
-							is_in_array = { global.MIE_tags_array = THIS }
-							has_capitulated = no
-						}
-					}
-					clear_global_event_target = MIE_leader
-					POL = {
-						save_global_event_target_as = MIE_leader
-						if = {
-							limit = {
-								has_global_flag = MIE_armored_division_exists
-								NOT = { has_template = "Osteuropäische Interdivision" }
-							}
-							MIE_form_armored_interdivision = yes
-						}
+					OR = {
+						tag = RUS
+						tag = SOV
 					}
 				}
-				else_if = {
-					limit = {
-						UKR = {
-							is_in_array = { global.MIE_tags_array = THIS }
-							has_capitulated = no
-						}
-					}
-					clear_global_event_target = MIE_leader
-					UKR = {
-						save_global_event_target_as = MIE_leader
-						if = {
-							limit = {
-								has_global_flag = MIE_armored_division_exists
-								NOT = { has_template = "Osteuropäische Interdivision" }
-							}
-							MIE_form_armored_interdivision = yes
-						}
-					}
-				}
-				else_if = {
-					limit = {
-						LIT = {
-							is_in_array = { global.MIE_tags_array = THIS }
-							has_capitulated = no
-						}
-					}
-					clear_global_event_target = MIE_leader
-					LIT = {
-						save_global_event_target_as = MIE_leader
-						if = {
-							limit = {
-								has_global_flag = MIE_armored_division_exists
-								NOT = { has_template = "Osteuropäische Interdivision" }
-							}
-							MIE_form_armored_interdivision = yes
-						}
-					}
-				}
-				else_if = {
-					limit = {
-						WHR = {
-							is_in_array = { global.MIE_tags_array = THIS }
-							has_capitulated = no
-						}
-					}
-					clear_global_event_target = MIE_leader
-					WHR = {
-						save_global_event_target_as = MIE_leader
-						if = {
-							limit = {
-								has_global_flag = MIE_armored_division_exists
-								NOT = { has_template = "Osteuropäische Interdivision" }
-							}
-							MIE_form_armored_interdivision = yes
-						}
-					}
-				}
+				MIE_intermarium_disbands = yes
 			}
 		}
 	}
@@ -258,18 +155,25 @@ on_actions = {
 
 	on_new_term_election = {
 		effect = {
-			### Lithuania ###
+			### Estonia ###
 			if = {
-				limit = { tag = LIT }
-				country_event = lithuania.11 #1938
+				limit = { tag = EST }
+				country_event = KREST.87
 			}
 			### Poland ###
-			if = {
+			else_if = {
 				limit = { tag = POL }
 				country_event = poland.46
 				country_event = poland.47
 				country_event = plcommon.15
 			}
+			### Lithuania ###
+			else_if = {
+				limit = { tag = LIT }
+				country_event = LIT.25
+				#country_event = LIT.440
+			}
+
 		}
 	}
 
@@ -278,125 +182,16 @@ on_actions = {
 		effect = {
 			# adding to Intermarium
 			if = {
-				limit = {
-					FROM = {
-						is_possible_intermarium_country = yes
-						is_in_faction_with = GER
-						NOT = {
-							is_in_array = { global.MIE_tags_array = FROM }
-						}
-					}
-				}
-				add_to_array = { global.MIE_tags_array = FROM }
-				FROM = {
-					if = {
-						limit = {
-							MIE = { has_idea = MIE_contributions }
-						}
-						add_ideas = MIE_contributions
-						add_to_variable = { global.MIE_infantry_equipment_monthly = 20 }
-						add_to_variable = { global.MIE_support_equipment_monthly = 10 }
-						add_to_variable = { global.MIE_artillery_equipment_monthly = 10 }
-					}
-					if = {
-						limit = {
-							MIE = { has_idea = MIE_joint_air_command_1 }
-						}
-						add_ideas = MIE_joint_air_command_1
-					}
-					else_if = {
-						limit = {
-							MIE = { has_idea = MIE_joint_air_command_2 }
-						}
-						add_ideas = MIE_joint_air_command_2
-					}
-				}
-			}
-			# removing from Intermarium
-			if = {
-				limit = {
-					NOT = { is_in_faction_with = GER }
-					is_in_array = { global.MIE_tags_array = FROM }
-				}
-				remove_from_array = { global.MIE_tags_array = FROM }
+				limit = { FROM = { is_possible_intermarium_country = yes } }
 				if = {
-					limit = {
-						FROM = { tag = MIE }
-					}
-					FROM = {
-						delete_unit = { id = 177013 }
-					}
+					limit = { tag = GER }
+					FROM = { MIE_add_to_intermarium = yes }
+				}
+				else = {
+					MIE_remove_from_intermarium = yes
 					if = {
-						limit = {
-							POL = {
-								is_in_array = { global.MIE_tags_array = THIS }
-								has_capitulated = no
-							}
-						}
-						clear_global_event_target = MIE_leader
-						POL = {
-							save_global_event_target_as = MIE_leader
-							if = {
-								limit = {
-									has_global_flag = MIE_armored_division_exists
-								}
-								MIE_form_armored_interdivision = yes
-							}
-						}
-					}
-					else_if = {
-						limit = {
-							UKR = {
-								is_in_array = { global.MIE_tags_array = THIS }
-								has_capitulated = no
-							}
-						}
-						clear_global_event_target = MIE_leader
-						UKR = {
-							save_global_event_target_as = MIE_leader
-							if = {
-								limit = {
-									has_global_flag = MIE_armored_division_exists
-								}
-								MIE_form_armored_interdivision = yes
-							}
-						}
-					}
-					else_if = {
-						limit = {
-							LIT = {
-								is_in_array = { global.MIE_tags_array = THIS }
-								has_capitulated = no
-							}
-						}
-						clear_global_event_target = MIE_leader
-						LIT = {
-							save_global_event_target_as = MIE_leader
-							if = {
-								limit = {
-									has_global_flag = MIE_armored_division_exists
-								}
-								MIE_form_armored_interdivision = yes
-							}
-						}
-					}
-					else_if = {
-						limit = {
-							WHR = {
-								is_in_array = { global.MIE_tags_array = THIS }
-								has_capitulated = no
-							}
-						}
-						clear_global_event_target = MIE_leader
-						WHR = {
-							save_global_event_target_as = MIE_leader
-							if = {
-								limit = {
-									has_global_flag = MIE_armored_division_exists
-								}
-								MIE_form_armored_interdivision = yes
-							}
-						}
+						limit = { FROM = { tag = MIE } }
+						MIE_move_to_next_intermarium_leader = yes
 					}
 				}
 			}
@@ -455,11 +250,33 @@ on_actions = {
 		}
 	}
 
-	on_peace = {
+	#ROOT = attacking side
+	#FROM = defending side
+	#fired when two countries end up at war with each other (on_war is fired when a country goes to war against anyone and is not fired again when it enters war against another country unless it went to peace first)
+	on_war_relation_added = {
 		effect = {
 			if = {
-				limit = { tag = LIT }
-				country_event = { id = lithuania.29 days = 45 random_days = 75 }
+				limit = {
+					OR = {
+						AND = {
+							tag = LIT
+							FROM = {
+								OR = {
+									tag = RUS
+									tag = SOV
+								}
+							}
+						}
+						AND = {
+							OR = {
+								tag = RUS
+								tag = SOV
+							}
+							FROM = { tag = LIT }
+						}
+					}
+				}
+				LIT = { add_ideas = LIT_fire_natpop_rebellion }
 			}
 		}
 	}

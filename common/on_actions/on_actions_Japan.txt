@@ -120,26 +120,19 @@ on_actions = {
 			if = {
 				limit = {
 					tag = JAP
-					NOT = { any_allied_country = { is_major = yes } }
+					NOT = { any_allied_country = { is_actual_major = yes } }
 				}
 				JAP_fading_sun = yes
 				every_other_country = {
-					limit = { is_in_faction_with = JAP }
-					if = {
-						limit = {
-							OR = {
-								is_chinese_tag = yes
-								has_capitulated = yes
-							}
-						}
-						leave_faction = yes
+					limit = {
+						is_in_faction_with = JAP
+						has_capitulated = no
 					}
-					else = {
-						set_country_flag = JAP_was_in_sphere
-						country_event = japfor.235
-					}
+					set_country_flag = JAP_was_in_sphere
+					country_event = japfor.250
 				}
 				dismantle_faction = yes
+				news_event = japfor.251
 				every_country = {
 					limit = {
 						has_war = yes
@@ -152,7 +145,7 @@ on_actions = {
 							}
 						}
 					}
-					country_event = { id = japfor.236 hours = 1 }
+					country_event = { id = japfor.252 hours = 1 }
 				}
 			}
 		}
@@ -332,6 +325,26 @@ on_actions = {
 					}
 				}
 			}
+			if = {
+				limit = {
+					#Japanese Treaty Territories
+					FROM = {
+						original_tag = JAP
+						NOT = { tag = JAP }
+					}
+				}
+				FROM = {
+					random_neighbor_country = {
+						limit = {
+							OR = {
+								tag = RUS
+								is_chinese_tag = yes
+							}
+						}
+						annex_country = { target = FROM }
+					}
+				}
+			}
 		}
 	}
 
@@ -369,7 +382,57 @@ on_actions = {
 					}
 				}
 			}
+			if = {
+				limit = {
+					has_global_flag = JAP_chinese_resistance_active
+					FROM.FROM = { is_mainland_china = yes }
+				}
+				if = {
+					limit = {
+						is_ally_with = JAP
+						NOT = {
+							FROM.FROM = { has_dynamic_modifier = { modifier = JAP_chinese_resistance } }
+						}
+					}
+					FROM.FROM = {
+						add_dynamic_modifier = { modifier = JAP_chinese_resistance }
+						add_to_array = { global.JAP_chinese_resistance_states = THIS }
+					}
+				}
+				else_if = {
+					limit = {
+						FROM.FROM = { has_dynamic_modifier = { modifier = JAP_chinese_resistance } }
+						FROM = { is_ally_with = JAP }
+					}
+					FROM.FROM = {
+						remove_dynamic_modifier = { modifier = JAP_chinese_resistance }
+						remove_from_array = { global.JAP_chinese_resistance_states = THIS }
+					}
+				}
+			}
+		}
+	}
+
+	#ROOT = attacking side
+	#FROM = defending side
+	#fired when two countries end up at war with each other (on_war is fired when a country goes to war against anyone and is not fired again when it enters war against another country unless it went to peace first)
+	on_war_relation_added = {
+		effect = {
+			if = {
+				limit = {
+					OR = {
+						AND = {
+							tag = JAP
+							FROM = { is_han_chinese_tag = yes }
+						}
+						AND = {
+							is_han_chinese_tag = yes
+							FROM = { tag = JAP }
+						}
+					}
+				}
+				JAP = { add_ideas = JAP_add_chinese_war_effort }
+			}
 		}
 	}
 }
-

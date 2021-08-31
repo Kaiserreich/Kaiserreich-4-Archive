@@ -10,13 +10,6 @@ JAP_fading_sun = {
 				NOT = { has_global_flag = JAP_Fading_Sun }
 			}
 			set_global_flag = JAP_Fading_Sun
-			set_global_flag = JAP_fading_sun_fired
-
-			# disable the Fading Sun missions
-			every_country = {
-				limit = { has_active_mission = JAP_fading_sun_mission }
-				remove_mission = JAP_fading_sun_mission
-			}
 
 			# fire country-specific events
 			TRM = { country_event = tram.106 }
@@ -50,6 +43,7 @@ JAP_fading_sun = {
 					JAP_three_alls_idea
 					JAP_ichigo
 					JAP_MANTETSU_COLLAPSE
+					JAP_COL_PREP
 				}
 
 				if = {
@@ -405,6 +399,138 @@ JAP_recalculate_economic_integration = {
 		add_to_variable = { global.sphere_resources_boost_member = JAP.num_of_civilian_factories }
 		clamp_variable = { var = global.sphere_resources_boost_member max = 100 min = 0 }
 		multiply_variable = { global.sphere_resources_boost_member = 0.002 }
+	}
+}
+
+JAP_increase_chinese_war_effort = {
+	if = {
+		limit = { has_idea = JAP_chinese_war_effort_1 }
+		swap_ideas = {
+			remove_idea = JAP_chinese_war_effort_1
+			add_idea = JAP_chinese_war_effort_2
+		}
+		hidden_effect = {
+			set_global_flag = JAP_chinese_resistance_active
+			JAP_increase_chinese_resistance = yes
+			every_enemy_country = {
+				limit = { is_chinese_tag = yes }
+				country_event = japfor.600
+				every_owned_state = {
+					limit = { controller = { is_ally_with = JAP } }
+					add_dynamic_modifier = { modifier = JAP_chinese_resistance }
+					add_to_array = { global.JAP_chinese_resistance_states = THIS }
+				}
+			}
+			country_event = japfor.601
+		}
+	}
+	else_if = {
+		limit = { has_idea = JAP_chinese_war_effort_2 }
+		swap_ideas = {
+			remove_idea = JAP_chinese_war_effort_2
+			add_idea = JAP_chinese_war_effort_3
+		}
+		JAP_increase_chinese_resistance = yes
+		hidden_effect = {
+			every_enemy_country = {
+				limit = {
+					is_chinese_tag = yes
+					any_owned_state = { controller = { is_ally_with = JAP } }
+				}
+				country_event = japfor.602
+			}
+		}
+	}
+	else_if = {
+		limit = { has_idea = JAP_chinese_war_effort_3 }
+		swap_ideas = {
+			remove_idea = JAP_chinese_war_effort_3
+			add_idea = JAP_chinese_war_effort_4
+		}
+		JAP_increase_chinese_resistance = yes
+		hidden_effect = {
+			every_enemy_country = {
+				limit = {
+					is_chinese_tag = yes
+					any_owned_state = { controller = { is_ally_with = JAP } }
+				}
+				country_event = japfor.602
+			}
+		}
+	}
+	else_if = {
+		limit = { has_idea = JAP_chinese_war_effort_4 }
+		swap_ideas = {
+			remove_idea = JAP_chinese_war_effort_4
+			add_idea = JAP_chinese_war_effort_5
+		}
+		JAP_increase_chinese_resistance = yes
+		hidden_effect = {
+			every_enemy_country = {
+				limit = {
+					is_chinese_tag = yes
+					any_owned_state = { controller = { is_ally_with = JAP } }
+				}
+				country_event = japfor.602
+			}
+		}
+	}
+	else_if = {
+		limit = { has_idea = JAP_chinese_war_effort_5 }
+		remove_ideas = JAP_chinese_war_effort_5
+		clr_country_flag = JAP_chinese_war_effort
+		JAP_increase_chinese_resistance = yes
+		hidden_effect = {
+			set_country_flag = JAP_war_max
+			every_enemy_country = {
+				limit = {
+					is_chinese_tag = yes
+					any_owned_state = { controller = { is_ally_with = JAP } }
+				}
+				country_event = japfor.602
+			}
+		}
+	}
+}
+
+JAP_increase_chinese_resistance = {
+	custom_effect_tooltip = JAP_increase_chinese_resistance
+	add_to_variable = {
+		global.JAP_chinese_resistance_compliance = -0.01
+		tooltip = JAP_chinese_resistance_compliance
+	}
+	add_to_variable = {
+		global.JAP_chinese_resistance_growth = 0.05
+		tooltip = JAP_chinese_resistance_growth
+	}
+	add_to_variable = {
+		global.JAP_chinese_resistance_target = 0.1
+		tooltip = JAP_chinese_resistance_target
+	}
+	add_to_variable = {
+		global.JAP_chinese_resistance_attrition = 0.05
+		tooltip = JAP_chinese_resistance_attrition
+	}
+}
+
+JAP_disable_chinese_resistance_on_country = {
+	custom_effect_tooltip = JAP_chinese_war_effort_end_tt
+	every_owned_state = {
+		limit = { has_dynamic_modifier = { modifier = JAP_chinese_resistance } }
+		remove_dynamic_modifier = { modifier = JAP_chinese_resistance }
+		if = {
+			limit = { is_in_array = { JAP_chinese_resistance_states = THIS } }
+			remove_from_array = { JAP_chinese_resistance_states = THIS }
+		}
+	}
+	if = {
+		limit = { check_variable = { JAP_chinese_resistance_states^num < 1 } }
+		clear_array = global.JAP_chinese_resistance_states
+		clr_global_flag = JAP_chinese_resistance_active
+		clear_variable = global.JAP_chinese_resistance_compliance
+		clear_variable = global.JAP_chinese_resistance_growth
+		clear_variable = global.JAP_chinese_resistance_target
+		clear_variable = global.JAP_chinese_resistance_attrition
 	}
 }
 
