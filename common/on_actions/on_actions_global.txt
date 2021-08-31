@@ -50,6 +50,7 @@ on_actions = {
             #}
 
 			random_list = {
+				seed = random
                 #log = yes # log picked effect in game.log
 				temp_var:capture_chance = {
 					capture_operative = {
@@ -92,6 +93,7 @@ on_actions = {
 				set_unit_leader_flag = le_clerc2
 			}
 			random_list = {
+				seed = random
 				log = yes
 				90 = { #regular
 					operative_leader_event = {
@@ -162,6 +164,7 @@ on_actions = {
 		effect = {
 			log = "[GetDateText] [From.GetName]: on_operative_detected_during_operation OPERATIVE: [This.GetName]"
 			random_list = {
+				seed = random
 				45 = {
 					force_operative_leader_into_hiding = 45
 					operative_leader_event = {
@@ -217,6 +220,7 @@ on_actions = {
 							NOT = { has_trait = operative_escape_artist }
 						}
 						random_list = {
+							seed = random
 							15 = { add_unit_leader_trait = operative_escape_artist }
 							85 = {}
 						}
@@ -232,6 +236,7 @@ on_actions = {
 						NOT = { has_nationality = FROM }
 					}
 					random_list = {
+						seed = random
 						20 = { add_nationality = FROM }
 						80 = {}
 					}
@@ -290,14 +295,23 @@ on_actions = {
 						add_to_temp_array = { guarantors_to_remove = v }
 					}
 				}
-				for_each_loop = {
-					array = guarantors_to_remove
-					remove_from_array = { guarantor_array = v }
+				if = {
+					limit = { check_variable = { guarantors_to_remove^num = guarantor_array^num } }
+					clear_array = guarantor_array
+				}
+				else = {
+					for_each_loop = {
+						array = guarantors_to_remove
+						remove_from_array = { guarantor_array = v }
+					}
 				}
 			}
 
 			if = {
-				limit = { is_debug = yes }				
+				limit = {
+					has_global_flag = KR_Economy_Logging
+					is_debug = yes
+				}
 				#resource logging
 				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];oil;[?resource_consumed@oil];[?resource_produced@oil];[?resource_exported@oil];[?resource_imported@oil];[?resource@oil]"
 				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];aluminium;[?resource_consumed@aluminium];[?resource_produced@aluminium];[?resource_exported@aluminium];[?resource_imported@aluminium];[?resource@aluminium]"
@@ -467,6 +481,13 @@ on_actions = {
 				set_capital = var:historical_capital_state
 			}
 
+			### Adding opinion modifiers to newly-spawned countries
+			if = {
+				limit = { NOT = { has_country_flag = opinion_modifiers_set_up } }
+				set_country_flag = opinion_modifiers_set_up
+				country_event = kr.political.41
+			}
+
 			### Appply WK2 AI boosts
 			if = {
 				limit = { has_global_flag = second_weltkrieg_has_started }
@@ -533,6 +554,7 @@ on_actions = {
 				#clr_country_flag = KR_can_lower_autonomy_level
 				#clr_country_flag = KR_can_be_annexed
 				clr_country_flag = KR_can_become_free
+				clr_country_flag = opinion_modifiers_set_up
 			}
 		}
 	}
@@ -615,6 +637,13 @@ on_actions = {
 				set_country_flag = KR_has_socialist_government
 				clear_all_sent_volunteers = yes
 			}
+		}
+	}
+
+	# temp var old_ideology_token is available for effects
+	on_ruling_party_change = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] on_ruling_party_change old_ideology_token = [?old_ideology_token.GetTokenKey] [?old_ideology_token.GetTokenLocalizedKey]"
 		}
 	}
 
@@ -856,6 +885,21 @@ on_actions = {
 					country_event = { id = kr.political.80 hours = 3 }
 				}
 			}
+
+			# transfer the navy if set to
+			if = {
+				limit = { has_variable = transfer_navy_to }
+				if = {
+					limit = {
+						country_exists = var:transfer_navy_to
+						FROM = { is_ally_with = var:transfer_navy_to }
+					}
+					var:transfer_navy_to = {
+						ROOT = { transfer_navy = { target = PREV } }
+					}
+				}
+				clear_variable = transfer_navy_to
+			}
 		}
 	}
 
@@ -1072,6 +1116,14 @@ on_actions = {
 		}
 	}
 
+	#used when liberating in a peace conference
+	#ROOT = nation being liberated, FROM = overlord
+	on_liberate = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] liberating FROM = [From.GetName]"
+		}
+	}
+
 	#used when puppeting through the occupied territories menu during peace time (or when releasing from non-core but owned territory, f.e. Britain releasing Egypt)
 	#ROOT = nation being released, FROM = overlord
 	on_release_as_puppet = {
@@ -1112,6 +1164,34 @@ on_actions = {
 	on_join_faction = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] on_join_faction FROM = [From.GetName]"
+		}
+	}
+
+	#FROM is the one that joins the faction
+	on_create_faction = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] on_create_faction"
+		}
+	}
+
+	# ROOT is the new faction leader FROM is the old faction leader
+	on_assume_faction_leadership = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] on_assume_faction_leadership"
+			if = {
+				limit = { FROM = { tag = ENT } }
+				save_global_event_target_as = KR_entente_leader
+				save_event_target_as = entente_transfer_to
+				CAN_transfer_entente_leader = yes
+				if = {
+					limit = { has_global_flag = CAN_iedc_created }
+					CAN_transfer_iedc_leadership = yes
+				}
+			}
+			else_if = {
+				limit = { FROM = { tag = INT } }
+				save_global_event_target_as = KR_internationale_leader
+			}
 		}
 	}
 
@@ -1157,7 +1237,7 @@ on_actions = {
 					}
 					set_temp_variable = { chance = 0.001 }
 					set_temp_variable = { factor = 1 }
-					add_to_temp_variable = { factor = leader_modifier@wounded_chance_factor } 
+					add_to_temp_variable = { factor = leader_modifier@wounded_chance_factor }
 					multiply_temp_variable = { chance = factor }
 					check_variable = { random < chance }
 				}
@@ -1182,7 +1262,7 @@ on_actions = {
 					}
 					set_temp_variable = { chance = 0.005 }
 					set_temp_variable = { factor = 1 }
-					add_to_temp_variable = { factor = leader_modifier@wounded_chance_factor } 
+					add_to_temp_variable = { factor = leader_modifier@wounded_chance_factor }
 					multiply_temp_variable = { chance = factor }
 					check_variable = { random < chance }
 				}
@@ -1397,6 +1477,24 @@ on_actions = {
 					multiply_variable = { coalition_pp_gain = 0.5 }
 				}
 			}
+		}
+	}
+
+	#ROOT = invading tag 
+	#FROM = invasion origin state
+	#THIS = invasion landing point
+	on_naval_invasion = {
+		effect = {
+			log = "[GetDateText]: [Root.GetName] has invaded [This.GetName] from [From.GetName]"
+		}
+	}
+
+	# root country that paradrops
+	# scope state that is paradroped into
+	# from scope state that the paradrop started
+	on_paradrop = {
+		effect = {
+			log = "[GetDateText]: [Root.GetName] has paradropped into [This.GetName] from [From.GetName]"
 		}
 	}
 }

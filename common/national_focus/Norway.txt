@@ -2067,13 +2067,15 @@ focus_tree = {
 		icon = GFX_goal_doctrine_tank_warfare
 		prerequisite = { focus = NOR_SYN_fund_fs }
 		prerequisite = { focus = NOR_SYN_swedish_unions }
-		will_lead_to_war_with = SWE
 		x = 4
 		y = 4
 		cost = 5
 		available = {
 			has_socialist_government = yes
-			SWE = { has_socialist_government = no }
+			SWE = {
+				has_socialist_government = no
+				NOT = { has_war_with = ROOT }
+			}
 			is_subject = no
 		}
 		bypass_if_unavailable = yes
@@ -2082,6 +2084,11 @@ focus_tree = {
 
 		ai_will_do = {
 			factor = 10
+			modifier = {
+				factor = 0
+				is_in_faction = yes
+				NOT = { has_global_flag = second_weltkrieg_has_started }
+			}
 		}
 
 		completion_reward = {
@@ -2542,10 +2549,31 @@ focus_tree = {
 		ai_will_do = {
 			factor = 100
 			modifier = {
+				factor = 0.4286
+				DEN = { has_elected_government = yes }
+				SWE = {
+					has_elected_government = yes
+					NOT = { has_completed_focus = SWE_protectionist_economy }
+				}
+				NOT = {
+					has_game_rule = {
+						rule = NOR_start_election
+						option = NOR_START_ELECTION_DEMOCRACY
+					}
+				}
+			}
+			modifier = {
 				factor = 0
 				has_game_rule = {
 					rule = NOR_start_election
 					option = NOR_START_ELECTION_DEMOCRACY_ENTENTE
+				}
+			}
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = NOR_start_election
+					option = NOR_START_ELECTION_DEMOCRACY_SCANDI
 				}
 			}
 		}
@@ -2580,16 +2608,6 @@ focus_tree = {
 				has_game_rule = {
 					rule = NOR_start_election
 					option = NOR_START_ELECTION_DEMOCRACY
-				}
-				NOT = {
-					AND = {
-						DEN = {
-							has_democratic_government = yes
-						}
-						SWE = {
-							has_democratic_government = yes
-						}
-					}
 				}
 			}
 		}
@@ -2794,16 +2812,22 @@ focus_tree = {
 		relative_position_id = NOR_DEM_internationalism
 
 		ai_will_do = {
-			factor = 10
+			factor = 100
 			modifier = {
-				factor = 10
+				factor = 0.5
 				has_country_flag = SCA_treaty_of_stockholm
+				NOT = {
+					has_game_rule = {
+						rule = NOR_start_election
+						option = NOR_START_ELECTION_DEMOCRACY_ENTENTE
+					}
+				}
 			}
 			modifier = {
 				factor = 0
 				has_game_rule = {
 					rule = NOR_start_election
-					option = NOR_START_ELECTION_DEMOCRACY
+					option = NOR_START_ELECTION_DEMOCRACY_SCANDI
 				}
 			}
 		}
@@ -2928,7 +2952,16 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus NOR_DEM_military_mission"
-			add_ideas = NOR_canadian_mission_idea_1
+			if = {
+				limit = { has_idea = NOR_canadian_mission_idea_2 }
+				swap_ideas = {
+					remove_idea = NOR_canadian_mission_idea_2
+					add_idea = NOR_canadian_mission_idea_3
+				}
+			}
+			else = {
+				add_ideas = NOR_canadian_mission_idea_1
+			}
 		}
 		search_filters = { FOCUS_FILTER_ARMY_BONUS }
 	}
@@ -2954,9 +2987,15 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus NOR_DEM_little_norway"
-			swap_ideas = {
-				remove_idea = NOR_canadian_mission_idea_1
-				add_idea = NOR_canadian_mission_idea_2
+			if = {
+				limit = { has_idea = NOR_canadian_mission_idea_1 }
+				swap_ideas = {
+					remove_idea = NOR_canadian_mission_idea_1
+					add_idea = NOR_canadian_mission_idea_3
+				}
+			}
+			else = {
+				add_ideas = NOR_canadian_mission_idea_2
 			}
 			add_equipment_to_stockpile = {
 				type = fighter_equipment_1
@@ -4331,7 +4370,6 @@ focus_tree = {
 		id = NOR_NAT_greenland_claim
 		icon = GFX_goal_NOR_greenland
 		prerequisite = { focus = NOR_NAT_new_state }
-		will_lead_to_war_with = DEN
 		x = 3
 		y = 1
 		cost = 6
@@ -4341,25 +4379,31 @@ focus_tree = {
 			has_government = paternal_autocrat
 		}
 
+		bypass = {
+			owns_state = 101 #Godthab
+		}
+
 		relative_position_id = NOR_NAT_new_state
 
 		ai_will_do = {
 			factor = 10
 		}
 
+		will_lead_to_war_with = DEN
+
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus NOR_NAT_greenland_claim"
-			add_state_claim = 101 #Greenland
+			add_state_claim = 101 #Godthab
+			add_state_claim = 926 #Humboldt Glacier
 			if = {
 				limit = { has_subject = 101.owner }
 				transfer_state = 101
-			}
-			add_state_claim = 926 #Greenland Interior
-			if = {
-				limit = { has_subject = 926.owner }
 				transfer_state = 926
 			}
-			country_event = norway.200
+			else_if = {
+				limit = { can_declare_war_on = 101.owner }
+				var:101.owner = { country_event = norway.213 }
+			}
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION }
 	}
@@ -4368,8 +4412,6 @@ focus_tree = {
 		id = NOR_NAT_iceland_claim
 		icon = GFX_goal_NOR_iceland
 		prerequisite = { focus = NOR_NAT_greenland_claim }
-		will_lead_to_war_with = DEN
-		will_lead_to_war_with = ICE
 		x = -1
 		y = 1
 		cost = 6
@@ -4395,19 +4437,65 @@ focus_tree = {
 			}
 		}
 
+		will_lead_to_war_with = DEN
+		will_lead_to_war_with = ICE
+
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus NOR_NAT_iceland_claim"
 			add_state_claim = 100 #Iceland
+			add_state_claim = 337 #Faroe Islands
 			if = {
 				limit = { has_subject = 100.owner }
 				transfer_state = 100
 			}
-			add_state_claim = 337 #Faroe Islands
+			else_if = {
+				limit = {
+					can_declare_war_on = ICE
+					ICE = { is_subject = no }
+				}
+				ICE = { country_event = norway.217 }
+			}
+			else_if = {
+				limit = {
+					NOT = {
+						country_exists = ICE
+						DEN = { owns_state = 100 }
+					}
+				}
+				create_wargoal = {
+					target = 100.owner
+					type = take_state_focus
+					generator = { 100 }
+				}
+			}
 			if = {
 				limit = { has_subject = 337.owner }
 				transfer_state = 337
 			}
-			country_event = norway.212
+			else_if = {
+				limit = {
+					can_declare_war_on = DEN
+					DEN = {
+						OR = {
+							owns_state = 100
+							owns_state = 337
+						}
+					}
+				}
+				DEN = { country_event = norway.213 }
+			}
+			else_if = {
+				limit = {
+					NOT = {
+						DEN = { owns_state = 337 }
+					}
+				}
+				create_wargoal = {
+					target = 337.owner
+					type = take_state_focus
+					generator = { 100 337 }
+				}
+			}
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION }
 	}
@@ -4432,12 +4520,24 @@ focus_tree = {
 			factor = 2
 		}
 
+		will_lead_to_war_with = ENG
+		will_lead_to_war_with = GBR
+		will_lead_to_war_with = GBP
+
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus NOR_NAT_orkney_claim"
 			add_state_claim = 938 #Shetland
 			if = {
 				limit = { has_subject = 938.owner }
 				transfer_state = 938
+			}
+			else_if = {
+				limit = { can_declare_war_on = 938.owner }
+				create_wargoal = {
+					target = 938.owner
+					type = take_state_focus
+					generator = { 938 }
+				}
 			}
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION }
@@ -4465,11 +4565,11 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus NOR_NAT_sweden_claim"
 			add_state_claim = 778 #Jemtland
+			add_state_claim = 908 #Bohuslan
 			if = {
 				limit = { has_subject = 778.owner }
 				transfer_state = 778
 			}
-			add_state_claim = 908 #Bohuslan
 			if = {
 				limit = { has_subject = 908.owner }
 				transfer_state = 908
@@ -4482,7 +4582,6 @@ focus_tree = {
 		id = NOR_NAT_sweden_demand
 		icon = GFX_goal_generic_occupy_states_ongoing_war
 		prerequisite = { focus = NOR_NAT_sweden_claim }
-		will_lead_to_war_with = SWE
 		x = 1
 		y = 2
 		cost = 6
@@ -4490,8 +4589,18 @@ focus_tree = {
 		available = {
 			is_subject = no
 			has_government = paternal_autocrat
+			can_declare_war_on = SWE
 			SWE = {
 				OR = {
+					owns_state = 778
+					owns_state = 908
+				}
+			}
+		}
+
+		bypass = {
+			SWE = {
+				NOT = {
 					owns_state = 778
 					owns_state = 908
 				}
@@ -4508,18 +4617,11 @@ focus_tree = {
 			}
 		}
 
-		bypass = {
-			SWE = {
-				NOT = {
-					owns_state = 778
-					owns_state = 908
-				}
-			}
-		}
+		will_lead_to_war_with = SWE
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus NOR_NAT_sweden_demand"
-			country_event = norway.220
+			SWE = { country_event = norway.221 }
 		}
 	}
 

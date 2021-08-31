@@ -10,6 +10,7 @@ foreign_politics = {# Foreign Policy
 		allowed = { tag = MEX }
 
 		available = {
+			has_socialist_government = yes
 			at_peace_or_same_enemies_as_FROM = yes
 		}
 
@@ -278,6 +279,9 @@ MEX_central_american_intervention = {
 			has_socialist_government = yes
 			can_declare_war_on = FROM
 			FROM = { NOT = { has_focus_tree = Centroamerica_focus } }
+			NOT = {
+				has_guaranteed = FROM
+			}
 		}
 
 		cancel_trigger = {
@@ -297,6 +301,9 @@ MEX_central_american_intervention = {
 		target_trigger = {
 			can_declare_war_on = FROM
 			FROM = { NOT = { has_focus_tree = Centroamerica_focus } }
+			NOT = {
+				has_guaranteed = FROM
+			}
 		}
 
 		ai_will_do = {
@@ -439,6 +446,13 @@ MEX_central_american_intervention = {
 			every_other_country = {
 				limit = { is_central_american_tag = yes }
 				country_event = mexico.212
+				ROOT = {
+					add_ai_strategy = {
+						type = ignore_claim
+						id = PREV
+						value = 1
+					}
+				}
 			}
 		}
 	}
@@ -452,6 +466,9 @@ MEX_central_american_intervention = {
 		visible = {
 			has_government = national_populist
 			can_declare_war_on = FROM
+			NOT = {
+				has_guaranteed = FROM
+			}
 		}
 
 		cost = 50
@@ -536,21 +553,99 @@ MEX_central_american_intervention = {
 }
 
 MEX_reconquista_decisons = {# Reconquistia Decisions
-	MEX_reclaim_lost_territories_decisions = {
+	MEX_reconquista_decision = {
 		icon = generic_ignite_civil_war
+
+		available = {
+			has_global_flag = USA_civil_war_begun_flag
+		}
 
 		visible = {
 			has_government = national_populist
+			OR = {
+				can_declare_war_on = USA
+				can_declare_war_on = PSA
+				can_declare_war_on = TEX
+				can_declare_war_on = CSA
+			}
 		}
 
-		fire_only_once = yes
 		cost = 50
+		days_remove = 20
+		fire_only_once = yes
 
-		ai_will_do = { factor = 100	}
+		war_with_on_remove = USA
+		war_with_on_remove = PSA
+		war_with_on_remove = CSA
+		war_with_on_remove = TEX
+
+		ai_will_do = {
+			factor = 50
+			modifier = {
+				factor = 0
+				OR = {
+					has_idea = MEX_revolution_economic
+					has_idea = MEX_revolution_military
+				}
+			}
+			modifier = {
+				factor = 0
+				ROOT_is_threatened_cautious = yes
+			}
+			modifier = {
+				factor = 0
+				var:375.owner = { #Texas
+					OR = {
+						is_stronger_than_ROOT_and_not_vulnerable = yes
+						overlord_is_stronger_than_ROOT_and_not_vulnerable = yes
+						faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				var:378.owner = { #California
+					OR = {
+						is_stronger_than_ROOT_and_not_vulnerable = yes
+						overlord_is_stronger_than_ROOT_and_not_vulnerable = yes
+						faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes
+					}
+				}
+			}
+		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision MEX_reclaim_lost_territories_decisions"
-			set_country_flag = MEX_claimed_lost_territories
+			log = "[GetDateText]: [Root.GetName]: Decision MEX_reconquista_decision"
+			set_country_flag = { flag = imminent_war days = 25 value = 1 }
+			every_other_country = {
+				limit = {
+					OR = {
+						tag = USA
+						tag = CSA
+						tag = PSA
+						tag = TEX
+					}
+					can_declare_war_on = ROOT
+				}
+				country_event = kr.political.30 #warning event
+				add_ai_strategy = {
+					type = prepare_for_war
+					id = ROOT
+					value = 1000
+				}
+				ROOT = {
+					set_country_flag = MEX_AI_strategies_@PREV
+					add_ai_strategy = {
+						type = prepare_for_war
+						id = PREV
+						value = 1000
+					}
+				}
+			}
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove MEX_reconquista_decision"
 			every_state = {
 				limit = {
 					OR = {
@@ -562,100 +657,51 @@ MEX_reconquista_decisons = {# Reconquistia Decisions
 				add_claim_by = ROOT
 				set_variable = { ambition_area_@ROOT = 1 }
 			}
-		}
-	}
-
-	MEX_reconquista_decision = {
-		icon = generic_ignite_civil_war
-
-		available = {
-			has_global_flag = USA_civil_war_begun_flag
-		}
-
-		visible = {
-			has_country_flag = MEX_claimed_lost_territories
-			can_declare_war_on = FROM
-		}
-
-		fire_only_once = yes
-		days_remove = 20
-		cost = 50
-		war_with_target_on_remove = yes
-
-		targets = { USA PSA CSA TEX NEE }
-		target_root_trigger = { has_country_flag = MEX_claimed_lost_territories }
-		target_trigger = {
-			can_declare_war_on = FROM
-			FROM = {
-				any_owned_state = { is_claimed_by = ROOT }
-			}
-		}
-
-		ai_will_do = {
-			factor = 50
-			modifier = {
-				factor = 0
-				FROM = {
-					is_actual_neighbor_of_ROOT_or_ally = no
+			every_other_country = {
+				limit = {
+					ROOT = { has_country_flag = MEX_AI_strategies_@PREV }
 				}
-			}
-			modifier = {
-				factor = 0
-				has_idea = MEX_revolution_economic
-			}
-			modifier = {
-				factor = 0
-				has_idea = MEX_revolution_military
-			}
-			modifier = {
-				factor = 0
-				enemies_strength_ratio > 0.5
-			}
-			modifier = {
-				factor = 0
-				surrender_progress > 0
-			}
-			modifier = {
-				factor = 0
-				strength_ratio = { tag = FROM ratio < 1 }
-			}
-			modifier = {
-				factor = 0
-				FROM = {
-					is_in_faction = yes
-					any_allied_country = {
-						strength_ratio = { tag = ROOT ratio > 0.7 }
+				add_ai_strategy = {
+					type = prepare_for_war
+					id = ROOT
+					value = -1000
+				}
+				ROOT = {
+					clr_country_flag = MEX_AI_strategies_@PREV
+					add_ai_strategy = {
+						type = prepare_for_war
+						id = PREV
+						value = -1000
 					}
 				}
 			}
-			modifier = {
-				factor = 0
-				FROM = {
-					is_subject = yes
-					overlord = {
-						strength_ratio = { tag = ROOT ratio > 0.7 }
-					}
+			if = {
+				limit = { can_declare_war_on = USA }
+				declare_war_on = {
+					target = USA
+					type = annex_everything
 				}
 			}
-			modifier = {
-				factor = 0
-				has_country_flag = imminent_war
+			if = {
+				limit = { can_declare_war_on = CSA }
+				declare_war_on = {
+					target = CSA
+					type = annex_everything
+				}
 			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision MEX_reconquista_decision target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 25 value = 1 }
-			FROM = { country_event = kr.political.30 } #warning event
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove MEX_reconquista_decision target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
+			if = {
+				limit = { can_declare_war_on = PSA }
+				declare_war_on = {
+					target = PSA
+					type = annex_everything
+				}
+			}
+			if = {
+				limit = { can_declare_war_on = TEX }
+				declare_war_on = {
+					target = TEX
+					type = annex_everything
+				}
 			}
 		}
 	}

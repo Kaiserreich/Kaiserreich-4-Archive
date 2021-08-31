@@ -102,7 +102,6 @@ country_event = {
 	option = {
 		name = pru.10.a
 		add_ideas = PRU_BM_lvl3
-		set_country_flag = BM_andes
 	}
 }
 
@@ -138,6 +137,7 @@ country_event = {
 		name = pru.18.a
 		if = {
 			limit = {
+				can_declare_war_on = ARG
 				ARG = {
 					owns_state = 872
 					owns_state = 873
@@ -149,8 +149,9 @@ country_event = {
 				type = annex_everything
 			}
 		}
-		if = {
+		else_if = {
 			limit = {
+				can_declare_war_on = CHL
 				CHL = {
 					owns_state = 872
 					owns_state = 873
@@ -165,51 +166,7 @@ country_event = {
 	}
 }
 
-
-country_event = {
-	id = pru.19
-	immediate = { log = "[GetDateText]: [Root.GetName]: event pru.19 FROM = [From.GetName]" }
-	title = pru.19.t
-	desc = pru.19.d
-	picture = GFX_report_event_PRU_generic
-
-	fire_only_once = yes
-	trigger = {
-		tag = PRU
-		NOT = {
-			has_cosmetic_tag = PBC
-		}
-		PRU = {
-			owns_state = 487
-			owns_state = 302
-			owns_state = 847
-			owns_state = 848
-		}
-	}
-
-	option = {
-		name = pru.19.a
-		PRU = {
-			set_cosmetic_tag = PBC
-			set_country_flag = PBC_full
-		}
-		hidden_effect = {
-			every_state = {
-				limit = {
-					OR = {
-						is_claimed_by = BOL
-						is_core_of = BOL
-					}
-				}
-				add_claim_by = ROOT
-			}
-		}
-	}
-}
-
-
 # Peace with Ecuador events
-
 country_event = { # PERU we are losing! sue for peace
 	id = pru.30
 	immediate = { log = "[GetDateText]: [Root.GetName]: event pru.30 FROM = [From.GetName]" }
@@ -220,38 +177,24 @@ country_event = { # PERU we are losing! sue for peace
 	trigger = {
 		tag = PRU
 		has_war_with = ECU
-		ECU = {
-			controls_state = 305
-			controls_state = 490
-			OR = {
-				controls_state = 491
-				controls_state = 845
-			}
-		}
+		surrender_progress > 0.2
+		is_valid_peace_target = yes
+		ECU = { is_valid_peace_target = yes }
 	}
 
 	fire_only_once = yes
 
 	option = { # we must
 		name = pru.30.a
-		ai_chance = {
-			base = 100
-		}
-		ECU = {
-			country_event = {
-				days = 3
-				id = pru.31
-			}
-		}
+		ai_chance = { base = 100 }
+		ECU = { country_event = { id = pru.31 days = 3 } }
 	}
 
 	option = { # we will never!
 		name = pru.30.b
+		ai_chance = { base = 0 }
 		add_stability = -0.15
 		add_war_support = -0.15
-		ai_chance = {
-			base = 0
-		}
 	}
 }
 
@@ -270,19 +213,18 @@ country_event = { # EVENT FOR ECU peru wants peace cus we wreckin them
 
 	option = { # its a deal
 		name = pru.31.a
-		ai_chance = {
-			base = 100
-		}
-		FROM = { white_peace_with_ROOT = yes }
+		ai_chance = { base = 100 }
 		add_stability = 0.15
 		add_political_power = 150
+		FROM = {
+			remove_state_claim = 490
+			white_peace_with_ROOT = yes
+		}
 	}
 
 	option = { # never!
 		name = pru.31.b
-		ai_chance = {
-			base = 0
-		}
+		ai_chance = { base = 0 }
 		add_stability = -0.1
 	}
 }
@@ -294,19 +236,27 @@ country_event = {
 	title = pru.102.t
 	desc = pru.102.d
 	picture = GFX_report_event_PRU_generic
+
 	trigger = {
-		tag = PRU
-		NOT = {
-			has_country_flag = PRU_socialists_weakened
-		}
+		has_socialist_government = no
+		NOT = { has_country_flag = PRU_socialists_weakened }
 	}
-	mean_time_to_happen = {
-		months = 4
+
+	is_triggered_only = yes
+
+	immediate = {
+		hidden_effect = {
+			country_event = { id = pru.102 days = 60 random_days = 180 }
+		}
 	}
 
 	option = {
 		name = pru.102.a
-		random_owned_state = {
+		random_owned_controlled_state = {
+			limit = {
+				is_core_of = ROOT
+				non_damaged_building_level = { building = industrial_complex level > 0.5 }
+			}
 			damage_building = {
 				type = industrial_complex
 				damage = 0.5
@@ -321,25 +271,23 @@ country_event = {
 	immediate = { log = "[GetDateText]: [Root.GetName]: event pru.103 FROM = [From.GetName]" }
 	title = pru.103.t
 	desc = pru.103.d
+	picture = GFX_report_event_PRU_generic
 
-	immediate = {
-		ECU = {
-			country_event = { id = pru.1030 }
-		}
-	}
 	trigger = {
 		check_variable = { ECU_PRU_tension > 1 }
+		can_declare_war_on = ECU
 	}
 
-	picture = GFX_report_event_PRU_generic
 	is_triggered_only = yes
+
 	option = {
 		name = pru.103.a
+		add_war_support = 0.1
+		ECU = { country_event = pru.1030 }
 		declare_war_on = {
 			target = ECU
 			type = annex_everything
 		}
-		add_war_support = 0.1
 	}
 }
 
@@ -349,7 +297,9 @@ country_event = {
 	title = pru.1030.t
 	desc = pru.1030.d
 	picture = GFX_report_event_PRU_generic
+
 	is_triggered_only = yes
+
 	option = {
 		name = pru.1030.a
 	}
@@ -361,29 +311,22 @@ country_event = {
 country_event = {
 	id = pru.104
 	immediate = { log = "[GetDateText]: [Root.GetName]: event pru.104 FROM = [From.GetName]" }
-	immediate = {
-		set_country_flag = PRU_socialists_weakened
-	}
 	title = pru.104.t
 	desc = pru.104.d
 	picture = GFX_report_event_PRU_generic
+
 	trigger = {
-		tag = PRU
-		OR = {
-			has_war_with = ECU
-			ECU = {
-				is_subject_of = PRU
-			}
-			owns_state = 490
-		}
+		has_government = authoritarian_democrat
 		is_subject = no
+		OR = {
+			owns_state = 490 #Pastaza
+			has_war_with = ECU
+			is_ally_with = ECU
+		}
 	}
 
 	fire_only_once = yes
-
-	mean_time_to_happen = {
-		months = 1
-	}
+	is_triggered_only = yes
 
 	option = {
 		name = pru.104.a
@@ -410,14 +353,13 @@ country_event = {
 		add_stability = 0.1
 		set_country_flag = PRU_will_have_elections
 		if = {
-			limit = {
-				has_war_with = ECU
-			}
+			limit = { has_war_with = ECU }
 			custom_effect_tooltip = PRU_future_elections
 		}
 		else = {
 			custom_effect_tooltip = PRU_future_elections_2
 		}
+		hidden_effect = { country_event = { id = pru.105 days = 20 random_days = 40 } }
 	}
 
 	option = {
@@ -448,14 +390,7 @@ country_event = {
 		}
 		add_stability = -0.2
 		add_war_support = -0.2
-
-		set_country_flag = PRU_patauth_dictatorship
-		hidden_effect = {
-			add_popularity = {
-				ideology = authoritarian_democrat
-				popularity = -1
-			}
-		}
+		set_political_party = { ideology = authoritarian_democrat popularity = 0 }
 		set_politics = {
 			ruling_party = paternal_autocrat
 			elections_allowed = no
@@ -473,35 +408,18 @@ country_event = {
 country_event = {
 	id = pru.105
 	immediate = { log = "[GetDateText]: [Root.GetName]: event pru.105 FROM = [From.GetName]" }
-	immediate = {
-		hidden_effect = {
-			add_popularity = {
-				ideology = authoritarian_democrat
-				popularity = -1
-			}
-			hold_election = ROOT
-		}
-	}
 	title = pru.105.t
 	desc = pru.105.d
 	picture = GFX_report_event_HOL_election_1937
 
-	fire_only_once = yes
 	trigger = {
-		tag = PRU
-		exists = yes
-		is_subject = no
 		has_country_flag = PRU_will_have_elections
+		is_subject = no
 		has_war = no
 	}
 
-	immediate = {
-		remove_all_ministers = yes
-	}
-
-	mean_time_to_happen = {
-		months = 1
-	}
+	fire_only_once = yes
+	is_triggered_only = yes
 
 	option = { #Conservatives
 		name = pru.105.a
@@ -525,24 +443,38 @@ country_event = {
 				}
 			}
 		}
-		PRU = {
+		effect_tooltip = {
 			set_politics = {
-				election_frequency = 48
-				elections_allowed = yes
 				ruling_party = social_conservative
-				last_election = "1939.1.15"
+				elections_allowed = yes
+				election_frequency = 48
 			}
 		}
 		add_popularity = {
 			ideology = social_conservative
 			popularity = 0.15
 		}
-		add_ideas = PRU_Alberto_Rey_de_Castro_hog_sco
-		add_ideas = PRU_Enrique_Goytisola_Bolognesi_for_sco
-		add_ideas = PRU_Eduardo_Rebagliati_Martins_eco_sco
-		add_ideas = PRU_Benigno_Ballon_Farfan_sec_sco
-		set_country_flag = PRU_cons_win
-		set_country_flag = PRU_democracy
+		unlock_national_focus = PRU_fragile_democracy
+		unlock_national_focus = PRU_conservatives_win
+		hidden_effect = {
+			meta_effect = {
+				text = {
+					set_politics = {
+						ruling_party = social_conservative
+						last_election = "[CURRENT_DATE]"
+						election_frequency = 48
+						elections_allowed = yes
+					}
+				}
+				CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
+			}
+			add_ideas = {
+				PRU_Alberto_Rey_de_Castro_hog_sco
+				PRU_Enrique_Goytisola_Bolognesi_for_sco
+				PRU_Eduardo_Rebagliati_Martins_eco_sco
+				PRU_Benigno_Ballon_Farfan_sec_sco
+			}
+		}
 	}
 	option = { #Liberals
 		name = pru.105.b
@@ -566,24 +498,38 @@ country_event = {
 				}
 			}
 		}
-		PRU = {
+		effect_tooltip = {
 			set_politics = {
-				election_frequency = 48
 				ruling_party = market_liberal
 				elections_allowed = yes
-				last_election = "1939.1.15"
+				election_frequency = 48
 			}
 		}
 		add_popularity = {
 			ideology = market_liberal
 			popularity = 0.15
 		}
-		add_ideas = PRU_Manuel_Cisneros_Sanchez_hog_mli
-		add_ideas = PRU_Javier_Correa_ElIas_for_mli
-		add_ideas = PRU_Guillermo_Almenara_Irigoyen_eco_mli
-		add_ideas = PRU_Manuel_Gallagher_sec_sli
-		set_country_flag = PRU_libs_win
-		set_country_flag = PRU_democracy
+		unlock_national_focus = PRU_fragile_democracy
+		unlock_national_focus = PRU_liberals_win
+		hidden_effect = {
+			meta_effect = {
+				text = {
+					set_politics = {
+						ruling_party = market_liberal
+						last_election = "[CURRENT_DATE]"
+						election_frequency = 48
+						elections_allowed = yes
+					}
+				}
+				CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
+			}
+			add_ideas = {
+				PRU_Manuel_Cisneros_Sanchez_hog_mli
+				PRU_Javier_Correa_ElIas_for_mli
+				PRU_Guillermo_Almenara_Irigoyen_eco_mli
+				PRU_Manuel_Gallagher_sec_sli
+			}
+		}
 	}
 
 	option = { #SocDems
@@ -608,24 +554,38 @@ country_event = {
 				}
 			}
 		}
-		PRU = {
+		effect_tooltip = {
 			set_politics = {
-				election_frequency = 48
 				ruling_party = social_democrat
 				elections_allowed = yes
-				last_election = "1939.1.15"
+				election_frequency = 48
 			}
 		}
 		add_popularity = {
 			ideology = social_democrat
 			popularity = 0.15
 		}
-		add_ideas = PRU_Jose_Galvez_Barrenechea_hog_sde
-		add_ideas = PRU_Oscar_Miro_Quesada_for_sde
-		add_ideas = PRU_Manuel_Vasquez_Diaz_eco_sde
-		add_ideas = PRU_Victor_N_Benavente_sec_sde
-		set_country_flag = PRU_socdems_win
-		set_country_flag = PRU_democracy
+		unlock_national_focus = PRU_fragile_democracy
+		unlock_national_focus = PRU_social_democrats_win
+		hidden_effect = {
+			meta_effect = {
+				text = {
+					set_politics = {
+						ruling_party = social_democrat
+						last_election = "[CURRENT_DATE]"
+						election_frequency = 48
+						elections_allowed = yes
+					}
+				}
+				CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
+			}
+			add_ideas = {
+				PRU_Jose_Galvez_Barrenechea_hog_sde
+				PRU_Oscar_Miro_Quesada_for_sde
+				PRU_Manuel_Vasquez_Diaz_eco_sde
+				PRU_Victor_N_Benavente_sec_sde
+			}
+		}
 	}
 
 	option = { #Falangist
@@ -650,15 +610,15 @@ country_event = {
 				}
 			}
 		}
-		PRU = {
-			set_politics = {
-				ruling_party = national_populist
-				elections_allowed = no
-			}
-			add_ideas = PRU_Jose_de_la_Riva_Aguero_hog_npo
-			add_ideas = PRU_Raul_Ferrero_Rebagliati_for_npo
-			add_ideas = PRU_Luis_A_Flores_eco_npo
-			add_ideas = PRU_Felipe_Sassone_sec_npo
+		set_politics = {
+			ruling_party = national_populist
+			elections_allowed = no
+		}
+		add_ideas = {
+			PRU_Jose_de_la_Riva_Aguero_hog_npo
+			PRU_Raul_Ferrero_Rebagliati_for_npo
+			PRU_Luis_A_Flores_eco_npo
+			PRU_Felipe_Sassone_sec_npo
 		}
 	}
 }
@@ -670,20 +630,18 @@ country_event = {
 	title = pru.106.t
 	desc = pru.106.d
 	picture = GFX_report_event_PRU_generic
+
 	trigger = {
-		tag = PRU
+		is_subject = no
 		OR = {
 			has_government = paternal_autocrat
 			has_government = national_populist
 		}
-		is_subject = no
-	}
-
-	mean_time_to_happen = {
-		months = 2
 	}
 
 	fire_only_once = yes
+	is_triggered_only = yes
+
 	option = {
 		name = pru.106.a
 		ai_chance = {
@@ -705,7 +663,6 @@ country_event = {
 		add_stability = 0.1
 	}
 
-
 	option = {
 		name = pru.106.b
 		ai_chance = {
@@ -726,7 +683,10 @@ country_event = {
 		}
 		add_stability = -0.1
 		add_war_support = -0.1
-		clr_country_flag = PRU_patauth_dictatorship
+		set_politics = {
+			ruling_party = syndicalist
+			elections_allowed = no
+		}
 		add_popularity = {
 			ideology = syndicalist
 			popularity = 0.1
@@ -739,40 +699,45 @@ country_event = {
 			ideology = radical_socialist
 			popularity = 0.05
 		}
-
-		set_politics = {
-			ruling_party = syndicalist
-			elections_allowed = no
+		clear_all_relations = yes
+		if = {
+			limit = { has_idea = PRU_militant_socialists }
+			remove_ideas = PRU_militant_socialists
 		}
-		set_country_flag = PRU_syndicalism
+		else_if = {
+			limit = { has_idea = PRU_deradicalized_socialists }
+			remove_ideas = PRU_deradicalized_socialists
+		}
+		else_if = {
+			limit = { has_idea = PRU_dead_socialists }
+			remove_ideas = PRU_dead_socialists
+		}
+		if = {
+			limit = { has_idea = PRU_guardia_monotera }
+			remove_ideas = PRU_guardia_monotera
+		}
+		if = {
+			limit = { has_idea = PRU_caudillo_rip }
+			remove_ideas = PRU_caudillo_rip
+		}
 		hidden_effect = {
 			every_unit_leader = {
-				retire = yes
+				set_unit_leader_flag = PRU_leader
+				set_nationality = XXA
 			}
-			news_event = {
-				id = worldnews.163
-			}
+			news_event = worldnews.163
 			country_event = {
 				id = pru.107
 				days = 30
 			}
-		}
-		set_country_flag = PRU_socialists_weakened
-		leave_faction = yes
-		hidden_effect = {
-			remove_ideas = {
-				PRU_militant_socialists
-				PRU_deradicalized_socialists
-				PRU_dead_socialists
-				PRU_guardia_monotera
+			remove_all_ministers = yes
+			add_ideas = {
+				PRU_Victor_Raul_Haya_de_la_Torre_hog_syn
+				PRU_Cesar_Vallejo_for_syn
+				PRU_Antenor_Orrego_eco_syn
+				PRU_carlos_manuel_cox_roose_sec_syn
 			}
-			remove_ideas = PRU_caudillo_rip
 		}
-		remove_all_ministers = yes
-		add_ideas = PRU_Victor_Raul_Haya_de_la_Torre_hog_syn
-		add_ideas = PRU_Cesar_Vallejo_for_syn
-		add_ideas = PRU_Antenor_Orrego_eco_syn
-		add_ideas = PRU_carlos_manuel_cox_roose_sec_syn
 	}
 }
 
@@ -784,12 +749,9 @@ country_event = {
 	title = pru.107.t
 	desc = pru.107.d
 	picture = GFX_report_event_PRU_generic
+
 	is_triggered_only = yes
 	fire_only_once = yes
-
-	immediate = {
-		remove_all_ministers = yes
-	}
 
 	option = {
 		name = pru.107.a
@@ -812,7 +774,7 @@ country_event = {
 			ideology = totalist
 			popularity = -0.1
 		}
-		set_country_flag = PRU_socialism_answered
+		unlock_national_focus = PRU_orthodox_syndicalism
 	}
 
 
@@ -829,6 +791,10 @@ country_event = {
 			}
 		}
 		add_war_support = 0.4
+		set_politics = {
+			ruling_party = totalist
+			elections_allowed = no
+		}
 		set_party_name = {
 			ideology = totalist
 			long_name = PRU_totalist_party_long_rulers
@@ -842,49 +808,32 @@ country_event = {
 			ideology = totalist
 			popularity = 0.1
 		}
+		unlock_national_focus = PRU_tupacamarism
 		hidden_effect = {
-			set_politics = {
-				ruling_party = totalist
-				elections_allowed = no
+			remove_all_ministers = yes
+			add_ideas = {
+				PRU_Gamaliel_Churata_hog_tot
+				PRU_Cesar_Atahualpa_for_tot
+				PRU_Manuel_Gonzalez_Prada_eco_tot
+				PRU_Alejandro_Peralta_sec_tot
 			}
 		}
-		custom_effect_tooltip = custom_tooltip_pru_107
 
-		set_country_flag = PRU_syndicalism
-		add_ideas = PRU_Gamaliel_Churata_hog_tot
-		add_ideas = PRU_Cesar_Atahualpa_for_tot
-		add_ideas = PRU_Manuel_Gonzalez_Prada_eco_tot
-		add_ideas = PRU_Alejandro_Peralta_sec_tot
-		set_country_flag = PRU_socialism_answered
 	}
 }
 
 country_event = {
 	id = pru.108
 	immediate = { log = "[GetDateText]: [Root.GetName]: event pru.108 FROM = [From.GetName]" }
-	immediate = {
-		clr_country_flag = PRU_cons_win
-		clr_country_flag = PRU_libs_win
-		clr_country_flag = PRU_socdems_win
-		clr_country_flag = PRU_democracy
-	}
 	title = pru.108.t
 	desc = pru.108.d
 	picture = GFX_report_event_HOL_election_1937
 
-	fire_only_once = yes
 	is_triggered_only = yes
-	trigger = {
-		tag = PRU
-		exists = yes
-		is_subject = no
-		has_country_flag = PRU_will_have_elections
-		has_war = no
-		date > 1940.01.01
-	}
 
-	immediate = {
-		remove_all_ministers = yes
+	trigger = {
+		has_elected_government = yes
+		is_subject = no
 	}
 
 	option = { #Conservatives
@@ -892,46 +841,34 @@ country_event = {
 		ai_chance = {
 			base = 25
 		}
-		PRU = {
-			hidden_effect = {
-				kill_country_leader = yes
-			}
-
-			set_politics = {
-				election_frequency = 48
-				elections_allowed = yes
-				ruling_party = social_conservative
-			}
+		set_politics = {
+			ruling_party = social_conservative
+			elections_allowed = yes
 		}
-		add_ideas = PRU_Alberto_Rey_de_Castro_hog_sco
-		add_ideas = PRU_Enrique_Goytisola_Bolognesi_for_sco
-		add_ideas = PRU_Eduardo_Rebagliati_Martins_eco_sco
-		add_ideas = PRU_Benigno_Ballon_Farfan_sec_sco
-		set_country_flag = PRU_cons_win
-		set_country_flag = PRU_democracy
+		remove_all_ministers = yes
+		add_ideas = {
+			PRU_Alberto_Rey_de_Castro_hog_sco
+			PRU_Enrique_Goytisola_Bolognesi_for_sco
+			PRU_Eduardo_Rebagliati_Martins_eco_sco
+			PRU_Benigno_Ballon_Farfan_sec_sco
+		}
 	}
 	option = { #Liberals
 		name = pru.108.b
 		ai_chance = {
 			base = 25
 		}
-		PRU = {
-			hidden_effect = {
-				kill_country_leader = yes
-			}
-
-			set_politics = {
-				election_frequency = 48
-				ruling_party = market_liberal
-				elections_allowed = yes
-			}
+		set_politics = {
+			ruling_party = market_liberal
+			elections_allowed = yes
 		}
-		add_ideas = PRU_Manuel_Cisneros_Sanchez_hog_mli
-		add_ideas = PRU_Javier_Correa_ElIas_for_mli
-		add_ideas = PRU_Guillermo_Almenara_Irigoyen_eco_mli
-		add_ideas = PRU_Manuel_Gallagher_sec_sli
-		set_country_flag = PRU_libs_win
-		set_country_flag = PRU_democracy
+		remove_all_ministers = yes
+		add_ideas = {
+			PRU_Manuel_Cisneros_Sanchez_hog_mli
+			PRU_Javier_Correa_ElIas_for_mli
+			PRU_Guillermo_Almenara_Irigoyen_eco_mli
+			PRU_Manuel_Gallagher_sec_sli
+		}
 	}
 
 	option = { #SocDems
@@ -939,23 +876,17 @@ country_event = {
 		ai_chance = {
 			base = 25
 		}
-		PRU = {
-			hidden_effect = {
-				kill_country_leader = yes
-			}
-
-			set_politics = {
-				election_frequency = 48
-				ruling_party = social_democrat
-				elections_allowed = yes
-			}
+		set_politics = {
+			ruling_party = social_democrat
+			elections_allowed = yes
 		}
-		add_ideas = PRU_Jose_Galvez_Barrenechea_hog_sde
-		add_ideas = PRU_Oscar_Miro_Quesada_for_sde
-		add_ideas = PRU_Manuel_Vasquez_Diaz_eco_sde
-		add_ideas = PRU_Victor_N_Benavente_sec_sde
-		set_country_flag = PRU_socdems_win
-		set_country_flag = PRU_democracy
+		remove_all_ministers = yes
+		add_ideas = {
+			PRU_Jose_Galvez_Barrenechea_hog_sde
+			PRU_Oscar_Miro_Quesada_for_sde
+			PRU_Manuel_Vasquez_Diaz_eco_sde
+			PRU_Victor_N_Benavente_sec_sde
+		}
 	}
 
 	option = { #Falangist
@@ -980,19 +911,17 @@ country_event = {
 				}
 			}
 		}
-		PRU = {
-			hidden_effect = {
-				kill_country_leader = yes
-			}
-			set_politics = {
-				ruling_party = national_populist
-				elections_allowed = no
-			}
+		set_politics = {
+			ruling_party = national_populist
+			elections_allowed = no
 		}
-		add_ideas = PRU_Jose_de_la_Riva_Aguero_hog_npo
-		add_ideas = PRU_Raul_Ferrero_Rebagliati_for_npo
-		add_ideas = PRU_Luis_A_Flores_eco_npo
-		add_ideas = PRU_Felipe_Sassone_sec_npo
+		remove_all_ministers = yes
+		add_ideas = {
+			PRU_Jose_de_la_Riva_Aguero_hog_npo
+			PRU_Raul_Ferrero_Rebagliati_for_npo
+			PRU_Luis_A_Flores_eco_npo
+			PRU_Felipe_Sassone_sec_npo
+		}
 	}
 }
 
@@ -1002,15 +931,13 @@ country_event = {
 	title = pru.109.t
 	desc = pru.109.d
 	picture = GFX_report_event_PRU_generic
+
 	fire_only_once = yes
+	is_triggered_only = yes
+
 	trigger = {
-		tag = PRU
-		exists = yes
 		has_government = national_populist
-
-		date > 1947.3.4
 	}
-
 
 	option = {
 		name = pru.109.a
@@ -1018,132 +945,11 @@ country_event = {
 		create_country_leader = {
 			name = "Consejo Nacional"
 			desc = "POLITICS_CONSEJO_NACIONAL_DESC"
-			picture = "Portrait_PRU_natpop_struggle.tga"
+			picture = "Portrait_PRU_natpop_struggle.png"
 			expire = "1965.1.1"
 			ideology = national_populist_subtype
 		}
-		hidden_effect = {
-			remove_ideas_with_trait = head_of_government
-		}
-		set_country_flag = PRU_rayo_es_muerte
-	}
-}
-
-country_event = {
-	id = pru.110
-	immediate = { log = "[GetDateText]: [Root.GetName]: event pru.110 FROM = [From.GetName]" }
-	immediate = {
-		set_country_flag = PRU_picks_successor
-	}
-	title = pru.110.t
-	desc = pru.110.d
-	picture = GFX_report_event_PRU_generic
-	fire_only_once = yes
-	is_triggered_only = yes
-
-
-	option = {
-		name = pru.110.a
-		create_country_leader = {
-			name = "Carlos Miró-Quesada"
-			desc = "POLITICS_MIRO_QUESADA_DESC"
-			picture = "Portrait_Peru_Carlos_Miro_Quesada.tga"
-			expire = "1965.1.1"
-			ideology = national_populist_subtype
-		}
-		hidden_effect = {
-			remove_ideas_with_trait = head_of_government
-		}
-		set_country_flag = PRU_miro_quesada_became_caudillo
-		add_ideas = PRU_Carlos_Miro_Quesada_hog_npo
-	}
-
-	option = {
-		name = pru.110.b
-		create_country_leader = {
-			name = "Luis A. Flores"
-			desc = "POLITICS_FLORES_DESC"
-			picture = "Portrait_Peru_Luis_Flores.tga"
-			expire = "1965.1.1"
-			ideology = national_populist_subtype
-		}
-		hidden_effect = {
-			remove_ideas_with_trait = head_of_government
-		}
-		set_country_flag = PRU_flores_became_caudillo
-		hidden_effect = {
-			country_event = {
-				id = pru.112
-				days = 90
-			}
-		}
-		add_ideas = PRU_Luis_A_Flores_hog_npo
-	}
-
-	option = {
-		name = pru.110.c
-		create_country_leader = {
-			name = "Eloy G. Ureta"
-			desc = "POLITICS_URETA_DESC"
-			picture = "Portrait_Peru_Eloy_Ureta.tga"
-			expire = "1965.1.1"
-			ideology = national_populist_subtype
-		}
-		hidden_effect = {
-			remove_ideas_with_trait = head_of_government
-		}
-		set_country_flag = PRU_ureta_became_caudillo
-		add_ideas = PRU_Eloy_G_Ureta_hog_npo
-	}
-}
-
-country_event = {
-	id = pru.111
-	immediate = { log = "[GetDateText]: [Root.GetName]: event pru.111 FROM = [From.GetName]" }
-	title = pru.111.t
-	desc = pru.111.d
-	picture = GFX_report_event_PRU_generic
-	fire_only_once = yes
-	trigger = {
-		tag = PRU
-		has_government = national_populist
-		NOT = {
-			has_country_flag = PRU_picks_successor
-		}
-		has_country_flag = PRU_rayo_es_muerte
-	}
-
-	mean_time_to_happen = {
-		months = 2
-	}
-
-	immediate = {
-		remove_all_ministers = yes
-	}
-
-	option = {
-		name = pru.111.a
-		create_country_leader = {
-			name = "Manuel A. Odria"
-			desc = "POLITICS_ODRIA_DESC"
-			picture = "Portrait_Peru_Manuel_Odria.tga"
-			expire = "1965.1.1"
-			ideology = paternal_autocrat_subtype
-		}
-		set_politics = {
-			ruling_party = paternal_autocrat
-			elections_allowed = no
-		}
-		set_country_flag = PRU_odria_became_caudillo
-		add_popularity = {
-			ideology = paternal_autocrat
-			popularity = 0.25
-		}
-		remove_ideas = PRU_caudillo_rip
-		add_ideas = PRU_Manuel_Odria_hog_pau
-		add_ideas = PRU_Felipe_Tudela_for_pau
-		add_ideas = PRU_Nicolas_Lindley_Lopez_eco_pau
-		add_ideas = PRU_Ernesto_Montagne_Markholz_sec_pau
+		unlock_national_focus = PRU_caudillo_dead
 	}
 }
 
@@ -1181,7 +987,7 @@ country_event = {
 				create_country_leader = {
 					name = "Pachacutec II"
 					desc = "POLITICS_BUSTIOS_DESC"
-					picture = "gfx/leaders/PRU/PRU_Pachacutec_II.tga"
+					picture = "gfx/leaders/PRU/PRU_Pachacutec_II.png"
 					expire = "1965.1.1"
 					ideology = paternal_autocrat_subtype
 				}
@@ -1222,7 +1028,6 @@ country_event = {
 	title = pru.113.t
 	desc = pru.113.d
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	option = {
@@ -1241,17 +1046,15 @@ country_event = {
 
 	is_triggered_only = yes
 
+	immediate = {
+		hidden_effect = {
+			country_event = { id = pru.114 days = 365 }
+		}
+	}
+
 	option = {
 		name = pru.114.a
 		add_political_power = 20
-		hidden_effect = {
-			PRU = {
-				country_event = {
-					id = pru.114
-					days = 365
-				}
-			}
-		}
 	}
 }
 
@@ -1262,36 +1065,27 @@ country_event = {
 	title = pru.115.t
 	desc = pru.115.d
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	option = {
 		name = pru.115.a
-		if = {
-			limit = {
-				has_country_flag = PRU_patauth_dictatorship
-			}
-			set_country_flag = PRU_odria_became_caudillo
-			kill_country_leader = yes
-		}
+		kill_ideology_leader = paternal_autocrat
 		create_country_leader = {
-			name = "Manuel A. Odria"
+			name = "Manuel Arturo Odria"
 			desc = "POLITICS_ODRIA_DESC"
-			picture = "Portrait_Peru_Manuel_Odria.tga"
+			picture = "Portrait_Peru_Manuel_Odria.png"
 			expire = "1965.1.1"
 			ideology = paternal_autocrat_subtype
 		}
+		if = {
+			limit = { has_unit_leader = 1569 }
+			remove_unit_leader = 1569
+		}
 		hidden_effect = {
-			if = {
-				limit = {
-					has_unit_leader = 1569
-				}
-				remove_unit_leader = 1569
-			}
 			create_country_leader = {
 				name = "Manuel A. Odria"
 				desc = "POLITICS_ODRIA_DESC"
-				picture = "Portrait_Peru_Manuel_Odria.tga"
+				picture = "Portrait_Peru_Manuel_Odria.png"
 				expire = "1965.1.1"
 				ideology = authoritarian_democrat_subtype
 			}
@@ -1305,12 +1099,14 @@ country_event = {
 	picture = GFX_report_event_PRU_elections
 	title = pru.116.t
 	desc = pru.116.d
-	fire_only_once = yes
+
 	is_triggered_only = yes
+
 	option = {
 		name = pru.116.a
 		add_stability = 0.05
 	}
+
 	option = {
 		name = pru.116.b
 		add_stability = -0.05
@@ -1327,6 +1123,7 @@ country_event = {
 	picture = GFX_report_event_PRU_generic
 	title = pru.117.t
 	desc = pru.117.d
+
 	is_triggered_only = yes
 
 	option = {
@@ -1347,31 +1144,20 @@ country_event = { #Join the Internationale
 	immediate = { log = "[GetDateText]: [Root.GetName]: event pru.1000 FROM = [From.GetName]" }
 	title = pru.1000.t
 	desc = pru.1000.d
-	fire_only_once = yes
+
 	is_triggered_only = yes
 
 	option = { #Sure
 		name = pru.1000.a
-		ai_chance = {
-			base = 100
-		}
+		ai_chance = { base = 100 }
 		add_to_faction = PRU
-		PRU = {
-			country_event = {
-				id = pru.1001
-				days = 1
-			}
-		}
+		PRU = { country_event = pru.1001 }
 	}
 
 	option = {
 		name = pru.1000.b
-		PRU = {
-			country_event = {
-				id = pru.1002
-				days = 1
-			}
-		}
+		ai_chance = { base = 0 }
+		PRU = { country_event = pru.1002 }
 	}
 }
 
@@ -1380,7 +1166,7 @@ country_event = { #They accept
 	immediate = { log = "[GetDateText]: [Root.GetName]: event pru.1001 FROM = [From.GetName]" }
 	title = pru.1001.t
 	desc = pru.1001.d
-	fire_only_once = yes
+
 	is_triggered_only = yes
 
 	option = { #Sure
@@ -1394,7 +1180,7 @@ country_event = { #They deny
 	immediate = { log = "[GetDateText]: [Root.GetName]: event pru.1002 FROM = [From.GetName]" }
 	title = pru.1002.t
 	desc = pru.1002.d
-	fire_only_once = yes
+
 	is_triggered_only = yes
 
 	option = { #Sure

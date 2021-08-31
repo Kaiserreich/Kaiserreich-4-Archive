@@ -249,7 +249,6 @@ country_event = { #Japan has pledged support, attack now
 			set_country_flag = ANQ_friendly_japan
 			set_country_flag = LEP_collapsed
 			add_ideas = league_collapse_ANQ
-			country_lock_all_division_template = yes
 			set_party_name = {
 				ideology = market_liberal
 				name = anq_influencepartyname_projapan
@@ -386,7 +385,7 @@ country_event = { #Qing pledges support (or abandoned), attack now
 	is_triggered_only = yes
 
 	immediate = {
-		hidden_effect = { set_cosmetic_tag = ANQ_proqing_war }
+		hidden_effect = { drop_cosmetic_tag = yes }
 	}
 
 	option = {
@@ -409,7 +408,6 @@ country_event = { #Qing pledges support (or abandoned), attack now
 			type = annex_everything
 		}
 		add_ideas = league_collapse_ANQ
-		country_lock_all_division_template = yes
 		custom_effect_tooltip = tooltip_white_line
 		custom_effect_tooltip = anq_increase_qie_3
 		custom_effect_tooltip = tooltip_white_line
@@ -871,7 +869,15 @@ country_event = { # Five Provinces Together Again
 		name = anq.16.a # Victory
 		add_political_power = 50
 		remove_ideas = league_collapse_ANQ
-		country_lock_all_division_template = no
+		if = {
+			limit = {
+				has_completed_focus = ANQ_stand_with_beijing
+			}
+			set_cosmetic_tag = LSEP_QIE
+		}
+		else = {
+			set_cosmetic_tag = LSEP_REP
+		}
 	}
 }
 
@@ -1383,29 +1389,19 @@ country_event = { #Deng Ruzhou requests an audience
 		}
 		anq_recalculate_chens_credibility = yes
 		set_country_flag = ANQ_jiangxi_deng_forgiven
-		if = {
-			limit = {
-				has_country_flag = ANQ_invite_back_governors_started
-			}
-			country_event = {
-				id = anq.30
-				days = 5
-				random_days = 3
-			}
+		country_event = {
+			id = anq.30
+			days = 3
+			random_days = 2
 		}
 	}
 	option = {
 		name = anq.29.b
 		add_stability = -0.01
-		if = {
-			limit = {
-				has_country_flag = ANQ_invite_back_governors_started
-			}
-			country_event = {
-				id = anq.31
-				days = 20
-				random_days = 8
-			}
+		country_event = {
+			id = anq.31
+			days = 15
+			random_days = 5
 		}
 	}
 }
@@ -2797,14 +2793,14 @@ country_event = { # Puppet for pro-japan ANQ
 				create_country_leader = {
 					name = "Liu Heding"
 					desc = "POLITICS_SQI_LIU_HEDING_ARMY_DESC"
-					picture = "gfx/leaders/ANQ/Portrait_ANQ_Liu_Heding.tga"
+					picture = "gfx/leaders/ANQ/Portrait_ANQ_Liu_Heding.png"
 					expire = "1965.1.1"
 					ideology = paternal_autocrat_subtype
 				}
 				create_country_leader = {
 					name = "Liu Heding"
 					desc = "POLITICS_SQI_LIU_HEDING_ARMY_DESC"
-					picture = "gfx/leaders/ANQ/Portrait_ANQ_Liu_Heding.tga"
+					picture = "gfx/leaders/ANQ/Portrait_ANQ_Liu_Heding.png"
 					expire = "1965.1.1"
 					ideology = authoritarian_democrat_subtype
 				}
@@ -2855,7 +2851,6 @@ country_event = { # Puppet for pro-japan ANQ
 					SQI_Peasant_revolt
 					SQI_Zongchang_revolt
 				}
-				country_lock_all_division_template = no
 				add_ideas = {
 					SQI_Yiguandao_revolt
 					SQI_Peasant_revolt
@@ -2884,16 +2879,18 @@ country_event = { # Declare war on SQI because they control critical provinces
 		}
 	}
 
+	picture = GFX_report_event_LEP_march
+
 	trigger = {
-		NOT = {
-			has_country_flag = LEP_collapse_SQI_out
-			SQI = { has_government = authoritarian_democrat }
+		can_declare_war_on = SQI
+		NOT = { has_global_flag = LEP_collapse_SQI_out }
+		SQI = {
+			is_in_faction = no
+			NOT = { has_government = authoritarian_democrat }
 		}
 	}
 
-
 	fire_only_once = yes
-	picture = GFX_report_event_LEP_march
 	is_triggered_only = yes
 
 	option = { #
@@ -2902,7 +2899,7 @@ country_event = { # Declare war on SQI because they control critical provinces
 		trigger = {
 			NOT = { has_country_flag = ANQ_sqi_holds_cores }
 		}
-		set_country_flag = ANQ_can_attack_sqi_decision
+		activate_mission = ANQ_attack_SQI
 	}
 
 	option = { #
@@ -4002,32 +3999,26 @@ country_event = { #declare war on CHI
 	title = anq.98.t
 	desc = anq.98.d
 	picture = GFX_report_event_GXC_federalist_troops_atgun
+
 	trigger = {
-		NOT = { has_war_with = CHI }
-		country_exists = CHI
+		can_declare_war_on = CHI
 	}
 
 	fire_only_once = yes
-
 	is_triggered_only = yes
 
 	option = { #
 		name = anq.98.a
-		custom_effect_tooltip = anq_declare_war_decision_chi_tt
-		set_country_flag = ANQ_can_attack_chi_decision
-		ai_chance = {
-			base = 100
-		}
+		ai_chance = { base = 100 }
+		activate_mission = ANQ_attack_CHI
 	}
 
 	option = { #
 		name = anq.98.b
+		ai_chance = { base = 0 }
 		declare_war_on = {
 			target = CHI
 			type = annex_everything
-		}
-		ai_chance = {
-			base = 0
 		}
 	}
 }
@@ -5472,7 +5463,12 @@ country_event = { # deciding on reclamation chain start (triggers before anq.165
 			has_war_with = QIE
 		}
 	}
-
+	trigger = {
+		NOT = {
+			has_country_flag = ANQ_chen_alone
+			has_completed_focus = ANQ_stand_with_beijing
+		}
+	}
 	fire_only_once = yes
 	is_triggered_only = yes
 

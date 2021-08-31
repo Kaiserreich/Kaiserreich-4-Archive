@@ -1502,10 +1502,8 @@ country_event = { #Japan Demands Observer Status
 
 	trigger = {
 		FNG = { controls_state = 608 }
-		NOT = {
-			has_global_flag = FNG_conference_failed
-			has_global_flag = JAP_Fading_Sun
-		}
+		JAP = { is_faction_leader = yes }
+		NOT = { has_global_flag = FNG_conference_failed }
 	}
 
 	is_triggered_only = yes
@@ -1672,10 +1670,8 @@ country_event = { #Japan Complains
 
 	trigger = {
 		FNG = { controls_state = 608 }
-		NOT = {
-			has_global_flag = FNG_conference_failed
-			has_global_flag = JAP_Fading_Sun
-		}
+		JAP = { is_faction_leader = yes }
+		NOT = { has_global_flag = FNG_conference_failed }
 		OR = {
 			has_global_flag = FNG_conference_federalists
 			has_global_flag = FNG_conference_song
@@ -6079,29 +6075,16 @@ country_event = { #End of the Conference
 	option = {
 		name = fngconf.74.b #We join the Fengtian Government
 		trigger = {
+			tag = event_target:FNG_federalist_leader
 			NOT = { has_global_flag = FNG_conference_failed_flag }
 			is_in_array = { FNG.FNG_conference_support = ROOT }
-			tag = event_target:FNG_federalist_leader
-			NOT = {
-				any_enemy_country = {
-					is_in_array = { FNG.FNG_conference_support = THIS }
-				}
-			}
 		}
 		dismantle_faction = yes
 		separate_peace_all_wars = yes
 		FROM = { add_to_faction = ROOT }
-		#FROM = {
-		#	annex_country = {
-		#		target = event_target:FNG_federalist_leader
-		#		transfer_troops = yes
-		#	}
-		#}
-		if = {
-			limit = { is_ai = no }
-			FROM = {
-				change_tag_from = event_target:FNG_federalist_leader
-			}
+		every_enemy_country = {
+			limit = { is_in_array = { FNG.FNG_conference_support = THIS } }
+			country_event = fngconf.80
 		}
 	}
 	option = {
@@ -6320,7 +6303,7 @@ country_event = { #[FNG.GetLeader] Requests Peace
 		every_enemy_country = {
 			limit = {
 				is_valid_peace_target = yes
-				is_in_array = { FNG.FNG_conference_participants = THIS }
+				is_in_array = { FNG.FNG_conference_support = THIS }
 			}
 			white_peace_with_ROOT = yes
 		}
@@ -6329,23 +6312,21 @@ country_event = { #[FNG.GetLeader] Requests Peace
 
 	option = {
 		name = fngconf.80.b #We Fight on!
-		ai_chance = { base = 10 }
+		ai_chance = { base = 0 }
 		add_political_power = -50
-
-		every_enemy_country = {
-			limit = {
-				is_valid_peace_target = yes
-				is_in_array = { FNG.FNG_conference_participants = THIS }
-			}
-			country_event = { id = fngconf.81 days = 1 }
+		if = {
+			limit = { is_in_array = { FNG.FNG_conference_participants = ROOT } }
+			remove_from_array = { FNG.FNG_conference_participants = ROOT }
 		}
-		FNG = {
-			country_event = {
-				id = fngconf.81
-				days = 1
-			}
+		if = {
+			limit = { is_in_array = { FNG.FNG_conference_support = ROOT } }
+			remove_from_array = { FNG.FNG_conference_support = ROOT }
 		}
-
+		if = {
+			limit = { is_in_array = { FNG.FNG_conference_autonomy = ROOT } }
+			remove_from_array = { FNG.FNG_conference_autonomy = ROOT }
+		}
+		FNG = { country_event = fngconf.81 }
 	}
 }
 
@@ -6353,27 +6334,31 @@ country_event = { #[FROM.GetNameDef] Rejects [FNG.GetLeader]'s Peace
 	id = fngconf.81
 	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.81 FROM = [From.GetName]" }
 	title = fngconf.81.t
+
 	desc = {
 		text = fngconf.81.d_fng
-		trigger = {
-			tag = FNG
-		}
+		trigger = { tag = FNG }
 	}
 	desc = {
 		text = fngconf.81.d_nonfng
-		trigger = {
-			NOT = {
-				tag = FNG
-			}
-		}
+		trigger = { NOT = { tag = FNG } }
 	}
 
 	is_triggered_only = yes
 
+	major = yes
+	show_major = {
+		OR = {
+			tag = FNG
+			AND = {
+				has_war_with = FROM
+				is_in_array = { FNG.FNG_conference_participants = THIS }
+			}
+		}
+	}
 
 	option = {
 		name = fngconf.81.a #Disappointing
-		ai_chance = { base = 100 }
 	}
 }
 
@@ -6407,31 +6392,13 @@ country_event = { #Time to join the [FNG.GetFactionName]
 
 	option = { #Of course
 		name = fngconf.82.a
-		trigger = {
-			NOT = { tag = event_target:FNG_federalist_leader }
-		}
 		if = {
 			limit = { is_subject = no }
 			leave_faction = yes
 			FNG = { add_to_faction = ROOT }
 		}
-		FNG = { add_to_faction = ROOT country_event = fngconf.83 }
+		FNG = { country_event = fngconf.83 }
 		add_political_power = 20
-	}
-
-	option = { #Of course
-		name = fngconf.82.b
-		trigger = {
-			tag = event_target:FNG_federalist_leader
-		}
-		dismantle_faction = yes
-		FNG = { add_to_faction = ROOT country_event = { id = fngconf.83 } }
-		if = {
-			limit = { is_ai = no }
-			FROM = {
-				change_tag_from = event_target:FNG_federalist_leader
-			}
-		}
 	}
 }
 
@@ -6456,6 +6423,174 @@ country_event = { #[FROM.GetNameDef] Joins the Anguojun
 				}
 			}
 			clear_array = FNG.FNG_conference_support
+		}
+	}
+}
+
+country_event = {
+	id = fngconf.1000
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.1000 FROM = [From.GetName]" }
+	title = fngconf.1000.t
+	desc = fngconf.1000.d
+	picture = GFX_report_event_japanese_soldiers_03
+
+	trigger = {
+		tag = JAP
+		is_faction_leader = yes
+		has_war_with_china = yes
+		has_capitulated = no
+		FNG_JAP_hostile = no
+		NOT = { has_global_flag = FNG_conference_success }
+		FNG = {
+			has_government = authoritarian_democrat
+			has_capitulated = no
+			has_war_with_china = yes
+			is_subject = no
+			NOT = {
+				has_country_flag = FNG_temp_JAP_alliance
+				is_in_faction_with = JAP
+				has_war_with = JAP
+			}
+		}
+	}
+
+	mean_time_to_happen = {
+		days = 7
+	}
+
+	fire_only_once = yes
+
+	option = {
+		name = fngconf.1000.a #China shall be OURS
+		effect_tooltip = { add_to_faction = FNG }
+		FNG = { country_event = fngconf.1001 }
+	}
+}
+
+country_event = {
+	id = fngconf.1001
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.1001 FROM = [From.GetName]" }
+	title = fngconf.1001.t
+	desc = {
+		text = fngconf.1001.d
+		trigger = {
+			controls_all_owned_states = no
+		}
+	}
+	desc = {
+		text = fngconf.1001.d.jp
+		trigger = {
+			controls_all_owned_states = yes
+		}
+	}
+	picture = GFX_report_event_chinese_soldiers_running
+
+	is_triggered_only = yes
+
+	option = {
+		name = fngconf.1001.a
+		set_country_flag = FNG_temp_JAP_alliance
+		custom_effect_tooltip = joining_cps_tt
+		hidden_effect = {
+			every_other_country = {
+				limit = { is_in_faction_with = ROOT }
+				set_country_flag = FNG_former_faction_member
+				if = {
+					limit = { is_subject = no }
+					set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
+					JAP = { add_to_faction = PREV }
+				}
+			}
+			dismantle_faction = yes
+		}
+		JAP = { add_to_faction = ROOT }
+	}
+}
+
+# Fengtain reforms its faction after the war
+country_event = {
+	id = fngconf.1002
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.1002 FROM = [From.GetName]" }
+	title = fngconf.1002.t
+	desc = fngconf.1002.d
+	picture = GFX_report_event_soldiers_marching
+
+	is_triggered_only = yes
+
+	option = {
+		name = fngconf.1002.a #Of course!
+		clr_country_flag = FNG_former_faction_member
+		if = {
+			limit = { is_in_faction = yes }
+			leave_faction = yes
+		}
+		separate_peace_all_wars = yes
+		FNG = { add_to_faction = ROOT }
+	}
+}
+
+# Informing Japan
+country_event = {
+	id = fngconf.1003
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.1003 FROM = [From.GetName]" }
+	title = fngconf.1003.t
+	desc = fngconf.1003.d
+	picture = GFX_report_event_japanese_parade
+
+	is_triggered_only = yes
+
+	option = {
+		name = fngconf.1003.a
+	}
+}
+
+country_event = { #Fengtain Recreates Faction here
+	id = fngconf.1004
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.1004 FROM = [From.GetName]" }
+	title = fngconf.1004.t
+	desc = fngconf.1004.d
+	picture = GFX_report_event_CHI_trucks
+
+	trigger = {
+		tag = FNG
+		has_country_flag = FNG_temp_JAP_alliance
+		is_in_faction_with = JAP
+		has_government = authoritarian_democrat
+		has_global_flag = FNG_conference_success
+		has_war_with_china = no
+		is_subject = no
+		controls_all_owned_states = yes
+		JAP = {
+			is_faction_leader = yes
+			has_war_with_china = no
+		}
+	}
+
+	mean_time_to_happen = {
+		days = 7
+	}
+
+	fire_only_once = yes
+
+	option = {
+		name = fngconf.1004.a #Of course!
+		clr_country_flag = FNG_temp_JAP_alliance
+		leave_faction = yes
+		JAP = { country_event = fngconf.1003 }
+		separate_peace_all_wars = yes
+
+		create_faction = pacification_faction
+		every_country = {
+			limit = {
+				has_country_flag = FNG_former_faction_member
+				has_socialist_government = no
+				is_in_faction_with = JAP
+				is_subject = no
+			}
+			effect_tooltip = { add_to_faction = ROOT }
+			hidden_effect = {
+				country_event = fngconf.1002
+			}
 		}
 	}
 }

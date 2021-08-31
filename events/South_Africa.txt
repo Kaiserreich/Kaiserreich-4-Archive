@@ -883,6 +883,27 @@ country_event = {
 				syndicalist = 35
 				social_democrat = 10
 			}
+			if = {
+				limit = { is_ai = yes }
+				every_state = {
+					limit = {
+						NOT = {
+							is_owned_by = ROOT
+							is_on_continent = africa
+						}
+						owner = {
+							OR = {
+								is_in_faction_with = ROOT
+								has_war_with = ROOT
+							}
+						}
+					}
+					teleport_armies = {
+						limit = { tag = ROOT }
+						to_state_array = owned_controlled_states
+					}
+				}
+			}
 		}
 		effect_tooltip = {
 			add_popularity = {
@@ -1267,15 +1288,6 @@ country_event = {
 			}
 		}
 		add_ideas = SAF_apartheid_1
-#		if = {
-#			limit = {
-#				has_country_flag = SAF_PNP_split
-#			}
-#			country_event = {
-#				id = saf.30
-#				days = 1
-#			}
-#		}
 		hidden_effect = {
 			country_event = { id = saf.101 days = 120 random = 40 }
 		}
@@ -1316,32 +1328,6 @@ country_event = {
 	}
 }
 
-## PNP Rejoins the National Party
-#country_event = {
-#	id = saf.30
-#	title = saf.30.t
-#	desc = saf.30.d
-#	picture = GFX_report_event_SAF_malan
-#
-#	is_triggered_only = yes
-#
-#	option = {
-#		name = saf.30.a
-#		clr_country_flag = SAF_PNP_split
-#		add_stability = 0.05
-#		if = {
-#			limit = {
-#				has_idea = SAF_T_E_Doenges_hog_ade
-#			}
-#			add_ideas = SAF_D_F_Malan_hog_pau
-#		}
-#		add_popularity = {
-#			ideology = paternal_autocrat
-#			popularity = -0.10
-#		}
-#	}
-#}
-
 # PNP Splits from the National Party
 country_event = {
 	id = saf.31
@@ -1370,13 +1356,12 @@ country_event = {
 			add_ideas = SAF_Nicolaas_Havenga_eco_ade
 		}
 		if = {
-			limit = {
-				OR = {
-					has_idea = SAF_D_F_Malan_sec_pau
-					has_idea = SAF_F_C_Erasmus_sec_pau
-				}
-			}
+			limit = { has_idea = SAF_D_F_Malan_sec_pau }
 			remove_ideas = SAF_D_F_Malan_sec_pau
+			add_ideas = SAF_Ben_Schoeman_sec_ade
+		}
+		if = {
+			limit = { has_idea = SAF_F_C_Erasmus_sec_pau }
 			remove_ideas = SAF_F_C_Erasmus_sec_pau
 			add_ideas = SAF_Ben_Schoeman_sec_ade
 		}
@@ -1536,23 +1521,40 @@ country_event = {
 				has_government = authoritarian_democrat
 			}
 			hidden_effect = {
-				set_temp_variable = { SAF_moderate_to_extremist_value = party_popularity@authoritarian_democrat }
-				set_temp_variable = { SAF_moderate_to_extremist_value_reverse = 0 }
-				subtract_from_temp_variable = { var = SAF_moderate_to_extremist_value_reverse value = party_popularity@authoritarian_democrat }
-				add_popularity = { ideology = authoritarian_democrat popularity = SAF_moderate_to_extremist_value_reverse }
-				add_popularity = { ideology = national_populist popularity = SAF_moderate_to_extremist_value }
+				save_current_party_popularities = yes
+				set_temp_variable = { SAF_new_natpop_value = saved_popularities^7 } #authdem
+				add_to_temp_variable = { SAF_new_natpop_value = saved_popularities^9 } #natpop
+				set_popularities = {
+					totalist = saved_popularities^0
+					syndicalist = saved_popularities^1
+					radical_socialist = saved_popularities^2
+					social_democrat = saved_popularities^3
+					social_liberal = saved_popularities^4
+					market_liberal = saved_popularities^5
+					social_conservative = saved_popularities^6
+					authoritarian_democrat = 0
+					paternal_autocrat = saved_popularities^8
+					national_populist = SAF_new_natpop_value
+				}
 			}
 		}
-		else_if = {
-			limit = {
-				has_government = paternal_autocrat
-			}
+		else = {
 			hidden_effect = {
-				set_temp_variable = { SAF_moderate_to_extremist_value = party_popularity@paternal_autocrat }
-				set_temp_variable = { SAF_moderate_to_extremist_value_reverse = 0 }
-				subtract_from_temp_variable = { var = SAF_moderate_to_extremist_value_reverse value = party_popularity@paternal_autocrat }
-				add_popularity = { ideology = paternal_autocrat popularity = SAF_moderate_to_extremist_value_reverse }
-				add_popularity = { ideology = national_populist popularity = SAF_moderate_to_extremist_value }
+				save_current_party_popularities = yes
+				set_temp_variable = { SAF_new_natpop_value = saved_popularities^8 } #patau
+				add_to_temp_variable = { SAF_new_natpop_value = saved_popularities^9 } #natpop
+				set_popularities = {
+					totalist = saved_popularities^0
+					syndicalist = saved_popularities^1
+					radical_socialist = saved_popularities^2
+					social_democrat = saved_popularities^3
+					social_liberal = saved_popularities^4
+					market_liberal = saved_popularities^5
+					social_conservative = saved_popularities^6
+					authoritarian_democrat = saved_popularities^7
+					paternal_autocrat = 0
+					national_populist = SAF_new_natpop_value
+				}
 			}
 		}
 		set_politics = {
@@ -1755,22 +1757,18 @@ country_event = {
 		name = saf.45.a
 		custom_effect_tooltip = SAF_tt_SAP_becomes_lib
 		hidden_effect = {
-			set_temp_variable = { SAF_conservative_to_liberal_value = party_popularity@social_conservative }
-			set_temp_variable = { SAF_conservative_to_liberal_value_reverse = 0 }
-			subtract_from_temp_variable = { var = SAF_conservative_to_liberal_value_reverse value = party_popularity@social_conservative }
-			add_popularity = { ideology = social_conservative popularity = SAF_conservative_to_liberal_value_reverse }
-			add_popularity = { ideology = social_liberal popularity = SAF_conservative_to_liberal_value }
+			SAF_SAP_becomes_soclib = yes
 			create_country_leader = {
 				name = "Jan Smuts"
 				desc = "POLITICS_JAN_SMUTS_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Jan_Smuts.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Jan_Smuts.png"
 				expire = "1965.1.1"
 				ideology = social_liberal_subtype
 			}
 			SAF_move_governor_general_soclib = yes
 			create_country_leader = {
 				name = "J.G.N. Strauss"
-				picture = "gfx/leaders/Generic/Portrait_Europe_Generic_new_1.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Jacobus_Gideon_Nel_Strauss.png"
 				expire = "1965.1.1"
 				ideology = social_conservative_subtype
 			}
@@ -1990,6 +1988,27 @@ country_event = {
 		hidden_effect = {
 			kill_country_leader = yes
 			set_cosmetic_tag = SAF_republic
+			if = {
+				limit = { is_ai = yes }
+				every_state = {
+					limit = {
+						NOT = {
+							is_owned_by = ROOT
+							is_on_continent = africa
+						}
+						owner = {
+							OR = {
+								is_in_faction_with = ROOT
+								has_war_with = ROOT
+							}
+						}
+					}
+					teleport_armies = {
+						limit = { tag = ROOT }
+						to_state_array = owned_controlled_states
+					}
+				}
+			}
 		}
 		leave_faction = yes
 		set_global_flag = saf_boer_war
@@ -2054,11 +2073,13 @@ country_event = {
 		name = saf.52.a
 		ai_chance = { base = 100 }
 		hidden_effect = {
+			545 = { add_core_of = ZIM }
 			ZIM = { transfer_state = 545 }
 			remove_state_core = 545
 			add_state_claim = 545
 		}
 		ZIM = {
+			set_country_flag = ZIM_boer_war_coming
 			meta_effect = {
 				text = {
 					set_politics = {
@@ -2073,15 +2094,15 @@ country_event = {
 			create_country_leader = {
 				name = "Herbert J. Stanley"
 				desc = "POLITICS_HERBERT_STANLEY_DESC"
-				picture = "gfx/leaders/ZIM/Portrait_ZIM_James_Stanley.tga"
+				picture = "gfx/leaders/ZIM/Portrait_ZIM_James_Stanley.png"
 				expire = "1965.1.1"
 				ideology = social_liberal_subtype
 			}
 			country_event = { id = zim.1 days = 2 } #Southern Rhodesia Introduction event and spawning of their military
 			hidden_effect = {
-				country_event = { id = zim.2 days = 8 }
+				country_event = { id = zim.2 days = 15 }
 			}
-			transfer_technology_without_doctrines = yes
+			transfer_technology = yes
 		}
 	}
 
@@ -2089,18 +2110,15 @@ country_event = {
 		name = saf.52.b
 		ai_chance = { base = 0 }
 		hidden_effect = {
-			545 = {
-				add_core_of = ZIM
-			}
+			545 = { add_core_of = ZIM }
 		}
-		release = ZIM
+		ZIM = { transfer_state = 545 }
 		hidden_effect = {
-			545 = {
-				remove_core_of = SAF
-				add_claim_by = SAF
-			}
+			remove_state_core = 545
+			add_state_claim = 545
 		}
 		ZIM = {
+			set_country_flag = ZIM_boer_war_coming
 			meta_effect = {
 				text = {
 					set_politics = {
@@ -2114,15 +2132,16 @@ country_event = {
 			}
 			create_country_leader = {
 				name = "Herbert J. Stanley"
-				picture = "gfx/leaders/ZIM/Portrait_ZIM_James_Stanley.tga"
+				picture = "gfx/leaders/ZIM/Portrait_ZIM_James_Stanley.png"
 				expire = "1965.1.1"
 				ideology = social_liberal_subtype
 			}
 			country_event = { id = zim.1 days = 2 } #Southern Rhodesia Introduction event and spawning of their military
 			hidden_effect = {
-				country_event = { id = zim.2 days = 8 }
+				country_event = { id = zim.2 days = 15 }
 			}
-			transfer_technology_without_doctrines = yes
+			transfer_technology = yes
+			remove_all_minister_types = yes
 			add_ideas = {
 				ZIM_Godfrey_Huggins_hog_ade
 				ZIM_Percy_Finn_for_mli
@@ -2172,7 +2191,7 @@ country_event = {
 		hidden_effect = {
 			SFR = { add_state_core = 719 }
 		}
-		release = SFR
+		SFR = { transfer_state = 719 }
 		hidden_effect = {
 			remove_state_core = 719
 			add_state_claim = 719
@@ -2185,7 +2204,7 @@ country_event = {
 				create_country_leader = {
 					name = "Patrick Duncan"
 					desc = "POLITICS_PAT_DUNCAN_DESC"
-					picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.tga"
+					picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.png"
 					expire = "1965.1.1"
 					ideology = market_liberal_subtype
 				}
@@ -2197,7 +2216,7 @@ country_event = {
 				create_country_leader = {
 					name = "George Villiers"
 					desc = "POLITICS_EARL_CLARENDON_DESC"
-					picture = "gfx/leaders/SAF/Portrait_SAF_Earl_of_Clarendon.tga"
+					picture = "gfx/leaders/SAF/Portrait_SAF_Earl_of_Clarendon.png"
 					expire = "1965.1.1"
 					ideology = market_liberal_subtype
 				}
@@ -2215,13 +2234,18 @@ country_event = {
 				}
 				CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 			}
-			transfer_technology_without_doctrines = yes
+			transfer_technology = yes
 			load_oob = SFR
 			country_event = { id = natal.1 days = 2 } #Natal Introduction event and spawning of their military
 			hidden_effect = {
-				country_event = { id = natal.4 days = 7 }
+				country_event = { id = natal.4 days = 14 }
 			}
+			remove_all_minister_types = yes
 			add_ideas = {
+				SFR_idea_syndicalism_zulu
+				SFR_idea_indian_diaspora
+				SFR_idea_Natal_Res
+
 				SFR_Heaton_Nicholls_hog_mli
 				SFR_Douglas_Mitchell_for_sco
 				SFR_R_G_L_Mathias_eco_sde
@@ -2244,12 +2268,10 @@ country_event = {
 				add_core_of = SFR
 			}
 		}
-		release = SFR
+		SFR = { transfer_state = 719 }
 		hidden_effect = {
-			719 = {
-				remove_core_of = SAF
-				add_claim_by = SAF
-			}
+			remove_state_core = 719
+			add_state_claim = 719
 		}
 		if = {
 			limit = {
@@ -2259,7 +2281,7 @@ country_event = {
 				create_country_leader = {
 					name = "Patrick Duncan"
 					desc = "POLITICS_PAT_DUNCAN_DESC"
-					picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.tga"
+					picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.png"
 					expire = "1965.1.1"
 					ideology = market_liberal_subtype
 				}
@@ -2271,7 +2293,7 @@ country_event = {
 				create_country_leader = {
 					name = "George Villiers"
 					desc = "POLITICS_EARL_CLARENDON_DESC"
-					picture = "gfx/leaders/SAF/Portrait_SAF_Earl_of_Clarendon.tga"
+					picture = "gfx/leaders/SAF/Portrait_SAF_Earl_of_Clarendon.png"
 					expire = "1965.1.1"
 					ideology = market_liberal_subtype
 				}
@@ -2289,13 +2311,18 @@ country_event = {
 				}
 				CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 			}
-			transfer_technology_without_doctrines = yes
+			transfer_technology = yes
 			load_oob = SFR
 			country_event = { id = natal.1 days = 2 } #Natal Introduction event and spawning of their military
 			hidden_effect = {
-				country_event = { id = natal.4 days = 7 }
+				country_event = { id = natal.4 days = 14 }
 			}
+			remove_all_minister_types = yes
 			add_ideas = {
+				SFR_idea_syndicalism_zulu
+				SFR_idea_indian_diaspora
+				SFR_idea_Natal_Res
+
 				SFR_Heaton_Nicholls_hog_mli
 				SFR_Douglas_Mitchell_for_sco
 				SFR_R_G_L_Mathias_eco_sde
@@ -2338,6 +2365,9 @@ country_event = {
 			type = annex_everything
 		}
 		hidden_effect = {
+			ZIM = {
+				clr_country_flag = ZIM_boer_war_coming
+			}
 			country_event = {
 				id = natal.2
 				days = 1
@@ -2371,20 +2401,16 @@ country_event = {
 		}
 		custom_effect_tooltip = SAF_tt_Strauss_leader_of_conservatives
 		hidden_effect = {
-			set_temp_variable = { SAF_conservative_to_liberal_value = party_popularity@social_conservative }
-			set_temp_variable = { SAF_conservative_to_liberal_value_reverse = 0 }
-			subtract_from_temp_variable = { var = SAF_moderate_to_extremist_value_reverse value = party_popularity@social_conservative }
-			add_popularity = { ideology = social_conservative popularity = SAF_moderate_to_extremist_value_reverse }
-			add_popularity = { ideology = social_liberal popularity = SAF_moderate_to_extremist_value }
+			SAF_SAP_becomes_soclib = yes
 			create_country_leader = {
 				name = "Jan Hendrik Hofmeyr"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Jan_Hendrik_Hofmeyr.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Jan_Hendrik_Hofmeyr.png"
 				expire = "1965.1.1"
 				ideology = social_liberal_subtype
 			}
 			create_country_leader = {
 				name = "J.G.N. Strauss"
-				picture = "gfx/leaders/Generic/Portrait_Europe_Generic_new_1.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Jacobus_Gideon_Nel_Strauss.png"
 				expire = "1965.1.1"
 				ideology = social_conservative_subtype
 			}
@@ -2817,11 +2843,21 @@ country_event = {
 		}
 		custom_effect_tooltip = SAF_tt_SAP_and_National_merge
 		hidden_effect = {
-			set_temp_variable = { SAF_conservative_to_authdem_value = party_popularity@social_conservative }
-			set_temp_variable = { SAF_conservative_to_authdem_value_reverse = 0 }
-			subtract_from_temp_variable = { var = SAF_conservative_to_authdem_value_reverse value = party_popularity@social_conservative }
-			add_popularity = { ideology = social_conservative popularity = SAF_conservative_to_authdem_value_reverse }
-			add_popularity = { ideology = authoritarian_democrat popularity = SAF_conservative_to_authdem_value }
+			save_current_party_popularities = yes
+			set_temp_variable = { SAF_new_authdem_value = saved_popularities^6 } #soccon
+			add_to_temp_variable = { SAF_new_authdem_value = saved_popularities^7 } #authdem
+			set_popularities = {
+				totalist = saved_popularities^0
+				syndicalist = saved_popularities^1
+				radical_socialist = saved_popularities^2
+				social_democrat = saved_popularities^3
+				social_liberal = saved_popularities^4
+				market_liberal = saved_popularities^5
+				social_conservative = 0
+				authoritarian_democrat = SAF_new_authdem_value
+				paternal_autocrat = saved_popularities^8
+				national_populist = saved_popularities^9
+			}
 			country_event = { id = saf.70 days = 1 }
 			country_event = { id = saf.139 days = 70 }
 		}
@@ -3364,7 +3400,7 @@ country_event = {
 	immediate = { log = "[GetDateText]: [Root.GetName]: event saf.80 FROM = [From.GetName]" }
 	immediate = {
 		hidden_effect = {
-			country_event = { id = saf.81 days = 32 } #Arrives in Bulhoek (Kruger's birthplace)
+			country_event = { id = saf.81 days = 32 } #Arrives in Bulhoek - Kruger's birthplace
 		}
 	}
 	title = saf.80.t
@@ -3506,7 +3542,7 @@ country_event = {
 	trigger = {
 		OR = {
 			NOT = { has_government = paternal_autocrat }
-			has_cosmetic_tag = SAF_republic
+			SAF_is_republic = yes
 		}
 		NOT = { has_country_flag = saf_centenary_festivities_cancelled }
 	}
@@ -3555,7 +3591,7 @@ country_event = {
 		is_subject = no
 		has_government = paternal_autocrat
 		NOT = {
-			has_cosmetic_tag = SAF_republic
+			SAF_is_republic = yes
 			has_country_flag = saf_centenary_festivities_cancelled
 		}
 	}
@@ -3577,6 +3613,27 @@ country_event = {
 		hidden_effect = {
 			kill_country_leader = yes
 			set_cosmetic_tag = SAF_republic
+			if = {
+				limit = { is_ai = yes }
+				every_state = {
+					limit = {
+						NOT = {
+							is_owned_by = ROOT
+							is_on_continent = africa
+						}
+						owner = {
+							OR = {
+								is_in_faction_with = ROOT
+								has_war_with = ROOT
+							}
+						}
+					}
+					teleport_armies = {
+						limit = { tag = ROOT }
+						to_state_array = owned_controlled_states
+					}
+				}
+			}
 		}
 		leave_faction = yes
 		set_global_flag = saf_boer_war
@@ -3785,11 +3842,21 @@ country_event = {
 		remove_ideas = SAF_wavering_dominion
 		custom_effect_tooltip = SAF_tt_United_becomes_Soccon
 		hidden_effect = {
-			set_temp_variable = { SAF_conservative_to_authdem_value = party_popularity@authoritarian_democrat }
-			set_temp_variable = { SAF_conservative_to_authdem_value_reverse = 0 }
-			subtract_from_temp_variable = { var = SAF_conservative_to_authdem_value_reverse value = party_popularity@authoritarian_democrat }
-			add_popularity = { ideology = authoritarian_democrat popularity = SAF_conservative_to_authdem_value_reverse }
-			add_popularity = { ideology = social_conservative popularity = SAF_conservative_to_authdem_value }
+			save_current_party_popularities = yes
+			set_temp_variable = { SAF_new_soccon_value = saved_popularities^6 } #soccon
+			add_to_temp_variable = { SAF_new_soccon_value = saved_popularities^7 } #authdem
+			set_popularities = {
+				totalist = saved_popularities^0
+				syndicalist = saved_popularities^1
+				radical_socialist = saved_popularities^2
+				social_democrat = saved_popularities^3
+				social_liberal = saved_popularities^4
+				market_liberal = saved_popularities^5
+				social_conservative = SAF_new_soccon_value
+				authoritarian_democrat = 0
+				paternal_autocrat = saved_popularities^8
+				national_populist = saved_popularities^9
+			}
 		}
 		SAF_move_governor_general_soccon = yes
 		set_politics = {
@@ -3982,6 +4049,27 @@ country_event = {
 			remove_idea = SAF_wavering_dominion
 			add_idea = SAF_neutral_dominion
 		}
+		if = {
+			limit = { is_ai = yes }
+			every_state = {
+				limit = {
+					NOT = {
+						is_owned_by = ROOT
+						is_on_continent = africa
+					}
+					owner = {
+						OR = {
+							is_in_faction_with = ROOT
+							has_war_with = ROOT
+						}
+					}
+				}
+				teleport_armies = {
+					limit = { tag = ROOT }
+					to_state_array = owned_controlled_states
+				}
+			}
+		}
 		leave_faction = yes
 		ENT = { country_event = saf.95 }
 		if = {
@@ -4045,6 +4133,27 @@ country_event = {
 			remove_idea = SAF_wavering_dominion
 			add_idea = SAF_neutral_dominion
 		}
+		if = {
+			limit = { is_ai = yes }
+			every_state = {
+				limit = {
+					NOT = {
+						is_owned_by = ROOT
+						is_on_continent = africa
+					}
+					owner = {
+						OR = {
+							is_in_faction_with = ROOT
+							has_war_with = ROOT
+						}
+					}
+				}
+				teleport_armies = {
+					limit = { tag = ROOT }
+					to_state_array = owned_controlled_states
+				}
+			}
+		}
 		leave_faction = yes
 		ENT = { country_event = saf.95 }
 		if = {
@@ -4102,7 +4211,7 @@ country_event = {
 		NOT = {
 			is_subject = yes
 			has_socialist_government = yes
-			has_cosmetic_tag = SAF_republic
+			SAF_is_republic = yes
 		}
 	}
 
@@ -4119,7 +4228,7 @@ country_event = {
 			create_country_leader = {
 				name = "Patrick Duncan"
 				desc = "POLITICS_PAT_DUNCAN_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.png"
 				expire = "1965.1.1"
 				ideology = social_democrat_subtype
 			}
@@ -4131,7 +4240,7 @@ country_event = {
 			create_country_leader = {
 				name = "Patrick Duncan"
 				desc = "POLITICS_PAT_DUNCAN_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.png"
 				expire = "1965.1.1"
 				ideology = social_liberal_subtype
 			}
@@ -4143,7 +4252,7 @@ country_event = {
 			create_country_leader = {
 				name = "Patrick Duncan"
 				desc = "POLITICS_PAT_DUNCAN_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.png"
 				expire = "1965.1.1"
 				ideology = market_liberal_subtype
 			}
@@ -4155,7 +4264,7 @@ country_event = {
 			create_country_leader = {
 				name = "Patrick Duncan"
 				desc = "POLITICS_PAT_DUNCAN_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.png"
 				expire = "1965.1.1"
 				ideology = social_conservative_subtype
 			}
@@ -4167,7 +4276,7 @@ country_event = {
 			create_country_leader = {
 				name = "Patrick Duncan"
 				desc = "POLITICS_PAT_DUNCAN_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.png"
 				expire = "1965.1.1"
 				ideology = authoritarian_democrat_subtype
 			}
@@ -4176,7 +4285,7 @@ country_event = {
 			create_country_leader = {
 				name = "Patrick Duncan"
 				desc = "POLITICS_PAT_DUNCAN_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Patrick_Duncan.png"
 				expire = "1965.1.1"
 				ideology = paternal_autocrat_subtype
 			}
@@ -4204,7 +4313,7 @@ country_event = {
 		NOT = {
 			is_subject = yes
 			has_socialist_government = yes
-			has_cosmetic_tag = SAF_republic
+			SAF_is_republic = yes
 			has_government = national_populist
 		}
 		has_country_flag = saf_duncan_gov_general
@@ -4224,7 +4333,7 @@ country_event = {
 			create_country_leader = {
 				name = "Nicolaas Jacobus de Wet"
 				desc = "POLITICS_NJ_DE_WET_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Nicolaas_Jacobus_de_Wet.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Nicolaas_Jacobus_de_Wet.png"
 				expire = "1965.1.1"
 				ideology = social_democrat_subtype
 			}
@@ -4236,7 +4345,7 @@ country_event = {
 			create_country_leader = {
 				name = "Nicolaas Jacobus de Wet"
 				desc = "POLITICS_NJ_DE_WET_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Nicolaas_Jacobus_de_Wet.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Nicolaas_Jacobus_de_Wet.png"
 				expire = "1965.1.1"
 				ideology = social_liberal_subtype
 			}
@@ -4247,7 +4356,7 @@ country_event = {
 			}
 			create_country_leader = {
 				name = "Nicolaas Jacobus de Wet"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Nicolaas_Jacobus_de_Wet.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Nicolaas_Jacobus_de_Wet.png"
 				expire = "1965.1.1"
 				ideology = market_liberal_subtype
 			}
@@ -4259,7 +4368,7 @@ country_event = {
 			create_country_leader = {
 				name = "Nicolaas Jacobus de Wet"
 				desc = "POLITICS_NJ_DE_WET_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Nicolaas_Jacobus_de_Wet.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Nicolaas_Jacobus_de_Wet.png"
 				expire = "1965.1.1"
 				ideology = social_conservative_subtype
 			}
@@ -4271,7 +4380,7 @@ country_event = {
 			create_country_leader = {
 				name = "Nicolaas Jacobus de Wet"
 				desc = "POLITICS_NJ_DE_WET_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Nicolaas_Jacobus_de_Wet.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Nicolaas_Jacobus_de_Wet.png"
 				expire = "1965.1.1"
 				ideology = authoritarian_democrat_subtype
 			}
@@ -4280,7 +4389,7 @@ country_event = {
 			create_country_leader = {
 				name = "Nicolaas Jacobus de Wet"
 				desc = "POLITICS_NJ_DE_WET_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Nicolaas_Jacobus_de_Wet.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Nicolaas_Jacobus_de_Wet.png"
 				expire = "1965.1.1"
 				ideology = paternal_autocrat_subtype
 			}
@@ -4305,7 +4414,7 @@ country_event = {
 			create_country_leader = {
 				name = "Ernest Janssen"
 				desc = "POLITICS_ERNEST_JANSEN_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Ernest_Jansen.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Ernest_Jansen.png"
 				expire = "1965.1.1"
 				ideology = social_democrat_subtype
 			}
@@ -4317,7 +4426,7 @@ country_event = {
 			create_country_leader = {
 				name = "Ernest Janssen"
 				desc = "POLITICS_ERNEST_JANSEN_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Ernest_Jansen.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Ernest_Jansen.png"
 				expire = "1965.1.1"
 				ideology = social_liberal_subtype
 			}
@@ -4328,7 +4437,7 @@ country_event = {
 			}
 			create_country_leader = {
 				name = "Ernest Janssen"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Ernest_Jansen.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Ernest_Jansen.png"
 				expire = "1965.1.1"
 				ideology = market_liberal_subtype
 			}
@@ -4340,7 +4449,7 @@ country_event = {
 			create_country_leader = {
 				name = "Ernest Janssen"
 				desc = "POLITICS_ERNEST_JANSEN_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Ernest_Jansen.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Ernest_Jansen.png"
 				expire = "1965.1.1"
 				ideology = social_conservative_subtype
 			}
@@ -4352,7 +4461,7 @@ country_event = {
 			create_country_leader = {
 				name = "Ernest Janssen"
 				desc = "POLITICS_ERNEST_JANSEN_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Ernest_Jansen.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Ernest_Jansen.png"
 				expire = "1965.1.1"
 				ideology = authoritarian_democrat_subtype
 			}
@@ -4361,7 +4470,7 @@ country_event = {
 			create_country_leader = {
 				name = "Ernest Janssen"
 				desc = "POLITICS_ERNEST_JANSEN_DESC"
-				picture = "gfx/leaders/SAF/Portrait_SAF_Ernest_Jansen.tga"
+				picture = "gfx/leaders/SAF/Portrait_SAF_Ernest_Jansen.png"
 				expire = "1965.1.1"
 				ideology = paternal_autocrat_subtype
 			}
@@ -5079,7 +5188,7 @@ country_event = {#White flight
 				}
 			}
 			set_nationality = XXA
-		}		
+		}
 		random_owned_state = {
 			prioritize = { 275 681 }
 			limit = {
@@ -5128,13 +5237,7 @@ country_event = {#The Cape National Party takes over National National
 		name = saf.120.a
 		set_country_flag = saf_national_turned_pataut
 		custom_effect_tooltip = SAF_tt_NP_becomes_aut
-		hidden_effect = {
-			set_temp_variable = { SAF_moderate_to_extremist_value = party_popularity@authoritarian_democrat }
-			set_temp_variable = { SAF_moderate_to_extremist_value_reverse = 0 }
-			subtract_from_temp_variable = { var = SAF_moderate_to_extremist_value_reverse value = party_popularity@authoritarian_democrat }
-			add_popularity = { ideology = authoritarian_democrat popularity = SAF_moderate_to_extremist_value_reverse }
-			add_popularity = { ideology = paternal_autocrat popularity = SAF_moderate_to_extremist_value }
-		}
+		hidden_effect = { SAF_national_party_becomes_pataut = yes }
 	}
 }
 
@@ -5262,7 +5365,7 @@ country_event = {
 			limit = {
 				NOT = {
 					has_government = social_conservative
-					has_cosmetic_tag = SAF_republic
+					SAF_is_republic = yes
 				}
 			}
 			SAF_move_governor_general_soccon = yes
@@ -5310,7 +5413,7 @@ country_event = {
 			limit = {
 				NOT = {
 					has_government = authoritarian_democrat
-					has_cosmetic_tag = SAF_republic
+					SAF_is_republic = yes
 				}
 			}
 			SAF_move_governor_general_authdem = yes
@@ -5381,7 +5484,7 @@ country_event = {
 			limit = {
 				NOT = {
 					has_government = paternal_autocrat
-					has_cosmetic_tag = SAF_republic
+					SAF_is_republic = yes
 				}
 			}
 			SAF_move_governor_general_pataut = yes
@@ -5464,7 +5567,7 @@ country_event = {
 			limit = {
 				NOT = {
 					has_government = social_conservative
-					has_cosmetic_tag = SAF_republic
+					SAF_is_republic = yes
 				}
 			}
 			SAF_move_governor_general_soccon = yes
@@ -5526,7 +5629,7 @@ country_event = {
 			limit = {
 				NOT = {
 					has_government = social_conservative
-					has_cosmetic_tag = SAF_republic
+					SAF_is_republic = yes
 				}
 			}
 			SAF_move_governor_general_soccon = yes
@@ -5614,7 +5717,7 @@ country_event = {
 			limit = {
 				NOT = {
 					has_government = social_conservative
-					has_cosmetic_tag = SAF_republic
+					SAF_is_republic = yes
 				}
 			}
 			SAF_move_governor_general_soccon = yes
@@ -5749,11 +5852,13 @@ country_event = {
 				SAF_Thomas_Boydell_sec_sde
 			}
 		}
-		add_ideas = {
-			SAF_Alex_Hepple_hog_sde
-			SAF_M_J_van_den_Berg_naaf_sde
-			SAF_Jimmy_Green_eco_sde
-			SAF_Thomas_Boydell_sec_sde
+		else = {
+			add_ideas = {
+				SAF_Alex_Hepple_hog_sde
+				SAF_M_J_van_den_Berg_naaf_sde
+				SAF_Jimmy_Green_eco_sde
+				SAF_Thomas_Boydell_sec_sde
+			}
 		}
 		hidden_effect = {
 			country_event = { id = saf.125 }
@@ -6453,7 +6558,10 @@ country_event = {
 		name = saf.142.a
 		if = {
 			limit = {
-				has_completed_focus = SAF_coloured_enfranchisement_act
+				OR = {
+					has_government = social_liberal
+					has_completed_focus = SAF_coloured_enfranchisement_act
+				}
 			}
 			add_popularity = { ideology = social_liberal popularity = 0.05 }
 		}
@@ -6581,11 +6689,7 @@ country_event = {
 				ruling_party = paternal_autocrat
 				elections_allowed = yes
 			}
-			set_temp_variable = { SAF_conservative_to_liberal_value = party_popularity@authoritarian_democrat }
-			set_temp_variable = { SAF_conservative_to_liberal_value_reverse = 0 }
-			subtract_from_temp_variable = { var = SAF_conservative_to_liberal_value_reverse value = party_popularity@authoritarian_democrat }
-			add_popularity = { ideology = authoritarian_democrat popularity = SAF_conservative_to_liberal_value_reverse }
-			add_popularity = { ideology = paternal_autocrat popularity = SAF_conservative_to_liberal_value }
+			SAF_national_party_becomes_pataut = yes
 		}
 		hidden_effect = {
 			country_event = { id = saf.50 days = 30 } #Natal Covenant
@@ -6614,13 +6718,7 @@ country_event = {
 		set_country_flag = SAF_Hertzog_passed_away
 		set_country_flag = saf_national_turned_pataut
 		custom_effect_tooltip = SAF_tt_NP_becomes_aut
-		hidden_effect = {
-			set_temp_variable = { SAF_conservative_to_liberal_value = party_popularity@authoritarian_democrat }
-			set_temp_variable = { SAF_conservative_to_liberal_value_reverse = 0 }
-			subtract_from_temp_variable = { var = SAF_conservative_to_liberal_value_reverse value = party_popularity@authoritarian_democrat }
-			add_popularity = { ideology = authoritarian_democrat popularity = SAF_conservative_to_liberal_value_reverse }
-			add_popularity = { ideology = paternal_autocrat popularity = SAF_conservative_to_liberal_value }
-		}
+		hidden_effect = { SAF_national_party_becomes_pataut = yes }
 	}
 }
 
@@ -6724,7 +6822,7 @@ country_event = {
 		}
 	}
 
-	option = { #:(
+	option = {
 		name = saf.151.a
 		add_political_power = -10
 		add_stability = -0.05
@@ -6746,7 +6844,7 @@ country_event = {
 		has_socialist_government = no
 	}
 
-	option = { #:(
+	option = {
 		name = saf.152.a
 		add_political_power = -10
 		add_stability = -0.05
@@ -6768,7 +6866,7 @@ country_event = {
 		has_socialist_government = no
 	}
 
-	option = { #:(
+	option = {
 		name = saf.153.a
 		add_political_power = -10
 		add_stability = -0.05
@@ -6790,7 +6888,7 @@ country_event = {
 		has_socialist_government = no
 	}
 
-	option = { #:(
+	option = {
 		name = saf.154.a
 		add_political_power = -10
 	}
@@ -7571,7 +7669,7 @@ country_event = { #Nuwe Rehoboth
 	}
 }
 
-country_event = { #Chaos in Südwest (MAF Collapse - time to get that colony that should be ours all along
+country_event = { #Chaos in Südwest - MAF Collapse - time to get that colony that should be ours all along
 	id = saf.179
 	immediate = { log = "[GetDateText]: [Root.GetName]: event saf.179 FROM = [From.GetName]" }
 	title = saf.179.t
@@ -7579,9 +7677,12 @@ country_event = { #Chaos in Südwest (MAF Collapse - time to get that colony tha
 	picture = GFX_report_event_generic_farming
 
 	is_triggered_only = yes
+
 	trigger = {
+		is_subject = no
 		has_socialist_government = no
 		country_exists = NMB
+		can_declare_war_on = NMB
 	}
 
 	option = { #Offer protection to the Germans there
@@ -7606,7 +7707,6 @@ country_event = { #Chaos in Südwest (MAF Collapse - time to get that colony tha
 		ai_chance = {
 			base = 5
 		}
-
 	}
 }
 
@@ -7786,20 +7886,8 @@ country_event = { #Collapse of the Portuguese Empire: seize Mozambique
 		POR = {
 			country_event = { id = saf.184 }
 		}
-		if = {
-			limit = {
-				GEX = {
-					exists = yes
-				}
-			}
-			GEX = {
-				country_event = { id = saf.185 hours = 2 }
-			}
-		}
-		else = {
-			MAF = {
-				country_event = { id = saf.185 hours = 2 }
-			}
+		MAF = {
+			country_event = { id = saf.185 hours = 2 }
 		}
 		transfer_state = 950
 		if = {
@@ -7817,6 +7905,25 @@ country_event = { #Collapse of the Portuguese Empire: seize Mozambique
 				}
 			}
 			transfer_state = 544
+		}
+		if = {
+			limit = {
+				871 = { #take Nyasaland if POR got it as result of bush war
+					is_owned_by = POR
+					is_controlled_by = POR #I am using these two checks instead of "is fully controlled" because that bugs out due to lake in the Nyasaland state
+				}
+			}
+			transfer_state = 871
+			add_state_claim = 871
+		}
+		if = {
+			limit = {
+				955 = { #take Eastern Zambezia if POR got it as result of bush war
+					is_fully_controlled_by = POR
+				}
+			}
+			transfer_state = 955
+			add_state_claim = 955
 		}
 	}
 
@@ -7895,8 +8002,8 @@ country_event = { #South Africa poaches Mozambique (MAF)
 	is_triggered_only = yes
 	trigger = {
 		OR = {
-			544 = { is_fully_controlled_by = SAF }
-			954 = { is_fully_controlled_by = SAF }
+			544 = { is_fully_controlled_by = FROM }
+			954 = { is_fully_controlled_by = FROM }
 		}
 		OR = {
 			871 = { is_owned_and_controlled_by = ROOT }
@@ -7912,7 +8019,7 @@ country_event = { #South Africa poaches Mozambique (MAF)
 		if = {
 			limit = {
 				954 = {
-					is_fully_controlled_by = SAF
+					is_fully_controlled_by = FROM
 				}
 			}
 			transfer_state = 954
@@ -7920,10 +8027,27 @@ country_event = { #South Africa poaches Mozambique (MAF)
 		if = {
 			limit = {
 				544 = {
-					is_fully_controlled_by = SAF
+					is_fully_controlled_by = FROM
 				}
 			}
 			transfer_state = 544
+		}
+		if = { #Nyasaland - if POR took it in end of Bush war
+			limit = {
+				871 = {
+					is_owned_by = FROM
+					is_controlled_by = FROM #I am using these two checks instead of "is fully controlled" because that has issues due to lake in the Nyasaland state
+				}
+			}
+			transfer_state = 871
+		}
+		if = { # Eastern Zambezia - again if POR took it before from MAF
+			limit = {
+				955 = {
+					is_fully_controlled_by = FROM
+				}
+			}
+			transfer_state = 955
 		}
 		SAF = { country_event = { id = saf.186 days = 2 } }
 	}
@@ -7992,14 +8116,10 @@ country_event = { #Collapse of the Portuguese Empire: seize Mozambique as ZIM
 	is_triggered_only = yes
 
 	trigger = {
-		NOT = {
-			country_exists = SAF
-		}
 		tag = ZIM
+		NOT = { country_exists = SAF }
 		controls_state = 545
-		POR = {
-			controls_state = 950
-		}
+		POR = { controls_state = 950 }
 	}
 
 	option = { #Move in
@@ -8019,20 +8139,8 @@ country_event = { #Collapse of the Portuguese Empire: seize Mozambique as ZIM
 		POR = {
 			country_event = { id = saf.191 }
 		}
-		if = {
-			limit = {
-				GEX = {
-					exists = yes
-				}
-			}
-			GEX = {
-				country_event = { id = saf.185 hours = 2 }
-			}
-		}
-		else = {
-			MAF = {
-				country_event = { id = saf.185 hours = 2 }
-			}
+		MAF = {
+			country_event = { id = saf.192 hours = 2 }
 		}
 		transfer_state = 950
 		if = {
@@ -8050,6 +8158,25 @@ country_event = { #Collapse of the Portuguese Empire: seize Mozambique as ZIM
 				}
 			}
 			transfer_state = 544
+		}
+		if = {
+			limit = {
+				871 = { #take Nyasaland if POR got it as result of bush war
+					is_owned_by = POR
+					is_controlled_by = POR #I am using these two checks instead of "is fully controlled" because that doesn't work right due to lake in the Nyasaland state
+				}
+			}
+			transfer_state = 871
+			add_state_claim = 871
+		}
+		if = {
+			limit = {
+				955 = { #take Eastern Zambezia if POR got it as result of bush war
+					is_fully_controlled_by = POR
+				}
+			}
+			transfer_state = 955
+			add_state_claim = 955
 		}
 	}
 
@@ -8141,6 +8268,23 @@ country_event = { #ZIM poaches Mozambique (MAF)
 			}
 			transfer_state = 544
 		}
+		if = { #Nyasaland - if POR took it in end of Bush war
+			limit = {
+				871 = {
+					is_owned_by = FROM
+					is_controlled_by = FROM #I am using these two checks instead of "is fully controlled" because that has issues due to lake in the Nyasaland state
+				}
+			}
+			transfer_state = 871
+		}
+		if = { # Eastern Zambezia - again if POR took it before from MAF
+			limit = {
+				955 = {
+					is_fully_controlled_by = FROM
+				}
+			}
+			transfer_state = 955
+		}
 		ZIM = { country_event = { id = saf.193 days = 2 } }
 	}
 
@@ -8186,22 +8330,55 @@ country_event = { #Rifle Contract
 
 	is_triggered_only = yes
 
-	option = { #Speaking the Goat
-		name = saf.200.a
+	immediate = {
 		if = {
 			limit = {
-				NOT = { has_tech = infantry_weapons1 }
-			}
-			set_technology = { infantry_weapons1 = 1 }
-			else = {
-				add_tech_bonus = {
-					name = SAF_lee_enf_con
-					bonus = 1
-					uses = 1
-					technology = infantry_weapons1
+				NOT = {
+					has_idea = directorate_of_supplies
+					has_idea = pretoria_mint
+					has_idea = dorman_long
+					has_idea = retief_de_ville_co
 				}
 			}
+			set_country_flag = SAF_need_equipment_designer
 		}
+	}
+
+	option = {
+		name = saf.200.a #Speaking the Goat
+		trigger = {
+			NOT = { has_country_flag = SAF_need_equipment_designer }
+		}
+		add_tech_bonus = {
+			name = SAF_New_Rifles
+			bonus = 1
+			uses = 1
+			technology = infantry_weapons
+		}
+	}
+	option = {
+		name = saf.200.b #Directorate of Supplies
+		trigger = { has_country_flag = SAF_need_equipment_designer }
+		clr_country_flag = SAF_need_equipment_designer
+		add_ideas = directorate_of_supplies
+	}
+	option = {
+		name = saf.200.c #Pretoria Mint
+		trigger = { has_country_flag = SAF_need_equipment_designer }
+		clr_country_flag = SAF_need_equipment_designer
+		add_ideas = pretoria_mint
+	}
+	option = {
+		name = saf.200.e #Dorman Long
+		trigger = { has_country_flag = SAF_need_equipment_designer }
+		clr_country_flag = SAF_need_equipment_designer
+		add_ideas = dorman_long
+	}
+	option = {
+		name = saf.200.f #Retief, De Ville & Co.
+		trigger = { has_country_flag = SAF_need_equipment_designer }
+		clr_country_flag = SAF_need_equipment_designer
+		add_ideas = retief_de_ville_co
 	}
 }
 
@@ -8332,6 +8509,7 @@ country_event = { #British Advisors
 	option = { #
 		name = saf.241.a
 		set_country_flag = SAF_SOC_BRITISH_ADVISOR_UNLOCK_TT
+		unlock_decision_tooltip = SAF_S1_B1
 	}
 }
 country_event = { #British Survey
@@ -8372,6 +8550,11 @@ country_event = { #French Advisors
 	option = { #
 		name = saf.250.a
 		set_country_flag = SAF_SOC_FRENCH_ADVISOR_UNLOCK_TT
+		unlock_decision_tooltip = SAF_S1_F1
+		unlock_decision_tooltip = SAF_S1_F2
+		unlock_decision_tooltip = SAF_S1_F4
+		unlock_decision_tooltip = SAF_S1_F5
+		unlock_decision_tooltip = SAF_S1_F6
 	}
 }
 country_event = { #Exchange results
@@ -8399,6 +8582,64 @@ country_event = { #French influence
 	option = { #
 		name = saf.253.a
 		add_stability = 0.02
+	}
+}
+country_event = {
+	id = saf.254
+	immediate = { log = "[GetDateText]: [Root.GetName]: event saf.254 FROM = [From.GetName]" }
+	title = saf.254.t
+	desc = saf.254.d
+	picture = GFX_report_event_SAF_boers
+
+	is_triggered_only = yes
+
+	trigger = {
+		has_war_with = ENT
+		any_owned_state = {
+			is_fully_controlled_by = ROOT
+		}
+	}
+
+	option = {
+		name = saf.254.a
+		add_manpower = 20000
+		division_template = {
+			name = "Afrikaner Veterans"
+			division_names_group = SAF_CAV_01
+			regiments = {
+				cavalry = { x = 0 y = 0 }
+				cavalry = { x = 0 y = 1 }
+				cavalry = { x = 0 y = 2 }
+				cavalry = { x = 1 y = 0 }
+				cavalry = { x = 1 y = 1 }
+				cavalry = { x = 1 y = 2 }
+			}
+			support = {
+				recon = { x = 0 y = 0 }
+				engineer = { x = 0 y = 1 }
+			}
+		}
+		random_owned_controlled_state = {
+			limit = { is_fully_controlled_by = ROOT }
+			create_unit = {
+				division = "name = \"1st Afrikaaner Veterans\" division_template = \"Afrikaner Veterans\"  start_experience_factor = 0.5"
+				owner = SAF
+			}
+		}
+		random_owned_controlled_state = {
+			limit = { is_fully_controlled_by = ROOT }
+			create_unit = {
+				division = "name = \"2nd Afrikaaner Veterans\" division_template = \"Afrikaner Veterans\"  start_experience_factor = 0.5"
+				owner = SAF
+			}
+		}
+		random_owned_controlled_state = {
+			limit = { is_fully_controlled_by = ROOT }
+			create_unit = {
+				division = "name = \"3rd Afrikaaner Veterans\" division_template = \"Afrikaner Veterans\"  start_experience_factor = 0.5"
+				owner = SAF
+			}
+		}
 	}
 }
 
@@ -9476,7 +9717,7 @@ country_event = { #Out with old, in with the new
 		name = saf.321.a
 		create_corps_commander = {
 			name = "James La Guma"
-			portrait_path = "gfx/leaders/SAF/Portrait_SAF_James_La_Guma.tga"
+			portrait_path = "gfx/leaders/SAF/Portrait_SAF_James_La_Guma.png"
 			traits = {
 				politically_connected
 			}
@@ -9488,7 +9729,7 @@ country_event = { #Out with old, in with the new
 		}
 		create_corps_commander = {
 			name = "Govan Mbeki"
-			portrait_path = "gfx/leaders/Generic/Portrait_Africa_Generic_land_new_7.tga"
+			portrait_path = "gfx/leaders/Generic/Portrait_Africa_Generic_land_new_7.png"
 			traits = {
 				infantry_leader
 			}
@@ -9500,7 +9741,7 @@ country_event = { #Out with old, in with the new
 		}
 		create_corps_commander = {
 			name = "Jack Hodson"
-			portrait_path = "gfx/leaders/Generic/Portrait_SAF_Jack_Hodgson"
+			portrait_path = "gfx/leaders/SAF/Portrait_SAF_Jack_Hodgson.png"
 			traits = {
 				trickster
 			}
@@ -9513,7 +9754,7 @@ country_event = { #Out with old, in with the new
 		}
 		create_field_marshal = {
 			name = "William H. Andrews"
-			portrait_path = "gfx/leaders/SAF/Portrait_SAF_WH_Andrews.tga"
+			portrait_path = "gfx/leaders/SAF/Portrait_SAF_WH_Andrews.png"
 			traits = {
 				politically_connected
 				thorough_planner
@@ -9524,8 +9765,8 @@ country_event = { #Out with old, in with the new
 			defense_skill = 2
 			planning_skill = 2
 			logistics_skill = 2
-			id = 98010
-		}		
+			id = 98011
+		}
 		add_ideas = SAF_SOC_purge_idea_1
 		add_political_power = -50
 		add_stability = 0.05

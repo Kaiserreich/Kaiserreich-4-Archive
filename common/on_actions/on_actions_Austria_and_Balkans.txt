@@ -1,6 +1,10 @@
 on_actions = {
 	on_startup = {
 		effect = {
+			ROM = {
+				give_resource_rights = { state = 46 receiver = GER }
+			}
+
 			#Transylvanian state array
 			for_each_scope_loop = {
 				array = HUN.owned_states
@@ -234,6 +238,15 @@ on_actions = {
 	#FROM is country getting invited.
 	on_offer_join_faction = {
 		effect = {
+			if = {
+				limit = {
+					tag = AUS
+					is_faction_leader = yes
+					NOT = { has_global_flag = AUS_created_donau_adriabund }
+				}
+				set_global_flag = AUS_created_donau_adriabund
+				set_faction_name = austrian_sphere
+			}
 			FROM = {
 				if = {
 					limit = {
@@ -362,45 +375,51 @@ on_actions = {
 		}
 	}
 
-	on_war = {
+	#ROOT = attacking side
+	#FROM = defending side
+	#fired when two countries end up at war with each other (on_war is fired when a country goes to war against anyone and is not fired again when it enters war against another country unless it went to peace first)
+	on_war_relation_added = {
 		effect = {
-			# Albania war with Serbia
+			log = "[GetDateText]: on_war_relation_added attacker: [Root.GetName] defender: [From.GetName]"
 			if = {
 				limit = {
-					tag = ALB
-					has_war_with = SER
-					765 = {
-						is_core_of = ALB
-					}
-					SER = {
-						owns_state = 765
+					OR = {
+						AND = {
+							tag = ROM
+							FROM = { owns_state = 84 }
+						}
+						AND = {
+							owns_state = 84
+							FROM = { tag = ROM }
+						}
 					}
 				}
-				country_event = albania.38
+				ROM = { add_ideas = ROM_fire_transylvanian_revolt }
 			}
+
 			# Remove from the Balkan economic union
 			if = {
 				limit = {
 					is_in_array = { global.balkan_economic_union = ROOT }
-					any_enemy_country = {
-						is_in_array = { global.balkan_economic_union = THIS }
-					}
+					is_in_array = { global.balkan_economic_union = FROM }
 				}
-				country_event = pact.305
+				add_ideas = BPL_remove_from_economic_union
 			}
 			# Bulgaria is at war with Serbia or Romania
 			if = {
 				limit = {
-					tag = BUL
-					NOT = { has_country_flag = BUL_vazovs_return }
 					OR = {
-						has_war_with = SER
-						has_war_with = ROM
+						tag = BUL
+						FROM = { tag = BUL }
 					}
 				}
-				country_event = { id = bulgariaflavour.27 days = 3 }
+				BUL = { add_ideas = BUL_fire_vazovs_return }
 			}
+		}
+	}
 
+	on_war = {
+		effect = {
 			#Belgrade Pact majors
 			if = {
 				limit = {
@@ -410,16 +429,6 @@ on_actions = {
 					}
 				}
 				country_event = pact.100
-			}
-			if = {
-				limit = {
-					tag = ROM
-					has_country_flag = ROM_funded_separatist
-					FROM = {
-						owns_state = 84 #Transylvania
-					}
-				}
-				country_event = romania.46 #fire revolt
 			}
 		}
 	}
