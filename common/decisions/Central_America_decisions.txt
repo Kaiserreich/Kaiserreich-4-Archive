@@ -594,6 +594,7 @@ Forming_Central_America = {
 					}
 				}
 				country_exists = var:global.CEN_socialist_leader
+				NOT = { has_war_with = var:global.CEN_socialist_leader }
 				var:global.CEN_socialist_leader = {
 					is_faction_leader = yes
 					OR = {
@@ -610,12 +611,15 @@ Forming_Central_America = {
 					has_authoritarian_government = yes
 				}
 				country_exists = var:global.CEN_military_leader
+				NOT = { has_war_with = var:global.CEN_military_leader }
 				var:global.CEN_military_leader = {
+					is_faction_leader = yes
 					has_authoritarian_government = yes
 				}
 			}
 			else = {
 				country_exists = var:global.CEN_liberal_leader
+				NOT = { has_war_with = var:global.CEN_liberal_leader }
 				var:global.CEN_liberal_leader = {
 					is_faction_leader = yes
 					has_elected_government = yes
@@ -690,9 +694,7 @@ Forming_Central_America = {
 						}
 					}
 					OR = {
-						NOT = {
-							tag = var:global.CEN_socialist_leader
-						}
+						NOT = { tag = var:global.CEN_socialist_leader }
 						AND = {
 							has_socialist_government = no
 							NOT = {
@@ -704,23 +706,21 @@ Forming_Central_America = {
 				}
 				else_if = {
 					limit = {
-						ROOT = {
-							has_authoritarian_government = yes
-						}
+						ROOT = { has_authoritarian_government = yes }
 					}
 					OR = {
-						NOT = {
-							tag = var:global.CEN_military_leader
-						}
+						NOT = { tag = var:global.CEN_military_leader }
 						has_authoritarian_government = no
 					}
 				}
 				else = {
 					OR = {
-						NOT = {
-							tag = var:global.CEN_liberal_leader
-						}
+						NOT = { tag = var:global.CEN_liberal_leader }
 						has_elected_government = no
+						AND = {
+							tag = NIC
+							has_government = social_democrat
+						}
 					}
 				}
 			}
@@ -773,24 +773,21 @@ Forming_Central_America = {
 		visible = {
 			is_faction_leader = yes
 			FROM = {
-				CEN_country_is_friendly = yes
 				exists = yes
+				CEN_country_is_friendly = yes
 				is_subject = no
 				is_in_faction = no
 			}
 		}
-		targets = {
-			GUA
-			ELS
-			HON
-			NIC
-		}
+		targets = { GUA ELS HON NIC }
 		target_root_trigger = {
 			is_faction_leader = yes
 		}
 		target_trigger = {
 			FROM = {
 				CEN_country_is_friendly = yes
+				is_subject = no
+				is_in_faction = no
 			}
 		}
 		cost = 30
@@ -818,28 +815,83 @@ Forming_Central_America = {
 		visible = {
 			has_global_flag = CEN_the_conflict_begins
 			can_declare_war_on = FROM
-			FROM = {
-				CEN_country_is_friendly = no
+			FROM = { CEN_country_is_friendly = no }
+		}
+		
+		cancel_trigger = {
+			OR = {
+				NOT = { can_declare_war_on = FROM }
+				if = {
+					limit = { FROM = { is_subject = yes } }
+					if = {
+						limit = { has_socialist_government = yes }
+						var:FROM.overlord = {
+							if = {
+								limit = { tag = NIC }
+								OR = {
+									has_socialist_government = yes
+									has_government = social_democrat
+								}
+							}
+							else = {
+								has_socialist_government = yes
+							}
+						}
+					}
+					else_if = {
+						limit = { has_authoritarian_government = yes }
+						var:FROM.overlord = { has_authoritarian_government = yes }
+					}
+					else = {
+						var:FROM.overlord = {
+							has_elected_government = yes
+							if = {
+								limit = { tag = NIC }
+								NOT = { has_government = social_democrat }
+							}
+						}
+					}
+				}
+				else_if = {
+					limit = { has_socialist_government = yes }
+					FROM = {
+						OR = {
+							has_socialist_government = yes
+							if = {
+								limit = { tag = NIC }
+								has_government = social_democrat
+							}
+						}
+					}
+				}
+				else_if = {
+					limit = { has_authoritarian_government = yes }
+					FROM = { has_authoritarian_government = yes }
+				}
+				else = {
+					FROM = {
+						has_elected_government = yes
+						if = {
+							limit = { tag = NIC }
+							NOT = { has_government = social_democrat }
+						}
+					}
+				}
 			}
 		}
+
 		cost = 30
 		days_remove = 20
-		cancel_if_not_visible = yes
-		targets = {
-			GUA
-			ELS
-			HON
-			NIC
-		}
+
+		targets = { GUA ELS HON NIC }
 		target_root_trigger = {
 			has_global_flag = CEN_the_conflict_begins
 		}
 		target_trigger = {
 			can_declare_war_on = FROM
-			FROM = {
-				CEN_country_is_friendly = no
-			}
+			FROM = { CEN_country_is_friendly = no }
 		}
+
 		ai_will_do = {
 			factor = 10
 			modifier = {
@@ -868,18 +920,20 @@ Forming_Central_America = {
 				}
 			}
 		}
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled CEN_attack_country target: [From.GetName]"
+			add_political_power = 30
+			clr_country_flag = imminent_war
+			clear_decision_attack_AI = yes
+		}
+
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision CEN_attack_country target: [From.GetName]"
-			set_country_flag = {
-				flag = imminent_war
-				value = 1
-				days = 25
-			}
+			set_country_flag = { flag = imminent_war value = 1 days = 25 }
+			FROM = { country_event = cend.34 } #warning event
 			setup_decision_attack_AI = yes
-			FROM = {
-				country_event = cend.34
-			}			#warning event
 		}
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove CEN_attack_country target: [From.GetName]"
 			clear_decision_attack_AI = yes
@@ -911,6 +965,7 @@ Forming_Central_America = {
 		ai_will_do = {
 			factor = 100
 		}
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove CEN_core_matagalpa"
 			1071 = {
