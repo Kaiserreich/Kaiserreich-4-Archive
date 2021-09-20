@@ -48,6 +48,18 @@ transfer_state_and_add_claim = {
 }
 
 # state scope
+transfer_state_and_add_claim_or_core = {
+	if = {
+		limit = { has_state_flag = was_core_of_@var:tag_to_release }
+		transfer_state_and_add_core = yes
+		clr_state_flag = was_core_of_@var:tag_to_release
+	}
+	else = {
+		transfer_state_and_add_claim = yes
+	}
+}
+
+# state scope
 remove_claim_and_add_core_of_ROOT = {
 	if = {
 		limit = { is_claimed_by = ROOT }
@@ -283,32 +295,27 @@ release_targeted_tag_with_claims = {
 
 # global scope
 release_targeted_tag = {
-	every_owned_state = {
-		limit = {
-			is_core_of = var:tag_to_release
-			is_claim_or_core_of_ROOT = no
-		}
-		var:tag_to_release = { transfer_state = PREV }
-	}
-	puppet_released_tag = yes
-}
-
-# global scope
-release_targeted_tag_during_war = {
-	every_owned_state = {
-		limit = {
-			is_core_of = var:tag_to_release
-			is_claim_or_core_of_ROOT = no
-		}
-		if = {
+	if = {
+		limit = { has_war = yes }
+		every_owned_state = {
 			limit = {
-				is_fully_controlled_by = controller
-				controller = { is_ally_with = ROOT }
+				is_core_of = var:tag_to_release
+				is_claim_or_core_of_ROOT = no
+			}
+			var:tag_to_release = { set_state_owner = PREV }
+			set_state_province_controller = {
+				controller = owner
+				limit = { NOT = { has_war_with = PREV.owner } }
+			}
+		}
+	}
+	else = {
+		every_owned_state = {
+			limit = {
+				is_core_of = var:tag_to_release
+				is_claim_or_core_of_ROOT = no
 			}
 			var:tag_to_release = { transfer_state = PREV }
-		}
-		else = {
-			var:tag_to_release = { set_state_owner = PREV }
 		}
 	}
 	puppet_released_tag = yes
@@ -363,6 +370,19 @@ puppet_released_tag = {
 			set_puppet_minister = yes
 			transfer_technology_without_doctrines = yes
 			remove_ideas = ready_to_surrender
+			if = {
+				limit = { has_elected_government = no }
+				set_politics = {
+					ruling_party = var:current_party_ideology_group
+					elections_allowed = no
+				}
+			}
+			else = {
+				set_politics = {
+					ruling_party = var:current_party_ideology_group
+					elections_allowed = yes
+				}
+			}
 		}
 	}
 	recheck_annexations = yes
@@ -377,6 +397,20 @@ puppet_released_tag_nocosmetic = {
 		hidden_effect = {
 			set_puppet_minister = yes
 			transfer_technology_without_doctrines = yes
+			remove_ideas = ready_to_surrender
+			if = {
+				limit = { has_elected_government = no }
+				set_politics = {
+					ruling_party = var:current_party_ideology_group
+					elections_allowed = no
+				}
+			}
+			else = {
+				set_politics = {
+					ruling_party = var:current_party_ideology_group
+					elections_allowed = yes
+				}
+			}
 		}
 	}
 	recheck_annexations = yes
@@ -554,6 +588,10 @@ setup_puppet_lithuania = {
 					ruling_party = social_conservative
 					elections_allowed = no
 				}
+				set_political_party = {
+					ideology = social_conservative
+					popularity = 60
+				}
 				remove_all_minister_types = yes
 				add_ideas = {
 					LIT_Stasys_Salkauskis_hog_sco
@@ -584,6 +622,8 @@ setup_puppet_lithuania = {
 					}
 					set_capital = 11
 				}
+				unlock_national_focus = LIT_new_seimas
+				unlock_national_focus = LIT_LKDP_victory
 			}
 		}
 	}
@@ -707,7 +747,7 @@ setup_puppet_baltic_union = {
 				BAT_revanchism_1
 				BAT_revanchism_2
 			}
-			1091 = {
+			842 = {
 				create_unit = {
 					division = "division_template = \"Raudonosios Armijos divizija\" start_experience_factor = 0.3 start_equipment_factor = 1"
 					owner = BAT
@@ -835,160 +875,6 @@ setup_romanian_puppet_leaders = {
 				ideology = national_populist_subtype
 				traits = { ROM_green_prince }
 			}
-		}
-	}
-}
-
-puppet_russia_setup = {
-	var:tag_to_release = {
-		if = {
-			limit = { tag = RUS }
-			if = {
-				limit = { has_cosmetic_tag = RUS_empire }
-				drop_cosmetic_tag = yes
-				kill_ideology_leader = social_democrat
-				kill_ideology_leader = social_liberal
-				kill_ideology_leader = market_liberal
-				kill_ideology_leader = social_conservative
-				kill_ideology_leader = authoritarian_democrat
-				kill_ideology_leader = paternal_autocrat
-			}
-			if = {
-				limit = {
-					ROOT = { is_germany_or_splinter_tag = yes }
-					NOT = { has_country_leader = { name = "Pavel Bermondt-Avalov" ruling_only = yes } }
-				}
-				meta_effect = {
-					text = {
-						create_country_leader = {
-							name = "Pavel Bermondt-Avalov"
-							picture = "gfx/leaders/RUS/Portrait_RUS_Pavel_Bermondt_Avalov.png"
-							ideology = [OVERLORD_IDEOLOGY]
-						}
-					}
-					OVERLORD_IDEOLOGY = "[ROOT.GetRulingIdeologySubtype]"
-				}
-				set_country_flag = was_puppeted
-			}
-			if = {
-				limit = {
-					OR = {
-						has_completed_focus = RUS_Restore_The_Monarchy
-						has_completed_focus = RUS_A_Firm_Hand
-					}
-				}
-				unlock_national_focus = RUS_The_Republic_Survives
-			}
-			if = {
-				limit = { 219 = { is_capital = no } } #Moscow
-				clear_variable = historical_capital_state
-				if = {
-					limit = { 219 = { is_owned_and_controlled_by = PREV } }
-					set_capital = 219
-				}
-			}
-		}
-		else_if = {
-			limit = { tag = SOV }
-			if = {
-				limit = { NOT = { has_completed_focus = SOV_Rebuild_The_Country } }
-				add_ideas = SOV_aftermath_of_the_civil_war_1
-				unlock_national_focus = SOV_Mobilise_Urban_Militias
-				unlock_national_focus = SOV_Krasnaya_Gvardiya_Units
-				unlock_national_focus = SOV_Rally_The_Defectors
-				unlock_national_focus = SOV_The_War_Effort
-			}
-		}
-		else_if = {
-			limit = { tag = TRM }
-			remove_ideas = {
-				TRM_dream_1
-				TRM_dream_2
-			}
-			if = {
-				limit = { has_idea = TRM_dream_3 }
-				swap_ideas = {
-					remove_idea = TRM_dream_3
-					add_idea = TRM_legacy_of_transamur_1
-				}
-			}
-			else_if = {
-				limit = { has_idea = TRM_dream_4 }
-				swap_ideas = {
-					remove_idea = TRM_dream_4
-					add_idea = TRM_legacy_of_transamur_2
-				}
-			}
-			else_if = {
-				limit = { has_idea = TRM_dream_5 }
-				swap_ideas = {
-					remove_idea = TRM_dream_5
-					add_idea = TRM_legacy_of_transamur_3
-				}
-			}
-			if = {
-				limit = {
-					ROOT = {
-						NOT = { tag = JAP }
-						has_government = authoritarian_democrat
-					}
-				}
-				create_country_leader = {
-					name = "Grigoriy Semyenov"
-					picture = "gfx/leaders/RUS/Portrait_RUS_Grigory_Semyonov.png"
-					expire = "1965.1.1"
-					ideology = authoritarian_democrat_subtype
-				}
-			}
-			else_if = {
-				limit = {
-					ROOT = { tag = JAP }
-					has_government = authoritarian_democrat
-					NOT = {
-						has_country_leader = { name = "Oi Shigemoto" ruling_only = yes }
-					}
-				}
-				kill_ideology_leader = authoritarian_democrat
-			}
-		}
-	}
-}
-
-remove_all_russian_cores = {
-	every_state = {
-		limit = {
-			OR = {
-				is_core_of = RUS
-				is_claimed_by = RUS
-				is_core_of = SOV
-				is_claimed_by = SOV
-				is_core_of = TRM
-				is_claimed_by = TRM
-			}
-		}
-		if = {
-			limit = { NOT = { country_exists = RUS } }
-			remove_core_of = RUS
-			remove_claim_by = RUS
-		}
-		if = {
-			limit = { NOT = { country_exists = SOV } }
-			remove_core_of = SOV
-			remove_claim_by = SOV
-		}
-		if = {
-			limit = { NOT = { country_exists = TRM } }
-			remove_core_of = TRM
-			remove_claim_by = TRM
-		}
-		if = {
-			limit = { NOT = { country_exists = SIB } }
-			remove_core_of = SIB
-			remove_claim_by = SIB
-		}
-		for_each_scope_loop = {
-			array = RUS.RUS_starting_states_array
-			add_core_of = var:tag_to_release
 		}
 	}
 }
@@ -1593,20 +1479,22 @@ transfer_iraq = {
 				ROOT = {
 					NOT = {
 						tag = TUR
-						tag = OTT
 						tag = PER
 					}
 				}
 				TUR = { ROOT_can_grant_land = no }
-				OTT = { ROOT_can_grant_land = no }
 				PER = { ROOT_can_grant_land = no }
 				350 = { is_valid_annexation_state = no } #Diyarbakir
 				352 = { is_valid_annexation_state = no } #Van
-				417 = { is_valid_annexation_state = no } #Western Azerbaijan
+				417 = { is_valid_annexation_state = no } #Urmia
 				421 = { is_valid_annexation_state = no } #Kurdistan
 			}
 		}
 		if = {
+			limit = { var:tag_to_release = { tag = OTT } }
+			remove_claim_and_add_core_of_target = yes
+		}
+		else_if = {
 			limit = {
 				NOT = {
 					is_core_of = var:tag_to_release

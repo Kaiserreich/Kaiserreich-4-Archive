@@ -580,7 +580,7 @@ Sichuan_Famine_decisions = {
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_International_Famine_Relief"
-			news_event = sichuan.135
+			country_event = sichuan.135
 		}
 	}
 
@@ -672,6 +672,7 @@ Sichuan_Famine_decisions = {
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Request_Aid target: [From.GetName]"
 			FROM = {
+				set_country_flag = SZC_already_requested_aid
 				if = {
 					limit = { tag = QIE }
 					country_event = sichuan.128
@@ -1379,6 +1380,10 @@ Sichuan_Opium_Removal_decisions = {
 						country_event = sichuan.225
 					}
 					5 = { #failure
+						modifier = {
+							factor = 0
+							is_ai = no
+						}
 						country_event = sichuan.226
 					}
 				}
@@ -2096,7 +2101,7 @@ Sichuan_Federalist_decisions = {
 
 		fire_only_once = yes
 		cost = 20
-		days_remove = 7
+		days_remove = 14
 		cancel_if_not_visible = yes
 		war_with_target_on_remove = yes
 
@@ -2197,7 +2202,7 @@ Sichuan_Federalist_decisions = {
 
 		fire_only_once = yes
 		cost = 20
-		days_remove = 7
+		days_remove = 14
 		cancel_if_not_visible = yes
 		war_with_target_on_remove = yes
 
@@ -2336,7 +2341,10 @@ Sichuan_Federalist_decisions = {
 				}
 				else_if = {
 					limit = { tag = FNG }
-					owns_state = 608
+					OR = {
+						NOT = { country_exists = QIE }
+						owns_state = 608
+					}
 				}
 				has_war = no
 				is_subject = no
@@ -2356,7 +2364,10 @@ Sichuan_Federalist_decisions = {
 				}
 				else_if = {
 					limit = { tag = FNG }
-					owns_state = 608
+					OR = {
+						NOT = { country_exists = QIE }
+						owns_state = 608
+					}
 				}
 				has_war = no
 				is_subject = no
@@ -2450,7 +2461,7 @@ Sichuan_Federalist_decisions = {
 			FROM = { owns_state = 608 }
 		}
 
-		targets = { QIE FNG SHX SQI }
+		targets = { QIE SHX SQI }
 		target_root_trigger = {
 			has_completed_focus = SZC_From_Chongqing_To_Beijing
 		}
@@ -2461,8 +2472,127 @@ Sichuan_Federalist_decisions = {
 
 		fire_only_once = yes
 		cost = 20
-		days_remove = 7
+		days_remove = 14
 		war_with_target_on_remove = yes
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				enemies_strength_ratio > 0.4
+			}
+			modifier = {
+				factor = 0
+				surrender_progress > 0
+			}
+			modifier = {
+				factor = 0
+				strength_ratio = { tag = FROM ratio < 1 }
+				FROM = { surrender_progress < 0.1 }
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = yes
+					faction_leader = {
+						surrender_progress < 0.1
+						strength_ratio = { tag = ROOT ratio > 0.7 }
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					is_subject = yes
+					overlord = {
+						surrender_progress < 0.1
+						strength_ratio = { tag = ROOT ratio > 0.7 }
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					is_in_faction = no
+					has_guarantor = yes
+					any_of_scopes = {
+						array = guarantor_array
+						has_guaranteed = PREV
+						alliance_strength_ratio > 0.8
+						surrender_progress < 0.1
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = imminent_war
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision SZC_Attack_North target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 15 value = 1 }
+			hidden_effect = {
+				FROM = { country_event = sichuan.20 }
+			}
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Attack_North target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			declare_war_on = {
+				target = FROM
+				type = annex_everything
+			}
+		}
+	}
+
+	SZC_Liberate_the_Northeast = {
+		icon = oppression
+
+		available = {
+			OR = {
+				is_neighbor_of = FROM
+				any_allied_country = {
+					is_neighbor_of = FROM
+				}
+			}
+		}
+
+		visible = {
+			has_completed_focus = SZC_From_Chongqing_To_Beijing
+			can_declare_war_on = FROM
+			FROM = {
+				OR = {
+					is_subject = yes
+					has_country_flag = UPC_refused_ultimatum
+				}
+			}
+		}
+
+		cancel_trigger = {
+			NOT = { can_declare_war_on = FROM }
+		}
+
+		fire_only_once = yes
+		cost = 20
+		days_remove = 14
+		war_with_target_on_remove = yes
+
+		targets = { FNG MAN }
+		target_root_trigger = {
+			has_completed_focus = SZC_From_Chongqing_To_Beijing
+		}
+		target_trigger = {
+			can_declare_war_on = FROM
+			FROM = {
+				OR = {
+					is_subject = yes
+					has_country_flag = UPC_refused_ultimatum
+				}
+			}
+		}
 
 		ai_will_do = {
 			factor = 100

@@ -1,0 +1,183 @@
+on_actions = {
+	on_startup = {
+		effect = {
+			# BUL starting coalition
+			BUL = {
+				set_temp_variable = { coalition_partner_var = token:social_conservative }
+				add_to_coalition = yes
+			}
+		}
+	}
+
+	#ROOT is winner #FROM is loser
+	on_annex = {
+		effect = {
+			if = {
+				limit = {
+					tag = SER
+					FROM = { tag = BUL }
+				}
+				country_event = { id = serbia.23 days = 14 random_days = 7 }
+			}
+			else_if = {
+				limit = {
+					tag = SER
+					FROM = { tag = MAC }
+				}
+				country_event = serbia.3100
+			}
+			if = {
+				limit = {
+					FROM = { tag = event_target:chetnik_state }
+					event_target:BUL_chetnik_headquarters = {
+						is_owned_by = BUL
+						OR = {
+							state = 105
+							state = 108
+							state = 107
+						}
+					}
+					SER = { is_subject_of = BUL }
+				}
+				SER = { transfer_state = event_target:BUL_chetnik_headquarters }
+			}
+		}
+	}
+	on_daily_SER = {
+		effect = {
+			if = {
+				limit = { has_idea = SER_konspiracija_idea }
+				SER_recalculate_konspiracija = yes
+				if = {
+					limit = {
+						has_country_flag = SER_enshrined_konspiracija_control_flag
+						national_populist < 0.11
+					}
+					set_temp_variable = { SER_natpop_gain_to_minimum = 0.11 }
+					subtract_from_temp_variable = { SER_natpop_gain_to_minimum = ROOT.party_popularity@national_populist }
+					add_popularity = {
+						ideology = national_populist
+						popularity = SER_natpop_gain_to_minimum
+					}
+				}
+				else_if = {
+					limit = {
+						has_country_flag = SER_curbed_konspiracija_control_flag
+						national_populist > 0.25
+					}
+					set_temp_variable = { SER_natpop_loss_to_maximum = ROOT.party_popularity@national_populist }
+					subtract_from_temp_variable = { SER_natpop_loss_to_maximum = 0.25 }
+					multiply_temp_variable = { SER_natpop_loss_to_maximum = -1 }
+					add_popularity = {
+						ideology = national_populist
+						popularity = SER_natpop_loss_to_maximum
+					}
+				}
+			}
+		}
+	}
+
+	on_new_term_election = {
+		effect = {
+			### Bulgaria ###
+			if = {
+				limit = { tag = BUL }
+				country_event = bulgaria.28
+				country_event = bulgariaflavour.11
+			}
+			### Serbia ###
+			if = {
+				limit = { tag = SER }
+				country_event = serbia.11 #1936
+				country_event = serbia.21 #Post-1936 (Serbia republic)
+				country_event = serbia.71 #Post-1936 (Serbia kingdom)
+				country_event = yugoslavia.1 #Yugoslavia
+			}
+		}
+	}
+
+	#ROOT is winner #FROM is loser
+	on_peaceconference_ended = {
+		effect = {
+			if = {
+				limit = {
+					ROOT = { tag = BUL }
+					FROM = { tag = SER }
+				}
+				country_event = { id = bulgaria.54 days = 60 random_days = 7 }
+			}
+		}
+	}
+
+	#ROOT = attacking side
+	#FROM = defending side
+	#fired when two countries end up at war with each other (on_war is fired when a country goes to war against anyone and is not fired again when it enters war against another country unless it went to peace first)
+	on_war_relation_added = {
+		effect = {
+			if = {
+				limit = { tag = SER }
+				FROM = { add_ideas = SER_spawn_chetniks }
+			}
+			else_if = {
+				limit = { FROM = { tag = SER } }
+				add_ideas = SER_spawn_chetniks
+			}
+			if = {
+				limit = { is_ally_with = SER }
+				add_ideas = SER_fire_fourth_balkan_war_event
+			}
+			else_if = {
+				limit = { FROM = { is_ally_with = SER } }
+				FROM = { add_ideas = SER_fire_fourth_balkan_war_event }
+			}
+		}
+	}
+	on_declare_war = {
+		effect = {
+			# Bulgaria is at war with Serbia or Romania
+			if = {
+				limit = {
+					OR = {
+						tag = SER
+						is_in_faction_with = SER
+					}
+					has_war_with = BUL
+				}
+				country_event = serflavor.6
+			}
+		}
+	}
+	on_war = {
+		effect = {
+			#Spawn chetniks
+			if = {
+				limit = { tag = BUL }
+				country_event = bulgaria.57
+			}
+		}
+	}
+	# FROM = country receiving volunteers, ROOT = country sending volunteers
+	on_send_volunteers = {
+		effect = {
+			if = {
+				limit = {
+					FROM = {
+						tag = BUL
+					}
+					ROOT = {
+						OR = {
+							tag = GER
+							tag = AUS
+							is_in_faction_with = GER
+							is_in_faction_with = AUS
+						}
+					}
+				}
+				FROM = {
+					set_country_flag = BUL_disabled_bulgoslavia
+				}
+			}
+		}
+	}
+}
+

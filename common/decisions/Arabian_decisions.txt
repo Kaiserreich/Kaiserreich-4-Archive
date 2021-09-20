@@ -131,7 +131,7 @@ SAU_JBS_Power_Struggle = {
 	}
 
 	### Anizzah
-		# Ruwala 
+		# Ruwala
 	SAU_Sway_Ruwala = {
 		icon = caravan
 
@@ -1098,6 +1098,13 @@ JBS_Ottoman_Favours = {
 					is_in_faction_with = EGY
 				}
 			}
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = JBS_foreign_policy
+					option = JBS_FOREIGN_POLICY_CAIRO_PACT
+				}
+			}
 		}
 	}
 	JBS_Join_Cairo_Pact = {
@@ -1140,6 +1147,13 @@ JBS_Ottoman_Favours = {
 
 		ai_will_do = {
 			factor = 100
+			modifier = {
+				factor = 0
+				has_game_rule = {
+					rule = JBS_foreign_policy
+					option = JBS_FOREIGN_POLICY_OTTOMAN
+				}
+			}
 		}
 	}
 }
@@ -1187,143 +1201,47 @@ foreign_politics = {
 			factor = 100
 		}
 	}
-	SAU_Conquer_the_Imamate = {
-		icon = generic_flags
 
-		allowed = { tag = SAU }
+	OMA_Request_Urgent_Intervention = {
+		icon = generic_prepare_civil_war
+
+		allowed = {
+			original_tag = OMA
+		}
 
 		available = {
-			controls_all_owned_states = yes
-			NOT = { has_wargoal_against = FROM }
+			OR = {
+				is_guaranteed_by = OTT
+				is_guaranteed_by = RAJ
+			}
+			NOT = { has_full_control_of_state = 294 } #Muscat
 		}
 
 		visible = {
-			can_declare_war_on = FROM
-			FROM = { owns_state = 859 } #Oman
-		}
-
-		targets = { OMA }
-		target_root_trigger = { has_completed_focus = SAU_hit_oman }
-		target_trigger = {
-			can_declare_war_on = FROM
-			FROM = { owns_state = 859 } #Oman
+			has_war_with = SAU
+			is_subject = no
+			is_in_faction = no
 		}
 
 		cost = 0
-		days_remove = 30
 		fire_only_once = yes
-		war_with_target_on_remove = yes
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision OMA_Request_Urgent_Intervention"
+			if = {
+				limit = { is_guaranteed_by = RAJ }
+				RAJ = { country_event = ottfor.41 }
+			}
+			else = {
+				OTT = { country_event = ottfor.41 }
+			}
+		}
 
 		ai_will_do = {
 			factor = 100
-			modifier = {
-				factor = 0
-				has_war = yes
-			}
-			modifier = {
-				factor = 0
-				strength_ratio = { tag = OMA ratio < 1.0 }
-			}
-			modifier = {
-				factor = 0
-				OMA = {
-					is_subject = yes
-					overlord = {
-						strength_ratio = { tag = ROOT ratio > 0.8 }
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				OMA = {
-					is_in_faction = yes
-					faction_leader = {
-						strength_ratio = { tag = ROOT ratio > 0.8 }
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				has_country_flag = imminent_war
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SAU_Conquer_the_Imamate target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 35 value = 1 }
-			setup_decision_attack_AI = yes
-			FROM = { activate_mission = OMA_Saudi_Invasion }
-		}
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SAU_Conquer_the_Imamate target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			FROM = {
-				declare_war_on = {
-					target = ROOT
-					type = annex_everything
-				}
-				add_ideas = has_scripted_peace
-				activate_mission = OMA_SAU_Whitepeace
-			}
-			activate_mission = SAU_OMA_Whitepeace
-			set_province_controller = 13749
-			custom_effect_tooltip = sau_conquer_imamate_tt
-			hidden_effect = {
-				if = {
-					limit = {
-						NOT = {
-							has_country_flag = SAU_oman_news_fired
-						}
-					}
-					news_event = worldnews.439
-					set_country_flag = SAU_oman_news_fired
-				}
-			}
 		}
 	}
 
-	OMA_Saudi_Invasion = {
-		icon = oppression
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			SAU = {
-				OR = {
-					is_subject = yes
-					exists = no
-				}
-			}
-		}
-
-		days_mission_timeout = 30
-		is_good = no
-
-		highlight_state_targets = {
-			state = 859
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision OMA_Saudi_Invasion target: [From.GetName]"
-			add_stability = 0.05
-		}
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout OMA_Saudi_Invasion target: [From.GetName]"
-			effect_tooltip = {
-				declare_war_on = {
-					target = SAU
-					type = annex_everything
-				}
-				add_ideas = has_scripted_peace
-				activate_mission = OMA_SAU_Whitepeace
-				SAU = {
-					activate_mission = SAU_OMA_Whitepeace
-					set_province_controller = 13749
-				}
-			}
-		}
-	}
 	SAU_OMA_Whitepeace = {
 		name = OMA_SAU_Whitepeace
 		icon = oppression
@@ -1338,7 +1256,7 @@ foreign_politics = {
 			NOT = { has_war_with = OMA }
 		}
 
-		days_mission_timeout = 150
+		days_mission_timeout = 70
 		is_good = yes
 		fire_only_once = yes
 
@@ -1348,13 +1266,6 @@ foreign_politics = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision SAU_OMA_Whitepeace target: [From.GetName]"
-			if = {
-				limit = {
-					OMA = { owns_state = 859 }
-				}
-				transfer_state = 859
-			}
-			OMA = { white_peace_with_ROOT = yes }
 			random_other_country = {
 				limit = { has_guaranteed = OMA }
 				country_event = ottfor.41
@@ -1364,6 +1275,8 @@ foreign_politics = {
 		timeout_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision timeout SAU_OMA_Whitepeace target: [From.GetName]"
 			OMA = { white_peace_with_ROOT = yes }
+			remove_state_claim = 294 #Muscat
+			remove_state_claim = 859 #Oman
 		}
 	}
 	OMA_SAU_Whitepeace = {
@@ -1380,8 +1293,8 @@ foreign_politics = {
 			NOT = { has_war_with = SAU }
 		}
 
-		days_mission_timeout = 150
-		is_good = no
+		days_mission_timeout = 70
+		is_good = yes
 		fire_only_once = yes
 
 		highlight_state_targets = {
@@ -1391,14 +1304,9 @@ foreign_politics = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision OMA_SAU_Whitepeace target: [From.GetName]"
 			effect_tooltip = {
-				if = {
-					limit = { owns_state = 859 }
-					SAU = { transfer_state = 859 }
-				}
-				SAU = { white_peace_with_ROOT = yes }
-				if = {
-					limit = { country_exists = OTT }
-					OTT = { country_event = ottfor.41 }
+				random_other_country = {
+					limit = { has_guaranteed = OMA }
+					country_event = ottfor.41
 				}
 			}
 		}

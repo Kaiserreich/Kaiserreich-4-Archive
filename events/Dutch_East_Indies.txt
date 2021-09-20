@@ -37,13 +37,23 @@ country_event = { #Black Monday comes to the Indies
 
 	is_triggered_only = yes
 
+	immediate = {
+		hidden_effect = {
+			add_stability = -0.1
+			add_political_power = -200
+			add_ideas = DEI_idea_black_monday
+			increase_insulindian_independence_unity = yes
+		}
+	}
+
 	option = {
 		name = dei.2.a
-		add_stability = -0.1
-		add_political_power = -200
-		add_ideas = DEI_idea_black_monday
-		increase_insulindian_independence_unity = yes
-		custom_effect_tooltip = dei_unity_up
+		effect_tooltip = {
+			add_stability = -0.1
+			add_political_power = -200
+			add_ideas = DEI_idea_black_monday
+			custom_effect_tooltip = dei_unity_up
+		}
 	}
 }
 
@@ -1353,11 +1363,6 @@ country_event = { #The Netherlands became socialist peacefully, and evacuates th
 
 	option = { #Switch over to the Netherlands
 		name = dei.35.a
-		every_owned_state = {
-			limit = { region = 159 }
-			add_core_of = BOR
-		}
-		release = BOR
 		effect_tooltip = { release = INS }
 		hidden_effect = {
 			random_owned_state = {
@@ -1379,11 +1384,6 @@ country_event = { #The Netherlands became socialist peacefully, and evacuates th
 
 	option = { #Switch over to Insulindia
 		name = dei.35.b
-		every_owned_state = {
-			limit = { region = 159 }
-			add_core_of = BOR
-		}
-		release = BOR
 		effect_tooltip = { release = INS }
 		hidden_effect = {
 			random_owned_state = {
@@ -1799,6 +1799,7 @@ country_event = { #Charter for the kingdom of the Netherlands
 					state = 1038
 					state = 1077
 				}
+				NOT = { is_core_of = HOL }
 			}
 			add_core_of = HOL
 		}
@@ -1840,6 +1841,30 @@ country_event = { #The Koninkrijksstatuut
 				}
 			}
 			add_core_of = HOL
+		}
+		every_owned_state = {
+			limit = {
+				NOT = {
+					state = 668
+					AND = {
+						HOL = { has_country_flag = dei_medium_coring }
+						OR = {
+							state = 669
+							state = 843
+							state = 1017
+							state = 1018
+						}
+					}
+					AND = {
+						HOL = { has_country_flag = dei_max_coring }
+						OR = {
+							state = 667
+							state = 1020
+						}
+					}
+				}
+			}
+			add_claim_by = HOL
 		}
 		transfer_navy = { target = HOL }
 		every_unit_leader = { set_nationality = HOL }
@@ -2792,9 +2817,6 @@ country_event = { #peace deal
 				days = 2
 			}
 		}
-		hidden_effect = {
-			HOL = { country_event = { id = dei.84 days = 7 } }
-		}
 	}
 	option = {
 		name = dei.81.b #We will fight them on the fodders
@@ -2837,7 +2859,7 @@ country_event = { #Peace Deal
 		DEI = {
 			every_owned_state = {
 				limit = {
-					is_core_of = INS
+					is_core_of = ROOT
 					NOT = {
 						state = 668 #Moluccas
 						state = 669 #NW. New Guinea
@@ -2845,11 +2867,19 @@ country_event = { #Peace Deal
 						state = 1017 #West Timor
 					}
 				}
-				INS = { transfer_state = PREV }
+				ROOT = { transfer_state = PREV }
+				teleport_armies = {
+					limit = { is_ally_with = FROM }
+					to_state_array = owned_controlled_states
+				}
 			}
 			white_peace_with_ROOT = yes
 		}
 		remove_ideas = INS_idea_insulindian_national_revolution
+		if = {
+			limit = { is_subject_of = HOL }
+			HOL = { country_event = dei.84 }
+		}
 	}
 }
 
@@ -2865,14 +2895,15 @@ country_event = { #Failed Project
 	option = {
 		name = dei.84.a
 		DEI = {
-			transfer_navy = { target = ROOT }
+			every_owned_state = { add_claim_by = ROOT }
 			every_unit_leader = { set_nationality = ROOT }
+			transfer_navy = { target = ROOT }
 		}
-		INS = { embargo_ROOT = yes }
 		annex_country = {
 			target = DEI
 			transfer_troops = yes
 		}
+		INS = { embargo_ROOT = yes }
 		every_state = {
 			limit = { is_core_of = DEI }
 			remove_core_of = DEI
@@ -3034,22 +3065,22 @@ country_event = { #The Carstenz Expedition
 			random_list = {
 				seed = random
 				50 = {
-					country_event = {
+					country_event = {	#Carstenz expedition succesfully reached the top
 						id = dei_flavor.7
 						days = 60
-					} #Carstenz expedition succesfully reached the top
+					}
 				}
 				25 = {
-					country_event = {
+					country_event = {	#Carstenz expedition failed to reach the top
 						id = dei_flavor.8
 						days = 60
-					} #Carstenz expedition failed to reach the top
+					}
 				}
 				25 = {
-					country_event = {
+					country_event = {	#Carstenz expedition disappears
 						id = dei_flavor.9
 						days = 120
-					} #Carstenz expedition disappears
+					}
 				}
 			}
 		}
@@ -3609,7 +3640,6 @@ country_event = { #Formation of the government in Exile
 				autonomy_state = autonomy_free
 			}
 			separate_peace_all_wars = yes
-			HOL_remove_monarchy = yes
 			DEI = {
 				leave_faction = yes
 				country_event = holex.39
@@ -3699,7 +3729,7 @@ country_event = { #Picking an ally - otherwise you will never be able to restore
 	option = { #Open channels with the Canadians
 		name = holex.2.a
 		ai_chance = {
-			base = 70
+			base = 30
 		}
 		trigger = {
 			ENT = {
@@ -5027,6 +5057,23 @@ country_event = { #Formation of the government in exile
 		is_in_faction = no
 	}
 
+	immediate = {
+		hidden_effect = {
+			HOL = { HOL_remove_monarchy = yes }
+			every_enemy_country = {
+				limit = {
+					is_valid_peace_target = yes
+					NOT = {
+						is_owner_neighbor_of = ROOT
+						is_ally_with = JAP
+						is_ally_with = INS
+					}
+				}
+				white_peace_with_ROOT = yes
+			}
+		}
+	}
+
 	option = { #Stay as the Batavian Commune
 		name = holex.39.a
 		if = {
@@ -5083,7 +5130,7 @@ country_event = { #Formation of the government in exile
 		}
 		set_country_flag = holex_got_exiled
 		mark_focus_tree_layout_dirty = yes
-		FROM = {
+		HOL = {
 			transfer_navy = { target = ROOT } #Navy Stays initially loyal to the old regime
 			every_owned_state = {
 				limit = { NOT = { is_core_of = PREV } }
@@ -5093,12 +5140,13 @@ country_event = { #Formation of the government in exile
 				limit = { is_core_of = PREV }
 				add_claim_by = ROOT
 			}
+			embargo_ROOT = yes
 		}
 		hidden_effect = {
 			HOL_create_wilhelmina = yes
 			if = {
-				limit = { has_variable = FROM.HOL_original_faction_leader }
-				var:FROM.HOL_original_faction_leader = {
+				limit = { has_variable = HOL.HOL_original_faction_leader }
+				var:HOL.HOL_original_faction_leader = {
 					add_to_faction = DEI
 					if = {
 						limit = { tag = GER }
@@ -5234,58 +5282,6 @@ country_event = { #Reclaimed the birthright as the exiles
 		HOL_restore_exiled_netherlands = yes
 		HOL_DEI_is_restored = yes
 		HOL = { change_tag_from = ROOT }
-	}
-}
-
-country_event = { #Betrayed by your allies
-	id = holex.41
-	immediate = { log = "[GetDateText]: [Root.GetName]: event holex.41 FROM = [From.GetName]" }
-	title = holex.41.t
-	desc = holex.41.d
-	picture = GFX_report_event_HOL_rhine_ships
-
-	trigger = {
-		is_in_faction = yes
-	}
-
-	is_triggered_only = yes
-
-	option = { #Stay as the exiles
-		name = holex.39.a
-		add_political_power = -25
-		leave_faction = yes
-	}
-}
-
-country_event = { #Germany ate our homeland over Flanders, wtf we hate u now
-	id = holex.42
-	immediate = { log = "[GetDateText]: [Root.GetName]: event holex.42 FROM = [From.GetName]" }
-	hidden = yes
-
-	fire_only_once = yes
-
-	trigger = {
-		tag = DEI
-		is_subject = no
-		HOL = { is_subject = yes }
-		NOT = { has_country_flag = holex_got_exiled }
-	}
-
-	option = { #Stay as the exiles
-		country_event = holex.1
-		if = {
-			limit = { has_war = yes }
-			every_enemy_country = {
-				limit = {
-					is_valid_peace_target = yes
-					NOT = {
-						JAP = { is_ally_with = PREV }
-						INS = { is_ally_with = PREV }
-					}
-				}
-				white_peace_with_ROOT = yes
-			}
-		}
 	}
 }
 

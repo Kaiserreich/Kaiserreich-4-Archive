@@ -467,13 +467,13 @@ ANQ_internal_decisions = {
 
 	###########################################
 	### Getting Support Lines online (Qing) ###
-	#	RIVER: 
+	#	RIVER:
 	#		Yangtze
 	#		Huai
 	#	RAIL:
 	#		Xuzhou
 	#		Nanchang
-	#		Jinan	
+	#		Jinan
 	#
 	###########################################
 
@@ -768,12 +768,12 @@ ANQ_internal_decisions = {
 
 	###########################################
 	### Getting Supply Lines online (Japan) ###
-	#	PORT: 
+	#	PORT:
 	#		Nantong
 	#		Wenzhou
 	#		Quanzhou
 	#		Hangzhou
-	#		
+	#
 	###########################################
 
 	ANQ_Nantong_Port_Line = {
@@ -2947,63 +2947,6 @@ ANQ_influence_decisions = {
 			}
 		}
 	}
-
-	ANQ_join_war_vs_QIE = {
-
-		icon = generic_prepare_civil_war
-
-		allowed = {
-			tag = ANQ
-		}
-
-		visible = {
-			ANQ_is_profengtian = yes
-			has_country_flag = ANQ_commits_reclamation
-			can_declare_war_on = FROM
-			OR = {
-				has_country_flag = ANQ_start_reclamation_war
-				AND = {
-					FNG = { has_war_with = QIE }
-					date > 1938.1.1
-				}
-			}
-		}
-
-		available = {
-			hidden_trigger = {
-				always = no
-			}
-		}
-
-		targets = { QIE }
-		target_trigger = {
-			can_declare_war_on = FROM
-		}
-
-		cancel_if_not_visible = yes
-		fire_only_once = yes
-		war_with_target_on_remove = yes
-
-		activation = {
-			OR = {
-				has_country_flag = ANQ_start_reclamation_war
-				AND = {
-					FNG = { has_war_with = QIE }
-					date > 1938.1.1
-				}
-			}
-			has_country_flag = ANQ_commits_reclamation
-		}
-		days_mission_timeout = 1
-		days_remove = 30
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove ANQ_join_war_vs_QIE target: [From.GetName]"
-			declare_war_on = {
-				target = QIE
-				type = annex_everything
-			}
-		}
-	}
 }
 
 foreign_politics = {
@@ -3081,302 +3024,183 @@ foreign_politics = {
 	ANQ_attack_FNG = {
 		icon = generic_prepare_civil_war
 
-		allowed = {
-			tag = ANQ
-		}
+		allowed = { always = no } #activated by effect
 
-		visible = {
-			has_completed_focus = ANQ_five_stars_five_provinces
-			can_declare_war_on = FNG
-			has_country_flag = FNG_hostile
+		available = {
 			NOT = { country_exists = QIE }
 		}
 
+		visible = {
+			can_declare_war_on = FROM
+		}
+
+		cost = 50
+		days_remove = 30
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+
 		ai_will_do = {
 			base = 0
 		}
 
-		cancel_if_not_visible = yes
-
-		fire_only_once = yes
-
-		cost = 50
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled ANQ_attack_FNG target: [From.GetName]"
+			clr_country_flag = imminent_war
+			clear_decision_attack_AI = yes
+		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision ANQ_attack_FNG"
+			log = "[GetDateText]: [Root.GetName]: Decision ANQ_attack_FNG target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 35 value = 1 }
+			FROM = { country_event = kr.political.30 } #warning event
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ANQ_attack_FNG target: [From.GetName]"
+			clear_decision_attack_AI = yes
 			declare_war_on = {
-				target = FNG
+				target = FROM
 				type = annex_everything
+			}
+			hidden_effect = {
+				remove_targeted_decision = { target = FROM decision = ANQ_attack_FNG }
 			}
 		}
 	}
 
-	ANQ_join_war_vs_QIE_self = {
-
+	ANQ_attack_QIE = {
 		icon = generic_prepare_civil_war
 
-		allowed = {
-			tag = ANQ
+		allowed = { always = no } #activated by effect
+
+		available = {
+			FROM = { has_war_with = FNG }
 		}
 
 		visible = {
-			has_completed_focus = ANQ_five_stars_five_provinces
-			has_completed_focus = ANQ_stand_with_republic
-			has_country_flag = ANQ_peace
-			NOT = {
-				has_country_flag = ANQ_commits_reclamation
-				date > 1938.1.1
-			}
 			can_declare_war_on = FROM
-			FROM = {
-				has_war_with = FNG
-			}
 		}
 
-		available = {
-			OR = {
-				AND = {
-					has_completed_focus = ANQ_smother_dragon
-					has_country_flag = ANQ_chen_alone
-				}
-				AND = {
-					FNG = { has_war_with = QIE }
-					NOT = { has_country_flag = ANQ_chen_alone }
-					date > 1938.1.1
-				}
-			}
-		}
+		days_remove = 30
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
 
 		ai_will_do = {
-			base = 0
+			base = 100
 			modifier = {
-				add = 1000
-				has_country_flag = ANQ_chen_alone
-				NOT = {
-					QIE = { has_war_with = JAP }
-				}
-				strength_ratio = { tag = QIE ratio > 0.5 }
+				factor = 0
+				ROOT_is_threatened = yes
+			}
+			modifier = {
+				factor = 0
+				FROM = { is_stronger_than_ROOT_and_not_vulnerable = yes }
+			}
+			modifier = {
+				factor = 0
+				FROM = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
+			}
+			modifier = {
+				factor = 0
+				FROM = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
 			}
 		}
 
-		targets = { QIE }
-		target_trigger = {
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled ANQ_attack_QIE target: [From.GetName]"
+			clr_country_flag = imminent_war
+			clear_decision_attack_AI = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ANQ_attack_QIE target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 35 value = 1 }
+			FROM = { country_event = kr.political.30 } #warning event
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove ANQ_attack_QIE target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			declare_war_on = {
+				target = FROM
+				type = annex_everything
+			}
+			hidden_effect = {
+				remove_targeted_decision = { target = QIE decision = ANQ_attack_QIE }
+			}
+		}
+	}
+
+	ANQ_attack_south = {
+		icon = generic_prepare_civil_war
+
+		allowed = { always = no } #activated by effect
+
+		available = {
+			ANQ_has_widespread_destruction = no
+			ANQ_has_derelict_industry = no
+			ANQ_has_ruined_interior = no
+		}
+
+		visible = {
 			can_declare_war_on = FROM
-			FROM = {
-				has_war_with = FNG
-			}
-		}
-
-		cancel_if_not_visible = yes
-		fire_only_once = yes
-		war_with_on_remove = QIE
-
-		days_remove = 20
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove ANQ_join_war_vs_QIE_self target: [From.GetName]"
-			declare_war_on = {
-				target = QIE
-				type = annex_everything
-			}
-		}
-	}
-
-	ANQ_attack_HNN = {
-		icon = generic_prepare_civil_war
-
-		allowed = {
-			tag = ANQ
-		}
-
-		visible = {
-			has_completed_focus = ANQ_five_stars_five_provinces
-			can_declare_war_on = HNN
-			OR = {
-				AND = {
-					has_completed_focus = ANQ_stand_with_republic
-					OR = {
-						NOT = { country_exists = QIE  }
-						#has_country_flag = ANQ_with_zhili
-					}
-				}
-				AND = {
-					has_completed_focus = ANQ_stand_with_beijing
-					OR = {
-						has_completed_focus = ANQ_imperial_keystone
-						#has_country_flag = ANQ_hostile_qing
-					}
-				}
-			}
 			NOT = {
 				AND = {
 					is_in_array = { FNG.FNG_conference_participants = ROOT }
-					is_in_array = { FNG.FNG_conference_participants = HNN }
+					is_in_array = { FNG.FNG_conference_participants = FROM }
 				}
 			}
 		}
-
-		available = {
-			AND = {
-				OR = {
-					if = {
-						limit = { has_completed_focus = ANQ_stand_with_republic }
-						has_completed_focus = ANQ_look_west_again
-					}
-					else = {
-						AND = {
-							has_completed_focus = ANQ_stand_with_beijing
-							has_country_flag = ANQ_peace
-						}
-					}
-				}
-				NOT = {
-					custom_trigger_tooltip = {
-						tooltip = lep_has_widespread_destruction_not
-						OR = {
-							has_idea = ANQ_widespread_destruction
-							has_idea = ANQ_widespread_destruction1
-							has_idea = ANQ_widespread_destruction2
-						}
-					}
-					custom_trigger_tooltip = {
-						tooltip = anq_has_derelict_industry_not
-						OR = {
-							has_idea = ANQ_derelict_industry
-							has_idea = ANQ_derelict_industry1
-							has_idea = ANQ_derelict_industry2
-							has_idea = ANQ_derelict_industry3
-						}
-					}
-					custom_trigger_tooltip = {
-						tooltip = anq_has_ruined_interior_not
-						OR = {
-							has_idea = ANQ_ruined_interior
-							has_idea = ANQ_ruined_interior1
-							has_idea = ANQ_ruined_interior2
-						}
-					}
-				}
-			}
-		}
-
-		ai_will_do = {
-			base = 0
-		}
-
-		cancel_if_not_visible = yes
-
-		fire_only_once = yes
 
 		cost = 50
-
-		days_remove = 14
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove ANQ_attack_HNN"
-			declare_war_on = {
-				target = HNN
-				type = annex_everything
-			}
-		}
-	}
-
-	ANQ_attack_GXC = {
-		icon = generic_prepare_civil_war
-
-		allowed = {
-			tag = ANQ
-		}
-
-		visible = {
-			has_completed_focus = ANQ_five_stars_five_provinces
-			can_declare_war_on = GXC
-			#NOT = { has_country_flag = ANQ_with_feds }
-			OR = {
-				AND = {
-					has_completed_focus = ANQ_stand_with_republic
-					OR = {
-						NOT = { country_exists = QIE  }
-						#has_country_flag = ANQ_with_zhili
-					}
-				}
-				AND = {
-					has_completed_focus = ANQ_stand_with_beijing
-					OR = {
-						has_completed_focus = ANQ_imperial_keystone
-						#has_country_flag = ANQ_hostile_qing
-					}
-				}
-			}
-			NOT = {
-				AND = {
-					is_in_array = { FNG.FNG_conference_participants = ROOT }
-					is_in_array = { FNG.FNG_conference_participants = GXC }
-				}
-			}
-
-		}
-
-		available = {
-			AND = {
-				OR = {
-					if = {
-						limit = { has_completed_focus = ANQ_stand_with_republic }
-						has_completed_focus = ANQ_look_west_again
-					}
-					else = {
-						AND = {
-							has_completed_focus = ANQ_stand_with_beijing
-							has_country_flag = ANQ_peace
-						}
-					}
-				}
-				NOT = {
-					custom_trigger_tooltip = {
-						tooltip = lep_has_widespread_destruction_not
-						OR = {
-							has_idea = ANQ_widespread_destruction
-							has_idea = ANQ_widespread_destruction1
-							has_idea = ANQ_widespread_destruction2
-						}
-					}
-					custom_trigger_tooltip = {
-						tooltip = anq_has_derelict_industry_not
-						OR = {
-							has_idea = ANQ_derelict_industry
-							has_idea = ANQ_derelict_industry1
-							has_idea = ANQ_derelict_industry2
-							has_idea = ANQ_derelict_industry3
-						}
-					}
-					custom_trigger_tooltip = {
-						tooltip = anq_has_ruined_interior_not
-						OR = {
-							has_idea = ANQ_ruined_interior
-							has_idea = ANQ_ruined_interior1
-							has_idea = ANQ_ruined_interior2
-						}
-					}
-				}
-			}
-		}
-
-		ai_will_do = {
-			base = 0
-		}
-
+		days_remove = 30
+		fire_only_once = yes
 		cancel_if_not_visible = yes
 
-		fire_only_once = yes
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				ROOT_is_threatened = yes
+			}
+			modifier = {
+				factor = 0
+				FROM = { is_stronger_than_ROOT_and_not_vulnerable = yes }
+			}
+			modifier = {
+				factor = 0
+				FROM = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
+			}
+			modifier = {
+				factor = 0
+				FROM = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
+			}
+		}
 
-		cost = 50
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled ANQ_attack_south target: [From.GetName]"
+			clr_country_flag = imminent_war
+			clear_decision_attack_AI = yes
+		}
 
-		days_remove = 14
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision ANQ_attack_south target: [From.GetName]"
+			set_country_flag = { flag = imminent_war days = 35 value = 1 }
+			FROM = { country_event = kr.political.30 } #warning event
+			setup_decision_attack_AI = yes
+		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove ANQ_attack_GXC"
+			log = "[GetDateText]: [Root.GetName]: Decision remove ANQ_attack_south target: [From.GetName]"
+			clear_decision_attack_AI = yes
 			declare_war_on = {
-				target = GXC
+				target = FROM
 				type = annex_everything
+			}
+			hidden_effect = {
+				remove_targeted_decision = { target = FROM decision = ANQ_attack_south }
 			}
 		}
 	}
