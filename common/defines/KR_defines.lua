@@ -130,5 +130,5 @@ NDefines.NAI.DEPLOY_MIN_EQUIPMENT_WAR_FACTOR = 0.80							-- Vanilla is 90
 NDefines.NAI.MIN_FIELD_STRENGTH_TO_BUILD_UNITS = 0.6						-- Vanilla is 0.7
 NDefines.NAI.MIN_MANPOWER_TO_BUILD_UNITS = 0.6								-- Vanilla is 0.7
 NDefines.NAI.UPGRADE_DIVISION_RELUCTANCE = 14								-- Vanilla is 7
-NDefines.NAI.VARIANT_UPGRADE_MIN_XP = 1000									-- Vanilla is 50
-
+NDefines.NAI.VARIANT_UPGRADE_MIN_XP = 105									-- Vanilla is 50
+NDefines.NAI.REFIT_SHIP_PERCENTAGE_OF_FORCES = 0.25							-- Vanilla is 0.1

@@ -385,33 +385,17 @@ country_event = { # The Fate of the Ukrainian Monarchy
 			ruling_party = syndicalist
 			elections_allowed = no
 		}
+		add_popularity = {
+			ideology = syndicalist
+			popularity = 0.2
+		}
 		UKR_remove_king = yes
-		set_country_flag = can_pick_foreign_policy
+		clear_all_relations = yes
+		GER_remove_from_mitteleuropa = yes
+		MIE_remove_from_intermarium = yes
+		activate_targeted_decision = { decision = UKR_french_faction target = INT }
 		hidden_effect = {
-			if = {
-				limit = {
-					is_subject = yes
-				}
-				overlord = {
-					set_autonomy = {
-						target = ROOT
-						autonomy_state = autonomy_free
-					}
-				}
-			}
-			leave_faction = yes
-			separate_peace_all_wars = yes
-			GER_leave_mitteleuropa = yes
-			add_popularity = {
-				ideology = syndicalist
-				popularity = 0.2
-			}
-			random_other_country = {
-				news_event = {
-					id = worldnews.32
-					days = 1
-				}
-			}
+			news_event = worldnews.32
 			GER = {
 				country_event = {
 					id = ukraine.34
@@ -724,10 +708,6 @@ country_event = { # Germany Has Declined to Grant Us a Loan!
 
 	is_triggered_only = yes
 
-	immediate = {
-		set_country_flag = UKR_loan_declined_1
-	}
-
 	option = {
 		name = ukraine.26.a
 		ai_chance = { base = 65 }
@@ -891,10 +871,6 @@ country_event = { # Germany Has Declined to Grant Us a Loan!
 	desc = ukraine.31.d
 
 	is_triggered_only = yes
-
-	immediate = {
-		set_country_flag = UKR_loan_declined_2
-	}
 
 	option = {
 		name = ukraine.31.a
@@ -1168,9 +1144,21 @@ country_event = { # Ukraine Wants to Join the International
 	option = {
 		name = ukraine.37.a
 		ai_chance = { base = 100 }
+		if = {
+			limit = { FROM = { is_faction_leader = yes } }
+			every_other_country = {
+				limit = {
+					is_subject = no
+					is_in_faction_with = FROM
+				}
+				country_event = { id = poland.173 days = 4 }
+			}
+			FROM = { dismantle_faction = yes }
+		}
 		add_to_faction = FROM
 		hidden_effect = {
 			FROM = {
+				remove_targeted_decision = { decision = UKR_french_faction target = ROOT }
 				country_event = {
 					id = ukraine.38
 					days = 1
@@ -1185,6 +1173,11 @@ country_event = { # Ukraine Wants to Join the International
 		reverse_add_opinion_modifier = {
 			target = FROM
 			modifier = KR_outraged
+		}
+		hidden_effect = {
+			FROM = {
+				remove_targeted_decision = { decision = UKR_french_faction target = ROOT }
+			}
 		}
 	}
 }
@@ -1214,6 +1207,7 @@ country_event = { # Ukraine Join the International
 			}
 			embargo_ROOT = yes
 		}
+		activate_targeted_decision = { decision = UKR_french_friendship target = INT }
 	}
 }
 
@@ -1751,12 +1745,10 @@ country_event = { # Treaty of Pereyaslav
 					region = 130 #Western Ukraine
 					region = 165 #Eastern Ukraine
 				}
-				is_claim_or_core_of_ROOT = no
 				NOT = {
-					is_claim_or_core_of_owner = yes
-					owner = {
-						NOT = { tag = ROOT }
-						is_ally_with = ROOT
+					AND = {
+						is_claim_or_core_of_owner = yes
+						owner = { is_ally_with = ROOT }
 					}
 				}
 			}
@@ -1950,30 +1942,23 @@ country_event = { # An offer from Ukraine
 	option = {
 		name = ukraine.71.a
 		ai_chance = { base = 100 }
-		if = {
-			limit = { FROM = { is_in_faction_with = GER } }
-			FROM = {
-				leave_faction = yes
-				separate_peace_all_wars = yes
-			}
-			hidden_effect = {
-				GER = {
-					country_event = {
-						id = ukraine.73
-						days = 1
-					}
-				}
-			}
-		}
 		effect_tooltip = { add_to_faction = FROM }
 		hidden_effect = {
-			FROM = { country_event = ukraine.72 }
+			FROM = {
+				remove_targeted_decision = { decision = UKR_rus_friendship target = ROOT }
+				country_event = ukraine.72
+			}
 		}
 	}
 
 	option = {
 		name = ukraine.71.b
 		ai_chance = { base = 0 }
+		hidden_effect = {
+			FROM = {
+				remove_targeted_decision = { decision = UKR_rus_friendship target = ROOT }
+			}
+		}
 	}
 }
 
@@ -1991,8 +1976,15 @@ country_event = { # Ukraine in Moscow Accord
 
 	option = {
 		name = ukraine.72.a
+		if = {
+			limit = { is_in_faction = yes }
+			faction_leader = { country_event = { id = ukraine.73 days = 1 } }
+			leave_faction = yes
+			separate_peace_all_wars = yes
+			GER_remove_from_mitteleuropa = yes
+			MIE_remove_from_intermarium = yes
+		}
 		FROM = { add_to_faction = ROOT }
-		add_ideas = UKR_Ties_Russia
 	}
 }
 
@@ -2273,7 +2265,17 @@ country_event = { # NatPops Takeover
 			ideology = national_populist
 			popularity = 0.05
 		}
-		set_country_flag = can_pick_foreign_policy
+		if = {
+			limit = { is_faction_leader = yes }
+			dismantle_faction = yes
+		}
+		else_if = {
+			limit = { is_in_faction = yes }
+			faction_leader = { country_event = { id = ukraine.73 days = 1 } }
+			leave_faction = yes
+			GER_remove_from_mitteleuropa = yes
+			MIE_remove_from_intermarium = yes
+		}
 	}
 }
 
@@ -2295,7 +2297,20 @@ country_event = { # PatAuts Takeover
 			ideology = paternal_autocrat
 			popularity = 0.05
 		}
-		set_country_flag = can_pick_foreign_policy
+		activate_targeted_decision = { decision = UKR_german_staff target = GER }
+		every_owned_state = {
+			limit = {
+				any_neighbor_state = {
+					OR = {
+						is_owned_by = RUS
+						is_owned_by = SOV
+					}
+				}
+			}
+			ROOT = {
+				activate_targeted_decision = { decision = UKR_ostwall target = PREV }
+			}
+		}
 	}
 }
 
@@ -2313,7 +2328,20 @@ country_event = { # AuthDems Takeover
 			ideology = authoritarian_democrat
 			popularity = 0.05
 		}
-		set_country_flag = can_pick_foreign_policy
+		activate_targeted_decision = { decision = UKR_german_staff target = GER }
+		every_owned_state = {
+			limit = {
+				any_neighbor_state = {
+					OR = {
+						is_owned_by = RUS
+						is_owned_by = SOV
+					}
+				}
+			}
+			ROOT = {
+				activate_targeted_decision = { decision = UKR_ostwall target = PREV }
+			}
+		}
 	}
 }
 
@@ -2326,30 +2354,30 @@ country_event = { # SocCon Treaty
 
 	option = {
 		name = ukraine.85.a
-
 		add_stability = -0.05
-		RUS = {
-			country_event = ukraine.62
-		}
+		RUS = { country_event = ukraine.62 }
 	}
 
 	option = {
 		name = ukraine.85.b
-
-		set_country_flag = can_pick_foreign_policy
-	}
-}
-
-country_event = { # SocCon Treaty 2
-	id = ukraine.86
-	immediate = { log = "[GetDateText]: [Root.GetName]: event ukraine.86 FROM = [From.GetName]" }
-	title = ukraine.86.t
-	desc = ukraine.86.d
-	is_triggered_only = yes
-
-	option = {
-		name = ukraine.86.a
-		set_country_flag = can_pick_foreign_policy
+		if = {
+			limit = { RUS = { is_faction_leader = yes } }
+			RUS = { country_event = ukraine.71 }
+			custom_effect_tooltip = if_they_accept_tt
+			effect_tooltip = {
+				RUS = { add_to_faction = ROOT }
+				if = {
+					limit = { is_in_faction = yes }
+					faction_leader = { country_event = { id = ukraine.73 days = 1 } }
+					leave_faction = yes
+					GER_remove_from_mitteleuropa = yes
+					MIE_remove_from_intermarium = yes
+				}
+			}
+		}
+		else = {
+			activate_targeted_decision = { decision = UKR_rus_friendship target = RUS }
+		}
 	}
 }
 

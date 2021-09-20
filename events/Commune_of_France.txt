@@ -1090,13 +1090,7 @@ country_event = {
 			}
 		}
 		add_stability = -0.1
-		remove_all_ministers = yes
-		add_ideas = {
-			FRA_Marcel_Cachin_hog_tot
-			FRA_Jacques_Duclos_for_tot
-			FRA_Ambroise_Croizat_eco_tot
-			FRA_Maurice_Thorez_sec_tot
-		}
+		add_ideas = FRA_Marcel_Cachin_hog_tot
 		add_popularity = {
 			ideology = totalist
 			popularity = 0.20
@@ -1145,12 +1139,7 @@ country_event = {
 		}
 		add_stability = -0.1
 		remove_all_ministers = yes
-		add_ideas = {
-			FRA_Jacques_Duclos_hog_tot
-			FRA_Marcel_Cachin_for_tot
-			FRA_Ambroise_Croizat_eco_tot
-			FRA_Maurice_Thorez_sec_tot
-		}
+		add_ideas = FRA_Jacques_Duclos_hog_tot
 		add_popularity = {
 			ideology = totalist
 			popularity = 0.20
@@ -1306,9 +1295,11 @@ country_event = {
 				days = 7
 			}
 		}
-		add_ideas = {
-			FRA_Daniel_Guerin_hog_rso
-			FRA_Benoit_Broutchoux_eco_rso
+		add_ideas = FRA_Daniel_Guerin_hog_rso
+		if = {
+			limit = { has_idea = FRA_Daniel_Guerin_eco_rso }
+			hidden_effect = { remove_ideas = FRA_Daniel_Guerin_eco_rso }
+			add_ideas = FRA_Benoit_Broutchoux_eco_rso
 		}
 		effect_tooltip = {
 			set_politics = {
@@ -3561,7 +3552,7 @@ country_event = {
 
 	option = { #we shall participate
 		name = comfrance.127.a
-		add_to_tech_sharing_group = phalanstere_research
+		FRA_add_to_phalanstere = yes
 	}
 }
 
@@ -5754,6 +5745,106 @@ country_event = {
 	}
 }
 
+country_event = { #France offers us an alliance
+	id = comfrance.170
+	immediate = { log = "[GetDateText]: [Root.GetName]: event comfrance.170 FROM = [From.GetName]" }
+	title = comfrance.170.t
+	desc = comfrance.170.d
+	picture = GFX_report_event_generic_diplomacy1
+
+	trigger = {
+		is_valid_peace_target = yes
+		NOT = { has_war_with = FROM }
+		FROM = { is_faction_leader = yes }
+	}
+
+	is_triggered_only = yes
+
+	option = {
+		name = comfrance.170.a
+		ai_chance = {
+			base = 100
+		}
+		if = {
+			limit = { tag = BPL }
+			if = {
+				limit = { is_in_tech_sharing_group = balkan_research }
+				remove_from_tech_sharing_group = balkan_research
+			}
+			if = {
+				limit = { has_idea = SER_balkan_research_idea }
+				remove_ideas = SER_balkan_research_idea
+			}
+			every_other_country = {
+				limit = {
+					is_in_faction_with = ROOT
+					is_subject = no
+				}
+				country_event = serbia.40
+			}
+			dismantle_faction = yes
+		}
+		save_event_target_as = accepted_alliance
+		FROM = {
+			effect_tooltip = { add_to_faction = ROOT }
+			hidden_effect = { country_event = comfrance.171 }
+		}
+	}
+	option = {
+		name = comfrance.170.b
+		ai_chance = {
+			base = 0
+		}
+		FROM = { country_event = comfrance.171 }
+	}
+}
+
+country_event = { #Country responds
+	id = comfrance.171
+	immediate = { log = "[GetDateText]: [Root.GetName]: event comfrance.171 FROM = [From.GetName]" }
+
+	title = {
+		text = comfrance.171.t.accept
+		trigger = { has_event_target = accepted_alliance }
+	}
+	title = {
+		text = comfrance.171.t.refuse
+		trigger = { NOT = { has_event_target = accepted_alliance } }
+	}
+
+	desc = {
+		text = comfrance.171.d.accept
+		trigger = {  has_event_target = accepted_alliance }
+	}
+	desc = {
+		text = comfrance.171.d.refuse
+		trigger = { NOT = {  has_event_target = accepted_alliance } }
+	}
+
+	picture = GFX_report_event_generic_diplomacy1
+
+	is_triggered_only = yes
+
+	option = {
+		name = comfrance.171.a
+		trigger = {
+			has_event_target = accepted_alliance
+		}
+		add_to_faction = FROM
+	}
+
+	option = {
+		name = comfrance.171.b
+		trigger = {
+			NOT = { has_event_target = accepted_alliance }
+		}
+		set_country_flag = INT_alliance_refused_@FROM
+		add_opinion_modifier = {
+			target = FROM
+			modifier = KR_disapproves_of_govt
+		}
+	}
+}
 
 # date > 1936.2.6 ?
 # 1936 election result decision
@@ -5892,8 +5983,10 @@ news_event = {
 	}
 
 	show_major = {
-		NOT = {
-			tag = FRA
+		NOT = { tag = FRA }
+		OR = {
+			regional_north_america_news = yes
+			regional_europe_news = yes
 		}
 	}
 
@@ -5921,4 +6014,3 @@ country_event = { #Capitalist Economies colapse
 		add_political_power = 15
 	}
 }
-

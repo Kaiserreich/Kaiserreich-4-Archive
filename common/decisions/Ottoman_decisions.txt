@@ -416,14 +416,20 @@ foreign_politics = {
 			FROM = { country_event = ottfor.18 }
 		}
 	}
-	OTT_demand_western_thrace = {
+	OTT_war_for_thrace = {
 		icon = GFX_decision_eng_trade_unions_demand
 
-		allowed = { tag = OTT }
+		allowed = { tag = TUR }
 
 		available = {
 			controls_all_owned_states = yes
-			NOT = { has_country_flag = SER_supported_bulgaria }
+			FROM = {
+				has_war_with = BPL
+				NOT = {
+					focus_progress = { focus = BUL_konstantinyye_diplomacy progress = 0 }
+					has_completed_focus = BUL_konstantinyye_diplomacy
+				}
+			}
 		}
 
 		visible = {
@@ -432,20 +438,34 @@ foreign_politics = {
 			owns_state = 341 #Adrianople
 			can_declare_war_on = FROM
 			FROM = {
-				has_war_with = SER
 				OR = {
 					owns_state = 184 #Western Thrace
 					owns_state = 1089 #Momchilgrad
+				}
+			}
+		}
+
+		cancel_trigger = {
+			OR = {
+				NOT = { owns_state = 341 } #Adrianople
+				NOT = { can_declare_war_on = FROM }
+				NOT = { FROM = { has_war_with = BPL } }
+				FROM = {
+					NOT = {
+						owns_state = 184 #Western Thrace
+						owns_state = 1089 #Momchilgrad
+					}
 				}
 			}
 		}
 
 		targets = { BUL }
-
+		target_root_trigger = {
+			has_global_flag = balkan_war_started
+		}
 		target_trigger = {
 			can_declare_war_on = FROM
 			FROM = {
-				has_war_with = SER
 				OR = {
 					owns_state = 184 #Western Thrace
 					owns_state = 1089 #Momchilgrad
@@ -453,35 +473,10 @@ foreign_politics = {
 			}
 		}
 
-		fire_only_once = yes
 		cost = 0
 		days_remove = 14
-
-		war_with_on_remove = BUL
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision OTT_demand_western_thrace target: [From.GetName]"
-			add_war_support = 0.05
-			hidden_effect = {
-				FROM = { country_event = pact.25 }
-			}
-		}
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove OTT_demand_western_thrace target: [From.GetName]"
-			if = {
-				limit = {
-					can_declare_war_on = FROM
-					FROM = {
-						has_war_with = SER
-						OR = {
-							owns_state = 184 #Western Thrace
-							owns_state = 1089 #Momchilgrad
-						}
-					}
-				}
-				country_event = pact.21
-			}
-		}
+		fire_only_once = yes
+		war_with_target_on_remove = yes
 
 		ai_will_do = {
 			factor = 100
@@ -489,25 +484,40 @@ foreign_politics = {
 				factor = 0
 				has_war = yes
 				NOT = {
-					OR = {
-						has_game_rule = {
-							rule = BUL_fourth_balkan_war
-							option = BUL_FOURTH_BALKAN_WAR_BUL_VS_PACT_OTT
-						}
-						has_game_rule = {
-							rule = BUL_fourth_balkan_war
-							option = BUL_FOURTH_BALKAN_WAR_BUL_ALB_VS_PACT_OTT
-						}
-						has_game_rule = {
-							rule = BUL_fourth_balkan_war
-							option = BUL_FOURTH_BALKAN_WAR_BUL_VS_PACT_SUBMIT_TO_OTT
-						}
-						has_game_rule = {
-							rule = BUL_fourth_balkan_war
-							option = BUL_FOURTH_BALKAN_WAR_BUL_ALB_VS_PACT_SUBMIT_TO_OTT
-						}
+					has_game_rule = {
+						rule = BUL_fourth_balkan_war
+						option = BUL_FOURTH_BALKAN_WAR_BUL_VS_PACT_OTT
+					}
+					has_game_rule = {
+						rule = BUL_fourth_balkan_war
+						option = BUL_FOURTH_BALKAN_WAR_BUL_ALB_VS_PACT_OTT
 					}
 				}
+			}
+		}
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled OTT_demand_western_thrace target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision OTT_demand_western_thrace target: [From.GetName]"
+			add_war_support = 0.05
+			FROM = { country_event = pact.25 }
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove OTT_demand_western_thrace target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			set_country_flag = OTT_war_for_thrace
+			declare_war_on = {
+				target = FROM
+				type = annex_everything
+			}
+			hidden_effect = {
+				country_event = { id = ottkem.60 days = 3 }
 			}
 		}
 	}
@@ -550,20 +560,16 @@ foreign_politics = {
 		}
 
 		available = {
-			has_war = no
 			at_peace_or_same_enemies_as_FROM = yes
-			FROM = {
-				has_government = national_populist
-				is_faction_leader = yes
-			}
 		}
 
 		visible = {
 			is_valid_peace_target = yes
-			is_in_faction = no
 			has_government = national_populist
 			has_completed_focus = OTT_Union_Party_State
 			FROM = {
+				has_government = national_populist
+				is_faction_leader = yes
 				NOT = { has_war_with = ROOT }
 			}
 		}
@@ -574,12 +580,13 @@ foreign_politics = {
 		}
 		target_trigger = {
 			FROM = {
+				has_government = national_populist
+				is_faction_leader = yes
 				NOT = { has_war_with = ROOT }
 			}
 		}
 
 		cost = 0
-		days_remove = 7
 		fire_only_once = yes
 
 		ai_will_do = {
@@ -592,9 +599,7 @@ foreign_politics = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision OTT_Join_Russia target: [From.GetName]"
-			FROM = {
-				country_event = ottfor.8
-			}
+			FROM = { country_event = ottfor.8 }
 		}
 	}
 }
@@ -863,6 +868,198 @@ OTT_Handling_Suriye = {
 				var = syr_integration_factor
 				min = 0
 				max = 100
+			}
+		}
+	}
+	OTT_SYR_Finish_West_Jordan_Irrigation_Project = {
+		icon = GFX_decision_oasis
+
+		visible = {
+			has_country_flag = OTT_Fahrettin_Governor
+		}
+
+		available = {
+			454 = {
+				is_controlled_by = OTT
+			}
+			992 = {
+				is_controlled_by = OTT
+			}
+		}
+
+		ai_will_do = {
+			factor = 100
+		}
+
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 200
+
+		highlight_state_targets = {
+			state = 454
+		}
+
+		cancel_trigger = {
+			has_authoritarian_government = no
+			NOT = { has_country_flag = centralist_DF }
+		}
+
+		modifier = {
+			civilian_factory_use = 1
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove OTT_SYR_Finish_West_Jordan_Irrigation_Project target: [From.GetName]"
+			if = {
+				limit = {
+					check_variable = {
+						syr_integration_factor < 100
+					}
+				}
+				custom_effect_tooltip = ott_increase_syr_int_5
+				add_to_variable = {
+					var = syr_integration_factor
+					value = 5
+				}
+				clamp_variable = {
+					var = syr_integration_factor
+					min = 0
+					max = 100
+				}
+			}
+			454 = {
+				add_extra_state_shared_building_slots = 1
+			}
+			add_offsite_building = {
+				type = industrial_complex
+				level = 1
+			}
+		}
+	}
+	OTT_SYR_Hunt_Down_Insurgents = {
+		icon = GFX_decision_generic_operation
+
+		visible = {
+			has_country_flag = OTT_Fahrettin_Governor
+		}
+
+		available = {
+			454 = {
+				is_controlled_by = OTT
+			}
+		}
+
+		ai_will_do = {
+			factor = 100
+		}
+
+		fire_only_once = yes
+
+		cost = 0
+		days_remove = 150
+
+		highlight_state_targets = {
+			state = 454
+		}
+
+		cancel_trigger = {
+			has_authoritarian_government = no
+			NOT = { has_country_flag = centralist_DF }
+		}
+
+		modifier = {
+			command_power_gain = -0.05
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove OTT_SYR_Hunt_Down_Insurgents target: [From.GetName]"
+			if = {
+				limit = {
+					check_variable = {
+						syr_integration_factor < 100
+					}
+				}
+				custom_effect_tooltip = ott_increase_syr_int_5
+				add_to_variable = {
+					var = syr_integration_factor
+					value = 5
+				}
+				clamp_variable = {
+					var = syr_integration_factor
+					min = 0
+					max = 100
+				}
+			}
+			454 = {
+				ott_decrease_revolt_risk = yes
+			}
+			992 = {
+				ott_decrease_revolt_risk = yes
+			}
+		}
+	}
+	OTT_SYR_Ensure_Demographic_Balance = {
+		icon = GFX_decision_generic_agreement
+
+		visible = {
+			has_country_flag = OTT_Fahrettin_Governor
+		}
+
+		available = {
+			454 = {
+				is_controlled_by = OTT
+			}
+		}
+
+		ai_will_do = {
+			factor = 100
+		}
+
+		fire_only_once = yes
+
+		cost = 50
+		days_remove = 150
+
+		highlight_state_targets = {
+			state = 454
+		}
+
+		cancel_trigger = {
+			has_authoritarian_government = no
+			NOT = { has_country_flag = centralist_DF }
+		}
+
+		modifier = {
+			political_power_gain = -0.10
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove OTT_SYR_Ensure_Demographic_Balance target: [From.GetName]"
+			454 = {
+				ott_decrease_revolt_risk = yes
+			}
+			455 = {
+				ott_decrease_revolt_risk = yes
+			}
+			992 = {
+				ott_decrease_revolt_risk = yes
+			}
+			custom_effect_tooltip = tooltip_white_line
+			454 = {
+				add_manpower = -2000
+			}
+			291 = {
+				add_manpower = 800
+			}
+			773 = {
+				add_manpower = 1200
+			}
+			custom_effect_tooltip = tooltip_white_line
+			454 = {
+				add_dynamic_modifier = {
+					modifier = jerusalem_religious_peace
+				}
 			}
 		}
 	}
@@ -2812,17 +3009,6 @@ OTT_congress_turkish_nationalists = {
 			### Add Turkish Nationalist votes in favour
 			custom_effect_tooltip = 10_nat_tur_sup_tt
 			add_to_variable = { nat_tur_sup_deputies = 10 }
-			subtract_from_variable = { nat_tur_opp_deputies = 10 }
-			clamp_variable = {
-				var = nat_tur_opp_deputies
-				min = 0
-				max = nat_tur_deputies
-			}
-			clamp_variable = {
-				var = nat_tur_sup_deputies
-				min = 0
-				max = nat_tur_deputies
-			}
 
 			### Calculate coalition strength
 			OTT_calc_coalition_strength = yes
@@ -2868,17 +3054,6 @@ OTT_congress_turkish_nationalists = {
 			### Add Turkish Nationalist votes in favour
 			custom_effect_tooltip = 30_nat_tur_sup_tt
 			add_to_variable = { nat_tur_sup_deputies = 30 }
-			subtract_from_variable = { nat_tur_opp_deputies = 30 }
-			clamp_variable = {
-				var = nat_tur_opp_deputies
-				min = 0
-				max = nat_tur_deputies
-			}
-			clamp_variable = {
-				var = nat_tur_sup_deputies
-				min = 0
-				max = nat_tur_deputies
-			}
 
 			### Calculate coalition strength
 			OTT_calc_coalition_strength = yes
@@ -2924,32 +3099,10 @@ OTT_congress_turkish_nationalists = {
 			### Add Turkish Nationalist votes in favour
 			custom_effect_tooltip = 60_nat_tur_sup_tt
 			add_to_variable = { nat_tur_sup_deputies = 60 }
-			subtract_from_variable = { nat_tur_opp_deputies = 60 }
-			clamp_variable = {
-				var = nat_tur_opp_deputies
-				min = 0
-				max = nat_tur_deputies
-			}
-			clamp_variable = {
-				var = nat_tur_sup_deputies
-				min = 0
-				max = nat_tur_deputies
-			}
 
 			### Add Arab Nationalist votes to coalition
 			custom_effect_tooltip = 60_nat_ara_opp_tt
-			add_to_variable = { nat_ara_opp_deputies = 60 }
 			subtract_from_variable = { nat_ara_sup_deputies = 60 }
-			clamp_variable = {
-				var = nat_ara_opp_deputies
-				min = 0
-				max = nat_ara_deputies
-			}
-			clamp_variable = {
-				var = nat_ara_sup_deputies
-				min = 0
-				max = nat_ara_deputies
-			}
 
 			### Calculate coalition strength
 			OTT_calc_coalition_strength = yes
@@ -2989,33 +3142,11 @@ OTT_congress_arab_nationalists = {
 			log = "[GetDateText]: [Root.GetName]: Decision OTT_con_elevate_arab_language"
 			### Add Turkish Nationalist votes in favour
 			custom_effect_tooltip = 60_nat_tur_opp_tt
-			add_to_variable = { nat_tur_opp_deputies = 60 }
 			subtract_from_variable = { nat_tur_sup_deputies = 60 }
-			clamp_variable = {
-				var = nat_tur_opp_deputies
-				min = 0
-				max = nat_tur_deputies
-			}
-			clamp_variable = {
-				var = nat_tur_sup_deputies
-				min = 0
-				max = nat_tur_deputies
-			}
 
 			### Add Arab Nationalist votes in favour
 			custom_effect_tooltip = 60_nat_ara_sup_tt
 			add_to_variable = { nat_ara_sup_deputies = 60 }
-			subtract_from_variable = { nat_ara_opp_deputies = 60 }
-			clamp_variable = {
-				var = nat_ara_opp_deputies
-				min = 0
-				max = nat_ara_deputies
-			}
-			clamp_variable = {
-				var = nat_ara_sup_deputies
-				min = 0
-				max = nat_ara_deputies
-			}
 
 			### Calculate coalition strength
 			OTT_calc_coalition_strength = yes
@@ -3053,17 +3184,6 @@ OTT_congress_arab_nationalists = {
 			### Add Arab Nationalist votes in favour
 			custom_effect_tooltip = 30_nat_ara_sup_tt
 			add_to_variable = { nat_ara_sup_deputies = 30 }
-			subtract_from_variable = { nat_ara_opp_deputies = 30 }
-			clamp_variable = {
-				var = nat_ara_opp_deputies
-				min = 0
-				max = nat_ara_deputies
-			}
-			clamp_variable = {
-				var = nat_ara_sup_deputies
-				min = 0
-				max = nat_ara_deputies
-			}
 
 			### Calculate coalition strength
 			OTT_calc_coalition_strength = yes
@@ -3101,17 +3221,6 @@ OTT_congress_arab_nationalists = {
 			### Add Arab Nationalist votes in favour
 			custom_effect_tooltip = 30_nat_ara_sup_tt
 			add_to_variable = { nat_ara_sup_deputies = 30 }
-			subtract_from_variable = { nat_ara_opp_deputies = 30 }
-			clamp_variable = {
-				var = nat_ara_opp_deputies
-				min = 0
-				max = nat_ara_deputies
-			}
-			clamp_variable = {
-				var = nat_ara_sup_deputies
-				min = 0
-				max = nat_ara_deputies
-			}
 
 			### Calculate coalition strength
 			OTT_calc_coalition_strength = yes
@@ -3155,17 +3264,6 @@ OTT_congress_conservatives = {
 			### Add Conservative votes to Coalition
 			custom_effect_tooltip = 30_con_sup_tt
 			add_to_variable = { con_sup_deputies = 30 }
-			subtract_from_variable = { con_opp_deputies = 30 }
-			clamp_variable = {
-				var = con_opp_deputies
-				min = 0
-				max = con_deputies
-			}
-			clamp_variable = {
-				var = con_sup_deputies
-				min = 0
-				max = con_deputies
-			}
 
 			### Calculate coalition strength
 			OTT_calc_coalition_strength = yes
@@ -3210,17 +3308,6 @@ OTT_congress_conservatives = {
 			### Add Conservative votes to Coalition
 			custom_effect_tooltip = 30_con_sup_tt
 			add_to_variable = { con_sup_deputies = 30 }
-			subtract_from_variable = { con_opp_deputies = 30 }
-			clamp_variable = {
-				var = con_opp_deputies
-				min = 0
-				max = con_deputies
-			}
-			clamp_variable = {
-				var = con_sup_deputies
-				min = 0
-				max = con_deputies
-			}
 
 			### Calculate coalition strength
 			OTT_calc_coalition_strength = yes
@@ -3257,17 +3344,6 @@ OTT_congress_conservatives = {
 			### Add Conservative votes to Coalition
 			custom_effect_tooltip = 30_con_sup_tt
 			add_to_variable = { con_sup_deputies = 30 }
-			subtract_from_variable = { con_opp_deputies = 30 }
-			clamp_variable = {
-				var = con_opp_deputies
-				min = 0
-				max = con_deputies
-			}
-			clamp_variable = {
-				var = con_sup_deputies
-				min = 0
-				max = con_deputies
-			}
 
 			### Calculate coalition strength
 			OTT_calc_coalition_strength = yes

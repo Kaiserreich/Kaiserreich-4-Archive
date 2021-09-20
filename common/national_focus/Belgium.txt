@@ -782,8 +782,11 @@ focus_tree = {
 		icon = GFX_BEL_support_democracy
 		bypass = {
 			OR = {
-				has_democratic_government = no
 				has_country_leader = { name = "Albert I" }
+				AND = {
+					is_subject = yes
+					has_democratic_government = no
+				}
 			}
 		}
 		ai_will_do = {
@@ -802,8 +805,6 @@ focus_tree = {
 		search_filters = { FOCUS_FILTER_POLITICAL FOCUS_FILTER_STABILITY }
 	}
 
-
-
 	focus = {
 		id = BEL_Monarchy
 		icon = GFX_goal_BEL_Monarchy
@@ -811,7 +812,9 @@ focus_tree = {
 		available = {
 			hidden_trigger = { always = no }
 		}
-		bypass = { has_country_leader = { name = "Albert I" } }
+		bypass = {
+			has_country_leader = { name = "Albert I" }
+		}
 		mutually_exclusive = { focus = BEL_Republic }
 		relative_position_id = BEL_Elections
 		x = 6
@@ -832,7 +835,11 @@ focus_tree = {
 		available = {
 			hidden_trigger = { always = no }
 		}
-		bypass = { has_democratic_government = no }
+		bypass = {
+			is_subject = yes
+			has_democratic_government = no
+			NOT = { has_country_leader = { name = "Albert I" } }
+		}
 		mutually_exclusive = { focus = BEL_Monarchy }
 		relative_position_id = BEL_Elections
 		x = -6
@@ -875,7 +882,10 @@ focus_tree = {
 	focus = {
 		id = BEL_LP
 		icon = GFX_goal_BEL_LP
-		prerequisite = { focus = BEL_Republic }
+		prerequisite = {
+			focus = BEL_Republic
+			focus = BEL_Monarchy
+		}
 		available = { has_country_flag = Choose_LP }
 		mutually_exclusive = { focus = BEL_KP }
 		mutually_exclusive = { focus = BEL_NP }
@@ -919,8 +929,11 @@ focus_tree = {
 	focus = {
 		id = BEL_NP
 		icon = GFX_goal_BEL_Verdinaso
-		prerequisite = { focus = BEL_Republic focus = BEL_Monarchy }
 		available = { has_country_flag = Choose_NP }
+		prerequisite = {
+			focus = BEL_Republic
+			focus = BEL_Monarchy
+		}
 		mutually_exclusive = {
 			focus = BEL_LP
 			focus = BEL_KP
@@ -928,7 +941,10 @@ focus_tree = {
 		}
 		bypass = {
 			is_subject = yes
-			has_government = paternal_autocrat
+			OR = {
+				has_government = paternal_autocrat
+				has_government = national_populist
+			}
 		}
 		ai_will_do = {
 			factor = 1000
@@ -1093,11 +1109,16 @@ focus_tree = {
 		icon = GFX_BEL_Reclaim_Netherlands
 		prerequisite = { focus = BEL_Look_Towards_Expansion }
 		available = {
-			NOT = { is_in_faction_with = ENT }
+			is_subject = no
 		}
 		bypass = {
-			978 = { is_owned_and_controlled_by = ROOT }
-			979 = { is_owned_and_controlled_by = ROOT }
+			OR = {
+				is_in_faction_with = HOL
+				AND = {
+					978 = { is_owned_and_controlled_by = ROOT }
+					979 = { is_owned_and_controlled_by = ROOT }
+				}
+			}
 		}
 		relative_position_id = BEL_Look_Towards_Expansion
 		x = -1
@@ -1107,37 +1128,24 @@ focus_tree = {
 			factor = 100
 			modifier = {
 				factor = 0
-				has_war = yes
-			}
-			modifier = {
-				factor = 0
-				strength_ratio = {
-					tag = HOL
-					ratio < 0.8
-				}
-			}
-			modifier = {
-				factor = 0
-				date < 1939.6.1
 				is_in_faction = yes
-				HOL = { is_in_faction = yes }
+				var:980.owner = { is_in_faction = yes }
 			}
 			modifier = {
 				factor = 0
-				is_in_faction = no
-				HOL = {
-					is_in_faction = yes
-					NOT = {
-						any_enemy_country = { is_actual_major = yes }
-					}
-				}
+				ROOT_is_threatened_cautious = yes
 			}
 			modifier = {
 				factor = 0
-				is_in_faction_with = GER
-				NOT = {
-					GER = { has_war_with = HOL }
-				}
+				HOL = { is_stronger_than_ROOT_and_not_vulnerable = yes }
+			}
+			modifier = {
+				factor = 0
+				HOL = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
+			}
+			modifier = {
+				factor = 0
+				HOL = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
 			}
 		}
 		will_lead_to_war_with = HOL
@@ -1196,11 +1204,14 @@ focus_tree = {
 		icon = GFX_BEL_Reclaim_France
 		prerequisite = { focus = BEL_Look_Towards_Expansion }
 		available = {
-			can_declare_war_on = 980.owner
+			is_subject = no
 			NOT = { is_in_faction_with = NFA }
 		}
 		bypass = {
-			980 = { is_owned_and_controlled_by = ROOT }
+			OR = {
+				is_in_faction_with = 980.owner
+				980 = { is_owned_and_controlled_by = ROOT }
+			}
 		}
 		relative_position_id = BEL_Look_Towards_Expansion
 		x = 1
@@ -1210,48 +1221,38 @@ focus_tree = {
 			factor = 100
 			modifier = {
 				factor = 0
-				has_war = yes
-			}
-			modifier = {
-				factor = 0
-				var:980.owner = {
-					strength_ratio = {
-						tag = ROOT
-						ratio > 0.5
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				date < 1939.6.1
 				is_in_faction = yes
+				var:980.owner = { is_in_faction = yes }
 			}
 			modifier = {
 				factor = 0
-				is_in_faction = no
-				var:980.owner = {
-					is_in_faction = yes
-					NOT = {
-						any_enemy_country = { is_actual_major = yes }
-					}
-				}
+				ROOT_is_threatened_cautious = yes
 			}
 			modifier = {
 				factor = 0
-				is_in_faction_with = GER
-				NOT = {
-					GER = { has_war_with = 980.owner }
-				}
+				var:980.owner = { is_stronger_than_ROOT_and_not_vulnerable = yes }
+			}
+			modifier = {
+				factor = 0
+				var:980.owner = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
+			}
+			modifier = {
+				factor = 0
+				var:980.owner = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
 			}
 		}
 		will_lead_to_war_with = FRA
+		will_lead_to_war_with = NFA
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus BEL_Reclaim_French_Flanders"
 			add_state_claim = 980
-			create_wargoal = {
-				type = take_state_focus
-				target = 980.owner
-				generator = { 980 }
+			if = {
+				limit = { can_declare_war_on = 980.owner }
+				create_wargoal = {
+					type = take_state_focus
+					target = 980.owner
+					generator = { 980 }
+				}
 			}
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION }
@@ -2028,7 +2029,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus BEL_Create_The_Belgian_Cooperative_Union"
 			add_war_support = 0.25
-			set_cosmetic_tag = BELS
+			set_cosmetic_tag = BEL_cooperative
 		}
 		search_filters = { FOCUS_FILTER_WAR_SUPPORT }
 	}
