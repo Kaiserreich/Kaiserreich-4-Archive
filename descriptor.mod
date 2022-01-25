@@ -67,5 +67,5 @@ tags = {
 	"Gameplay"
 }
 picture = "KR.jpg"
-version = "0.19"
+version = "0.19.1"
 supported_version = "1.10.*"

@@ -34,16 +34,31 @@ occupy_massive_country = {
 }
 
 # state scope
+transfer_state_without_overriding_occupation = {
+	if = {
+		limit = { is_fully_controlled_by = owner }
+		var:tag_to_release = { transfer_state = PREV }
+	}
+	else = {
+		var:tag_to_release = { set_state_owner = PREV }
+		set_state_province_controller = {
+			controller = owner
+			limit = { NOT = { has_war_with = PREV.owner } }
+		}
+	}
+}
+
+# state scope
 transfer_state_and_add_core = {
 	remove_claim_and_add_core_of_target = yes
-	var:tag_to_release = { transfer_state = PREV }
+	transfer_state_without_overriding_occupation = yes
 	ROOT = { recheck_annexations = yes }
 }
 
 # state scope
 transfer_state_and_add_claim = {
 	add_claim_of_target = yes
-	var:tag_to_release = { transfer_state = PREV }
+	transfer_state_without_overriding_occupation = yes
 	ROOT = { recheck_annexations = yes }
 }
 
@@ -130,11 +145,8 @@ add_claim_of_target = {
 add_claim_of_target_and_transfer_if_owned = {
 	add_claim_of_target = yes
 	if = {
-		limit = {
-			is_owned_by = ROOT
-			is_claim_or_core_of_ROOT = no
-		}
-		var:tag_to_release = { transfer_state = PREV }
+		limit = { is_owned_by = ROOT }
+		transfer_state_without_overriding_occupation = yes
 	}
 	ROOT = { recheck_annexations = yes }
 }
@@ -143,11 +155,8 @@ add_claim_of_target_and_transfer_if_owned = {
 add_core_of_target_and_transfer_if_owned = {
 	remove_claim_and_add_core_of_target = yes
 	if = {
-		limit = {
-			is_owned_by = ROOT
-			is_claim_or_core_of_ROOT = no
-		}
-		var:tag_to_release = { transfer_state = PREV }
+		limit = { is_owned_by = ROOT }
+		transfer_state_without_overriding_occupation = yes
 	}
 	ROOT = { recheck_annexations = yes }
 }
@@ -155,12 +164,9 @@ add_core_of_target_and_transfer_if_owned = {
 # state scope
 add_core_and_transfer_if_owned_else_add_claim = {
 	if = {
-		limit = {
-			is_owned_by = ROOT
-			is_claim_or_core_of_ROOT = no
-		}
+		limit = { is_owned_by = ROOT }
 		remove_claim_and_add_core_of_target = yes
-		var:tag_to_release = { transfer_state = PREV }
+		transfer_state_without_overriding_occupation = yes
 	}
 	else = {
 		add_claim_of_target = yes
@@ -172,8 +178,10 @@ add_core_and_transfer_if_owned_else_add_claim = {
 add_core_if_owned_else_add_claim = {
 	if = {
 		limit = {
-			is_owned_by = ROOT
-			is_claim_or_core_of_ROOT = no
+			OR = {
+				is_owned_by = ROOT
+				is_owned_by = var:tag_to_release
+			}
 		}
 		remove_claim_and_add_core_of_target = yes
 	}
@@ -217,32 +225,73 @@ remove_all_cores_and_claims_of_tags = {
 
 # global scope
 transfer_territory_from_core_regions = {
-	every_owned_state = {
-		limit = {
-			any_of = {
-				array = target_cores_to_release
-				is_core_of = var:v
+	if = {
+		limit = { has_war = yes }
+		every_owned_state = {
+			limit = {
+				any_of = {
+					array = target_cores_to_release
+					is_core_of = var:v
+				}
+				is_claim_or_core_of_ROOT = no
 			}
-			is_claim_or_core_of_ROOT = no
+			var:tag_to_release = { set_state_owner = PREV }
+			set_state_province_controller = {
+				controller = owner
+				limit = { NOT = { has_war_with = PREV.owner } }
+			}
 		}
-		var:tag_to_release = { transfer_state = PREV }
+	}
+	else = {
+		every_owned_state = {
+			limit = {
+				any_of = {
+					array = target_cores_to_release
+					is_core_of = var:v
+				}
+				is_claim_or_core_of_ROOT = no
+			}
+			var:tag_to_release = { transfer_state = PREV }
+		}
 	}
 	recheck_annexations = yes
 }
 
 # global scope
 transfer_territory_from_core_regions_and_add_claims = {
-	every_owned_state = {
-		limit = {
-			any_of = {
-				array = target_cores_to_release
-				is_core_of = var:v
+	if = {
+		limit = { has_war = yes }
+		every_owned_state = {
+			limit = {
+				any_of = {
+					array = target_cores_to_release
+					is_core_of = var:v
+				}
+				is_claim_or_core_of_ROOT = no
 			}
-			is_claim_or_core_of_ROOT = no
+			var:tag_to_release = {
+				add_state_claim = PREV
+				set_state_owner = PREV
+			}
+			set_state_province_controller = {
+				controller = owner
+				limit = { NOT = { has_war_with = PREV.owner } }
+			}
 		}
-		var:tag_to_release = {
-			add_state_claim = PREV
-			transfer_state = PREV
+	}
+	else = {
+		every_owned_state = {
+			limit = {
+				any_of = {
+					array = target_cores_to_release
+					is_core_of = var:v
+				}
+				is_claim_or_core_of_ROOT = no
+			}
+			var:tag_to_release = {
+				add_state_claim = PREV
+				transfer_state = PREV
+			}
 		}
 	}
 	recheck_annexations = yes
@@ -250,17 +299,39 @@ transfer_territory_from_core_regions_and_add_claims = {
 
 # global scope
 transfer_territory_from_core_regions_and_add_cores = {
-	every_owned_state = {
-		limit = {
-			any_of = {
-				array = target_cores_to_release
-				is_core_of = var:v
+	if = {
+		limit = { has_war = yes }
+		every_owned_state = {
+			limit = {
+				any_of = {
+					array = target_cores_to_release
+					is_core_of = var:v
+				}
+				is_claim_or_core_of_ROOT = no
 			}
-			is_claim_or_core_of_ROOT = no
+			var:tag_to_release = {
+				add_state_core = PREV
+				set_state_owner = PREV
+			}
+			set_state_province_controller = {
+				controller = owner
+				limit = { NOT = { has_war_with = PREV.owner } }
+			}
 		}
-		var:tag_to_release = {
-			add_state_core = PREV
-			transfer_state = PREV
+	}
+	else = {
+		every_owned_state = {
+			limit = {
+				any_of = {
+					array = target_cores_to_release
+					is_core_of = var:v
+				}
+				is_claim_or_core_of_ROOT = no
+			}
+			var:tag_to_release = {
+				add_state_core = PREV
+				transfer_state = PREV
+			}
 		}
 	}
 	recheck_annexations = yes
@@ -280,15 +351,34 @@ release_targeted_tag_from_core_regions_and_add_cores = {
 
 # global scope
 release_targeted_tag_with_claims = {
-	every_owned_state = {
-		limit = {
-			OR = {
-				is_core_of = var:tag_to_release
-				is_claimed_by = var:tag_to_release
+	if = {
+		limit = { has_war = yes }
+		every_owned_state = {
+			limit = {
+				OR = {
+					is_core_of = var:tag_to_release
+					is_claimed_by = var:tag_to_release
+				}
+				is_claim_or_core_of_ROOT = no
 			}
-			is_claim_or_core_of_ROOT = no
+			var:tag_to_release = { set_state_owner = PREV }
+			set_state_province_controller = {
+				controller = owner
+				limit = { NOT = { has_war_with = PREV.owner } }
+			}
 		}
-		var:tag_to_release = { transfer_state = PREV }
+	}
+	else = {
+		every_owned_state = {
+			limit = {
+				OR = {
+					is_core_of = var:tag_to_release
+					is_claimed_by = var:tag_to_release
+				}
+				is_claim_or_core_of_ROOT = no
+			}
+			var:tag_to_release = { transfer_state = PREV }
+		}
 	}
 	puppet_released_tag = yes
 }
@@ -319,36 +409,6 @@ release_targeted_tag = {
 		}
 	}
 	puppet_released_tag = yes
-}
-
-# state scope
-transfer_to_ROOT = {
-	if = {
-		limit = {
-			is_fully_controlled_by = controller
-			controller = { is_ally_with = ROOT }
-		}
-		ROOT = { transfer_state = PREV }
-	}
-	else = {
-		ROOT = { set_state_owner = PREV }
-	}
-}
-
-# country_scope, with PREV as the state
-transfer_PREV_to_THIS = {
-	if = {
-		limit = {
-			PREV = {
-				is_fully_controlled_by = controller
-				controller = { is_ally_with = PREV.PREV }
-			}
-		}
-		transfer_state = PREV
-	}
-	else = {
-		set_state_owner = PREV
-	}
 }
 
 # global scope

@@ -7757,9 +7757,6 @@ country_event = { # Olson election reaction
 	option = {	# Hopefully they don't abandon us?
 		name = lecyankded.3.a
 		add_political_power = 5
-		hidden_effect = {
-			country_event = { id = lecyankded.9 days = 100 }
-		}
 	}
 }
 
@@ -7777,9 +7774,6 @@ country_event = { # Garner election reaction
 		name = lecyankded.4.a
 		add_political_power = 5
 		add_stability = 0.025
-		hidden_effect = {
-			country_event = { id = lecyankded.9 days = 100 }
-		}
 	}
 }
 
@@ -7800,9 +7794,6 @@ country_event = { # landon election reaction
 			days = 50
 		}
 		add_stability = 0.05
-		hidden_effect = {
-			country_event = { id = lecyankded.9 days = 100 }
-		}
 	}
 }
 
@@ -7864,7 +7855,7 @@ country_event = { # MacDaddy takes over
 			popularity = -0.05
 		}
 		hidden_effect = {
-			country_event = { id = lecyankded.11 days = 20 }
+			country_event = { id = lecyankded.10 days = 10 }
 		}
 	}
 }
@@ -7873,6 +7864,7 @@ country_event = { # USA states split apart - no MacArthur
 	id = lecyankded.9
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lecyankded.9 FROM = [From.GetName]" }
 	title = lecyankded.9.t
+
 	desc = {
 		text = lecyankded.9.long
 		trigger = {
@@ -7894,14 +7886,16 @@ country_event = { # USA states split apart - no MacArthur
 			country_exists = TEX
 		}
 	}
+
 	picture = GFX_report_event_USA_civil_war
+
 	is_triggered_only = yes
+
 	trigger = {
 		is_subject = no
-		USA = {
-			NOT = { has_country_flag = USA_macarthur_coup }
-		}
+		NOT = { USA = { has_government = paternal_autocrat } }
 	}
+
 	option = {	# this is just unbelievable
 		name = lecyankded.9.a
 		add_political_power = -25
@@ -9385,37 +9379,51 @@ country_event = { # Germany Investigates - Fails
 	fire_only_once = yes
 	is_triggered_only = yes
 
-	option = {	#
+	option = {
 		name = lectianjap.24.a
-
 		add_political_power = -10
 	}
 }
 
-country_event = { # Japan gets Tianjin
+country_event = { # Japan gets the option to seize Tianjin from a bankrupt LEC
 	id = lectianjap.25
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.25 FROM = [From.GetName]" }
 	title = lectianjap.25.t
 	desc = lectianjap.25.d
-	fire_only_once = yes
 	picture = GFX_report_event_JAP_troops_gas
+
 	is_triggered_only = yes
-	option = {	# let's go for it
-		name = lectianjap.25.a
-		ai_chance = {
-			base = 1000
-		}
-		add_political_power = -25
-		LEC = {
-			country_event = { id = lectianjap.26 days = 5 }
+
+	immediate = {
+		hidden_effect = {
+			remove_targeted_decision = { decision = LEC_JAP_take_tianjin target = LEC }
 		}
 	}
-	option = {	# I didn't want to click this decision!
-		name = lectianjap.25.b
-		ai_chance = {
-			base = 0
+
+	option = { #yes
+		name = lectianjap.25.a
+		ai_chance = { base = 100 }
+		add_political_power = -15
+		add_state_claim = 609
+		transfer_state = 609
+		LEC = { country_event = lectianjap.26 }
+		hidden_effect = {
+			country_event = { id = lectianjap.28 days = 2 }
 		}
-		add_stability = -0.05
+	}
+
+	option = { #no
+		name = lectianjap.25.b
+		ai_chance = { base = 0 }
+		if = {
+			limit = {
+				var:608.controller = { is_han_chinese_tag = yes }
+			}
+			var:608.controller = { country_event = lec.68 }
+		}
+		else = {
+			var:608.owner = { country_event = lec.68 }
+		}
 	}
 }
 
@@ -9423,12 +9431,29 @@ country_event = { # The Japanese try to invade Tianjin
 	id = lectianjap.26
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.26 FROM = [From.GetName]" }
 	title = lectianjap.26.t
-	desc = lectianjap.26.d
-	fire_only_once = yes
+
+	desc = {
+		text = lectianjap.26.d.default
+		trigger = {
+			NOT = { has_country_flag = LEC_bankrupt }
+		}
+	}
+	desc = {
+		text = lectianjap.26.d.bankrupt
+		trigger = {
+			has_country_flag = LEC_bankrupt
+		}
+	}
+
 	picture = GFX_report_event_JAP_troops_gas
+
 	is_triggered_only = yes
+
 	option = {	# Damn Japs
 		name = lectianjap.26.a
+		trigger = {
+			NOT = { has_country_flag = LEC_bankrupt }
+		}
 		ai_chance = {
 			base = 40
 		}
@@ -9438,15 +9463,16 @@ country_event = { # The Japanese try to invade Tianjin
 			ideology = national_populist
 			popularity = -0.5
 		}
-		JAP = {
+		FROM = {
 			country_event = lectianjap.27
 		}
 	}
 	option = {	# This means war!
 		name = lectianjap.26.b
-		ai_chance = {
-			base = 0
+		trigger = {
+			NOT = { has_country_flag = LEC_bankrupt }
 		}
+		ai_chance = { base = 0 }
 		add_popularity = {
 			ideology = national_populist
 			popularity = -1
@@ -9454,13 +9480,19 @@ country_event = { # The Japanese try to invade Tianjin
 		declare_war_on = {
 			target = JAP
 			type = take_state
-			generator = {
-				609
-			}
+			generator = { 609 }
 		}
-		JAP = {
+		FROM = {
 			country_event = lectianjap.27
 		}
+	}
+
+	option = {	#ok very bad
+		name = lectianjap.26.c
+		trigger = {
+			has_country_flag = LEC_bankrupt
+		}
+		add_political_power = -15
 	}
 }
 
@@ -9468,12 +9500,11 @@ country_event = { # Tianjin is ours!
 	id = lectianjap.27
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.27 FROM = [From.GetName]" }
 	title = lectianjap.27.t
+
 	desc = {
 		text = lectianjap.27.d.peace
 		trigger = {
-			NOT = {
-				has_war_with = LEC
-			}
+			NOT = { has_war_with = LEC }
 		}
 	}
 	desc = {
@@ -9482,17 +9513,19 @@ country_event = { # Tianjin is ours!
 			has_war_with = LEC
 		}
 	}
-	fire_only_once = yes
+
 	picture = GFX_report_event_JAP_troops_gas
+
 	is_triggered_only = yes
+
 	option = {	# Kaboom baby
 		name = lectianjap.27.a
 		add_manpower = -300
 		add_political_power = 50
-		JAP = {
-			transfer_state = 609
+		transfer_state = 609
+		hidden_effect = {
+			country_event = { id = lectianjap.28 days = 1 }
 		}
-		country_event = { id = lectianjap.28 days = 1 }
 	}
 }
 
@@ -9501,31 +9534,29 @@ country_event = { # Japan - Do we keep Tianjin or no?
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.28 FROM = [From.GetName]" }
 	title = lectianjap.28.t
 	desc = lectianjap.28.d
-	fire_only_once = yes
 	picture = GFX_report_event_FNG_troops
+
 	is_triggered_only = yes
+
 	trigger = {
-		FNG = {
-			exists = yes
-			NOT = {
-				has_war_with = JAP
-			}
-		}
+		country_exists = FNG
+		FNG_JAP_hostile = no
 		NOT = {
+			has_war_with = FNG
 			has_war_with = LEC
 		}
 	}
+
 	option = {	# Keep it
 		name = lectianjap.28.a
 		add_political_power = -5
 		add_manpower = 1500
 	}
+
 	option = {	# Give it to Fengtian
 		name = lectianjap.28.b
-		add_political_power = 25
-		FNG = {
-			country_event = lectianjap.29
-		}
+		remove_state_claim = 609
+		FNG = { country_event = lectianjap.29 }
 	}
 }
 
@@ -9534,15 +9565,14 @@ country_event = { # Fengtian gets Tianjin from Japan
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.29 FROM = [From.GetName]" }
 	title = lectianjap.29.t
 	desc = lectianjap.29.d
-	fire_only_once = yes
 	picture = GFX_report_event_FNG_troops
+
 	is_triggered_only = yes
+
 	option = {	# Yipee!
 		name = lectianjap.29.a
-		FNG = {
-			transfer_state = 609
-		}
 		add_political_power = 25
+		transfer_state = 609
 		QIE = {
 			country_event = lectianjap.31
 		}
@@ -9554,17 +9584,16 @@ country_event = { # Fengtian gets Tianjin
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.30 FROM = [From.GetName]" }
 	title = lectianjap.30.t
 	desc = lectianjap.30.d
-	fire_only_once = yes
 	picture = GFX_report_event_FNG_troops
+
 	is_triggered_only = yes
+
 	option = {	# Yipee!
 		name = lectianjap.30.a
 		ai_chance = {
 			base = 100
 		}
-		FNG = {
-			transfer_state = 609
-		}
+		transfer_state = 609
 		add_timed_idea = {
 			idea = LEC_FNG_tianjin
 			days = 700
@@ -9579,27 +9608,23 @@ country_event = { # Fengtian gets Tianjin
 			country = LEC
 			relation = non_aggression_pact
 		}
-		hidden_effect = {
-			LEC = {
-				country_event = lectianjap.34
-			}
-		}
 		add_political_power = 25
-		set_country_flag = legation_council_member
+		LEC_add_to_legation_council_observer = yes
 		QIE = {
 			country_event = lectianjap.31
+		}
+		hidden_effect = {
+			LEC = { country_event = lectianjap.34 }
 		}
 	}
 	option = { # nah
 		name = lectianjap.30.b
 		ai_chance = {
-			base = 1
+			base = 0
 		}
 		add_political_power = -15
 		hidden_effect = {
-			LEC = {
-				country_event = lectianjap.35
-			}
+			LEC = { country_event = lectianjap.35 }
 		}
 	}
 }
@@ -9609,19 +9634,16 @@ country_event = { # Fengtian took Tianjin - Qing
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.31 FROM = [From.GetName]" }
 	title = lectianjap.31.t
 	desc = lectianjap.31.d
-	fire_only_once = yes
 	picture = GFX_report_event_FNG_troops
+
 	is_triggered_only = yes
-	option = {	#
+
+	option = {
 		name = lectianjap.31.a
 		add_political_power = -25
 		if = {
-			limit = {
-				LEC = {
-					has_government = national_populist
-				}
-			}
-			clr_country_flag = legation_council_member
+			limit = { LEC = { has_government = national_populist } }
+			LEC_remove_from_legation_council = yes
 		}
 	}
 }
@@ -9631,9 +9653,10 @@ country_event = { # LEC asks for guns
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.32 FROM = [From.GetName]" }
 	title = lectianjap.32.t
 	desc = lectianjap.32.d
-	fire_only_once = yes
 	picture = GFX_report_event_JAP_troops_gas
+
 	is_triggered_only = yes
+
 	option = {	# give 'em back later pls
 		name = lectianjap.32.a
 		add_political_power = 35
@@ -9655,9 +9678,10 @@ country_event = { # LEC gives guns - FNG
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.33 FROM = [From.GetName]" }
 	title = lectianjap.33.t
 	desc = lectianjap.33.d
-	fire_only_once = yes
 	picture = GFX_report_event_JAP_troops_gas
+
 	is_triggered_only = yes
+
 	option = {	# great
 		name = lectianjap.33.a
 	}
@@ -9668,9 +9692,10 @@ country_event = { # LEC - FNG accepts Tianjin from us
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.34 FROM = [From.GetName]" }
 	title = lectianjap.34.t
 	desc = lectianjap.34.d
-	fire_only_once = yes
 	picture = GFX_report_event_JAP_troops_gas
+
 	is_triggered_only = yes
+
 	option = {	# great
 		name = lectianjap.34.a
 		give_guarantee = FNG
@@ -9697,9 +9722,10 @@ country_event = { # LEC - FNG refuses Tianjin from us
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.35 FROM = [From.GetName]" }
 	title = lectianjap.35.t
 	desc = lectianjap.35.d
-	fire_only_once = yes
 	picture = GFX_report_event_JAP_troops_gas
+
 	is_triggered_only = yes
+
 	option = {	# drat
 		name = lectianjap.35.a
 	}
@@ -9710,9 +9736,10 @@ country_event = { # LEC - FNG ends tribute to us for Tianjin
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.36 FROM = [From.GetName]" }
 	title = lectianjap.36.t
 	desc = lectianjap.36.d
-	fire_only_once = yes
 	picture = GFX_report_event_JAP_troops_gas
+
 	is_triggered_only = yes
+
 	option = {	# great...
 		name = lectianjap.36.a
 		remove_opinion_modifier = {
@@ -9741,13 +9768,12 @@ country_event = { #Arms shipments pass
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lectianjap.37 FROM = [From.GetName]" }
 	title = lectianjap.37.t
 	desc = lectianjap.37.d
-	fire_only_once = yes
 	picture = GFX_report_event_CHI_interruption
+
 	is_triggered_only = yes
 
 	option = {
 		name = lectianjap.37.a
-
 		add_timed_idea = {
 			idea = LEC_japanese_up
 			days = 25
@@ -9773,7 +9799,6 @@ country_event = { #Skirmish at the Japanese Consulate
 	mean_time_to_happen = {
 		months = 1
 	}
-
 
 	option = {
 		name = lecjapfeud.1.a
