@@ -9,7 +9,6 @@ NDefines.NWiki.BASE_URL = "https://kaiserreich.fandom.com/wiki/The_Kaiserreich_W
 NDefines.NGame.END_DATE = "1959.1.1.1"										-- Vanilla is 1949.1.1.1
 NDefines.NGame.HANDS_OFF_START_TAG = "BHU"									-- Vanilla is URG
 NDefines.NGame.DECISION_ALERT_TIMEOUT_DAYS = 60								-- Vanilla is 30
-NDefines.NCountry.BASE_STABILITY_WAR_FACTOR = -0.1							-- Vanilla is -0.3
 NDefines.NCountry.BASE_STABILITY_PARTY_POPULARITY_FACTOR = 0.0				-- Vanilla is 0.15
 NDefines.NCountry.MIN_STABILITY = -1.0										-- Vanilla is 0.0
 NDefines.NCountry.WAR_SUPPORT_OFFNSIVE_WAR = -0.1							-- Vanilla is -0.2

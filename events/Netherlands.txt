@@ -6,7 +6,6 @@ add_namespace = hol
 add_namespace = holst #Starting Events of 1936
 add_namespace = holel #Elections + direct results
 add_namespace = holfocus #Focus events
-add_namespace = holdei #Dutch East Indies
 add_namespace = holnavy #naval events
 add_namespace = holpostel #After 37 elections
 add_namespace = holflavor
@@ -325,7 +324,6 @@ country_event = { #Dutch Elections 1937
 			}
 			else = {
 				random_list = {
-					seed = random
 					5 = {
 						GER = { country_event = { id = holel.7 hours = 8 } } #Reijnders requests support from Germany
 					}
@@ -846,6 +844,10 @@ country_event = { #Reijnders seeks support for putsch in Germany
 	desc = holel.7.d
 	picture = GFX_report_event_HOL_military_putsch_for_GER
 
+	trigger = {
+		NOT = { has_war_with = HOL }
+	}
+
 	is_triggered_only = yes
 
 	option = {
@@ -949,20 +951,12 @@ country_event = { #Putsch succeeded, what now?
 	desc = holel.10.d
 	picture = GFX_report_event_HOL_putsch_succeeded
 
-	immediate = {
-		hidden_effect = {
-			if = {
-				limit = { has_war_with = GER }
-				GER = { white_peace_with_ROOT = yes }
-			}
-		}
-	}
-
 	is_triggered_only = yes
 
 	option = {
 		name = holel.10.a #Form junta
 		ai_chance = { base = 70 }
+		clear_all_relations = yes
 		add_popularity = {
 			ideology = authoritarian_democrat
 			popularity = 0.3
@@ -980,7 +974,6 @@ country_event = { #Putsch succeeded, what now?
 		}
 		complete_national_focus = HOL_reijnders_putsch
 		complete_national_focus = HOL_junta_consolidation
-		leave_faction = yes
 		hidden_effect = {
 			news_event = worldnews.190
 			GER = {
@@ -1002,6 +995,7 @@ country_event = { #Putsch succeeded, what now?
 			}
 		}
 		add_political_power = -10
+		clear_all_relations = yes
 		add_popularity = {
 			ideology = paternal_autocrat
 			popularity = 0.2
@@ -1014,7 +1008,8 @@ country_event = { #Putsch succeeded, what now?
 			ruling_party = paternal_autocrat
 			elections_allowed = no
 		}
-		leave_faction = yes
+		set_temp_variable = { coalition_partner_var = token:national_populist }
+		add_to_coalition = yes
 		remove_all_ministers = yes
 		add_ideas = {
 			HOL_Henri_Nicolas_Alfred_Swart_hog_pau
@@ -1029,105 +1024,13 @@ country_event = { #Putsch succeeded, what now?
 				country_event = { hours = 6 id = holfocus.69 }
 			}
 		}
-		set_temp_variable = { coalition_partner_var = token:national_populist }
-		add_to_coalition = yes
-		complete_national_focus = HOL_reijnders_putsch
-		complete_national_focus = HOL_intimidate_parliament
 	}
 }
 
-###################################
-# Dutch East Indies
-###################################
-
-country_event = { #Should we do a white peace, because we've been fighting for 3 years and we're still in a stalemate
-	id = holdei.4
-	immediate = { log = "[GetDateText]: [Root.GetName]: event holdei.4 FROM = [From.GetName]" }
-	title = holdei.4.t
-	desc = holdei.4.d
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	trigger = {
-		has_war_with = JAP
-		is_valid_peace_target = yes
-	}
-
-	option = {
-		name = holdei.4.a
-		ai_chance = { base = 100 }
-		JAP = {
-			country_event = { id = holdei.5 days = 2 }
-		}
-	}
-
-	option = {
-		name = holdei.4.b
-		ai_chance = { base = 0 }
-		add_stability = -0.025
-	}
-}
-
-country_event = { #Dutch offer a white peace
-	id = holdei.5
-	immediate = { log = "[GetDateText]: [Root.GetName]: event holdei.5 FROM = [From.GetName]" }
-	title = holdei.5.t
-	desc = holdei.5.d
-
-	is_triggered_only = yes
-
-	trigger = {
-		has_war_with = FROM
-	}
-
-	option = { #OK, then
-		name = holdei.5.a
-		ai_chance = { base = 100 }
-		FROM = {
-			white_peace_with_ROOT = yes
-			country_event = { id = holdei.6 days = 2 }
-		}
-	}
-
-	option = { #Never!
-		name = holdei.5.b
-		ai_chance = { base = 0 }
-		add_stability = -0.1
-		FROM = {
-			country_event = { id = holdei.7 days = 2 }
-		}
-	}
-}
-
-country_event = { #Japan accepts
-	id = holdei.6
-	immediate = { log = "[GetDateText]: [Root.GetName]: event holdei.6 FROM = [From.GetName]" }
-	title = holdei.6.t
-	desc = holdei.6.d
-
-	is_triggered_only = yes
-
-	option = { #OK
-		name = holdei.6.a
-	}
-}
-
-country_event = { #Japan declines
-	id = holdei.7
-	immediate = { log = "[GetDateText]: [Root.GetName]: event holdei.7 FROM = [From.GetName]" }
-	title = holdei.7.t
-	desc = holdei.7.d
-
-	is_triggered_only = yes
-
-	option = { #SAD!!!
-		name = holdei.7.a
-	}
-}
 ###################################
 # Focus events - starting from 200
 ###################################
+
 country_event = { #Dutch Army Plan
 	id = hol.200
 	immediate = { log = "[GetDateText]: [Root.GetName]: event hol.200 FROM = [From.GetName]" }
@@ -2134,6 +2037,7 @@ country_event = { #Sneek Conspiracy
 	picture = GFX_report_event_HOL_sneek_conspiracy
 
 	trigger = {
+		has_elected_government = yes
 		has_country_flag = hol_binnenhof_burning
 	}
 
@@ -2396,12 +2300,7 @@ country_event = { #March on the Hague
 
 	trigger = {
 		has_country_flag = hol_binnenhof_burning
-		NOT = {
-			OR = {
-				has_government = paternal_autocrat
-				has_government = national_populist
-			}
-		}
+		has_democratic_government = yes
 	}
 
 	option = { #Leave them alone, eh...
@@ -2938,7 +2837,6 @@ country_event = { #French Nationals apprehended at border
 		ai_chance = { base = 75 }
 		hidden_effect = {
 			random_list = {
-				seed = random
 				50 = { country_event = { id = holpostel.32 hours = 12 } } #French spies come clean
 				50 = { country_event = { id = holpostel.33 hours = 12 } } #French spies stay silent
 			}
@@ -2950,7 +2848,6 @@ country_event = { #French Nationals apprehended at border
 		ai_chance = { base = 25 }
 		add_stability = 0.025
 		random_list = {
-			seed = random
 			25 = {}
 			25 = {
 				add_popularity = {
@@ -3029,7 +2926,6 @@ country_event = { #Arrested French nationals stay silent
 		name = holpostel.33.a
 		ai_chance = { base = 75 }
 		random_list = {
-			seed = random
 			75 = { country_event = { id = holpostel.32 hours = 12 } } #French spies come clean
 			25 = { country_event = { id = holpostel.34 hours = 12 } } #French spies stay silent
 		}
@@ -3040,7 +2936,6 @@ country_event = { #Arrested French nationals stay silent
 		ai_chance = { base = 75 }
 		add_stability = 0.025
 		random_list = {
-			seed = random
 			25 = {}
 			25 = {
 				add_popularity = {
@@ -3087,7 +2982,6 @@ country_event = { #Arrested French nationals stay silent
 		}
 		hidden_effect = {
 			random_list = {
-				seed = random
 				50 = {
 					country_event = { id = holpostel.36 days = 80 }
 				}
@@ -3110,7 +3004,6 @@ country_event = { #After torture, French spies still say silent
 		name = holpostel.34.a
 		ai_chance = { base = 25 }
 		random_list = {
-			seed = random
 			95 = { country_event = { id = holpostel.35 hours = 12 } } #French spies die
 			5 = { country_event = { id = holpostel.32 hours = 12 } } #French spies come clean
 		}
@@ -3121,7 +3014,6 @@ country_event = { #After torture, French spies still say silent
 		ai_chance = { base = 75 }
 		add_political_power = 25
 		random_list = {
-			seed = random
 			25 = {}
 			25 = {
 				add_popularity = {
@@ -3168,7 +3060,6 @@ country_event = { #After torture, French spies still say silent
 		}
 		hidden_effect = {
 			random_list = {
-				seed = random
 				20 = {
 					country_event = { id = holpostel.36 days = 80 }
 				}
@@ -7231,6 +7122,7 @@ country_event = { #The Batavian Commune forms and we need to react
 				OR = {
 					HOL = { is_in_faction_with = FRA }
 					HOL = { is_guaranteed_by = FRA }
+					HOL = { has_decision = hol_join_internationale_decision }
 				}
 				has_game_rule = {
 					rule = wk2_begin_options
@@ -7243,6 +7135,7 @@ country_event = { #The Batavian Commune forms and we need to react
 				OR = {
 					HOL = { is_in_faction_with = FRA }
 					HOL = { is_guaranteed_by = FRA }
+					HOL = { has_decision = hol_join_internationale_decision }
 				}
 				has_game_rule = {
 					rule = wk2_begin_options
@@ -7250,7 +7143,7 @@ country_event = { #The Batavian Commune forms and we need to react
 				}
 			}
 		}
-		declare_war_on = {
+		create_wargoal = {
 			target = HOL
 			type = annex_everything
 		}
@@ -8518,7 +8411,6 @@ country_event = { #Leftwing Negotiations failed (hidden event giving the syndica
 				}
 			}
 			random_list = {
-				seed = random
 				90 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8533,7 +8425,6 @@ country_event = { #Leftwing Negotiations failed (hidden event giving the syndica
 				}
 			}
 			random_list = {
-				seed = random
 				75 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8548,7 +8439,6 @@ country_event = { #Leftwing Negotiations failed (hidden event giving the syndica
 				}
 			}
 			random_list = {
-				seed = random
 				60 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8558,7 +8448,6 @@ country_event = { #Leftwing Negotiations failed (hidden event giving the syndica
 		if = { #50%, if you give them a fair deal (extremists are not reasonable)
 			limit = { has_country_flag = leftwing_negotiation_happiness_0 }
 			random_list = {
-				seed = random
 				50 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8571,7 +8460,6 @@ country_event = { #Leftwing Negotiations failed (hidden event giving the syndica
 				has_country_flag = leftwing_negotiation_happiness_2
 			}
 			random_list = {
-				seed = random
 				35 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8584,7 +8472,6 @@ country_event = { #Leftwing Negotiations failed (hidden event giving the syndica
 				has_country_flag = leftwing_negotiation_happiness_4
 			}
 			random_list = {
-				seed = random
 				15 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8597,7 +8484,6 @@ country_event = { #Leftwing Negotiations failed (hidden event giving the syndica
 				has_country_flag = leftwing_negotiation_happiness_6
 			}
 			random_list = {
-				seed = random
 				5 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8833,7 +8719,6 @@ country_event = { #Rightwing Negotiations failed (hidden event giving the syndic
 				}
 			}
 			random_list = {
-				seed = random
 				90 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8848,7 +8733,6 @@ country_event = { #Rightwing Negotiations failed (hidden event giving the syndic
 				}
 			}
 			random_list = {
-				seed = random
 				75 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8863,7 +8747,6 @@ country_event = { #Rightwing Negotiations failed (hidden event giving the syndic
 				}
 			}
 			random_list = {
-				seed = random
 				60 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8873,7 +8756,6 @@ country_event = { #Rightwing Negotiations failed (hidden event giving the syndic
 		if = { #50%, if you give them a fair deal (extremists are not reasonable)
 			limit = { has_country_flag = rightwing_negotiation_happiness_0 }
 			random_list = {
-				seed = random
 				60 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8886,7 +8768,6 @@ country_event = { #Rightwing Negotiations failed (hidden event giving the syndic
 				has_country_flag = rightwing_negotiation_happiness_2
 			}
 			random_list = {
-				seed = random
 				35 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8899,7 +8780,6 @@ country_event = { #Rightwing Negotiations failed (hidden event giving the syndic
 				has_country_flag = rightwing_negotiation_happiness_4
 			}
 			random_list = {
-				seed = random
 				15 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -8912,7 +8792,6 @@ country_event = { #Rightwing Negotiations failed (hidden event giving the syndic
 				has_country_flag = rightwing_negotiation_happiness_6
 			}
 			random_list = {
-				seed = random
 				5 = {
 					country_event = { id = holfocus.36 days = 1 }
 				}
@@ -9273,7 +9152,6 @@ country_event = { #Cancel Nationalisation, or face war
 		}
 		hidden_effect = {
 			random_list = {
-				seed = random
 				30 = {
 					country_event = { id = holfocus.53 days = 1 }
 				}
@@ -9358,7 +9236,6 @@ country_event = { #Cancel Nationalisation, or lose access to Mitteleuropa market
 		}
 		hidden_effect = {
 			random_list = {
-				seed = random
 				30 = {
 					country_event = { id = holfocus.53 days = 1 }
 				}
@@ -10355,7 +10232,6 @@ country_event = { # No majority
 		}
 		else = {
 			random_list = {
-				seed = random
 				50 = {
 					set_politics = {
 						ruling_party = radical_socialist
@@ -10424,7 +10300,6 @@ country_event = { # No majority
 		}
 		else = {
 			random_list = {
-				seed = random
 				50 = {
 					set_politics = {
 						ruling_party = syndicalist

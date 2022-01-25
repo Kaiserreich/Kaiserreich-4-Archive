@@ -337,7 +337,6 @@ NFA_fight_for_influence_cat = {
 				limit = { has_country_flag = cf_rival_broadcast }
 				hidden_effect = {
 					random_list = {
-						seed = random
 						4 = {
 							modifier = {
 								add = Mor_influence
@@ -508,7 +507,6 @@ NFA_fight_for_influence_cat = {
 				limit = { has_country_flag = cf_rival_speech }
 				hidden_effect = {
 					random_list = {
-						seed = random
 						4 = {
 							modifier = {
 								add = Mor_influence
@@ -3337,73 +3335,54 @@ NFA_rebuild_legitimacy_cat = {
 	NFA_Integrate_Metropole = {
 		icon = eng_trade_unions_demand
 
-		ai_will_do = {
-			factor = 1000
-		}
-
-		on_map_mode = map_only
+		allowed = { always = no } #activated by effect
 
 		available = {
 			has_political_power > 0
-			FROM = {
-				is_fully_controlled_by = ROOT
-				compliance > 80
-				resistance < 10
-			}
+			has_full_control_of_state = FROM
+			FROM = { compliance > 80 }
+			FROM = { resistance < 10 }
 		}
 
 		visible = {
-			FROM = {
-				is_owned_by = ROOT
-				NOT = { is_core_of = ROOT }
-				compliance > 40
-				resistance < 30
-			}
+			owns_state = FROM
 		}
 
 		cancel_trigger = {
-			NOT = {
-				FROM = {
-					is_fully_controlled_by = ROOT
-				}
-			}
+			NOT = { has_full_control_of_state = FROM }
 		}
 
 		cost = 0
 		days_remove = 75
 		cancel_if_not_visible = yes
-		fire_only_once = yes
-
+		on_map_mode = map_only
 		state_target = yes
-		target_array = NFA.coring_states_array
-		target_root_trigger = { has_completed_focus = NATFRA_Reconstruction_Commission }
-		target_trigger = {
-			FROM = {
-				is_owned_by = ROOT
-				NOT = { is_core_of = ROOT }
-			}
+
+		ai_will_do = {
+			factor = 1000
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision NFA_Integrate_Metropole target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision NFA_Integrate_Metropole"
 			NFA_dynamic_metropole_coring_cost = yes
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Integrate_Metropole target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Integrate_Metropole"
 			hidden_effect = { remove_state_claim = FROM }
 			add_state_core = FROM
 			FROM = {
-				remove_dynamic_modifier = {
-					modifier = NFA_Communard_Resistance
+				if = {
+					limit = { has_dynamic_modifier = { modifier = NFA_Communard_Resistance } }
+					remove_dynamic_modifier = { modifier = NFA_Communard_Resistance }
 				}
 			}
 			if = {
 				limit = {
 					FROM = {
 						state = 16
+						is_capital = no
 					}
-					NOT = { capital_scope = { state = 16 } }
 				}
 				set_capital = 16
 				set_variable = { historical_capital_state = 16.id }
@@ -3413,17 +3392,14 @@ NFA_rebuild_legitimacy_cat = {
 				limit = {
 					FROM = {
 						state = 21
+						is_capital = no
 					}
-					NOT = {
-						capital_scope = { state = 21 }
-						owns_state = 16
-					}
+					NOT = { owns_state = 16 }
 				}
 				set_capital = 21
 				set_variable = { historical_capital_state = 21.id }
 				country_event = nfa.525 #Flavour about capital change
 			}
-			remove_from_array = { NFA.coring_states_array = FROM }
 			set_temp_variable = { NFA_owned_france_states = 0 }
 			set_temp_variable = { NFA_cored_france_states = 0 }
 			hidden_effect = {
@@ -3456,6 +3432,9 @@ NFA_rebuild_legitimacy_cat = {
 					remove_idea = NFA_communard_influence_2
 					add_idea = NFA_communard_influence_1
 				}
+			}
+			hidden_effect = {
+				remove_targeted_decision = { decision = NFA_Integrate_Metropole target = FROM }
 			}
 		}
 	}
