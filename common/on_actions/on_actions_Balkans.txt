@@ -6,6 +6,20 @@ on_actions = {
 				set_temp_variable = { coalition_partner_var = token:social_conservative }
 				add_to_coalition = yes
 			}
+
+			# ROM resource rights
+			ROM = {
+				give_resource_rights = { state = 46 receiver = GER }
+			}
+
+			#Transylvanian state array
+			for_each_scope_loop = {
+				array = HUN.owned_states
+				if = {
+					limit = { is_core_of = TRS }
+					add_to_array = { global.ROM_transylvania_states = THIS }
+				}
+			}
 		}
 	}
 
@@ -41,8 +55,53 @@ on_actions = {
 				}
 				SER = { transfer_state = event_target:BUL_chetnik_headquarters }
 			}
+			if = {
+				limit = { tag = ROM }
+				country_event = romania.49
+			}
+			# end the Balkan War if peace event ignored/missed
+			if = {
+				limit = {
+					is_in_faction_with = SER
+					FROM = { tag = BUL }
+					SER = { has_country_flag = SER_founded_belgradepact }
+					has_global_flag = balkan_war_started
+					NOT = { has_global_flag = balkan_war_ended }
+				}
+				set_global_flag = balkan_war_ended
+			}
+			if = {
+				limit = {
+					tag = BUL
+					FROM = { tag = SER }
+					SER = { has_country_flag = SER_founded_belgradepact }
+					has_global_flag = balkan_war_started
+					NOT = { has_global_flag = balkan_war_ended }
+				}
+				set_global_flag = balkan_war_ended
+			}
+			if = {
+				limit = {
+					FROM = { is_in_tech_sharing_group = balkan_research }
+				}
+				FROM = { remove_from_tech_sharing_group = balkan_research }
+			}
+			if = {
+				limit = {
+					FROM = { has_idea = SER_balkan_research_idea }
+				}
+				FROM = { remove_ideas = SER_balkan_research_idea }
+			}
+			if = {
+				limit = {
+					has_variable = global.ROM_resource_rights_grant
+					FROM = { tag = global.ROM_resource_rights_grant }
+				}
+				var:global.ROM_resource_rights_grant = { remove_resource_rights = 46 }
+			}
 		}
 	}
+
 	on_daily_SER = {
 		effect = {
 			if = {
@@ -77,16 +136,146 @@ on_actions = {
 		}
 	}
 
+	#FROM is war target
+	on_declare_war = {
+		effect = {
+			# Remove from the Balkan Research Initiative
+			if = {
+				limit = {
+					FROM = {
+						OR = {
+							is_in_tech_sharing_group = balkan_research
+							has_idea = SER_balkan_research_idea
+						}
+					}
+				}
+				country_event = serbia.37
+			}
+
+			# Remove from the Balkan economic union
+			if = {
+				limit = {
+					is_in_array = { global.balkan_economic_union = ROOT }
+					is_in_array = { global.balkan_economic_union = FROM }
+				}
+				country_event = pact.305
+			}
+
+			#Fifth Balkan War
+			if = {
+				limit = {
+					OR = {
+						tag = ROM
+						tag = SER
+					}
+					FROM = {
+						OR = {
+							tag = AUS
+							tag = HUN
+						}
+					}
+				}
+				news_event = worldnews.449
+			}
+
+			#Sixth Balkan War
+			if = {
+				limit = {
+					OR = {
+						tag = ROM
+						tag = SER
+					}
+					FROM = {
+						OR = {
+							tag = ROM
+							tag = SER
+						}
+						is_subject = no
+					}
+				}
+				news_event = worldnews.450
+			}
+		}
+	}
+
+	on_government_change = {
+		effect = {
+			if = {
+				limit = {
+					tag = BUL
+					has_country_flag = cannot_have_extensive_conscription
+					NOT = { has_government = social_conservative }
+				}
+				clr_country_flag = cannot_have_extensive_conscription
+			}
+			if = {
+				limit = {
+					has_socialist_government = yes
+					OR = {
+						is_in_array = { global.balkan_economic_union = ROOT }
+						has_idea = BP_economic_council_1
+						has_idea = BP_economic_council_2
+						has_idea = BP_economic_council_3
+						has_idea = BP_economic_council_upgraded_1
+						has_idea = BP_economic_council_upgraded_2
+						has_idea = BP_economic_council_upgraded_3
+					}
+				}
+				country_event = pact.305
+			}
+		}
+	}
+
+	#FROM is country getting invited.
+	on_offer_join_faction = {
+		effect = {
+			FROM = {
+				if = {
+					limit = {
+						OR = {
+							is_in_tech_sharing_group = balkan_research
+							has_idea = SER_balkan_research_idea
+						}
+						NOT = {
+							is_in_faction_with = SER
+							SER = { is_faction_leader = yes }
+						}
+					}
+					country_event = { id = serbia.37 days = 2 }
+				}
+			}
+		}
+	}
+
 	on_new_term_election = {
 		effect = {
-			### Bulgaria ###
+			### Albania ###
 			if = {
+				limit = { tag = ALB }
+				country_event = albania.3
+				country_event = albania.30
+			}
+			### Bulgaria ###
+			else_if = {
 				limit = { tag = BUL }
 				country_event = bulgaria.28
 				country_event = bulgariaflavour.11
 			}
+			### Greece ###
+			else_if = {
+				limit = { tag = GRE }
+				country_event = gre.50 #Pre-Monarchy referendum
+				country_event = gre.51 #Post-Monarchist Victory
+				country_event = gre.52 #Post-Republican Victory
+			}
+			### Romania ###
+			else_if = {
+				limit = { tag = ROM }
+				country_event = romania.106
+				country_event = romania.133
+			}
 			### Serbia ###
-			if = {
+			else_if = {
 				limit = { tag = SER }
 				country_event = serbia.11 #1936
 				country_event = serbia.21 #Post-1936 (Serbia republic)
@@ -99,12 +288,98 @@ on_actions = {
 	#ROOT is winner #FROM is loser
 	on_peaceconference_ended = {
 		effect = {
+			country_event = pact.101 #disabling major status during war
+			if = {
+				limit = { tag = ROM }
+				country_event = romania.49
+			}
+			else_if = {
+				limit = { tag = SER }
+				country_event = { id = serbia.23 days = 5 random_days = 7 }
+			}
+
+			if = {
+				limit = {
+					FROM = { tag = ROM }
+				}
+				for_each_scope_loop = {
+					array = global.ROM_transylvania_states
+					clear_variable = ROM_transylvanian_resistance_target
+					clear_variable = ROM_transylvanian_resistance_activity
+					clear_variable = ROM_transylvanian_resistance_garrison
+					if = {
+						limit = {
+							has_dynamic_modifier = { modifier = ROM_transylvanian_resistance }
+						}
+						remove_dynamic_modifier = { modifier = ROM_transylvanian_resistance }
+					}
+					force_disable_resistance = { occupier = TRS clear = yes }
+				}
+			}
+			if = {
+				limit = {
+					ROOT = { tag = GRE }
+					FROM = { tag = GRR }
+				}
+				add_to_temp_array = { core_removal_array = GRR }
+				remove_all_cores_and_claims_of_tags = yes
+			}
+
 			if = {
 				limit = {
 					ROOT = { tag = BUL }
 					FROM = { tag = SER }
 				}
 				country_event = { id = bulgaria.54 days = 60 random_days = 7 }
+			}
+
+			# Do you want to keep the Pact?
+			if = {
+				limit = {
+					tag = ROM
+					owns_state = 84
+					is_ai = no
+					is_in_faction_with = SER
+				}
+				country_event = { id = pact.307 days = 5 }
+			}
+			else_if = {
+				limit = {
+					tag = SER
+					owns_state = 106
+					is_in_faction_with = ROM
+				}
+				country_event = { id = pact.307 days = 80 }
+			}
+		}
+	}
+
+	#ROOT is new controller #FROM is old controller #FROM.FROM is state ID
+	on_state_control_changed = {
+		effect = {
+			#UKR-ROM peace deal
+			if = {
+				limit = {
+					has_war_with = FROM
+					OR = {
+						ROOT = { tag = UKR }
+						FROM = { tag = ROM }
+					}
+					OR = {
+						ROOT = { tag = ROM }
+						FROM = { tag = UKR }
+					}
+				}
+				country_event = { id = romania.55 hours = 6 }
+				country_event = { id = romania.56 hours = 6 }
+			}
+			#Resistance in Alföld
+			if = {
+				limit = {
+					tag = ROM
+					FROM.FROM = { state = 154 }
+				}
+				country_event = { id = romania.231 days = 120 }
 			}
 		}
 	}
@@ -114,6 +389,7 @@ on_actions = {
 	#fired when two countries end up at war with each other (on_war is fired when a country goes to war against anyone and is not fired again when it enters war against another country unless it went to peace first)
 	on_war_relation_added = {
 		effect = {
+			# Chetnik events
 			if = {
 				limit = { tag = SER }
 				FROM = { add_ideas = SER_spawn_chetniks }
@@ -122,6 +398,8 @@ on_actions = {
 				limit = { FROM = { tag = SER } }
 				add_ideas = SER_spawn_chetniks
 			}
+
+			# Fourth Balkan War event
 			if = {
 				limit = { is_ally_with = SER }
 				add_ideas = SER_fire_fourth_balkan_war_event
@@ -129,6 +407,54 @@ on_actions = {
 			else_if = {
 				limit = { FROM = { is_ally_with = SER } }
 				FROM = { add_ideas = SER_fire_fourth_balkan_war_event }
+			}
+
+			# Transylvanian Revolt event
+			if = {
+				limit = {
+					OR = {
+						AND = {
+							tag = ROM
+							FROM = { owns_state = 84 }
+						}
+						AND = {
+							owns_state = 84
+							FROM = { tag = ROM }
+						}
+					}
+				}
+				ROM = { add_ideas = ROM_fire_transylvanian_revolt }
+			}
+
+			# Remove from the Balkan economic union
+			if = {
+				limit = {
+					is_in_array = { global.balkan_economic_union = ROOT }
+					is_in_array = { global.balkan_economic_union = FROM }
+				}
+				add_ideas = BPL_remove_from_economic_union
+			}
+
+			# Bulgaria is at war with Serbia or Romania
+			if = {
+				limit = {
+					OR = {
+						tag = BUL
+						FROM = { tag = BUL }
+					}
+				}
+				BUL = { add_ideas = BUL_fire_vazovs_return }
+				if = {
+					limit = {
+						has_global_flag = BUL_OTT_accepted_alliance
+						BUL = {
+							has_non_aggression_pact_with = OTT
+							has_socialist_government = no
+							is_subject = no
+						}
+					}
+					OTT = { add_ideas = BUL_OTT_Alliance_Balkan_War }
+				}
 			}
 		}
 	}
@@ -149,13 +475,22 @@ on_actions = {
 	}
 	on_war = {
 		effect = {
-			#Spawn chetniks
+			country_event = { id = pact.100 days = 2 } #adding major status during war
+
+			#Spawn Chetniks
 			if = {
 				limit = { tag = BUL }
-				country_event = bulgaria.57
+				country_event = { id = bulgaria.57 days = 2 }
 			}
 		}
 	}
+
+	on_peace = {
+		effect = {
+			country_event = { id = pact.101 days = 2 } #disabling major status during war
+		}
+	}
+
 	# FROM = country receiving volunteers, ROOT = country sending volunteers
 	on_send_volunteers = {
 		effect = {

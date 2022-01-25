@@ -17,17 +17,16 @@ Forming_Central_America = {
 		}
 		available = {
 			date > 1938.3.1
+			is_faction_leader = yes
 			has_war = no
 			is_subject = no
-			312 = { CEN_is_aligned_to_ROOT = yes } #Honduras
-			313 = { CEN_is_aligned_to_ROOT = yes } #Guatemala
-			314 = { CEN_is_aligned_to_ROOT = yes } #El Salvador
-			317 = { CEN_is_aligned_to_ROOT = yes } #Managua
+			312 = { owner = { is_in_faction_with = ROOT } } #Honduras
+			313 = { owner = { is_in_faction_with = ROOT } } #Guatemala
+			314 = { owner = { is_in_faction_with = ROOT } } #El Salvador
+			317 = { owner = { is_in_faction_with = ROOT } } #Managua
 		}
 		visible = {
-			NOT = {
-				country_exists = CEN
-			}
+			NOT = { country_exists = CEN }
 		}
 		cost = 0
 		fire_only_once = yes
@@ -68,9 +67,6 @@ Forming_Central_America = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision CEN_unite_central_america"
 			hidden_effect = {
-				clear_variable = global.CEN_socialist_leader
-				clear_variable = global.CEN_liberal_leader
-				clear_variable = global.CEN_military_leader
 				CEN = { transfer_state = 1071 } #Basically makes sure it exists while all this goes down
 				if = {
 					limit = {
@@ -160,6 +156,33 @@ Forming_Central_America = {
 					set_global_flag = centroamerica_formed
 				}
 			}
+			#Transfer factions
+			if = {
+				limit = {
+					is_faction_leader = yes
+					NOT = {
+						tag = var:global.CEN_socialist_leader
+						tag = var:global.CEN_military_leader
+						tag = var:global.CEN_liberal_leader
+					}
+				}
+				add_to_faction = CEN
+				CEN = { set_faction_leader = yes }
+				if = {
+					limit = { has_completed_focus = COS_Fullfill_our_Duty }
+					set_country_flag = COS_Fullfill_our_Duty
+				}
+			}
+			else_if = {
+				limit = {
+					is_in_faction = yes
+					is_faction_leader = no
+				}
+				faction_leader = { add_to_faction = CEN }
+			}
+			clear_variable = global.CEN_socialist_leader
+			clear_variable = global.CEN_liberal_leader
+			clear_variable = global.CEN_military_leader
 			#Transfer all generals
 			hidden_effect = {
 				CEN_setleaders = yes
@@ -167,9 +190,6 @@ Forming_Central_America = {
 			# Transfer technologies
 			CEN = {
 				transfer_technology = yes
-			}
-			# Transfer Agencies
-			CEN = {
 				transfer_int_upgrade = yes
 			}
 			# Failsafe to clear volunteers and transfer subject countries
@@ -178,12 +198,7 @@ Forming_Central_America = {
 					OR = {
 						AND = {
 							tag = COS
-							COS = {
-								is_ai = no
-							}
-							316 = {
-								CEN_is_aligned_to_ROOT = yes
-							}
+							is_in_faction_with = ROOT
 						}
 						tag = NIC
 						tag = HON
@@ -199,12 +214,7 @@ Forming_Central_America = {
 					OR = {
 						AND = {
 							is_subject_of = COS
-							COS = {
-								is_ai = no
-							}
-							316 = {
-								CEN_is_aligned_to_ROOT = yes
-							}
+							COS = { is_in_faction_with = ROOT }
 						}
 						is_subject_of = NIC
 						is_subject_of = HON
@@ -221,12 +231,17 @@ Forming_Central_America = {
 			# Check if you should get cores on Costa Rica and annex it (before annexations occur)
 			if = {
 				limit = {
-					COS = {
-						is_ai = no
+					OR = {
+						is_in_faction_with = COS
+						COS = {
+							is_subject = yes
+							overlord = { is_central_american_tag = yes }
+						}
 					}
-					316 = {
-						CEN_is_aligned_to_ROOT = yes
-					}
+				}
+				if = {
+					limit = { COS = { is_ai = no } }
+					CEN = { change_tag_from = COS }
 				}
 				CEN = {
 					set_country_flag = CEN_annexed_COS
@@ -242,27 +257,10 @@ Forming_Central_America = {
 							set_unit_leader_flag = CEN_leader
 							set_nationality = CEN
 						}
-						if = {
-							limit = {
-								is_faction_leader = yes
-							}
-							dismantle_faction = yes
-						}
-						else_if = {
-							limit = {
-								is_in_faction = yes
-							}
-							var:COS.faction_leader = {
-								set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
-								add_to_faction = CEN
-							}
-						}
 					}
 					for_each_loop = {
 						array = COS.core_states
-						CEN = {
-							add_state_core = var:v
-						}
+						CEN = { add_state_core = var:v }
 					}
 				}
 			}
@@ -325,7 +323,10 @@ Forming_Central_America = {
 				}
 				# Tag switch
 				news_event = worldnews.418
-				change_tag_from = ROOT
+				if = {
+					limit = { ROOT = { is_ai = no } }
+					change_tag_from = ROOT
+				}
 			}
 		}
 	}
@@ -584,7 +585,7 @@ Forming_Central_America = {
 			factor = 100
 		}
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision CEN_join_faction target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision CEN_join_faction"
 			if = {
 				limit = {
 					has_socialist_government = yes
@@ -942,18 +943,18 @@ Forming_Central_America = {
 		}
 		cancel_if_not_visible = yes
 		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancelled PBC_core_BOL_land target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled CEN_core_COS_PAN_states target: [From.GetName]"
 			add_political_power = 50
 		}
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision PBC_core_BOL_land target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision CEN_core_COS_PAN_states target: [From.GetName]"
 			add_stability = -0.04
 			FROM = {
 				add_resistance = 40
 			}
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove PBC_core_BOL_land target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision remove CEN_core_COS_PAN_states target: [From.GetName]"
 			add_stability = 0.02
 			FROM = {
 				set_resistance = 0

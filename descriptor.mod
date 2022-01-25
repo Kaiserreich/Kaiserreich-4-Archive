@@ -1,4 +1,4 @@
-name = "Kaiserreich - Dev Build"
+name = "Kaiserreich"
 path = "mod/Kaiserreich"
 
 replace_path = "common/abilities"
@@ -37,7 +37,7 @@ replace_path = "common/scripted_guis"
 replace_path = "common/scripted_localisation"
 replace_path = "common/scripted_triggers"
 replace_path = "common/state_category"
-replace_path = "common/technology"
+replace_path = "common/technologies"
 replace_path = "common/technology_sharing"
 replace_path = "common/technology_tags"
 
@@ -67,5 +67,5 @@ tags = {
 	"Gameplay"
 }
 picture = "KR.jpg"
-version = "0.19.1"
+version = "0.19.2"
 supported_version = "1.10.*"
