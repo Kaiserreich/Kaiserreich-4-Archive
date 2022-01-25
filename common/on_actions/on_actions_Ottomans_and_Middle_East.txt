@@ -34,12 +34,19 @@ on_actions = {
 			}
 
 			#Setup the Ottoman mechanics
-			OTT = {
-				calculate_state_values_ott = yes
-				calculate_state_values_ott = yes
-			}
-			ARM = {
-				add_manpower = 12000
+			every_state = {
+				limit = {
+					OR = {
+						OTT_is_conservative_state = yes
+						OTT_is_turkish_nationalist_state = yes
+						OTT_is_arab_nationalist_state = yes
+						OTT_is_independent_state = yes
+					}
+				}
+				# Calculate amount of added deputies
+				set_variable = { deputy_calculator = state_population_k }
+				divide_variable = { deputy_calculator = 100 }
+				round_variable = deputy_calculator
 			}
 			773 = {	#Konstantiniyye
 				set_state_flag = ott_ottomanist
@@ -591,17 +598,10 @@ on_actions = {
 			# Benghazi goes to LBA if OTT dies
 			if = {
 				limit = {
-					if = {
-						limit = {
-							exists = yes
-						}
-						is_ally_with = OTT
-					}
+					tag = OTT
 					is_valid_peace_target = yes
-					OTT = {
-						owns_state = 450 #Benghazi
-						NOT = { owns_state = 451 } #Ajdabiya
-					}
+					owns_state = 450 #Benghazi
+					NOT = { owns_state = 451 } #Ajdabiya
 				}
 				var:451.owner = { transfer_state = 450 }
 			}
@@ -617,23 +617,17 @@ on_actions = {
 	#FROM is war target
 	on_declare_war = {
 		effect = {
+
+			#National Defense Organizations
 			if = {
 				limit = {
-					OR = {
-						tag = RUS
+					is_actual_major = yes
+					FROM = {
 						tag = OTT
 					}
-					FROM = {
-						OR = {
-							tag = RUS
-							tag = OTT
-						}
-					}
 				}
-				RUS = { country_event = ottfor.7701 } #break Russo-Ottoman convention
 				OTT = {
-					add_ideas = OTT_Ottoman_Russian_War
-					country_event = ottfor.70 #prematurely end the Baku Conference
+					country_event = ottfor.94 #prematurely end the Baku Conference
 				}
 			}
 
@@ -651,31 +645,6 @@ on_actions = {
 					}
 				}
 				OTT = { country_event = { id = ottkem.60 days = 2 } } #The Grand Vizier speaks
-			}
-
-			#Remove Armed Neutrality
-			if = {
-				limit = {
-					tag = OTT
-					OR = {
-						has_idea = ott_armed_neutrality
-						has_idea = ott_armed_neutrality_2
-					}
-					NOT = {
-						AND = {
-							FROM = { tag = BUL }
-							has_country_flag = OTT_war_for_thrace
-						}
-					}
-				}
-				if = {
-					limit = { has_idea = ott_armed_neutrality }
-					remove_ideas = ott_armed_neutrality
-				}
-				else_if = {
-					limit = { has_idea = ott_armed_neutrality_2 }
-					remove_ideas = ott_armed_neutrality_2
-				}
 			}
 
 			# Armenian Rebellion
@@ -892,6 +861,18 @@ on_actions = {
 				country_event = {
 					id = ottkem.64
 					days = 60
+				}
+			}
+
+			if= { ##Remove National Defense Organizations
+				limit = {
+					tag = OTT
+					NOT = { any_enemy_country = { is_actual_major = yes } }
+					has_idea = OTT_national_defense_organization
+				}
+				country_event = {
+					id = ottfor.95
+					days = 1
 				}
 			}
 
@@ -1407,6 +1388,13 @@ on_actions = {
 									local_manpower = 0.25
 								}
 							}
+						}
+						if = {
+							limit = {
+								has_dynamic_modifier = { modifier = OTT_nationalist_hotbed }
+								NOT = { is_owned_by = FROM }
+							}
+							remove_dynamic_modifier = { modifier = OTT_nationalist_hotbed }
 						}
 					}
 				}

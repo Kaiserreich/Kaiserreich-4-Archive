@@ -198,15 +198,53 @@ FRA_phalanstere_infrastructure_effect = {
 FRA_transfer_internationale_leader = {
 	if = {
 		limit = {
-			any_allied_country = {
-				is_actual_major = yes
-				is_subject = no
-				has_capitulated = no
+			OR = {
+				any_allied_country = {
+					is_actual_major = yes
+					has_capitulated = no
+					is_subject = no
+				}
+				SOV = { is_faction_leader = yes }
 			}
 		}
 		get_highest_scored_country_temp = {
 			scorer = next_internationale_leader_scorer
 			var = next_internationale_leader
+		}
+		if = {
+			limit = {
+				NOT = { has_variable = next_internationale_leader }
+				SOV = { is_faction_leader = yes }
+			}
+			set_temp_variable = { next_internationale_leader = SOV }
+		}
+		if = {
+			limit = {
+				check_variable = { next_internationale_leader = SOV }
+				SOV = { is_faction_leader = yes }
+			}
+			every_other_country = {
+				limit = {
+					is_in_faction_with = SOV
+					is_subject = no
+				}
+				set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
+				PREV = {
+					add_to_faction = PREV
+					hidden_effect = {
+						diplomatic_relation = {
+							country = PREV
+							relation = guarantee
+							active = no
+						}
+						diplomatic_relation = {
+							country = PREV
+							relation = non_aggression_pact
+							active = no
+						}
+					}
+				}
+			}
 		}
 		var:next_internationale_leader = {
 			set_faction_leader = yes
@@ -214,16 +252,15 @@ FRA_transfer_internationale_leader = {
 			if = {
 				limit = {
 					OR = {
-						NOT = { country_exists = FRA }
+						NOT = { is_in_faction_with = FRA }
 						FRA = { has_capitulated = yes }
 					}
 					OR = {
-						NOT = { country_exists = ENG }
+						NOT = { is_in_faction_with = ENG }
 						ENG = { has_capitulated = yes }
 					}
 					OR = {
-						NOT = { country_exists = SRI }
-						NOT = { is_in_faction_with = var:next_internationale_leader }
+						NOT = { is_in_faction_with = SRI }
 						SRI = { has_capitulated = yes }
 					}
 					NOT = { country_exists = CSA }

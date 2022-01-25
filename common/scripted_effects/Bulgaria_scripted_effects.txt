@@ -162,16 +162,48 @@ BUL_reduce_imperfect_union = {
 BUL_fire_zveno_coup = {
 	custom_effect_tooltip = BUL_fire_zveno_coup_tt
 	hidden_effect = {
-		set_temp_variable_to_random = { var = coup_strength min = 0 max = 101 integer = yes }
+		# first check if BUL is both AI (so player can't cheese) and has Zveno path- in which case make coup always succesfull
 		if = {
 			limit = {
-				check_variable = { BUL_coup_success_chance > coup_strength }
+				has_game_rule = {
+					rule = BUL_PRE_WAR_PATH
+					option = BUL_PRE_WAR_PATH_ZVENO_COUP
+				}
+				is_ai = yes
 			}
 			set_country_flag = BUL_coup_success
 		}
-		else = {
+		# after that check if BUL has one of the two game rules which shouldn't get coup and is AI
+		else_if = {
+			limit = {
+				OR = {
+					has_game_rule = {
+						rule = BUL_PRE_WAR_PATH
+						option = BUL_PRE_WAR_PATH_ROYAL_DICTATORSHIP
+					}
+					has_game_rule = {
+						rule = BUL_PRE_WAR_PATH
+						option = BUL_PRE_WAR_PATH_DEMOCRACY_RESTORED
+					}
+				}
+				is_ai = yes
+			}
 			set_country_flag = BUL_coup_failure
 		}
+		# Use the normal system, which should be used for any other case (default game rule for AI and always for Player)
+		else = {
+			set_temp_variable_to_random = { var = coup_strength min = 0 max = 101 integer = yes }
+			if = {
+				limit = {
+					check_variable = { BUL_coup_success_chance > coup_strength }
+				}
+				set_country_flag = BUL_coup_success
+			}
+			else = {
+				set_country_flag = BUL_coup_failure
+			}
+		}
+		#these events should always fire no matter what the above conditions are
 		if = {
 			limit = {
 				has_country_flag = BUL_stands_with_zveno
@@ -1352,6 +1384,28 @@ BUL_spawn_chetnik_revolt = {
 			defense_skill = 1
 			planning_skill = 2
 			logistics_skill = 2
+		}
+	}
+}
+#this is a scripted effect who's purpose is to ranomize Legion's AI
+##so it will become more likely to declare war but in random amounts
+###with the intent that they will declare war about 50% of the time in AI VS AI situation
+BUL_AI_increase_legion_war_chance = {
+	hidden_effect = {
+		if = {
+			limit = { has_variable = BUL_Legion_AI_attack_Var }
+			random_list = {
+				seed = random
+				20 = {
+					add_to_variable = { BUL_Legion_AI_attack_Var = 1 }
+				}
+				50 = {
+					add_to_variable = { BUL_Legion_AI_attack_Var = 2 }
+				}
+				30 = {
+					add_to_variable = { BUL_Legion_AI_attack_Var = 3 }
+				}
+			}
 		}
 	}
 }
