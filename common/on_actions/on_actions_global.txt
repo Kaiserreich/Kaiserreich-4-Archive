@@ -79,18 +79,6 @@ on_actions = {
 				set_from = FROM
 				days = 1
 			}
-			if = {
-				limit = {
-					NOT = { has_unit_leader_flag = le_clerc1 }
-				}
-				set_unit_leader_flag = le_clerc1
-			}
-			else_if = {
-				limit = {
-					has_unit_leader_flag = le_clerc1
-				}
-				set_unit_leader_flag = le_clerc2
-			}
 			random_list = {
 				log = yes
 				90 = { #regular
@@ -140,16 +128,6 @@ on_actions = {
 			else = {
 				# other cause of death
 				log = "[GetDateText] [From.GetName]: on_operative_death OPERATIVE: [This.GetName]"
-			}
-
-			if = {
-				limit = {
-					FROM = {
-						NOT = { is_ai = yes }
-						has_done_agency_upgrade = upgrade_suicide_pills
-					}
-				}
-				set_global_flag = kill_me_alive_flag
 			}
 		}
 	}
@@ -253,19 +231,6 @@ on_actions = {
 				}
 				update_operation_ai = yes
 			}
-
-			# update AI navy experience gain
-			if = {
-				limit = { is_major = yes }
-				set_variable = { ai_naval_experience_gain_var = 0.5 }
-			}
-			else_if = {
-				limit = { num_of_naval_factories > 0 }
-				set_variable = { ai_naval_experience_gain_var = 0.2 }
-			}
-			else = {
-				clear_variable = ai_naval_experience_gain_var
-			}
 		}
 	}
 
@@ -282,7 +247,7 @@ on_actions = {
 				for_each_loop = {
 					array = guarantor_array
 					if = {
-						limit = { NOT = { is_guaranteed_by = var:v }  }
+						limit = { NOT = { is_guaranteed_by = var:v } }
 						add_to_temp_array = { guarantors_to_remove = v }
 					}
 				}
@@ -378,20 +343,6 @@ on_actions = {
 				}
 				else = {
 					default_party_popularity_PP_gain = yes
-				}
-
-				#AI Naval Experience Gain
-				add_dynamic_modifier = { modifier = ai_naval_experience_gain }
-				if = {
-					limit = { is_major = yes }
-					set_variable = { ai_naval_experience_gain_var = 0.5 }
-				}
-				else_if = {
-					limit = { num_of_naval_factories > 0 }
-					set_variable = { ai_naval_experience_gain_var = 0.2 }
-				}
-				else = {
-					clear_variable = ai_naval_experience_gain_var
 				}
 			}
 
@@ -491,26 +442,12 @@ on_actions = {
 							OR = {
 								is_in_faction_with = ROOT
 								is_subject_of = ROOT
-								ROOT = { is_subject_of = PREV }
+								has_subject = ROOT
 							}
 						}
 					}
 				}
-				FROM.FROM = {
-					owner = {
-						set_state_controller = PREV
-					}
-				}
-			}
-
-			### Fix for event-moved capitals not reapplying correctly
-			if = {
-				limit = {
-					has_variable = historical_capital_state
-					controls_state = var:historical_capital_state
-					capital_scope = { NOT = { state = var:historical_capital_state } }
-				}
-				set_capital = var:historical_capital_state
+				FROM.FROM = { set_state_controller_to = owner }
 			}
 
 			### Adding opinion modifiers to newly-spawned countries
@@ -557,6 +494,22 @@ on_actions = {
 					}
 					FROM = { country_event = ai_events.301 }
 				}
+			}
+
+			#Important countries for logalyzer
+			if = {
+				limit = {
+					ROOT = { tag = CAN }
+					FROM = { tag = ENG }
+				}
+				log = "KR_Event_Logging;CANADA LANDS IN BRITAIN;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = {
+					ROOT = { tag = NFA }
+					FROM = { tag = FRA }
+				}
+				log = "KR_Event_Logging;FRANCE LANDS IN FRANCE;[GetDateText];[ROOT.GetName];[FROM.GetName]"
 			}
 		}
 	}
@@ -691,16 +644,6 @@ on_actions = {
 				limit = {
 					is_ai = no
 					OR = {
-						#Japanese Treaty Territories
-						FROM = {
-							original_tag = JAP
-							NOT = { tag = JAP }
-						}
-						#Siam
-						AND = {
-							tag = SIA
-							FROM = { tag = SIR }
-						}
 						#India
 						AND = {
 							tag = HND
@@ -708,31 +651,10 @@ on_actions = {
 						}
 						#Liangguang
 						AND = {
-							OR = {
-								tag = GXC
-								tag = PRC
-							}
-							FROM = {
-								OR = {
-									tag = GXC
-									tag = PRC
-								}
-							}
+							original_tag = GXC
+							FROM = { original_tag = GXC }
 						}
-						#Greece
-						AND = {
-							OR = {
-								tag = GRE
-								tag = GRR
-							}
-							FROM = {
-								OR = {
-									tag = GRE
-									tag = GRR
-								}
-							}
-						}
-						#Greece
+						#Portugal
 						AND = {
 							original_tag = POR
 							FROM = { original_tag = POR }
@@ -865,6 +787,40 @@ on_actions = {
 				news_event = country_capitulated.0
 			}
 
+			# Important countries for logalyzer
+			if = {
+				limit = { ROOT = { tag = GER } }
+				log = "KR_Event_Logging;GER FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = { ROOT = { tag = FRA } }
+				log = "KR_Event_Logging;FRA FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = { ROOT = { tag = ENG } }
+				log = "KR_Event_Logging;ENG FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = { ROOT = { tag = RUS } }
+				log = "KR_Event_Logging;RUS FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = { ROOT = { tag = SOV } }
+				log = "KR_Event_Logging;SOV FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = { ROOT = { tag = AUS } }
+				log = "KR_Event_Logging;AUS FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = { ROOT = { tag = CAN } }
+				log = "KR_Event_Logging;CAN FALLS - BY [FROM.GetTag];[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = { ROOT = { tag = NFA } }
+				log = "KR_Event_Logging;NFA FALLS - BY [FROM.GetTag];[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+
 			# Fixes for vanilla bugs
 			restore_control_of_all_non_enemy_states = yes
 			FROM = {
@@ -896,7 +852,7 @@ on_actions = {
 								NOT = { has_war_with = ROOT }
 							}
 						}
-						owner = { set_state_controller = PREV }
+						set_state_controller_to = owner
 					}
 				}
 			}
@@ -990,6 +946,15 @@ on_actions = {
 	on_call_allies = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] has called its ally [From.GetName] into its war"
+
+			#Important countries for logalyzer
+			if = {
+				limit = {
+					ROOT = { tag = EGY }
+					FROM = { tag = LBA }
+				}
+				log = "KR_Event_Logging;CYRENAICA REVOLTS AGAINST OTT;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
 		}
 	}
 
@@ -1025,8 +990,6 @@ on_actions = {
 	on_send_expeditionary_force = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] is sending an expeditionary force to [From.GetName]"
-			country_event = { id = kr.political.210 hours = 2 }
-			FROM = { country_event = { id = kr.political.211 hours = 2 } }
 		}
 	}
 
@@ -1034,8 +997,6 @@ on_actions = {
 	on_return_expeditionary_forces = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] is recalling its expeditionary force from [From.GetName]"
-			country_event = { id = kr.political.210 hours = 2 }
-			FROM = { country_event = { id = kr.political.211 hours = 2 } }
 		}
 	}
 
@@ -1043,8 +1004,6 @@ on_actions = {
 	on_request_expeditionary_forces = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] has requested expeditionary forces from [From.GetName]"
-			country_event = { id = kr.political.211 hours = 2 }
-			FROM = { country_event = { id = kr.political.210 hours = 2 } }
 		}
 	}
 
@@ -1240,13 +1199,13 @@ on_actions = {
 					check_variable = { random < 0.02 }
 					NOT = {
 						has_trait = sick
-						has_unit_leader_flag = recently_sick
+						has_character_flag = recently_sick
 					}
 					set_temp_variable = { temp = sum_unit_terrain_modifier@sickness_chance }
 					divide_temp_variable = { temp = num_units }
 					check_variable = { temp > 0.75 }
 				}
-				set_unit_leader_flag = { flag = recently_sick value = 1 days = 180 }
+				set_character_flag = { flag = recently_sick value = 1 days = 180 }
 				add_timed_unit_leader_trait = {
 					trait = sick
 					days = 30
@@ -1263,7 +1222,7 @@ on_actions = {
 				limit = {
 					NOT = {
 						has_trait = wounded
-						has_unit_leader_flag = recently_wounded
+						has_character_flag = recently_wounded
 					}
 					set_temp_variable = { chance = 0.001 }
 					set_temp_variable = { factor = 1 }
@@ -1271,7 +1230,7 @@ on_actions = {
 					multiply_temp_variable = { chance = factor }
 					check_variable = { random < chance }
 				}
-				set_unit_leader_flag = { flag = recently_wounded value = 1 days = 360 }
+				set_character_flag = { flag = recently_wounded value = 1 days = 360 }
 				add_timed_unit_leader_trait = {
 					trait = wounded
 					days = 90
@@ -1288,7 +1247,7 @@ on_actions = {
 				limit = {
 					NOT = {
 						has_trait = wounded
-						has_unit_leader_flag = recently_wounded
+						has_character_flag = recently_wounded
 					}
 					set_temp_variable = { chance = 0.005 }
 					set_temp_variable = { factor = 1 }
@@ -1296,7 +1255,7 @@ on_actions = {
 					multiply_temp_variable = { chance = factor }
 					check_variable = { random < chance }
 				}
-				set_unit_leader_flag = { flag = recently_wounded value = 1 days = 360 }
+				set_character_flag = { flag = recently_wounded value = 1 days = 360 }
 				add_timed_unit_leader_trait = {
 					trait = wounded
 					days = 90
@@ -1432,6 +1391,34 @@ on_actions = {
 	on_war_relation_added = {
 		effect = {
 			log = "[GetDateText]: on_war_relation_added attacker: [Root.GetName] defender: [From.GetName]"
+
+			# Important countries for logalyzer
+			if = {
+				limit = {
+					ROOT = { tag = FRA }
+					FROM = { tag = AUS }
+				}
+				log = "KR_Event_Logging;AUSTRIA IN 2WK;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = {
+					ROOT = { tag = JAP }
+					FROM = { tag = RUS }
+				}
+				log = "KR_Event_Logging;JAP DECLARES ON RUS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = {
+					ROOT = { tag = CAN }
+					FROM = {
+						OR = {
+							tag = FRA
+							tag = ENG
+						}
+					}
+				}
+				log = "KR_Event_Logging;ENTENTE ENTERS 2WK;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
 		}
 	}
 

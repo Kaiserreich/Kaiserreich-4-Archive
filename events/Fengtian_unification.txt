@@ -11,17 +11,14 @@ country_event = { #hidden conference starter event
 	trigger = {
 		NOT = { has_country_flag = FNG_shenyang_conference }
 		NOT = { has_country_flag = FNG_conference_fired }
+		country_exists = QIE
 		OR = {
 			ANQ = {
 				exists = yes
 				is_ruled_by_pro_fengtian = yes
 			}
-			GXC = {
-				exists = yes
-				GXC_has_federalist_government = yes
-			}
-			PRC = {
-				exists = yes
+			any_country_with_original_tag = {
+				original_tag_to_check = GXC
 				GXC_has_federalist_government = yes
 			}
 			SZC = {
@@ -29,101 +26,64 @@ country_event = { #hidden conference starter event
 				SZC_federalists_in_exile = yes
 			}
 		}
-		QIE = {
-			exists = yes
-		}
 	}
 
 	is_triggered_only = yes
 
-	option = { #war already started, PRC-GXC not finished -> only for Anqing
-		trigger = {
-			has_war_with = QIE
-			ANQ = {
-				exists = yes
-				is_ruled_by_pro_fengtian = yes
-				has_country_flag = ANQ_peace
-				NOT = {
-					has_country_flag = ANQ_feng_aid_undecided
+	option = {
+		if = {
+			limit = {
+				OR = {
+					#wait for the GXC civil war to end
+					any_country_with_original_tag = {
+						original_tag_to_check = GXC
+						GXC_has_federalist_government = yes
+						has_civil_war = yes
+					}
+					#wait for ANQ to have peace
+					ANQ = {
+						exists = yes
+						is_ruled_by_pro_fengtian = yes
+						NOT = { has_country_flag = ANQ_peace }
+					}
+					#wait for FNG to do national irredentism
+					NOT = { has_country_flag = FNG_national_irredentism_flag }
 				}
 			}
+			country_event = { id = fngshen.0 days = 5 random = 12 }
 		}
-		set_country_flag = FNG_shenyang_anq_only
-		country_event = {
-			id = fngshen.1
-			days = 1
-			random_hours = 12
-		}
-	}
-
-	option = { #wait for the GXC-PRC war to end and ANQ to have peace / SQI won League War and FNG did national irredentism
-		trigger = {
-			OR = {
-				GXC = {
-					GXC_has_federalist_government = yes
-					has_war_with = PRC
+		else = {
+			if = {
+				limit = {
+					ANQ = {
+						exists = yes
+						is_ruled_by_pro_fengtian = yes
+						has_country_flag = ANQ_peace
+					}
 				}
-				PRC = {
-					GXC_has_federalist_government = yes
-					has_war_with = GXC
+				if = {
+					limit = { has_war_with = QIE }
+					set_country_flag = FNG_shenyang_anq_only
 				}
-				ANQ = {
-					exists = yes
-					is_ruled_by_pro_fengtian = yes
-					NOT = { has_country_flag = ANQ_peace }
+				country_event = fngshen.1
+			}
+			else_if = {
+				limit = {
+					OR = {
+						any_country_with_original_tag = {
+							original_tag_to_check = GXC
+							GXC_has_federalist_government = yes
+						}
+						SZC = {
+							exists = yes
+							SZC_federalists_in_exile = yes
+						}
+					}
 				}
-				NOT = { has_country_flag = FNG_national_irredentism_flag }
+				set_country_flag = FNG_shenyang_no_allies
+				country_event = fngshen.4
 			}
 		}
-		country_event = {
-			id = fngshen.0
-			days = 5
-			random = 12
-		}
-	}
-
-	option = { #ANQ won League War and the GXC-PRC war is finished
-		trigger = {
-			has_country_flag = FNG_national_irredentism_flag
-			ANQ = {
-				exists = yes
-				is_ruled_by_pro_fengtian = yes
-				has_country_flag = ANQ_peace
-			}
-			NOT = {
-				GXC = {
-					GXC_has_federalist_government = yes
-					has_war_with = PRC
-				}
-				PRC = {
-					GXC_has_federalist_government = yes
-					has_war_with = GXC
-				}
-			}
-		}
-		country_event = fngshen.1
-	}
-
-	option = { #ANQ is not pro fengtian / does not exist
-		trigger = {
-			has_country_flag = FNG_national_irredentism_flag
-			NOT = {
-				ANQ = {
-					exists = yes
-					is_ruled_by_pro_fengtian = yes
-				}
-				GXC = {
-					GXC_has_federalist_government = yes
-					has_war_with = PRC
-				}
-				PRC = {
-					GXC_has_federalist_government = yes
-					has_war_with = GXC
-				}
-			}
-		}
-		set_country_flag = FNG_shenyang_no_allies
-		country_event = fngshen.4
 	}
 }
 
@@ -999,6 +959,15 @@ country_event = { #End of the Conference
 				NOT = { tag = FNG }
 			}
 			set_country_flag = FNG_alliance
+			if = {
+				limit = {
+					OR = {
+						original_tag = SQI
+						original_tag = GXC
+					}
+				}
+				hidden_effect = { activate_targeted_decision = { target = QIE decision = FNG_Join_The_Zhifeng_War } }
+			}
 			FNG = {
 				clr_country_flag = FNG_shenyang_@ROOT
 			}
@@ -1263,10 +1232,7 @@ country_event = { #Attend the National Conference?
 			}
 			modifier = {
 				factor = 100
-				has_country_leader = {
-					name = "Chen Jiongming"
-					ruling_only = yes
-				}
+				has_country_leader = { character = GXC_chen_jiongming }
 				has_game_rule = {
 					rule = FNG_Conference_path
 					option = FNG_CONFEREENCE_FEDS
@@ -1277,17 +1243,14 @@ country_event = { #Attend the National Conference?
 		hidden_effect = {
 			if = {
 				limit = { num_subjects > 0 }
-				for_each_loop = {
-					array = subjects
-					if = {
-						limit = {
-							NOT = {
-								check_variable = { v = MON }
-								check_variable = { v = TIB }
-							}
+				every_subject_country = {
+					limit = {
+						NOT = {
+							tag = MON
+							tag = TIB
 						}
-						add_to_array = { FNG.FNG_conference_participants = v }
 					}
+					add_to_array = { FNG.FNG_conference_participants = THIS }
 				}
 			}
 			if = {
@@ -1313,6 +1276,7 @@ country_event = { #Attend the National Conference?
 			limit = { tag = event_target:FNG_federalist_leader }
 			set_global_flag = FNG_conference_federalists
 		}
+		FNG = { country_event = fngconf.84 }
 	}
 
 	option = {
@@ -1383,6 +1347,7 @@ country_event = { #Attend the National Conference?
 			custom_effect_tooltip = FNG_betrayal_tooltip
 			set_country_flag = FNG_hostile
 		}
+		FNG = { country_event = fngconf.85 }
 	}
 }
 
@@ -1395,7 +1360,7 @@ country_event = { #The Zhili/Manchu Denounce Us
 		text = fngconf.3.d.zhili
 		trigger = {
 			QIE = {
-				NOT = { has_country_flag = QIE_manchu_restoration }
+				NOT = { has_global_flag = QIE_manchu_restoration }
 			}
 		}
 	}
@@ -1403,7 +1368,7 @@ country_event = { #The Zhili/Manchu Denounce Us
 		text = fngconf.3.d.manchu
 		trigger = {
 			QIE = {
-				has_country_flag = QIE_manchu_restoration
+				has_global_flag = QIE_manchu_restoration
 			}
 		}
 	}
@@ -1440,21 +1405,11 @@ country_event = { #The KMT Denounces Us
 			AND = {
 				NOT = { country_exists = CHI }
 				country_exists = GXC
-				GXC = {
-					has_country_leader = {
-						name = "Chen Mingshu"
-						ruling_only = yes
-					}
-				}
+				GXC = { has_country_leader = { character = GXC_chen_mingshu } }
 			}
 			AND = {
 				country_exists = YUN
-				YUN = {
-					has_country_leader = {
-						name = "Zhu Peide"
-						ruling_only = yes
-					}
-				}
+				YUN = { has_country_leader = { character = YUN_zhu_peide } }
 			}
 		}
 		FNG = { controls_state = 608 }
@@ -1551,14 +1506,12 @@ country_event = { #Invite Chen Jiongming?
 
 	trigger = {
 		OR = {
-			GXC = {
-				exists = yes
-				is_subject = no
+			any_country_with_original_tag = {
+				original_tag_to_check = GXC
 				GXC_has_federalist_government = yes
-				NOT = {
-					has_war_with = PRC
-					has_war_with = ROOT
-				}
+				is_subject = no
+				has_civil_war = no
+				NOT = { has_war_with = ROOT }
 			}
 			SZC = {
 				exists = yes
@@ -3440,12 +3393,7 @@ country_event = { #The Conference Falls Apart
 		trigger = {
 			FNG = {
 				controls_state = 608
-				NOT = {
-					has_country_leader = {
-						name = "Yang Yuting"
-						ruling_only = yes
-					}
-				}
+				NOT = { has_country_leader = { character = FNG_yang_yuting } }
 			}
 		}
 	}
@@ -3454,10 +3402,7 @@ country_event = { #The Conference Falls Apart
 		trigger = {
 			FNG = {
 				controls_state = 608
-				has_country_leader = {
-					name = "Yang Yuting"
-					ruling_only = yes
-				}
+				has_country_leader = { character = FNG_yang_yuting }
 			}
 		}
 	}
@@ -3557,8 +3502,7 @@ country_event = { #Zuolin is Defiant (JAP)
 		ai_chance = {
 			base = 10
 		}
-		unlock_decision_tooltip = JAP_invade_manchuria
-		set_country_flag = JAP_invade_manchuria_unlocked
+		activate_targeted_decision = { target = FNG decision = JAP_invade_manchuria }
 		hidden_effect = {
 			set_JAP_FNG_hostile_AI = yes
 			FROM = {
@@ -3683,7 +3627,7 @@ country_event = { #Do we make demands?
 	}
 	option = {
 		name = fngconf.45.b #Concessions
-		trigger = { tag = GXC }
+		trigger = { original_tag = GXC }
 		FROM = { set_country_flag = FNG_demands_concessions_@ROOT }
 	}
 	option = {
@@ -3753,7 +3697,7 @@ country_event = { #Do we make demands?
 	option = {
 		name = fngconf.45.j #Autonomy
 		trigger = {
-			NOT = { tag = GXC }
+			NOT = { original_tag = GXC }
 		}
 		FROM = { set_country_flag = FNG_demands_autonomy_@ROOT }
 	}
@@ -4780,7 +4724,7 @@ country_event = { #Fengtian Accepts Our Territorial Demands
 					is_claimed_by = ROOT
 					NOT = { has_variable = ambition_area_@ROOT }
 				}
-				ROOT = { transfer_state = PREV }
+				transfer_state_to = ROOT
 			}
 			hidden_effect = {
 				country_event = {
@@ -4924,7 +4868,7 @@ country_event = { #Yunnan Claims Our Territory
 	desc = {
 		text = fngconf.59.d.GXC
 		trigger = {
-			tag = GXC
+			original_tag = GXC
 			OR = {
 				has_global_flag = YUN_demands_guangxi
 				AND = {
@@ -4937,7 +4881,7 @@ country_event = { #Yunnan Claims Our Territory
 	desc = {
 		text = fngconf.59.d.GXC_HNN
 		trigger = {
-			tag = GXC
+			original_tag = GXC
 			is_in_faction_with = HNN
 			has_global_flag = YUN_demands_guangxi_guizhou
 		}
@@ -4958,7 +4902,7 @@ country_event = { #Yunnan Claims Our Territory
 			base = 20
 			modifier = {
 				factor = 0
-				tag = GXC
+				original_tag = GXC
 				OR = {
 					has_global_flag = YUN_demands_guangxi
 					has_global_flag = YUN_demands_guangxi_guizhou
@@ -5015,7 +4959,7 @@ country_event = { #Yunnan Claims Our Territory
 	option = {
 		name = fngconf.59.e #Guizhou for Autonomy
 		trigger = {
-			tag = GXC
+			original_tag = GXC
 			is_in_faction_with = HNN
 			has_global_flag = YUN_demands_guangxi_guizhou
 		}
@@ -5116,7 +5060,7 @@ country_event = { #FROM Accepts Our Demands
 						is_in_array = { FNG.FNG_conference_participants = THIS }
 					}
 				}
-				ROOT = { transfer_state = PREV }
+				transfer_state_to = ROOT
 			}
 		}
 		FROM = {
@@ -5241,6 +5185,9 @@ country_event = { #Fengtian Refuses Autonomy For Territory
 	}
 	option = {
 		name = fngconf.63.b #Ask for Federalist support
+		trigger = {
+			is_in_faction_with = event_target:FNG_federalist_leader
+		}
 		hidden_effect = {
 			event_target:FNG_federalist_leader = {
 				country_event = {
@@ -5746,7 +5693,7 @@ country_event = { #Fengtian Sides Against Us
 		name = fngconf.71.a #Cede the territory
 		trigger = {
 			OR = {
-				tag = GXC
+				original_tag = GXC
 				tag = HNN
 			}
 		}
@@ -5907,9 +5854,7 @@ country_event = { #End of the Conference
 		create_faction = pacification_faction
 		if = {
 			limit = {
-				event_target:FNG_federalist_leader = {
-					is_in_array = { FNG.FNG_conference_support = THIS }
-				}
+				is_in_array = { FNG.FNG_conference_support = event_target:FNG_federalist_leader }
 			}
 			event_target:FNG_federalist_leader = {
 				country_event = {
@@ -5974,9 +5919,7 @@ country_event = { #End of the Conference
 		create_faction = pacification_faction
 		if = {
 			limit = {
-				event_target:FNG_federalist_leader = {
-					is_in_array = { FNG.FNG_conference_support = THIS }
-				}
+				is_in_array = { FNG.FNG_conference_support = event_target:FNG_federalist_leader }
 			}
 			event_target:FNG_federalist_leader = {
 				country_event = {
@@ -6068,7 +6011,13 @@ country_event = { #End of the Conference
 		if = {
 			limit = { is_subject = no }
 			leave_faction = yes
-			FROM = { add_to_faction = ROOT }
+			FROM = {
+				add_to_faction = ROOT
+				if = {
+					limit = { has_cosmetic_tag = FNG_ROC }
+					activate_targeted_decision = { target = PREV decision = FNG_Integrate_Faction_Members }
+				}
+			}
 		}
 		add_political_power = 20
 	}
@@ -6081,7 +6030,13 @@ country_event = { #End of the Conference
 		}
 		dismantle_faction = yes
 		separate_peace_all_wars = yes
-		FROM = { add_to_faction = ROOT }
+		FROM = {
+			add_to_faction = ROOT
+			if = {
+				limit = { has_cosmetic_tag = FNG_ROC }
+				activate_targeted_decision = { target = PREV decision = FNG_Integrate_Faction_Members }
+			}
+		}
 		every_enemy_country = {
 			limit = { is_in_array = { FNG.FNG_conference_support = THIS } }
 			country_event = fngconf.80
@@ -6278,7 +6233,13 @@ country_event = { #Zhang Zuolin betrays Chen Jiongming (for Federalist allies)
 		name = fngconf.79.a #side with Chen
 		ai_chance = { base = 100 }
 		separate_peace_all_wars = yes
-		FROM = { add_to_faction = ROOT }
+		FROM = {
+			add_to_faction = ROOT
+			if = {
+				limit = { has_cosmetic_tag = FNG_ROC }
+				activate_targeted_decision = { target = PREV decision = FNG_Integrate_Faction_Members }
+			}
+		}
 		declare_war_on = {
 			target = FNG
 			type = annex_everything
@@ -6395,7 +6356,13 @@ country_event = { #Time to join the [FNG.GetFactionName]
 		if = {
 			limit = { is_subject = no }
 			leave_faction = yes
-			FNG = { add_to_faction = ROOT }
+			FNG = {
+				add_to_faction = ROOT
+				if = {
+					limit = { has_cosmetic_tag = FNG_ROC }
+					activate_targeted_decision = { target = PREV decision = FNG_Integrate_Faction_Members }
+				}
+			}
 		}
 		FNG = { country_event = fngconf.83 }
 		add_political_power = 20
@@ -6424,6 +6391,100 @@ country_event = { #[FROM.GetNameDef] Joins the Anguojun
 			}
 			clear_array = FNG.FNG_conference_support
 		}
+	}
+}
+
+country_event = { #[FROM.GetNameDef] Agrees to Attend the Conference
+	id = fngconf.84
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.84 FROM = [From.GetName]" }
+	title = fngconf.84.t
+
+	desc = {
+		text = fngconf.84.d.federalists
+		trigger = {
+			FROM = {
+				OR = {
+					AND = {
+						original_tag = GXC
+						GXC_has_federalist_government = yes
+					}
+					AND = {
+						tag = SZC
+						SZC_federalists_in_exile = yes
+					}
+				}
+			}
+		}
+	}
+	desc = {
+		text = fngconf.84.d.default
+		trigger = {
+			FROM = {
+				NOT = {
+					AND = {
+						original_tag = GXC
+						GXC_has_federalist_government = yes
+					}
+					AND = {
+						tag = SZC
+						SZC_federalists_in_exile = yes
+					}
+				}
+			}
+		}
+	}
+
+	is_triggered_only = yes
+
+	option = { #Excellent
+		name = fngconf.84.a
+	}
+}
+
+country_event = { #[FROM.GetNameDef] Refuses to Attend the Conference
+	id = fngconf.85
+	immediate = { log = "[GetDateText]: [Root.GetName]: event fngconf.85 FROM = [From.GetName]" }
+	title = fngconf.85.t
+
+	desc = {
+		text = fngconf.85.d.federalists
+		trigger = {
+			FROM = {
+				OR = {
+					AND = {
+						original_tag = GXC
+						GXC_has_federalist_government = yes
+					}
+					AND = {
+						tag = SZC
+						SZC_federalists_in_exile = yes
+					}
+				}
+			}
+		}
+	}
+	desc = {
+		text = fngconf.85.d.default
+		trigger = {
+			FROM = {
+				NOT = {
+					AND = {
+						original_tag = GXC
+						GXC_has_federalist_government = yes
+					}
+					AND = {
+						tag = SZC
+						SZC_federalists_in_exile = yes
+					}
+				}
+			}
+		}
+	}
+
+	is_triggered_only = yes
+
+	option = { #Their loss
+		name = fngconf.85.a
 	}
 }
 
@@ -6525,7 +6586,13 @@ country_event = {
 			leave_faction = yes
 		}
 		separate_peace_all_wars = yes
-		FNG = { add_to_faction = ROOT }
+		FNG = {
+			add_to_faction = ROOT
+			if = {
+				limit = { has_cosmetic_tag = FNG_ROC }
+				activate_targeted_decision = { target = PREV decision = FNG_Integrate_Faction_Members }
+			}
+		}
 	}
 }
 

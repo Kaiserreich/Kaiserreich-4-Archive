@@ -6,7 +6,7 @@ on_actions = {
 				array = global.china_tags_array
 				setup_army_reform = yes
 				every_unit_leader = {
-					set_unit_leader_flag = CHI_original_unit_leader
+					set_character_flag = CHI_original_unit_leader
 				}
 
 				#Disable manual justification in China
@@ -59,15 +59,16 @@ on_actions = {
 					}
 				}
 
-				#Chinese tag flag, for use in triggers
-				set_country_flag = is_chinese_tag
-				if = {
-					limit = { is_han_chinese_tag = yes }
-					set_country_flag = is_han_chinese_tag
-				}
-				else = {
-					set_country_flag = is_non_han_chinese_tag
-				}
+				# Chinese tag flag, for use in triggers
+				# Note from Pelmen - these flags are currently never used. Uncomment if you need them
+				# set_country_flag = is_chinese_tag
+				# if = {
+				# 	limit = { is_han_chinese_tag = yes }
+				# 	set_country_flag = is_han_chinese_tag
+				# }
+				# else = {
+				# 	set_country_flag = is_non_han_chinese_tag
+				# }
 			}
 			#Special case
 			TIB = {
@@ -84,6 +85,8 @@ on_actions = {
 					value = 1
 				}
 			}
+			# Initializing resources decisions for Chinese tags
+			QIE = { china_setup_resources_decisions = yes }
 		}
 	}
 
@@ -92,21 +95,14 @@ on_actions = {
 		effect = {
 			if = {
 				limit = {
-					tag = GXC
-					FROM = { tag = PRC }
+					original_tag = GXC
+					FROM = { original_tag = GXC }
 				}
 				country_event = lngcivilwar.13
 				country_event = lngcivilwar.14
 				country_event = lngcivilwar.15
 				country_event = lngcivilwar.16
 				country_event = lngcivilwar.20
-			}
-			if = {
-				limit = {
-					tag = PRC
-					FROM = { tag = GXC }
-				}
-				country_event = lngcivilwar.11
 			}
 			if = {
 				limit = {
@@ -187,43 +183,37 @@ on_actions = {
 					FROM = {
 						tag = AST
 						OR = {
-							is_in_array = { array = global.LEC_voters value = THIS }
-							has_country_flag = AST_hong_kong
 							has_country_flag = legation_council_member
 							has_country_flag = legation_council_vote
 						}
 					}
 					OR = {
-						GBR = {
-							exists = yes
-							is_faction_leader = yes
-						}
-						CAN = {
-							exists = yes
-							is_faction_leader = yes
-						}
+						GBR = { is_faction_leader = yes }
+						CAN = { is_faction_leader = yes }
 					}
 				}
 				if = {
 					limit = {
-						GBR = {
-							exists = yes
-							is_faction_leader = yes
-						}
+						GBR = { is_faction_leader = yes }
 					}
-					GBR = {
-						save_event_target_as = new_holder
-					}
+					GBR = { save_event_target_as = new_holder }
 				}
 				else = {
-					CAN = {
-						save_event_target_as = new_holder
-					}
+					CAN = { save_event_target_as = new_holder }
 				}
-				if = {
-					limit = { is_in_array = { global.LEC_voters = FROM } }
-					remove_from_array = { global.LEC_voters = FROM }
-					add_to_array = { global.LEC_voters = event_target:new_holder }
+				event_target:event_target:new_holder = {
+					if = {
+						limit = { FROM = { has_country_flag = legation_council_vote } }
+						LEC_add_to_legation_council = yes
+					}
+					else = {
+						LEC_add_to_legation_council_observer = yes
+					}
+					if = {
+						limit = { has_country_flag = AST_hong_kong }
+						clr_country_flag = AST_hong_kong
+						event_target:new_holder = { set_country_flag = AST_hong_kong }
+					}
 				}
 				FROM = {
 					if = {
@@ -232,25 +222,10 @@ on_actions = {
 						event_target:new_holder = { set_country_flag = AST_hong_kong }
 					}
 					if = {
-						limit = { has_country_flag = legation_council_member }
-						clr_country_flag = legation_council_member
-						event_target:new_holder = { set_country_flag = legation_council_member }
-					}
-					if = {
 						limit = { has_country_flag = legation_council_vote }
-						clr_country_flag = legation_council_vote
-						event_target:new_holder = { set_country_flag = legation_council_vote }
+						save_event_target_as = LEC_AST_had_vote
 					}
-					if = {
-						limit = { has_idea = LEC_generic_open_door }
-						remove_ideas = { LEC_generic_open_door }
-						event_target:new_holder = { add_ideas = LEC_generic_open_door }
-					}
-					if = {
-						limit = { has_idea = LEC_better_open_door }
-						remove_ideas = { LEC_better_open_door }
-						event_target:new_holder = { add_ideas = LEC_better_open_door }
-					}
+					LEC_remove_from_legation_council = yes
 				}
 				event_target:new_holder = { country_event = lecbrits.29 }
 			}
@@ -289,7 +264,7 @@ on_actions = {
 				}
 				every_other_country = {
 					limit = { has_country_flag = legation_council_member }
-					country_event = lec.36
+					country_event = lec.106
 				}
 			}
 
@@ -420,6 +395,89 @@ on_actions = {
 		}
 	}
 
+	#ROOT is winner #FROM gets annexed - This fires just before FROM gets annexed, meaning the country and everything it owns still exists. It will also fire on_annex and on_civil_war_end
+	on_civil_war_end_before_annexation = {
+		effect = {
+			# GXC civil war cleanup
+			if = {
+				limit = { original_tag = GXC }
+				if = {
+					limit = { has_active_mission = GXC_move_quickly }
+					remove_mission = GXC_move_quickly
+				}
+				if = {
+					limit = { has_idea = GXC_victory_imminent }
+					remove_ideas = GXC_victory_imminent
+				}
+				if = {
+					limit = { has_idea = GXC_lost_momentum }
+					remove_ideas = GXC_lost_momentum
+				}
+				if = {
+					limit = { has_idea = GXW_victory_imminent }
+					remove_ideas = GXW_victory_imminent
+				}
+				if = {
+					limit = { has_idea = GXW_lost_momentum }
+					remove_ideas = GXW_lost_momentum
+				}
+				FROM = {
+					if = {
+						limit = { has_active_mission = GXC_move_quickly }
+						remove_mission = GXC_move_quickly
+					}
+					if = {
+						limit = { has_idea = GXC_victory_imminent }
+						remove_ideas = GXC_victory_imminent
+					}
+					if = {
+						limit = { has_idea = GXC_lost_momentum }
+						remove_ideas = GXC_lost_momentum
+					}
+					if = {
+						limit = { has_idea = GXW_victory_imminent }
+						remove_ideas = GXW_victory_imminent
+					}
+					if = {
+						limit = { has_idea = GXW_lost_momentum }
+						remove_ideas = GXW_lost_momentum
+					}
+					every_character = {
+						limit = {
+							OR = {
+								has_trait = GXC_guangdong_clique_officer
+								has_trait = GXC_guangxi_clique_officer
+							}
+						}
+						if = {
+							limit = { can_be_country_leader = no }
+							set_nationality = ROOT
+						}
+						else = {
+							retire = yes
+						}
+					}
+				}
+				if = {
+					limit = { GXC_has_guangdong_government = yes }
+					if = {
+						limit = { has_global_flag = GXC_new_guangxi_clique_took_over }
+						GXC_new_guangxi_clique_flees = yes
+					}
+					else = {
+						GXC_old_guangxi_clique_flees = yes
+					}
+				}
+				else_if = {
+					limit = { GXC_has_federalist_government = no }
+					GXC_federalists_flee = yes
+				}
+				clear_global_event_target = GXC_civil_war_target
+				clear_global_event_target = GXC_original_target
+			}
+		}
+	}
+
 	# ROOT is country
 	on_daily_QIE = {
 		effect = {
@@ -536,10 +594,7 @@ on_actions = {
 					}
 					FROM = {
 						tag = HNN
-						has_country_leader = {
-							name = "Zhao Hengti"
-							ruling_only = yes
-						}
+						has_country_leader = { character = HNN_zhao_hengti }
 						ic_ratio = {
 							tag = ROOT
 							ratio > 0.5
@@ -550,40 +605,16 @@ on_actions = {
 					NOT = {
 						has_global_flag = GXCHNN_foronaction
 					}
-					OR = {
-						GXC = {
-							is_subject = no
-							has_country_leader = {
-								name = "Chen Jiongming"
-								ruling_only = yes
-							}
-						}
-						PRC = {
-							is_subject = no
-							has_country_leader = {
-								name = "Chen Jiongming"
-								ruling_only = yes
-							}
-						}
+					any_country_with_original_tag = {
+						original_tag_to_check = GXC
+						GXC_has_federalist_government = yes
+						is_subject = no
 					}
 				}
-				HNN = {
-					country_event = {
-						id = hnn.84
-						hours = 6
-					}
-				}
+				HNN = { country_event = { id = hnn.84 hours = 6 } }
 				random_country = {
-					limit = {
-						has_country_leader = {
-							name = "Chen Jiongming"
-							ruling_only = yes
-						}
-					}
-					country_event = {
-						id = hnn.840
-						hours = 6
-					}
+					limit = { has_country_leader = { character = GXC_chen_jiongming } }
+					country_event = { id = hnn.840 hours = 6 }
 				}
 			}
 			if = {
@@ -594,24 +625,15 @@ on_actions = {
 					}
 					FROM = {
 						tag = HNN
-						has_country_leader = {
-							name = "Zhao Hengti"
-							ruling_only = yes
-						}
-						ic_ratio = {
-							tag = ROOT
-							ratio > 0.5
-						}
+						has_country_leader = { character = HNN_zhao_hengti }
+						ic_ratio = { tag = ROOT ratio > 0.5 }
 						is_in_faction = no
 						is_subject = no
 					}
 					has_global_flag = GXCHNN_foronaction
 					GXC = {
 						is_subject = no
-						has_country_leader = {
-							name = "Chen Jiongming"
-							ruling_only = yes
-						}
+						has_country_leader = { character = GXC_chen_jiongming }
 					}
 				}
 				ROOT = {
@@ -658,6 +680,11 @@ on_actions = {
 				}
 				ANQ = { ANQ_break_relations_fengtian = yes }
 			}
+
+			#Oher events (triggers set on the event themselves)
+			hidden_effect = {
+				country_event = { id = chi_for.65 days = 1 } #Second Northern Expedition
+			}
 		}
 	}
 
@@ -701,7 +728,7 @@ on_actions = {
 			}
 			### Liangguang ###
 			if = {
-				limit = { tag = GXC }
+				limit = { original_tag = GXC }
 				country_event = lngkmt.11 #Li Zongren's RoC after political tutelage
 				country_event = lngupc.30 #UPC
 			}
@@ -710,6 +737,11 @@ on_actions = {
 				limit = { tag = SZC }
 				country_event = sichuan.510
 				country_event = lngupc.30 #UPC
+			}
+			### Mongolia ###
+			if = {
+				limit = { tag = MON }
+				country_event = mon.119
 			}
 		}
 	}
@@ -1272,7 +1304,7 @@ on_actions = {
 				country_event = { id = lec.19 days = 3 random_days = 7 }
 			}
 			else_if = {
-				limit = { is_chinese_tag = yes }
+				limit = { is_core_china_tag = yes }
 				country_event = qiedom.22 #Adds major status to prevent LEP capitulation upon QIE defeat
 			}
 			if = {
@@ -1280,7 +1312,7 @@ on_actions = {
 				country_event = fngsystem.15
 				country_event = { id = fengtian.102 hours = 8 random_hours = 16 }
 				if = { #Cuts Prince Kan'in Kotohito's Visit short
-					limit = { has_country_flag = prince_visit }
+					limit = { has_country_flag = FNG_prince_visit }
 					country_event = { id = fengtian.1500 hours = 12 }
 				}
 			}
@@ -1393,6 +1425,34 @@ on_actions = {
 						clear_variable = sqi_legation_control_var
 						remove_ideas_with_trait = SQI_Legation_Collaboration
 					}
+				}
+			}
+
+			if = {
+				limit = {
+					has_global_flag = LEP_war
+					OR = {
+						tag = LEP
+						FROM = { tag = LEP }
+					}
+				}
+				if = {
+					limit = {
+						OR = {
+							tag = CHI
+							FROM = { tag = CHI }
+						}
+					}
+					LEP = { activate_mission = LEP_jiangxi_governor }
+				}
+				else_if = {
+					limit = {
+						OR = {
+							tag = SQI
+							FROM = { tag = SQI }
+						}
+					}
+					LEP = { activate_mission = LEP_jiangsu_governor }
 				}
 			}
 		}

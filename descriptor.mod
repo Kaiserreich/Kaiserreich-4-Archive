@@ -1,4 +1,4 @@
-name = "Kaiserreich"
+name = "Kaiserreich - Dev Build"
 path = "mod/Kaiserreich"
 
 replace_path = "common/abilities"
@@ -11,6 +11,7 @@ replace_path = "common/ai_strategy_plans"
 replace_path = "common/ai_templates"
 replace_path = "common/autonomous_states"
 replace_path = "common/bookmarks"
+replace_path = "common/characters"
 replace_path = "common/continuous_focus"
 replace_path = "common/countries"
 replace_path = "common/country_leader"
@@ -52,6 +53,7 @@ replace_path = "gfx/loadingscreens"
 replace_path = "gfx/flags"
 
 replace_path = "history/countries"
+replace_path = "history/general"
 replace_path = "history/states"
 replace_path = "history/units"
 
@@ -67,5 +69,5 @@ tags = {
 	"Gameplay"
 }
 picture = "KR.jpg"
-version = "0.19.2"
-supported_version = "1.10.*"
+version = "0.20"
+supported_version = "1.11.*"
