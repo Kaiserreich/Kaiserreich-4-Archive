@@ -649,11 +649,8 @@ USA_new_monroe_doctrine = {
 			if = {
 				limit = {
 					FROM = {
+						is_in_central_america = no
 						NOT = {
-							tag = CUB
-							tag = DOM
-							tag = HAI
-							tag = CAF
 							tag = COL
 							tag = VEN
 						}
@@ -753,8 +750,13 @@ USA_new_monroe_doctrine = {
 				}
 				OR = {
 					any_owned_state = { is_coastal = yes }
-					any_neighbor_country = { is_in_faction_with = ROOT }
-					any_neighbor_country = { gives_military_access_to = ROOT }
+					any_neighbor_country = {
+						OR = {
+							is_in_faction_with = ROOT
+							is_subject_of = ROOT
+							gives_military_access_to = ROOT
+						}
+					}
 				}
 			}
 		}
@@ -869,6 +871,8 @@ USA_new_monroe_doctrine = {
 	USA_install_league_puppet = {
 		icon = generic_political_discourse
 
+		allowed = { always = no } #activated by effect
+
 		available = {
 			strength_ratio = { tag = FROM ratio > 10.0 }
 			has_war = no
@@ -878,6 +882,7 @@ USA_new_monroe_doctrine = {
 		visible = {
 			is_subject = no
 			country_exists = FROM
+			FROM = { is_subject = no }
 		}
 
 		cancel_trigger = {
@@ -887,6 +892,7 @@ USA_new_monroe_doctrine = {
 				NOT = { country_exists = FROM }
 				strength_ratio = { tag = FROM ratio < 10.0 }
 				FROM = { has_war = yes }
+				FROM = { is_subject = yes }
 				FROM = { NOT = { has_idea = USA_league_of_america_2 } }
 			}
 		}
@@ -900,19 +906,22 @@ USA_new_monroe_doctrine = {
 		days_remove = 90
 
 		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancelled USA_install_league_puppet"
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled USA_install_league_puppet target: [From.GetName]"
 			add_political_power = 200
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_install_league_puppet"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_install_league_puppet target: [From.GetName]"
 			FROM = { country_event = ustates.256 }
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_install_league_puppet"
-			remove_from_array = { USA.USA_potential_loas_puppets = FROM }
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_install_league_puppet target: [From.GetName]"
+			effect_tooltip = { puppet = FROM }
 			FROM = { country_event = ustates.258 }
+			hidden_effect = {
+				remove_targeted_decision = { decision = USA_install_league_puppet target = FROM }
+			}
 		}
 
 		ai_will_do = {
@@ -970,12 +979,12 @@ USA_Pan_American_Development_Foundation = {
 		}
 
 		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancelled USA_develop_ally"
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled USA_develop_ally target: [From.GetName]"
 			add_political_power = 25
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_develop_ally"
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_develop_ally target: [From.GetName]"
 			remove_from_array = { USA.USA_loas_development_array = FROM }
 			FROM = {
 				effect_tooltip = {
@@ -987,67 +996,6 @@ USA_Pan_American_Development_Foundation = {
 					}
 				}
 				country_event = ustates.252
-			}
-		}
-	}
-
-	USA_form_ant = {# Forming Antillean Union
-		icon = generic_political_discourse
-		available = {
-			has_global_flag = USA_civil_war_over_flag
-			CUB = {
-				OR = {
-					is_subject_of = USA
-					AND = {
-						NOT = {
-							has_country_flag = CUB_brokefreefromUS
-						}
-						OR = {
-							has_completed_focus = CUB_auth_continue
-							has_completed_focus = CUB_democratize_auth
-						}
-					}
-				}
-			}
-			DOM = {
-				is_subject_of = USA
-			}
-			CAF = {
-				has_socialist_government = yes
-			}
-		}
-		visible = {
-			has_global_flag = USA_civil_war_over_flag
-			CUB = {
-				OR = {
-					is_subject_of = USA
-					AND = {
-						NOT = {
-							has_country_flag = CUB_brokefreefromUS
-						}
-						OR = {
-							has_completed_focus = CUB_auth_continue
-							has_completed_focus = CUB_democratize_auth
-						}
-					}
-				}
-			}
-			DOM = {
-				is_subject_of = USA
-			}
-			CAF = {
-				has_socialist_government = yes
-			}
-		}
-		fire_only_once = yes
-		cost = 200
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_form_ant"
-			DOM = {
-				country_event = {
-					id = ant.1
-					days = 1
-				}
 			}
 		}
 	}
@@ -1167,6 +1115,7 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 				tag = USA
 				tag = PSA
 				tag = TEX
+				tag = CSA
 			}
 		}
 		available = {
@@ -1175,20 +1124,22 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 				is_in_faction_with = NEE
 				can_declare_war_on = NEE
 			}
-			NEE = {
-				is_neighbor_of = ROOT
-				controls_all_owned_states = yes
-			}
+			is_neighbor_of = NEE
+			NEE = { controls_all_owned_states = yes }
 		}
 		visible = {
 			is_subject = no
-			932 = {
-				is_claim_or_core_of_ROOT = yes
+			932 = { is_claim_or_core_of_ROOT = yes }
+			if = {
+				limit = { tag = CSA }
+				country_exists = NEE
+				NOT = { has_war_with = NEE }
+				NEE = { is_valid_peace_target = yes }
 			}
-			NEE = {
-				exists = yes
-				is_subject = no
-				NOT = { has_war_with = ROOT }
+			else = {
+				country_exists = NEE
+				NOT = { has_war_with = NEE }
+				NEE = { is_subject = no }
 			}
 			NOT = {
 				count_triggers = {
@@ -1219,9 +1170,7 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_reclaim_new_england_decision2"
-			NEE = {
-				country_event = newengland.90
-			}
+			NEE = { country_event = newengland.90 }
 		}
 	}
 
@@ -1278,7 +1227,6 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 		}
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_reclaim_alaska_decision"
-			set_country_flag = asked_alaska_@CAN
 			CAN = {	country_event = ustates.273 }
 		}
 	}
@@ -1290,7 +1238,6 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 				tag = USA
 				tag = PSA
 				tag = TEX
-				tag = NEE
 			}
 		}
 		available = {
@@ -1366,6 +1313,22 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 		}
 		available = {
 			797 = { is_owned_and_controlled_by = ROOT } #San Francisco
+			if = {
+				limit = { tag = NEE }
+				OR = {
+					has_completed_focus = NEE_The_Old_Order
+					has_completed_focus = NEE_Organisation_of_American_States
+				}
+				HAW = {
+					OR = {
+						is_in_faction_with = NEE #In faction with NEE
+						AND = { #Completely on their own
+							is_subject = no
+							is_in_faction = no
+						}
+					}
+				}
+			}
 		}
 		visible = {
 			is_subject = no
@@ -1568,8 +1531,7 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 		ai_will_do = { factor = 100 }
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_capital_returns_to_dc"
-			set_capital = 361
-			clear_variable = historical_capital_state
+			set_capital = { state = 361 remember_old_capital = no }
 			if = {
 				limit = { has_country_flag = ACW_denver_made_capital }
 				clr_country_flag = ACW_denver_made_capital
@@ -2590,7 +2552,7 @@ USA_deal_with_terrorists_decisions = {# deal with terrorists
 }
 
 ### Party Policies ###
-USA_progressive_policy_decisions = {# Progressive Policies
+USA_progressive_democrat_policies = {# Progressive Policies
 	USA_progressive_desegregate_the_military = {
 		icon = GFX_decision_generic_independence
 
@@ -2708,7 +2670,7 @@ USA_progressive_policy_decisions = {# Progressive Policies
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision USA_progressive_medicare"
-			add_popularity = { ideology = social_democrat popularity = 0.03 }
+			add_popularity = { ideology = social_liberal popularity = 0.03 }
 			add_tech_bonus = {
 				name = USA_progressive_medicare
 				bonus = 1
@@ -2803,18 +2765,20 @@ USA_progressive_policy_decisions = {# Progressive Policies
 
 		cost = 25
 		fire_only_once = yes
-		highlight_state_targets = { state = 368 }
+		highlight_states = {
+			highlight_state_targets = { state = 368 }
+		}
 		modifier = { civilian_factory_use = 4 }
 		days_remove = 60
 
 		ai_will_do = { factor = 50 }
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_progressive_public_owned_corporations target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision USA_progressive_public_owned_corporations"
 			add_stability = -0.05
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_progressive_public_owned_corporations target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_progressive_public_owned_corporations"
 			set_country_flag = USA_tennesse_valley_authority
 			add_resource = {
 				type = aluminium
@@ -2903,14 +2867,16 @@ USA_republican_policies = {# Republican Policies
 
 		cost = 25
 		fire_only_once = yes
-		highlight_state_targets = { state = 368 }
+		highlight_states = {
+			highlight_state_targets = { state = 368 }
+		}
 		days_remove = 60
 		modifier = { civilian_factory_use = 4 }
 
 		ai_will_do = { factor = 50 }
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove USA_republican_energy_companies target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision remove USA_republican_energy_companies"
 			set_country_flag = USA_tennesse_valley_authority
 			add_resource = {
 				type = aluminium
@@ -2932,29 +2898,29 @@ USA_republican_policies = {# Republican Policies
 			log = "[GetDateText]: [Root.GetName]: Decision USA_republican_highway"
 			random_owned_controlled_state = {
 				limit = {
-					is_in_home_area = yes
-					infrastructure < 10
+					is_mainland_america = yes
+					free_building_slots = { building = infrastructure size > 0 include_locked = yes }
 				}
 				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
 			}
 			random_owned_controlled_state = {
 				limit = {
-					is_in_home_area = yes
-					infrastructure < 10
+					is_mainland_america = yes
+					free_building_slots = { building = infrastructure size > 0 include_locked = yes }
 				}
 				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
 			}
 			random_owned_controlled_state = {
 				limit = {
-					is_in_home_area = yes
-					infrastructure < 10
+					is_mainland_america = yes
+					free_building_slots = { building = infrastructure size > 0 include_locked = yes }
 				}
 				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
 			}
 			random_owned_controlled_state = {
 				limit = {
-					is_in_home_area = yes
-					infrastructure < 10
+					is_mainland_america = yes
+					free_building_slots = { building = infrastructure size > 0 include_locked = yes }
 				}
 				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
 			}
@@ -3067,136 +3033,7 @@ USA_republican_policies = {# Republican Policies
 	}
 }
 
-USA_liberal_democratic_policies = {# Liberal Democratic Policies
-	USA_liberal_highway = {
-		icon = GFX_decision_generic_independence
-
-		cost = 50
-		fire_only_once = yes
-
-		ai_will_do = { factor = 40 }
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_liberal_highway"
-			set_country_flag = USA_national_highways
-			random_owned_controlled_state = {
-				limit = {
-					is_in_home_area = yes
-					infrastructure < 10
-				}
-				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
-			}
-			random_owned_controlled_state = {
-				limit = {
-					is_in_home_area = yes
-					infrastructure < 10
-				}
-				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
-			}
-			random_owned_controlled_state = {
-				limit = {
-					is_in_home_area = yes
-					infrastructure < 10
-				}
-				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
-			}
-			random_owned_controlled_state = {
-				limit = {
-					is_in_home_area = yes
-					infrastructure < 10
-				}
-				add_building_construction = { type = infrastructure	level = 1 instant_build = yes }
-			}
-		}
-	}
-
-	USA_liberal_trade_liberalization = {
-		icon = GFX_decision_generic_independence
-
-		cost = 50
-		fire_only_once = yes
-
-		ai_will_do = { factor = 40 }
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_liberal_trade_liberalization"
-			add_ideas = free_trade
-		}
-	}
-
-	USA_liberal_business_support = {
-		icon = GFX_decision_generic_independence
-
-		cost = 50
-		fire_only_once = yes
-
-		ai_will_do = { factor = 40 }
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_liberal_business_support"
-			random_owned_controlled_state = {
-				limit = {
-					is_in_home_area = yes
-					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-				}
-				add_extra_state_shared_building_slots = 1
-				add_building_construction = { type = industrial_complex	level = 1 instant_build = yes }
-			}
-			random_owned_controlled_state = {
-				limit = {
-					is_in_home_area = yes
-					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-				}
-				add_extra_state_shared_building_slots = 1
-				add_building_construction = { type = industrial_complex	level = 1 instant_build = yes }
-			}
-		}
-	}
-
-	USA_liberal_banking_act = {
-		icon = GFX_decision_generic_independence
-
-		cost = 50
-		fire_only_once = yes
-
-		ai_will_do = { factor = 40 }
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_liberal_banking_act"
-			add_stability = 0.03
-		}
-	}
-
-	USA_liberal_gospel_of_wealth = {
-		icon = GFX_decision_generic_independence
-
-		cost = 50
-		fire_only_once = yes
-
-		ai_will_do = { factor = 40 }
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_liberal_gospel_of_wealth"
-			add_stability = 0.03
-		}
-	}
-
-	USA_liberal_liberal_tax = {
-		icon = GFX_decision_generic_independence
-
-		cost = 50
-		fire_only_once = yes
-
-		ai_will_do = { factor = 40 }
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision USA_liberal_liberal_tax"
-			add_stability = 0.03
-		}
-	}
-}
-
-USA_conservative_democratic_policies = {# Conservative Democratic Policies
+USA_conservative_democrat_policies = {# Conservative Democratic Policies
 	USA_conservative_social_hygiene = {
 		icon = GFX_decision_generic_independence
 

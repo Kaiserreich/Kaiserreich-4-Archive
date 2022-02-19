@@ -259,7 +259,33 @@ on_actions = {
 
 			#Azerbaijan
 			AZR = {
-				give_resource_rights = { state = 990 receiver = GER }
+				give_resource_rights = { state = 229 receiver = GER }
+			}
+
+			#JBS - setup starting decisions
+			JBS = {
+				activate_targeted_decision = { target = 915 decision = JBS_Sway_Harb }
+				activate_targeted_decision = { target = 994 decision = JBS_Sway_Hutaim }
+				activate_targeted_decision = { target = 291 decision = JBS_Sway_Muntafiq }
+				activate_targeted_decision = { target = 1035 decision = JBS_Sway_Anizzah }
+				activate_targeted_decision = { target = 991 decision = JBS_Sway_Mutair_Dawish }
+				activate_targeted_decision = { target = 675 decision = JBS_Sway_Mutair_Busayis }
+				activate_targeted_decision = { target = 991 decision = JBS_Sway_Ajman }
+				activate_targeted_decision = { target = 675 decision = JBS_Sway_Utaibah }
+				activate_targeted_decision = { target = 656 decision = JBS_Sway_Awazim }
+				# JBS decisions related to OTT interactions
+				activate_targeted_decision = { target = OTT decision = JBS_Ottoman_Training }
+				activate_targeted_decision = { target = OTT decision = JBS_Ottoman_Weapons_Assistance }
+			}
+			#SAU - setup starting decisions
+			SAU = {
+				activate_targeted_decision = { target = 1035 decision = SAU_Sway_Ruwala }
+				activate_targeted_decision = { target = 1035 decision = SAU_Sway_Anizzah }
+				activate_targeted_decision = { target = 1035 decision = SAU_Sway_Dhafir }
+				activate_targeted_decision = { target = 675 decision = SAU_Sway_Mutair_Busayis }
+				activate_targeted_decision = { target = 675 decision = SAU_Sway_Utaibah_Ikh }
+				activate_targeted_decision = { target = 675 decision = SAU_Sway_Utaibah }
+				activate_targeted_decision = { target = 292 decision = SAU_Sway_Duwasir }
 			}
 		}
 	}
@@ -269,37 +295,13 @@ on_actions = {
 		effect = {
 			if = {
 				limit = {
-					229 = {
-						has_variable = resource_rights_holder
-					}
-					990 = {
-						has_variable = resource_rights_holder
-					}
+					229 = { has_variable = resource_rights_holder }
+					tag = 229.owner
+					FROM = { tag = 229.resource_rights_holder }
 				}
-
-				if = {
-					limit = {
-						OR = {
-							AND = {
-								tag = 990.owner
-								FROM = {
-									tag = 990.resource_rights_holder
-								}
-							}
-							AND = {
-								tag = 990.resource_rights_holder
-								FROM = {
-									tag = 990.owner
-								}
-							}
-						}
-					}
-					# Remove GER resource rights in AZR
-					remove_resource_rights = 229
-					remove_resource_rights = 990
-					clear_variable = 229.resource_rights_holder
-					clear_variable = 990.resource_rights_holder
-				}
+				# Remove GER resource rights in AZR
+				remove_resource_rights = 229
+				clear_variable = 229.resource_rights_holder
 			}
 		}
 	}
@@ -312,9 +314,7 @@ on_actions = {
 				if = {
 					limit = { tag = GER }
 					remove_resource_rights = 229
-					remove_resource_rights = 990
 					clear_variable = 229.resource_rights_holder
-					clear_variable = 990.resource_rights_holder
 				}
 
 				# Remove OTT resource rights in JBS
@@ -350,7 +350,6 @@ on_actions = {
 					}
 					if = {
 						limit = { tag = IKH }
-						SAU = { set_country_flag = IKH_revolt_2 }
 					}
 				}
 
@@ -376,9 +375,7 @@ on_actions = {
 					limit = { tag = RUS }
 					clr_global_flag = RUSSIAN_OTTOMAN_DEAL
 					remove_resource_rights = 229
-					remove_resource_rights = 990
 					clear_variable = 229.resource_rights_holder
-					clear_variable = 990.resource_rights_holder
 				}
 
 				#Disable Russo-Ottoman Convention if either tag dies
@@ -392,6 +389,15 @@ on_actions = {
 					limit = { tag = CYP }
 					remove_state_core = 187
 					remove_state_core = 164
+				}
+
+				#Fire OTT events
+				else_if = {
+					limit = { tag = SYR }
+					if = {
+						limit = { OTT = { owns_state = 554 } } #Damascus
+						OTT = { country_event = { id = syrrev.8 days = 2 } }
+					}
 				}
 
 				# Remove Kirkuk resource rights
@@ -856,13 +862,9 @@ on_actions = {
 
 			### Greek general going home
 			if = {
-				limit = {
-					original_tag = CYP
-				}
+				limit = { original_tag = CYP }
 				random_army_leader = {
-					limit = {
-						has_id = 578
-					}
+					limit = { is_character = GRE_georgios_grivas }
 					set_nationality = GRE
 				}
 			}
@@ -875,8 +877,8 @@ on_actions = {
 					OR = {
 						NOT = { has_completed_focus = JBS_unite_arabs }
 						AND = {
-							NOT = { has_country_leader = { name = "Abdallah ibn Talal al Rashid" } }
-							NOT = { has_country_leader = { name = "Saud al-Subhan" } }
+							NOT = { has_country_leader = { character = JBS_abdallah_ibn_talal_al_rashid } }
+							NOT = { has_country_leader = { character = JBS_saud_al_subhan } }
 						}
 					}
 					OTT = {
@@ -905,6 +907,7 @@ on_actions = {
 						}
 					}
 					restore_previous_government_type = yes
+					JBS_readd_claims_after_puppeting = yes
 					clr_country_flag = jbs_revolt
 				}
 			}
@@ -925,6 +928,54 @@ on_actions = {
 					}
 				}
 				annex_country = { target = FROM transfer_troops = no }
+			}
+
+			### Fix the Ottoman capital
+			if = {
+				limit = { tag = OTT }
+				if = {
+					limit = {
+						773 = { #Constantinople
+							is_owned_and_controlled_by = PREV
+							is_capital = no
+						}
+					}
+					set_capital = { state = 773 remember_old_capital = no }
+				}
+				else_if = {
+					limit = {
+						NOT = { owns_state = 773 } #Constantinople
+						49 = { #Ankara
+							is_owned_and_controlled_by = PREV
+							is_capital = no
+						}
+					}
+					set_capital = { state = 49 remember_old_capital = no }
+				}
+			}
+			else_if = {
+				limit = { FROM = { tag = OTT } }
+				FROM = {
+					if = {
+						limit = {
+							773 = { #Constantinople
+								is_owned_and_controlled_by = PREV
+								is_capital = no
+							}
+						}
+						set_capital = { state = 773 remember_old_capital = no }
+					}
+					else_if = {
+						limit = {
+							NOT = { owns_state = 773 } #Constantinople
+							49 = { #Ankara
+								is_owned_and_controlled_by = PREV
+								is_capital = no
+							}
+						}
+						set_capital = { state = 49 remember_old_capital = no }
+					}
+				}
 			}
 
 			### Russo-Ottoman Pact
@@ -982,8 +1033,11 @@ on_actions = {
 					tag = SAU
 					FROM = { tag = JBS }
 				}
-				remove_ideas = JBS_arabian_war_of_unification
-				SAU = { remove_ideas = SAU_arabian_war_of_unification }
+				remove_ideas = SAU_arabian_war_of_unification
+				JBS = {
+					remove_ideas = JBS_arabian_war_of_unification
+					JBS_remove_tribal_generals = yes #remove tribal leaders from JBS so that Sa'adun could return to IRQ
+				}
 				country_event = { id = saud.2 days = 1 }
 			}
 
@@ -992,12 +1046,8 @@ on_actions = {
 				limit = {
 					tag = OTT
 					FROM = { tag = YEM }
-					OR = {
-						has_subject = JBS
-						is_in_faction_with = JBS
-					}
 				}
-				ROOT = { country_event = { id = jbs.65 hours = 12 } }
+				country_event = { id = jbs.65 hours = 12 }
 			}
 
 			# Annexation of Cyrenaica by the Turks
@@ -1060,37 +1110,25 @@ on_actions = {
 				}
 				if = {
 					limit = {
-						has_country_leader = {
-							name = "Faisal al-Duwaish"
-							ruling_only = yes
-						}
+						has_country_leader = { character = IKH_faisal_al_duwaish }
 					}
 					set_cosmetic_tag = NAJ_Arabia
 				}
 				else_if = {
 					limit = {
-						has_country_leader = {
-							name = "Nidā ibn Nuhair"
-							ruling_only = yes
-						}
+						has_country_leader = { character = IKH_nida_ibn_nuhair }
 					}
 					set_cosmetic_tag = HAL_Arabia
 				}
 				else_if = {
 					limit = {
-						has_country_leader = {
-							name = "Zaidan ibn Hithlain"
-							ruling_only = yes
-						}
+						has_country_leader = { character = IKH_zaidan_ibn_hithlain }
 					}
 					set_cosmetic_tag = HAS_Arabia
 				}
 				else_if = {
 					limit = {
-						has_country_leader = {
-							name = "Sultan ibn Humaid ibn Bijad"
-							ruling_only = yes
-						}
+						has_country_leader = { character = IKH_sultan_ibn_humaid_ibn_bijad }
 					}
 					set_cosmetic_tag = UTA_Arabia
 				}
@@ -1367,13 +1405,6 @@ on_actions = {
 								}
 							}
 						}
-						if = {
-							limit = {
-								has_dynamic_modifier = { modifier = OTT_nationalist_hotbed }
-								NOT = { is_owned_by = FROM }
-							}
-							remove_dynamic_modifier = { modifier = OTT_nationalist_hotbed }
-						}
 					}
 				}
 			}
@@ -1439,12 +1470,7 @@ on_actions = {
 						modifier = League_of_Arab_States_dynamic_modifier
 						scope = SYR
 					}
-					FROM = {
-						OR = {
-							is_ally_with = SYR
-							is_guaranteed_by = SYR
-						}
-					}
+					FROM = { is_ally_with = SYR }
 				}
 				remove_dynamic_modifier = {
 					modifier = League_of_Arab_States_dynamic_modifier
@@ -1458,12 +1484,7 @@ on_actions = {
 						modifier = League_of_Arab_States_dynamic_modifier
 						scope = IRQ
 					}
-					FROM = {
-						OR = {
-							is_ally_with = IRQ
-							is_guaranteed_by = IRQ
-						}
-					}
+					FROM = { is_ally_with = IRQ }
 				}
 				remove_dynamic_modifier = {
 					modifier = League_of_Arab_States_dynamic_modifier
@@ -1477,12 +1498,7 @@ on_actions = {
 						modifier = League_of_Arab_States_dynamic_modifier
 						scope = EGY
 					}
-					FROM = {
-						OR = {
-							is_ally_with = EGY
-							is_guaranteed_by = EGY
-						}
-					}
+					FROM = { is_ally_with = EGY }
 				}
 				remove_dynamic_modifier = {
 					modifier = League_of_Arab_States_dynamic_modifier

@@ -385,6 +385,78 @@ political_actions = {
 		}
 	}
 
+	seize_some_trains_woo = { #repeating train seize
+
+		icon = GFX_decision_train
+
+		visible = {
+			num_of_factories < 60
+		}
+
+		available = {
+			has_equipment = { train_equipment < 101 }
+			has_tech = basic_train
+		}
+
+		days_remove = 180
+
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 1
+				has_stability > 0.74
+			}
+		}
+
+		complete_effect = {
+			add_equipment_to_stockpile = {
+				type = train_equipment
+				amount = 15
+			}
+			add_stability = -0.05
+		}
+	}
+
+	restructure_supply_system = { #one time boost to get a few cheap supply hubs
+
+		icon = GFX_decision_railroad
+
+		visible = {
+			OR = {
+				is_major = no
+				AND = {
+					is_faction_leader = yes
+					num_of_factories < 51 #would be a minor if it wasn't for faction leader status
+				}
+			}
+		}
+		fire_only_once = yes
+
+		days_remove = 120
+
+		ai_will_do = {
+			factor = 1
+			modifier = {
+				num_of_factories < 30
+				factor = 0
+			}
+		}
+
+		modifier = {
+			production_speed_supply_node_factor = 3
+		}
+
+		complete_effect = {
+			set_variable = { node_goal = num_of_supply_nodes }
+			add_to_variable = { node_goal = 3 } #maximum 3 additional nodes
+		}
+
+		cancel_trigger = {
+
+			check_variable = { node_goal < num_of_supply_nodes } #if the number of supply nodes exceeds the old number by +3, immediately cancel
+		}
+	}
+
 	AI_set_up_templates = {
 		icon = oppression
 
@@ -406,7 +478,7 @@ political_actions = {
 				OR = {
 					tag = CHI
 					tag = ANQ
-					tag = GXC
+					original_tag = GXC
 					tag = HNN
 				}
 				NOT = { has_country_flag = choice_made }
@@ -426,7 +498,10 @@ political_actions = {
 			}
 			if = {
 				limit = {
-					has_tech = gwtank
+					OR = {
+						has_tech = gwtank
+						has_tech = gwtank_chassis
+					}
 					NOT = { ai_has_role_template = armor }
 				}
 				if = {
@@ -465,7 +540,10 @@ political_actions = {
 			}
 			if = {
 				limit = {
-					has_tech = basic_heavy_tank
+					OR = {
+						has_tech = basic_heavy_tank
+						has_tech = gwtank_chassis
+					}
 					NOT = {	has_template_containing_unit = heavy_armor }
 				}
 				log = "		--- loading heavy tanks"
@@ -476,9 +554,11 @@ political_actions = {
 						heavy_armor = { x = 0 y = 0 }
 						heavy_armor = { x = 0 y = 1 }
 						heavy_armor = { x = 0 y = 2 }
-						heavy_armor = { x = 1 y = 0 }
-						heavy_armor = { x = 1 y = 1 }
-						heavy_armor = { x = 1 y = 2 }
+						heavy_armor = { x = 0 y = 3 }
+						infantry = { x = 1 y = 0 }
+						infantry = { x = 1 y = 1 }
+						infantry = { x = 1 y = 2 }
+						infantry = { x = 1 y = 3 }
 					}
 				}
 			}
@@ -504,10 +584,7 @@ political_actions = {
 			if = {
 				limit = {
 					NOT = { ai_has_role_template = infantry }
-					OR = {
-						NOT = { has_tech = gw_artillery }
-						num_of_military_factories < 10
-					}
+					num_of_military_factories < 10
 				}
 				log = "		--- loading infantry div"
 				division_template = {
@@ -516,12 +593,8 @@ political_actions = {
 						infantry = { x = 0 y = 0 }
 						infantry = { x = 0 y = 1 }
 						infantry = { x = 0 y = 2 }
-						infantry = { x = 1 y = 0 }
-						infantry = { x = 1 y = 1 }
-						infantry = { x = 1 y = 2 }
-						infantry = { x = 2 y = 0 }
-						infantry = { x = 2 y = 1 }
-						infantry = { x = 2 y = 2 }
+						infantry = { x = 0 y = 3 }
+						infantry = { x = 0 y = 4 }
 					}
 				}
 			}
@@ -529,7 +602,7 @@ political_actions = {
 				limit = {
 					NOT = {	has_template_containing_unit = artillery_brigade }
 					has_tech = gw_artillery
-					num_of_military_factories > 7
+					num_of_military_factories > 9
 				}
 				log = "		--- loading infantry div"
 				division_template = {
@@ -617,6 +690,7 @@ political_actions = {
 						cavalry = { x = 0 y = 2 }
 						cavalry = { x = 1 y = 0 }
 						cavalry = { x = 1 y = 1 }
+						cavalry = { x = 1 y = 2 }
 					}
 					template_counter = 13
 					priority = 0
@@ -982,7 +1056,9 @@ operations = {
 	blow_singapore_causeway = {
 
 		icon = GFX_decision_generic_ignite_civil_war
-		highlight_provinces = { 12299 10313 4424 }
+		highlight_states = {
+			highlight_provinces = { 12299 10313 4424 }
+		}
 
 		available = {
 			has_full_control_of_state = 336 # Singapore
@@ -1067,6 +1143,7 @@ propaganda_efforts = {
 		available = {
 			NOT = { has_country_flag = war_propaganda_campaign_running }
 			threat > 0.5
+			has_war_support < 0.5
 		}
 
 		visible = {
@@ -1078,7 +1155,7 @@ propaganda_efforts = {
 		days_remove = 90
 		days_re_enable = 180
 
-		cost = 50
+		cost = 150
 
 		modifier = {
 			war_support_weekly = 0.01
@@ -1112,27 +1189,36 @@ propaganda_efforts = {
 
 		available = {
 			NOT = { has_country_flag = war_propaganda_campaign_running }
+			# lower the cost for neighbors
+			if = {
+				limit = { is_neighbor_of = FROM }
+				set_temp_variable = { war_propaganda_cost = 50 }
+			}
 		}
 
 		visible = {
 			FROM = {
-				has_war_with = ROOT
-				is_subject = no
 				OR = {
-					is_in_faction = no
-					is_faction_leader = yes
+					is_justifying_wargoal_against = ROOT
+					AND = {
+						has_war_with = ROOT
+						is_neighbor_of = ROOT
+					}
 				}
+				is_valid_peace_target = yes
 			}
 		}
 
 		target_trigger = {
 			FROM = {
-				has_war_with = ROOT
-				is_subject = no
 				OR = {
-					is_in_faction = no
-					is_faction_leader = yes
+					is_justifying_wargoal_against = ROOT
+					AND = {
+						has_war_with = ROOT
+						is_neighbor_of = ROOT
+					}
 				}
+				is_valid_peace_target = yes
 			}
 		}
 
@@ -1147,22 +1233,25 @@ propaganda_efforts = {
 
 		fire_only_once = yes
 
-		cost = 50
+		cost = var:war_propaganda_cost?75
 
 		modifier = {
-			war_support_weekly = 0.02
+			war_support_weekly = 0.01
 		}
 
-		cancel_trigger = {
-			NOT = { has_war_with = FROM }
-		}
+		cancel_if_not_visible = yes
 
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled war_propaganda_against_warmonger target: [From.GetName]"
+			clr_country_flag = war_propaganda_campaign_running
+		}
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision war_propaganda_against_warmonger target: [From.GetName]"
 			set_country_flag = { flag = war_propaganda_campaign_running days = 90 value = 1 }
 		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove war_propaganda_against_warmonger target: [From.GetName]"
+			clr_country_flag = war_propaganda_campaign_running
 		}
 
 		ai_will_do = {
@@ -1412,4 +1501,3 @@ KR_foreign_support = {
 		}
 	}
 }
-

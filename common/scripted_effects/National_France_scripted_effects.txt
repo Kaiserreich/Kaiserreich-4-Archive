@@ -13,7 +13,7 @@ NFA_Greater_Belgium_to_GER = {
 					state = 980
 				}
 			}
-			BEL = { transfer_state = PREV }
+			transfer_state_to = BEL
 		}
 	}
 	else_if = {
@@ -30,7 +30,7 @@ NFA_Greater_Belgium_to_GER = {
 					state = 980
 				}
 			}
-			WLL = { transfer_state = PREV }
+			transfer_state_to = WLL
 		}
 	}
 }
@@ -127,7 +127,7 @@ GER_transfer_NFA = {
 				is_not_claim_or_core_of_ROOT = yes
 				is_european_france = yes
 			}
-			NFA = { transfer_state = PREV }
+			transfer_state_to = NFA
 			NFA_add_resistance_modifiers = yes
 		}
 	}
@@ -147,7 +147,7 @@ GER_transfer_NFA_except_Belgium = {
 					state = 980
 				}
 			}
-			NFA = { transfer_state = PREV }
+			transfer_state_to = NFA
 			NFA_add_resistance_modifiers = yes
 		}
 	}
@@ -170,7 +170,7 @@ GER_transfer_NFA_except_Belgium_and_Brittany = {
 					state = 983
 				}
 			}
-			NFA = { transfer_state = PREV }
+			transfer_state_to = NFA
 			NFA_add_resistance_modifiers = yes
 		}
 	}
@@ -190,7 +190,7 @@ GER_transfer_NFA_except_Brittany = {
 					state = 983
 				}
 			}
-			NFA = { transfer_state = PREV }
+			transfer_state_to = NFA
 			NFA_add_resistance_modifiers = yes
 		}
 	}
@@ -686,6 +686,7 @@ NFA_disable_revolt_decision_category = {
 				has_country_flag = NFA_rebelled_GNA
 				has_country_flag = NFA_rebelled_MRT
 				has_country_flag = NFA_rebelled_TUN
+				has_country_flag = NFA_rebelled_IVO
 				# Special cases
 				has_country_flag = NFA_rebelled_SIE
 				has_country_flag = NFA_rebelled_SEN
@@ -887,3 +888,49 @@ NFA_Breaking_Lyon_Effect = {
 	}
 }
 
+NFA_colony_released_by_revolter = {
+	hidden_effect = {
+		set_country_flag = NFA_active_rebellion
+		set_country_flag = NFA_rebelled_@var:revolter
+		activate_targeted_decision = { decision = NFA_crush_resistance target = var:revolter }
+		every_owned_state = {
+			limit = { is_core_of = var:revolter }
+			transfer_state_to = var:revolter
+		}
+		var:original_occupier = {
+			var:revolter = {
+				diplomatic_relation = {
+					country = PREV
+					relation = military_access
+				}
+			}
+		}
+		var:revolter = {
+			# log = "KR_Event_Logging;[revolter.GetTag] REVOLTS AGAINST NFA;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			var:original_occupier = {
+				diplomatic_relation = {
+					country = PREV
+					relation = military_access
+				}
+			}
+			meta_effect = {
+				text = {
+					load_oob = [OOB_NAME]
+				}
+				OOB_NAME = "[?revolter.GetTag]_revolt"
+			}
+		}
+		every_owned_state = {
+			limit = {
+				has_resistance = yes
+				any_neighbor_state = { is_controlled_by = var:revolter }
+			}
+			add_resistance = 7
+			add_compliance = -4
+		}
+	}
+	declare_war_on = {
+		target = var:revolter
+		type = annex_everything
+	}
+}

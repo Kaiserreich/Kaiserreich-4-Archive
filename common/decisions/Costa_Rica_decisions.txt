@@ -572,7 +572,7 @@ COS_UFC_decisions = {
 				has_country_flag = UFC_GONE
 				has_country_flag = COS_EXPANDING_OPERATIONS
 			}
-			CAF = {
+			WIF = {
 				has_opinion = {
 					target = COS
 					value > 59
@@ -584,7 +584,7 @@ COS_UFC_decisions = {
 		}
 		visible = {
 			has_country_flag = COS_UFC_HEADQUARTERS_FLAG
-			CAF = {
+			WIF = {
 				has_socialist_government = no
 			}
 		}
@@ -644,7 +644,7 @@ COS_UFC_decisions = {
 				has_country_flag = UFC_GONE
 				has_country_flag = COS_EXPANDING_OPERATIONS
 			}
-			CAF = {
+			WIF = {
 				has_opinion = {
 					target = COS
 					value > 59
@@ -656,7 +656,7 @@ COS_UFC_decisions = {
 		}
 		visible = {
 			has_country_flag = COS_UFC_HEADQUARTERS_FLAG
-			CAF = {
+			WIF = {
 				has_socialist_government = no
 			}
 		}
@@ -2037,22 +2037,21 @@ COS_Ferrer_Aggro_decisions = {
 	COS_Legion_del_Caribe_Attack = {
 		icon = GFX_decision_generic_military
 
-		available = {
-			CEN = {
-				exists = yes
-				OR = {
-					has_authoritarian_government = yes
-					has_socialist_government = yes
-				}
+		allowed = { always = no } #activated by effect
+
+		cancel_trigger = {
+			NOT = {
+				has_war_with = CEN
+				can_declare_war_on = CEN
 			}
 		}
 
-		fire_only_once = yes
-
 		days_remove = 600
+		fire_only_once = yes
 
 		modifier = {
 			conscription = 0.03
+			unit_limit_bonus = 5
 			mobilization_speed = 1
 			supply_consumption_factor = -0.5
 			out_of_supply_factor = -0.5
@@ -2062,18 +2061,7 @@ COS_Ferrer_Aggro_decisions = {
 			base = 0
 			modifier = {
 				add = 200
-				has_country_flag = COS_BEL_WEAP
-				has_country_flag = COS_MAT_WEAP
-				has_country_flag = COS_PCA_WEAP
-				has_country_flag = COS_SAA_WEAP
-				has_country_flag = COS_PBA_WEAP
-			}
-		}
-
-		cancel_trigger = {
-			OR = {
-				NOT = { country_exists = CEN }
-				NOT = { has_war_with = CEN }
+				CEN = { all_core_state = { has_state_flag = COS_supplied_rebels } }
 			}
 		}
 
@@ -2086,9 +2074,9 @@ COS_Ferrer_Aggro_decisions = {
 					is_faction_leader = no
 				}
 				faction_leader = {
-					country_event = cos.113
 					remove_from_faction = CEN
 					remove_from_faction = COS
+					country_event = { id = cos.113 hours = 12 }
 				}
 			}
 
@@ -2099,321 +2087,89 @@ COS_Ferrer_Aggro_decisions = {
 			}
 
 			#Load Rebel OOBS
-			hidden_effect = {
-				CEN = { add_ideas = COS_Carib_Peacedeal }
-				if = {
-					limit = { CEN = { has_stability < 0.3 } }
-					load_oob = COS_BEL
+			division_template = {
+				name = "Brigada de Milicia"
+				division_names_group = SPAN_MIL_01
+				regiments = {
+					infantry = { x = 0 y = 0 }
+					infantry = { x = 0 y = 1 }
+					infantry = { x = 0 y = 2 }
 				}
-				if = {
-					limit = { has_country_flag = COS_MAT_WEAP }
-					load_oob = COS_MAT
-				}
-				if = {
-					limit = { has_country_flag = COS_PCA_WEAP }
-					load_oob = COS_PCA
-				}
-				if = {
-					limit = { has_country_flag = COS_SAA_WEAP }
-					load_oob = COS_SAA
-				}
-				if = {
-					limit = { has_country_flag = COS_BEL_WEAP }
-					load_oob = COS_BEL
-				}
-				if = {
-					limit = { has_country_flag = COS_PBA_WEAP }
-					load_oob = COS_PBA
+			}
+			CEN = {
+				hidden_effect = { add_ideas = COS_Carib_Peacedeal }
+				every_owned_state = {
+					limit = { has_state_flag = COS_supplied_rebels }
+					create_unit = {
+						division = "division_template = \"Brigada de Milicia\" start_experience_factor = 0.1 start_equipment_factor = 0.9"
+						allow_spawning_on_enemy_provs = yes
+						owner = ROOT
+					}
 				}
 			}
 
 			#STOP FURTHER REBEL ACTIONS
 			set_country_flag = COS_TIME_TO_DANCE_DICKWEED
+			COS_clear_legion_del_caribe_rebel_decisions = yes
 		}
 	}
 
 	#GREAT CENTRAL AMERICAN REVOLUTION
-	COS_Matagalpa_Weapons = {
+	COS_Supply_Rebels = {
 		icon = GFX_decision_infiltrate_state
-		allowed = { original_tag = COS }
+
+		allowed = { always = no } #activated by effect
+
 		available = {
-			has_equipment = {
-				infantry_equipment > 399
-			}
 			has_war = no
 		}
-		visible = {
-			country_exists = CEN
-			CEN = { has_authoritarian_government = yes }
-			NOT = { has_country_flag = COS_TIME_TO_DANCE_DICKWEED }
+
+		cancel_trigger = {
+			OR = {
+				NOT = { can_declare_war_on = CEN }
+				NOT = { FROM = { is_owned_by = CEN } }
+			}
 		}
 
-		highlight_state_targets = { state = 1071 }
+		custom_cost_text = MP_50
+		custom_cost_trigger = {
+			has_manpower > 49
+			has_equipment = { infantry_equipment > 399 }
+		}
 
 		days_remove = 30
-
-		custom_cost_trigger = {
-			has_equipment = {
-				infantry_equipment > 399
-			}
-			has_manpower > 50
-		}
-		custom_cost_text = MP_50
-
 		fire_only_once = yes
+		state_target = yes
 
 		ai_will_do = {
 			factor = 100
 		}
 
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision COS_Matagalpa_Weapons target: [From.GetName]"
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled COS_Supply_Rebels target: [From.GetName]"
 			hidden_effect = {
-				add_manpower = -50
-				add_equipment_to_stockpile = {
-					type = infantry_equipment
-					amount = -400
-					producer = COS
-				}
-			}
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove COS_Matagalpa_Weapons target: [From.GetName]"
-			custom_effect_tooltip = COS_MAT_WEAP
-			set_country_flag = COS_MAT_WEAP
-		}
-	}
-
-	COS_Puerto_Cabezas_Weapons = {
-		icon = GFX_decision_infiltrate_state
-		allowed = { original_tag = COS }
-		available = {
-			has_equipment = {
-				infantry_equipment > 399
-			}
-			has_war = no
-		}
-		visible = {
-			country_exists = CEN
-			CEN = { has_authoritarian_government = yes }
-			NOT = { has_country_flag = COS_TIME_TO_DANCE_DICKWEED }
-		}
-
-		days_remove = 30
-
-		highlight_state_targets = { state = 1071 }
-
-		custom_cost_trigger = {
-			has_equipment = {
-				infantry_equipment > 399
-			}
-			has_manpower > 50
-		}
-		custom_cost_text = MP_50
-
-		fire_only_once = yes
-
-		ai_will_do = {
-			base = 0
-			modifier = {
-				add = 150
-				has_equipment = {
-					infantry_equipment > 1000
-				}
+				add_manpower = 50
+				add_equipment_to_stockpile = { type = infantry_equipment amount = 400 }
+				remove_targeted_decision = { decision = COS_Legion_del_Caribe_Attack target = CEN }
+				COS_disable_legion_del_caribe_decisions = yes
 			}
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision COS_Puerto_Cabezas_Weapons target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision COS_Supply_Rebels target: [From.GetName]"
 			hidden_effect = {
 				add_manpower = -50
-				add_equipment_to_stockpile = {
-					type = infantry_equipment
-					amount = -400
-					producer = COS
-				}
+				add_equipment_to_stockpile = { type = infantry_equipment amount = -400 }
 			}
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove COS_Puerto_Cabezas_Weapons target: [From.GetName]"
-			custom_effect_tooltip = COS_PCA_WEAP
-			set_country_flag = COS_PCA_WEAP
-		}
-	}
-
-	COS_Santa_Ana_Weapons = {
-		icon = GFX_decision_infiltrate_state
-		allowed = { original_tag = COS }
-		available = {
-			has_equipment = {
-				infantry_equipment > 399
-			}
-			has_war = no
-		}
-		visible = {
-			country_exists = CEN
-			CEN = { has_authoritarian_government = yes }
-			NOT = { has_country_flag = COS_TIME_TO_DANCE_DICKWEED }
-		}
-
-		days_remove = 30
-
-		highlight_state_targets = { state = 314 }
-
-		custom_cost_trigger = {
-			has_equipment = {
-				infantry_equipment > 399
-			}
-			has_manpower > 50
-		}
-		custom_cost_text = MP_50
-
-		fire_only_once = yes
-
-		ai_will_do = {
-			base = 0
-			modifier = {
-				add = 150
-				has_equipment = {
-					infantry_equipment > 1000
-				}
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision COS_Santa_Ana_Weapons target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision remove COS_Supply_Rebels target: [From.GetName]"
+			custom_effect_tooltip = COS_suplied_rebels_tooltip
+			FROM = { set_state_flag = COS_supplied_rebels }
 			hidden_effect = {
-				add_manpower = -50
-				add_equipment_to_stockpile = {
-					type = infantry_equipment
-					amount = -400
-					producer = COS
-				}
+				remove_targeted_decision = { decision = COS_Supply_Rebels target = FROM }
 			}
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove COS_Santa_Ana_Weapons target: [From.GetName]"
-			custom_effect_tooltip = COS_SAA_WEAP
-			set_country_flag = COS_SAA_WEAP
-		}
-	}
-
-	COS_Belmopan_Weapons = {
-		icon = GFX_decision_infiltrate_state
-		allowed = { original_tag = COS }
-		available = {
-			has_equipment = {
-				infantry_equipment > 399
-			}
-			has_war = no
-		}
-		visible = {
-			country_exists = CEN
-			CEN = { has_authoritarian_government = yes }
-			NOT = { has_country_flag = COS_TIME_TO_DANCE_DICKWEED }
-		}
-
-		days_remove = 30
-
-		highlight_state_targets = { state = 311 }
-
-		custom_cost_trigger = {
-			has_equipment = {
-				infantry_equipment > 399
-			}
-			has_manpower > 50
-		}
-		custom_cost_text = MP_50
-
-		fire_only_once = yes
-
-		ai_will_do = {
-			base = 0
-			modifier = {
-				add = 150
-				has_equipment = {
-					infantry_equipment > 1000
-				}
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision COS_Belmopan_Weapons target: [From.GetName]"
-			hidden_effect = {
-				add_manpower = -50
-				add_equipment_to_stockpile = {
-					type = infantry_equipment
-					amount = -400
-					producer = COS
-				}
-			}
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove COS_Belmopan_Weapons target: [From.GetName]"
-			custom_effect_tooltip = COS_BEL_WEAP
-			set_country_flag = COS_BEL_WEAP
-		}
-	}
-
-	COS_Puerto_Barrios_Weapons = {
-		icon = GFX_decision_infiltrate_state
-		allowed = { original_tag = COS }
-		available = {
-			has_equipment = {
-				infantry_equipment > 399
-			}
-			has_war = no
-		}
-		visible = {
-			country_exists = CEN
-			CEN = { has_authoritarian_government = yes }
-			NOT = { has_country_flag = COS_TIME_TO_DANCE_DICKWEED }
-		}
-
-		days_remove = 30
-
-		highlight_state_targets = { state = 313 }
-
-		custom_cost_trigger = {
-			has_equipment = {
-				infantry_equipment > 399
-			}
-			has_manpower > 50
-		}
-		custom_cost_text = MP_50
-
-		fire_only_once = yes
-
-		ai_will_do = {
-			base = 0
-			modifier = {
-				add = 150
-				has_equipment = {
-					infantry_equipment > 1000
-				}
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision COS_Puerto_Barrios_Weapons target: [From.GetName]"
-			hidden_effect = {
-				add_manpower = -50
-				add_equipment_to_stockpile = {
-					type = infantry_equipment
-					amount = -400
-					producer = COS
-				}
-			}
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove COS_Puerto_Barrios_Weapons target: [From.GetName]"
-			custom_effect_tooltip = COS_PBA_WEAP
-			set_country_flag = COS_PBA_WEAP
 		}
 	}
 }
@@ -2779,10 +2535,8 @@ COS_Ferrer_Pacifist_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision COS_Disband_the_Council"
-			create_country_leader = {
-				name = "Leon Cortes Castro"
-				picture = "Portrait_COS_Leon_Cortes_Castro.png"
-				expire = "1965.1.1"
+			promote_character = {
+				character = COS_teodoro_picado_michalski
 				ideology = social_democrat_subtype
 			}
 			set_politics = {

@@ -1,0 +1,136 @@
+on_actions = {
+	on_war = {
+		effect = {
+			### Ridding ourselves of the GD
+			if = {
+				limit = {
+					tag = NEE
+					has_dynamic_modifier = { modifier = NEE_Great_Depression }
+					OR = {
+						has_war_with = CSA
+						has_war_with = USA
+						has_war_with = TEX
+						has_war_with = PSA
+					}
+				}
+				NEE = {
+					country_event = newengland.102 #The Fires of War!
+					country_event = { id = newengland.22 days = 150 } # United Service
+					NEE_Pointblank = yes
+				}
+			}
+			else_if = { #No Great Depression but still entering the war
+				limit = {
+					tag = NEE
+					NOT = { has_dynamic_modifier = { modifier = NEE_Great_Depression } }
+					OR = {
+						has_war_with = CSA
+						has_war_with = USA
+						has_war_with = TEX
+						has_war_with = PSA
+					}
+				}
+				NEE = {
+					country_event = newengland.103 #The Fires of War!
+					country_event = { id = newengland.22 days = 150 } # United Service
+					NEE_Pointblank = yes
+				}
+			}
+		}
+	}
+	#ROOT is winner #FROM is loser
+	on_peaceconference_ended = {
+		effect = {
+			# Morgenthau Plan
+			if = {
+				limit = {
+					tag = NEE
+					FROM = { tag = GER }
+				}
+				country_event = { id = newengland.175 days = 20 }
+			}
+			# Removing CSA forced resistance
+			if = {
+				limit = {
+					tag = NEE
+					FROM = { tag = CSA }
+					930 = { has_state_flag = has_resistance_forced_for_nee }
+				}
+				clr_state_flag = has_resistance_forced_for_nee
+			}
+			# Finisher Tree for NEE
+			if = {
+				limit = {
+					tag = ENT
+					FROM = { tag = INT }
+					NEE = { has_completed_focus = NEE_End_Reconstruction }
+				}
+				NEE = { country_event = newengland.261 }
+			}
+			# Adding NEE reconstruction debuffs if it gets the mainland after the end of the ACW
+			if = {
+				limit = { tag = NEE }
+				country_event = { id = newengland.1000 hours = 3 }
+			}
+		}
+	}
+
+	on_leave_faction = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] on_leave_faction FROM = [From.GetName]"
+			if = {
+				limit = {
+					ROOT = { tag = NEE }
+					FROM = { tag = ENT }
+				}
+				hidden_effect = {
+					CSA = { country_event = { id = newengland.86 days = 10 } }
+				}
+			}
+		}
+	}
+
+	#ROOT is new controller #FROM is old controller #FROM.FROM is state ID
+	on_state_control_changed = {
+		effect = {
+			if = {
+				limit = { #If NEE has made contacts in a state, add compliance when it flips the first time
+					tag = NEE
+					FROM = { is_american_tag = yes }
+					FROM.FROM = {
+						has_state_flag = NEE_state_contacted
+						NOT = { has_state_flag = NEE_state_contacted_effect_applied } #This should prevent farming compliance
+					}
+				}
+				FROM.FROM = {
+					add_compliance = 10
+					set_garrison_strength = 1
+					set_state_flag = NEE_state_contacted_effect_applied
+				}
+			}
+			if = {
+				limit = { tag = NEE }
+				country_event = { id = newengland.374 days = 2 } #triggers on the event itself
+			}
+		}
+	}
+
+	on_war_relation_added = {
+		effect = {
+			if = {
+				limit = {
+					tag = NEE
+					FROM = { is_american_tag = yes }
+				}
+				NEE = { set_country_flag = NEE_entered_the_civil_war }
+			}
+			else_if = {
+				limit = {
+					is_american_tag = yes
+					FROM = { tag = NEE }
+				}
+				NEE = { set_country_flag = NEE_entered_the_civil_war }
+			}
+		}
+	}
+}

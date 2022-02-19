@@ -8,30 +8,38 @@ scripted_gui = {
 		visible = {
 			is_claimed_by = NEE
 			ROOT = { tag = NEE }
+			NOT = { NEE_war_is_truly_over = yes }
 		}
 
 		effects = {
+			NEE_Contacts_button_click = {	#Making Contacts
+				ROOT = {
+					add_political_power = -20
+				}
+				if = {
+					limit = {
+						FROM = {
+							is_controlled_by = NEE
+						}
+					}
+					FROM = {
+						add_compliance = 10
+						set_garrison_strength = 1
+						set_state_flag = NEE_state_contacted_effect_applied
+					}
+				}
+				set_state_flag = NEE_state_contacted
+			}
 			NEE_Infiltration_button_click = {	#Infiltrating the State
 				ROOT = {
 					add_manpower = -300
 					add_equipment_to_stockpile = {
-						type = infantry_equipment_0
+						type = infantry_equipment
 						amount = -200
-						producer = NEE
 					}
 				}
 				set_state_flag = NEE_state_infiltrated
-			}
-			NEE_Airdrop_button_click = {	#Airdropping in Supplies
-				ROOT = {
-					add_manpower = -100
-					add_equipment_to_stockpile = {
-						type = infantry_equipment_0
-						amount = -500
-						producer = NEE
-					}
-				}
-				set_state_flag = NEE_airdropped_supplies
+				set_state_flag = { flag = NEE_state_infil_timer value = 1 days = 5 }
 			}
 			NEE_Launch_Uprising_button_click = {	#Spawns the rebels
 				ROOT = {
@@ -48,16 +56,26 @@ scripted_gui = {
 								infantry = { x = 0 y = 1 }
 								infantry = { x = 0 y = 2 }
 								infantry = { x = 0 y = 3 }
-								infantry = { x = 0 y = 4 }
+								infantry = { x = 1 y = 0 }
+								infantry = { x = 1 y = 1 }
+								infantry = { x = 1 y = 2 }
+								infantry = { x = 1 y = 3 }
+							}
+							support = {
+								recon = { x = 0 y = 0 }
+								engineer = { x = 0 y = 1 }
+								logistics_company = { x = 0 y = 2 }
 							}
 						}
 					}
 				}
 				set_state_flag = NEE_rebel_spawned
 				if = {
-					limit = { has_state_flag = NEE_airdropped_supplies }
+					limit = {
+						ROOT = { has_completed_focus = NEE_Flying_For_Freedom }
+					}
 					create_unit = {
-						division = "name = \"Resistance\" division_template = \"Resistance\" start_experience_factor = 0.4 start_equipment_factor = 1"
+						division = "name = \"Resistance\" division_template = \"Resistance\" start_experience_factor = 0.35 start_equipment_factor = 0.9"
 						owner = ROOT
 						count = 2
 						allow_spawning_on_enemy_provs = yes
@@ -65,7 +83,7 @@ scripted_gui = {
 				}
 				else = {
 					create_unit = {
-						division = "name = \"Resistance\" division_template = \"Resistance\" start_experience_factor = 0.4 start_equipment_factor = 0.4"
+						division = "name = \"Resistance\" division_template = \"Resistance\" start_experience_factor = 0.05 start_equipment_factor = 0.65"
 						owner = ROOT
 						count = 2
 						allow_spawning_on_enemy_provs = yes
@@ -75,25 +93,33 @@ scripted_gui = {
 		}
 
 		triggers = {
-			NEE_Infiltration_button_click_enabled = {	#Enable Infiltration
+			NEE_Contacts_button_click_enabled = {	#Enable Contact Making
+				any_neighbor_state = {
+					is_fully_controlled_by = NEE
+				}
 				ROOT = {
-					has_completed_focus = NEE_Behind_Eneny_Lines
+					has_completed_focus = NEE_Behind_Enemy_Lines
+					has_political_power > 19
+				}
+				NOT = { has_state_flag = NEE_state_contacted }
+			}
+			NEE_Infiltration_button_click_enabled = {	#Enable Infiltration
+				any_neighbor_state = {
+					is_fully_controlled_by = NEE
+				}
+				ROOT = {
+					has_completed_focus = NEE_Behind_Enemy_Lines
 					has_equipment = { infantry_equipment > 200 }
 					has_manpower > 300
 				}
 				NOT = { has_state_flag = NEE_state_infiltrated }
 			}
-			NEE_Airdrop_button_click_enabled = {	#Enable Air Drops
-				ROOT = {
-					has_completed_focus = NEE_Flying_For_Freedom
-					has_equipment = { infantry_equipment > 500 }
-					has_manpower > 100
-				}
-				has_state_flag = NEE_state_infiltrated
-				NOT = { has_state_flag = NEE_airdropped_supplies }
-			}
 			NEE_Launch_Uprising_button_click_enabled = {	#Enable the Uprising
+				any_neighbor_state = {
+					NOT = { is_fully_controlled_by = NEE }
+				}
 				owner = { has_war_with = ROOT }
+				NOT = { has_state_flag = NEE_state_infil_timer }
 				has_state_flag = NEE_state_infiltrated
 				NOT = { has_state_flag = NEE_rebel_spawned }
 			}
@@ -102,21 +128,14 @@ scripted_gui = {
 		ai_test_scopes = test_neighbouring_enemy_states
 
 		ai_weights = {
+			NEE_Contacts_button_click = {
+				ai_will_do = { base = 100 }
+			}
 			NEE_Infiltration_button_click = {
 				ai_will_do = { base = 100 }
 			}
-			NEE_Airdrop_button_click = {
-				ai_will_do = { base = 100 }
-			}
 			NEE_Launch_Uprising_button_click = {
-				ai_will_do = {
-					base = 100
-					modifier = {
-						factor = 0
-						ROOT = { has_completed_focus = NEE_Flying_For_Freedom }
-						NOT = { has_state_flag = NEE_airdropped_supplies }
-					}
-				}
+				ai_will_do = { base = 100 }
 			}
 		}
 	}

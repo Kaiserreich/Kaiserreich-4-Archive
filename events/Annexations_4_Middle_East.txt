@@ -80,6 +80,9 @@ country_event = { #Fate of the Levant
 
 	option = { #release Syria
 		name = annex.4000.a
+		trigger = {
+			NOT = {tag = EGY}
+		}
 		ai_chance = {
 			base = 80
 		}
@@ -151,6 +154,70 @@ country_event = { #Fate of the Levant
 		recheck_annexations = yes
 	}
 
+	option = { #Release the Sultanate
+		name = annex.4000.d
+		trigger = {
+			tag = EGY
+		}
+		ai_chance = {
+			base = 80
+		}
+		set_temp_variable = { tag_to_release = SYR }
+		release_targeted_tag_with_claims = yes
+		transfer_sinai_if_annexation_unavailable = yes
+		SYR = { #Set up the Sultanate of Syria
+			set_cosmetic_tag = SYR_sultanate
+			event_target:EGY_abdel_moneim_i_target = {
+				set_nationality = SYR
+			}
+			if = {
+				limit = { has_character = EGY_abdel_moneim_i }
+				EGY_abdel_moneim_i = {
+					if = {
+						limit = { has_ideology = authoritarian_democrat_subtype }
+						promote_character = { ideology = authoritarian_democrat_subtype }
+					}
+					else = {
+						add_country_leader_role = {
+							country_leader = { ideology = authoritarian_democrat_subtype }
+							promote_leader = yes
+						}
+					}
+				}
+			}
+			set_politics = {
+				ruling_party = authoritarian_democrat
+				#last_election = "1935.6.15"
+				#election_frequency = 48
+				elections_allowed = no
+			}
+			set_party_name = {
+				ideology = authoritarian_democrat
+				long_name = SYR_authoritarian_democrat_party_long_sultanate
+				name = SYR_authoritarian_democrat_party_sultanate
+			}
+			hidden_effect = {
+				set_popularities = {
+					totalist = 0
+					syndicalist = 5
+					radical_socialist = 2
+					social_democrat = 5
+					social_liberal = 16
+					market_liberal = 20
+					social_conservative = 36
+					authoritarian_democrat = 8
+					paternal_autocrat = 0
+					national_populist = 8
+				}
+				uncomplete_national_focus = {
+					focus = SYR_republic_of_equals
+					uncomplete_children = yes }
+			}
+		}
+
+
+	}
+
 	option = { #Integrate
 		name = annex.integration
 		trigger = {
@@ -202,6 +269,13 @@ country_event = { #Fate of Lebanon
 		}
 		set_temp_variable = { tag_to_release = LEB }
 		release_targeted_tag = yes
+		hidden_effect = {
+			LEB = {
+				remove_targeted_decision = { target = ENT decision = LEB_join_the_entente_decision }
+				remove_targeted_decision = { target = EGY decision = LEB_join_the_cairo_pact }
+				remove_targeted_decision = { target = IRQ decision = LEB_join_the_arab_league }
+			}
+		}
 	}
 
 	option = { #give to OTT ally
@@ -319,8 +393,11 @@ country_event = { #Fate of Anatolia
 		}
 		set_temp_variable = { tag_to_release = TUR }
 		every_owned_state = {
-			limit = { should_transfer_anatolian_state = yes }
-			var:tag_to_release = { transfer_state = PREV }
+			limit = {
+				should_transfer_anatolian_state = yes
+				is_claim_or_core_of_ROOT = no
+			}
+			transfer_state_to = var:tag_to_release
 		}
 		puppet_released_tag = yes
 	}
@@ -343,7 +420,7 @@ country_event = { #Fate of Anatolia
 	#	set_temp_variable = { tag_to_release = TUR }
 	#	every_owned_state = {
 	#		limit = { should_transfer_anatolian_state = yes }
-	#		var:tag_to_release = { transfer_state = PREV }
+	#		transfer_state_to = var:tag_to_release
 	#	}
 	#	puppet_released_tag = yes
 	#}
@@ -568,7 +645,7 @@ country_event = { #Fate of Egypt
 					state = 753 #Suez
 				}
 			}
-			var:tag_to_release = { transfer_state = PREV }
+			transfer_state_to = var:tag_to_release
 		}
 		puppet_released_tag = yes
 	}
@@ -595,7 +672,7 @@ country_event = { #Fate of Egypt
 					state = 753 #Suez
 				}
 			}
-			var:tag_to_release = { transfer_state = PREV }
+			transfer_state_to = var:tag_to_release
 		}
 		puppet_released_tag = yes
 	}
@@ -859,7 +936,6 @@ country_event = { #Fate of Cyrenaica
 		release_targeted_tag = yes
 		LBA = {
 			clr_country_flag = LBA_idris_btfo
-			set_country_flag = LBA_truepuppet
 		}
 	}
 
@@ -881,7 +957,6 @@ country_event = { #Fate of Cyrenaica
 		LBA = {
 			set_cosmetic_tag = LBA_libya
 			clr_country_flag = LBA_idris_btfo
-			set_country_flag = LBA_truepuppet
 		}
 	}
 
@@ -901,7 +976,6 @@ country_event = { #Fate of Cyrenaica
 		release_targeted_tag = yes
 		LBA = {
 			clr_country_flag = LBA_idris_btfo
-			set_country_flag = LBA_truepuppet
 		}
 	}
 
@@ -978,8 +1052,7 @@ country_event = { #Fate of Tripolitania
 					is_italian_tag = yes
 					448 = { is_claimed_by = PREV } #Tripoli
 				}
-				any_of_scopes = {
-					array = subjects
+				any_subject_country = {
 					is_italian_tag = yes
 					448 = { is_claimed_by = PREV } #Tripoli
 				}
@@ -1029,26 +1102,8 @@ country_event = { #Fate of Georgia
 			remove_all_cores_and_claims_of_tags = yes
 			GEO = {
 				add_state_core = 231 #Sakartvelo
+				add_state_core = 585 #Batumi
 				add_state_core = 1080 #Abkhazia
-				if = {
-					limit = { has_country_flag = was_puppeted }
-					kill_country_leader = yes
-				}
-				if = {
-					limit = {
-						OR = {
-							has_country_leader = { name = "Ioakhim I" ruling_only = yes }
-							has_country_leader = { name = "Giorgi IX" ruling_only = yes }
-						}
-					}
-					kill_ideology_leader = national_populist
-					kill_ideology_leader = paternal_autocrat
-					kill_ideology_leader = authoritarian_democrat
-					kill_ideology_leader = social_conservative
-					kill_ideology_leader = market_liberal
-					kill_ideology_leader = social_liberal
-					kill_ideology_leader = social_democrat
-				}
 				remove_ideas = {
 					GEO_treaty_of_poti_idea
 					GEO_treaty_of_poti_idea2
@@ -1071,7 +1126,7 @@ country_event = { #Fate of Georgia
 				is_controlled_by = owner
 				is_claim_or_core_of_ROOT = no
 			}
-			990 = { #Baku
+			229 = { #Azerbaijan
 				is_owned_by_ROOT_or_subject = yes
 				is_controlled_by = owner
 				is_claim_or_core_of_ROOT = no
@@ -1085,7 +1140,6 @@ country_event = { #Fate of Georgia
 				add_state_core = 229
 				add_state_core = 230
 				add_state_core = 585
-				add_state_core = 990
 				add_state_core = 998
 				add_state_core = 1000
 				add_state_core = 1001
@@ -1126,6 +1180,14 @@ country_event = { #Fate of Georgia
 				factor = 0
 				has_completed_focus = RUS_Expansionism
 			}
+			modifier = {
+				factor = 0
+				has_country_flag = RUS_will_annex_caucasus
+			}
+		}
+		if = {
+			limit = { tag = RUS }
+			set_country_flag = RUS_will_liberate_caucasus
 		}
 		set_temp_variable = { tag_to_release = GEO }
 		release_targeted_tag = yes
@@ -1135,12 +1197,12 @@ country_event = { #Fate of Georgia
 				var:tag_to_release = {
 					meta_effect = {
 						text = {
-							create_country_leader = {
-								name = "Ioakhim I"
-								desc = "POLITICS_JOACHIM_VON_PREUSSEN_DESC"
-								picture = "gfx/leaders/GEO/Portrait_GEO_Prince_Joachim.png"
-								expire = "1965.1.1"
-								ideology = [OVERLORD_IDEOLOGY]
+							add_country_leader_role = {
+								character = GEO_king_ioakhim
+								country_leader = {
+									ideology = [OVERLORD_IDEOLOGY]
+								}
+								promote_leader = yes
 							}
 						}
 						OVERLORD_IDEOLOGY = "[ROOT.GetRulingIdeologySubtype]"
@@ -1152,12 +1214,12 @@ country_event = { #Fate of Georgia
 				var:tag_to_release = {
 					meta_effect = {
 						text = {
-							create_country_leader = {
-								name = "Giorgi IX"
-								desc = "POLITICS_GIORGI_BAGRATION_DESC"
-								picture = "gfx/leaders/GEO/Portrait_GEO_George_Bagriaton_Mukhraneli.png"
-								expire = "1965.1.1"
-								ideology = [OVERLORD_IDEOLOGY]
+							add_country_leader_role = {
+								character = GEO_king_giorgi
+								country_leader = {
+									ideology = [OVERLORD_IDEOLOGY]
+								}
+								promote_leader = yes
 							}
 						}
 						OVERLORD_IDEOLOGY = "[ROOT.GetRulingIdeologySubtype]"
@@ -1179,6 +1241,14 @@ country_event = { #Fate of Georgia
 				factor = 0
 				has_completed_focus = RUS_Expansionism
 			}
+			modifier = {
+				factor = 0
+				has_country_flag = RUS_will_annex_caucasus
+			}
+		}
+		if = {
+			limit = { tag = RUS }
+			set_country_flag = RUS_will_liberate_caucasus
 		}
 		set_temp_variable = { tag_to_release = GEO }
 		release_targeted_tag = yes
@@ -1191,6 +1261,10 @@ country_event = { #Fate of Georgia
 		}
 		ai_chance = {
 			base = 50
+			modifier = {
+				factor = 0
+				has_country_flag = RUS_will_liberate_caucasus
+			}
 		}
 		every_state = {
 			limit = {
@@ -1207,6 +1281,7 @@ country_event = { #Fate of Georgia
 			}
 			add_claim_by = ROOT
 		}
+		set_country_flag = RUS_will_annex_caucasus
 		add_political_power = -25
 		add_to_array = { RUS_integration_array = GEO }
 		recheck_annexations = yes
@@ -1236,9 +1311,9 @@ country_event = { #Fate of Georgia
 	option = { #occupation
 		name = annex.occupation
 		trigger = {
-			is_ai = no
 			is_russian_tag = no
 		}
+		ai_chance = { base = 0 }
 		set_country_flag = GEO_CONQ
 		occupy_medium_country = yes
 	}
@@ -1264,6 +1339,14 @@ country_event = { #Fate of Azerbaijan
 				factor = 0
 				has_completed_focus = RUS_Expansionism
 			}
+			modifier = {
+				factor = 0
+				has_country_flag = RUS_will_annex_caucasus
+			}
+		}
+		if = {
+			limit = { tag = RUS }
+			set_country_flag = RUS_will_liberate_caucasus
 		}
 		set_temp_variable = { tag_to_release = AZR }
 		every_owned_state = {
@@ -1275,7 +1358,7 @@ country_event = { #Fate of Azerbaijan
 					230 = { is_valid_annexation_state = no } #Yerevan
 				}
 			}
-			var:tag_to_release = { transfer_state = PREV }
+			transfer_state_to = var:tag_to_release
 		}
 		puppet_released_tag = yes
 	}
@@ -1287,6 +1370,10 @@ country_event = { #Fate of Azerbaijan
 		}
 		ai_chance = {
 			base = 50
+			modifier = {
+				factor = 0
+				has_country_flag = RUS_will_liberate_caucasus
+			}
 		}
 		every_state = {
 			limit = {
@@ -1303,6 +1390,7 @@ country_event = { #Fate of Azerbaijan
 			}
 			add_claim_by = ROOT
 		}
+		set_country_flag = RUS_will_annex_caucasus
 		add_political_power = -20
 		add_to_array = { RUS_integration_array = AZR }
 		recheck_annexations = yes
@@ -1312,7 +1400,7 @@ country_event = { #Fate of Azerbaijan
 		name = annex.integration
 		trigger = {
 			OR = {
-				tag = TUR
+				tag = OTT
 				tag = PER
 			}
 		}
@@ -1321,7 +1409,6 @@ country_event = { #Fate of Azerbaijan
 		}
 		set_country_flag = AZR_CONQ
 		add_state_claim = 229
-		add_state_claim = 990
 		if = {
 			limit = {
 				tag = PER
@@ -1329,18 +1416,11 @@ country_event = { #Fate of Azerbaijan
 			}
 			if = {
 				limit = { owns_state = 998 }
-				ARM = { transfer_state = 998 }
+				998 = { transfer_state_to = ARM }
 			}
-			ARM = {
-				every_owned_state = {
-					limit = {
-						OR = {
-							state = 229
-							state = 990
-						}
-					}
-					ROOT = { transfer_state = PREV }
-				}
+			if = {
+				limit = { ARM = { owns_state = 229 } }
+				229 = { transfer_state_to = ROOT }
 			}
 		}
 		else = {
@@ -1373,10 +1453,13 @@ country_event = { #Fate of Azerbaijan
 	option = { #occupy
 		name = annex.occupation
 		trigger = {
-			is_ai = no
 			is_russian_tag = no
-			NOT = { tag = PER }
+			NOT = {
+				tag = OTT
+				tag = PER
+			}
 		}
+		ai_chance = { base = 0 }
 		occupy_small_country = yes
 		set_country_flag = AZR_CONQ
 	}
@@ -1448,12 +1531,12 @@ country_event = { #Fate of Karabakh
 	option = { #occupy
 		name = annex.occupation
 		trigger = {
-			is_ai = no
 			NOT = {
 				tag = ARM
 				tag = AZR
 			}
 		}
+		ai_chance = { base = 0 }
 		occupy_small_country = yes
 		set_country_flag = KARABAKH_CONQ
 	}
@@ -1483,6 +1566,14 @@ country_event = { #Fate of Armenia
 				factor = 0
 				has_completed_focus = RUS_Expansionism
 			}
+			modifier = {
+				factor = 0
+				has_country_flag = RUS_will_annex_caucasus
+			}
+		}
+		if = {
+			limit = { tag = RUS }
+			set_country_flag = RUS_will_liberate_caucasus
 		}
 		set_temp_variable = { tag_to_release = ARM }
 		every_owned_state = {
@@ -1491,11 +1582,11 @@ country_event = { #Fate of Armenia
 				is_claim_or_core_of_ROOT = no
 				if = {
 					limit = { state = 998 } #Highland Karabakh
-					990 = { is_valid_annexation_state = no } #Baku
+					229 = { is_valid_annexation_state = no } #Azerbaijan
 					AZR = { ROOT_can_grant_land = no }
 				}
 			}
-			var:tag_to_release = { transfer_state = PREV }
+			transfer_state_to = var:tag_to_release
 		}
 		puppet_released_tag = yes
 	}
@@ -1507,6 +1598,10 @@ country_event = { #Fate of Armenia
 		}
 		ai_chance = {
 			base = 50
+			modifier = {
+				factor = 0
+				has_country_flag = RUS_will_liberate_caucasus
+			}
 		}
 		every_state = {
 			limit = {
@@ -1523,6 +1618,7 @@ country_event = { #Fate of Armenia
 			}
 			add_claim_by = ROOT
 		}
+		set_country_flag = RUS_will_annex_caucasus
 		add_political_power = -20
 		add_to_array = { RUS_integration_array = ARM }
 		recheck_annexations = yes
@@ -1603,10 +1699,10 @@ country_event = { #Fate of Armenia
 	option = { #occupy
 		name = annex.occupation
 		trigger = {
-			is_ai = no
 			is_russian_tag = no
 			NOT = { tag = PER }
 		}
+		ai_chance = { base = 0 }
 		occupy_small_country = yes
 		set_country_flag = ARM_CONQ
 	}
@@ -1718,59 +1814,17 @@ country_event = { #Fate of Lazistan
 
 	is_triggered_only = yes
 
-	option = {
-		name = annex.4015.a #give it to Armenia
-		trigger = {
-			NOT = {
-				tag = ARM
-				tag = GEO
-				tag = TUR
-			}
-			ARM = {
-				owns_state = 1000 #Kars
-				ROOT_can_grant_land = yes
-			}
-		}
-		ai_chance = {
-			base = 100
-			modifier = {
-				factor = 0
-				if = {
-					limit = { is_russian_tag = yes }
-					is_ally_with = GEO
-				}
-				else = {
-					OR = {
-						is_ally_with = GEO
-						is_ally_with = TUR
-					}
-				}
-				NOT = { is_ally_with = ARM }
-			}
-			modifier = {
-				factor = 0
-				has_completed_focus = RUS_Expansionism
-				OR = {
-					owns_state = 230 #Yerevan
-					owns_state = 231 #Georgia
-				}
-			}
-		}
-		set_temp_variable = { tag_to_release = ARM }
-		1001 = { transfer_state_and_add_claim = yes }
-	}
 
 	option = {
-		name = annex.4015.b #give it to Georgia
+		name = annex.4015.a #give it to Georgia
 		trigger = {
 			NOT = {
-				tag = ARM
 				tag = GEO
 				tag = TUR
 			}
 			GEO = {
-				ROOT_can_grant_land = yes
 				owns_state = 585 #Batumi
+				ROOT_can_grant_land = yes
 			}
 		}
 		ai_chance = {
@@ -1779,23 +1833,13 @@ country_event = { #Fate of Lazistan
 				factor = 0
 				if = {
 					limit = { is_russian_tag = yes }
-					is_ally_with = ARM
 				}
 				else = {
 					OR = {
-						is_ally_with = ARM
 						is_ally_with = TUR
 					}
 				}
 				NOT = { is_ally_with = GEO }
-			}
-			modifier = {
-				factor = 0
-				has_completed_focus = RUS_Expansionism
-				OR = {
-					owns_state = 230 #Yerevan
-					owns_state = 231 #Georgia
-				}
 			}
 		}
 		set_temp_variable = { tag_to_release = GEO }
@@ -1803,7 +1847,7 @@ country_event = { #Fate of Lazistan
 	}
 
 	option = {
-		name = annex.4015.c #give it to Turkey
+		name = annex.4015.b #give it to Turkey
 		trigger = {
 			NOT = {
 				tag = ARM
@@ -1817,7 +1861,6 @@ country_event = { #Fate of Lazistan
 			modifier = {
 				factor = 0
 				OR = {
-					is_ally_with = ARM
 					is_ally_with = GEO
 				}
 				NOT = { is_ally_with = TUR }
@@ -1826,10 +1869,7 @@ country_event = { #Fate of Lazistan
 				factor = 0
 				is_russian_tag = yes
 				OR = {
-					ARM = { ROOT_can_grant_land = yes }
 					GEO = { ROOT_can_grant_land = yes }
-					owns_state = 230 #Yerevan
-					owns_state = 231 #Georgia
 				}
 			}
 		}
@@ -1843,16 +1883,10 @@ country_event = { #Fate of Lazistan
 			OR = {
 				tag = TUR
 				AND = {
-					tag = ARM
-					owns_state = 1000 #Kars
-				}
-				AND = {
-					tag = GEO
 					owns_state = 585 #Batumi
-				}
-				AND = {
-					is_russian_tag = yes
-					owns_state = 585 #Batumi
+					OR = {
+						tag = GEO
+					}
 				}
 			}
 		}
@@ -1869,16 +1903,11 @@ country_event = { #Fate of Lazistan
 			NOT = {
 				tag = TUR
 				AND = {
-					tag = ARM
-					owns_state = 1000 #Kars
-				}
-				AND = {
-					tag = GEO
 					owns_state = 585 #Batumi
-				}
-				AND = {
-					is_russian_tag = yes
-					owns_state = 585 #Batumi
+					OR = {
+						tag = ARM
+						tag = GEO
+					}
 				}
 			}
 		}
@@ -1944,6 +1973,13 @@ country_event = { #Fate of Arabia
 		}
 		else = {
 			set_temp_variable = { tag_to_release = JBS }
+			if = {
+				limit = { tag = OTT }
+				JBS = { JBS_restore_rashids = yes }
+			}
+			else = {
+				JBS = { JBS_remove_rashids = yes }
+			}
 		}
 		every_state = {
 			limit = {
@@ -1980,12 +2016,6 @@ country_event = { #Fate of Arabia
 						authoritarian_democrat = 46
 						paternal_autocrat = 39
 						national_populist = 15
-					}
-					OTT = {
-						set_autonomy = {
-							target = PREV
-							autonomy_state = kr_ottoman_emirate
-						}
 					}
 				}
 			}
@@ -2046,6 +2076,45 @@ country_event = { #Fate of the Trucial States
 	picture = GFX_report_event_generic_conference2
 
 	is_triggered_only = yes
+
+	immediate = {
+		hidden_effect = {
+			TRU = {
+				if = {
+					limit = { NOT = { has_character = TRU_shakhbut_bin_sultan_al_nahyan } }
+					event_target:TRU_shakhbut_bin_sultan_al_nahyan_target = {
+						set_nationality = TRU
+						promote_leader = yes
+					}
+					if = {
+						limit = { has_character = TRU_shakhbut_bin_sultan_al_nahyan }
+						TRU_shakhbut_bin_sultan_al_nahyan = {
+							if = {
+								limit = { has_ideology = social_conservative_subtype }
+								promote_character = { ideology = social_conservative_subtype }
+							}
+							else = {
+								add_country_leader_role = {
+									country_leader = { ideology = social_conservative_subtype }
+									promote_leader = yes
+								}
+							}
+							if = {
+								limit = { has_ideology = authoritarian_democrat_subtype }
+								promote_character = { ideology = authoritarian_democrat_subtype }
+							}
+							else = {
+								add_country_leader_role = {
+									country_leader = { ideology = authoritarian_democrat_subtype }
+									promote_leader = yes
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
 	option = { #liberate
 		name = annex.4017.a
@@ -2445,6 +2514,31 @@ country_event = { #Fate of Iraq
 	picture = GFX_report_event_generic_conference2
 
 	is_triggered_only = yes
+	immediate = {
+		hidden_effect = {
+			TUR = {
+				if = {
+					limit = { has_character = IRQ_yasin_al_hashimi }
+					event_target:IRQ_Yasin_Al_Hashimi = {
+						set_nationality = IRQ
+						promote_character = yes
+						promote_leader = yes
+						remove_trait = { trait = recently_promoted }
+					}
+				}
+			}
+			IRQ = { #removing IRQ's Saadun monarchy
+				if = {
+					limit = { has_character = IRQ_ajami_al_saadun }
+					set_party_name = {
+						ideology = paternal_autocrat
+						name = IRQ_paternal_autocrat_party
+						long_name = IRQ_paternal_autocrat_party_long
+					}
+				}
+			}
+		}
+	}
 
 	option = { #release Iraq
 		name = annex.4019.a
@@ -2606,7 +2700,7 @@ country_event = { #Fate of Kurdistan
 		}
 		every_owned_state = {
 			limit = { is_core_of = KUR }
-			KUR = { transfer_state = PREV }
+			transfer_state_to = KUR
 		}
 		recheck_annexations = yes
 	}
@@ -2968,7 +3062,7 @@ country_event = { #Fate of Persia
 				is_claim_or_core_of_ROOT = no
 				NOT = { is_core_of = KUR }
 			}
-			var:tag_to_release = { transfer_state = PREV }
+			transfer_state_to = var:tag_to_release
 		}
 		puppet_released_tag_nocosmetic = yes
 		hidden_effect = {
@@ -3015,7 +3109,7 @@ country_event = { #Fate of Persia
 				is_claim_or_core_of_ROOT = no
 				NOT = { is_core_of = KUR }
 			}
-			var:tag_to_release = { transfer_state = PREV }
+			transfer_state_to = var:tag_to_release
 		}
 		puppet_released_tag_nocosmetic = yes
 		hidden_effect = {
@@ -3054,7 +3148,7 @@ country_event = { #Fate of Persia
 				is_claim_or_core_of_ROOT = no
 				NOT = { is_core_of = KUR }
 			}
-			var:tag_to_release = { transfer_state = PREV }
+			transfer_state_to = var:tag_to_release
 		}
 		puppet_released_tag_nocosmetic = yes
 		hidden_effect = {
@@ -3152,7 +3246,7 @@ country_event = { #Fate of Yemen
 	immediate = {
 		hidden_effect = {
 			if = {
-				limit = { tag = TUR }
+				limit = { tag = OTT }
 				add_state_claim = 659 #Aden
 				add_state_claim = 752 #Hadhramaut
 			}
@@ -3171,7 +3265,7 @@ country_event = { #Fate of Yemen
 					state = 982 #Asir
 				}
 			}
-			var:tag_to_release = { transfer_state = PREV }
+			transfer_state_to = var:tag_to_release
 		}
 		puppet_released_tag = yes
 
@@ -3219,7 +3313,7 @@ country_event = { #Fate of Asir
 		name = annex.4024.a
 		trigger = {
 			is_arabian_tag = no
-			NOT = { tag = TUR }
+			NOT = { tag = OTT }
 			YEM = { ROOT_can_grant_land = yes }
 		}
 		ai_chance = {
@@ -3250,7 +3344,7 @@ country_event = { #Fate of Asir
 		name = annex.4024.b
 		trigger = {
 			is_arabian_tag = no
-			NOT = { tag = TUR }
+			NOT = { tag = OTT }
 			var:292.owner = {
 				is_arabian_tag = yes
 				ROOT_can_grant_land = yes
@@ -3281,7 +3375,7 @@ country_event = { #Fate of Asir
 		name = annex.integration
 		trigger = {
 			OR = {
-				tag = TUR
+				tag = OTT
 				is_arabian_tag = yes
 			}
 		}
@@ -3292,10 +3386,8 @@ country_event = { #Fate of Asir
 		if = {
 			limit = { owns_state = 981 }
 			if = {
-				limit = { tag = TUR }
-				hidden_effect = {
-					var:678.owner = { transfer_state = 981 } #Rub al Khali
-				}
+				limit = { tag = OTT }
+				var:678.owner = { transfer_state = 981 } #Rub al Khali
 			}
 			else = {
 				add_state_claim = 981
@@ -3308,7 +3400,7 @@ country_event = { #Fate of Asir
 		name = annex.occupation
 		trigger = {
 			is_arabian_tag = no
-			NOT = { tag = TUR }
+			NOT = { tag = OTT }
 		}
 		ai_chance = { base = 0 }
 		occupy_small_country = yes

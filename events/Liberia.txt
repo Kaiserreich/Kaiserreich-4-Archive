@@ -261,7 +261,6 @@ country_event = {
 				has_game_rule = { rule = LIB_society option = LIB_SOCIETY_TOTALIST }
 			}
 		}
-		set_country_flag = LIB_societies_legalized
 		add_stability = -0.03
 		add_political_power = 50
 		hidden_effect = {
@@ -277,7 +276,6 @@ country_event = {
 				has_game_rule = { rule = LIB_society option = LIB_SOCIETY_FREEMASON }
 			}
 		}
-		set_country_flag = LIB_societies_banned
 		add_stability = 0.03
 		add_political_power = -50
 		hidden_effect = {
@@ -594,7 +592,7 @@ country_event = {
 	}
 }
 
-# Liberia demands Sierra Leone from National France
+# Liberia demands Sierra Leone
 country_event = {
 	id = lib.51
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.51 FROM = [From.GetName]" }
@@ -609,23 +607,27 @@ country_event = {
 		ai_chance = {
 			base = 25
 			modifier = {
+				factor = 0
+				tag = SIE
+			}
+			modifier = {
 				factor = 3
 				strength_ratio = {
-					tag = LIB
+					tag = FROM
 					ratio < 1.0
 				}
 			}
 			modifier = {
 				factor = 0.5
 				strength_ratio = {
-					tag = LIB
+					tag = FROM
 					ratio > 2.0
 				}
 			}
 			modifier = {
 				factor = 0.5
 				strength_ratio = {
-					tag = LIB
+					tag = FROM
 					ratio > 3.0
 				}
 			}
@@ -639,17 +641,31 @@ country_event = {
 				surrender_progress > 0.20
 			}
 		}
-		add_opinion_modifier = {
-			target = FROM
-			modifier = KR_outraged
-		}
-		add_political_power = -50
-		LIB = {
-			country_event = {
-				id = lib.53
-				days = 1
+		if = {
+			limit = { tag = SIE }
+			custom_effect_tooltip = GAME_OVER_TT
+			effect_tooltip = {
+				FROM = { annex_country = { target = ROOT } }
 			}
 		}
+		else = {
+			add_opinion_modifier = {
+				target = FROM
+				modifier = KR_outraged
+			}
+			add_political_power = -50
+			effect_tooltip = {
+				if = {
+					limit = { has_subject = IVO }
+					FROM = { annex_country = { target = IVO } }
+				}
+				else_if = {
+					limit = { 700 = { is_owned_by_ROOT_or_subject = yes } }
+					FROM = { transfer_state = 700 }
+				}
+			}
+		}
+		FROM = { country_event = { id = lib.53 hours = 8 } }
 	}
 	option = { #Absolutely not!
 		name = lib.51.b
@@ -660,16 +676,11 @@ country_event = {
 			target = FROM
 			modifier = KR_outraged
 		}
-		LIB = {
-			country_event = {
-				id = lib.52
-				days = 1
-			}
-		}
+		FROM = { country_event = { id = lib.52 hours = 8 } }
 	}
 }
 
-# National France has refused the demand
+# Sierra Leone has refused the demand
 country_event = {
 	id = lib.52
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.52 FROM = [From.GetName]" }
@@ -681,19 +692,14 @@ country_event = {
 
 	option = { #war
 		name = lib.52.a
-		ai_chance = {
-			base = 75
-		}
-		declare_war_on = {
+		create_wargoal = {
 			target = FROM
 			type = annex_everything
 		}
 	}
 	option = { #get cucked
 		name = lib.52.b
-		ai_chance = {
-			base = 25
-		}
+		ai_chance = { base = 0 }
 		add_political_power = -50
 	}
 }
@@ -710,7 +716,15 @@ country_event = {
 
 	option = {
 		name = lib.53.a
-		transfer_state = 700
+		effect_tooltip = {
+			if = {
+				limit = { FROM = { has_subject = SIE } }
+				annex_country = { target = SIE }
+			}
+			else = {
+				700 = { transfer_state_to = ROOT }
+			}
+		}
 	}
 }
 
@@ -726,18 +740,35 @@ country_event = {
 	trigger = {
 		tag = LIB
 		has_war_with = NFA
-		700 = {
-			is_owned_by = NFA
-			is_controlled_by = ROOT
-		}
-		controls_state = 700
 		is_valid_peace_target = yes
-		surrender_progress < 0.1
-		NFA = { surrender_progress > 0.2 }
-	}
-
-	mean_time_to_happen = {
-		days = 30
+		NFA = { surrender_progress > 0.25 }
+		count_triggers = {
+			amount = 3
+			272 = { #Senegal
+				is_owned_by = NFA
+				is_controlled_by = ROOT
+			}
+			556 = { #French Sudan
+				is_owned_by = NFA
+				is_controlled_by = ROOT
+			}
+			700 = { #Sierra Leone
+				is_owned_by = NFA
+				is_controlled_by = ROOT
+			}
+			806 = { #Guinea
+				is_owned_by = NFA
+				is_controlled_by = ROOT
+			}
+			807 = { #Ivory Coast
+				is_owned_by = NFA
+				is_controlled_by = ROOT
+			}
+			808 = { #Upper Volta
+				is_owned_by = NFA
+				is_controlled_by = ROOT
+			}
+		}
 	}
 
 	option = {
@@ -746,7 +777,7 @@ country_event = {
 	}
 	option = {
 		name = lib.54.b #We are not ready for peace yet
-		trigger = { is_ai = no }
+		ai_chance = { base = 0 }
 		add_political_power = -50
 		add_stability = -0.05
 	}
@@ -765,31 +796,30 @@ country_event = {
 	option = {
 		name = lib.55.a #Let them have that backwater countryside
 		add_political_power = -100
-		LIB = {
-			transfer_state = 700
-			if = {
-				limit = {
-					controls_state = 806 #Guinea
-					ROOT = { owns_state = 806 }
+		every_owned_state = {
+			limit = {
+				OR = {
+					state = 272 #Senegal
+					state = 296 #Portuguese Guinea
+					state = 556 #French Sudan
+					state = 700 #Sierra Leone
+					state = 806 #Guinea
+					state = 807 #Ivory Coast
+					state = 808 #Upper Volta
+					state = 834 #Gambia
+					state = 963 #Akanland
 				}
-				transfer_state = 806
 			}
-			white_peace_with_ROOT = yes
+			transfer_state_to = FROM
 		}
+		FROM = { white_peace_with_ROOT = yes }
 	}
 
 	option = {
 		name = lib.55.b #Never! French Honour is on the line!
-		trigger = {
-			is_ai = no
-		}
+		ai_chance = { base = 0 }
 		add_political_power = 25
-		LIB = {
-			country_event = {
-				id = lib.56
-				days = 1
-			}
-		}
+		FROM = { country_event = { id = lib.56 days = 1 } }
 	}
 }
 
@@ -823,6 +853,10 @@ country_event = {
 		ai_chance = {
 			base = 25
 			modifier = {
+				factor = 0
+				tag = IVO
+			}
+			modifier = {
 				factor = 3
 				strength_ratio = {
 					tag = FROM
@@ -853,31 +887,42 @@ country_event = {
 				surrender_progress > 0.20
 			}
 		}
-		add_opinion_modifier = {
-			target = FROM
-			modifier = KR_outraged
-		}
-		add_political_power = -50
 		if = {
-			limit = { 807 = { is_owned_by_ROOT_or_subject = yes } }
-			FROM = { transfer_state = 807 }
+			limit = { tag = IVO }
+			custom_effect_tooltip = GAME_OVER_TT
+			effect_tooltip = {
+				FROM = { annex_country = { target = ROOT } }
+			}
 		}
-		if = {
-			limit = { 963 = { is_owned_by_ROOT_or_subject = yes } }
-			FROM = { transfer_state = 963 }
+		else = {
+			add_opinion_modifier = {
+				target = FROM
+				modifier = KR_outraged
+			}
+			add_political_power = -50
+			effect_tooltip = {
+				if = {
+					limit = { has_subject = IVO }
+					FROM = { annex_country = { target = IVO } }
+				}
+				else_if = {
+					limit = { 807 = { is_owned_by_ROOT_or_subject = yes } }
+					FROM = { transfer_state = 807 }
+					if = {
+						limit = { 963 = { is_owned_by_ROOT_or_subject = yes } }
+						FROM = { transfer_state = 963 }
+					}
+				}
+			}
 		}
-		FROM = { country_event = lib.59 }
+		FROM = { country_event = { id = lib.59 hours = 8 } }
 	}
 	option = { #How dare they! We will push them back across the border and beyond!
 		name = lib.57.b
 		ai_chance = {
 			base = 75
 		}
-		declare_war_on = {
-			target = FROM
-			type = annex_everything
-		}
-		FROM = { country_event = lib.58 }
+		FROM = { country_event = { id = lib.58 hours = 8 } }
 	}
 }
 
@@ -893,6 +938,14 @@ country_event = {
 
 	option = {
 		name = lib.58.a
+		create_wargoal = {
+			target = FROM
+			type = annex_everything
+		}
+	}
+	option = {
+		name = lib.58.b
+		ai_chance = { base = 0 }
 		add_political_power = -50
 	}
 }
@@ -909,112 +962,34 @@ country_event = {
 
 	option = {
 		name = lib.53.a
-		effect_tooltip = {
-			transfer_state = 807
-			transfer_state = 963
+		if = {
+			limit = { FROM = { has_subject = IVO } }
+			annex_country = { target = IVO }
 		}
-	}
-}
-
-# Liberia controls Ivory Coast during war with Mittelafrika
-country_event = {
-	id = lib.60
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.60 FROM = [From.GetName]" }
-	title = lib.60.t
-	desc = lib.60.d
-	picture = GFX_report_event_USA_congress
-
-	fire_only_once = yes
-
-	trigger = {
-		tag = LIB
-		has_war_with = MAF
-		OR = {
+		else = {
 			807 = {
-				is_owned_by = MAF
-				is_controlled_by = ROOT
+				if = {
+					limit = {
+						OR = {
+							is_owned_by = FROM
+							owner = { is_subject_of = FROM }
+						}
+					}
+					transfer_state_to = ROOT
+				}
 			}
 			963 = {
-				is_owned_by = MAF
-				is_controlled_by = ROOT
-			}
-		}
-		is_valid_peace_target = yes
-		surrender_progress < 0.1
-		MAF = { surrender_progress > 0.2 }
-	}
-
-	mean_time_to_happen = {
-		days = 30
-	}
-
-	option = {
-		name = lib.60.a #Send MAF the peace proposal
-		MAF = { country_event = lib.61 }
-	}
-	option = {
-		name = lib.60.b #We are not ready for peace yet
-		trigger = { is_ai = no }
-		add_political_power = -50
-		add_stability = -0.05
-	}
-}
-
-# Mittelafrika decides whether to accept the Liberian peace offer
-country_event = {
-	id = lib.61
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.61 FROM = [From.GetName]" }
-	title = lib.55.t
-	desc = lib.61.d
-	picture = GFX_report_event_USA_congress
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.61.a #Let them have that backwater countryside
-		add_political_power = -100
-		every_state = {
-			limit = {
-				OR = {
-					state = 274 #Gold Coast
-					state = 807 #Ivory Coast
-					state = 877 #Togo
-					state = 963 #Akanland
+				if = {
+					limit = {
+						OR = {
+							is_owned_by = FROM
+							owner = { is_subject_of = FROM }
+						}
+					}
+					transfer_state_to = ROOT
 				}
-				is_owned_by_ROOT_or_ally = yes
-			}
-			FROM = { transfer_state = PREV }
-		}
-		FROM = { white_peace_with_ROOT = yes }
-	}
-
-	option = {
-		name = lib.61.b #Never! German Honour is on the line!
-		trigger = {
-			is_ai = no
-		}
-		add_political_power = 25
-		FROM = {
-			country_event = {
-				id = lib.62
-				days = 1
 			}
 		}
-	}
-}
-
-# Mittelafrika has refused the peace deal
-country_event = {
-	id = lib.62
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.62 FROM = [From.GetName]" }
-	title = lib.56.t
-	desc = lib.56.d
-	picture = GFX_report_event_USA_congress
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.56.a
 	}
 }
 
@@ -1427,6 +1402,13 @@ country_event = {
 		}
 		add_political_power = 50
 		add_to_faction = FROM
+		hidden_effect = {
+			LIB = {
+				activate_targeted_decision = { target = INT decision = LIB_request_rifles_from_ally }
+				activate_targeted_decision = { target = INT decision = LIB_request_artillery_from_ally }
+				activate_targeted_decision = { target = INT decision = LIB_request_sup_equip_from_ally }
+			}
+		}
 	}
 	option = {
 		name = lib.91.b #We have no need of them
@@ -1629,689 +1611,3 @@ country_event = {
 	}
 
 }
-
-country_event = {
-	id = lib.941 #hidden event to fire for FROM of decision to be FROM of lib.94
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.941 FROM = [From.GetName]" }
-	title = lib.941.t
-	desc = lib.941.desc
-
-	hidden = yes
-	is_triggered_only = yes
-
-	option = {
-		name = lib.941.a
-		FROM = { country_event = lib.94 } #asking for equipment
-	}
-}
-
-country_event = {
-	id = lib.94 #asking for equipment event- rifles
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.94 FROM = [From.GetName]" }
-	title = lib.94.t
-	desc = lib.94.desc
-	picture = GFX_report_event_generic_sign_treaty1
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.94.a
-		FROM = { country_event = lib.95 } #rifles/infantry equipment
-	}
-	option = {
-		name = lib.94.b
-		FROM = { country_event = lib.96 } #airframes
-	}
-	option = {
-		name = lib.94.c
-		trigger = {
-			NOT = { has_active_mission = LIB_dockyard_mission }
-			FROM = {
-				num_of_naval_factories > 3 #mostly here to avoid any possible edge cases with American tags without enough dockyards
-			}
-		}
-		FROM = { country_event = lib.97 } #Dockyards
-	}
-	option = {
-		name = lib.94.d
-		trigger = {
-			NOT = { has_active_mission = LIB_industry_mission }
-		}
-		FROM = { country_event = lib.98 } #industrial investment
-	}
-}
-
-country_event = {
-	id = lib.95 #asking for equipment event- rifles
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.95 FROM = [From.GetName]" }
-	title = lib.95.t
-	desc = {
-		text = lib.95.desc
-		trigger = {
-			NOT = {
-				OR = {
-					tag = USA
-					tag = PSA
-					tag = TEX
-					tag = CSA
-				}
-			}
-		}
-	}
-	desc = {
-		text = lib.95.descUSA
-		trigger = {
-			OR = {
-				tag = USA
-				tag = PSA
-				tag = TEX
-				tag = CSA
-			}
-		}
-	}
-	picture = GFX_report_event_USA_guy_with_helmet
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.95.a
-		trigger = {
-			has_equipment = { infantry_equipment > 999 }
-		}
-		ai_chance = {
-			base = 1
-			modifier = {
-				factor = 30
-				LIB = { is_ai = no }
-			}
-		}
-		send_equipment = {
-			target = LIB
-			type = infantry_equipment
-			amount = 1000
-		}
-		if = {
-			limit = { has_idea = LIB_buying_equipment }
-			modify_timed_idea = {
-				idea = LIB_buying_equipment
-				days = 60
-			}
-		}
-		else = {
-			add_timed_idea = {
-				idea = LIB_buying_equipment
-				days = 60
-			}
-		}
-		add_political_power = 5
-		FROM = { country_event = lib.951 }
-	}
-	option = {
-		name = lib.95.b
-		trigger = {
-			has_equipment = { infantry_equipment > 999 }
-			has_equipment = { support_equipment > 49 }
-			has_equipment = { artillery_equipment > 99 }
-		}
-		ai_chance = {
-			base = 1
-			modifier = {
-				factor = 90
-				LIB = { is_ai = no }
-			}
-		}
-		send_equipment = {
-			target = LIB
-			type = infantry_equipment
-			amount = 1000
-		}
-		send_equipment = {
-			target = LIB
-			type = support_equipment
-			amount = 50
-		}
-		send_equipment = {
-			target = LIB
-			type = artillery_equipment
-			amount = 100
-		}
-		if = {
-			limit = { has_idea = LIB_buying_equipment }
-			modify_timed_idea = {
-				idea = LIB_buying_equipment
-				days = 90
-			}
-		}
-		else = {
-			add_timed_idea = {
-				idea = LIB_buying_equipment
-				days = 90
-			}
-		}
-		add_political_power = 5
-		FROM = { country_event = lib.952 }
-	}
-	option = {
-		name = lib.95.c
-		if = {
-			limit = { has_equipment = { infantry_equipment < 1000 } }
-			custom_effect_tooltip = LIB_Not_Enough_Stuff
-		}
-		FROM = { country_event = lib.953 }
-	}
-}
-
-country_event = {
-	id = lib.951 #LIB got just rifles
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.951 FROM = [From.GetName]" }
-	title = lib.951.t
-	desc = lib.951.desc
-	picture = GFX_report_event_SAF_black_soldiers
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.951.a
-		effect_tooltip = {
-			add_equipment_to_stockpile = { type = infantry_equipment amount = 1000 producer = FROM }
-		}
-	}
-}
-
-country_event = {
-	id = lib.952 #LIB got both Rifles, Support equipment and artillery
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.952 FROM = [From.GetName]" }
-	title = lib.952.t
-	desc = lib.952.desc
-	picture = GFX_report_event_USA_artillery
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.952.a
-		effect_tooltip = {
-			add_equipment_to_stockpile = { type = infantry_equipment amount = 1000 producer = FROM }
-		}
-		effect_tooltip = {
-			add_equipment_to_stockpile = { type = artillery_equipment amount = 100 producer = FROM }
-		}
-		effect_tooltip = {
-			add_equipment_to_stockpile = { type = support_equipment amount = 1000 producer = FROM }
-		}
-	}
-}
-
-country_event = {
-	id = lib.953 #LIB got nothing
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.953 FROM = [From.GetName]" }
-	title = lib.953.t
-	desc = lib.953.desc
-	picture = GFX_report_event_SAF_crowd_1
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.953.a
-		hidden_effect = {
-			add_political_power = 250
-		}
-		custom_effect_tooltip = LIB_refund_on_fail_decision_TT
-	}
-	option = {
-		name = lib.953.b
-		trigger = {
-			is_ai = no
-		}
-		hidden_effect = {
-			FROM = {
-				country_event = { id = lib.941 } #if you are wondering why the scope change- its so I coould use FROM in event lib.94 and have it scope to FROM of this decision
-			}
-		}
-		effect_tooltip = {
-			country_event = lib.94
-		}
-	}
-}
-
-country_event = {
-	id = lib.96 #asking for equipment event- airwings
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.96 FROM = [From.GetName]" }
-	title = lib.96.t
-	desc = {
-		text = lib.96.desc
-		trigger = {
-			NOT = {
-				OR = {
-					tag = USA
-					tag = PSA
-					tag = TEX
-					tag = CSA
-				}
-			}
-		}
-	}
-	desc = {
-		text = lib.96.descUSA
-		trigger = {
-			OR = {
-				tag = USA
-				tag = PSA
-				tag = TEX
-				tag = CSA
-			}
-		}
-	}
-	picture = GFX_report_event_airplane_factory
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.96.a
-		trigger = {
-			has_equipment = { fighter_equipment > 24 }
-		}
-		ai_chance = {
-			base = 1
-			modifier = {
-				factor = 90
-				LIB = { is_ai = no }
-			}
-		}
-		send_equipment = {
-			target = LIB
-			type = fighter_equipment
-			amount = 25
-		}
-		if = {
-			limit = { has_idea = LIB_buying_equipment }
-			modify_timed_idea = {
-				idea = LIB_buying_equipment
-				days = 120
-			}
-		}
-		else = {
-			add_timed_idea = {
-				idea = LIB_buying_equipment
-				days = 120
-			}
-		}
-		add_political_power = 5
-		FROM = { country_event = lib.961 } #LIB got planes
-	}
-	option = {
-		name = lib.96.a
-		if = {
-			limit = { has_equipment = { fighter_equipment < 25 } }
-			custom_effect_tooltip = LIB_Not_Enough_Stuff
-		}
-		FROM = { country_event = lib.953 } #LIB did not get nothing
-	}
-}
-
-country_event = {
-	id = lib.961 #LIB got Planes event
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.961 FROM = [From.GetName]" }
-	title = lib.961.t
-	desc = {
-		text = lib.961.desc
-		trigger = {
-			FROM = {
-				NOT = {
-					OR = {
-						tag = USA
-						tag = PSA
-						tag = TEX
-						tag = CSA
-					}
-				}
-			}
-		}
-	}
-	desc = {
-		text = lib.961.descUSA
-		trigger = {
-			FROM = {
-				OR = {
-					tag = USA
-					tag = PSA
-					tag = TEX
-					tag = CSA
-				}
-			}
-		}
-	}
-	picture = GFX_report_event_USA_plane_formation
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.961.a
-		effect_tooltip = {
-			add_equipment_to_stockpile = { type = fighter_equipment_1 amount = 25 producer = FROM }
-		}
-	}
-}
-
-country_event = {
-	id = lib.97 #asking for dockyards
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.97 FROM = [From.GetName]" }
-	title = lib.97.t
-	desc = {
-		text = lib.97.desc
-		trigger = {
-			NOT = {
-				OR = {
-					tag = USA
-					tag = PSA
-					tag = TEX
-					tag = CSA
-				}
-			}
-		}
-	}
-	desc = {
-		text = lib.97.descUSA
-		trigger = {
-			OR = {
-				tag = USA
-				tag = PSA
-				tag = TEX
-				tag = CSA
-			}
-		}
-	}
-	picture = GFX_report_event_IRE_belfast_shipyards
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.97.a
-		ai_chance = {
-			base = 1
-			modifier = {
-				factor = 90
-				LIB = { is_ai = no }
-			}
-		}
-		hidden_effect = {
-			random_owned_state = {
-				limit = {
-					dockyard > 0
-				}
-				remove_building = {
-					type = dockyard
-					level = 1
-				}
-			}
-			random_owned_state = {
-				limit = {
-					dockyard > 0
-				}
-				remove_building = {
-					type = dockyard
-					level = 1
-				}
-			}
-			random_owned_state = {
-				limit = {
-					dockyard > 0
-				}
-				remove_building = {
-					type = dockyard
-					level = 1
-				}
-			}
-		}
-		if = {
-			limit = { has_idea = LIB_buying_equipment }
-			modify_timed_idea = {
-				idea = LIB_buying_equipment
-				days = 300
-			}
-		}
-		else = {
-			add_timed_idea = {
-				idea = LIB_buying_equipment
-				days = 300
-			}
-		}
-		add_political_power = 5
-		hidden_effect = {
-			country_event = { id = lib.972 days = 300 }
-		}
-		FROM = { country_event = lib.971 } #dockyards accepted
-	}
-	option = {
-		name = lib.97.b
-
-	}
-}
-
-country_event = {
-	id = lib.971 #granted dockyards
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.971 FROM = [From.GetName]" }
-	title = lib.971.t
-	desc = lib.971.desc
-	picture = GFX_report_event_IRE_belfast_shipyards
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.971.a
-		add_offsite_building = { type = dockyard level = 3 }
-		activate_mission = LIB_dockyard_mission
-	}
-}
-
-country_event = {
-	id = lib.972 #Dockyards retrun to FROM
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.972 FROM = [From.GetName]" }
-	title = lib.972.t
-	desc = lib.972.desc
-	picture = GFX_report_event_IRE_belfast_shipyards
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.972.a
-		hidden_effect = {
-			random_owned_state = {
-				limit = {
-					is_coastal = yes
-					free_building_slots = { building = dockyard size > 0 include_locked = yes }
-					is_metropolis_state = no
-				}
-				add_building_construction = {
-					type = dockyard
-					level = 1
-					instant_build = yes
-				}
-			}
-			random_owned_state = {
-				limit = {
-					is_coastal = yes
-					free_building_slots = { building = dockyard size > 0 include_locked = yes }
-					is_metropolis_state = no
-				}
-				add_building_construction = {
-					type = dockyard
-					level = 1
-					instant_build = yes
-				}
-			}
-			random_owned_state = {
-				limit = {
-					is_coastal = yes
-					free_building_slots = { building = dockyard size > 0 include_locked = yes }
-					is_metropolis_state = no
-				}
-				add_building_construction = {
-					type = dockyard
-					level = 1
-					instant_build = yes
-				}
-			}
-		}
-	}
-}
-
-country_event = {
-	id = lib.98 #asking for industry (FROM)
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.98 FROM = [From.GetName]" }
-	title = lib.98.t
-	desc = {
-		text = lib.98.desc
-		trigger = {
-			NOT = {
-				OR = {
-					tag = USA
-					tag = PSA
-					tag = TEX
-					tag = CSA
-				}
-			}
-		}
-	}
-	desc = {
-		text = lib.98.descUSA
-		trigger = {
-			OR = {
-				tag = USA
-				tag = PSA
-				tag = TEX
-				tag = CSA
-			}
-		}
-	}
-	picture = GFX_report_event_IRE_building_capital
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.98.a
-		ai_chance = {
-			base = 1
-			modifier = {
-				factor = 90
-				LIB = { is_ai = no }
-			}
-		}
-		hidden_effect = {
-			random_owned_state = {
-				limit = {
-					industrial_complex > 0
-				}
-				remove_building = {
-					type = industrial_complex
-					level = 1
-				}
-			}
-			random_owned_state = {
-				limit = {
-					industrial_complex > 0
-				}
-				remove_building = {
-					type = industrial_complex
-					level = 1
-				}
-			}
-			random_owned_state = {
-				limit = {
-					industrial_complex > 0
-				}
-				remove_building = {
-					type = industrial_complex
-					level = 1
-				}
-			}
-		}
-		if = {
-			limit = { has_idea = LIB_buying_equipment }
-			modify_timed_idea = {
-				idea = LIB_buying_equipment
-				days = 300
-			}
-		}
-		else = {
-			add_timed_idea = {
-				idea = LIB_buying_equipment
-				days = 300
-			}
-		}
-		add_political_power = 5
-		hidden_effect = {
-			country_event = { id = lib.982 days = 300 }
-		}
-		FROM = { country_event = lib.981 } #industrial investments to LIB
-	}
-	option = {
-		name = lib.98.b
-
-	}
-}
-
-country_event = {
-	id = lib.981 #industrial investments to LIB
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.981 FROM = [From.GetName]" }
-	title = lib.981.t
-	desc = lib.981.desc
-	picture = GFX_report_event_IRE_building_capital
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.981.a
-		add_offsite_building = { type = industrial_complex level = 3 }
-		activate_mission = LIB_industry_mission
-	}
-}
-
-country_event = {
-	id = lib.982 #factories return to FROM
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lib.982 FROM = [From.GetName]" }
-	title = lib.982.t
-	desc = lib.982.desc
-	picture = GFX_report_event_IRE_building_capital
-
-	is_triggered_only = yes
-
-	option = {
-		name = lib.982.a
-		hidden_effect = {
-			random_owned_state = {
-				limit = {
-					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-					is_metropolis_state = no
-				}
-				add_building_construction = {
-					type = industrial_complex
-					level = 1
-					instant_build = yes
-				}
-			}
-			random_owned_state = {
-				limit = {
-					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-					is_metropolis_state = no
-				}
-				add_building_construction = {
-					type = industrial_complex
-					level = 1
-					instant_build = yes
-				}
-			}
-			random_owned_state = {
-				limit = {
-					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-					is_metropolis_state = no
-				}
-				add_building_construction = {
-					type = industrial_complex
-					level = 1
-					instant_build = yes
-				}
-			}
-		}
-	}
-}
-
