@@ -10,7 +10,7 @@ on_actions = {
 
 		effect = {
 			log = "[GetDateText] [From.GetName]: on_operative_on_mission_spotted in [Root.GetName] OPERATIVE: [This.GetName]"
-			# SCOPE  the operative
+			# SCOPE the operative
 			# ROOT   the country the operative was performing its mission in
 			# FROM   the country the operative is operating for
 
@@ -68,7 +68,7 @@ on_actions = {
 	on_operative_captured = {
 		effect = {
 			log = "[GetDateText] [From.GetName]: on_operative_captured by [Root.GetName] OPERATIVE: [This.GetName]"
-			# SCOPE  the operative
+			# SCOPE the operative
 			# ROOT   the country the operative was performing its mission in
 			# FROM   the country the operative is operating for
 			operative_leader_event = {
@@ -110,7 +110,7 @@ on_actions = {
 
 	on_operative_death = {
 		effect = {
-			# SCOPE  the operative
+			# SCOPE the operative
 			# ROOT   the killer country (optional)
 			# FROM   the country the operative is operating for
 			if = {
@@ -262,34 +262,6 @@ on_actions = {
 					}
 				}
 			}
-
-			if = {
-				limit = {
-					has_global_flag = KR_Economy_Logging
-					is_debug = yes
-				}
-				#resource logging
-				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];oil;[?resource_consumed@oil];[?resource_produced@oil];[?resource_exported@oil];[?resource_imported@oil];[?resource@oil]"
-				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];aluminium;[?resource_consumed@aluminium];[?resource_produced@aluminium];[?resource_exported@aluminium];[?resource_imported@aluminium];[?resource@aluminium]"
-				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];rubber;[?resource_consumed@rubber];[?resource_produced@rubber];[?resource_exported@rubber];[?resource_imported@rubber];[?resource@rubber]"
-				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];tungsten;[?resource_consumed@tungsten];[?resource_produced@tungsten];[?resource_exported@tungsten];[?resource_imported@tungsten];[?resource@tungsten]"
-				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];steel;[?resource_consumed@steel];[?resource_produced@steel];[?resource_exported@steel];[?resource_imported@steel];[?resource@steel]"
-				log = "KR_Resource_Metrics;[GetDateText];[Root.GetTag];chromium;[?resource_consumed@chromium];[?resource_produced@chromium];[?resource_exported@chromium];[?resource_imported@chromium];[?resource@chromium]"
-
-				#economy logging
-				log = "KR_Economy_Metrics;[GetDateText];[Root.GetTag];[?num_of_available_civilian_factories];[?num_of_available_military_factories];[?num_of_available_naval_factories];[?num_of_civilian_factories];[?num_of_military_factories];[?num_of_naval_factories];[?num_of_factories]"
-
-				#unit limits logging
-				log = "KR_Unit_Limit_Metrics;[GetDateText];[Root.GetTag];[?num_actual_divisions];[?max_divisions]"
-			}
-			if = {
-				limit = {
-					is_debug = yes
-					NOT = { has_global_flag = KR_has_logged_threat_this_month }
-				}
-				set_global_flag = { flag = KR_has_logged_threat_this_month days = 27 value = 1 }
-				log = "KR_Threat;[GetDateText];[?global.threat]"
-			}
 		}
 	}
 
@@ -312,12 +284,183 @@ on_actions = {
 				}
 			}
 
+			every_possible_country = {
+				#Party Popularity Setup
+				if = {
+					limit = { has_variable = political_power_ideology }
+					map_party_popularity_PP_gain_to_ideology = yes
+				}
+				else = {
+					default_party_popularity_PP_gain = yes
+				}
+
+				#Opinion Modifiers Setup
+				every_other_country = {
+					if = {
+						limit = { has_government = PREV }
+						add_opinion_modifier = {
+							target = PREV
+							modifier = KR_same_ideology
+						}
+					}
+					else_if = {
+						limit = {
+							OR = {
+								AND = {
+									OR = {
+										has_government = social_conservative
+										has_government = authoritarian_democrat
+									}
+									PREV = {
+										OR = {
+											has_government = social_conservative
+											has_government = authoritarian_democrat
+										}
+									}
+								}
+								AND = {
+									OR = {
+										has_government = social_democrat
+										has_government = social_liberal
+									}
+									PREV = {
+										OR = {
+											has_government = social_democrat
+											has_government = social_liberal
+										}
+									}
+								}
+							}
+						}
+						add_opinion_modifier = {
+							target = PREV
+							modifier = KR_similar_ideology_close
+						}
+					}
+					else_if = {
+						limit = {
+							OR = {
+								AND = {
+									has_government = social_democrat
+									PREV = {
+										OR = {
+											has_government = market_liberal
+											has_government = social_conservative
+											has_government = authoritarian_democrat
+										}
+									}
+								}
+								AND = {
+									OR = {
+										has_government = market_liberal
+										has_government = social_conservative
+										has_government = authoritarian_democrat
+									}
+									PREV = { has_government = social_democrat }
+								}
+								AND = {
+									has_government = totalist
+									PREV = { has_government = radical_socialist }
+								}
+								AND = {
+									has_government = radical_socialist
+									PREV = { has_government = totalist }
+								}
+							}
+						}
+						add_opinion_modifier = {
+							target = PREV
+							modifier = KR_similar_ideology_distant
+						}
+					}
+					else_if = {
+						limit = {
+							OR = {
+								AND = {
+									has_socialist_government = yes
+									PREV = { has_socialist_government = yes }
+								}
+								AND = {
+									has_democratic_government = yes
+									PREV = { has_democratic_government = yes }
+								}
+								AND = {
+									has_dictatorship_government = yes
+									PREV = { has_dictatorship_government = yes }
+								}
+								AND = {
+									OR = {
+										has_government = authoritarian_democrat
+										has_government = paternal_autocrat
+									}
+									PREV = {
+										OR = {
+											has_government = authoritarian_democrat
+											has_government = paternal_autocrat
+										}
+									}
+								}
+							}
+						}
+						add_opinion_modifier = {
+							target = PREV
+							modifier = KR_similar_ideology
+						}
+					}
+					else_if = {
+						limit = {
+							OR = {
+								AND = {
+									has_government = social_democrat
+									PREV = { has_government = radical_socialist }
+								}
+								AND = {
+									has_government = radical_socialist
+									PREV = { has_government = social_democrat }
+								}
+								AND = {
+									has_government = paternal_autocrat
+									PREV = { has_government = social_conservative }
+								}
+								AND = {
+									has_government = social_conservative
+									PREV = { has_government = paternal_autocrat }
+								}
+								AND = {
+									has_government = national_populist
+									PREV = {
+										OR = {
+											has_government = social_conservative
+											has_government = authoritarian_democrat
+										}
+									}
+								}
+								AND = {
+									OR = {
+										has_government = social_conservative
+										has_government = authoritarian_democrat
+									}
+									PREV = { has_government = national_populist }
+								}
+							}
+						}
+						add_opinion_modifier = {
+							target = PREV
+							modifier = KR_different_ideology_close
+						}
+					}
+					else = {
+						add_opinion_modifier = {
+							target = PREV
+							modifier = KR_different_ideology
+						}
+					}
+				}
+			}
+
 			every_country = {
 				#Unit Limits Setup
 				country_event = kr.political.119
-
-				#Opinion Modifiers Setup
-				country_event = kr.political.40
 
 				#Faction Opinion Modifiers
 				country_event = kr.political.50
@@ -332,18 +475,6 @@ on_actions = {
 			}
 			else = {
 				set_global_flag = NEWS_ALL
-			}
-
-			#Party Popularity and Government Flag Setup
-			every_possible_country = {
-				set_government_type_flags = yes
-				if = {
-					limit = { has_variable = political_power_ideology }
-					map_party_popularity_PP_gain_to_ideology = yes
-				}
-				else = {
-					default_party_popularity_PP_gain = yes
-				}
 			}
 
 			#UI Setup
@@ -389,12 +520,6 @@ on_actions = {
 				SWI = { embargo_PREV = yes }
 				PRF = { embargo_PREV = yes }
 			}
-
-			#AI Tweaks
-			ENG = { add_ideas = ai_build_more_units_100 }
-			RUS = { add_ideas = ai_build_more_units_50 }
-			SOV = { add_ideas = ai_build_more_units_50 }
-			JAP = { add_ideas = ai_build_more_units_50 }
 		}
 	}
 
@@ -445,13 +570,6 @@ on_actions = {
 					}
 				}
 				FROM.FROM = { set_state_controller_to = owner }
-			}
-
-			### Adding opinion modifiers to newly-spawned countries
-			if = {
-				limit = { NOT = { has_country_flag = opinion_modifiers_set_up } }
-				set_country_flag = opinion_modifiers_set_up
-				country_event = kr.political.41
 			}
 
 			### Appply WK2 AI boosts
@@ -514,28 +632,21 @@ on_actions = {
 	on_annex = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] has annexed [From.GetName]"
-			if = {
-				limit = {
-					FROM = { has_country_flag = KR_operative_nationality_check }
-				}
-				FROM = { clr_country_flag = KR_operative_nationality_check }
-			}
-			if = {
-				limit = {
-					FROM = { has_country_flag = GER_capitulated }
-				}
-				FROM = { clr_country_flag = GER_capitulated }
-			}
-
-			recheck_annexations = yes
-
 			FROM = {
 				end_coalition = yes
-				set_equipment_fraction = 0
 				clr_country_flag = KR_can_raise_autonomy_level
 				clr_country_flag = KR_can_become_free
-				clr_country_flag = opinion_modifiers_set_up
+				clr_country_flag = KR_operative_nationality_check
+				clr_country_flag = GER_capitulated
+				if = {
+					limit = { is_dynamic_country = yes }
+					every_state = {
+						limit = { is_claimed_by = PREV }
+						remove_claim_by = PREV
+					}
+				}
 			}
+			recheck_annexations = yes
 		}
 	}
 
@@ -590,18 +701,85 @@ on_actions = {
 	on_government_change = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] on_government_change"
+			if = {
+				limit = { has_elections = yes }
+				set_country_flag = had_elections
+			}
+		}
+	}
+
+	on_ruling_party_change = {
+		# temp var old_ideology_token is available for effects
+		effect = {
+			log = "[GetDateText] [Root.GetName] on_ruling_party_change old_ideology_token: [?old_ideology_token.GetTokenKey]"
+
+			#Government Flags
+			clr_country_flag = KR_is_socialist
+			clr_country_flag = KR_is_elected
+			clr_country_flag = KR_is_democratic
+			clr_country_flag = KR_right_wing_democracy
+			clr_country_flag = KR_left_wing_democracy
+			clr_country_flag = KR_is_authoritarian
+			clr_country_flag = KR_is_dictatorship
+			clr_country_flag = KR_is_any_authoritarian
+			if = {
+				limit = { will_have_totalist_government = yes }
+				set_country_flag = KR_is_socialist
+				set_country_flag = KR_is_any_authoritarian
+			}
+			else_if = {
+				limit = {
+					OR = {
+						will_have_syndicalist_government = yes
+						will_have_radical_socialist_government = yes
+					}
+				}
+				set_country_flag = KR_is_socialist
+			}
+			else_if = {
+				limit = {
+					OR = {
+						will_have_paternal_autocrat_government = yes
+						will_have_national_populist_government = yes
+					}
+				}
+				set_country_flag = KR_is_authoritarian
+				set_country_flag = KR_is_any_authoritarian
+				set_country_flag = KR_is_dictatorship
+			}
+			else_if = {
+				limit = { will_have_authoritarian_democrat_government = yes }
+				set_country_flag = KR_is_democratic
+				set_country_flag = KR_is_authoritarian
+				set_country_flag = KR_is_any_authoritarian
+			}
+			else = {
+				set_country_flag = KR_is_democratic
+				set_country_flag = KR_is_elected
+				if = {
+					limit = {
+						OR = {
+							will_have_market_liberal_government = yes
+							will_have_social_conservative_government = yes
+						}
+					}
+					set_country_flag = KR_right_wing_democracy
+				}
+				else = {
+					set_country_flag = KR_left_wing_democracy
+				}
+			}
+
+			# Coalitions
 			mark_focus_tree_layout_dirty = yes
 			end_coalition = yes
-			country_event = kr.political.41 #opinion modifiers
-			country_event = kr.political.12 #puppet ministers
 
-			# return all volunteers if changed to or from socialist
+			# Volunteers
 			if = {
 				limit = {
-					has_country_flag = KR_has_socialist_government
-					has_socialist_government = no
+					has_socialist_government = yes
+					will_have_socialist_government = no
 				}
-				clr_country_flag = KR_has_socialist_government
 				clear_all_sent_volunteers = yes
 				FRA_remove_from_phalanstere = yes
 				every_other_country = {
@@ -611,29 +789,284 @@ on_actions = {
 			}
 			else_if = {
 				limit = {
-					has_socialist_government = yes
-					NOT = { has_country_flag = KR_has_socialist_government }
+					has_socialist_government = no
+					will_have_socialist_government = yes
 				}
-				set_country_flag = KR_has_socialist_government
 				clear_all_sent_volunteers = yes
 				every_other_country = {
 					limit = { has_country_flag = embargoed_@PREV }
 					clear_embargo_PREV = yes
 				}
 			}
-		}
-	}
 
-	on_ruling_party_change = {
-		# temp var old_ideology_token is available for effects
-		effect = {
-			log = "[GetDateText] [Root.GetName] on_ruling_party_change old_ideology_token: [?old_ideology_token.GetTokenKey]"
-			clr_country_flag = KR_is_socialist
-			clr_country_flag = KR_is_elected
-			clr_country_flag = KR_is_democratic
-			clr_country_flag = KR_is_authoritarian
-			clr_country_flag = KR_is_dictatorship
-			set_government_type_flags = yes
+			# Generic 2ICs
+			if = {
+				limit = { is_dynamic_country = no }
+				if = {
+					limit = {
+						has_character = empowered_trade_unions
+						NOT = { has_idea = empowered_trade_unions_sic }
+						will_have_socialist_government = yes
+					}
+					clear_sic_slot = yes
+					activate_advisor = empowered_trade_unions_sic
+				}
+				else_if = {
+					limit = {
+						has_character = empowered_executive
+						NOT = { has_idea = empowered_executive_sic }
+						will_have_authoritarian_government = yes
+					}
+					clear_sic_slot = yes
+					activate_advisor = empowered_executive_sic
+				}
+				else_if = {
+					limit = {
+						has_character = empowered_legislative
+						NOT = { has_idea = empowered_legislative_sic }
+						will_have_elected_government = yes
+					}
+					clear_sic_slot = yes
+					activate_advisor = empowered_legislative_sic
+				}
+			}
+
+			# Opinion Modifiers
+			every_other_country = {
+				remove_opinion_modifier = {
+					target = ROOT
+					modifier = KR_similar_ideology_close
+				}
+				remove_opinion_modifier = {
+					target = ROOT
+					modifier = KR_similar_ideology
+				}
+				remove_opinion_modifier = {
+					target = ROOT
+					modifier = KR_similar_ideology_distant
+				}
+				remove_opinion_modifier = {
+					target = ROOT
+					modifier = KR_different_ideology_close
+				}
+				remove_opinion_modifier = {
+					target = ROOT
+					modifier = KR_different_ideology
+				}
+				remove_opinion_modifier = {
+					target = ROOT
+					modifier = KR_same_ideology
+				}
+				ROOT = {
+					remove_opinion_modifier = {
+						target = PREV
+						modifier = KR_similar_ideology_close
+					}
+					remove_opinion_modifier = {
+						target = PREV
+						modifier = KR_similar_ideology
+					}
+					remove_opinion_modifier = {
+						target = PREV
+						modifier = KR_similar_ideology_distant
+					}
+					remove_opinion_modifier = {
+						target = PREV
+						modifier = KR_different_ideology_close
+					}
+					remove_opinion_modifier = {
+						target = PREV
+						modifier = KR_different_ideology
+					}
+					remove_opinion_modifier = {
+						target = PREV
+						modifier = KR_same_ideology
+					}
+				}
+				if = {
+					limit = { has_government = var:old_ideology_token }
+					add_opinion_modifier = {
+						target = ROOT
+						modifier = KR_same_ideology
+					}
+					reverse_add_opinion_modifier = {
+						target = ROOT
+						modifier = KR_same_ideology
+					}
+				}
+				else_if = {
+					limit = {
+						OR = {
+							AND = {
+								OR = {
+									has_government = social_conservative
+									has_government = authoritarian_democrat
+								}
+								ROOT = {
+									OR = {
+										will_have_social_conservative_government = yes
+										will_have_authoritarian_democrat_government = yes
+									}
+								}
+							}
+							AND = {
+								OR = {
+									has_government = social_democrat
+									has_government = social_liberal
+								}
+								ROOT = {
+									OR = {
+										will_have_social_democrat_government = yes
+										will_have_social_liberal_government = yes
+									}
+								}
+							}
+						}
+					}
+					add_opinion_modifier = {
+						target = ROOT
+						modifier = KR_similar_ideology_close
+					}
+					reverse_add_opinion_modifier = {
+						target = ROOT
+						modifier = KR_similar_ideology_close
+					}
+				}
+				else_if = {
+					limit = {
+						OR = {
+							AND = {
+								has_government = social_democrat
+								ROOT = {
+									OR = {
+										will_have_market_liberal_government = yes
+										will_have_social_conservative_government = yes
+										will_have_authoritarian_democrat_government = yes
+									}
+								}
+							}
+							AND = {
+								OR = {
+									has_government = market_liberal
+									has_government = social_conservative
+									has_government = authoritarian_democrat
+								}
+								ROOT = { will_have_social_democrat_government = yes }
+							}
+							AND = {
+								has_government = totalist
+								ROOT = { will_have_radical_socialist_government = yes }
+							}
+							AND = {
+								has_government = radical_socialist
+								ROOT = { will_have_totalist_government = yes }
+							}
+						}
+					}
+					add_opinion_modifier = {
+						target = ROOT
+						modifier = KR_similar_ideology_distant
+					}
+					reverse_add_opinion_modifier = {
+						target = ROOT
+						modifier = KR_similar_ideology_distant
+					}
+				}
+				else_if = {
+					limit = {
+						OR = {
+							AND = {
+								has_socialist_government = yes
+								ROOT = { will_have_socialist_government = yes }
+							}
+							AND = {
+								has_democratic_government = yes
+								ROOT = { will_have_democratic_government = yes }
+							}
+							AND = {
+								has_dictatorship_government = yes
+								ROOT = { will_have_dictatorship_government = yes }
+							}
+							AND = {
+								OR = {
+									has_government = authoritarian_democrat
+									has_government = paternal_autocrat
+								}
+								ROOT = {
+									OR = {
+										will_have_authoritarian_democrat_government = yes
+										will_have_paternal_autocrat_government = yes
+									}
+								}
+							}
+						}
+					}
+					add_opinion_modifier = {
+						target = ROOT
+						modifier = KR_similar_ideology
+					}
+					reverse_add_opinion_modifier = {
+						target = ROOT
+						modifier = KR_similar_ideology
+					}
+				}
+				else_if = {
+					limit = {
+						OR = {
+							AND = {
+								has_government = social_democrat
+								ROOT = { will_have_radical_socialist_government = yes }
+							}
+							AND = {
+								has_government = radical_socialist
+								ROOT = { will_have_social_democrat_government = yes }
+							}
+							AND = {
+								has_government = paternal_autocrat
+								ROOT = { will_have_social_conservative_government = yes }
+							}
+							AND = {
+								has_government = social_conservative
+								ROOT = { will_have_paternal_autocrat_government = yes }
+							}
+							AND = {
+								has_government = national_populist
+								ROOT = {
+									OR = {
+										will_have_social_conservative_government = yes
+										will_have_authoritarian_democrat_government = yes
+									}
+								}
+							}
+							AND = {
+								OR = {
+									has_government = social_conservative
+									has_government = authoritarian_democrat
+								}
+								ROOT = { will_have_national_populist_government = yes }
+							}
+						}
+					}
+					add_opinion_modifier = {
+						target = ROOT
+						modifier = KR_different_ideology_close
+					}
+					reverse_add_opinion_modifier = {
+						target = ROOT
+						modifier = KR_different_ideology_close
+					}
+				}
+				else = {
+					add_opinion_modifier = {
+						target = ROOT
+						modifier = KR_different_ideology
+					}
+					reverse_add_opinion_modifier = {
+						target = ROOT
+						modifier = KR_different_ideology
+					}
+				}
+			}
 		}
 	}
 
@@ -788,7 +1221,7 @@ on_actions = {
 	# ROOT is capitulated country, FROM is winner
 	on_capitulation = {
 		effect = {
-			log = "[GetDateText] [Root.GetName] has capitulated to [From.GetName]"
+			log = "[GetDateText] [Root.GetName] (ROOT) on_capitulation FROM = [From.GetName]"
 			if = {
 				limit = { is_in_faction = yes }
 				news_event = country_capitulated.0
@@ -892,6 +1325,38 @@ on_actions = {
 					}
 				}
 				clear_variable = transfer_navy_to
+			}
+		}
+	}
+
+	# ROOT is capitulated country, FROM is winner
+	on_capitulation_immediate = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] (ROOT) on_capitulation_immediate FROM = [From.GetName]"
+			# Logalyzer logging
+			if = {
+				limit = {
+					ROOT = {
+						tag = BRA
+						OR = {
+							has_war_with = ARG
+							has_war_with = FOP
+						}
+					}
+				}
+				log = "KR_Event_Logging;ARG WINS AGAINST BRA;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = {
+					ROOT = {
+						OR = {
+							tag = ARG
+							tag = FOR
+						}
+						has_war_with = BRA
+					}
+				}
+				log = "KR_Event_Logging;BRA WINS AGAINST ARG;[GetDateText];[ROOT.GetName];[FROM.GetName]"
 			}
 		}
 	}
@@ -1103,8 +1568,6 @@ on_actions = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] on_puppet FROM = [From.GetName]"
 			ROOT = {
-				remove_all_ministers = yes
-				set_puppet_minister = yes
 				clr_country_flag = KR_independence_war_overlord
 				clr_country_flag = KR_independence_war
 				clr_country_flag = KR_independence_refused
@@ -1125,10 +1588,6 @@ on_actions = {
 	on_release_as_puppet = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] on_release_as_puppet FROM = [From.GetName]"
-			ROOT = {
-				remove_all_ministers = yes
-				set_puppet_minister = yes
-			}
 		}
 	}
 
@@ -1136,10 +1595,6 @@ on_actions = {
 	on_release_as_free = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] on_release_as_free FROM = [From.GetName]"
-			ROOT = {
-				remove_all_ministers = yes
-				set_puppet_minister = yes
-			}
 		}
 	}
 
@@ -1152,6 +1607,44 @@ on_actions = {
 				country_event = kr.political.50
 				country_event = kr.political.52
 				country_event = kr.political.54
+			}
+			if = {
+				limit = {
+					OR = {
+						original_tag = GER
+						original_tag = ENT
+					}
+				}
+				FROM = {
+					get_highest_scored_country_temp = { scorer = major_industry_count_scorer }
+					set_temp_variable = { threat_change = num_of_controlled_factories }
+					divide_temp_variable = { threat_change = highest_scored_country:num_of_controlled_factories }
+					multiply_temp_variable = { threat_change = -3.5 }
+					add_named_threat = {
+						threat = threat_change
+						name = country_joins_alliance_threat
+					}
+				}
+			}
+			else_if = {
+				limit = {
+					OR = {
+						original_tag = RUS
+						original_tag = INT
+						original_tag = SOV
+						original_tag = JAP
+					}
+				}
+				FROM = {
+					get_highest_scored_country_temp = { scorer = major_industry_count_scorer }
+					set_temp_variable = { threat_change = num_of_controlled_factories }
+					divide_temp_variable = { threat_change = highest_scored_country:num_of_controlled_factories }
+					multiply_temp_variable = { threat_change = 3.5 }
+					add_named_threat = {
+						threat = threat_change
+						name = country_joins_alliance_threat
+					}
+				}
 			}
 		}
 	}
@@ -1413,7 +1906,6 @@ on_actions = {
 								}
 							}
 						}
-
 					}
 					else_if = {
 						limit = {
@@ -1539,7 +2031,6 @@ on_actions = {
 	on_pride_of_the_fleet_sunk = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] on_pride_of_the_fleet_sunk FROM = [From.GetName]"
-
 		}
 	}
 
@@ -1547,12 +2038,22 @@ on_actions = {
 	on_civil_war_end_before_annexation = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] on_civil_war_end_before_annexation FROM = [From.GetName]"
-
 		}
 	}
 	on_civil_war_end = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] on_civil_war_end FROM = [From.GetName]"
+			if = {
+				limit = {
+					has_country_flag = had_elections
+					has_elections = no
+				}
+				clr_country_flag = had_elections
+				set_politics = {
+					ruling_party = var:ROOT.current_party_ideology_group
+					elections_allowed = yes
+				}
+			}
 		}
 	}
 	on_unit_leader_created = {
@@ -1562,7 +2063,7 @@ on_actions = {
 				limit = { is_exiled_leader = yes }
 				From.From = { save_event_target_as = exile_nation }
 				add_unit_leader_trait = exiled_leader
-				unit_leader_event = { id = mtg_exile_leader_added.1 }
+				unit_leader_event = mtg_exile_leader_added.1
 			}
 		}
 	}
@@ -1611,23 +2112,6 @@ on_actions = {
 	on_war = {
 		effect = {
 			log = "[GetDateText]: [Root.GetName]: on_war"
-			# Start of the Second Weltkrieg
-			country_event = ai_events.201
-
-			# World tension events
-			country_event = worldtension.2
-			country_event = worldtension.3
-			country_event = worldtension.4
-			country_event = worldtension.5
-			country_event = worldtension.27
-			country_event = worldtension.32
-			country_event = worldtension.33
-
-			# Volunteers
-			every_other_country = {
-				country_event = ai_events.100
-			}
-
 			# Check for puppets at war with their overlord
 			if = {
 				limit = {
@@ -1650,6 +2134,72 @@ on_actions = {
 	on_war_relation_added = {
 		effect = {
 			log = "[GetDateText]: on_war_relation_added attacker: [Root.GetName] defender: [From.GetName]"
+
+			# Volunteers
+			save_event_target_as = volunteer_target
+			every_other_country = {
+				limit = { willing_to_send_volunteers_to_PREV = yes }
+				send_volunteers_to_TARGET = yes
+			}
+			FROM = {
+				save_event_target_as = volunteer_target
+				every_other_country = {
+					limit = { willing_to_send_volunteers_to_PREV = yes }
+					send_volunteers_to_TARGET = yes
+				}
+			}
+
+			# Boot events
+			country_event = ai_events.203 #WK3 - ENT vs GER
+			country_event = ai_events.204 #WK3 - RUS vs INT
+			country_event = ai_events.205 #2nd Sino-Japanese War
+			country_event = ai_events.208 #GEA vs JAP
+
+			if = {
+				limit = {
+					OR = {
+						tag = RUS
+						tag = GER
+					}
+					FROM = {
+						OR = {
+							tag = RUS
+							tag = GER
+						}
+					}
+				}
+				country_event = ai_events.201 #WK2 RUS-GER
+			}
+			else_if = {
+				limit = {
+					OR = {
+						tag = INT
+						tag = GER
+					}
+					FROM = {
+						OR = {
+							tag = INT
+							tag = GER
+						}
+					}
+				}
+				country_event = ai_events.202 #WK2 INT-GER
+			}
+			else_if = {
+				limit = {
+					OR = {
+						tag = SOV
+						tag = GER
+					}
+					FROM = {
+						OR = {
+							tag = SOV
+							tag = GER
+						}
+					}
+				}
+				country_event = ai_events.202 #WK2 SOV-GER
+			}
 
 			# Important countries for logalyzer
 			if = {
@@ -1722,8 +2272,10 @@ on_actions = {
 			}
 
 			# Volunteers
+			save_event_target_as = volunteer_target
 			every_other_country = {
-				country_event = ai_events.101
+				limit = { has_country_flag = sent_volunteers_@PREV }
+				clear_volunteers_to_TARGET = yes
 			}
 
 			# Disable wartime major status

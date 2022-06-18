@@ -2,31 +2,30 @@
 # By Rylock and Alpinia
 
 ### To have tags send volunteers whenever a war starts, add a new rule below
-### ROOT is the tag sending the volunteers, FROM is the tag that receives them
-### If the conditions are fulfilled, ROOT will automatically send volunteers to FROM whenever the latter is at war
-### When adding new rules, please follow the order of triggers - first global (when the rule should apply), then FROM triggers (who should receive the volunteers), then ROOT triggers (who should send them)
+### ROOT is the tag sending the volunteers, PREV is the tag that receives them
+### If the conditions are fulfilled, ROOT will automatically send volunteers to PREV whenever the latter is at war
+### When adding new rules, please follow the order of triggers - first global (when the rule should apply), then PREV triggers (who should receive the volunteers), then ROOT triggers (who should send them)
 
-willing_to_send_volunteers_to_FROM = {
+willing_to_send_volunteers_to_PREV = {
 	if = {
+		limit = { check_variable = { PREV.modifier@cannot_receive_volunteers > 0 } }
+		always = no
+	}
+	else_if = {
 		limit = { tag = SRI }
 		NOT = {
 			country_exists = ITA
 			country_exists = SIC
 		}
 	}
-	if = {
-		limit = { check_variable = { FROM.modifier@cannot_receive_volunteers > 0 } }
-		always = no
-	}
 	OR = {
+		is_neighbor_of = PREV
 		any_owned_state = { is_coastal = yes }
-		is_neighbor_of = FROM
 	}
 	OR = {
 		spanish_civil_war_volunteers = yes
 		american_civil_war_volunteers = yes
 		russian_civil_war_volunteers = yes
-		korean_japanese_war_volunteers = yes
 		fourth_balkan_war_volunteers = yes
 		second_weltkrieg_volunteers = yes
 		chilean_argentinian_war_volunteers = yes
@@ -50,7 +49,7 @@ spanish_civil_war_volunteers = {
 	has_global_flag = spanish_civil_war
 	OR = {
 		AND = {
-			FROM = { tag = SPR }
+			PREV = { tag = SPR }
 			OR = {
 				tag = SIC
 				tag = CAN
@@ -61,11 +60,11 @@ spanish_civil_war_volunteers = {
 			}
 		}
 		AND = {
-			FROM = { tag = SPA }
+			PREV = { tag = SPA }
 			tag = GER
 		}
 		AND = {
-			FROM = { tag = SWF }
+			PREV = { tag = SWF }
 			has_socialist_government = yes
 			num_of_military_factories > 8
 		}
@@ -74,9 +73,9 @@ spanish_civil_war_volunteers = {
 
 american_civil_war_volunteers = {
 	NOT = { has_global_flag = USA_civil_war_over_flag }
+	PREV = { tag = CSA }
 	has_socialist_government = yes
 	num_of_military_factories > 8
-	FROM = { tag = CSA }
 	### USA, PSA and TEX volunteers are handled by ACW support decisions
 }
 
@@ -84,12 +83,12 @@ russian_civil_war_volunteers = {
 	RUS = { has_war_with = SOV }
 	OR = {
 		AND = {
-			FROM = { tag = SOV }
+			PREV = { tag = SOV }
 			has_socialist_government = yes
 			num_of_military_factories > 8
 		}
 		AND = {
-			FROM = { tag = RUS }
+			PREV = { tag = RUS }
 			OR = {
 				tag = FIN
 				tag = GER
@@ -97,18 +96,6 @@ russian_civil_war_volunteers = {
 				tag = NFA
 			}
 		}
-	}
-}
-
-korean_japanese_war_volunteers = {
-	JAP = { has_war_with = KOR }
-	FROM = { tag = KOR }
-	OR = {
-		tag = RUS
-		tag = QIE
-		tag = SOV
-		tag = CHI
-		tag = GER
 	}
 }
 
@@ -120,7 +107,7 @@ fourth_balkan_war_volunteers = {
 	}
 	OR = {
 		AND = {
-			FROM = { tag = BUL }
+			PREV = { tag = BUL }
 			AND = {
 				OR = {
 					tag = GER
@@ -133,7 +120,7 @@ fourth_balkan_war_volunteers = {
 			}
 		}
 		AND = {
-			FROM = { tag = SER }
+			PREV = { tag = SER }
 			AND = {
 				OR = {
 					tag = RUS
@@ -149,12 +136,12 @@ second_weltkrieg_volunteers = {
 	GER = { has_war_with = FRA }
 	OR = {
 		AND = {
-			FROM = { tag = FRA }
+			PREV = { tag = FRA }
 			has_socialist_government = yes
 			num_of_military_factories > 8
 		}
 		AND = {
-			FROM = { tag = GER }
+			PREV = { tag = GER }
 			NOT = {
 				tag = JAP
 				tag = RUS
@@ -174,50 +161,44 @@ second_weltkrieg_volunteers = {
 }
 
 chilean_argentinian_war_volunteers = {
-	CHL = { has_war_with = ARG }
+	FOP = { has_war_with = ARG }
 	OR = {
 		AND = {
-			FROM = { tag = ARG }
+			PREV = { tag = ARG }
 			OR = {
-				tag = BRA
 				tag = BOL
 				tag = PRU
 				tag = GER
 				tag = CAN
 				tag = NFA
+			}
+		}
+		AND = {
+			PREV = { is_ally_with = FOP }
+			has_socialist_government = yes
+			OR = {
+				tag = SRI
+				tag = MEX
 				AND = {
 					OR = {
-						is_in_faction_with = GER
-						is_in_faction_with = CAN
+						is_in_europe = yes
+						is_in_north_america = yes
+						is_in_south_america = yes
+						is_in_faction_with = INT
 					}
 					num_of_military_factories > 8
 				}
 			}
 		}
-		AND = {
-			FROM = {
-				OR = {
-					tag = CHL
-					tag = FOP
-				}
-			}
-			has_socialist_government = yes
-			OR = {
-				is_in_europe = yes
-				is_in_north_america = yes
-				is_in_south_america = yes
-				is_in_faction_with = FRA
-				is_in_faction_with = ENG
-				is_in_faction_with = CSA
-			}
-			num_of_military_factories > 8
-		}
 	}
 }
 
 south_african_civil_war_volunteers = {
-	SAF = { has_war_with = SFR }
-	FROM = { tag = SAF }
+	SAF = { has_civil_war = yes }
+	PREV = {
+		original_tag = SAF
+		NOT = { tag = NAT }
+	}
 	OR = {
 		tag = GER
 		tag = MAF
@@ -229,8 +210,8 @@ south_african_civil_war_volunteers = {
 
 south_african_revolution_volunteers = {
 	SAF = { has_war_with = ENT }
-	FROM = {
-		tag = SAF
+	PREV = {
+		original_tag = SAF
 		has_socialist_government = yes
 	}
 	has_socialist_government = yes
@@ -245,19 +226,19 @@ indian_civil_war_volunteers = {
 	}
 	OR = {
 		AND = {
-			FROM = { tag = HND }
+			PREV = { tag = HND }
 			has_socialist_government = yes
 			num_of_military_factories > 8
 		}
 		AND = {
-			FROM = { tag = PRF }
+			PREV = { tag = PRF }
 			OR = {
 				tag = GER
 				tag = JAP
 			}
 		}
 		AND = {
-			FROM = { tag = RAJ }
+			PREV = { tag = RAJ }
 			NOT = { country_exists = PRF }
 			OR = {
 				tag = GER
@@ -270,7 +251,7 @@ indian_civil_war_volunteers = {
 sichuan_volunteers = {
 	OR = {
 		AND = {
-			FROM = {
+			PREV = {
 				OR = {
 					is_ruled_by_kmt = yes
 					is_ruled_by_federalists = yes
@@ -291,7 +272,7 @@ sichuan_volunteers = {
 			}
 		}
 		AND = {
-			FROM = {
+			PREV = {
 				OR = {
 					is_ruled_by_pro_zhili = yes
 					AND = {
@@ -314,12 +295,8 @@ venetian_rebellion_volunteers = {
 		has_country_flag = ITA_venice_will_rebel
 		has_war_with = VNC
 	}
-	FROM = { tag = VNC }
-	OR = {
-		tag = AUS
-		is_in_faction_with = AUS
-		is_subject_of = AUS
-	}
+	PREV = { tag = VNC }
+	is_ally_with = AUS
 	is_subject = no
 	has_socialist_government = no
 }
@@ -338,12 +315,12 @@ italian_civil_war_volunteers = {
 	}
 	OR = {
 		AND = {
-			FROM = { tag = SRI }
+			PREV = { tag = SRI }
 			is_in_faction_with = INT
 			num_of_military_factories > 8
 		}
 		AND = {
-			FROM = {
+			PREV = {
 				OR = {
 					AND = {
 						tag = ITA
@@ -353,45 +330,38 @@ italian_civil_war_volunteers = {
 					tag = VNC
 				}
 			}
-			OR = {
-				tag = AUS
-				is_in_faction_with = AUS
-				is_subject_of = AUS
-			}
+			is_ally_with = AUS
 			is_in_europe = yes
 		}
 		AND = {
-			FROM = {
+			PREV = {
 				tag = SIC
 				NOT = { has_government = national_populist }
 			}
 			OR = {
-				tag = AUS
-				is_in_faction_with = AUS
-				is_subject_of = AUS
-				is_in_faction_with = GER
+				is_ally_with = AUS
+				is_ally_with = GER
 			}
 			num_of_military_factories > 8
 			is_in_europe = yes
 		}
 		AND = {
-			FROM = {
+			PREV = {
 				tag = ITA
 				has_government = national_populist
-				AUS = { exists = yes }
 			}
+			AUS = { is_subject = no }
 			OR = {
 				76 = { owned_by_austria_or_puppet = yes }
 				109 = { owned_by_austria_or_puppet = yes }
 			}
 			OR = {
-				tag = SER
-				tag = ROM
-				is_in_faction_with = SER
+				is_ally_with = SER
+				is_ally_with = ROM
 			}
 		}
 		AND = {
-			FROM = {
+			PREV = {
 				tag = SIC
 				has_government = national_populist
 			}
@@ -406,16 +376,16 @@ italian_civil_war_volunteers = {
 
 greek_civil_war_volunteers = {
 	GRE = { has_civil_war = yes }
-	FROM = { original_tag = GRE }
+	PREV = { original_tag = GRE }
 	OR = {
 		AND = {
-			FROM = { has_socialist_government = yes }
+			PREV = { has_socialist_government = yes }
 			has_socialist_government = yes
 			is_in_europe = yes
 			is_faction_leader = yes
 		}
 		AND = {
-			FROM = { has_socialist_government = no }
+			PREV = { has_socialist_government = no }
 			has_socialist_government = no
 			is_in_europe = yes
 			is_faction_leader = yes
@@ -425,7 +395,7 @@ greek_civil_war_volunteers = {
 }
 
 german_austrian_volunteers = {
-	FROM = {
+	PREV = {
 		tag = AUS
 		is_subject = no
 		has_socialist_government = no
@@ -441,7 +411,7 @@ german_austrian_volunteers = {
 }
 
 csa_internationale_volunteers = {
-	FROM = {
+	PREV = {
 		has_socialist_government = yes
 		num_of_civilian_factories > 10
 		OR = {
@@ -492,7 +462,7 @@ league_collapse_volunteers = {
 	}
 	OR = {
 		AND = {
-			FROM = { tag = LEP }
+			PREV = { tag = LEP }
 			OR = {
 				tag = GEA
 				tag = GEX
@@ -513,7 +483,7 @@ league_collapse_volunteers = {
 			}
 		}
 		AND = {
-			FROM = {
+			PREV = {
 				tag = SQI
 				is_ruled_by_pro_fengtian = yes
 			}
@@ -526,7 +496,7 @@ league_collapse_volunteers = {
 			}
 		}
 		AND = {
-			FROM = {
+			PREV = {
 				tag = ANQ
 				is_ruled_by_pro_fengtian = yes
 			}
@@ -539,16 +509,12 @@ league_collapse_volunteers = {
 			}
 		}
 		AND = {
-			FROM = {
-				tag = ANQ
-			}
+			PREV = { tag = ANQ }
 			tag = QIE
 			has_country_flag = wu_intervenes_proANQ
 		}
 		AND = {
-			FROM = {
-				tag = CHI
-			}
+			PREV = { tag = CHI }
 			OR = {
 				tag = HND
 				tag = INC
@@ -559,25 +525,26 @@ league_collapse_volunteers = {
 
 northwest_war_volunteers = {
 	TIB = { has_war_with = XSM }
-	FROM = { tag = TIB }
+	PREV = { tag = TIB }
 	OR = {
 		AND = {
-			FROM = { has_government = authoritarian_democrat }
+			PREV = { has_government = authoritarian_democrat }
 			tag = RAJ
 		}
 		AND = {
-			FROM = { has_government = totalist }
+			PREV = { has_government = totalist }
 			tag = HND
 		}
 		AND = {
-			FROM = { has_government = social_democrat }
+			PREV = { has_government = social_democrat }
 			tag = CHI
 		}
 	}
 }
 
 GEA_zhili_volunteers = {
-	FROM = {
+	tag = GEA
+	PREV = {
 		OR = {
 			tag = LEP
 			AND = {
@@ -590,7 +557,6 @@ GEA_zhili_volunteers = {
 			}
 		}
 	}
-	tag = GEA
 }
 
 ANQ_volunteers = {
@@ -603,11 +569,11 @@ ANQ_volunteers = {
 	OR = {
 		AND = {
 			is_ruled_by_pro_fengtian = yes
-			FROM = { is_ruled_by_pro_fengtian = yes }
+			PREV = { is_ruled_by_pro_fengtian = yes }
 		}
 		AND = {
 			is_ruled_by_pro_zhili = yes
-			FROM = { is_ruled_by_pro_zhili = yes }
+			PREV = { is_ruled_by_pro_zhili = yes }
 		}
 	}
 }
@@ -616,13 +582,10 @@ ANQ_volunteers = {
 
 country_has_armor_focus = {
 	OR = {
-		tag = GER
 		tag = FRA
-		tag = USA
-		tag = CSA
-		tag = TEX
-		tag = PSA
-		tag = SOV
+		tag = ENG
+		tag = POL
+		is_american_tag = yes
 	}
 }
 
@@ -634,7 +597,7 @@ has_unattained_important_goals = {
 			CAN = { is_faction_leader = yes }
 			NOT = { country_exists = GBR }
 		}
-		# National France needs to reclaim France
+		# the French Republic needs to reclaim France
 		AND = {
 			is_in_faction_with = NFA
 			is_in_faction_with = ENT
@@ -653,10 +616,7 @@ has_unattained_important_goals = {
 		# UoB needs to destroy Canada
 		AND = {
 			tag = ENG
-			CAN = {
-				exists = yes
-				is_faction_leader = yes
-			}
+			CAN = { is_faction_leader = yes }
 		}
 		# Balkans need to reclaim their core states
 		AND = {
@@ -808,6 +768,7 @@ ROOT_is_threatened_cautious = {
 
 ROOT_is_threatened = {
 	OR = {
+		has_civil_war = yes
 		enemies_strength_ratio > 0.5
 		surrender_progress > 0
 		has_country_flag = imminent_war
@@ -815,7 +776,7 @@ ROOT_is_threatened = {
 }
 
 #on the target's scope
-ROOT_dont_start_major_faction_wars = {
+dont_start_major_faction_wars = {
 	ROOT = {
 		is_in_faction = yes
 		is_faction_leader = no
@@ -1001,6 +962,7 @@ guarantor_is_stronger_than_ROOT_and_not_vulnerable = {
 	any_of_scopes = {
 		array = guarantor_array
 		has_guaranteed = PREV
+		NOT = { tag = ROOT }
 		OR = {
 			AND = {
 				strength_ratio = { tag = ROOT ratio > 0.8 }
@@ -1026,6 +988,15 @@ default_attack_AI_trigger = {
 	}
 }
 
+default_attack_AI_trigger_FROM = {
+	OR = {
+		is_stronger_than_ROOT_and_not_vulnerable = yes
+		overlord_is_stronger_than_ROOT_and_not_vulnerable = yes
+		faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes
+		guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes
+	}
+}
+
 ### AI AREA TRIGGERS ###
 is_normal_european_focused_tag = {
 	OR = {
@@ -1041,13 +1012,17 @@ is_normal_european_focused_tag = {
 		original_tag = BRI
 
 		#Britain/Ireland
-		is_british_isles_tag = yes
+		is_british_tag = yes
+		original_tag = SCO
+		original_tag = WLS
+		original_tag = IRE
+		original_tag = NIR
 
 		#Benelux
 		original_tag = HOL
 		original_tag = BEL
-		original_tag = FLN
-		original_tag = WLL
+		original_tag = FLA
+		original_tag = WAL
 
 		#Germany
 		original_tag = GER
@@ -1056,14 +1031,6 @@ is_normal_european_focused_tag = {
 		original_tag = BAY
 		original_tag = NGF
 		original_tag = DDR
-
-		#Scandinavia
-		original_tag = SWE
-		original_tag = NOR
-		original_tag = FIN
-		original_tag = DEN
-		original_tag = ICE
-		original_tag = SCA
 
 		#Switzerland
 		original_tag = SWI
@@ -1088,8 +1055,18 @@ is_normal_european_focused_tag = {
 		original_tag = UKR
 		original_tag = DKB
 
-		#Russia
-		is_russian_tag = yes
+		#Russia has its own logic
+	}
+}
+
+is_normal_scandinavian_focused_tag = {
+	OR = {
+		original_tag = SWE
+		original_tag = NOR
+		original_tag = FIN
+		original_tag = DEN
+		original_tag = ICE
+		original_tag = SCA
 	}
 }
 
@@ -1198,7 +1175,6 @@ is_normal_african_focused_tag = {
 		#British Africa
 		original_tag = BOT
 		original_tag = SAF
-		original_tag = SFR
 		original_tag = ZIM
 	}
 }

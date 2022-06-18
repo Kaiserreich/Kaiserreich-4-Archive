@@ -1,0 +1,479 @@
+﻿add_namespace = asiapeace
+
+country_event = { #Reichspakt is defeated in Asia
+	id = asiapeace.1
+	immediate = { log = "[GetDateText]: [Root.GetName]: event asiapeace.1 FROM = [From.GetName]" }
+	title = asiapeace.1.t
+	desc = asiapeace.1.d
+
+	fire_only_once = yes
+
+	trigger = {
+		tag = GER
+		has_war = yes
+		is_faction_leader = yes
+		any_enemy_country = {
+			OR = {
+				is_in_asia = yes
+				is_in_australia = yes
+			}
+			has_capitulated = no
+			OR = {
+				is_faction_leader = yes
+				is_in_faction = no
+			}
+		}
+		NOT = {
+			any_allied_country = {
+				OR = {
+					is_in_asia = yes
+					is_in_australia = yes
+				}
+				has_capitulated = no
+			}
+		}
+	}
+
+	option = { #We surrender!
+		name = asiapeace.1.a
+		ai_chance = {
+			base = 100
+		}
+		custom_effect_tooltip = asian_reichspakt_will_proceed_to_peacedeal_we_white_peace
+		hidden_effect = {
+			# remove Asian/Oceanian countries from the Reichspakt
+			every_other_country = {
+				limit = {
+					is_ally_with = GER
+					OR = {
+						is_in_asia = yes
+						is_in_australia = yes
+					}
+				}
+				if = {
+					limit = { is_subject = yes }
+					overlord = {
+						set_autonomy = {
+							target = PREV
+							autonomy_state = autonomy_free
+						}
+					}
+				}
+				leave_faction = yes
+			}
+
+			# Ceylon/Maldives order == India -> JAP -> occupier -> independent CEY
+			if = {
+				limit = { owns_state = 422 } #Ceylon
+				if = {
+					limit = { NOT = { controls_state = 422 } }
+					var:422.controller = {
+						if = {
+							limit = { is_ally_with = PRF }
+							set_temp_variable = { ceylon_target = PRF }
+						}
+						else_if = {
+							limit = {
+								var:423.owner = {
+									is_ally_with = ROOT
+									is_indian_tag = yes
+								}
+							}
+							set_temp_variable = { ceylon_target = 423.owner }
+						}
+						else_if = {
+							limit = { is_ally_with = RAJ }
+							set_temp_variable = { ceylon_target = RAJ }
+						}
+						else_if = {
+							limit = { is_ally_with = HND }
+							set_temp_variable = { ceylon_target = HND }
+						}
+						else_if = {
+							limit = { is_ally_with = JAP }
+							set_temp_variable = { ceylon_target = JAP }
+						}
+						else = {
+							set_temp_variable = { ceylon_target = 422.controller }
+						}
+					}
+				}
+				else = {
+					if = {
+						limit = { has_war_with = PRF }
+						set_temp_variable = { ceylon_target = PRF }
+					}
+					else_if = {
+						limit = {
+							var:423.owner = {
+								is_ally_with = ROOT
+								is_indian_tag = yes
+							}
+						}
+						set_temp_variable = { ceylon_target = 423.owner }
+					}
+					else_if = {
+						limit = { has_war_with = RAJ }
+						set_temp_variable = { ceylon_target = RAJ }
+					}
+					else_if = {
+						limit = { has_war_with = HND }
+						set_temp_variable = { ceylon_target = HND }
+					}
+					else_if = {
+						limit = { has_war_with = JAP }
+						set_temp_variable = { ceylon_target = JAP }
+					}
+				}
+				if = {
+					limit = { has_variable = ceylon_target }
+					every_owned_state = {
+						limit = {
+							OR = {
+								state = 281 #Maldives
+								state = 422 #Ceylon
+								state = 710 #Diego Garcia
+							}
+						}
+						transfer_state_to = var:ceylon_target
+					}
+				}
+				else = {
+					281 = { add_core_of = CEY } #Maldives
+					710 = { add_core_of = CEY } #Diego Garcia
+					release = CEY
+				}
+			}
+
+			# HOL-held Indonesia order == INS -> JAP -> occupier -> independent INS
+			HOL = {
+				if = {
+					limit = {
+						is_ally_with = ROOT
+						any_owned_state = { is_indonesia = yes }
+					}
+					if = {
+						limit = { has_war_with = INS }
+						every_owned_state = {
+							limit = { is_indonesia = yes }
+							transfer_state_to = INS
+						}
+					}
+					else_if = {
+						limit = { has_war_with = JAP }
+						every_owned_state = {
+							limit = { is_indonesia = yes }
+							transfer_state_to = JAP
+						}
+					}
+					else_if = {
+						limit = {
+							NOT = { controls_state = 1020 }
+						}
+						every_owned_state = {
+							limit = { is_indonesia = yes }
+							transfer_state_to = var:1020.controller
+						}
+					}
+					else = {
+						release = INS
+					}
+				}
+			}
+
+			# then peace any Asian/Oceanian countries at war with the Reichspakt
+			every_enemy_country = {
+				limit = {
+					is_valid_peace_target = yes
+					OR = {
+						is_in_asia = yes
+						is_in_australia = yes
+					}
+				}
+				country_event = asiapeace.2
+			}
+
+			#remove any remaining diplomatic relations
+			every_other_country = {
+				limit = {
+					OR = {
+						is_in_asia = yes
+						is_in_australia = yes
+					}
+					is_guaranteed_by = ROOT
+				}
+				ROOT = {
+					diplomatic_relation = {
+						country = PREV
+						relation = guarantee
+						active = no
+					}
+				}
+			}
+			every_other_country = {
+				limit = {
+					OR = {
+						is_in_asia = yes
+						is_in_australia = yes
+					}
+					has_non_aggression_pact_with = ROOT
+				}
+				diplomatic_relation = {
+					country = ROOT
+					relation = non_aggression_pact
+					active = no
+				}
+			}
+			every_other_country = {
+				limit = {
+					OR = {
+						is_in_asia = yes
+						is_in_australia = yes
+					}
+					has_military_access_to = ROOT
+				}
+				ROOT = {
+					diplomatic_relation = {
+						country = PREV
+						relation = military_access
+						active = no
+					}
+				}
+			}
+			every_other_country = {
+				limit = {
+					OR = {
+						is_in_asia = yes
+						is_in_australia = yes
+					}
+					gives_military_access_to = ROOT
+				}
+				diplomatic_relation = {
+					country = ROOT
+					relation = military_access
+					active = no
+				}
+			}
+			LEC_remove_from_legation_council = yes
+		}
+	}
+
+	option = { #We shall keep fighting
+		name = asiapeace.1.b
+		ai_chance = {
+			base = 0
+		}
+		add_war_support = -0.1
+		add_stability = -0.1
+	}
+}
+
+country_event = { #Reichspakt surrenders
+	id = asiapeace.2
+	immediate = { log = "[GetDateText]: [Root.GetName]: event asiapeace.2 FROM = [From.GetName]" }
+	title = asiapeace.2.t
+	desc = asiapeace.2.d
+
+	is_triggered_only = yes
+
+	option = { #We accept their surrender!
+		name = asiapeace.2.a
+		ai_chance = {
+			base = 100
+		}
+		custom_effect_tooltip = asian_reichspakt_will_proceed_to_peacedeal_we_white_peace
+		hidden_effect = {
+			if = {
+				limit = {
+					AUS = {
+						has_war_together_with = GER
+						has_war_with = JAP
+					}
+				}
+				AUS = {
+					white_peace_with_ROOT = yes
+				}
+			}
+			GER = {
+				white_peace_with_ROOT = yes
+			}
+		}
+	}
+
+	option = { #We demand unconditional surrender!
+		name = asiapeace.2.b
+		ai_chance = {
+			base = 0
+		}
+		add_war_support = -0.1
+		add_stability = -0.1
+		GER = {
+			country_event = {
+				id = asiapeace.3
+				days = 1
+			}
+		}
+	}
+}
+
+country_event = { #[From.GetNameDef] does not accept the peace in the east
+	id = asiapeace.3
+	immediate = { log = "[GetDateText]: [Root.GetName]: event asiapeace.3 FROM = [From.GetName]" }
+	title = asiapeace.3.t
+	desc = asiapeace.3.d
+
+	is_triggered_only = yes
+
+	option = { #No choice but to fight on then
+		name = asiapeace.3.a
+		add_war_support = 0.1
+	}
+}
+
+country_event = { #Netherlands is defeated in Asia
+	id = asiapeace.4
+	immediate = { log = "[GetDateText]: [Root.GetName]: event asiapeace.4 FROM = [From.GetName]" }
+	title = asiapeace.4.t
+	desc = asiapeace.4.d
+
+	is_triggered_only = yes
+
+	trigger = {
+		has_war = yes
+		is_valid_peace_target = yes
+		any_enemy_country = {
+			is_in_asia = yes
+			has_capitulated = no
+			NOT = { tag = INS }
+			OR = {
+				is_faction_leader = yes
+				is_in_faction = no
+			}
+		}
+		OR = {
+			any_allied_country = {
+				is_in_asia = yes
+			}
+			any_subject_country = {
+				is_in_asia = yes
+			}
+		}
+		NOT = {
+			any_allied_country = {
+				is_in_asia = yes
+				has_capitulated = no
+			}
+			any_subject_country = {
+				is_in_asia = yes
+				has_capitulated = no
+			}
+		}
+	}
+
+	option = { #We surrender!
+		name = asiapeace.4.a
+		ai_chance = { base = 100 }
+		custom_effect_tooltip = asian_hol_will_proceed_to_peacedeal_we_white_peace
+		hidden_effect = {
+			# remove any Asian subjects/allies of HOL
+			every_country = {
+				limit = {
+					is_ally_with = ROOT
+					OR = {
+						is_in_asia = yes
+						is_in_australia = yes
+					}
+				}
+				overlord = {
+					set_autonomy = {
+						target = PREV
+						autonomy_state = autonomy_free
+					}
+				}
+				leave_faction = yes
+			}
+			# release all occupied states in Asia
+			every_enemy_country = {
+				limit = {
+					OR = {
+						is_in_asia = yes
+						is_in_australia = yes
+					}
+				}
+				every_owned_state = {
+					limit = {
+						controller = {
+							OR = {
+								is_ally_with = ROOT
+								NOT = { has_war_with = PREV.PREV }
+							}
+						}
+					}
+					set_state_controller_to = owner
+				}
+			}
+			#then peace out any Asian/Oceanian countries at war with HOL
+			every_enemy_country = {
+				limit = {
+					is_subject = no
+					OR = {
+						is_in_asia = yes
+						is_in_australia = yes
+					}
+					OR = {
+						is_in_faction = no
+						is_faction_leader = yes
+					}
+				}
+				country_event = asiapeace.5
+			}
+		}
+	}
+
+	option = { #We shall keep fighting
+		name = asiapeace.4.b
+		ai_chance = { base = 0 }
+		add_war_support = -0.1
+		add_stability = -0.1
+	}
+}
+
+country_event = { #Netherlands surrenders
+	id = asiapeace.5
+	immediate = { log = "[GetDateText]: [Root.GetName]: event asiapeace.5 FROM = [From.GetName]" }
+	title = asiapeace.5.t
+	desc = asiapeace.5.d
+
+	is_triggered_only = yes
+
+	option = { #We accept their surrender!
+		name = asiapeace.5.a
+		ai_chance = { base = 100 }
+		custom_effect_tooltip = asian_reichspakt_will_proceed_to_peacedeal_we_white_peace
+		hidden_effect = {
+			FROM = { white_peace_with_ROOT = yes }
+		}
+	}
+
+	option = { #We demand unconditional surrender!
+		name = asiapeace.5.b
+		ai_chance = { base = 0 }
+		add_war_support = -0.1
+		add_stability = -0.1
+		FROM = { country_event = { id = asiapeace.6 days = 1 } }
+	}
+}
+
+country_event = { #[From.GetNameDef] does not accept the peace in the east
+	id = asiapeace.6
+	immediate = { log = "[GetDateText]: [Root.GetName]: event asiapeace.6 FROM = [From.GetName]" }
+	title = asiapeace.6.t
+	desc = asiapeace.6.d
+
+	is_triggered_only = yes
+
+	option = { #No choice but to fight on then
+		name = asiapeace.6.a
+		add_war_support = 0.1
+	}
+}

@@ -62,6 +62,8 @@ replace_path = "map/supplyareas"
 
 replace_path = "portraits"
 
+replace_path = "tests"
+
 tags = {
 	"Alternative History"
 	"Events"
@@ -69,5 +71,5 @@ tags = {
 	"Gameplay"
 }
 picture = "KR.jpg"
-version = "0.20.1"
+version = "0.21"
 supported_version = "1.11.*"
