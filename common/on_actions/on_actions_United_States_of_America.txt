@@ -116,7 +116,7 @@ on_actions = {
 					if = {
 						limit = { has_country_flag = TEX_war_committee_factories }
 						clr_country_flag = TEX_war_committee_factories
-						add_offsite_building = { type = arms_factory level = -8 }
+						add_offsite_building = { type = arms_factory level = -3 }
 					}
 
 					### Restore the TEX VPs to their original values
@@ -126,6 +126,19 @@ on_actions = {
 						clr_country_flag = TEX_baton_rouge_kept
 						set_victory_points = { province = 1453 value = 12 }
 					}
+				}
+				if = {
+					limit = {
+						tag = NEE
+						ROOT = {
+							OR = {
+								tag = USA
+								tag = PSA
+								tag = TEX
+							}
+						}
+					}
+					country_event = { id = amcivwar.768 days = 25 } #Trial event for NEE generals
 				}
 			}
 			if = {
@@ -158,13 +171,12 @@ on_actions = {
 	}
 
 	# ROOT is capitulated country, FROM is winner
-	on_capitulation = {
+	on_capitulation_immediate = {
 		effect = {
 			### Rebuilding the US Navy
 			if = {
 				limit = {
 					is_american_tag = yes
-					is_in_faction = no
 					FROM = { is_american_tag = yes }
 				}
 				transfer_navy = { target = FROM }
@@ -199,6 +211,49 @@ on_actions = {
 					province = 1827
 					value = 20
 				}
+			}
+		}
+	}
+
+	# ROOT is capitulated country, FROM is winner
+	on_capitulation = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] (ROOT) on_capitulation FROM = [From.GetName]"
+			if = {
+				limit = {
+					tag = USA
+					is_in_faction = no
+					has_global_flag = USA_civil_war_begun_flag
+					NOT = { has_global_flag = USA_civil_war_over_flag }
+				}
+				news_event = amcivwar.607
+			}
+			else_if = {
+				limit = {
+					tag = CSA
+					is_in_faction = no
+					has_global_flag = USA_civil_war_begun_flag
+					NOT = { has_global_flag = USA_civil_war_over_flag }
+				}
+				news_event = amcivwar.608
+			}
+			else_if = {
+				limit = {
+					tag = TEX
+					is_in_faction = no
+					has_global_flag = USA_civil_war_begun_flag
+					NOT = { has_global_flag = USA_civil_war_over_flag }
+				}
+				news_event = amcivwar.609
+			}
+			else_if = {
+				limit = {
+					tag = PSA
+					is_in_faction = no
+					has_global_flag = USA_civil_war_begun_flag
+					NOT = { has_global_flag = USA_civil_war_over_flag }
+				}
+				news_event = amcivwar.610
 			}
 		}
 	}
@@ -263,6 +318,7 @@ on_actions = {
 				country_event = csa.28 #1944
 				country_event = csa.35 #1948
 				country_event = csa.43 #1952
+				country_event = csa.51 #Totalist "elections"
 			}
 			### Hawaii ###
 			else_if = {
@@ -409,25 +465,70 @@ on_actions = {
 		}
 	}
 
-	#ROOT is winner #FROM gets annexed - For civil wars on_civil_war_end is also fired
-	on_annex = { #NEE getting annexed into American tag (That is not the CSA)
+	on_ruling_party_change = {
+		# temp var old_ideology_token is available for effects
 		effect = {
 			if = {
-				limit = {
-					OR = {
-						tag = USA
-						tag = PSA
-						tag = TEX
+				limit = { tag = USA }
+				if = {
+					limit = { will_have_dictatorship_government = yes }
+					USA_united_states_congress = {
+						if = {
+							limit = { has_trait = KR_parliament_sic }
+							remove_trait = {
+								trait = KR_parliament_sic
+								slot = second_in_command
+							}
+						}
+						if = {
+							limit = { NOT = { has_trait = KR_authoritarian_sic } }
+							add_trait = {
+								trait = KR_authoritarian_sic
+								slot = second_in_command
+							}
+						}
 					}
-					FROM = { tag = NEE }
 				}
-				country_event = { id = amcivwar.768 days = 25 } #Trial event for NEE generals
+				else = {
+					USA_united_states_congress = {
+						if = {
+							limit = { has_trait = KR_authoritarian_sic }
+							remove_trait = {
+								trait = KR_authoritarian_sic
+								slot = second_in_command
+							}
+						}
+						if = {
+							limit = { NOT = { has_trait = KR_parliament_sic } }
+							add_trait = {
+								trait = KR_parliament_sic
+								slot = second_in_command
+							}
+						}
+					}
+				}
 			}
 		}
 	}
 
 	on_war_relation_added = {
 		effect = {
+			# CSA events
+			if = {
+				limit = {
+					OR = {
+						tag = CAN
+						tag = CSA
+					}
+					FROM = {
+						OR = {
+							tag = CAN
+							tag = CSA
+						}
+					}
+				}
+				CSA = { country_event = { id = amcivwar.42 hours = 8 } }
+			}
 			# Clear ceasefire global flag
 			if = {
 				limit = {
@@ -503,4 +604,3 @@ on_actions = {
 		}
 	}
 }
-

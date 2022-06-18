@@ -1,16 +1,23 @@
 on_actions = {
-
-	on_startup = {
+	#ROOT is winner #FROM gets annexed - For civil wars on_civil_war_end is also fired
+	on_annex = {
 		effect = {
-			542 = {
-				set_compliance = 25
-				set_state_flag = SAF_the_empire_strikes_back
-			}
-			85 = {
-				clr_state_flag = SAF_the_empire_strikes_back
-			}
-			738 = {
-				clr_state_flag = SAF_the_empire_strikes_back
+			if = {
+				limit = {
+					original_tag = SAF
+					has_country_flag = SAF_antagonise_@FROM
+				}
+				clr_country_flag = SAF_antagonise_@FROM
+				add_ai_strategy = {
+					type = antagonize
+					id = FROM
+					value = -200
+				}
+				add_ai_strategy = {
+					type = declare_war
+					id = FROM
+					value = -2000
+				}
 			}
 		}
 	}
@@ -20,14 +27,10 @@ on_actions = {
 		effect = {
 			if = {
 				limit = {
-					tag = SFR
-					FROM = { tag = SAF }
+					original_tag = SAF
+					FROM = { original_tag = SAF }
 				}
 				country_event = natal.26
-			}
-			if = {
-				limit = { tag = SAF }
-				country_event = natal.17
 			}
 		}
 	}
@@ -41,17 +44,162 @@ on_actions = {
 				country_event = saf.73 #1938 fusion
 				country_event = saf.123 #usual generic
 				country_event = saf.124 #mixed race may vote
-			}
-			### Natal ###
-			if = {
-				limit = { tag = SFR }
 				country_event = natal.51 #South African Federation
 				country_event = natal.52 #Natal itself
 			}
 			### Rhodesia ###
-			if = {
+			else_if = {
 				limit = { tag = ZIM }
 				country_event = zim.13
+			}
+		}
+	}
+
+	#ROOT is new controller #FROM is old controller #FROM.FROM is state ID
+	on_state_control_changed = {
+		effect = {
+			if = {
+				limit = { FROM.FROM = { has_state_flag = SAF_protectorate_modifier } }
+				if = {
+					limit = { original_tag = SAF }
+					FROM.FROM = {
+						if = {
+							limit = { NOT = { has_dynamic_modifier = { modifier = SAF_protectorate } } }
+							add_dynamic_modifier = { modifier = SAF_protectorate }
+						}
+					}
+				}
+				else = {
+					FROM.FROM = {
+						if = {
+							limit = { has_dynamic_modifier = { modifier = SAF_protectorate } }
+							remove_dynamic_modifier = { modifier = SAF_protectorate }
+						}
+					}
+				}
+			}
+			else_if = {
+				limit = { FROM.FROM = { has_state_flag = SAF_commune_modifier } }
+				if = {
+					limit = { original_tag = SAF }
+					FROM.FROM = {
+						if = {
+							limit = { NOT = { has_dynamic_modifier = { modifier = SAF_autonomous_commune } } }
+							add_dynamic_modifier = { modifier = SAF_autonomous_commune }
+						}
+					}
+				}
+				else = {
+					FROM.FROM = {
+						if = {
+							limit = { has_dynamic_modifier = { modifier = SAF_autonomous_commune } }
+							remove_dynamic_modifier = { modifier = SAF_autonomous_commune }
+						}
+					}
+				}
+			}
+		}
+	}
+	on_ruling_party_change = {
+		effect = {
+			if = {
+				limit = { original_tag = SAF }
+				clear_sic_slot = yes
+				if = {
+					limit = {
+						will_have_totalist_government = yes
+						has_character = SAF_albert_thomas_nzula
+					}
+					activate_advisor = SAF_albert_thomas_nzula_sic
+				}
+				else_if = {
+					limit = {
+						will_have_syndicalist_government = yes
+						has_character = SAF_emil_solomon_sachs
+					}
+					activate_advisor = SAF_emil_solomon_sachs_sic
+				}
+				else_if = {
+					limit = {
+						will_have_radical_socialist_government = yes
+						has_country_leader = { character = SAF_david_ivon_jones }
+						has_character = SAF_moses_mauane_kotane
+					}
+					activate_advisor = SAF_moses_mauane_kotane_sic
+				}
+				else_if = {
+					limit = {
+						will_have_radical_socialist_government = yes
+						has_character = SAF_john_stephen_gomas
+					}
+					activate_advisor = SAF_john_stephen_gomas_sic
+				}
+				else_if = {
+					limit = { SAF_has_governor_general = yes }
+					if = {
+						limit = {
+							will_have_social_democrat_government = yes
+							has_character = SAF_walter_bayley_madeley
+						}
+						activate_advisor = SAF_walter_bayley_madeley_sic
+					}
+					else_if = {
+						limit = {
+							OR = {
+								will_have_social_liberal_government = yes
+								will_have_social_conservative_government = yes
+							}
+							has_character = SAF_jan_christian_smuts
+						}
+						activate_advisor = SAF_jan_christian_smuts_sic
+					}
+					else_if = {
+						limit = {
+							will_have_authoritarian_democrat_government = yes
+							has_character = SAF_james_barry_munnik_hertzog
+						}
+						activate_advisor = SAF_james_barry_munnik_hertzog_sic
+					}
+					else_if = {
+						limit = {
+							will_have_authoritarian_democrat_government = yes
+							has_character = SAF_nicolaas_christiaan_havenga
+						}
+						activate_advisor = SAF_nicolaas_christiaan_havenga_sic
+					}
+					else_if = {
+						limit = {
+							will_have_paternal_autocrat_government = yes
+							has_character = SAF_daniel_francois_malan
+						}
+						activate_advisor = SAF_daniel_francois_malan_sic
+					}
+					else_if = {
+						limit = { has_character = SAF_south_african_parliament }
+						activate_advisor = SAF_south_african_parliament_sic
+					}
+				}
+				else_if = {
+					limit = { has_character = SAF_south_african_parliament }
+					activate_advisor = SAF_south_african_parliament_sic
+				}
+			}
+		}
+	}
+
+	#ROOT = attacking side
+	#FROM = defending side
+	#fired when two countries end up at war with each other (on_war is fired when a country goes to war against anyone and is not fired again when it enters war against another country unless it went to peace first)
+	on_war_relation_added = {
+		effect = {
+			if = {
+				limit = {
+					OR = {
+						tag = SAF
+						FROM = { tag = SAF }
+					}
+				}
+				SAF = { country_event = { id = saf.107 days = 10 random_days = 10 } }
 			}
 		}
 	}
@@ -71,4 +219,3 @@ on_actions = {
 		}
 	}
 }
-

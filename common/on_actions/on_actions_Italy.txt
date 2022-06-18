@@ -19,26 +19,12 @@ on_actions = {
 				limit = {
 					FROM = { tag = SRI }
 				}
-				if = {
-					limit = {
-						ROOT = { tag = PAP }
-					}
-					ROOT = { country_event = papalstate.65 }
-				}
-				if = {
-					limit = {
-						ROOT = { tag = ITA }
-					}
-					ROOT = {
-						country_event = { id = papalstate.65 days = 45 random_days = 45 }
-						country_event = ita.173
-					}
-					FROM = { country_event = ita.173 }
-				}
+				PAP = { country_event = papalstate.65 }
+				ITA = { country_event = ita.173 }
 			}
 			if = {
 				limit = {
-					ROOT = { tag = VNC }
+					tag = VNC
 					FROM = { tag = ITA }
 				}
 				ROOT = {
@@ -47,7 +33,7 @@ on_actions = {
 			}
 			if = {
 				limit = {
-					ROOT = { tag = SRI }
+					tag = SRI
 					FROM = { tag = ITA }
 					country_exists = VNC
 				}
@@ -57,7 +43,7 @@ on_actions = {
 			}
 			if = {
 				limit = {
-					ROOT = { tag = ITA }
+					tag = ITA
 					FROM = { tag = VNC }
 				}
 				AUS = {
@@ -68,13 +54,13 @@ on_actions = {
 				}
 			}
 			if = {
-				limit = {
-					ROOT = { has_country_flag = ITA_libya_war_@FROM }
-				}
-				ROOT = {
-					clr_country_flag = ITA_libya_war_@FROM
-					clr_country_flag = ITA_war_for_libya
-				}
+				limit = { has_country_flag = ITA_libya_war_@FROM }
+				clr_country_flag = ITA_libya_war_@FROM
+				clr_country_flag = ITA_war_for_libya
+			}
+			if = {
+				limit = { is_italian_tag = yes }
+				italy_recalculate_integration_decisions = yes
 			}
 		}
 	}
@@ -125,6 +111,17 @@ on_actions = {
 				FROM = {
 					clr_country_flag = ITA_libya_war_@ROOT
 					clr_country_flag = ITA_war_for_libya
+				}
+			}
+			if = {
+				limit = { is_italian_tag = yes }
+				italy_recalculate_integration_decisions = yes
+			}
+			else_if = {
+				limit = { FROM = { is_italian_tag = yes } }
+				if = {
+					limit = { FROM = { tag = SRD } }
+					FROM = { SRD_remove_entente_support_idea = yes }
 				}
 			}
 		}
@@ -179,8 +176,10 @@ on_actions = {
 			### Sardinia ###
 			if = {
 				limit = { tag = SRD }
-				country_event = srd.29
-				country_event = srd.30
+				country_event = srd.30 #Generic
+				country_event = srd.29 #First Elections
+				country_event = srd.17 #Generic Authoritarian Liberal Elections
+				country_event = srd.16 #Generic Badoglio Elections
 			}
 			### Venice ###
 			if = {
@@ -200,26 +199,86 @@ on_actions = {
 		}
 	}
 
-	#ROOT is new controller
-	#FROM is old controller
-	#FROM.FROM is state ID
-
-	on_state_control_changed = {
+	on_war_relation_added = {
 		effect = {
-			# Venice transfers its navy back to Italy if captured
+			if = {
+				limit = {
+					ROOT = {
+						OR = {
+							tag = INT
+							tag = SRD
+						}
+					}
+					FROM = {
+						OR = {
+							tag = INT
+							tag = SRD
+						}
+					}
+				}
+				SRD = {
+					country_event = {
+						id = srd.41
+						days = 30
+						random_days = 180
+					}
+				}
+			}
+		}
+	}
+
+	# ROOT is capitulated country, FROM is winner
+	on_capitulation_immediate = {
+		effect = {
+			### Rebuilding the Italian navies
 			if = {
 				limit = {
 					tag = ITA
-					has_country_flag = ITA_venice_will_rebel
-					FROM = {
-						tag = VNC
-						has_war_with = ITA
-					}
-					FROM.FROM = { state = 160 }
+					FROM = { tag = VNC }
 				}
-				ITA = { country_event = ita.70 }
+				country_event = ita.70
+			}
+			else_if = {
+				limit = {
+					is_italian_tag = yes
+					FROM = { is_italian_tag = yes }
+				}
+				transfer_navy = { target = FROM }
+			}
+		}
+	}
+
+	#ROOT is new controller
+	#FROM is old controller
+	#FROM.FROM is state ID
+	on_state_control_changed = {
+		effect = {
+			if = {
+				limit = {
+					is_italian_tag = yes
+					FROM.FROM = {
+						is_claimed_by = ROOT
+						NOT = { is_core_of = ROOT }
+						is_italy_or_potential_claim = yes
+					}
+				}
+				FROM.FROM = { italy_enable_coring_decisions_on_state = yes }
+			}
+			if = {
+				limit = {
+					tag = SRD
+					FROM.FROM = {
+						is_owned_by = ROOT
+						state = 1
+					}
+				}
+				SRD = {
+					country_event = {
+						id = srd.42
+						days = 55
+					}
+				}
 			}
 		}
 	}
 }
-

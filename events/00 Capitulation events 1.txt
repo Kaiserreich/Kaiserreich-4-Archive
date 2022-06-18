@@ -1,0 +1,1629 @@
+﻿###########################
+# Capitulation Events
+###########################
+
+add_namespace = capt
+
+### German Capitulation
+
+# Main German capitulation event
+country_event = {
+	id = capt.1
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.1 FROM = [From.GetName]" }
+	title = capt.1.t
+	desc = capt.1.d
+	picture = GFX_report_event_german_reichstag_bombed
+
+	fire_only_once = yes
+
+	trigger = {
+		tag = GER
+		is_subject = no
+		has_war = yes
+		if = {
+			limit = { NOT = { controls_state = 64 } } #Brandenburg
+			surrender_progress > 0.75
+		}
+		else = {
+			surrender_progress > 0.8
+		}
+	}
+
+	immediate = {
+		hidden_effect = {
+			if = { #Does Germany flee to MAF?
+				limit = {
+					MAF = {
+						is_subject_of = GER
+						965 = { is_controlled_by = MAF } #Dar-es-Salaam
+						surrender_progress < 0.30
+						OR = {
+							is_ai = yes
+							GER = { is_ai = yes }
+						}
+					}
+				}
+				set_global_flag = GER_flees_to_africa
+			}
+
+			if = { #Checking for UoB involvement in the war
+				limit = {
+					ENG = {
+						is_in_faction_with = FRA
+						has_war_with = GER
+						OR = {
+							any_war_score > 10
+							controls_state = 56
+							controls_state = 58
+							controls_state = 59
+						}
+					}
+				}
+				set_global_flag = UoB_war_par_1
+			}
+			if = {
+				limit = {
+					ENG = {
+						is_in_faction_with = FRA
+						has_war_with = GER
+						OR = {
+							any_war_score > 25
+							AND = {
+								controls_state = 5
+								controls_state = 62
+								controls_state = 86
+							}
+							controls_state = 64
+						}
+					}
+				}
+				set_global_flag = UoB_war_par_2
+			}
+
+			random_other_country = {
+				limit = { has_war_with = GER }
+				news_event = worldnews.145
+			}
+
+			LEC = {
+				country_event = {
+					id = lec.100
+					days = 1
+				}
+			}
+		}
+	}
+
+	option = {
+		name = capt.1.a #Assume control of Mittelafrika. We shall fight on from there
+		trigger = {
+			has_global_flag = GER_flees_to_africa
+		}
+		set_country_flag = GER_capitulated
+		if = {
+			limit = { MAF = { is_ai = no } }
+			MAF = { country_event = capt.2 }
+		}
+		else = {
+			MAF = { change_tag_from = ROOT }
+			hidden_effect = { country_event = capt.21 }
+		}
+	}
+	option = {
+		name = capt.1.b #There is nowhere to run. Surrender!
+		trigger = {
+			NOT = { has_global_flag = GER_flees_to_africa }
+		}
+		set_country_flag = GER_capitulated
+		custom_effect_tooltip = GER_will_capitulate
+		hidden_effect = {
+			country_event = capt.22
+		}
+	}
+}
+
+# MAF player given option to refuse the flight to Africa
+country_event = {
+	id = capt.2
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.2 FROM = [From.GetName]" }
+	title = capt.2.t
+	desc = capt.2.d
+	picture = GFX_report_event_german_reichstag_bombed
+
+	is_triggered_only = yes
+
+	option = {
+		name = capt.2.a #Lapdogs no longer! Declare the independence of the Mittelafrikan Empire!
+		add_stability = -0.3
+		overlord = {
+			set_autonomy = {
+				target = MAF
+				autonomy_state = autonomy_free
+			}
+		}
+		if = {
+			limit = { is_in_faction = yes }
+			leave_faction = yes
+		}
+		GER = {
+			country_event = capt.3
+		}
+	}
+
+	option = {
+		name = capt.2.b #Welcome the exiled government and give in to their demands
+		effect_tooltip = { set_cosmetic_tag = MAF_germany_in_exile }
+		GER = { country_event = capt.4 }
+	}
+}
+
+# MAF has refused to surrender to the fleeing Germans
+country_event = {
+	id = capt.3
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.3 FROM = [From.GetName]" }
+	title = capt.3.t
+	desc = capt.3.d
+	picture = GFX_report_event_MAF_tanganyika
+
+	is_triggered_only = yes
+
+	option = {
+		name = capt.3.a
+		custom_effect_tooltip = GER_will_capitulate
+		hidden_effect = { country_event = capt.22 }
+	}
+}
+
+# MAF has agreed to take in the fleeing Germans
+country_event = {
+	id = capt.4
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.4 FROM = [From.GetName]" }
+	title = capt.4.t
+	desc = capt.4.d
+	picture = GFX_report_event_MAF_tanganyika
+
+	is_triggered_only = yes
+
+	option = {
+		name = capt.4.a
+		MAF = { change_tag_from = ROOT }
+		hidden_effect = { country_event = capt.21 }
+	}
+}
+
+# GEX considers peace with Siam
+country_event = {
+	id = capt.5
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.5 FROM = [From.GetName]" }
+	title = capt.5.t
+	desc = capt.5.d
+	picture = GFX_report_event_MAF_tanganyika
+
+	is_triggered_only = yes
+
+	trigger = {
+		country_exists = GEA
+		GEA = { has_war_with = SIA }
+	}
+
+	option = {
+		name = capt.5.a #Give them whatever they want
+		SIA = {
+			country_event = capt.6
+		}
+	}
+	option = {
+		name = capt.5.b #We will continue the war, if we must
+		ai_chance = { base = 0 }
+		add_war_support = -0.10
+		add_stability = -0.05
+	}
+}
+
+# Siam receives peace offer
+country_event = {
+	id = capt.6
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.6 FROM = [From.GetName]" }
+	title = capt.6.t
+	desc = capt.6.d
+	picture = GFX_report_event_MAF_tanganyika
+
+	is_triggered_only = yes
+
+	option = {
+		name = capt.6.a #An excellent plan
+		GEA = {
+			country_event = capt.9
+		}
+	}
+	option = {
+		name = capt.6.b #Much? We want it ALL
+		ai_chance = { base = 0 }
+		add_war_support = -0.10
+		add_stability = -0.05
+	}
+}
+
+# GEX considers peace with Japan
+country_event = {
+	id = capt.7
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.7 FROM = [From.GetName]" }
+	title = capt.7.t
+	desc = capt.7.d
+	picture = GFX_report_event_MAF_tanganyika
+
+	is_triggered_only = yes
+
+	trigger = {
+		country_exists = GEA
+		GEA = { has_war_with = JAP }
+	}
+
+	option = {
+		name = capt.5.a #Give them whatever they want
+		JAP = {
+			country_event = capt.8
+		}
+	}
+	option = {
+		name = capt.5.b #We will continue the war, if we must
+		ai_chance = { base = 0 }
+		add_war_support = -0.10
+		add_stability = -0.10
+	}
+}
+
+# Japan receives peace offer
+country_event = {
+	id = capt.8
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.8 FROM = [From.GetName]" }
+	title = capt.8.t
+	desc = capt.8.d
+	picture = GFX_report_event_MAF_tanganyika
+
+	is_triggered_only = yes
+
+	option = {
+		name = capt.8.a #An excellent idea
+		GEA = {
+			country_event = capt.9
+		}
+	}
+	option = {
+		name = capt.8.b #We will take everything they have
+		ai_chance = { base = 0 }
+		add_war_support = -0.10
+		add_stability = -0.05
+	}
+}
+
+# GEA informed of the exiled government's peace plan
+country_event = {
+	id = capt.9
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.9 FROM = [From.GetName]" }
+	title = capt.9.t
+	picture = GFX_report_event_MAF_tanganyika
+
+	desc = {
+		text = capt.9.d.siam
+		trigger = {
+			FROM = { tag = SIA }
+		}
+	}
+	desc = {
+		text = capt.9.d.japan
+		trigger = {
+			FROM = { tag = JAP }
+		}
+	}
+
+	is_triggered_only = yes
+
+	option = {
+		name = capt.9.a
+		if = {
+			limit = {
+				FROM = { tag = SIA }
+			}
+			every_owned_state = {
+				limit = {
+					NOT = {
+						region = 142 #Siam
+						region = 196 #Indochina
+						region = 194 #Malay Peninsula
+						region = 216 #Lingnan
+					}
+				}
+				GEX = {
+					transfer_state = PREV
+				}
+			}
+			FROM = { white_peace_with_ROOT = yes }
+		}
+		else = {
+			if = {
+				limit = { is_subject = yes }
+				overlord = {
+					set_autonomy = {
+						target = ROOT
+						autonomy_state = autonomy_free
+					}
+				}
+			}
+			leave_faction = yes
+			add_timed_idea = {
+				idea = GER_ready_to_surrender
+				days = 30
+			}
+			if = {
+				limit = { is_ai = no }
+				GEX = { change_tag_from = ROOT }
+			}
+		}
+	}
+}
+
+# Hidden event to peace out Reichspakt members
+country_event = {
+	id = capt.10
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.10 FROM = [From.GetName]" }
+
+	is_triggered_only = yes
+	hidden = yes
+
+	immediate = {
+		# First non-Russian European faction leaders peace out with any non-neighbours outside of Europe
+		if = {
+			limit = {
+				OR = {
+					is_in_europe = yes
+					tag = ENT
+				}
+				is_faction_leader = yes
+				NOT = { tag = RUS }
+			}
+			every_enemy_country = {
+				limit = {
+					has_country_flag = former_reichspakt_member
+					is_valid_peace_target = yes
+					has_capitulated = no
+					is_in_europe = no
+					NOT = {
+						tag = GER
+						AND = {
+							tag = HAW
+							ROOT = {
+								OR = {
+									is_in_faction_with = USA
+									is_in_faction_with = CSA
+									is_in_faction_with = TEX
+									is_in_faction_with = NEE
+									is_in_faction_with = PSA
+								}
+							}
+						}
+						is_actual_neighbor_of_ROOT_or_ally = yes
+						any_owned_state = {
+							is_coastal = yes
+							is_controlled_by_ROOT_or_ally = yes
+						}
+						any_subject_country = {
+							is_in_europe = yes
+							OR = {
+								is_actual_neighbor_of_ROOT_or_ally = yes
+								any_owned_state = {
+									is_coastal = yes
+									is_controlled_by_ROOT_or_ally = yes
+								}
+							}
+						}
+						any_subject_country = {
+							is_in_europe = no
+							any_owned_state = {
+								is_controlled_by_ROOT_or_ally = yes
+							}
+						}
+						AND = {
+							is_in_faction = yes
+							any_allied_country = {
+								is_valid_peace_target = no
+								OR = {
+									is_actual_neighbor_of_ROOT_or_ally = yes
+									any_owned_state = {
+										is_coastal = yes
+										is_controlled_by_ROOT_or_ally = yes
+									}
+								}
+							}
+						}
+					}
+				}
+				white_peace_with_ROOT = yes
+			}
+		}
+		# Then deal with Russia specifically
+		else_if = {
+			limit = {
+				tag = RUS
+				is_faction_leader = yes
+			}
+			every_enemy_country = {
+				limit = {
+					has_country_flag = former_reichspakt_member
+					is_valid_peace_target = yes
+					has_capitulated = no
+					is_actual_neighbor_of_ROOT_or_ally = no
+					NOT = {
+						tag = GER
+						tag = AUS
+						tag = POL
+						tag = GAL
+						tag = UKR
+						tag = WHR
+						tag = LIT
+						tag = BAT
+						tag = EST
+						tag = LAT
+						tag = DKB
+						tag = GEO
+						tag = AZR
+						tag = ARM
+						AND = {
+							tag = HAW
+							ROOT = {
+								OR = {
+									is_in_faction_with = USA
+									is_in_faction_with = CSA
+									is_in_faction_with = TEX
+									is_in_faction_with = NEE
+									is_in_faction_with = PSA
+								}
+							}
+						}
+						any_owned_state = {
+							is_coastal = yes
+							is_controlled_by_ROOT_or_ally = yes
+						}
+						any_neighbor_country = {
+							has_capitulated = yes
+							any_owned_state = {
+								is_controlled_by_ROOT_or_ally = yes
+							}
+						}
+						any_subject_country = {
+							OR = {
+								is_actual_neighbor_of_ROOT_or_ally = yes
+								any_owned_state = {
+									is_coastal = yes
+									is_controlled_by_ROOT_or_ally = yes
+								}
+							}
+						}
+						AND = {
+							is_in_faction = yes
+							any_allied_country = {
+								is_valid_peace_target = no
+								OR = {
+									is_actual_neighbor_of_ROOT_or_ally = yes
+									any_owned_state = {
+										is_coastal = yes
+										is_controlled_by_ROOT_or_ally = yes
+									}
+								}
+							}
+						}
+					}
+				}
+				white_peace_with_ROOT = yes
+			}
+		}
+		# Then Asian faction leaders peace out with any non-neighbours outside of Asia
+		else_if = {
+			limit = {
+				is_in_asia = yes
+				is_faction_leader = yes
+			}
+			every_enemy_country = {
+				limit = {
+					has_country_flag = former_reichspakt_member
+					is_valid_peace_target = yes
+					has_capitulated = no
+					is_in_asia = no
+					NOT = {
+						tag = GER
+						AND = {
+							tag = HAW
+							ROOT = {
+								OR = {
+									is_in_faction_with = USA
+									is_in_faction_with = CSA
+									is_in_faction_with = TEX
+									is_in_faction_with = NEE
+									is_in_faction_with = PSA
+								}
+							}
+						}
+						AND = {
+							has_subject = GEA
+							ROOT = { tag = JAP }
+						}
+						AND = {
+							tag = HOL
+							ROOT = { tag = INS }
+						}
+						is_actual_neighbor_of_ROOT_or_ally = yes
+						any_owned_state = {
+							is_coastal = yes
+							is_controlled_by_ROOT_or_ally = yes
+						}
+						any_subject_country = {
+							is_in_asia = yes
+							OR = {
+								is_actual_neighbor_of_ROOT_or_ally = yes
+								any_owned_state = {
+									is_coastal = yes
+									is_controlled_by_ROOT_or_ally = yes
+								}
+							}
+						}
+						AND = {
+							is_in_faction = yes
+							any_allied_country = {
+								is_valid_peace_target = no
+								OR = {
+									is_actual_neighbor_of_ROOT_or_ally = yes
+									any_owned_state = {
+										is_coastal = yes
+										is_controlled_by_ROOT_or_ally = yes
+									}
+								}
+							}
+						}
+					}
+				}
+				white_peace_with_ROOT = yes
+			}
+		}
+		# Then everyone else peaces out with any non-neighbours
+		else = {
+			every_enemy_country = {
+				limit = {
+					has_country_flag = former_reichspakt_member
+					is_valid_peace_target = yes
+					has_capitulated = no
+					NOT = {
+						civilwar_target = ROOT #do not peace out civil wars
+						tag = GER
+						AND = {
+							tag = HOL
+							ROOT = { tag = INS }
+						}
+						AND = {
+							tag = AUS
+							ROOT = {
+								OR = {
+									tag = SER
+									tag = ROM
+									tag = POL
+									tag = ITA
+								}
+							}
+						}
+						AND = {
+							tag = HAW
+							ROOT = { is_american_tag = yes }
+						}
+						is_actual_neighbor_of_ROOT_or_ally = yes
+						any_owned_state = {
+							is_coastal = yes
+							is_controlled_by_ROOT_or_ally = yes
+						}
+						any_subject_country = {
+							OR = {
+								is_actual_neighbor_of_ROOT_or_ally = yes
+								any_owned_state = {
+									is_coastal = yes
+									is_controlled_by_ROOT_or_ally = yes
+								}
+							}
+						}
+						AND = {
+							is_in_faction = yes
+							any_allied_country = {
+								is_valid_peace_target = no
+								OR = {
+									is_actual_neighbor_of_ROOT_or_ally = yes
+									any_owned_state = {
+										is_coastal = yes
+										is_controlled_by_ROOT_or_ally = yes
+									}
+								}
+							}
+						}
+					}
+				}
+				white_peace_with_ROOT = yes
+			}
+		}
+	}
+}
+
+# Hidden event to remove German ideas and force them to surrender
+country_event = {
+	id = capt.11
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.11 FROM = [From.GetName]" }
+
+	is_triggered_only = yes
+	hidden = yes
+
+	immediate = {
+		if = {
+			limit = { has_idea = GER_imperial_pride }
+			remove_ideas = GER_imperial_pride
+		}
+		add_timed_idea = {
+			idea = GER_ready_to_surrender
+			days = 30
+		}
+	}
+}
+
+# NFA considers continuing war with GEX
+country_event = {
+	id = capt.12
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.12 FROM = [From.GetName]" }
+	title = capt.12.t
+	desc = capt.12.d
+	picture = GFX_report_event_MAF_tanganyika
+
+	is_triggered_only = yes
+
+	trigger = {
+		GEX = {
+			any_owned_state = {
+				OR = {
+					is_french_colonial_claim = yes
+					is_core_of = NFA
+					is_claimed_by = NFA
+				}
+			}
+		}
+		NOT = { has_global_flag = ENT_agree_colonies }
+	}
+
+	option = {
+		name = capt.12.a #Demand the colonies
+		ai_chance = {
+			base = 70
+			modifier = {
+				factor = 3
+				has_war = no
+			}
+			modifier = {
+				factor = 0.1
+				OR = {
+					has_war_with = ENG
+					has_war_with = FRA
+					has_war_with = JAP
+				}
+			}
+		}
+		GEX = {
+			country_event = capt.13
+		}
+	}
+	option = {
+		name = capt.12.b #We have had enough of war with the Germans
+		ai_chance = {
+			base = 30
+		}
+		add_stability = 0.05
+	}
+}
+
+# GEX receives the French demands
+country_event = {
+	id = capt.13
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.13 FROM = [From.GetName]" }
+	title = capt.13.t
+	desc = capt.13.d
+	picture = GFX_report_event_MAF_tanganyika
+
+	is_triggered_only = yes
+
+	option = {
+		name = capt.13.a #Give them what they want, if it will end this
+		every_owned_state = {
+			limit = {
+				OR = {
+					is_french_colonial_claim = yes
+					is_core_of = NFA
+					is_claimed_by = NFA
+				}
+			}
+			NFA = {
+				transfer_state = PREV
+				if = {
+					limit = {
+						has_completed_focus = NATFRA_Colonial_Extraction
+					}
+					PREV = {
+						set_state_flag = nfa_state_colonial_exploitation_flag
+					}
+				}
+				else = {
+					PREV = {
+						set_state_flag = nfa_state_colonial_resistance_flag
+					}
+				}
+				NFA_Resistance_Policy_on_colony_states = yes
+			}
+			clear_variable = ambition_area_@MAF
+		}
+	}
+	option = {
+		name = capt.13.b #We face them here in Africa, then
+		ai_chance = { base = 0 }
+		add_war_support = -0.10
+		NFA = {
+			create_wargoal = {
+				target = GEX
+				type = annex_everything
+			}
+		}
+	}
+}
+
+# Event to let countries know they've received a state
+state_event = {
+	id = capt.15
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.15 FROM = [From.GetName]" }
+	title = capt.15.t
+	desc = capt.15.d
+	picture = GFX_report_event_MAF_tanganyika
+
+	is_triggered_only = yes
+
+	option = {
+		effect_tooltip = {
+			event_target:transferred_state = { transfer_state_to = NFA }
+		}
+	}
+}
+
+# Hidden clean-up event
+country_event = {
+	id = capt.20
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.20 FROM = [From.GetName]" }
+
+	is_triggered_only = yes
+	hidden = yes
+
+	immediate = {
+		every_state = {
+			limit = { has_state_flag = GER_capitulation_transfer }
+			clr_state_flag = GER_capitulation_transfer
+		}
+		every_country = {
+			clr_country_flag = former_reichspakt_member
+		}
+	}
+}
+
+# Actual flight to Africa event (to prevent crashing)
+country_event = {
+	id = capt.21
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.21 FROM = [From.GetName]" }
+
+	is_triggered_only = yes
+	hidden = yes
+
+	immediate = {
+		germany_flees_to_africa = yes
+	}
+}
+
+# Actual capitulation event (to prevent crashing)
+country_event = {
+	id = capt.22
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.22 FROM = [From.GetName]" }
+
+	is_triggered_only = yes
+	hidden = yes
+
+	immediate = {
+		germany_capitulates = yes
+	}
+}
+
+### French Capitulation
+
+# The Commune of France capitulates
+country_event = {
+	id = capt.40
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.40 FROM = [From.GetName]" }
+	title = capt.40.t
+	desc = capt.40.d
+	picture = GFX_report_event_GER_weeping
+
+	fire_only_once = yes
+
+	trigger = {
+		tag = FRA
+		has_capitulated = yes
+		has_war = yes
+		is_in_faction = yes
+		NOT = { controls_state = 16 } #Paris
+		NOT = { has_global_flag = FRA_capitulated }
+	}
+
+	mean_time_to_happen = {
+		days = 5
+	}
+
+	immediate = {
+		hidden_effect = {
+			set_global_flag = FRA_capitulated
+			every_owned_state = {
+				limit = {
+					NOT = { is_controlled_by = FRA }
+				}
+				set_state_controller_to = controller
+			}
+			every_other_country = {
+				limit = {
+					NOT = {
+						tag = GER
+						tag = NFA
+					}
+					OR = {
+						is_in_faction_with = GER
+						is_in_faction_with = NFA
+					}
+					any_state = {
+						is_owned_by = FRA
+						is_controlled_by = PREV
+						is_owned_by = FRA
+						is_core_of = FRA
+						is_claim_or_core_or_ambition_of_PREV = no
+						OR = {
+							is_coastal = yes
+							AND = {
+								any_neighbor_state = { is_controlled_by = GER }
+								PREV = { is_in_faction_with = GER }
+							}
+							AND = {
+								any_neighbor_state = { is_controlled_by = NFA }
+								PREV = { is_in_faction_with = NFA }
+							}
+						}
+					}
+				}
+				country_event = capt.41
+			}
+		}
+	}
+
+	option = {
+		name = capt.40.a
+	}
+}
+
+# Reichspakt and Entente members asked to turn over control
+country_event = {
+	id = capt.41
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.41 FROM = [From.GetName]" }
+	title = capt.41.t
+	picture = GFX_report_event_GER_weeping
+
+	desc = {
+		text = capt.41.d.ger
+		trigger = { is_in_faction_with = GER }
+	}
+	desc = {
+		text = capt.41.d.nfa
+		trigger = { is_in_faction_with = NFA }
+	}
+
+	is_triggered_only = yes
+
+	trigger = {
+		OR = {
+			is_in_faction_with = GER
+			is_in_faction_with = NFA
+		}
+		FRA = {
+			any_owned_state = {
+				is_controlled_by = ROOT
+				is_core_of = FRA
+				is_claim_or_core_or_ambition_of_ROOT = no
+			}
+		}
+	}
+
+	option = {
+		name = capt.41.a #Yes, of course we shall
+		if = {
+			limit = { is_in_faction_with = GER }
+			FRA = {
+				every_owned_state = {
+					limit = {
+						is_controlled_by = ROOT
+						is_core_of = FRA
+						is_claim_or_core_or_ambition_of_ROOT = no
+						OR = {
+							is_coastal = yes
+							any_neighbor_state = { is_controlled_by = GER }
+						}
+					}
+					set_state_controller_to = GER
+				}
+				every_owned_state = {
+					limit = {
+						is_controlled_by = ROOT
+						is_core_of = FRA
+						is_claim_or_core_or_ambition_of_ROOT = no
+						any_neighbor_state = { is_controlled_by = GER }
+					}
+					set_state_controller_to = GER
+				}
+				every_owned_state = {
+					limit = {
+						is_controlled_by = ROOT
+						is_core_of = FRA
+						is_claim_or_core_or_ambition_of_ROOT = no
+						any_neighbor_state = { is_controlled_by = GER }
+					}
+					set_state_controller_to = GER
+				}
+				every_owned_state = {
+					limit = {
+						is_controlled_by = ROOT
+						is_core_of = FRA
+						is_claim_or_core_or_ambition_of_ROOT = no
+						any_neighbor_state = { is_controlled_by = GER }
+					}
+					set_state_controller_to = GER
+				}
+			}
+		}
+		else_if = {
+			limit = { is_in_faction_with = NFA }
+			FRA = {
+				every_owned_state = {
+					limit = {
+						is_controlled_by = ROOT
+						is_core_of = FRA
+						is_claim_or_core_or_ambition_of_ROOT = no
+						OR = {
+							is_coastal = yes
+							any_neighbor_state = { is_controlled_by = NFA }
+						}
+					}
+					set_state_controller_to = NFA
+				}
+				every_owned_state = {
+					limit = {
+						is_controlled_by = ROOT
+						is_core_of = FRA
+						is_claim_or_core_or_ambition_of_ROOT = no
+						any_neighbor_state = { is_controlled_by = NFA }
+					}
+					set_state_controller_to = NFA
+				}
+				every_owned_state = {
+					limit = {
+						is_controlled_by = ROOT
+						is_core_of = FRA
+						is_claim_or_core_or_ambition_of_ROOT = no
+						any_neighbor_state = { is_controlled_by = NFA }
+					}
+					set_state_controller_to = NFA
+				}
+				every_owned_state = {
+					limit = {
+						is_controlled_by = ROOT
+						is_core_of = FRA
+						is_claim_or_core_or_ambition_of_ROOT = no
+						any_neighbor_state = { is_controlled_by = NFA }
+					}
+					set_state_controller_to = NFA
+				}
+			}
+		}
+	}
+	option = {
+		name = capt.41.b #No, we'll keep what we're occupying
+		ai_chance = { base = 0 }
+	}
+}
+
+# French resistance collapses
+country_event = {
+	id = capt.42
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.42 FROM = [From.GetName]" }
+	title = capt.42.t
+	desc = capt.42.d
+	picture = GFX_report_event_GER_weeping
+
+	fire_only_once = yes
+
+	trigger = {
+		tag = FRA
+		has_capitulated = yes
+		is_in_faction = yes
+		NOT = { var:16.controller = { is_ally_with = ROOT } }
+		if = {
+			limit = { has_dlc = "Man the Guns" }
+			is_government_in_exile = yes
+			NOT = { has_legitimacy > 20 }
+		}
+	}
+
+	mean_time_to_happen = {
+		days = 10
+		modifier = {
+			factor = 9
+			NOT = { has_dlc = "Man the Guns" }
+		}
+	}
+
+	option = {
+		name = capt.42.a
+		every_subject_country = {
+			ROOT = {
+				set_autonomy = {
+					target = PREV
+					autonomy_state = autonomy_free
+				}
+			}
+		}
+		if = {
+			limit = { is_faction_leader = yes }
+			dismantle_faction = yes
+		}
+		else = {
+			leave_faction = yes
+		}
+	}
+}
+
+# Hidden event to peace out Internationale members
+country_event = {
+	id = capt.4200
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.4200 FROM = [From.GetName]" }
+
+	is_triggered_only = yes
+	hidden = yes
+
+	immediate = {
+		# First European faction leaders peace out with any non-neighbours outside of Europe
+		if = {
+			limit = {
+				OR = {
+					tag = ENT
+					is_in_europe = yes
+				}
+				is_faction_leader = yes
+			}
+			every_enemy_country = {
+				limit = {
+					has_capitulated = no
+					is_in_europe = no
+					is_valid_peace_target = yes
+					NOT = {
+						is_neighbor_of = ROOT #being invaded
+						AND = {
+							tag = NZL
+							AST = { is_in_faction_with = ROOT }
+						}
+					}
+				}
+				white_peace_with_ROOT = yes
+			}
+		}
+		# Then Asian faction leaders peace out with any non-neighbours outside of Asia
+		else_if = {
+			limit = {
+				is_in_asia = yes
+				is_faction_leader = yes
+			}
+			every_enemy_country = {
+				limit = {
+					has_capitulated = no
+					is_in_asia = no
+					is_valid_peace_target = yes
+					NOT = {
+						is_neighbor_of = ROOT #being invaded
+						AND = {
+							tag = NZL
+							AST = { is_in_faction_with = ROOT }
+						}
+					}
+				}
+				white_peace_with_ROOT = yes
+			}
+		}
+		# Then everyone else peaces out with any non-neighbours not on the same continent
+		else = {
+			every_enemy_country = {
+				limit = {
+					has_capitulated = no
+					is_valid_peace_target = yes
+					NOT = {
+						civilwar_target = ROOT #do not peace out civil wars
+						is_neighbor_of = ROOT #being invaded
+						same_continent_as_ROOT = yes
+						AND = {
+							tag = NZL
+							AST = { is_in_faction_with = ROOT }
+						}
+					}
+				}
+				white_peace_with_ROOT = yes
+			}
+		}
+	}
+}
+
+# Germany invites NFA into southern France
+country_event = {
+	id = capt.43
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.43 FROM = [From.GetName]" }
+	title = capt.43.t
+	desc = capt.43.d
+	picture = GFX_report_event_GER_weeping
+
+	is_triggered_only = yes
+
+	immediate = {
+		hidden_effect = {
+			set_variable = { cof_states_given = 0 }
+			set_variable = { cof_states_need = 3 }
+			FRA = {
+				every_owned_state = {
+					limit = {
+						is_controlled_by = NFA
+						is_core_of = FRA
+					}
+					subtract_from_variable = { var = ROOT.cof_states_need value = 1 }
+				}
+			}
+		}
+	}
+
+	option = {
+		name = capt.43.a #Agree
+		ai_chance = { base = 80 }
+		# first state transferred
+		if = {
+			limit = {
+				any_state = {
+					is_owned_by = FRA
+					is_core_of = FRA
+					region = 20 #Southern France
+					is_controlled_by = GER
+					any_neighbor_state = { is_controlled_by = NFA }
+					is_coastal = yes
+				}
+			}
+			add_to_variable = { var = ROOT.cof_states_given value = 1 }
+			random_state = {
+				limit = {
+					is_owned_by = FRA
+					is_core_of = FRA
+					region = 20 #Southern France
+					is_controlled_by = GER
+					any_neighbor_state = { is_controlled_by = NFA }
+					is_coastal = yes
+				}
+				set_state_controller_to = ROOT
+			}
+		}
+		else_if = {
+			limit = {
+				any_state = {
+					is_owned_by = FRA
+					is_core_of = FRA
+					region = 20 #Southern France
+					is_controlled_by = GER
+					any_neighbor_state = {
+						is_controlled_by = NFA
+						any_neighbor_state = {
+							NOT = { state = PREV.PREV }
+							is_controlled_by = NFA
+						}
+					}
+				}
+			}
+			add_to_variable = { var = ROOT.cof_states_given value = 1 }
+			random_state = {
+				limit = {
+					is_owned_by = FRA
+					is_core_of = FRA
+					region = 20 #Southern France
+					is_controlled_by = GER
+					any_neighbor_state = {
+						is_controlled_by = NFA
+						any_neighbor_state = {
+							NOT = { state = PREV.PREV }
+							is_controlled_by = NFA
+						}
+					}
+				}
+				set_state_controller_to = ROOT
+			}
+		}
+		else_if = {
+			limit = {
+				any_state = {
+					is_owned_by = FRA
+					is_core_of = FRA
+					region = 20 #Southern France
+					is_controlled_by = GER
+					any_neighbor_state = { is_controlled_by = NFA }
+				}
+			}
+			add_to_variable = { var = ROOT.cof_states_given value = 1 }
+			random_state = {
+				limit = {
+					is_owned_by = FRA
+					is_core_of = FRA
+					region = 20 #Southern France
+					is_controlled_by = GER
+					any_neighbor_state = { is_controlled_by = NFA }
+				}
+				set_state_controller_to = ROOT
+			}
+		}
+		else_if = {
+			limit = {
+				GER = { controls_state = 21 }
+			}
+			add_to_variable = { var = ROOT.cof_states_given value = 1 }
+			set_state_controller = 21
+		}
+		else_if = {
+			limit = {
+				any_state = {
+					is_owned_by = FRA
+					is_core_of = FRA
+					region = 20 #Southern France
+					is_controlled_by = GER
+					is_coastal = yes
+				}
+			}
+			add_to_variable = { var = ROOT.cof_states_given value = 1 }
+			random_state = {
+				limit = {
+					is_owned_by = FRA
+					is_core_of = FRA
+					region = 20 #Southern France
+					is_controlled_by = GER
+					is_coastal = yes
+				}
+				set_state_controller_to = ROOT
+			}
+		}
+		else = {
+			add_to_variable = { var = ROOT.cof_states_given value = 1 }
+			random_state = {
+				limit = {
+					is_owned_by = FRA
+					is_core_of = FRA
+					region = 20 #Southern France
+					is_controlled_by = GER
+				}
+				set_state_controller_to = ROOT
+			}
+		}
+
+		# second state transferred
+		if = {
+			limit = {
+				check_variable = { ROOT.cof_states_need > 1 }
+				check_variable = { ROOT.cof_states_given < ROOT.cof_states_need }
+			}
+			if = {
+				limit = {
+					any_state = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = { is_controlled_by = NFA }
+						is_coastal = yes
+					}
+				}
+				add_to_variable = { var = ROOT.cof_states_given value = 1 }
+				random_state = {
+					limit = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = { is_controlled_by = NFA }
+						is_coastal = yes
+					}
+					set_state_controller_to = ROOT
+				}
+			}
+			else_if = {
+				limit = {
+					any_state = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = {
+							is_controlled_by = NFA
+							any_neighbor_state = {
+								NOT = { state = PREV.PREV }
+								is_controlled_by = NFA
+							}
+						}
+					}
+				}
+				add_to_variable = { var = ROOT.cof_states_given value = 1 }
+				random_state = {
+					limit = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = {
+							is_controlled_by = NFA
+							any_neighbor_state = {
+								NOT = { state = PREV.PREV }
+								is_controlled_by = NFA
+							}
+						}
+					}
+					set_state_controller_to = ROOT
+				}
+			}
+			else_if = {
+				limit = {
+					any_state = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = { is_controlled_by = NFA }
+					}
+				}
+				add_to_variable = { var = ROOT.cof_states_given value = 1 }
+				random_state = {
+					limit = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = { is_controlled_by = NFA }
+					}
+					set_state_controller_to = ROOT
+				}
+			}
+			else_if = {
+				limit = {
+					any_state = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						is_coastal = yes
+					}
+				}
+				add_to_variable = { var = ROOT.cof_states_given value = 1 }
+				random_state = {
+					limit = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						is_coastal = yes
+					}
+					set_state_controller_to = ROOT
+				}
+			}
+			else_if = {
+				limit = {
+					any_state = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+					}
+				}
+				add_to_variable = { var = ROOT.cof_states_given value = 1 }
+				random_state = {
+					limit = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+					}
+					set_state_controller_to = ROOT
+				}
+			}
+		}
+
+		# third state transferred
+		if = {
+			limit = {
+				check_variable = { ROOT.cof_states_need > 2 }
+				check_variable = { ROOT.cof_states_given < ROOT.cof_states_need }
+			}
+			if = {
+				limit = {
+					any_state = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = { is_controlled_by = NFA }
+						is_coastal = yes
+					}
+				}
+				add_to_variable = { var = ROOT.cof_states_given value = 1 }
+				random_state = {
+					limit = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = { is_controlled_by = NFA }
+						is_coastal = yes
+					}
+					set_state_controller_to = ROOT
+				}
+			}
+			else_if = {
+				limit = {
+					any_state = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = {
+							is_controlled_by = NFA
+							any_neighbor_state = {
+								NOT = { state = PREV.PREV }
+								is_controlled_by = NFA
+							}
+						}
+					}
+				}
+				add_to_variable = { var = ROOT.cof_states_given value = 1 }
+				random_state = {
+					limit = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = {
+							is_controlled_by = NFA
+							any_neighbor_state = {
+								NOT = { state = PREV.PREV }
+								is_controlled_by = NFA
+							}
+						}
+					}
+					set_state_controller_to = ROOT
+				}
+			}
+			else_if = {
+				limit = {
+					any_state = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = { is_controlled_by = NFA }
+					}
+				}
+				add_to_variable = { var = ROOT.cof_states_given value = 1 }
+				random_state = {
+					limit = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = { is_controlled_by = NFA }
+					}
+					set_state_controller_to = ROOT
+				}
+			}
+			else_if = {
+				limit = {
+					any_state = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						is_coastal = yes
+					}
+				}
+				add_to_variable = { var = ROOT.cof_states_given value = 1 }
+				random_state = {
+					limit = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+						is_coastal = yes
+					}
+					set_state_controller_to = ROOT
+				}
+			}
+			else_if = {
+				limit = {
+					any_state = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+					}
+				}
+				add_to_variable = { var = ROOT.cof_states_given value = 1 }
+				random_state = {
+					limit = {
+						is_owned_by = FRA
+						is_core_of = FRA
+						region = 20 #Southern France
+						is_controlled_by = GER
+					}
+					set_state_controller_to = ROOT
+				}
+			}
+		}
+		clear_variable = cof_states_given
+		clear_variable = cof_states_need
+
+		reverse_add_opinion_modifier = { target = GER modifier = KR_approves_of_govt }
+		GER = {
+			country_event = { id = capt.45 hours = 2 }
+		}
+	}
+	option = {
+		name = capt.43.b #Refuse
+		ai_chance = { base = 20 }
+		reverse_add_opinion_modifier = { target = GER modifier = KR_disapproves_of_govt }
+		GER = {
+			country_event = { id = capt.44 days = 2 }
+		}
+	}
+}
+
+# NFA refuses the invitation
+country_event = {
+	id = capt.44
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.44 FROM = [From.GetName]" }
+	title = capt.44.t
+	desc = capt.44.d
+	picture = GFX_report_event_generic_diplomacy2
+
+	is_triggered_only = yes
+
+	option = {
+		name = capt.44.a
+		reverse_add_opinion_modifier = { target = NFA modifier = KR_disapproves_of_govt }
+	}
+}
+
+# NFA accepts the invitation
+country_event = {
+	id = capt.45
+	immediate = { log = "[GetDateText]: [Root.GetName]: event capt.45 FROM = [From.GetName]" }
+	title = capt.45.t
+	desc = capt.45.d
+	picture = GFX_report_event_generic_diplomacy3
+
+	is_triggered_only = yes
+
+	option = {
+		name = capt.45.a
+		reverse_add_opinion_modifier = { target = NFA modifier = KR_approves_of_govt }
+	}
+}
+

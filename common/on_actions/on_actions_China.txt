@@ -192,49 +192,6 @@ on_actions = {
 				}
 			}
 
-			#Restore neutral ministers back for Anqing/Nanjing after they managed to KO'ed the other
-			else_if = {
-				limit = {
-					FROM = { tag = ANQ }
-				}
-				CHI = { country_event = chi_for.11 }
-				LEP = {
-					clr_country_flag = Wang_Geng_dead
-					clr_country_flag = Lin_Wei_dead
-					clr_country_flag = Xu_Peigen_dead
-					clr_country_flag = Qian_Zongze_dead
-					clr_country_flag = Li_Erkang_dead
-					clr_country_flag = Zhang_Pei_dead
-					clr_country_flag = Ma_Baohang_dead
-					clr_country_flag = Wang_Shouting_dead
-					clr_country_flag = Wu_Zhennan_dead
-					clr_country_flag = Zeng_Yijing_dead # Not shared, but still hidden.
-					clr_country_flag = Ge_Jingen_dead
-					clr_country_flag = Xu_Huansheng_dead
-					clr_country_flag = Chen_Qixia_dead
-				}
-			}
-			else_if = {
-				limit = {
-					FROM = { tag = LEP }
-				}
-				ANQ = {
-					clr_country_flag = Wang_Geng_dead
-					clr_country_flag = Lin_Wei_dead
-					clr_country_flag = Xu_Peigen_dead
-					clr_country_flag = Qian_Zongze_dead
-					clr_country_flag = Li_Erkang_dead
-					clr_country_flag = Zhang_Pei_dead
-					clr_country_flag = Ma_Baohang_dead
-					clr_country_flag = Wang_Shouting_dead
-					clr_country_flag = Wu_Zhennan_dead
-					clr_country_flag = Choi_Yong_deok_dead # Not shared, but still hidden.
-					clr_country_flag = Ge_Jingen_dead
-					clr_country_flag = Xu_Huansheng_dead
-					clr_country_flag = Chen_Qixia_dead
-				}
-			}
-
 			else_if = {
 				limit = {
 					FROM = { tag = FNG }
@@ -286,7 +243,7 @@ on_actions = {
 	}
 
 	# ROOT is capitulated country, FROM is winner
-	on_capitulation = {
+	on_capitulation_immediate = {
 		effect = {
 			#Move the China target
 			if = {
@@ -306,6 +263,80 @@ on_actions = {
 				SQI = { country_event = Ostasien.213 }
 				SZC = { country_event = Ostasien.213 }
 			}
+			else_if = {
+				limit = { tag = LEP }
+				if = {
+					limit = {
+						FROM = {
+							OR = {
+								tag = ANQ
+								tag = SQI
+								tag = CHI
+							}
+						}
+						count_triggers = {
+							amount = 2
+							has_war_with = ANQ
+							has_war_with = SQI
+							has_war_with = CHI
+						}
+					}
+					if = {
+						limit = {
+							has_war_with = ANQ
+							has_war_with = SQI
+							has_war_with = CHI
+						}
+						transfer_units_fraction = {
+							target = var:enemies^0
+							size = 0
+							army_ratio = 0
+							navy_ratio = 0
+							air_ratio = 0
+							stockpile_ratio = 0.33
+							keep_unit_leaders_trigger = { always = yes }
+						}
+						transfer_units_fraction = {
+							target = var:enemies^1
+							size = 0
+							army_ratio = 0
+							navy_ratio = 0
+							air_ratio = 0
+							stockpile_ratio = 0.5
+							keep_unit_leaders_trigger = { always = yes }
+						}
+						transfer_units_fraction = {
+							target = var:enemies^2
+							size = 0
+							army_ratio = 0
+							navy_ratio = 0
+							air_ratio = 0
+							stockpile_ratio = 1
+							keep_unit_leaders_trigger = { always = yes }
+						}
+					}
+					else = {
+						transfer_units_fraction = {
+							target = var:enemies^0
+							size = 0
+							army_ratio = 0
+							navy_ratio = 0
+							air_ratio = 0
+							stockpile_ratio = 0.5
+							keep_unit_leaders_trigger = { always = yes }
+						}
+						transfer_units_fraction = {
+							target = var:enemies^1
+							size = 0
+							army_ratio = 0
+							navy_ratio = 0
+							air_ratio = 0
+							stockpile_ratio = 1
+							keep_unit_leaders_trigger = { always = yes }
+						}
+					}
+				}
+			}
 
 			# Revert Wuxi's VPs
 			if = {
@@ -315,6 +346,28 @@ on_actions = {
 				}
 				clr_global_flag = LEP_wuxi_vp_increased
 				add_victory_points = { province = 10076 value = -10 }
+			}
+
+			# logging
+			if = {
+				limit = { tag = QIE }
+				log = "KR_Event_Logging;QIE FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = { tag = FNG }
+				log = "KR_Event_Logging;FNG FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = { tag = YUN }
+				log = "KR_Event_Logging;YUN FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = { tag = SHX }
+				log = "KR_Event_Logging;SHX FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			else_if = {
+				limit = { tag = SZC }
+				log = "KR_Event_Logging;SZC FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
 			}
 		}
 	}
@@ -345,7 +398,16 @@ on_actions = {
 					limit = { has_idea = GXW_lost_momentum }
 					remove_ideas = GXW_lost_momentum
 				}
+				every_state = {
+					limit = { is_mainland_china = yes }
+					remove_claim_by = FROM
+				}
 				FROM = {
+					transfer_units_fraction = {
+						target = PREV
+						size = 1
+						keep_unit_leaders_trigger = { always = yes }
+					}
 					if = {
 						limit = { has_active_mission = GXC_move_quickly }
 						remove_mission = GXC_move_quickly
@@ -371,6 +433,7 @@ on_actions = {
 							OR = {
 								has_trait = GXC_guangdong_clique_officer
 								has_trait = GXC_guangxi_clique_officer
+								is_advisor = yes
 							}
 						}
 						if = {
@@ -572,13 +635,13 @@ on_actions = {
 			}
 			if = {
 				limit = {
-					ROOT =	{
+					ROOT = {
 						OR = {
 							tag = JAP
 							tag = ANQ
 						}
 					}
-					FROM =	{
+					FROM = {
 						OR = {
 							tag = JAP
 							tag = ANQ
@@ -589,13 +652,13 @@ on_actions = {
 			}
 			if = {
 				limit = {
-					ROOT =	{
+					ROOT = {
 						OR = {
 							tag = FNG
 							tag = ANQ
 						}
 					}
-					FROM =	{
+					FROM = {
 						OR = {
 							tag = FNG
 							tag = ANQ
@@ -615,10 +678,6 @@ on_actions = {
 	on_government_change = {
 		effect = {
 			if = {
-				limit = { tag = SZC }
-				SZC_add_government_ministers = yes
-			}
-			else_if = {
 				limit = { tag = BEL }
 				if = {
 					limit = { has_socialist_government = yes }
@@ -647,8 +706,7 @@ on_actions = {
 			### Qing ###
 			if = {
 				limit = { tag = QIE }
-				country_event = qiecoup.32
-				country_event = qiecoup.33
+				country_event = qiecoup.32 #Sham elections
 			}
 			### Liangguang ###
 			if = {
@@ -688,7 +746,7 @@ on_actions = {
 					LEC = {
 						exists = no
 					}
-					ROOT ={
+					ROOT = {
 						tag = FNG
 						owns_state = 743
 					}
@@ -802,6 +860,21 @@ on_actions = {
 	#ROOT is new controller #FROM is old controller #FROM.FROM is state ID
 	on_state_control_changed = {
 		effect = {
+			if = { #Remove FNG Mantetsu Monopoly modifier
+				limit = {
+					FROM = {
+						tag = FNG
+					}
+					FROM.FROM = {
+						has_dynamic_modifier = {
+							modifier = FNG_mantetsu_monopoly
+						}
+					}
+				}
+				remove_dynamic_modifier = {
+					modifier = FNG_mantetsu_monopoly
+				}
+			}
 			if = { #Dihua and Aksu fall during Xinjiang war
 				limit = {
 					FROM = {
@@ -1177,39 +1250,6 @@ on_actions = {
 				FNG = { country_event = { id = lep.205 hours = 6 } }
 			}
 
-			# split LEP stockpile
-			if = {
-				limit = {
-					FROM = {
-						tag = LEP
-						surrender_progress > 0.9
-					}
-					ROOT = {
-						OR = {
-							tag = ANQ
-							tag = SQI
-							tag = CHI
-						}
-					}
-				}
-				FROM = {
-					set_temp_variable = { global.LEP_stockpile_ratio = 1 }
-					divide_temp_variable = { global.LEP_stockpile_ratio = FROM.enemies^num }
-					for_each_loop = {
-						array = FROM.enemies
-						transfer_units_fraction = {
-							target = var:v
-							size = 0
-							army_ratio = 0
-							navy_ratio = 0
-							air_ratio = 0
-							stockpile_ratio = global.LEP_stockpile_ratio
-							keep_unit_leaders_trigger = { always = yes }
-						}
-					}
-				}
-			}
-
 			if = { #Capture of Luoyang
 				limit = {
 					is_chinese_tag = yes
@@ -1217,6 +1257,42 @@ on_actions = {
 					FROM.FROM = { state = 607 }
 				}
 				country_event = { id = qieflavor.28 hours = 3 }
+			}
+
+			if = { # Update Morale
+				limit = {
+					OR = {
+						has_idea = league_collapse_ANQ
+						has_idea = league_collapse_CHI
+						has_idea = league_collapse_SQI
+						has_idea = league_collapse_LEP
+					}
+				}
+				set_temp_variable = { strategic_value_temp = FROM.FROM.state_strategic_value }
+				set_temp_variable = { state_name_temp = FROM.FROM }
+				if = {
+					limit = { check_variable = { FROM.FROM.state_strategic_value > 50 } }
+					set_temp_variable = { change_league_war_morale_by = 25 }
+				}
+				else_if = {
+					limit = { check_variable = { FROM.FROM.state_strategic_value > 25 } }
+					set_temp_variable = { change_league_war_morale_by = 15 }
+				}
+				else_if = {
+					limit = { check_variable = { FROM.FROM.state_strategic_value > 10 } }
+					set_temp_variable = { change_league_war_morale_by = 10 }
+				}
+				else = {
+					set_temp_variable = { change_league_war_morale_by = 5 }
+				}
+
+				china_update_morale = yes
+
+				ROOT = {
+					set_temp_variable = { change_league_war_morale_by = PREV.change_league_war_morale_by }
+					multiply_temp_variable = { change_league_war_morale_by = -1 }
+					china_update_morale = yes
+				}
 			}
 		}
 	}
@@ -1238,6 +1314,18 @@ on_actions = {
 				if = { #Cuts Prince Kan'in Kotohito's Visit short
 					limit = { has_country_flag = FNG_prince_visit }
 					country_event = { id = fengtian.1500 hours = 12 }
+				}
+			}
+			if = { #JAP temporarily removes Mantetsu Monopoly
+				limit = { #Further limits exist in the event's trigger
+					tag = FNG
+					NOT = {
+						has_war_with = JAP
+					}
+				}
+				country_event = {
+					id = fengtian.30
+					days = 20
 				}
 			}
 		}
@@ -1379,18 +1467,53 @@ on_actions = {
 					LEP = { activate_mission = LEP_jiangsu_governor }
 				}
 			}
+			if = {
+				limit = {
+					tag = QIE
+					FROM = { tag = FNG }
+				}
+				log = "KR_Event_Logging;FNG-QIE WAR START;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
+			if = {
+				limit = {
+					tag = FNG
+					FROM = { tag = QIE }
+				}
+				log = "KR_Event_Logging;FNG-QIE WAR START;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			}
 		}
 	}
 
 	on_peace = {
 		effect = {
 			clr_country_flag = LEC_war_backer
-			if = {
+			if = { # Re-applies FNG_mantetsu_monopoly
 				limit = {
-					tag = SIK
-					has_idea = SIK_enemies_all_sides
+					tag = FNG
+					has_war = no
+					OR = {
+						has_country_flag = FNG_715_monopoly
+						has_country_flag = FNG_716_monopoly
+						has_country_flag = FNG_885_monopoly
+						has_country_flag = FNG_886_monopoly
+						has_country_flag = FNG_328_monopoly
+					}
 				}
-				remove_ideas = SIK_enemies_all_sides
+				country_event = {
+					id = fengtian.31
+					days = 20
+				}
+			}
+			if = {
+				limit = { tag = SIK }
+				if = {
+					limit = { has_idea = SIK_enemies_all_sides }
+					remove_ideas = SIK_enemies_all_sides
+				}
+			}
+			else_if = {
+				limit = { tag = NPA }
+				country_event = { id = npa.8 days = 2 random_days = 7 }
 			}
 
 			#Return Eastern Shanxi (615) to SHX after QIE victory
