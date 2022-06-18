@@ -1250,7 +1250,6 @@ JAP_mantetsu_projects = {
 					is_controlled_by = PREV
 					free_building_slots = { building = infrastructure size > 0 include_locked = yes }
 				}
-				has_country_flag = JAP_minor_railroad
 			}
 		}
 
@@ -1488,9 +1487,7 @@ JAP_mantetsu_projects = {
 JAP_co_prosperity_decisions = {
 	JAP_invite_into_faction = {
 		icon = generic_flags
-
-		allowed = { always = no }
-
+		allowed = { tag = JAP }
 		available = {
 			has_capitulated = no
 			FROM = {
@@ -1518,6 +1515,7 @@ JAP_co_prosperity_decisions = {
 				is_in_faction = no
 				is_subject = no
 				has_socialist_government = no
+				NOT = { has_country_flag = JAP_invited_to_sphere }
 			}
 		}
 
@@ -1525,6 +1523,17 @@ JAP_co_prosperity_decisions = {
 		fire_only_once = yes
 
 		priority = 10
+		target_root_trigger = { is_faction_leader = yes }
+		target_array = global.JAP_possible_allies_array
+		target_trigger = {
+			FROM = {
+				exists = yes
+				is_in_faction = no
+				is_subject = no
+				has_socialist_government = no
+				NOT = { has_country_flag = JAP_invited_to_sphere }
+			}
+		}
 
 		ai_will_do = {
 			factor = 10
@@ -1532,14 +1541,17 @@ JAP_co_prosperity_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision JAP_invite_into_faction target: [From.GetName]"
-			FROM = { country_event = japfor.342 }
+			FROM = {
+				set_country_flag = JAP_invited_to_sphere
+				country_event = japfor.342
+			}
 		}
 	}
 
 	JAP_invite_into_economic_sphere = {
 		icon = generic_agreement
 
-		allowed = { always = no }
+		allowed = { tag = JAP }
 
 		available = {
 			surrender_progress < 0.30
@@ -1627,7 +1639,122 @@ JAP_co_prosperity_decisions = {
 
 		cost = 25
 		fire_only_once = no
+
 		priority = 5
+		targets = { ANQ ASM AST BNG BOM BRM CAM CEY ETS MAN FNG GUJ GXC HAW HND HYD INC INS KAC KAS KOR LAO LEC MAL MDR MON MYS NZL ORI PAK PHI PJB PNG PRF RJS SAR SHA SHX SIA SQI SZC TIB TRM TRV XSM VIN NEP AFG ALO TRK BUK KHI }
+		target_root_trigger = { has_completed_focus = JAP_osaka_conference }
+		target_trigger = {
+			FROM = {
+				exists = yes
+				has_socialist_government = no
+				OR = {
+					is_in_faction = no
+					is_in_faction_with = ROOT
+				}
+				OR = {
+					is_subject = no
+					is_in_faction_with = ROOT
+					is_subject_of = ROOT
+				}
+				if = {
+					limit = { is_chinese_tag = yes }
+					OR = {
+						is_subject_of = ROOT
+						has_country_flag = tokyo_conference_trade_ally
+					}
+				}
+				if = {
+					limit = { has_country_flag = attended_tokyo_conference }
+					OR = {
+						has_country_flag = tokyo_conference_trade_ally
+						is_in_faction_with = ROOT
+						is_subject_of = ROOT
+					}
+				}
+				if = {
+					limit = {
+						OR = {
+							has_country_flag = JAP_refused_tokyo_conference
+							has_country_flag = JAP_refused_sphere_invitation
+						}
+					}
+					is_subject_of = ROOT
+				}
+				if = {
+					limit = { tag = AST }
+					OR = {
+						has_country_flag = AST_has_ties_with_japan
+						is_subject_of = ROOT
+					}
+				}
+				if = {
+					limit = { tag = NZL }
+					is_subject_of = ROOT
+				}
+				if = {
+					limit = { tag = KOR }
+					NOT = { has_country_flag = KOR_rebellion }
+				}
+				if = {
+					limit = { is_indian_tag = yes }
+					is_in_faction_with = ROOT
+				}
+				if = {
+					limit = {
+						tag = PHI
+						NOT = { is_in_faction_with = JAP }
+					}
+					JAP = {
+						NOT = {
+							has_country_flag = JAP_has_threatened_philippines
+						}
+					}
+				}
+				if = {
+					limit = {
+						tag = HAW
+						NOT = { is_in_faction_with = JAP }
+					}
+					JAP = {
+						NOT = {
+							has_country_flag = JAP_has_claimed_pacific
+						}
+					}
+				}
+				if = {
+					limit = {
+						tag = NEP
+					}
+					OR = {
+						NOT = {
+							country_exists = RAJ
+						}
+						RAJ = {
+							is_subject_of = JAP
+						}
+					}
+				}
+				if = {
+					limit = {
+						OR = {
+							tag = AFG
+							tag = ALO
+							tag = TRK
+							tag = BUK
+							tag = KHI
+						}
+					}
+					any_neighbor_country = {
+						is_in_faction_with = JAP
+					}
+				}
+				NOT = {
+					has_country_flag = JAP_was_invited_into_sphere
+					is_in_array = { global.asian_economic_sphere = THIS }
+					has_war_with = ROOT
+				}
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision JAP_invite_into_economic_sphere target: [From.GetName]"
@@ -1681,7 +1808,7 @@ JAP_co_prosperity_decisions = {
 	JAP_invest_in_sphere_member1 = {
 		icon = hol_attract_foreign_investors
 
-		allowed = { always = no }
+		allowed = { tag = JAP }
 
 		available = {
 			surrender_progress < 0.30
@@ -1693,6 +1820,7 @@ JAP_co_prosperity_decisions = {
 		}
 
 		visible = {
+			has_completed_focus = JAP_integrate_asian_economies
 			is_faction_leader = yes
 			has_socialist_government = no
 			FROM = {
@@ -1710,6 +1838,19 @@ JAP_co_prosperity_decisions = {
 		fire_only_once = no
 
 		priority = 1
+		target_array = global.asian_economic_sphere
+		target_root_trigger = { has_completed_focus = JAP_integrate_asian_economies }
+		target_trigger = {
+			FROM = {
+				has_socialist_government = no
+				is_subject = no
+				NOT = {
+					has_idea = JAP_member_integration_1
+					has_idea = JAP_member_integration_2
+					has_idea = JAP_member_integration_3
+				}
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision JAP_invest_in_sphere_member1 target: [From.GetName]"
@@ -1718,7 +1859,6 @@ JAP_co_prosperity_decisions = {
 				effect_tooltip = { add_ideas = JAP_member_integration_1 }
 				country_event = japfor.405
 			}
-			hidden_effect = { activate_targeted_decision = { target = FROM decision = JAP_invest_in_sphere_member2 } }
 		}
 
 		ai_will_do = {
@@ -1745,7 +1885,7 @@ JAP_co_prosperity_decisions = {
 	JAP_invest_in_sphere_member2 = {
 		icon = hol_attract_foreign_investors
 
-		allowed = { always = no }
+		allowed = { tag = JAP }
 
 		available = {
 			surrender_progress < 0.30
@@ -1759,6 +1899,7 @@ JAP_co_prosperity_decisions = {
 		}
 
 		visible = {
+			has_completed_focus = JAP_integrate_asian_economies
 			is_faction_leader = yes
 			has_socialist_government = no
 			FROM = {
@@ -1772,6 +1913,15 @@ JAP_co_prosperity_decisions = {
 		fire_only_once = no
 
 		priority = 2
+		target_array = global.asian_economic_sphere
+		target_root_trigger = { has_completed_focus = JAP_integrate_asian_economies }
+		target_trigger = {
+			FROM = {
+				has_socialist_government = no
+				is_subject = no
+				has_idea = JAP_member_integration_1
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision JAP_invest_in_sphere_member2 target: [From.GetName]"
@@ -1785,7 +1935,6 @@ JAP_co_prosperity_decisions = {
 				}
 				country_event = japfor.405
 			}
-			hidden_effect = { activate_targeted_decision = { target = FROM decision = JAP_invest_in_sphere_member3 } }
 		}
 
 		ai_will_do = {
@@ -1812,7 +1961,7 @@ JAP_co_prosperity_decisions = {
 	JAP_invest_in_sphere_member3 = {
 		icon = hol_attract_foreign_investors
 
-		allowed = { always = no }
+		allowed = { tag = JAP }
 
 		available = {
 			surrender_progress < 0.30
@@ -1826,6 +1975,7 @@ JAP_co_prosperity_decisions = {
 		}
 
 		visible = {
+			has_completed_focus = JAP_integrate_asian_economies
 			is_faction_leader = yes
 			has_socialist_government = no
 			FROM = {
@@ -1839,6 +1989,15 @@ JAP_co_prosperity_decisions = {
 		fire_only_once = no
 
 		priority = 3
+		target_array = global.asian_economic_sphere
+		target_root_trigger = { has_completed_focus = JAP_integrate_asian_economies }
+		target_trigger = {
+			FROM = {
+				has_socialist_government = no
+				is_subject = no
+				has_idea = JAP_member_integration_2
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision JAP_invest_in_sphere_member3 target: [From.GetName]"
@@ -1852,7 +2011,6 @@ JAP_co_prosperity_decisions = {
 				}
 				country_event = japfor.405
 			}
-			hidden_effect = { activate_targeted_decision = { target = FROM decision = JAP_economic_sphere_takeover } }
 		}
 
 		ai_will_do = {
@@ -1879,7 +2037,7 @@ JAP_co_prosperity_decisions = {
 	JAP_economic_sphere_takeover = {
 		icon = oppression
 
-		allowed = { always = no }
+		allowed = { tag = JAP }
 
 		available = {
 			surrender_progress < 0.30
@@ -1906,6 +2064,15 @@ JAP_co_prosperity_decisions = {
 		fire_only_once = no
 
 		priority = 4
+		target_array = global.asian_economic_sphere
+		target_root_trigger = { has_completed_focus = JAP_integrate_asian_economies }
+		target_trigger = {
+			FROM = {
+				is_subject = no
+				has_socialist_government = no
+				has_idea = JAP_member_integration_3
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision JAP_economic_sphere_takeover target: [From.GetName]"
@@ -1937,7 +2104,7 @@ JAP_co_prosperity_decisions = {
 	JAP_invest_in_sphere_member_docks = {
 		icon = hol_attract_foreign_investors
 
-		allowed = { always = no }
+		allowed = { tag = JAP }
 
 		available = {
 			surrender_progress < 0.30
@@ -1961,6 +2128,13 @@ JAP_co_prosperity_decisions = {
 		fire_only_once = yes
 
 		priority = 1
+		target_array = global.asian_economic_sphere
+		target_root_trigger = { has_completed_focus = JAP_MIL_MANTESU_SHIP }
+		target_trigger = {
+			FROM = {
+				has_socialist_government = no
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision JAP_invest_in_sphere_member_docks target: [From.GetName]"
@@ -1995,7 +2169,7 @@ JAP_co_prosperity_decisions = {
 	JAP_invest_in_sphere_naval_advisors = {
 		icon = hol_attract_foreign_investors
 
-		allowed = { always = no }
+		allowed = { tag = JAP }
 
 		available = {
 			surrender_progress < 0.30
@@ -2021,6 +2195,13 @@ JAP_co_prosperity_decisions = {
 		fire_only_once = no
 
 		priority = 1
+		target_array = global.asian_economic_sphere
+		target_root_trigger = { has_completed_focus = JAP_MIL_NAVAL_RESEARCH }
+		target_trigger = {
+			FROM = {
+				has_socialist_government = no
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision JAP_invest_in_sphere_naval_advisors target: [From.GetName]"
@@ -2046,7 +2227,7 @@ JAP_co_prosperity_decisions = {
 	JAP_invest_in_sphere_prosperity_ships = {
 		icon = hol_attract_foreign_investors
 
-		allowed = { always = no }
+		allowed = { tag = JAP }
 
 		available = {
 			surrender_progress < 0.30
@@ -2068,6 +2249,13 @@ JAP_co_prosperity_decisions = {
 		fire_only_once = yes
 
 		priority = 1
+		target_array = global.asian_economic_sphere
+		target_root_trigger = { has_completed_focus = JAP_MIL_DEFINITELY_NOT_LIBERTY }
+		target_trigger = {
+			FROM = {
+				has_socialist_government = no
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision JAP_invest_in_sphere_prosperity_ships target: [From.GetName]"
@@ -2092,7 +2280,7 @@ JAP_co_prosperity_decisions = {
 	JAP_invest_in_sphere_take_dockyards = { #took over dockyards
 		icon = hol_attract_foreign_investors
 
-		allowed = { always = no }
+		allowed = { tag = JAP }
 
 		available = {
 			surrender_progress < 0.30
@@ -2119,6 +2307,14 @@ JAP_co_prosperity_decisions = {
 		cost = 50
 
 		priority = 1
+		target_array = global.asian_economic_sphere
+		target_root_trigger = { has_completed_focus = JAP_MIL_UNIFIED_PRODUCTION }
+		target_trigger = {
+			FROM = {
+				has_country_flag = JAP_invest_docks
+				has_socialist_government = no
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision JAP_invest_in_sphere_take_dockyards target: [From.GetName]"
@@ -2200,7 +2396,36 @@ JAP_co_prosperity_member_decisions = {
 	JAP_join_rikagaku_kenkyusho = {
 		icon = generic_research
 
-		allowed = { always = no }
+		allowed = {
+			NOT = {
+				tag = JAP
+				tag = GER #always hostile
+				tag = MAF
+				tag = GEA
+				tag = BAT
+				tag = RUS
+				tag = FRA
+				tag = ENG
+				tag = CSA
+				tag = SRI
+				tag = SWF
+				tag = SOV
+				tag = FOP
+				tag = HND
+				tag = USA #can't join
+				tag = TEX
+				tag = NEE
+				tag = RAJ
+				tag = DEI
+				tag = INS #handled by tag content
+			}
+			OR = {
+				tag = FNG
+				original_tag = GXC
+				tag = SQI
+				is_chinese_tag = no #others can't join
+			}
+		}
 
 		visible = {
 			OR = {
@@ -2211,6 +2436,15 @@ JAP_co_prosperity_member_decisions = {
 				exists = yes
 				is_in_tech_sharing_group = japan_research
 			}
+		}
+
+		targets = { JAP }
+		target_trigger = {
+			OR = {
+				is_in_faction_with = FROM
+				is_in_array = { global.asian_economic_sphere = THIS }
+			}
+			FROM = { is_in_tech_sharing_group = japan_research }
 		}
 
 		fire_only_once = yes
@@ -2228,8 +2462,6 @@ JAP_co_prosperity_member_decisions = {
 
 	JAP_request_nav_advisors = {
 		icon = generic_research
-
-		allowed = { always = no }
 
 		allowed = {
 			NOT = {
@@ -2281,6 +2513,18 @@ JAP_co_prosperity_member_decisions = {
 			}
 		}
 
+		targets = { JAP }
+		target_root_trigger = {
+			num_of_naval_factories > 0
+		}
+		target_trigger = {
+			OR = {
+				is_in_faction_with = FROM
+				is_in_array = { global.asian_economic_sphere = THIS }
+			}
+			FROM = { has_completed_focus = JAP_MIL_NAVAL_RESEARCH }
+		}
+
 		cost = 20
 		fire_only_once = no
 
@@ -2299,7 +2543,9 @@ JAP_co_prosperity_member_decisions = {
 	JAP_withdraw_from_alliance = {
 		icon = generic_army_support
 
-		allowed = { always = no }
+		allowed = {
+			NOT = { tag = JAP }
+		}
 
 		available = {
 			has_war = no
@@ -2310,7 +2556,6 @@ JAP_co_prosperity_member_decisions = {
 			is_ai = no
 			is_in_faction_with = JAP
 			JAP = { is_faction_leader = yes }
-			NOT = { tag = JAP }
 		}
 
 		cost = 0
@@ -2333,7 +2578,9 @@ JAP_co_prosperity_member_decisions = {
 	JAP_withdraw_from_sphere = {
 		icon = generic_break_treaty
 
-		allowed = { always = no }
+		allowed = {
+			NOT = { tag = JAP }
+		}
 
 		available = {
 			is_subject = no
@@ -2344,7 +2591,6 @@ JAP_co_prosperity_member_decisions = {
 		}
 
 		visible = {
-			NOT = { tag = JAP }
 			is_in_array = { global.asian_economic_sphere = ROOT }
 			NOT = {
 				has_idea = JAP_member_integration_1
@@ -2383,7 +2629,9 @@ JAP_co_prosperity_member_decisions = {
 	JAP_nationalize_japanese_investments = {
 		icon = generic_break_treaty
 
-		allowed = { always = no }
+		allowed = {
+			NOT = { tag = JAP }
+		}
 
 		available = {
 			is_subject = no
@@ -2394,8 +2642,12 @@ JAP_co_prosperity_member_decisions = {
 		}
 
 		visible = {
-			NOT = { tag = JAP }
 			is_in_array = { global.asian_economic_sphere = ROOT }
+			OR = {
+				has_idea = JAP_member_integration_1
+				has_idea = JAP_member_integration_2
+				has_idea = JAP_member_integration_3
+			}
 		}
 
 		cost = JAP_investment_buyout?100

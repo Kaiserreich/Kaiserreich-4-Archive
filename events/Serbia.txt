@@ -1592,8 +1592,7 @@ country_event = { #Post-1936 Elections
 			limit = {
 				has_country_leader = { character = SER_dragomir_vasic }
 			}
-			effect_tooltip = { retire_character = SER_dragomir_vasic }
-			hidden_effect = { SER_dragomir_vasic = { retire = yes } }
+			retire_character = SER_dragomir_vasic
 			promote_character = SER_milan_grol
 			hidden_effect = {
 				country_event = serflavor.14
@@ -1663,8 +1662,7 @@ country_event = { #Post-1936 Elections
 			limit = {
 				has_country_leader = { character = SER_dragomir_vasic }
 			}
-			effect_tooltip = { retire_character = SER_dragomir_vasic }
-			hidden_effect = { SER_dragomir_vasic = { retire = yes } }
+			retire_character = SER_dragomir_vasic
 			promote_character = SER_milan_grol
 			hidden_effect = {
 				country_event = serflavor.14
@@ -1732,8 +1730,7 @@ country_event = { #Post-1936 Elections
 			limit = {
 				has_country_leader = { character = SER_dragomir_vasic }
 			}
-			effect_tooltip = { retire_character = SER_dragomir_vasic }
-			hidden_effect = { SER_dragomir_vasic = { retire = yes } }
+			retire_character = SER_dragomir_vasic
 			promote_character = SER_milan_grol
 			hidden_effect = {
 				country_event = serflavor.14
@@ -3019,6 +3016,9 @@ country_event = { #Belgrade Pact members get choice to join Russia as well
 
 	option = {
 		name = serbia.42.a
+		trigger = {
+			has_capitulated = no
+		}
 		ai_chance = {
 			base = 100
 			modifier = {
@@ -3040,25 +3040,24 @@ country_event = { #Belgrade Pact members get choice to join Russia as well
 				}
 			}
 		}
-		hidden_effect = {
-			RUS = {
-				country_event = {
-					id = serbia.4200
-					days = 3
-					random = 72
-				}
-			}
-		}
+		RUS = { country_event = { id = serbia.4200 hours = 8 } }
 	}
+
 	option = {
 		name = serbia.42.b
+		trigger = {
+			has_capitulated = no
+		}
 		ai_chance = {
 			base = 100
 			modifier = {
 				factor = 0
 				NOT = {
-					tag = GRE
 					tag = CZE
+					AND = {
+						tag = GRE
+						NOT = { has_completed_focus = GRE_new_expansionism }
+					}
 					RUS = {
 						any_owned_state = { is_claim_or_core_of_ROOT = yes }
 					}
@@ -3070,6 +3069,15 @@ country_event = { #Belgrade Pact members get choice to join Russia as well
 				}
 			}
 		}
+		leave_faction = yes
+	}
+
+	option = {
+		name = serbia.42.c
+		trigger = {
+			has_capitulated = yes
+		}
+		RUS = { country_event = { id = serbia.4200 hours = 8 } }
 	}
 }
 
@@ -3087,9 +3095,7 @@ country_event = { #FROM wants to join Russia
 	desc = {
 		text = serbia.4200.d.other
 		trigger = {
-			NOT = {
-				FROM = { tag = ROM }
-			}
+			NOT = { FROM = { tag = ROM } }
 		}
 	}
 
@@ -3113,8 +3119,8 @@ country_event = { #FROM wants to join Russia
 				FROM = { owns_state = 78 } #Bessarabia
 			}
 		}
-		add_to_faction = FROM
 		FROM = {
+			set_country_flag = { flag = RUS_country_will_join_russia days = 20 value = 1 }
 			every_owned_state = {
 				limit = { is_claimed_by = ROOT }
 				remove_claim_by = ROOT
@@ -3122,13 +3128,25 @@ country_event = { #FROM wants to join Russia
 		}
 		hidden_effect = {
 			if = {
-				limit = {
-					FROM = { tag = ROM }
-				}
+				limit = { FROM = { tag = ROM } }
 				GER = {
 					embargo_FROM = yes
 					FROM = { embargo_PREV = yes }
 				}
+			}
+			if = {
+				limit = {
+					event_target:original_faction_leader = {
+						all_allied_country = {
+							OR = {
+								is_subject = yes
+								has_capitulated = yes
+								has_country_flag = RUS_country_will_join_russia
+							}
+						}
+					}
+				}
+				RUS = { country_event = { id = rusfor.53 hours = 8 } }
 			}
 		}
 	}
@@ -3143,18 +3161,18 @@ country_event = { #FROM wants to join Russia
 					any_owned_state = { is_claim_or_core_of_ROOT = yes }
 				}
 			}
+			modifier = {
+				factor = 0
+				FROM = { has_capitulated = yes }
+			}
 		}
 		FROM = {
-			country_event = {
-				id = serbia.4201
-				days = 2
-				random = 48
-			}
+			country_event = { id = serbia.4201 hours = 8 }
 		}
 	}
 }
 
-country_event = { #Russia refuses former Serbian ally
+country_event = { #Former Serbian ally goes their own way
 	id = serbia.4201
 	immediate = { log = "[GetDateText]: [Root.GetName]: event serbia.4201 FROM = [From.GetName]" }
 	title = serbia.4201.t
@@ -3165,9 +3183,26 @@ country_event = { #Russia refuses former Serbian ally
 
 	option = {
 		name = serbia.4201.a
+		leave_faction = yes
 		add_opinion_modifier = {
 			target = FROM
 			modifier = KR_disapproves_of_govt
+		}
+		hidden_effect = {
+			if = {
+				limit = {
+					event_target:original_faction_leader = {
+						all_allied_country = {
+							OR = {
+								is_subject = yes
+								has_capitulated = yes
+								has_country_flag = RUS_country_will_join_russia
+							}
+						}
+					}
+				}
+				RUS = { country_event = { id = rusfor.53 hours = 8 } }
+			}
 		}
 	}
 }
@@ -6163,7 +6198,7 @@ country_event = { # Bojovic comes to help
 		show_unit_leaders_tooltip = SER_petar_bojovic
 		custom_effect_tooltip = Bojovic_stats_tt
 		hidden_effect = {
-			SER_petar_bojovic = { set_nationality = ROOT }
+			event_target:SER_petar_bojovic_target = { set_nationality = ROOT }
 			if = {
 				limit = { has_idea = SER_Petar_II_regency }
 				SER_petar_bojovic = { unit_leader_event = serflavor.12 }
@@ -6733,8 +6768,7 @@ country_event = { # Bojovic leaves
 
 	option = {
 		name = serflavor.31.a # He served his country well
-		effect_tooltip = { retire_character = SER_petar_bojovic }
-		hidden_effect = { SER_petar_bojovic = { retire = yes } }
+		retire_character = SER_petar_bojovic
 	}
 }
 
@@ -6758,6 +6792,7 @@ news_event = { # Republicans Win Serbian Elections
 		text = serflavor.32.d.status_quo
 		trigger = {
 			SER = {
+				SER_rep_no_coalition = no
 				SER_repsoc_coalition = yes
 			}
 		}
@@ -6860,6 +6895,7 @@ news_event = { # Radicals Win Serbian Elections
 		text = serflavor.33.d.great_union
 		trigger = {
 			SER = {
+				SER_rad_no_coalition = no
 				SER_radagr_coalition = yes
 			}
 		}
@@ -7038,8 +7074,8 @@ news_event = { # Royalist Coup in Serbia!
 		log = "KR_Event_Logging;SER PATH ROYALIST;[GetDateText];[ROOT.GetName];[FROM.GetName]"
 	}
 	title = serflavor.35.t
-	picture = GFX_news_event_SER_white_hand
 	desc = serflavor.35.d
+	picture = GFX_news_event_SER_white_hand
 
 	is_triggered_only = yes
 
@@ -7313,80 +7349,81 @@ country_event = { #Yugoslavia Elections
 	immediate = {
 		hidden_effect = {
 			if = {
-				limit = {
-					NOT = {
-						has_completed_focus = SER_November_Sixth_Dictatorship
-					}
-				}
+				limit = { has_character = SER_temporary_national_representation }
+				retire_character = SER_temporary_national_representation
 				if = {
-					limit = {
-						has_country_flag = YUG_grol_leads_republicans
+					limit = { NOT = { has_completed_focus = SER_November_Sixth_Dictatorship } }
+					if = {
+						limit = { has_country_flag = YUG_grol_leads_republicans }
+						promote_character = SER_milan_grol
 					}
-					promote_character = SER_milan_grol
-				}
-				else_if = {
-					limit = {
-						has_country_flag = YUG_budisavljevic_leads_republicans
+					else_if = {
+						limit = { has_country_flag = YUG_budisavljevic_leads_republicans }
+						promote_character = SER_srdan_budisavljevic
 					}
-					promote_character = SER_srdan_budisavljevic
-				}
-				else_if = {
-					limit = {
-						has_country_flag = YUG_kramer_leads_republicans
+					else_if = {
+						limit = {
+							has_country_flag = YUG_kramer_leads_republicans
+							NOT = { country_exists = SLV }
+						}
+						event_target:SLV_albert_kramer_target = { set_nationality = PREV }
+						promote_character = SLV_albert_kramer
 					}
-					promote_character = SER_albert_kramer
-				}
-				create_country_leader = {
-					name = "Miha Krek"
-					picture = "gfx/leaders/SLV/Portrait_SLV_Albert_Kramer.png"
-					ideology = market_liberal_subtype
-				}
-				if = {
-					limit = {
-						NOT = {
-							has_completed_focus = SER_unite_with_agrarians
+					else = {
+						event_target:SLV_miha_krek_target = { set_nationality = PREV }
+						add_country_leader_role = {
+							character = SLV_miha_krek
+							country_leader = { ideology = market_liberal_subtype }
+							promote_leader = yes
 						}
 					}
-					create_country_leader = {
-						name = "Stjepan Radić"
-						picture = "gfx/leaders/CRO/Portrait_CRO_Stjepan_Radic.png"
-						ideology = social_conservative_subtype
+					if = {
+						limit = {
+							NOT = {
+								has_completed_focus = SER_unite_with_agrarians
+								country_exists = CRO
+							}
+						}
+						event_target:CRO_stjepan_radic_target = { set_nationality = PREV }
+						promote_character = {
+							character = CRO_stjepan_radic
+							ideology = social_conservative_subtype
+						}
 					}
-				}
-				else = {
+					else = {
+						SER_milan_stojadinovic = {
+							if = {
+								limit = { has_ideology = social_conservative_subtype }
+								promote_character = { ideology = social_conservative_subtype }
+							}
+							else = {
+								add_country_leader_role = {
+									country_leader = {
+										desc = "POLITICS_MILAN_STOJADINOVIC_DESC"
+										ideology = social_conservative_subtype
+									}
+									promote_leader = yes
+								}
+							}
+						}
+					}
 					SER_milan_stojadinovic = {
 						if = {
-							limit = { has_ideology = social_conservative_subtype }
-							promote_character = { ideology = social_conservative_subtype }
+							limit = { has_ideology = authoritarian_democrat_subtype }
+							promote_character = { ideology = authoritarian_democrat_subtype }
 						}
 						else = {
 							add_country_leader_role = {
 								country_leader = {
 									desc = "POLITICS_MILAN_STOJADINOVIC_DESC"
-									ideology = social_conservative_subtype
+									ideology = authoritarian_democrat_subtype
 								}
 								promote_leader = yes
 							}
 						}
 					}
 				}
-				SER_milan_stojadinovic = {
-					if = {
-						limit = { has_ideology = authoritarian_democrat_subtype }
-						promote_character = { ideology = authoritarian_democrat_subtype }
-					}
-					else = {
-						add_country_leader_role = {
-							country_leader = {
-								desc = "POLITICS_MILAN_STOJADINOVIC_DESC"
-								ideology = authoritarian_democrat_subtype
-							}
-							promote_leader = yes
-						}
-					}
-				}
 			}
-			SER_temporary_national_representation = { retire = yes }
 		}
 	}
 
@@ -7953,6 +7990,7 @@ country_event = { # The (Republican-)Democratic Party
 	}
 	option = {
 		name = yugoslavia.5.c
+		trigger = { NOT = { country_exists = SLV } }
 		set_country_flag = YUG_kramer_leads_republicans
 	}
 }
@@ -8869,15 +8907,13 @@ country_event = { # New party leader
 	}
 	option = {
 		name = yugoslavia.18.b
-		effect_tooltip = { retire_character = SER_trifun_kaclerovic }
-		hidden_effect = { SER_trifun_kaclerovic = { retire = yes } }
+		retire_character = SER_trifun_kaclerovic
 		promote_character = SER_mosa_pijade
 
 	}
 	option = {
 		name = yugoslavia.18.c
-		effect_tooltip = { retire_character = SER_trifun_kaclerovic }
-		hidden_effect = { SER_trifun_kaclerovic = { retire = yes } }
+		retire_character = SER_trifun_kaclerovic
 		promote_character = SER_milan_gorkic
 		if = {
 			limit = {
@@ -8938,8 +8974,7 @@ country_event = { # Is this a heckin reference
 	}
 	option = {
 		name = yugoslavia.19.b
-		effect_tooltip = { retire_character = SER_milan_gorkic }
-		hidden_effect = { SER_milan_gorkic = { retire = yes } }
+		retire_character = SER_milan_gorkic
 		promote_character = SER_josip_broz
 		add_stability = -0.1
 	}

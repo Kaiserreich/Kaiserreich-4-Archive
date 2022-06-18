@@ -9,30 +9,17 @@ FROM_send_volunteers_to_ROOT = {
 					has_country_flag = sent_volunteers_@ROOT
 					has_country_flag = imminent_war
 					any_claim = yes #is justifying/being justified against
+					check_variable = { modifier@cannot_receive_volunteers > 0 }
 				}
 			}
 
 			#unlock volunteers diplo action
-			if = {
-				limit = {
-					NOT = { has_country_flag = can_send_volunteers }
-				}
-				log = "[THIS.GetName]: unlocked AI volunteers"
-			}
-			else = {
-				log = "[THIS.GetName]: AI volunteers already unlocked"
-			}
+			set_rule = { can_send_volunteers = yes }
 
-			#set variable if not set already, update count
-			if = {
-				limit = {
-					NOT = { has_variable = send_volunteers_count }
-				}
-				set_variable = { send_volunteers_count = 0 }
-			}
+			#update count
 			add_to_variable = { send_volunteers_count = 1 }
 
-			#add spare unit factor
+			#add spare unit factor if necessary
 			if = {
 				limit = {
 					num_divisions < 32
@@ -104,28 +91,14 @@ send_volunteers_to_TARGET = {
 				has_country_flag = sent_volunteers_@event_target:volunteer_target
 				has_country_flag = imminent_war
 				any_claim = yes #is justifying/being justified against
+				check_variable = { event_target:volunteer_target.modifier@cannot_receive_volunteers > 0 }
 			}
 		}
 
 		#unlock volunteers diplo action
-		if = {
-			limit = {
-				NOT = { has_country_flag = can_send_volunteers }
-			}
-			set_country_flag = can_send_volunteers
-			log = "[THIS.GetName]: unlocked AI volunteers"
-		}
-		else = {
-			log = "[THIS.GetName]: AI volunteers already unlocked"
-		}
+		set_rule = { can_send_volunteers = yes }
 
-		#set variable if not set already, update count
-		if = {
-			limit = {
-				NOT = { has_variable = send_volunteers_count }
-			}
-			set_variable = { send_volunteers_count = 0 }
-		}
+		#update count
 		add_to_variable = { send_volunteers_count = 1 }
 
 		#add spare unit factor if necessary
@@ -193,139 +166,147 @@ send_volunteers_to_TARGET = {
 }
 
 clear_volunteers_to_TARGET = {
-	#lock volunteers diplo action if no other volunteers
-	subtract_from_variable = { send_volunteers_count = 1 }
 	if = {
-		limit = {
-			check_variable = { send_volunteers_count < 1 }
+		limit = { has_country_flag = sent_volunteers_@event_target:volunteer_target }
+		#lock volunteers diplo action if no other volunteers
+		subtract_from_variable = { send_volunteers_count = 1 }
+		if = {
+			limit = {
+				is_ai = yes
+				check_variable = { send_volunteers_count < 1 }
+			}
+			set_rule = { can_send_volunteers = no }
+			log = "[THIS.GetName]: locked AI volunteers"
 		}
-		clr_country_flag = can_send_volunteers
-		log = "[THIS.GetName]: locked AI volunteers"
-	}
 
-	#remove spare unit factor
-	if = {
-		limit = {
-			has_country_flag = AI_increased_spare_factor_12
+		#remove spare unit factor
+		if = {
+			limit = {
+				has_country_flag = AI_increased_spare_factor_12
+			}
+			log = "[THIS.GetName]: reduced spare unit factor by 12"
+			clr_country_flag = AI_increased_spare_factor_12
+			add_ai_strategy = {
+				type = spare_unit_factor
+				value = -12
+			}
 		}
-		log = "[THIS.GetName]: reduced spare unit factor by 12"
-		clr_country_flag = AI_increased_spare_factor_12
-		add_ai_strategy = {
-			type = spare_unit_factor
-			value = -12
+		else_if = {
+			limit = {
+				has_country_flag = AI_increased_spare_factor_6
+			}
+			log = "[THIS.GetName]: reduced spare unit factor by 6"
+			clr_country_flag = AI_increased_spare_factor_6
+			add_ai_strategy = {
+				type = spare_unit_factor
+				value = -6
+			}
 		}
-	}
-	else_if = {
-		limit = {
-			has_country_flag = AI_increased_spare_factor_6
+		else_if = {
+			limit = {
+				has_country_flag = AI_increased_spare_factor_3
+			}
+			log = "[THIS.GetName]: reduced spare unit factor by 3"
+			clr_country_flag = AI_increased_spare_factor_3
+			add_ai_strategy = {
+				type = spare_unit_factor
+				value = -3
+			}
 		}
-		log = "[THIS.GetName]: reduced spare unit factor by 6"
-		clr_country_flag = AI_increased_spare_factor_6
-		add_ai_strategy = {
-			type = spare_unit_factor
-			value = -6
-		}
-	}
-	else_if = {
-		limit = {
-			has_country_flag = AI_increased_spare_factor_3
-		}
-		log = "[THIS.GetName]: reduced spare unit factor by 3"
-		clr_country_flag = AI_increased_spare_factor_3
-		add_ai_strategy = {
-			type = spare_unit_factor
-			value = -3
-		}
-	}
 
-	#remove strategies
-	log = "[THIS.GetName]: removed volunteer desire to [volunteer_target.GetName]"
-	add_ai_strategy = {
-		type = send_volunteers_desire
-		id = event_target:volunteer_target
-		value = -10000
-	}
-	add_ai_strategy = {
-		type = send_lend_lease_desire
-		id = event_target:volunteer_target
-		value = -200
-	}
-	add_ai_strategy = {
-		type = support
-		id = event_target:volunteer_target
-		value = -200
-	}
+		#remove strategies
+		log = "[THIS.GetName]: removed volunteer desire to [volunteer_target.GetName]"
+		add_ai_strategy = {
+			type = send_volunteers_desire
+			id = event_target:volunteer_target
+			value = -10000
+		}
+		add_ai_strategy = {
+			type = send_lend_lease_desire
+			id = event_target:volunteer_target
+			value = -200
+		}
+		add_ai_strategy = {
+			type = support
+			id = event_target:volunteer_target
+			value = -200
+		}
 
-	#clear flag
-	clr_country_flag = sent_volunteers_@event_target:volunteer_target
+		#clear flag
+		clr_country_flag = sent_volunteers_@event_target:volunteer_target
+	}
 }
 
 clear_volunteers_to_PREV = {
-	#lock volunteers diplo action if no other volunteers
-	subtract_from_variable = { send_volunteers_count = 1 }
 	if = {
-		limit = {
-			check_variable = { send_volunteers_count < 1 }
+		limit = { has_country_flag = sent_volunteers_@PREV }
+		#lock volunteers diplo action if no other volunteers
+		subtract_from_variable = { send_volunteers_count = 1 }
+		if = {
+			limit = {
+				is_ai = yes
+				check_variable = { send_volunteers_count < 1 }
+			}
+			set_rule = { can_send_volunteers = no }
+			log = "[THIS.GetName]: locked AI volunteers"
 		}
-		clr_country_flag = can_send_volunteers
-		log = "[THIS.GetName]: locked AI volunteers"
-	}
 
-	#remove spare unit factor
-	if = {
-		limit = {
-			has_country_flag = AI_increased_spare_factor_12
+		#remove spare unit factor
+		if = {
+			limit = {
+				has_country_flag = AI_increased_spare_factor_12
+			}
+			log = "[THIS.GetName]: reduced spare unit factor by 12"
+			clr_country_flag = AI_increased_spare_factor_12
+			add_ai_strategy = {
+				type = spare_unit_factor
+				value = -12
+			}
 		}
-		log = "[THIS.GetName]: reduced spare unit factor by 12"
-		clr_country_flag = AI_increased_spare_factor_12
-		add_ai_strategy = {
-			type = spare_unit_factor
-			value = -12
+		else_if = {
+			limit = {
+				has_country_flag = AI_increased_spare_factor_6
+			}
+			log = "[THIS.GetName]: reduced spare unit factor by 6"
+			clr_country_flag = AI_increased_spare_factor_6
+			add_ai_strategy = {
+				type = spare_unit_factor
+				value = -6
+			}
 		}
-	}
-	else_if = {
-		limit = {
-			has_country_flag = AI_increased_spare_factor_6
+		else_if = {
+			limit = {
+				has_country_flag = AI_increased_spare_factor_3
+			}
+			log = "[THIS.GetName]: reduced spare unit factor by 3"
+			clr_country_flag = AI_increased_spare_factor_3
+			add_ai_strategy = {
+				type = spare_unit_factor
+				value = -3
+			}
 		}
-		log = "[THIS.GetName]: reduced spare unit factor by 6"
-		clr_country_flag = AI_increased_spare_factor_6
-		add_ai_strategy = {
-			type = spare_unit_factor
-			value = -6
-		}
-	}
-	else_if = {
-		limit = {
-			has_country_flag = AI_increased_spare_factor_3
-		}
-		log = "[THIS.GetName]: reduced spare unit factor by 3"
-		clr_country_flag = AI_increased_spare_factor_3
-		add_ai_strategy = {
-			type = spare_unit_factor
-			value = -3
-		}
-	}
 
-	#remove strategies
-	log = "[THIS.GetName]: removed volunteer desire to [PREV.GetName]"
-	add_ai_strategy = {
-		type = send_volunteers_desire
-		id = PREV
-		value = -10000
-	}
-	add_ai_strategy = {
-		type = send_lend_lease_desire
-		id = PREV
-		value = -200
-	}
-	add_ai_strategy = {
-		type = support
-		id = PREV
-		value = -200
-	}
+		#remove strategies
+		log = "[THIS.GetName]: removed volunteer desire to [PREV.GetName]"
+		add_ai_strategy = {
+			type = send_volunteers_desire
+			id = PREV
+			value = -10000
+		}
+		add_ai_strategy = {
+			type = send_lend_lease_desire
+			id = PREV
+			value = -200
+		}
+		add_ai_strategy = {
+			type = support
+			id = PREV
+			value = -200
+		}
 
-	#clear flag
-	clr_country_flag = sent_volunteers_@PREV
+		#clear flag
+		clr_country_flag = sent_volunteers_@PREV
+	}
 }
 
 clear_all_volunteers = {

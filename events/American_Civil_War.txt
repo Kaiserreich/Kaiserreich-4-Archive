@@ -141,7 +141,6 @@ country_event = {
 				}
 				else = {
 					USA_initial_events = yes
-					news_event = { id = amcivwar.4 hours = 8 }
 					country_event = { id = amcivwar.5 days = 30 } #war starts
 				}
 			}
@@ -154,7 +153,6 @@ country_event = {
 						}
 					}
 					USA_initial_events = yes
-					news_event = { id = amcivwar.4 hours = 8 }
 					country_event = { id = amcivwar.5 days = 30 } #war starts
 				}
 				else = {
@@ -183,7 +181,6 @@ country_event = {
 				}
 				else = {
 					USA_initial_events = yes
-					news_event = { id = amcivwar.4 hours = 8 }
 					country_event = { id = amcivwar.5 days = 30 } #war starts
 				}
 			}
@@ -195,7 +192,6 @@ country_event = {
 					}
 				}
 				USA_initial_events = yes
-				news_event = { id = amcivwar.4 hours = 8 }
 				country_event = { id = amcivwar.5 days = 30 } #war starts
 			}
 			else = {
@@ -366,7 +362,6 @@ country_event = {
 				}
 				else = {
 					USA_initial_events = yes
-					news_event = { id = amcivwar.4 hours = 8 }
 					country_event = { id = amcivwar.5 days = 30 } #war starts
 				}
 			}
@@ -378,7 +373,6 @@ country_event = {
 					}
 				}
 				USA_initial_events = yes
-				news_event = { id = amcivwar.4 hours = 8 }
 				country_event = { id = amcivwar.5 days = 30 } #war starts
 			}
 			else = {
@@ -405,7 +399,6 @@ country_event = {
 				}
 				else = {
 					USA_initial_events = yes
-					news_event = { id = amcivwar.4 hours = 8 }
 					country_event = { id = amcivwar.5 days = 30 } #war starts
 				}
 			}
@@ -418,7 +411,6 @@ country_event = {
 						}
 					}
 					USA_initial_events = yes
-					news_event = { id = amcivwar.4 hours = 8 }
 					country_event = { id = amcivwar.5 days = 30 } #war starts
 				}
 				else = {
@@ -457,7 +449,6 @@ country_event = {
 		hidden_effect = {
 			PSA_initial_events = yes
 			USA_initial_events = yes
-			news_event = { id = amcivwar.4 hours = 8 }
 		}
 	}
 	option = {
@@ -472,7 +463,6 @@ country_event = {
 		hidden_effect = {
 			PSA_initial_events = yes
 			USA_initial_events = yes
-			news_event = { id = amcivwar.4 hours = 8 }
 		}
 		PSA = {
 			set_country_flag = choice_made
@@ -519,7 +509,6 @@ country_event = {
 
 	picture = GFX_report_event_USA_soldiers_running
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	immediate = {
@@ -599,6 +588,10 @@ country_event = {
 						AND = {
 							tag = NEE
 							has_country_flag = NEE_entered_the_civil_war
+							any_owned_state = {
+								is_mainland_america = yes
+								NOT = { is_new_england = yes }
+							}
 						}
 					}
 				}
@@ -606,7 +599,15 @@ country_event = {
 			}
 		}
 		else_if = {
-			limit = { country_exists = NEE }
+			limit = {
+				NEE = {
+					exists = yes
+					any_owned_state = {
+						is_mainland_america = yes
+						NOT = { is_new_england = yes }
+					}
+				}
+			}
 			NEE = { country_event = amcivwar.24 }
 		}
 		else = {
@@ -682,7 +683,7 @@ country_event = {
 			news_event = ustates.1008
 
 			#Post-war events
-			country_event = { id = csa.215 days = 180 }
+			activate_mission = CSA_demobilise_mission
 			country_event = { id = csa.207 days = 60 random_days = 60 }
 			country_event = { id = csa.97 days = 115 random = 480 }
 
@@ -757,7 +758,7 @@ country_event = {
 				news_event = ustates.1004
 				log = "KR_Event_Logging;USA (DEM) WINS ACW;[GetDateText];[ROOT.GetName];[FROM.GetName]"
 			}
-
+			set_cosmetic_tag = america
 			#Post-war events
 			country_event = { id = ustates.168 days = 15 }
 			country_event = { id = ustates.163 days = 90 random_days = 270 }
@@ -1753,13 +1754,11 @@ country_event = { # PSA support
 }
 
 ### Uprisings ###
-country_event = { # Syndicalist uprising
+country_event = { # Syndicalist uprising boot event
 	id = amcivwar.94
 	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.94 FROM = [From.GetName]" }
-	title = amcivwar.94.t
-	desc = amcivwar.94.d
-	picture = GFX_report_event_USA_civil_war
 
+	hidden = yes
 	fire_only_once = yes
 
 	trigger = {
@@ -1774,60 +1773,64 @@ country_event = { # Syndicalist uprising
 		days = 15
 	}
 
-	major = yes
-	show_major = {
-		is_american_tag = yes
-		OR = {
-			tag = CSA
-			has_war_with = CSA
+	option = {
+		385 = {
+			set_variable = { ACW_revolting_tag = CSA }
+			remove_claim_by = CSA
+			add_core_of = CSA
+			if = {
+				limit = { is_in_array = { TEX.USA_restoring_order_array = CSA } }
+				remove_from_array = { owner:USA_restoring_order_array = CSA }
+			}
+			remove_core_of = owner
+			add_claim_by = owner
+			if = {
+				limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
+				add_to_array = { owner:USA_restoring_order_array = THIS }
+			}
+			if = {
+				limit = { has_resistance = no }
+				start_resistance = yes
+			}
+		}
+		386 = {
+			set_variable = { ACW_revolting_tag = CSA }
+			remove_claim_by = CSA
+			add_core_of = CSA
+			if = {
+				limit = { is_in_array = { TEX.USA_restoring_order_array = CSA } }
+				remove_from_array = { owner:USA_restoring_order_array = CSA }
+			}
+			remove_core_of = owner
+			add_claim_by = owner
+			if = {
+				limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
+				add_to_array = { owner:USA_restoring_order_array = THIS }
+			}
+			if = {
+				limit = { has_resistance = no }
+				start_resistance = yes
+			}
+		}
+		country_event = amcivwar.95
+		every_enemy_country = {
+			limit = { is_american_tag = yes }
+			country_event = amcivwar.95
 		}
 	}
+}
 
-	immediate = {
-		hidden_effect = {
-			385 = {
-				set_variable = { ACW_revolting_tag = CSA }
-				remove_claim_by = CSA
-				add_core_of = CSA
-				if = {
-					limit = { is_in_array = { TEX.USA_restoring_order_array = CSA } }
-					remove_from_array = { owner:USA_restoring_order_array = CSA }
-				}
-				remove_core_of = owner
-				add_claim_by = owner
-				if = {
-					limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
-					add_to_array = { owner:USA_restoring_order_array = THIS }
-				}
-				if = {
-					limit = { has_resistance = no }
-					start_resistance = yes
-				}
-			}
-			386 = {
-				set_variable = { ACW_revolting_tag = CSA }
-				remove_claim_by = CSA
-				add_core_of = CSA
-				if = {
-					limit = { is_in_array = { TEX.USA_restoring_order_array = CSA } }
-					remove_from_array = { owner:USA_restoring_order_array = CSA }
-				}
-				remove_core_of = owner
-				add_claim_by = owner
-				if = {
-					limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
-					add_to_array = { owner:USA_restoring_order_array = THIS }
-				}
-				if = {
-					limit = { has_resistance = no }
-					start_resistance = yes
-				}
-			}
-		}
-	}
+country_event = { # Syndicalist uprising
+	id = amcivwar.95
+	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.95 FROM = [From.GetName]" }
+	title = amcivwar.95.t
+	desc = amcivwar.95.d
+	picture = GFX_report_event_USA_civil_war
+
+	is_triggered_only = yes
 
 	option = {
-		name = amcivwar.94.a
+		name = amcivwar.95.a
 		trigger = { tag = CSA }
 		add_manpower = 25000
 		effect_tooltip = {
@@ -1847,7 +1850,7 @@ country_event = { # Syndicalist uprising
 	}
 
 	option = {
-		name = amcivwar.94.b
+		name = amcivwar.95.b
 		trigger = { NOT = { tag = CSA } }
 		effect_tooltip = {
 			385 = {
@@ -1866,13 +1869,11 @@ country_event = { # Syndicalist uprising
 	}
 }
 
-country_event = { # Longist uprising
-	id = amcivwar.95
-	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.95 FROM = [From.GetName]" }
-	title = amcivwar.95.t
-	desc = amcivwar.95.d
-	picture = GFX_report_event_USA_civil_war
+country_event = { # Longist uprising boot event
+	id = amcivwar.96
+	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.96 FROM = [From.GetName]" }
 
+	hidden = yes
 	fire_only_once = yes
 
 	trigger = {
@@ -1887,60 +1888,64 @@ country_event = { # Longist uprising
 		days = 30
 	}
 
-	major = yes
-	show_major = {
-		is_american_tag = yes
-		OR = {
-			tag = TEX
-			has_war_with = TEX
+	option = {
+		369 = {
+			set_variable = { ACW_revolting_tag = TEX }
+			remove_claim_by = TEX
+			add_core_of = TEX
+			if = {
+				limit = { is_in_array = { owner:USA_restoring_order_array = THIS } }
+				remove_from_array = { owner:USA_restoring_order_array = THIS }
+			}
+			remove_core_of = owner
+			add_claim_by = owner
+			if = {
+				limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
+				add_to_array = { owner:USA_restoring_order_array = THIS }
+			}
+			if = {
+				limit = { has_resistance = no }
+				start_resistance = yes
+			}
+		}
+		396 = {
+			set_variable = { ACW_revolting_tag = TEX }
+			remove_claim_by = TEX
+			add_core_of = TEX
+			if = {
+				limit = { is_in_array = { TEX.USA_restoring_order_array = THIS } }
+				remove_from_array = { owner:USA_restoring_order_array = THIS }
+			}
+			remove_core_of = owner
+			add_claim_by = owner
+			if = {
+				limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
+				add_to_array = { owner:USA_restoring_order_array = THIS }
+			}
+			if = {
+				limit = { has_resistance = no }
+				start_resistance = yes
+			}
+		}
+		country_event = amcivwar.97
+		every_enemy_country = {
+			limit = { is_american_tag = yes }
+			country_event = amcivwar.97
 		}
 	}
+}
 
-	immediate = {
-		hidden_effect = {
-			369 = {
-				set_variable = { ACW_revolting_tag = TEX }
-				remove_claim_by = TEX
-				add_core_of = TEX
-				if = {
-					limit = { is_in_array = { owner:USA_restoring_order_array = THIS } }
-					remove_from_array = { owner:USA_restoring_order_array = THIS }
-				}
-				remove_core_of = owner
-				add_claim_by = owner
-				if = {
-					limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
-					add_to_array = { owner:USA_restoring_order_array = THIS }
-				}
-				if = {
-					limit = { has_resistance = no }
-					start_resistance = yes
-				}
-			}
-			396 = {
-				set_variable = { ACW_revolting_tag = TEX }
-				remove_claim_by = TEX
-				add_core_of = TEX
-				if = {
-					limit = { is_in_array = { TEX.USA_restoring_order_array = THIS } }
-					remove_from_array = { owner:USA_restoring_order_array = THIS }
-				}
-				remove_core_of = owner
-				add_claim_by = owner
-				if = {
-					limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
-					add_to_array = { owner:USA_restoring_order_array = THIS }
-				}
-				if = {
-					limit = { has_resistance = no }
-					start_resistance = yes
-				}
-			}
-		}
-	}
+country_event = { # Longist uprising
+	id = amcivwar.97
+	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.97 FROM = [From.GetName]" }
+	title = amcivwar.97.t
+	desc = amcivwar.97.d
+	picture = GFX_report_event_USA_civil_war
+
+	is_triggered_only = yes
 
 	option = {
-		name = amcivwar.95.a
+		name = amcivwar.97.a
 		trigger = { tag = TEX }
 		add_manpower = 25000
 		effect_tooltip = {
@@ -1960,7 +1965,7 @@ country_event = { # Longist uprising
 	}
 
 	option = {
-		name = amcivwar.95.b
+		name = amcivwar.97.b
 		trigger = { NOT = { tag = TEX } }
 		effect_tooltip = {
 			369 = {
@@ -1980,12 +1985,10 @@ country_event = { # Longist uprising
 }
 
 country_event = { # Loyalist uprising
-	id = amcivwar.96
-	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.96 FROM = [From.GetName]" }
-	title = amcivwar.96.t
-	desc = amcivwar.96.d
-	picture = GFX_report_event_USA_civil_war
+	id = amcivwar.98
+	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.98 FROM = [From.GetName]" }
 
+	hidden = yes
 	fire_only_once = yes
 
 	trigger = {
@@ -2006,60 +2009,64 @@ country_event = { # Loyalist uprising
 		days = 15
 	}
 
-	major = yes
-	show_major = {
-		is_american_tag = yes
-		OR = {
-			tag = USA
-			has_war_with = USA
+	option = {
+		359 = {
+			set_variable = { ACW_revolting_tag = USA }
+			remove_claim_by = USA
+			add_core_of = USA
+			if = {
+				limit = { is_in_array = { TEX.USA_restoring_order_array = USA } }
+				remove_from_array = { owner:USA_restoring_order_array = USA }
+			}
+			remove_core_of = owner
+			add_claim_by = owner
+			if = {
+				limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
+				add_to_array = { owner:USA_restoring_order_array = THIS }
+			}
+			if = {
+				limit = { has_resistance = no }
+				start_resistance = yes
+			}
+		}
+		360 = {
+			set_variable = { ACW_revolting_tag = USA }
+			remove_claim_by = USA
+			add_core_of = USA
+			if = {
+				limit = { is_in_array = { TEX.USA_restoring_order_array = USA } }
+				remove_from_array = { owner:USA_restoring_order_array = USA }
+			}
+			remove_core_of = owner
+			add_claim_by = owner
+			if = {
+				limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
+				add_to_array = { owner:USA_restoring_order_array = THIS }
+			}
+			if = {
+				limit = { has_resistance = no }
+				start_resistance = yes
+			}
+		}
+		country_event = amcivwar.99
+		every_enemy_country = {
+			limit = { is_american_tag = yes }
+			country_event = amcivwar.99
 		}
 	}
+}
 
-	immediate = {
-		hidden_effect = {
-			359 = {
-				set_variable = { ACW_revolting_tag = USA }
-				remove_claim_by = USA
-				add_core_of = USA
-				if = {
-					limit = { is_in_array = { TEX.USA_restoring_order_array = USA } }
-					remove_from_array = { owner:USA_restoring_order_array = USA }
-				}
-				remove_core_of = owner
-				add_claim_by = owner
-				if = {
-					limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
-					add_to_array = { owner:USA_restoring_order_array = THIS }
-				}
-				if = {
-					limit = { has_resistance = no }
-					start_resistance = yes
-				}
-			}
-			360 = {
-				set_variable = { ACW_revolting_tag = USA }
-				remove_claim_by = USA
-				add_core_of = USA
-				if = {
-					limit = { is_in_array = { TEX.USA_restoring_order_array = USA } }
-					remove_from_array = { owner:USA_restoring_order_array = USA }
-				}
-				remove_core_of = owner
-				add_claim_by = owner
-				if = {
-					limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
-					add_to_array = { owner:USA_restoring_order_array = THIS }
-				}
-				if = {
-					limit = { has_resistance = no }
-					start_resistance = yes
-				}
-			}
-		}
-	}
+country_event = { # Loyalist uprising
+	id = amcivwar.99
+	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.99 FROM = [From.GetName]" }
+	title = amcivwar.99.t
+	desc = amcivwar.99.d
+	picture = GFX_report_event_USA_civil_war
+
+	is_triggered_only = yes
 
 	option = {
-		name = amcivwar.96.a
+		name = amcivwar.99.a
 		trigger = { tag = USA }
 		add_manpower = 25000
 		effect_tooltip = {
@@ -2079,7 +2086,7 @@ country_event = { # Loyalist uprising
 	}
 
 	option = {
-		name = amcivwar.96.b
+		name = amcivwar.99.b
 		trigger = { NOT = { tag = USA } }
 		effect_tooltip = {
 			359 = {
@@ -2098,28 +2105,11 @@ country_event = { # Loyalist uprising
 	}
 }
 
-country_event = { # Rebels sponsored by other faction
-	id = amcivwar.97
-	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.97 FROM = [From.GetName]" }
-	title = amcivwar.97.t
-	desc = amcivwar.97.d
-	picture = GFX_report_event_USA_civil_war
+country_event = { # Resistance uprising boot event
+	id = amcivwar.100
+	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.100 FROM = [From.GetName]" }
 
-	is_triggered_only = yes
-
-	option = {
-		name = amcivwar.97.a
-		add_stability = -0.05
-	}
-}
-
-country_event = { # Resistance uprising
-	id = amcivwar.98
-	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.98 FROM = [From.GetName]" }
-	title = amcivwar.98.t
-	desc = amcivwar.98.d
-	picture = GFX_report_event_USA_civil_war
-
+	hidden = yes
 	fire_only_once = yes
 
 	trigger = {
@@ -2134,60 +2124,64 @@ country_event = { # Resistance uprising
 		days = 40
 	}
 
-	major = yes
-	show_major = {
-		is_american_tag = yes
-		OR = {
-			tag = PSA
-			has_war_with = PSA
+	option = {
+		383 = {
+			set_variable = { ACW_revolting_tag = PSA }
+			remove_claim_by = PSA
+			add_core_of = PSA
+			if = {
+				limit = { is_in_array = { TEX.USA_restoring_order_array = PSA } }
+				remove_from_array = { owner:USA_restoring_order_array = PSA }
+			}
+			remove_core_of = owner
+			add_claim_by = owner
+			if = {
+				limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
+				add_to_array = { owner:USA_restoring_order_array = THIS }
+			}
+			if = {
+				limit = { has_resistance = no }
+				start_resistance = yes
+			}
+		}
+		384 = {
+			set_variable = { ACW_revolting_tag = PSA }
+			remove_claim_by = PSA
+			add_core_of = PSA
+			if = {
+				limit = { is_in_array = { TEX.USA_restoring_order_array = PSA } }
+				remove_from_array = { owner:USA_restoring_order_array = PSA }
+			}
+			remove_core_of = owner
+			add_claim_by = owner
+			if = {
+				limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
+				add_to_array = { owner:USA_restoring_order_array = THIS }
+			}
+			if = {
+				limit = { has_resistance = no }
+				start_resistance = yes
+			}
+		}
+		country_event = amcivwar.101
+		every_enemy_country = {
+			limit = { is_american_tag = yes }
+			country_event = amcivwar.101
 		}
 	}
+}
 
-	immediate = {
-		hidden_effect = {
-			383 = {
-				set_variable = { ACW_revolting_tag = PSA }
-				remove_claim_by = PSA
-				add_core_of = PSA
-				if = {
-					limit = { is_in_array = { TEX.USA_restoring_order_array = PSA } }
-					remove_from_array = { owner:USA_restoring_order_array = PSA }
-				}
-				remove_core_of = owner
-				add_claim_by = owner
-				if = {
-					limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
-					add_to_array = { owner:USA_restoring_order_array = THIS }
-				}
-				if = {
-					limit = { has_resistance = no }
-					start_resistance = yes
-				}
-			}
-			384 = {
-				set_variable = { ACW_revolting_tag = PSA }
-				remove_claim_by = PSA
-				add_core_of = PSA
-				if = {
-					limit = { is_in_array = { TEX.USA_restoring_order_array = PSA } }
-					remove_from_array = { owner:USA_restoring_order_array = PSA }
-				}
-				remove_core_of = owner
-				add_claim_by = owner
-				if = {
-					limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
-					add_to_array = { owner:USA_restoring_order_array = THIS }
-				}
-				if = {
-					limit = { has_resistance = no }
-					start_resistance = yes
-				}
-			}
-		}
-	}
+country_event = { # Resistance uprising
+	id = amcivwar.101
+	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.101 FROM = [From.GetName]" }
+	title = amcivwar.101.t
+	desc = amcivwar.101.d
+	picture = GFX_report_event_USA_civil_war
+
+	is_triggered_only = yes
 
 	option = {
-		name = amcivwar.98.a
+		name = amcivwar.101.a
 		trigger = { tag = PSA }
 		add_manpower = 50000
 		effect_tooltip = {
@@ -2213,7 +2207,7 @@ country_event = { # Resistance uprising
 	}
 
 	option = {
-		name = amcivwar.98.b
+		name = amcivwar.101.b
 		trigger = { NOT = { tag = PSA } }
 		effect_tooltip = {
 			382 = {
@@ -2238,18 +2232,16 @@ country_event = { # Resistance uprising
 	}
 }
 
-country_event = { # Syndicalist uprising in Georgia
-	id = amcivwar.100
-	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.100 FROM = [From.GetName]" }
-	title = amcivwar.100.t
-	desc = amcivwar.100.d
-	picture = GFX_report_event_USA_civil_war
+country_event = { # Syndicalist uprising in Georgia boot event
+	id = amcivwar.102
+	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.102 FROM = [From.GetName]" }
 
+	hidden = yes
 	fire_only_once = yes
 
 	trigger = {
 		tag = CSA
-		has_war_with = 365.owner
+		has_war_with = USA
 		USA = {
 			OR = {
 				has_country_flag = USA_assassinated_long
@@ -2268,32 +2260,45 @@ country_event = { # Syndicalist uprising in Georgia
 		}
 	}
 
-	immediate = {
-		hidden_effect = {
-			365 = {
-				set_variable = { ACW_revolting_tag = CSA }
-				remove_claim_by = CSA
-				add_core_of = CSA
-				if = {
-					limit = { is_in_array = { TEX.USA_restoring_order_array = CSA } }
-					remove_from_array = { owner:USA_restoring_order_array = CSA }
-				}
-				remove_core_of = owner
-				add_claim_by = owner
-				if = {
-					limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
-					add_to_array = { owner:USA_restoring_order_array = THIS }
-				}
-				if = {
-					limit = { has_resistance = no }
-					start_resistance = yes
-				}
+	option = {
+		365 = {
+			set_variable = { ACW_revolting_tag = CSA }
+			remove_claim_by = CSA
+			add_core_of = CSA
+			if = {
+				limit = { is_in_array = { TEX.USA_restoring_order_array = CSA } }
+				remove_from_array = { owner:USA_restoring_order_array = CSA }
+			}
+			remove_core_of = owner
+			add_claim_by = owner
+			if = {
+				limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
+				add_to_array = { owner:USA_restoring_order_array = THIS }
+			}
+			if = {
+				limit = { has_resistance = no }
+				start_resistance = yes
 			}
 		}
+		country_event = amcivwar.103
+		every_enemy_country = {
+			limit = { is_american_tag = yes }
+			country_event = amcivwar.103
+		}
 	}
+}
+
+country_event = { # Syndicalist uprising in Georgia
+	id = amcivwar.103
+	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.103 FROM = [From.GetName]" }
+	title = amcivwar.103.t
+	desc = amcivwar.103.d
+	picture = GFX_report_event_USA_civil_war
+
+	is_triggered_only = yes
 
 	option = {
-		name = amcivwar.100.a
+		name = amcivwar.103.a
 		trigger = { tag = CSA }
 		add_manpower = 50000
 		effect_tooltip = {
@@ -2307,7 +2312,7 @@ country_event = { # Syndicalist uprising in Georgia
 	}
 
 	option = {
-		name = amcivwar.100.b
+		name = amcivwar.103.b
 		trigger = { NOT = { tag = CSA } }
 		effect_tooltip = {
 			365 = {
@@ -2320,14 +2325,11 @@ country_event = { # Syndicalist uprising in Georgia
 	}
 }
 
+country_event = { # Longist uprising in California boot event
+	id = amcivwar.104
+	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.104 FROM = [From.GetName]" }
 
-country_event = { # Longist uprising in California
-	id = amcivwar.102
-	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.102 FROM = [From.GetName]" }
-	title = amcivwar.102.t
-	desc = amcivwar.102.d
-	picture = GFX_report_event_USA_civil_war
-
+	hidden = yes
 	fire_only_once = yes
 
 	trigger = {
@@ -2352,51 +2354,64 @@ country_event = { # Longist uprising in California
 		}
 	}
 
-	immediate = {
-		hidden_effect = {
-			798 = {
-				set_variable = { ACW_revolting_tag = TEX }
-				remove_claim_by = TEX
-				add_core_of = TEX
-				if = {
-					limit = { is_in_array = { TEX.USA_restoring_order_array = THIS } }
-					remove_from_array = { owner:USA_restoring_order_array = THIS }
-				}
-				remove_core_of = owner
-				add_claim_by = owner
-				if = {
-					limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
-					add_to_array = { owner:USA_restoring_order_array = THIS }
-				}
-				if = {
-					limit = { has_resistance = no }
-					start_resistance = yes
-				}
+	option = {
+		798 = {
+			set_variable = { ACW_revolting_tag = TEX }
+			remove_claim_by = TEX
+			add_core_of = TEX
+			if = {
+				limit = { is_in_array = { TEX.USA_restoring_order_array = THIS } }
+				remove_from_array = { owner:USA_restoring_order_array = THIS }
 			}
-			829 = {
-				set_variable = { ACW_revolting_tag = TEX }
-				remove_claim_by = TEX
-				add_core_of = TEX
-				if = {
-					limit = { is_in_array = { TEX.USA_restoring_order_array = THIS } }
-					remove_from_array = { owner:USA_restoring_order_array = THIS }
-				}
-				remove_core_of = owner
-				add_claim_by = owner
-				if = {
-					limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
-					add_to_array = { owner:USA_restoring_order_array = THIS }
-				}
-				if = {
-					limit = { has_resistance = no }
-					start_resistance = yes
-				}
+			remove_core_of = owner
+			add_claim_by = owner
+			if = {
+				limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
+				add_to_array = { owner:USA_restoring_order_array = THIS }
+			}
+			if = {
+				limit = { has_resistance = no }
+				start_resistance = yes
 			}
 		}
+		829 = {
+			set_variable = { ACW_revolting_tag = TEX }
+			remove_claim_by = TEX
+			add_core_of = TEX
+			if = {
+				limit = { is_in_array = { TEX.USA_restoring_order_array = THIS } }
+				remove_from_array = { owner:USA_restoring_order_array = THIS }
+			}
+			remove_core_of = owner
+			add_claim_by = owner
+			if = {
+				limit = { NOT = { is_in_array = { owner:USA_restoring_order_array = THIS } } }
+				add_to_array = { owner:USA_restoring_order_array = THIS }
+			}
+			if = {
+				limit = { has_resistance = no }
+				start_resistance = yes
+			}
+		}
+		country_event = amcivwar.105
+		every_enemy_country = {
+			limit = { is_american_tag = yes }
+			country_event = amcivwar.105
+		}
 	}
+}
+
+country_event = { # Longist uprising in California boot event
+	id = amcivwar.105
+	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.105 FROM = [From.GetName]" }
+	title = amcivwar.105.t
+	desc = amcivwar.105.d
+	picture = GFX_report_event_USA_civil_war
+
+	is_triggered_only = yes
 
 	option = {
-		name = amcivwar.100.a
+		name = amcivwar.105.a
 		trigger = { tag = TEX }
 		add_manpower = 50000
 		effect_tooltip = {
@@ -2416,7 +2431,7 @@ country_event = { # Longist uprising in California
 	}
 
 	option = {
-		name = amcivwar.100.b
+		name = amcivwar.105.b
 		trigger = { NOT = { tag = TEX } }
 		effect_tooltip = {
 			798 = {
@@ -2808,6 +2823,7 @@ country_event = { # Canada considers what to do with land after ACW
 		NEE = {
 			add_opinion_modifier = { target = CAN modifier = KR_returned_land }
 			country_event = amcivwar.158
+			hidden_effect = { country_event = { id = newengland.1000 hours = 3 } }
 		}
 	}
 	option = {
@@ -3002,7 +3018,8 @@ country_event = { # Canada sets up new American government
 		hidden_effect = {
 			USA = {
 				save_event_target_as = america_country
-				drop_cosmetic_tag = yes
+				set_cosmetic_tag = america
+				country_event = { id = amcivwar.24 days = 1 }
 			}
 			country_event = { id = amcivwar.160 days = 1 } #New England
 			country_event = { id = amcivwar.161 days = 2 } #Alaska
@@ -3085,6 +3102,7 @@ country_event = { # Canada sets up new American government
 			PSA = {
 				save_event_target_as = america_country
 				drop_cosmetic_tag = yes
+				country_event = { id = amcivwar.24 days = 1 }
 			}
 			country_event = { id = amcivwar.160 days = 1 } #New England
 			country_event = { id = amcivwar.161 days = 2 } #Alaska
@@ -3176,6 +3194,7 @@ country_event = { # Canada sets up new American government
 			TEX = {
 				save_event_target_as = america_country
 				drop_cosmetic_tag = yes
+				country_event = { id = amcivwar.24 days = 1 }
 			}
 			country_event = { id = amcivwar.160 days = 1 } #New England
 			country_event = { id = amcivwar.161 days = 2 } #Alaska
@@ -3243,7 +3262,10 @@ country_event = { # Canada sets up new American government
 			add_to_faction = NEE
 		}
 		hidden_effect = {
-			USA = { save_event_target_as = america_country }
+			NEE = {
+				save_event_target_as = america_country
+				country_event = { id = newengland.1000 days = 1 }
+			}
 			country_event = { id = amcivwar.161 days = 2 } #Alaska
 			country_event = { id = amcivwar.162 days = 365 } #Elections
 		}
@@ -3421,40 +3443,33 @@ country_event = { # Elections for America?
 		}
 		add_political_power = 50
 		if = {
-			limit = {
-				event_target:america_country = { is_subject_of = ROOT }
-			}
+			limit = { has_subject = event_target:america_country }
 			set_autonomy = {
 				target = event_target:america_country
 				autonomy_state = autonomy_free
 			}
 		}
 		event_target:america_country = {
-			hidden_effect = {
-				clr_country_flag = USA_had_1942_election
-				clr_country_flag = USA_had_1944_election
-				clr_country_flag = USA_had_1948_election
-				clr_country_flag = USA_had_1952_election
-				clr_country_flag = NEE_had_1942_election
+			set_politics = {
+				ruling_party = var:current_party_ideology_group
+				elections_allowed = yes
+			}
+			if = {
+				limit = {
+					OR = {
+						tag = NEE
+						tag = PSA
+					}
+				}
+				set_country_flag = NEE_had_provisional_election
+				clr_country_flag = PSA_Leader
+				clr_country_flag = NEE_had_1940_election
 				clr_country_flag = NEE_had_1944_election
 				clr_country_flag = NEE_had_1948_election
 				clr_country_flag = NEE_had_1952_election
-				clr_country_flag = PSA_had_1942_election
-				clr_country_flag = PSA_had_1944_election
-				clr_country_flag = PSA_had_1948_election
-				clr_country_flag = PSA_had_1952_election
-				meta_effect = {
-					text = {
-						set_politics = {
-							ruling_party = [RULING_PARTY_TAG]
-							last_election = "[CURRENT_DATE]"
-							election_frequency = 3
-							elections_allowed = yes
-						}
-					}
-					RULING_PARTY_TAG = "[Root.GetRulingIdeologyId]"
-					CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
-				}
+			}
+			else = {
+				set_variable = { USA_elections = 1 }
 			}
 		}
 	}
@@ -4501,6 +4516,7 @@ country_event = {
 					region = 118 #California
 					region = 185 #Cascades
 					state = 463 #Alaska
+					state = 387 #Idaho
 					state = 380 #Utah
 					state = 377 #Arizona
 				}
@@ -4630,7 +4646,7 @@ country_event = { # America in Chaos
 		}
 		reverse_add_opinion_modifier = {
 			target = USA
-			modifier = LIB_goes
+			modifier = KR_hates_govt
 		}
 		separate_peace_all_wars = yes
 	}
@@ -4653,7 +4669,7 @@ country_event = { # America in Chaos
 		add_stability = -0.1
 		reverse_add_opinion_modifier = {
 			target = USA
-			modifier = LIB_stand
+			modifier = KR_close_allies
 		}
 	}
 }
@@ -4713,7 +4729,7 @@ country_event = { # Philippines Seizing equipment
 		}
 		reverse_add_opinion_modifier = {
 			target = USA
-			modifier = PHI_SIZE_EQUIP
+			modifier = KR_disapproves_of_govt
 		}
 		add_equipment_to_stockpile = {
 			type = infantry_equipment_1
@@ -4729,7 +4745,7 @@ country_event = { # Philippines Seizing equipment
 		add_stability = -0.01
 		reverse_add_opinion_modifier = {
 			target = USA
-			modifier = PHI_NO_EQUIP
+			modifier = KR_pleased
 		}
 	}
 }
@@ -11022,12 +11038,12 @@ country_event = {
 	}
 
 	option = {
-		name = amcivwar.754.a
+		name = amcivwar.754.b
 		trigger = { tag = TEX }
 	}
 
 	option = {
-		name = amcivwar.754.b
+		name = amcivwar.754.c
 		trigger = {
 			NOT = {
 				tag = USA
@@ -12121,9 +12137,9 @@ country_event = {
 country_event = {
 	id = amcivwar.768
 	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.768 FROM = [From.GetName]" }
-	picture = GFX_report_event_USA_military_trial
 	title = amcivwar.768.t
 	desc = amcivwar.768.d
+	picture = GFX_report_event_USA_military_trial
 
 	trigger = {
 		NEE = {
@@ -12148,108 +12164,3 @@ country_event = {
 		add_political_power = 50
 	}
 }
-
-### State Capture Events ###
-
-country_event = { #Important state lost
-	id = amcivwar.800
-	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.800 FROM = [From.GetName]" }
-	title = amcivwar.800.t
-
-	desc = {
-		text = amcivwar.800.d_level_1
-		trigger = { FROM = { has_idea = ACW_wavering_momentum_1 } }
-	}
-	desc = {
-		text = amcivwar.800.d_level_2
-		trigger = { FROM = { has_idea = ACW_wavering_momentum_2 } }
-	}
-	desc = {
-		text = amcivwar.800.d_level_3
-		trigger = { FROM = { has_idea = ACW_wavering_momentum_3 } }
-	}
-	desc = {
-		text = amcivwar.800.d_level_4
-		trigger = { FROM = { has_idea = ACW_wavering_momentum_4 } }
-	}
-	desc = {
-		text = amcivwar.800.d_level_5
-		trigger = { FROM = { has_idea = ACW_wavering_momentum_5 } }
-	}
-	desc = {
-		text = amcivwar.800.d_level_6
-		trigger = { FROM = { has_idea = ACW_wavering_momentum_6 } }
-	}
-	desc = {
-		text = amcivwar.800.d_level_7
-		trigger = { FROM = { has_idea = ACW_wavering_momentum_7 } }
-	}
-	desc = {
-		text = amcivwar.800.d_level_8
-		trigger = { FROM = { has_idea = ACW_wavering_momentum_8 } }
-	}
-	desc = {
-		text = amcivwar.800.d_none
-		trigger = {
-			FROM = { NOT = { has_idea_with_trait = ACW_wavering_momentum_idea } }
-		}
-	}
-
-	is_triggered_only = yes
-
-	option = {
-		name = amcivwar.800.a
-		USA_increase_wavering_momentum = yes
-	}
-}
-
-country_event = { #Important state recovered
-	id = amcivwar.801
-	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.801 FROM = [From.GetName]" }
-	title = amcivwar.801.t
-	desc = amcivwar.801.d
-
-	trigger = {
-		has_idea_with_trait = ACW_wavering_momentum_idea
-	}
-
-	is_triggered_only = yes
-
-	option = {
-		name = amcivwar.801.a
-		USA_decrease_wavering_momentum = yes
-	}
-}
-
-### Resistance Effects ###
-country_event = { #Uprising in state
-	id = amcivwar.900
-	immediate = { log = "[GetDateText]: [Root.GetName]: event amcivwar.900 FROM = [From.GetName]" }
-	title = amcivwar.900.t
-	desc = amcivwar.900.d
-
-	is_triggered_only = yes
-
-	option = {
-		name = amcivwar.900.a
-		event_target:revolt_state = {
-			every_neighbor_state = {
-				limit = {
-					is_core_of = ROOT
-					is_mainland_america = yes
-					check_variable = { core_countries^num > 1 }
-				}
-				remove_core_of = ROOT
-				if = {
-					limit = { NOT = { is_in_array = { ROOT.USA_restoring_order_array = THIS } } }
-					add_to_array = { ROOT.USA_restoring_order_array = THIS }
-				}
-				if = {
-					limit = { NOT = { is_claimed_by = ROOT } }
-					add_claim_by = ROOT
-				}
-			}
-		}
-	}
-}
-

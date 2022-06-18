@@ -333,7 +333,7 @@ transfer_territory_from_core_regions_and_add_cores = {
 				is_claim_or_core_of_ROOT = no
 				NOT = { has_state_flag = retain_state_@PREV }
 			}
-			add_claim_by = var:tag_to_release
+			add_core_of = var:tag_to_release
 			set_state_owner_to = var:tag_to_release
 			set_state_province_controller = {
 				controller = owner
@@ -547,6 +547,20 @@ puppet_released_tag_nocosmetic = {
 	recheck_annexations = yes
 }
 
+transfer_state_during_war_target_tag_to_release = {
+	if = {
+		limit = { owner = { has_war = no } }
+		transfer_state_to = var:tag_to_release
+	}
+	else = {
+		set_state_owner_to = var:tag_to_release
+		set_state_province_controller = {
+			controller = owner
+			limit = { NOT = { has_war_with = PREV.owner } }
+		}
+	}
+}
+
 ### COUNTRY-SPECIFIC EFFECTS ###
 
 release_france = {
@@ -576,7 +590,7 @@ release_france = {
 			add_core_of = var:tag_to_release
 		}
 		if = {
-			limit = { is_owned_and_controlled_by = ROOT }
+			limit = { is_owned_by = ROOT }
 			if = {
 				limit = {
 					OR = {
@@ -591,10 +605,11 @@ release_france = {
 						is_italian_tag = yes
 					}
 				}
-				transfer_state_to = var:158.owner
+				set_temp_variable = { target = 158.owner }
+				transfer_state_during_war = yes
 			}
 			else = {
-				transfer_state_to = var:tag_to_release
+				transfer_state_during_war_target_tag_to_release = yes
 			}
 		}
 	}
@@ -635,52 +650,46 @@ release_france = {
 release_spain = {
 	hidden_effect = {
 		every_state = {
-			limit = {
-				is_spain = yes
-			}
+			limit = { is_spain = yes }
 			add_core_of = var:tag_to_release
 			if = {
 				limit = {
+					is_owned_by = ROOT
 					is_claim_or_core_of_ROOT = no
 					OR = {
 						is_important_state = no
 						ROOT = { is_actual_major = no }
 					}
-					if = {
-						limit = {
-							OR = {
-								country_exists = BAS
-								ROOT = { has_country_flag = SPA_CONQ }
-							}
-						}
+					OR = {
+						NOT = { is_core_of = BAS }
 						NOT = {
-							is_core_of = BAS
+							BAS = { is_ally_with = ROOT }
+							ROOT = { has_country_flag = SPA_CONQ }
 						}
 					}
 					if = {
-						limit = {
-							OR = {
-								country_exists = GLC
-								ROOT = { has_country_flag = SPA_CONQ }
-							}
-						}
-						NOT = {
-							is_core_of = GLC
+						limit = { is_core_of = BAS }
+						ROOT = {
+							NOT = { is_ally_with = BAS }
+							NOT = { has_country_flag = SPA_CONQ }
 						}
 					}
 					if = {
-						limit = {
-							OR = {
-								country_exists = CAT
-								ROOT = { has_country_flag = SPA_CONQ }
-							}
+						limit = { is_core_of = GLC }
+						ROOT = {
+							NOT = { is_ally_with = GLC }
+							NOT = { has_country_flag = SPA_CONQ }
 						}
-						NOT = {
-							is_core_of = CAT
+					}
+					if = {
+						limit = { is_core_of = CAT }
+						ROOT = {
+							NOT = { is_ally_with = CAT }
+							NOT = { has_country_flag = SPA_CONQ }
 						}
 					}
 				}
-				transfer_state_to = var:tag_to_release
+				transfer_state_during_war_target_tag_to_release = yes
 			}
 		}
 	}
@@ -803,7 +812,7 @@ reorganised_china_setup = {
 		}
 		set_cosmetic_tag = FNG_JAP
 		set_global_flag = FNG_projapan
-		set_country_flag = Zhang_Zuolin_dead
+		set_global_flag = Zhang_Zuolin_dead
 		set_country_flag = Zhang_Xueliang_dead
 		FNG_tang_shaoyi = {
 			if = {

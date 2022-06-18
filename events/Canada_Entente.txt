@@ -5149,20 +5149,7 @@ country_event = {
 		trigger = { tag = FROM }
 		add_political_power = -50
 		clr_global_flag = CAN_king_busy
-		if = {
-			limit = { has_country_leader_with_trait = CAN_popular_figurehead }
-			remove_country_leader_trait = CAN_popular_figurehead
-			set_country_flag = GBR_remove_figurehead_trait
-		}
-		else_if = {
-			limit = { has_country_leader_with_trait = CAN_returning_king }
-			remove_country_leader_trait = CAN_returning_king
-			set_country_flag = GBR_remove_returning_king_trait
-		}
-		else = {
-			add_country_leader_trait = CAN_unpopular_monarch
-			set_country_flag = GBR_has_unpopular_monarch
-		}
+		CAN_king_becomes_unpopular = yes
 		custom_effect_tooltip = CAN_exile_influence_decrease
 		set_variable = { king_influence = 0 }
 		CAN_calc_exile_influence_effects = yes
@@ -5216,8 +5203,7 @@ country_event = {
 				}
 			}
 		}
-		effect_tooltip = { retire_character = CAN_edward_windsor }
-		hidden_effect = { CAN_edward_windsor = { retire = yes } }
+		retire_character = CAN_edward_windsor
 		clear_global_event_target = CAN_edward_windsor_target
 		if = {
 			limit = {
@@ -5284,20 +5270,7 @@ country_event = {
 			}
 		}
 		clr_global_flag = CAN_king_busy
-		if = {
-			limit = { has_country_leader_with_trait = CAN_popular_figurehead }
-			remove_country_leader_trait = CAN_popular_figurehead
-			set_country_flag = GBR_remove_figurehead_trait
-		}
-		else_if = {
-			limit = { has_country_leader_with_trait = CAN_returning_king }
-			remove_country_leader_trait = CAN_returning_king
-			set_country_flag = GBR_remove_returning_king_trait
-		}
-		else = {
-			add_country_leader_trait = CAN_unpopular_monarch
-			set_country_flag = GBR_has_unpopular_monarch
-		}
+		CAN_king_becomes_unpopular = yes
 		if = {
 			limit = {
 				check_variable = { king_popularity < 2 }
@@ -5369,11 +5342,6 @@ country_event = {
 		hidden_effect = {
 			clr_global_flag = CAN_king_busy
 			clr_global_flag = CAN_king_edward_VIII
-			clr_country_flag = GBR_has_returning_king
-			clr_country_flag = GBR_remove_returning_king_trait
-			clr_country_flag = GBR_has_unpopular_monarch
-			clr_country_flag = GBR_remove_unpopular_monarch_trait
-			clr_country_flag = GBR_remove_figurehead_trait
 			set_global_flag = CAN_king_albert_I
 			set_variable = { king_popularity = 2 }
 			set_variable = { global.king_albert_story = 0 }
@@ -5416,17 +5384,13 @@ country_event = {
 		hidden_effect = {
 			clr_global_flag = CAN_king_busy
 			clr_global_flag = CAN_king_edward_VIII
-			clr_country_flag = GBR_has_returning_king
-			clr_country_flag = GBR_remove_returning_king_trait
-			clr_country_flag = GBR_has_unpopular_monarch
-			clr_country_flag = GBR_remove_unpopular_monarch_trait
-			clr_country_flag = GBR_remove_figurehead_trait
 			set_global_flag = CAN_king_henry_IX
 			set_variable = { king_popularity = 2 }
 			set_variable = { global.king_henry_story = 0 }
 			AST = {
 				if = {
 					limit = { has_country_leader = { character = CAN_henry_windsor } }
+					event_target:CAN_henry_windsor_target = { save_event_target_as = windsor }
 					country_event = entente.113
 				}
 			}
@@ -5460,17 +5424,13 @@ country_event = {
 		hidden_effect = {
 			clr_global_flag = CAN_king_busy
 			clr_global_flag = CAN_king_edward_VIII
-			clr_country_flag = GBR_has_returning_king
-			clr_country_flag = GBR_remove_returning_king_trait
-			clr_country_flag = GBR_has_unpopular_monarch
-			clr_country_flag = GBR_remove_unpopular_monarch_trait
-			clr_country_flag = GBR_remove_figurehead_trait
 			set_global_flag = CAN_king_george_VI
 			set_variable = { king_popularity = 2 }
 			set_variable = { global.king_george_story = 0 }
 			AST = {
 				if = {
 					limit = { has_country_leader = { character = CAN_george_windsor } }
+					event_target:CAN_george_windsor_target = { save_event_target_as = windsor }
 					country_event = entente.113
 				}
 			}
@@ -5591,7 +5551,7 @@ unit_leader_event = {
 	option = {
 		name = entente.112.a
 		effect_tooltip = {
-			THIS = { set_nationality = AST }
+			event_target:CAN_henry_windsor_target = { set_nationality = AST }
 		}
 	}
 }
@@ -5610,7 +5570,7 @@ country_event = {
 		name = entente.113.a
 		add_stability = 0.05
 		effect_tooltip = {
-			event_target:CAN_henry_windsor_target = { set_nationality = FROM }
+			event_target:windsor = { set_nationality = FROM }
 		}
 		AST_create_governor_general_hore_ruthven = yes
 	}
@@ -6746,6 +6706,16 @@ country_event = {
 				}
 			}
 			remove_ideas = CAN_darkest_hour
+			hidden_effect = {
+				# peace out the rest of the Entente if appropriate
+				every_country = {
+					limit = {
+						has_war_with = event_target:entente_transfer_to
+						is_valid_peace_target = yes
+					}
+					country_event = { id = entente.258 hours = 3 }
+				}
+			}
 		}
 		else = {
 			CAN_entente_collapses = yes
@@ -8971,96 +8941,7 @@ news_event = {
 	}
 }
 
-# Promises dropped if war between Germany/Entente begins
-country_event = {
-	id = entente.321
-	immediate = { log = "[GetDateText]: [Root.GetName]: event entente.321 FROM = [From.GetName]" }
-	title = entente.321.t
-	desc = entente.321.d
-	picture = GFX_report_event_generic_conference2
-
-	trigger = {
-		OR = {
-			tag = GER
-			tag = NFA
-			tag = CAN
-			tag = GBR
-		}
-		if = {
-			limit = { tag = GER }
-			has_global_flag = GER_stay_out_france_uk
-			is_faction_leader = yes
-			has_war_with = ENT
-		}
-		else_if = {
-			limit = {
-				OR = {
-					tag = GBR
-					AND = {
-						tag = CAN
-						NOT = { country_exists = GBR }
-					}
-				}
-			}
-			OR = {
-				has_global_flag = ENT_britain_agree_northire
-				has_global_flag = ENT_agree_colonies
-			}
-			has_war_with = GER
-		}
-		else_if = {
-			limit = { tag = NFA }
-			OR = {
-				has_global_flag = ENT_france_agree_alsace
-				has_global_flag = ENT_france_agree_mittel
-				has_global_flag = ENT_agree_colonies
-			}
-			has_war_with = GER
-		}
-	}
-
-	mean_time_to_happen = {
-		days = 3
-	}
-
-	option = {
-		name = entente.321.a
-		if = {
-			limit = { tag = GER }
-			clr_global_flag = GER_stay_out_france_uk
-		}
-		if = {
-			limit = {
-				OR = {
-					tag = CAN
-					tag = GBR
-				}
-			}
-			clr_global_flag = ENT_britain_agree_northire
-			clr_global_flag = ENT_agree_colonies
-		}
-		if = {
-			limit = {
-				tag = NFA
-				has_global_flag = ENT_france_agree_alsace
-			}
-			clr_global_flag = ENT_france_agree_alsace
-			if = {
-				limit = { 28 = { is_not_claim_or_core_of_ROOT = yes } }
-				28 = { add_claim_by = NFA }
-			}
-		}
-		if = {
-			limit = { tag = NFA }
-			if = {
-				limit = { has_global_flag = ENT_france_agree_mittel }
-				clr_global_flag = ENT_france_agree_mittel
-				clr_country_flag = CAN_refused_iedc
-			}
-			clr_global_flag = ENT_agree_colonies
-		}
-	}
-}
+#321 is free
 
 # Return French territory?
 country_event = {
@@ -9330,7 +9211,7 @@ country_event = {
 	hidden = yes
 	is_triggered_only = yes
 
-	immediate = {
+	option = {
 		add_political_power = 50
 		clr_country_flag = ENT_france_refuse_alsace
 		clr_country_flag = ENT_france_refuse_mittel
@@ -9382,7 +9263,7 @@ country_event = {
 	hidden = yes
 	is_triggered_only = yes
 
-	immediate = {
+	option = {
 		clr_country_flag = GER_conf_demand_alsace
 		clr_country_flag = GER_conf_demand_france_mitt
 		clr_country_flag = GER_conf_demand_colonies
@@ -9409,7 +9290,7 @@ country_event = {
 	hidden = yes
 	is_triggered_only = yes
 
-	immediate = {
+	option = {
 		add_political_power = 25
 		if = {
 			limit = { is_in_faction_with = ENT }
@@ -9453,7 +9334,7 @@ country_event = {
 	hidden = yes
 	is_triggered_only = yes
 
-	immediate = {
+	option = {
 		clr_country_flag = ENT_france_refuse_alsace
 		clr_country_flag = ENT_france_agree_alsace
 		clr_country_flag = ENT_france_refuse_mittel
@@ -9569,6 +9450,51 @@ country_event = {
 				hidden_effect = {
 					GEX = { country_event = entente.330 }
 				}
+			}
+		}
+	}
+}
+
+# hidden event to break Halifax if GER is at war with ENT
+country_event = {
+	id = entente.331
+	immediate = { log = "[GetDateText]: [Root.GetName]: event entente.331 FROM = [From.GetName]" }
+
+	hidden = yes
+	fire_only_once = yes
+	is_triggered_only = yes
+
+	option = {
+		GER = { country_event = entente.332 }
+		GBR = { country_event = entente.332 }
+		CAN = { country_event = entente.332 }
+		NFA = { country_event = entente.332 }
+	}
+}
+
+# Promises dropped if war between Germany/Entente begins
+country_event = {
+	id = entente.332
+	immediate = { log = "[GetDateText]: [Root.GetName]: event entente.332 FROM = [From.GetName]" }
+	title = entente.332.t
+	desc = entente.332.d
+	picture = GFX_report_event_generic_conference2
+
+	is_triggered_only = yes
+
+	option = {
+		name = entente.332.a
+		clr_global_flag = GER_stay_out_france_uk
+		clr_global_flag = ENT_britain_agree_northire
+		clr_global_flag = ENT_agree_colonies
+		clr_global_flag = ENT_france_agree_alsace
+		clr_global_flag = ENT_france_agree_mittel
+		if = {
+			limit = { tag = NFA }
+			clr_country_flag = CAN_refused_iedc
+			if = {
+				limit = { 28 = { is_not_claim_or_core_of_ROOT = yes } }
+				28 = { add_claim_by = NFA }
 			}
 		}
 	}
