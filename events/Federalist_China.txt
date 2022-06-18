@@ -18,10 +18,10 @@ country_event = {#Setting up the Shantou Conference
 
 	option = {#Let's see how it goes
 		name = lngupc.1.a
-		country_event = {
-			id = lngupc.101
-			days = 1
+		effect_tooltip = {
+			country_event = { id = lngupc.101 days = 1 }
 		}
+		hidden_effect = { federalist_conference_next_event = yes }
 	}
 }
 country_event = {#Shantou Conference begins
@@ -165,19 +165,37 @@ country_event = {#Finalize the Conference (join UPC?)
 	option = {#Of course
 		name = lngupc.104.a
 		ai_chance = { base = 100 }
-		FROM = {
-			add_to_faction = ROOT
+		if = {
+			limit = { has_war = yes }
+			save_event_target_as = volunteer_target
+			custom_effect_tooltip = UPC_will_join_faction_after_war
+			set_country_flag = UPC_will_join_faction_after_war
+			hidden_effect = {
+				every_other_country = {
+					limit = { is_ally_with = FROM }
+					send_volunteers_to_TARGET = yes
+				}
+			}
 		}
+		FROM = { country_event = lngupc.112 }
 	}
 	option = {#Ehhhh
 		name = lngupc.104.b
 		ai_chance = { base = 0 }
-		FROM = {
-			create_wargoal = {
-				type = puppet_wargoal_focus
-				target = ROOT
+		if = {
+			limit = { is_in_faction_with = FROM }
+			effect_tooltip = {
+				leave_faction = yes
+				every_enemy_country = {
+					limit = {
+						is_valid_peace_target = yes
+						has_war_with = FROM
+					}
+					white_peace_with_ROOT = yes
+				}
 			}
 		}
+		FROM = { country_event = lngupc.113 }
 	}
 }
 country_event = {#End of the Conference
@@ -266,28 +284,47 @@ country_event = {#Finalize the Conference (join UPC?), but Tang is a moron
 	option = {#Of course
 		name = lngupc.108.a
 		ai_chance = { base = 70 }
-		FROM = {
-			add_to_faction = ROOT
-			if = {
-				limit = { tag = SZC }
-				set_variable = { SZC_alliance = GXC }
+		if = {
+			limit = { tag = SZC }
+			set_variable = { SZC_alliance = GXC }
+		}
+		if = {
+			limit = { has_war = yes }
+			save_event_target_as = volunteer_target
+			custom_effect_tooltip = UPC_will_join_faction_after_war
+			set_country_flag = UPC_will_join_faction_after_war
+			hidden_effect = {
+				every_other_country = {
+					limit = { is_ally_with = FROM }
+					send_volunteers_to_TARGET = yes
+				}
 			}
 		}
+		FROM = { country_event = lngupc.112 }
 	}
 	option = {#Ehhhh
 		name = lngupc.108.b
-		ai_chance = { base = 30 }
-		if = {
-			limit = { is_in_faction_with = FROM }
-			leave_faction = yes
-			separate_peace_all_wars = yes
-		}
-		FROM = {
-			create_wargoal = {
-				type = puppet_wargoal_focus
-				target = ROOT
+		ai_chance = {
+			base = 30
+			modifier = {
+				factor = 0
+				is_in_faction_with = FROM
 			}
 		}
+		if = {
+			limit = { is_in_faction_with = FROM }
+			effect_tooltip = {
+				leave_faction = yes
+				every_enemy_country = {
+					limit = {
+						is_valid_peace_target = yes
+						has_war_with = FROM
+					}
+					white_peace_with_ROOT = yes
+				}
+			}
+		}
+		FROM = { country_event = lngupc.113 }
 	}
 }
 country_event = {#End of the Conference, but everything is on fire
@@ -335,6 +372,126 @@ country_event = {#End of the Conference (observers), but everything is on fire
 		}
 	}
 }
+
+country_event = {#Join the UPC after war
+	id = lngupc.111
+	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.110 FROM = [From.GetName]" }
+	title = lngupc.111.t
+	desc = lngupc.111.d
+	picture = GFX_report_event_GXC_federalist_party_3
+
+	trigger = {
+		has_country_flag = UPC_will_join_faction_after_war
+		is_subject = no
+		is_in_faction = no
+		UPC = { is_faction_leader = yes }
+	}
+
+	is_triggered_only = yes
+
+	immediate = {
+		clr_country_flag = UPC_will_join_faction_after_war
+	}
+
+	option = {
+		name = lngupc.111.a
+		ai_chance = { base = 1 }
+		UPC = { country_event = lngupc.112 }
+	}
+
+	option = {
+		name = lngupc.111.b
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 1
+				UPC = { surrender_progress > 0.5 }
+			}
+		}
+		save_event_target_as = UPC_refused_to_join_after_war
+		UPC = { country_event = lngupc.113 }
+	}
+}
+
+country_event = { #Country Joins the UPC
+	id = lngupc.112
+	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.112 FROM = [From.GetName]" }
+	title = lngupc.112.t
+	desc = lngupc.112.d
+	picture = GFX_report_event_GXC_federalist_party_3
+
+	is_triggered_only = yes
+
+	option = {
+		name = lngupc.112.a
+		if = {
+			limit = { FROM = { has_war = no } }
+			add_to_faction = FROM
+		}
+		else = {
+			FROM = { set_country_flag = UPC_will_join_faction_after_war }
+			custom_effect_tooltip = UPC_will_join_faction_after_war_FROM
+		}
+	}
+}
+
+country_event = { #Country Betrays the UPC
+	id = lngupc.113
+	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.113 FROM = [From.GetName]" }
+	title = lngupc.113.t
+
+	desc = {
+		text = lngupc.113.d.refused
+		trigger = { NOT = { has_event_target = UPC_refused_to_join_after_war } }
+	}
+	desc = {
+		text = lngupc.113.d.refused_after_war
+		trigger = { has_event_target = UPC_refused_to_join_after_war }
+	}
+
+	picture = GFX_report_event_GXC_federalist_party_3
+
+	is_triggered_only = yes
+
+	immediate = {
+		hidden_effect = {
+			if = {
+				limit = { is_in_faction_with = FROM }
+				FROM = {
+					leave_faction = yes
+					every_enemy_country = {
+						limit = {
+							is_valid_peace_target = yes
+							has_war_with = ROOT
+						}
+						white_peace_with_TARGET = yes
+					}
+				}
+			}
+		}
+	}
+
+	option = {
+		name = lngupc.113.a
+		ai_chance = { base = 1 }
+		create_wargoal = {
+			type = puppet_wargoal_focus
+			target = FROM
+		}
+	}
+
+	option = {
+		name = lngupc.113.b
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 1
+				surrender_progress > 0.5
+			}
+		}
+	}
+}
+
 country_event = {#Attend the conference?
 	id = lngupc.2
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.2 FROM = [From.GetName]" }
@@ -349,12 +506,14 @@ country_event = {#Attend the conference?
 		ai_chance = { base = 100 }
 		#tt
 		set_country_flag = attending_shantou_conference
+		hidden_effect = { federalist_conference_next_event = yes }
 	}
 	option = {
 		name = lngupc.2.b
 		ai_chance = { base = 0 }
 		#tt
 		set_country_flag = not_attending_shantou_conference
+		hidden_effect = { federalist_conference_next_event = yes }
 	}
 }
 country_event = {#Observe the conference?
@@ -1261,13 +1420,6 @@ country_event = {#first national assembly election
 			}
 			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
-		effect_tooltip = {
-			set_politics = {
-				ruling_party = social_democrat
-				elections_allowed = yes
-				election_frequency = 48
-			}
-		}
 		set_sdfed_ministers = yes
 	}
 
@@ -1309,13 +1461,6 @@ country_event = {#first national assembly election
 				}
 			}
 			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
-		}
-		effect_tooltip = {
-			set_politics = {
-				ruling_party = social_liberal
-				elections_allowed = yes
-				election_frequency = 48
-			}
 		}
 		set_slfed_ministers = yes
 		set_temp_variable = { coalition_partner_var = token:social_democrat }
@@ -1361,13 +1506,6 @@ country_event = {#first national assembly election
 			}
 			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
-		effect_tooltip = {
-			set_politics = {
-				ruling_party = social_liberal
-				elections_allowed = yes
-				election_frequency = 48
-			}
-		}
 		set_slfed_ministers = yes
 	}
 	option = {#DCP
@@ -1409,13 +1547,6 @@ country_event = {#first national assembly election
 				}
 			}
 			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
-		}
-		effect_tooltip = {
-			set_politics = {
-				ruling_party = social_conservative
-				elections_allowed = yes
-				election_frequency = 48
-			}
 		}
 		set_merchant_ministers = yes
 	}
@@ -1774,22 +1905,16 @@ country_event = {
 	option = {
 		name = lngupc.334.a #curses!
 		if = {
-			limit = {
-				tag = AST
-			}
-			event_target:UPC_leader = {
-				transfer_state = 326
-			}
+			limit = { tag = AST }
+			UPC = { transfer_state = 326 }
 			set_country_flag = abandoned_HK
 		}
-		if = {
-			limit = {
-				tag = LEC
-			}
+		else_if = {
+			limit = { tag = LEC }
 			leave_faction = yes
 			set_country_flag = abandoned_LEC
 		}
-		event_target:UPC_leader = {
+		UPC = {
 			country_event = {
 				id = lngupc.333
 				days = 1
@@ -2129,13 +2254,9 @@ country_event = { #UPC repeals unequal treaties
 	option = { #sign a new treaty
 		name = fedchi.200.a
 		add_political_power = -25
-		event_target:UPC_leader = {
-			country_event = {
-				id = fedchi.201
-			}
-		}
+		UPC = { country_event = fedchi.201 }
 		add_opinion_modifier = {
-			target = event_target:UPC_leader
+			target = UPC
 			modifier = KR_trade_agreement
 		}
 	}
@@ -2145,7 +2266,7 @@ country_event = { #UPC repeals unequal treaties
 		add_political_power = -25
 		set_country_flag = UPC_sactions
 		add_opinion_modifier = {
-			target = event_target:UPC_leader
+			target = UPC
 			modifier = KR_trade_sanctions
 		}
 	}
@@ -2183,17 +2304,13 @@ country_event = { #UPC asks for new treaty
 			base = 75
 		}
 		add_political_power = -25
-		event_target:UPC_leader = {
-			country_event = {
-				id = fedchi.201
-			}
-		}
+		UPC = { country_event = fedchi.201 }
 		remove_opinion_modifier = {
-			target = event_target:UPC_leader
+			target = UPC
 			modifier = KR_trade_sanctions
 		}
 		add_opinion_modifier = {
-			target = event_target:UPC_leader
+			target = UPC
 			modifier = KR_trade_agreement
 		}
 		clr_country_flag = UPC_sactions
@@ -2205,11 +2322,7 @@ country_event = { #UPC asks for new treaty
 			base = 25
 		}
 		add_political_power = -15
-		event_target:UPC_leader = {
-			country_event = {
-				id = fedchi.204
-			}
-		}
+		UPC = { country_event = fedchi.204 }
 	}
 }
 country_event = { #x refuses to sign new treaty

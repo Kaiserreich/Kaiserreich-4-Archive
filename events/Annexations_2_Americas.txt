@@ -106,19 +106,23 @@ country_event = { #Fate of America
 			CSA = {
 				if = {
 					limit = { has_character = CSA_jack_reed }
-					CSA_jack_reed = {
-						retire = yes
-					}
+					retire_character = CSA_jack_reed
 				}
 			}
 			USA = {
 				if = {
 					limit = { NOT = { has_character = TEX_charles_lindbergh } }
-					event_target:TEX_charles_lindbergh_target = {
-						set_nationality = USA
-						add_country_leader_role = {
-							country_leader = { ideology = authoritarian_democrat_subtype }
-							promote_leader = yes
+					event_target:TEX_charles_lindbergh_target = { set_nationality = USA }
+					TEX_charles_lindbergh = {
+						if = {
+							limit = { NOT = { has_ideology = authoritarian_democrat_subtype } }
+							add_country_leader_role = {
+								country_leader = { ideology = authoritarian_democrat_subtype }
+								promote_leader = yes
+							}
+						}
+						else = {
+							promote_character = { ideology = authoritarian_democrat_subtype }
 						}
 					}
 				}
@@ -134,9 +138,9 @@ country_event = { #Fate of America
 				}
 				if = {
 					limit = { NOT = { has_character = TEX_gerald_lyman_kenneth_smith } }
-					event_target:TEX_gerald_lyman_kenneth_smith_target = {
-						set_nationality = USA
-						promote_character = yes
+					event_target:TEX_gerald_lyman_kenneth_smith_target = { set_nationality = USA }
+					USA = {
+						TEX_gerald_lyman_kenneth_smith = { promote_character = yes }
 					}
 				}
 			}
@@ -350,23 +354,28 @@ country_event = { #Fate of Canada
 				remove_claim_by = CAN
 				clear_variable = ambition_area_@CAN
 			}
-			CAN = { CAN_create_republic = yes }
+			CAN = {
+				every_unit_leader = {
+					limit = { has_trait = CAN_british_exile_trait }
+					remove_unit_leader_trait = CAN_british_exile_trait
+					set_nationality = GBR
+				}
+				CAN_create_republic = yes
+			}
 		}
 	}
 
 	option = { #Liberate Canada
 		name = annex.2003.a
-		ai_chance = {
-			base = 70
-			modifier = {
-				factor = 0.5
-				OR = {
-					tag = NFA
-					tag = FRA
-				}
+		trigger = {
+			NOT = {
+				is_in_faction_with = ENT
+				is_in_faction_with = GBR
 			}
 		}
-
+		ai_chance = {
+			base = 70
+		}
 		if = {
 			limit = {
 				tag = RUS
@@ -374,52 +383,27 @@ country_event = { #Fate of Canada
 				owns_state = 463
 			}
 			add_state_claim = 463
+			custom_effect_tooltip = tooltip_white_line
 		}
-
-		if = {
-			limit = {
-				tag = PSA
-				owns_state = 473
-			}
-			add_state_claim = 473
-			add_state_claim = 471
-			add_state_claim = 740
-			add_state_claim = 463
-		}
-
-		every_owned_state = {
-			limit = {
-				is_core_of = CAN
-				is_not_claim_or_core_of_ROOT = yes
-			}
-
-			CAN = {
-				transfer_state = PREV
-			}
-		}
-
 		set_temp_variable = { tag_to_release = CAN }
-		puppet_released_tag_nocosmetic = yes
+		release_targeted_tag = yes
 	}
 
 	option = { #Liberate Canada and Quebec
 		name = annex.2003.b
-		ai_chance = {
-			base = 30
-			modifier = {
-				factor = 0.3
-				tag = ENG
-			}
-			modifier = {
-				factor = 4
-				tag = NFA
-			}
-			modifier = {
-				factor = 2
-				tag = FRA
+		trigger = {
+			NOT = {
+				is_in_faction_with = ENT
+				is_in_faction_with = GBR
 			}
 		}
-
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 30
+				is_french_tag = yes
+			}
+		}
 		if = {
 			limit = {
 				tag = RUS
@@ -427,53 +411,117 @@ country_event = { #Fate of Canada
 				owns_state = 463
 			}
 			add_state_claim = 463
-		}
-
-		if = {
-			limit = {
-				tag = PSA
-				owns_state = 473
-			}
-			add_state_claim = 473
-			add_state_claim = 471
-			add_state_claim = 740
-			add_state_claim = 463
-		}
-
-		every_owned_state = {
-			limit = {
-				OR = {
-					is_core_of = QUE
-					state = 332 #Labrador
-				}
-				is_not_claim_or_core_of_ROOT = yes
-			}
-
-			QUE = {
-				transfer_state = PREV
-			}
+			custom_effect_tooltip = tooltip_white_line
 		}
 
 		set_temp_variable = { tag_to_release = QUE }
-		puppet_released_tag = yes
-
-		every_owned_state = {
-			limit = {
-				is_core_of = CAN
-				is_not_claim_or_core_of_ROOT = yes
-			}
-
-			CAN = {
-				transfer_state = PREV
-			}
-		}
+		release_targeted_tag = yes
+		custom_effect_tooltip = tooltip_white_line
 
 		set_temp_variable = { tag_to_release = CAN }
-		puppet_released_tag_nocosmetic = yes
+		release_targeted_tag = yes
+	}
+
+	option = { #Restore the Dominion
+		name = annex.2003.c
+		trigger = {
+			OR = {
+				is_in_faction_with = ENT
+				is_in_faction_with = GBR
+			}
+		}
+		ai_chance = {
+			base = 70
+		}
+		if = {
+			limit = {
+				tag = RUS
+				owns_state = 637
+				owns_state = 463
+			}
+			add_state_claim = 463
+			custom_effect_tooltip = tooltip_white_line
+		}
+		set_temp_variable = { tag_to_release = CAN }
+		release_targeted_tag = yes
+		set_autonomy = {
+			target = var:tag_to_release
+			autonomy_state = autonomy_free
+		}
+		set_temp_variable_to_random = CAN_random
+		var:tag_to_release = {
+			set_cosmetic_tag = CAN_entente
+			if = {
+				limit = { check_variable = { CAN_random > 0.5 } }
+				set_politics = {
+					ruling_party = social_conservative
+					elections_allowed = yes
+				}
+			}
+			else = {
+				set_politics = {
+					ruling_party = market_liberal
+					elections_allowed = yes
+				}
+			}
+			hidden_effect = {
+				set_popularities = {
+					totalist = 1
+					radical_socialist = 1
+					syndicalist = 1
+					social_democrat = 2
+					social_liberal = 10
+					market_liberal = 42
+					social_conservative = 30
+					authoritarian_democrat = 1
+					paternal_autocrat = 2
+					national_populist = 10
+				}
+			}
+			if = {
+				limit = { NOT = { country_exists = GBR } }
+				CAN_create_monarchy = yes
+				hidden_effect = {
+					save_event_target_as = king_flees_to
+					CAN_transfer_king_base = yes
+				}
+			}
+		}
+	}
+
+	option = { #Annex Canada
+		name = annex.2003.d
+		trigger = {
+			is_american_tag = yes
+			NOT = {
+				is_in_faction_with = ENT
+				is_in_faction_with = GBR
+			}
+		}
+		ai_chance = {
+			base = 10
+			modifier = {
+				factor = 3
+				tag = TEX
+			}
+			modifier = {
+				factor = 0
+				tag = CSA
+			}
+		}
+		set_country_flag = CAN_CONQ
+		occupy_small_country = yes
 	}
 
 	option = { #Liberate Quebec and annex Canada
 		name = annex.2003.e
+		trigger = {
+			is_american_tag = yes
+			NOT = {
+				is_in_faction_with = ENT
+				is_in_faction_with = GBR
+			}
+		}
 		ai_chance = {
 			base = 20
 			modifier = {
@@ -485,55 +533,9 @@ country_event = { #Fate of Canada
 				tag = CSA
 			}
 		}
-		trigger = {
-			OR = {
-				tag = USA
-				tag = CSA
-				tag = TEX
-			}
-		}
-
-		every_owned_state = {
-			limit = {
-				OR = {
-					is_core_of = QUE
-					state = 332 #Labrador
-				}
-				is_not_claim_or_core_of_ROOT = yes
-			}
-
-			QUE = {
-				transfer_state = PREV
-			}
-		}
-
 		set_temp_variable = { tag_to_release = QUE }
-		puppet_released_tag = yes
-
-		set_country_flag = CAN_CONQ
-		occupy_small_country = yes
-	}
-
-	option = { #Annex Canada
-		name = annex.2003.c
-		ai_chance = {
-			base = 30
-			modifier = {
-				factor = 3
-				tag = TEX
-			}
-			modifier = {
-				factor = 0
-				tag = CSA
-			}
-		}
-		trigger = {
-			OR = {
-				tag = USA
-				tag = CSA
-				tag = TEX
-			}
-		}
+		release_targeted_tag = yes
+		custom_effect_tooltip = tooltip_white_line
 
 		set_country_flag = CAN_CONQ
 		occupy_small_country = yes
@@ -541,34 +543,22 @@ country_event = { #Fate of Canada
 
 	option = { #occupy
 		name = annex.occupation
+		trigger = {
+			is_american_tag = no
+			NOT = {
+				is_in_faction_with = ENT
+				is_in_faction_with = GBR
+			}
+		}
 		ai_chance = {
 			base = 0
 		}
-		trigger = {
-			NOT = {
-				tag = USA
-				tag = CSA
-				tag = TEX
-			}
-		}
-
 		if = {
 			limit = {
 				tag = RUS
 				owns_state = 637
 				owns_state = 463
 			}
-			add_state_claim = 463
-		}
-
-		if = {
-			limit = {
-				tag = PSA
-				owns_state = 473
-			}
-			add_state_claim = 473
-			add_state_claim = 471
-			add_state_claim = 740
 			add_state_claim = 463
 		}
 		occupy_large_country = yes
@@ -1439,17 +1429,15 @@ country_event = { #The Fate of Costa Rica
 	immediate = {
 		hidden_effect = {
 			event_target:COS_rafael_angel_calderon_guardia_target = { set_nationality = COS }
+			event_target:COS_jose_figueres_ferrer_target = { set_nationality = COS }
 			COS = {
 				promote_character = {
 					character = COS_rafael_angel_calderon_guardia
 					ideology = social_democrat_subtype
 				}
-			}
-			event_target:COS_jose_figueres_ferrer_target = {
-				set_nationality = COS
 				if = {
-					limit = { can_be_country_leader = yes }
-					promote_character = yes
+					limit = { can_be_country_leader = COS_jose_figueres_ferrer }
+					promote_character = COS_jose_figueres_ferrer
 				}
 			}
 			event_target:COS_fernando_figuls_quiros_target = { set_nationality = COS }
@@ -1626,6 +1614,221 @@ country_event = { #annexation of Cuba
 				remove_targeted_decision = { target = THIS decision = CUB_germanesque }
 				remove_targeted_decision = { target = THIS decision = CUB_germanesque2 }
 				remove_targeted_decision = { target = THIS decision = CUB_germanesque3 }
+
+				# Removing Ideas
+				remove_ideas = {
+					CUB_americancrime_idea
+					CUB_americanaircraftneg
+					CUB_token_pros
+					CUB_new_market_1
+					CUB_new_market_2
+					CUB_new_market_3
+					CUB_new_market_4
+					CUB_hailcol_idea
+					CUB_american_influence
+					CUB_american_influence_2
+					CUB_american_puppet_idea
+					CUB_american_puppet_idea_2
+					CUB_american_puppet_idea_3
+					CUB_american_puppet_idea_4
+					CUB_american_loyal_idea
+					CUB_american_loyal_idea_2
+					CUB_american_loyal_idea_3
+					CUB_american_loyal_idea_4
+				}
+				if = {
+					limit = { ROOT = { has_socialist_government = no } }
+					remove_ideas = {
+						CUB_militia_idea
+						CUB_militia_idea_2
+						CUB_militia_idea_3
+						CUB_militia_idea_4
+						CUB_militia_idea_5
+						CUB_militia_idea_6
+						CUB_rs_guard_guer
+						CUB_rs_guard_pol
+						CUB_syn_guard_sep
+						CUB_syn_guard_int
+						CUB_tot_guard_ref
+						CUB_tot_guard_rip
+						CUB_tot_guard2_sep
+						CUB_tot_guard2_int
+						CUB_syn_seize_mod
+						CUB_syn_seize_rad
+						CUB_socecobureau
+						CUB_comerecobureau
+						CUB_permrev_idea
+						CUB_syndint_idea
+						CUB_ruralpolitics_idea
+						CUB_ruralpolitics_idea_2
+						CUB_ruralpolitics_idea_3
+						CUB_radsocresearch
+						CUB_radsocmilsurge
+						CUB_modsyndagr
+						CUB_modsyndagr_2
+						CUB_modsyndagr_radplus
+						CUB_modsyndagr_radplus_2
+						CUB_extsyndagr
+						CUB_extsyndagr_2
+						CUB_extsyndagr_3
+						CUB_extsyndagr_4
+						CUB_extsyndagr_comp
+						CUB_modsyndindust
+						CUB_modsyndindust_2
+						CUB_extsyndindust
+						CUB_extsyndindust_2
+						CUB_judicial_reform
+						CUB_racism_outlawed
+						CUB_sexism
+						CUB_mellatranssociet
+						CUB_blastranssociety
+						CUB_comptranssociety
+						CUB_perm_rev
+						CUB_longjustblas
+						CUB_socliscences
+						CUB_education
+						CUB_opensocialistconflict
+						CUB_rev_society
+					}
+				}
+				if = {
+					limit = { ROOT = { has_elected_government = no } }
+					remove_ideas = {
+						CUB_demecobureau
+						CUB_optimism_idea
+						CUB_demecon_idea
+						CUB_demecon_idea_2
+					}
+				}
+				if = {
+					limit = { ROOT = { has_authoritarian_government = no } }
+					remove_ideas = {
+						CUB_natplantdeal
+						CUB_nat_seize
+						CUB_npopecobureau
+						CUB_peacenatpop_idea
+						CUB_germanizedarmy_idea
+						CUB_mixed_regime
+						CUB_complete_chaos
+						CUB_strike_destroyed
+						CUB_emergency_powersidea
+						CUB_mass_act_est
+						CUB_mass_act_edu
+						CUB_npop_Greenshirts_est
+						CUB_npop_Greenshirts_edu
+						CUB_eqindidea
+						CUB_authentic_girls
+						CUB_education_natpop
+						CUB_racism_outlawed_natpop
+						CUB_corruption_elim
+						CUB_forinvestide
+						CUB_forvice
+						CUB_plantamodern
+						CUB_ampleworkers
+						CUB_foragrexp
+						CUB_agun
+						CUB_agrsup
+						CUB_agrsup_2
+						CUB_industcountr
+						CUB_finandereg
+						CUB_multinafin
+						CUB_corpslash
+						CUB_corpslashtwo
+						CUB_redsub
+						CUB_redsubtwo
+						CUB_freesocidea
+						CUB_freesocideatwo
+						CUB_pubworkidea
+						CUB_privpubidea
+						CUB_goodsubidea
+						CUB_intermedidea
+						CUB_intermedideatwo
+						CUB_industexpidea
+						CUB_industexpideatwo
+						CUB_comnatidea
+						CUB_exportcidea
+					}
+				}
+
+				# Reset Focus Tree
+				if = {
+					limit = {
+						ROOT = {
+							is_american_tag = yes
+							has_socialist_government = no
+						}
+					}
+					load_focus_tree = CUB_uspuppet_focuses
+					uncomplete_national_focus = {
+						focus = CUB_puppet_begin
+						uncomplete_children = yes
+					}
+					unlock_national_focus = CUB_puppet_begin
+					unlock_national_focus = CUB_auth_continue
+				}
+				else_if = {
+					limit = { ROOT = { has_authoritarian_government = yes } }
+					load_focus_tree = CUB_authoritarian_focuses
+					uncomplete_national_focus = {
+						focus = CUB_authoritarianism_normal
+						uncomplete_children = yes
+					}
+					unlock_national_focus = CUB_authoritarianism_normal
+				}
+				else_if = {
+					limit = {
+						ROOT = { has_government = totalist }
+						can_be_country_leader = CUB_julio_mella_mcpartland
+					}
+					load_focus_tree = CUB_mella_focuses
+					uncomplete_national_focus = {
+						focus = CUB_mella_begin
+						uncomplete_children = yes
+					}
+					unlock_national_focus = CUB_mella_begin
+					clr_country_flag = mellaradsocdeal
+				}
+				else_if = {
+					limit = { ROOT = { has_socialist_government = yes } }
+					load_focus_tree = CUB_leftist_focuses
+					uncomplete_national_focus = {
+						focus = CUB_orthodox_syndicalism
+						uncomplete_children = yes
+					}
+					unlock_national_focus = CUB_orthodox_syndicalism
+					if = {
+						limit = { ROOT = { has_government = totalist } }
+						unlock_national_focus = CUB_syndienodem
+					}
+					else = {
+						unlock_national_focus = CUB_syndiedem
+					}
+				}
+				else_if = {
+					limit = { ROOT = { has_socialist_government = yes } }
+					load_focus_tree = CUB_leftist_focuses
+					uncomplete_national_focus = {
+						focus = CUB_orthodox_syndicalism
+						uncomplete_children = yes
+					}
+					unlock_national_focus = CUB_orthodox_syndicalism
+					if = {
+						limit = { ROOT = { has_government = totalist } }
+						unlock_national_focus = CUB_syndienodem
+					}
+					else = {
+						unlock_national_focus = CUB_syndiedem
+					}
+				}
+				else = {
+					load_focus_tree = CUB_democratic_focuses
+					uncomplete_national_focus = {
+						focus = CUB_democracy_survives
+						uncomplete_children = yes
+					}
+					unlock_national_focus = CUB_democracy_survives
+
+				}
 			}
 		}
 	}
@@ -2073,6 +2276,7 @@ country_event = { #The Annexation of Jamaica
 		}
 		set_temp_variable = { tag_to_release = JAM }
 		release_targeted_tag = yes
+		JAM_move_bustamante = yes
 	}
 
 	option = {
@@ -2390,6 +2594,10 @@ country_event = { #Fate of Bolivia
 				remove_targeted_decision = { target = INT decision = BOL_Join_Internationale }
 				remove_targeted_decision = { target = PAR decision = BOL_kill_PAR }
 				remove_targeted_decision = { target = CHL decision = BOL_kill_CHL }
+				if = {
+					limit = { has_socialist_government = yes }
+					903 = { remove_claim_by = BOL }
+				}
 			}
 		}
 	}
@@ -2450,12 +2658,55 @@ country_event = { #Fate of Peru
 
 	is_triggered_only = yes
 
+	immediate = {
+		hidden_effect = {
+			every_state = {
+				limit = {
+					OR = {
+						is_core_of = PRU
+						is_claimed_by = PRU
+					}
+					NOT = {
+						region = 197 #Northern Andes
+						region = 206 #Peru
+					}
+				}
+				remove_core_of = PRU
+				remove_claim_by = PRU
+			}
+			PRU = {
+				remove_targeted_decision = { target = PAR decision = BOL_kill_PAR }
+				remove_targeted_decision = { target = CHL decision = BOL_kill_CHL }
+				remove_targeted_decision = { target = INT decision = PRU_join_internationale }
+			}
+			if = {
+				limit = { has_socialist_government = yes }
+				PRU = {
+					every_unit_leader = {
+						limit = { has_character_flag = PRU_leader }
+						set_nationality = XXA
+					}
+				}
+			}
+			else = {
+				XXA = {
+					every_unit_leader = {
+						limit = { has_character_flag = PRU_leader }
+						set_nationality = PRU
+					}
+				}
+			}
+		}
+	}
 
 	option = {
 		name = annex.2022.a #Liberate Peru
 		trigger = {
-			PRU = {
-				NOT = { has_cosmetic_tag = PBC }
+			NOT = {
+				AND = {
+					PRU = { has_completed_focus = PRU_summit }
+					302 = { is_valid_annexation_state = yes }
+				}
 			}
 		}
 		ai_chance = {
@@ -2492,36 +2743,12 @@ country_event = { #Fate of Peru
 			transfer_state_to = var:tag_to_release
 		}
 		puppet_released_tag = yes
-		hidden_effect = {
-			if = {
-				limit = { has_socialist_government = yes }
-				PRU = {
-					every_unit_leader = {
-						limit = { has_character_flag = PRU_leader }
-						set_nationality = XXA
-					}
-				}
-			}
-			else = {
-				XXA = {
-					every_unit_leader = {
-						limit = { has_character_flag = PRU_leader }
-						set_nationality = PRU
-					}
-				}
-			}
-			PRU = {
-				remove_targeted_decision = { target = INT decision = PRU_join_internationale }
-			}
-		}
 	}
 
 	option = {
 		name = annex.2022.b #Liberate Peru-Bolivia
 		trigger = {
-			PRU = {
-				has_cosmetic_tag = PBC
-			}
+			PRU = { has_completed_focus = PRU_summit }
 			302 = { is_valid_annexation_state = yes }
 		}
 		ai_chance = {
@@ -2568,36 +2795,20 @@ country_event = { #Fate of Peru
 					279 = { is_valid_annexation_state = no } #Santiago
 				}
 			}
-			transfer_state_to = var:tag_to_release
+			transfer_state_and_add_core = yes
 		}
 		puppet_released_tag = yes
-		PRU = {
-			set_cosmetic_tag = PBC
-		}
-		hidden_effect = {
-			PRU = {
-				remove_targeted_decision = { target = PAR decision = BOL_kill_PAR }
-				remove_targeted_decision = { target = CHL decision = BOL_kill_CHL }
-				remove_targeted_decision = { target = INT decision = PRU_join_internationale }
-			}
-		}
+		PRU = { set_cosmetic_tag = PBC }
 	}
 
 	option = {
 		name = annex.2022.c #Liberate Peru, choose what to do with Bolivia
 		trigger = {
-			PRU = { has_cosmetic_tag = PBC }
+			PRU = { has_completed_focus = PRU_summit }
 			302 = { is_valid_annexation_state = yes }
 		}
 		ai_chance = {
 			base = 100
-		}
-		every_state = {
-			limit = {
-				is_core_of = BOL
-				is_core_of = PRU
-			}
-			remove_core_of = PRU
 		}
 		set_temp_variable = { tag_to_release = PRU }
 		every_owned_state = {
@@ -2624,20 +2835,11 @@ country_event = { #Fate of Peru
 			transfer_state_to = var:tag_to_release
 		}
 		puppet_released_tag = yes
-		hidden_effect = {
-			PRU = {
-				remove_targeted_decision = { target = PAR decision = BOL_kill_PAR }
-				remove_targeted_decision = { target = CHL decision = BOL_kill_CHL }
-				remove_targeted_decision = { target = INT decision = PRU_join_internationale }
-			}
-		}
 	}
 
 	option = { #Occupy Peru
 		name = annex.occupation
-		ai_chance = {
-			base = 0
-		}
+		ai_chance = { base = 0 }
 		set_country_flag = PRU_CONQ
 		occupy_medium_country = yes
 	}
@@ -2754,28 +2956,6 @@ country_event = { #Fate of Ecuador
 		}
 		set_temp_variable = { tag_to_release = ECU }
 		release_targeted_tag = yes
-
-		ECU = {
-			clr_country_flag = ECU_true_dem
-			if = {
-				limit = {
-					NOT = {
-						has_government = market_liberal
-					}
-				}
-				clr_country_flag = ECU_dem_ayora
-			}
-			if = {
-				limit = {
-					NOT = {
-						has_government = authoritarian_democrat
-						has_government = paternal_autocrat
-						has_government = national_populist
-					}
-				}
-				clr_country_flag = ECU_notyet
-			}
-		}
 	}
 
 	option = { #Occupy Ecuador
@@ -3189,6 +3369,102 @@ country_event = { #Fate of Brazil
 					limit = { has_country_leader = { character = BRA_pedro_henrique_de_orleans_braganca } }
 					promote_character = BRA_gustavo_dodt_barroso
 				}
+				remove_ideas = {
+					BRA_german_capital
+					BRA_entente_capital
+					BRA_inflation_1
+					BRA_inflation_2
+					BRA_inflation_3
+					BRA_inflation_4
+					BRA_inflation_5
+					BRA_end_inflation
+				}
+				if = {
+					limit = { ROOT = { has_democratic_government = no } }
+					remove_ideas = {
+						BRA_republican_reforms_1
+						BRA_republican_reforms_2
+						BRA_republican_reforms_3
+						BRA_republican_reforms_4
+						BRA_republican_reforms_5
+						BRA_republican_reforms_6
+						BRA_republican_reforms_7
+						BRA_republican_reforms_8
+						BRA_higher_learing
+						BRA_democratic_reforms_1
+						BRA_democratic_reforms_2
+						BRA_democratic_reforms_3
+						BRA_democratic_reforms_4
+						BRA_democratic_reforms_5
+						BRA_democratic_reforms_6
+						BRA_democratic_reforms_7
+						BRA_democratic_reforms_8
+						BRA_liberal_reforms_1
+						BRA_liberal_reforms_2
+						BRA_liberal_reforms_3
+						BRA_liberal_reforms_4
+						BRA_liberal_reforms_5
+						BRA_liberal_reforms_6
+						BRA_liberal_reforms_7
+						BRA_libdem_reforms_1
+						BRA_libdem_reforms_2
+						BRA_libdem_reforms_3
+						BRA_libdem_reforms_4
+						BRA_libdem_reforms_5
+						BRA_libdem_reforms_6
+						BRA_libdem_reforms_7
+						BRA_black_monday_1
+						BRA_black_monday_2
+						BRA_black_monday_3
+						BRA_liberal_finances_1
+						BRA_liberal_finances_2
+						BRA_liberal_finances_3
+						BRA_coffee_breaks
+						BRA_free_market_reforms_1
+						BRA_free_market_reforms_2
+					}
+				}
+				if = {
+					limit = { ROOT = { NOT = { has_government = paternal_autocrat } } }
+					remove_ideas = {
+						BRA_constitution_broke
+						BRA_constitution_fixed_1
+						BRA_constitution_fixed_2
+						BRA_constitution_fixed_3
+						BRA_constitution_fixed_4
+						BRA_constitution_fixed_5
+						BRA_constitution_fixed_6
+						BRA_constitution_fixed_7
+						BRA_constitution_fixed_8
+						BRA_new_constitution_1
+						BRA_new_constitution_2
+						BRA_new_constitution_3
+						BRA_new_constitution_4
+						BRA_electoral_reforms
+						BRA_lingering_state_powers
+						BRA_police_state_1
+						BRA_police_state_2
+						BRA_police_state_3
+						BRA_police_state_2_lar
+						BRA_police_state_3_lar
+						BRA_vargas_clt_1
+						BRA_vargas_clt_2
+						BRA_vargas_clt_3
+						BRA_vargas_clt_4
+						BRA_vocational_training
+						BRA_academic_training
+						BRA_federal_projects_1
+						BRA_federal_projects_2
+						BRA_federal_projects_3
+						BRA_federal_projects_4
+						BRA_federal_projects_5
+						BRA_federal_projects_6
+						BRA_youth_group_idea
+						BRA_military_alliance_idea
+						BRA_propaganda_media_1
+						BRA_propaganda_media_2
+					}
+				}
 			}
 		}
 	}
@@ -3234,36 +3510,37 @@ country_event = { #Fate of Brazil
 				}
 				add_core_of = BRA
 			}
-			if = {
-				limit = { NOT = { country_exists = PIR } }
-				PIR_move_leaders_back = yes
+			BRA = {
+				if = {
+					limit = { NOT = { country_exists = PIR } }
+					PIR_move_leaders_back = yes
+				}
+				if = {
+					limit = { NOT = { country_exists = SPO } }
+					SPO_move_leaders_back = yes
+				}
+				if = {
+					limit = { NOT = { country_exists = RJM } }
+					RJM_move_leaders_back = yes
+				}
+				if = {
+					limit = { NOT = { country_exists = BAH } }
+					BAH_move_leaders_back = yes
+				}
+				if = {
+					limit = { NOT = { country_exists = GRP } }
+					GRP_move_leaders_back = yes
+				}
+				if = {
+					limit = { NOT = { country_exists = GOY } }
+					GOY_move_leaders_back = yes
+				}
+				if = {
+					limit = { NOT = { country_exists = AMA } }
+					AMA_move_leaders_back = yes
+				}
+				mark_focus_tree_layout_dirty = yes
 			}
-			if = {
-				limit = { NOT = { country_exists = SPO } }
-				SPO_move_leaders_back = yes
-			}
-			if = {
-				limit = { NOT = { country_exists = RJM } }
-				RJM_move_leaders_back = yes
-			}
-			if = {
-				limit = { NOT = { country_exists = BAH } }
-				BAH_move_leaders_back = yes
-			}
-			if = {
-				limit = { NOT = { country_exists = GRP } }
-				GRP_move_leaders_back = yes
-			}
-			if = {
-				limit = { NOT = { country_exists = GOY } }
-				GOY_move_leaders_back = yes
-			}
-			if = {
-				limit = { NOT = { country_exists = AMA } }
-				AMA_move_leaders_back = yes
-			}
-
-			BRA = { mark_focus_tree_layout_dirty = yes }
 			if = {
 				limit = { has_government = national_populist }
 				BRA = { complete_national_focus = BRA_AIB }
@@ -4749,6 +5026,11 @@ country_event = { #Fate of Paraguay
 		name = annex.2040.a
 		ai_chance = {
 			base = 99
+			modifier = {
+				add = -99
+				tag = ARG
+				has_government = national_populist
+			}
 		}
 
 		set_temp_variable = { tag_to_release = PAR }
@@ -4787,8 +5069,39 @@ country_event = { #Fate of Paraguay
 		}
 	}
 
+	option = { #integration
+		name = annex.2040.b
+		trigger = {
+			tag = ARG
+			has_government = national_populist
+		}
+
+		ai_chance = { base = 100 }
+		if = {
+			limit = { 301 = { is_owned_by = ROOT } }
+			add_state_claim = 301
+			301 = { add_resistance = 35 }
+		}
+		if = {
+			limit = { 688 = { is_owned_by = ROOT } }
+			add_state_claim = 688
+			688 = { add_resistance = 20 }
+		}
+		if = {
+			limit = { 1027 = { is_owned_by = ROOT } }
+			add_state_claim = 1027
+			1027 = { add_resistance = 15 }
+		}
+	}
+
 	option = { #Occupy it
 		name = annex.occupation
+		trigger = {
+			NOT = {
+				tag = ARG
+				has_government = national_populist
+			}
+		}
 		ai_chance = {
 			base = 0
 		}
@@ -5167,16 +5480,13 @@ country_event = { #annexation of Uruguay
 		trigger = {
 			OR = {
 				tag = FOP
-				AND = {
-					tag = ARG
-					has_government = national_populist
-				}
+				tag = ARG
 			}
 		}
 
 		ai_chance = { base = 100 }
 		add_state_claim = 300
-		activate_targeted_decision = { target = 300 decision = ARG_Integrate_Uruguay }
+		activate_targeted_decision = { target = 300 decision = ARG_integrate_state_decision }
 	}
 
 	option = { #occupation
@@ -5263,13 +5573,22 @@ country_event = { #Fate of Argentina
 					add_claim_by = ROOT
 				}
 			}
-			901 = {
-				remove_core_of = ARG
-				remove_core_of = FOP
-			}
-			1074 = {
-				remove_core_of = ARG
-				remove_core_of = FOP
+			if = {
+				limit = { has_socialist_government = no }
+				ARG = {
+					load_focus_tree = KR_Argentina_Democratic
+					complete_national_focus = ARG_Countercoup
+					complete_national_focus = ARG_Safeguard_Democracy
+					complete_national_focus = ARG_Stability_on_the_streets
+					complete_national_focus = ARG_Crack_down_on_Liga_Patriotica
+				}
+				if = {
+					limit = { has_authoritarian_government = yes }
+					ARG = { complete_national_focus = ARG_Rigged_Elections }
+				}
+				else = {
+					ARG = { complete_national_focus = ARG_Free_Elections_of_the_Republic }
+				}
 			}
 		}
 	}
@@ -5282,14 +5601,20 @@ country_event = { #Fate of Argentina
 				factor = 0
 				tag = BRA
 				has_government = national_populist
+				owns_state = 512
+				NOT = { country_exists = FOP }
 			}
 		}
 		trigger = {
 			NOT = {
-				is_ally_with = ARG
-				is_ally_with = FOP
+				FOP = {
+					ROOT_can_grant_land = yes
+					has_socialist_government = yes
+				}
 			}
 		}
+		901 = { retain_state = yes }
+		1074 = { retain_state = yes }
 		if = {
 			limit = { has_socialist_government = yes }
 			set_temp_variable = { tag_to_release = FOP }
@@ -5307,17 +5632,24 @@ country_event = { #Fate of Argentina
 			}
 			ARG = { promote_character = ARG_miguel_de_andrea }
 		}
-		hidden_effect = {
+		hidden_effect = { FOP_clear_araucania = yes }
+		if = {
+			limit = {
+				tag = PAR
+				FOP = {
+					exists = yes
+					has_socialist_government = yes
+					NOT = { has_completed_focus = FOP_The_revolution_successful }
+				}
+			}
+			custom_effect_tooltip = tooltip_white_line
 			if = {
-				limit = { FOP = { owns_state = 278 } }
-				901 = { add_core_of = FOP }
-				1074 = { add_core_of = FOP }
+				limit = { FOP = { is_subject = yes } }
+				var:FOP.overlord = { country_event = { id = southern.12 hours = 8 } }
 			}
 			else = {
-				901 = { add_core_of = ARG }
-				1074 = { add_core_of = ARG }
+				FOP = { country_event = { id = southern.12 hours = 8 } }
 			}
-			FOP_clear_araucania = yes
 		}
 	}
 
@@ -5342,6 +5674,8 @@ country_event = { #Fate of Argentina
 				add_state_core = 1029 #Santa Cruz
 			}
 		}
+		901 = { retain_state = yes }
+		1074 = { retain_state = yes }
 		set_temp_variable = { tag_to_release = FOP }
 		release_targeted_tag = yes
 		var:tag_to_release = { FOP_setup_araucania = yes }
@@ -5349,10 +5683,6 @@ country_event = { #Fate of Argentina
 		set_temp_variable = { tag_to_release = ARG }
 		release_targeted_tag = yes
 		ARG = { promote_character = ARG_miguel_de_andrea }
-		hidden_effect = {
-			901 = { add_core_of = ARG }
-			1074 = { add_core_of = ARG }
-		}
 	}
 
 	option = { #Give to FOP
@@ -5361,25 +5691,48 @@ country_event = { #Fate of Argentina
 			base = 100
 		}
 		trigger = {
-			is_ally_with = FOP
+			FOP = {
+				ROOT_can_grant_land = yes
+				has_socialist_government = yes
+			}
 		}
+		901 = { retain_state = yes }
+		1074 = { retain_state = yes }
 		add_to_temp_array = { target_cores_to_release = ARG }
 		add_to_temp_array = { target_cores_to_release = FOP }
 		set_temp_variable = { tag_to_release = FOP }
-		transfer_territory_from_core_regions_and_add_cores = yes
+		if = {
+			limit = { NOT = { FOP = { has_completed_focus = FOP_The_revolution_successful } } }
+			transfer_territory_from_core_regions_and_add_claims = yes
+		}
+		else = {
+			transfer_territory_from_core_regions_and_add_cores = yes
+		}
 	}
 
 	option = { #occupy
 		name = annex.occupation
-		ai_chance = {
-			base = 0
-		}
-		hidden_effect = {
-			901 = { add_core_of = ARG }
-			1074 = { add_core_of = ARG }
-		}
+		ai_chance = { base = 0 }
 		occupy_medium_country = yes
 		set_country_flag = ARG_CONQ
+		if = {
+			limit = {
+				tag = PAR
+				FOP = {
+					exists = yes
+					has_socialist_government = yes
+					NOT = { has_completed_focus = FOP_The_revolution_successful }
+				}
+			}
+			custom_effect_tooltip = tooltip_white_line
+			if = {
+				limit = { FOP = { is_subject = yes } }
+				var:FOP.overlord = { country_event = { id = southern.12 hours = 8 } }
+			}
+			else = {
+				FOP = { country_event = { id = southern.12 hours = 8 } }
+			}
+		}
 	}
 }
 

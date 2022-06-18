@@ -1,0 +1,118 @@
+on_actions = {
+
+	#ROOT is winner #FROM is loser
+	on_annex = {
+		effect = {
+			if = {
+				limit = { FROM = { original_tag = GRE } }
+				if = {
+					limit = { original_tag = GRE }
+					set_capital = { state = 47 remember_old_capital = no }
+				}
+
+				#Dynamic Greece got annexed by someone else, move the leaders back to the base tag
+				else_if = {
+					limit = { FROM = { is_dynamic_country = yes } }
+					FROM = {
+						every_unit_leader = {
+							limit = {
+								NOT = {
+									has_character_flag = GRE_royalist
+									has_character_flag = GRE_socialist
+								}
+							}
+							set_nationality = GRE
+						}
+					}
+				}
+			}
+		}
+	}
+
+	on_government_change = {
+		effect = {
+			if = {
+				limit = { original_tag = GRE }
+				GRE_uncomplete_focuses = yes
+			}
+		}
+	}
+
+	on_new_term_election = {
+		effect = {
+			if = {
+				limit = { tag = GRE }
+				country_event = gre.50 #Pre-Monarchy referendum
+				country_event = gre.51 #Post-Monarchist Victory
+				country_event = gre.52 #Post-Republican Victory
+				country_event = gre.156 #Second Hellenic Congress
+				country_event = gre.157 #Third Hellenic Congress
+			}
+		}
+	}
+
+	#ROOT is winner #FROM gets annexed - This fires just before FROM gets annexed, meaning the country and everything it owns still exists. It will also fire on_annex and on_civil_war_end
+	on_civil_war_end_before_annexation = {
+		effect = {
+			if = {
+				limit = {
+					original_tag = GRE
+					FROM = { original_tag = GRE }
+				}
+				FROM = { transfer_navy = { target = ROOT } }
+				# if Greece was in a faction, readd them
+				if = {
+					limit = {
+						has_variable = GRE_previous_faction_leader
+						var:GRE_previous_faction_leader = {
+							is_faction_leader = yes
+							NOT = {
+								has_war_with = PREV
+								any_allied_country = { has_war_with = PREV }
+							}
+						}
+					}
+					set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
+					var:GRE_previous_faction_leader = { add_to_faction = PREV }
+					clear_variable = GRE_previous_faction_leader
+				}
+				if = {
+					limit = { is_dynamic_country = yes } #revolter won
+					if = {
+						limit = { has_cosmetic_tag = GRE_civil_war_socialist }
+						set_cosmetic_tag = GRE_civil_war
+					}
+
+					#move the party leaders
+					FROM = {
+						every_unit_leader = {
+							limit = {
+								NOT = {
+									has_character_flag = GRE_royalist
+									has_character_flag = GRE_socialist
+								}
+							}
+							set_nationality = ROOT
+						}
+					}
+					if = {
+						limit = { has_socialist_government = yes }
+						news_event = { id = gre.507 days = 1 }
+					}
+					else = {
+						news_event = { id = gre.508 days = 1 }
+					}
+				}
+				else_if = {
+					limit = {
+						OR = {
+							has_cosmetic_tag = GRE_civil_war
+							has_cosmetic_tag = GRE_civil_war_socialist
+						}
+					}
+					drop_cosmetic_tag = yes
+				}
+			}
+		}
+	}
+}

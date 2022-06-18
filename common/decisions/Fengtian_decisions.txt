@@ -373,7 +373,6 @@ FNG_fixing_the_economy_category = { # Wang Yongjiang's Legacy
 			has_country_flag = banks_centralized
 			NOT = {
 				has_country_flag = reserve_full
-				has_decision = FNG_Fill_the_Silver_Reserve
 			}
 		}
 
@@ -398,6 +397,9 @@ FNG_fixing_the_economy_category = { # Wang Yongjiang's Legacy
 		}
 
 		complete_effect = {
+			hidden_effect = {
+				remove_targeted_decision = { target = THIS decision = FNG_Fill_the_Silver_Reserve }
+			}
 			log = "[GetDateText]: [Root.GetName]: Decision FNG_Re_Introduce_the_Fengtian_Dollar"
 		}
 
@@ -426,7 +428,6 @@ FNG_fixing_the_economy_category = { # Wang Yongjiang's Legacy
 			has_country_flag = banks_centralized
 			NOT = {
 				has_country_flag = fengtian_dollar_reintroduced
-				has_decision = FNG_Re_Introduce_the_Fengtian_Dollar
 			}
 		}
 
@@ -450,6 +451,12 @@ FNG_fixing_the_economy_category = { # Wang Yongjiang's Legacy
 			}
 		}
 
+		complete_effect = {
+			hidden_effect = {
+				remove_targeted_decision = { target = THIS decision = FNG_Re_Introduce_the_Fengtian_Dollar }
+			}
+		}
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Fill_the_Silver_Reserve"
 			custom_effect_tooltip = FNG_unlock_investment_decisions
@@ -465,81 +472,15 @@ FNG_fixing_the_economy_category = { # Wang Yongjiang's Legacy
 		}
 	}
 
-	FNG_Encourage_Japanese_Investment = {
-		icon = GFX_decision_hol_exchange_intelligence_data
+	FNG_Encourage_Chinese_Investment = { #Solicit Chinese Investment
+		icon = GFX_decision_give_cash
 
 		allowed = { always = no }
 
 		available = {
-			OR = {
-				has_country_flag = reserve_full
-				has_country_flag = fengtian_dollar_reintroduced
+			NOT = {
+				has_country_flag = FNG_already_soliciting_investment
 			}
-		}
-
-		fire_only_once = yes
-
-		cost = 35
-		days_remove = 20
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				set_temp_variable = { FNG_CA_weight = ROOT.party_popularity@market_liberal }
-				multiply_temp_variable = { FNG_CA_weight = -100 }
-				add = FNG_CA_weight
-			}
-			modifier = {
-				factor = 0
-				has_political_power < 60
-			}
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Encourage_Japanese_Investment"
-			if = {
-				limit = {
-					has_country_flag = enrich_country
-				}
-				hidden_effect = {
-					add_political_power = 30
-				}
-				custom_effect_tooltip = BONUS_PP_30
-			}
-			custom_effect_tooltip = FNG_remove_investment_dearth
-			if = {
-				limit = {
-					has_idea = FNG_Limited_Investment
-				}
-				remove_ideas = FNG_Limited_Investment
-				country_event = fengtian.33
-				else_if = {
-					limit = {
-						has_idea = FNG_Investment_Dearth
-					}
-					swap_ideas = {
-						remove_idea = FNG_Investment_Dearth
-						add_idea = FNG_Limited_Investment
-					}
-				}
-				else = {
-					remove_ideas = FNG_Limited_Investment
-				}
-			}
-			set_temp_variable = { RLPOP = -3 }
-			FNG_RLPOP = yes
-			set_temp_variable = { CAPOP = 3 }
-			FNG_CAPOP = yes
-			set_country_flag = japanese_investment
-		}
-	}
-
-	FNG_Encourage_Chinese_Investment = {
-		icon = GFX_decision_hol_exchange_intelligence_data
-
-		allowed = { always = no }
-
-		available = {
 			OR = {
 				has_country_flag = reserve_full
 				has_country_flag = fengtian_dollar_reintroduced
@@ -549,13 +490,19 @@ FNG_fixing_the_economy_category = { # Wang Yongjiang's Legacy
 		fire_only_once = yes
 
 		cost = 45
-		days_remove = 20
+		days_remove = 60
 
 		ai_will_do = {
 			factor = 100
 			modifier = {
 				factor = 0
 				has_political_power < 70
+			}
+		}
+
+		complete_effect = {
+			hidden_effect = {
+				set_country_flag = FNG_already_soliciting_investment
 			}
 		}
 
@@ -590,10 +537,498 @@ FNG_fixing_the_economy_category = { # Wang Yongjiang's Legacy
 					remove_ideas = FNG_Limited_Investment
 				}
 			}
+			activate_targeted_decision = { target = THIS decision = FNG_Approve_Domestic_Industrial_Materials_Investment }
+			activate_targeted_decision = { target = THIS decision = FNG_Approve_Chinese_Investments_in_Heilongjiang }
 			set_temp_variable = { CAPOP = -3 }
 			FNG_CAPOP = yes
 			set_temp_variable = { CCPOP = 3 }
 			FNG_CCPOP = yes
+			hidden_effect = {
+				clr_country_flag = FNG_already_soliciting_investment
+			}
+		}
+	}
+
+	FNG_Approve_Domestic_Industrial_Materials_Investment = {
+		icon = decision_generic_factory
+		available = {
+			num_of_civilian_factories_available_for_projects > 0
+			NOT = {
+				has_country_flag = FNG_already_soliciting_investment
+				has_idea = FNG_Investment_Dearth
+			}
+		}
+
+		allowed = { always = no }
+		fire_only_once = yes
+
+		cost = 30
+		days_remove = 90
+
+		modifier = {
+			civilian_factory_use = 1
+		}
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				has_political_power < 70
+			}
+		}
+
+		complete_effect = {
+			hidden_effect = {
+				set_country_flag = FNG_already_soliciting_investment
+			}
+		}
+
+		remove_effect = {
+			328 = {
+				if = {
+					limit = {
+						free_building_slots = {
+							size < 1
+							building = industrial_complex
+							include_locked = no
+						}
+						free_building_slots = {
+							size < 1
+							building = arms_factory
+							include_locked = no
+						}
+					}
+					add_extra_state_shared_building_slots = 1
+				}
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
+				}
+			}
+			set_temp_variable = { CAPOP = 3 }
+			FNG_CAPOP = yes
+			hidden_effect = {
+				clr_country_flag = FNG_already_soliciting_investment
+			}
+		}
+	}
+
+	FNG_Approve_Chinese_Investments_in_Heilongjiang = {
+		icon = GFX_decision_cement_mixer
+		available = {
+			num_of_civilian_factories_available_for_projects > 0
+			NOT = {
+				has_country_flag = FNG_already_soliciting_investment
+				has_idea = FNG_Investment_Dearth
+			}
+		}
+
+		allowed = { always = no }
+		fire_only_once = yes
+
+		cost = 30
+		days_remove = 90
+
+		modifier = {
+			civilian_factory_use = 1
+		}
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				has_political_power < 70
+			}
+		}
+
+		complete_effect = {
+			hidden_effect = {
+				set_country_flag = FNG_already_soliciting_investment
+			}
+		}
+
+		remove_effect = {
+			328 = {
+				if = {
+					limit = {
+						free_building_slots = {
+							size < 1
+							building = industrial_complex
+							include_locked = no
+						}
+						free_building_slots = {
+							size < 1
+							building = arms_factory
+							include_locked = no
+						}
+					}
+					add_extra_state_shared_building_slots = 1
+				}
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
+				}
+			}
+			set_temp_variable = { CCPOP = 3 }
+			FNG_CCPOP = yes
+			hidden_effect = {
+				clr_country_flag = FNG_already_soliciting_investment
+			}
+		}
+	}
+
+	FNG_Encourage_Japanese_Investment = { #Solicit Japanese Investment
+		icon = GFX_decision_give_cash
+
+		allowed = { always = no }
+
+		available = {
+			NOT = {
+				has_country_flag = FNG_already_soliciting_investment
+			}
+			OR = {
+				has_country_flag = reserve_full
+				has_country_flag = fengtian_dollar_reintroduced
+			}
+		}
+
+		fire_only_once = yes
+
+		cost = 35
+		days_remove = 60
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				set_temp_variable = { FNG_CA_weight = ROOT.party_popularity@market_liberal }
+				multiply_temp_variable = { FNG_CA_weight = -100 }
+				add = FNG_CA_weight
+			}
+			modifier = {
+				factor = 0
+				has_political_power < 60
+			}
+		}
+
+		complete_effect = {
+			hidden_effect = {
+				set_country_flag = FNG_already_soliciting_investment
+			}
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Encourage_Japanese_Investment"
+			if = {
+				limit = {
+					has_country_flag = enrich_country
+				}
+				hidden_effect = {
+					add_political_power = 30
+				}
+				custom_effect_tooltip = BONUS_PP_30
+			}
+			custom_effect_tooltip = FNG_remove_investment_dearth
+			if = {
+				limit = {
+					has_idea = FNG_Limited_Investment
+				}
+				remove_ideas = FNG_Limited_Investment
+				country_event = fengtian.33
+				else_if = {
+					limit = {
+						has_idea = FNG_Investment_Dearth
+					}
+					swap_ideas = {
+						remove_idea = FNG_Investment_Dearth
+						add_idea = FNG_Limited_Investment
+					}
+				}
+				else = {
+					remove_ideas = FNG_Limited_Investment
+				}
+			}
+			activate_targeted_decision = { target = JAP decision = FNG_Japanese_Glass_Paper_Textiles }
+			activate_targeted_decision = { target = JAP decision = FNG_Sino-Japanese_Shipping_Tourism }
+			activate_targeted_decision = { target = JAP decision = FNG_Japanese_Minerals_and_Metals }
+			activate_targeted_decision = { target = JAP decision = FNG_Japanese_Steel }
+			set_temp_variable = { RLPOP = -3 }
+			FNG_RLPOP = yes
+			set_temp_variable = { CAPOP = 3 }
+			FNG_CAPOP = yes
+			clr_country_flag = FNG_already_soliciting_investment
+		}
+	}
+
+	FNG_Japanese_Glass_Paper_Textiles = {
+		icon = decision_ger_mefo_bills
+		available = {
+			FNG_JAP_hostile = no
+			JAP = { is_faction_leader = yes }
+			NOT = {
+				has_country_flag = FNG_already_soliciting_investment
+				has_idea = FNG_Investment_Dearth
+			}
+		}
+
+		allowed = { always = no }
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 90
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				set_temp_variable = { FNG_CA_weight = ROOT.party_popularity@market_liberal }
+				multiply_temp_variable = { FNG_CA_weight = -20 }
+				add = FNG_CA_weight
+			}
+			modifier = {
+				factor = 0
+				market_liberal > 0.19
+			}
+			modifier = {
+				factor = 0
+				has_political_power < 50
+			}
+		}
+
+		complete_effect = {
+			hidden_effect = {
+				set_country_flag = FNG_already_soliciting_investment
+			}
+		}
+
+		remove_effect = {
+			715 = {
+				if = {
+					limit = {
+						free_building_slots = {
+							size < 1
+							building = industrial_complex
+							include_locked = no
+						}
+						free_building_slots = {
+							size < 1
+							building = arms_factory
+							include_locked = no
+						}
+					}
+					add_extra_state_shared_building_slots = 1
+				}
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
+				}
+			}
+			set_temp_variable = { CAPOP = 3 }
+			FNG_CAPOP = yes
+			hidden_effect = {
+				clr_country_flag = FNG_already_soliciting_investment
+			}
+		}
+
+
+	}
+
+	FNG_Sino-Japanese_Shipping_Tourism = {
+		icon = GFX_decision_oasis
+		available = {
+			FNG_JAP_hostile = no
+			JAP = { is_faction_leader = yes }
+			has_completed_focus = FNG_Yingkou_Commercial_Development
+			NOT = {
+				has_idea = FNG_Investment_Dearth
+			}
+		}
+
+		allowed = { always = no }
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 30
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				set_temp_variable = { FNG_CA_weight = ROOT.party_popularity@market_liberal }
+				multiply_temp_variable = { FNG_CA_weight = -20 }
+				add = FNG_CA_weight
+			}
+			modifier = {
+				factor = 0
+				market_liberal > 0.19
+			}
+			modifier = {
+				factor = 0
+				has_political_power < 50
+			}
+		}
+
+		complete_effect = {
+			hidden_effect = {
+				set_country_flag = FNG_already_soliciting_investment
+			}
+		}
+
+		remove_effect = {
+			add_stability = 0.03
+			716 = {
+				add_extra_state_shared_building_slots = 1
+				add_building_construction = {
+					type = naval_base
+					level = 1
+					province = 11764
+					instant_build = yes
+				}
+			}
+			set_temp_variable = { CAPOP = 3 }
+			FNG_CAPOP = yes
+		}
+	}
+
+	FNG_Japanese_Minerals_and_Metals = {
+		icon = GFX_decision_factories
+
+		available = {
+			has_completed_focus = FNG_Develop_the_Northern_Frontier
+			FNG_JAP_hostile = no
+			JAP = { is_faction_leader = yes }
+			NOT = {
+				has_idea = FNG_Investment_Dearth
+			}
+		}
+
+		allowed = { always = no }
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 120
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				set_temp_variable = { FNG_CA_weight = ROOT.party_popularity@market_liberal }
+				multiply_temp_variable = { FNG_CA_weight = -20 }
+				add = FNG_CA_weight
+			}
+			modifier = {
+				factor = 0
+				market_liberal > 0.19
+			}
+			modifier = {
+				factor = 0
+				has_political_power < 50
+			}
+		}
+
+		complete_effect = {
+			hidden_effect = {
+				hidden_effect = {
+					set_country_flag = FNG_already_soliciting_investment
+				}
+			}
+		}
+
+		remove_effect = {
+			884 = {
+				if = {
+					limit = {
+						free_building_slots = {
+							size < 1
+							building = industrial_complex
+							include_locked = no
+						}
+						free_building_slots = {
+							size < 1
+							building = arms_factory
+							include_locked = no
+						}
+					}
+					add_extra_state_shared_building_slots = 1
+				}
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
+				}
+				add_resource = {
+					type = tungsten
+					amount = 6
+				}
+			}
+			set_temp_variable = { CAPOP = 5 }
+			FNG_CAPOP = yes
+			hidden_effect = {
+				clr_country_flag = FNG_already_soliciting_investment
+			}
+		}
+	}
+
+	FNG_Japanese_Steel = {
+		icon = decision_steel
+		available = {
+			FNG_JAP_hostile = no
+			JAP = { is_faction_leader = yes }
+			NOT = {
+				has_country_flag = FNG_already_soliciting_investment
+				has_idea = FNG_Investment_Dearth
+			}
+		}
+
+		allowed = { always = no }
+		fire_only_once = yes
+
+		cost = 25
+		days_remove = 120
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				set_temp_variable = { FNG_CA_weight = ROOT.party_popularity@market_liberal }
+				multiply_temp_variable = { FNG_CA_weight = -20 }
+				add = FNG_CA_weight
+			}
+			modifier = {
+				factor = 0
+				market_liberal > 0.19
+			}
+			modifier = {
+				factor = 0
+				has_political_power < 50
+			}
+		}
+
+		complete_effect = {
+			hidden_effect = {
+				set_country_flag = FNG_already_soliciting_investment
+			}
+			random_list = {
+				50 = {
+					country_event = {
+						id = fengtian.112
+						days = 32
+					}
+				}
+				50 = {}
+			}
+		}
+
+		remove_effect = {
+			716 = {
+				add_resource = {
+					type = steel
+					amount = 8
+				}
+			}
+			set_temp_variable = { CAPOP = 5 }
+			FNG_CAPOP = yes
+			hidden_effect = {
+				clr_country_flag = FNG_already_soliciting_investment
+			}
 		}
 	}
 }
@@ -1303,6 +1738,10 @@ FNG_internal_conference = {
 				}
 				set_variable = { FNG_legitimacy_level = 1 }
 				if = {
+					limit = { is_subject = yes }
+					country_event = fngshen.413
+				}
+				else_if = {
 					limit = {
 						OR = {
 							check_variable = { FNG_possible_participants > 2 }
@@ -2011,11 +2450,11 @@ FNG_foreign_policy = { #The Road to Reclamation
 			modifier = {
 				factor = 0 #focus on the east
 				OR = {
-					592 = { is_owned_by_ROOT_or_ally = no } #Guangdong
-					608 = { is_owned_by_ROOT_or_ally = no } #Beijing
-					613 = { is_owned_by_ROOT_or_ally = no } #Nanjing
-					650 = { is_owned_by_ROOT_or_ally = no } #Chongqing
-					1072 = { is_owned_by_ROOT_or_ally = no } #Taiyuan
+					592 = {  OR = { is_owned_by_ROOT_or_ally = no is_owned_by = JAP } } #Guangdong
+					608 = { OR = { is_owned_by_ROOT_or_ally = no  is_owned_by = JAP } } #Beijing
+					613 = { OR = { is_owned_by_ROOT_or_ally = no  is_owned_by = JAP } } #Nanjing
+					650 = { OR = { is_owned_by_ROOT_or_ally = no is_owned_by = JAP } } #Chongqing
+					1072 = { OR = { is_owned_by_ROOT_or_ally = no is_owned_by = JAP } } #Taiyuan
 				}
 				FROM = {
 					OR = {
@@ -2250,7 +2689,7 @@ FNG_foreign_policy = { #The Road to Reclamation
 
 		available = {
 			QIE = {
-				has_country_leader = { character = QIE_aisin_gioro_puyi }
+				has_country_leader = { character = QIE_Aisin_Gioro_Puyi }
 			}
 		}
 
@@ -2413,7 +2852,7 @@ FNG_foreign_policy = { #The Road to Reclamation
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = -40
+			base = -40
 			modifier = {
 				add = 25
 				SQI = { is_ruled_by_pro_fengtian = yes }
@@ -2519,7 +2958,7 @@ FNG_foreign_policy = { #The Road to Reclamation
 		war_with_target_on_remove = yes
 
 		ai_will_do = {
-			factor = -40
+			base = -40
 			modifier = {
 				add = 25
 				SQI = { is_ruled_by_pro_fengtian = yes }
