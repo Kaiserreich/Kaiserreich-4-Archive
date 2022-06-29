@@ -1,4 +1,4 @@
-name = "Kaiserreich - Dev Build"
+name = "Kaiserreich"
 path = "mod/Kaiserreich"
 
 replace_path = "common/abilities"
@@ -71,5 +71,5 @@ tags = {
 	"Gameplay"
 }
 picture = "KR.jpg"
-version = "0.21"
+version = "0.21.1"
 supported_version = "1.11.*"
