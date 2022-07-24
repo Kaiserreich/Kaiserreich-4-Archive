@@ -3,6 +3,8 @@
 # Note that MAF isn't annexed and the player doesn't switch nation so if those are desired effects they must be done separately
 
 MAF_collapse = {
+	log = "KR_Event_Logging;MITTELAFRIKA COLLAPSES;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+
 	remove_ideas = {
 		MAF_colonial_budget_idea
 
@@ -33,6 +35,9 @@ MAF_collapse = {
 
 	# News event
 	news_event = worldnews.120
+
+	# Disband MAF's army
+	delete_unit = { disband = yes }
 
 	# First give away any owned states to their controller, if we're at war
 	every_owned_state = {
@@ -448,13 +453,6 @@ MAF_collapse = {
 		clr_country_flag = MAF_already_exists
 	}
 
-   # Get rid of MAF cores/claims
-	every_core_state = {
-		limit = { is_on_continent = africa }
-		remove_core_of = MAF
-		add_claim_by = MAF
-	}
-
    # If South Africa doesn't have a Boer war to deal with, they will try to intervene in SWA
 	if = {
 		limit = {
@@ -488,62 +486,93 @@ MAF_collapse = {
 	BAT = { country_event = KRBAT.93 }
 	BEL = { country_event = mittel.110 }
 
-	### SETTING UP SWA ###
-	clear_all_relations_except_wars = yes
-	every_enemy_country = {
-		limit = {
-			is_valid_peace_target = yes
-			OR = {
-				is_in_africa = no
-				AND = {
-					is_in_africa = yes
-					NOT = { is_owner_neighbor_of = ROOT }
+	#If MAF is GEX, game over
+	if = {
+		limit = { tag = GEX }
+		set_major = no
+		remove_ideas = MAF_on_borrowed_time
+		event_target:GER_wilhelm_iii_target = { set_nationality = GER }
+		if = {
+			limit = { has_event_target = GER_wilhelm_ii_target }
+			event_target:GER_wilhelm_ii_target = { set_nationality = GER }
+		}
+		every_character = {
+			limit = { has_character_flag = GER_character }
+			clr_character_flag = GER_character
+			set_nationality = GER
+		}
+
+		set_equipment_fraction = 0
+		every_state = {
+			remove_claim_by = MAF
+			remove_core_of = MAF
+		}
+		NMB = { annex_country = { target = MAF } }
+	}
+	#else, set up SWA
+	else = {
+		set_equipment_fraction = 0.5
+		clear_all_relations_except_wars = yes
+		every_enemy_country = {
+			limit = {
+				is_valid_peace_target = yes
+				OR = {
+					is_in_africa = no
+					AND = {
+						is_in_africa = yes
+						NOT = { is_owner_neighbor_of = ROOT }
+					}
 				}
 			}
+			white_peace_with_ROOT = yes
 		}
-		white_peace_with_ROOT = yes
-	}
 
-	remove_state_claim = 541
-	add_state_core = 541
-
-	set_cosmetic_tag = NMB_GER
-	save_global_event_target_as = KR_suedwest
-	delete_unit = { disband = no }
-	load_oob = NMB
-	set_capital = { state = 541 remember_old_capital = no }
-
-	set_stability = 0.55
-	set_war_support = 0.7
-
-	set_politics = {
-		ruling_party = paternal_autocrat
-		last_election = "1888.6.15"
-		election_frequency = 48
-		elections_allowed = no
-	}
-
-	set_popularities = {
-		totalist = 0
-		radical_socialist = 1
-		syndicalist = 1
-		social_democrat = 6
-		social_liberal = 4
-		market_liberal = 2
-		social_conservative = 26
-		authoritarian_democrat = 37
-		paternal_autocrat = 23
-		national_populist = 0
-	}
-
-	if = {
-		limit = {
-			country_exists = NMB
-			NMB = { NOT = { has_country_flag = MAF_already_exists } }
+		#Get rid of MAF cores/claims
+		every_state = { remove_claim_by = MAF }
+		every_core_state = {
+			remove_core_of = MAF
+			add_claim_by = MAF
 		}
-		declare_war_on = {
-			target = NMB
-			type = annex_everything
+		remove_state_claim = 541
+		add_state_core = 541
+
+		set_cosmetic_tag = NMB_GER
+		save_global_event_target_as = KR_suedwest
+		load_oob = NMB
+		set_capital = { state = 541 remember_old_capital = no }
+
+		set_stability = 0.55
+		set_war_support = 0.7
+
+		set_politics = {
+			ruling_party = paternal_autocrat
+			last_election = "1888.6.15"
+			election_frequency = 48
+			elections_allowed = no
+		}
+
+		set_popularities = {
+			totalist = 0
+			radical_socialist = 1
+			syndicalist = 1
+			social_democrat = 6
+			social_liberal = 4
+			market_liberal = 2
+			social_conservative = 26
+			authoritarian_democrat = 37
+			paternal_autocrat = 23
+			national_populist = 0
+		}
+
+		if = {
+			limit = {
+				country_exists = NMB
+				NMB = { NOT = { has_country_flag = MAF_already_exists } }
+			}
+			declare_war_on = {
+				target = NMB
+				type = annex_everything
+			}
 		}
 	}
 }
@@ -1058,7 +1087,6 @@ KEN_british_setup = {
 			}
 		}
 		every_owned_state = {
-			remove_dynamic_modifier = { modifier = MAF_british_kenya }
 			set_demilitarized_zone = no
 
 			remove_core_of = MAF
