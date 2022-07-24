@@ -367,10 +367,6 @@ country_event = { #Aftermath of the assassination
 						rule = RUS_post_assassination
 						option = RUS_POST_ASSASSINATION_DMITRIY_ARISTOCRATIC_REPUBLIC
 					}
-					has_game_rule = {
-						rule = RUS_forpol
-						option = RUS_FORPOL_REALPOLITIK
-					}
 				}
 			}
 		}
@@ -610,9 +606,15 @@ country_event = { #The Kornilov Affair
 			base = 75
 			modifier = {
 				factor = 0
-				has_game_rule = {
-					rule = RUS_post_assassination
-					option = RUS_POST_ASSASSINATION_KORNILOV_DENIKIN
+				OR = {
+					has_game_rule = {
+						rule = RUS_post_assassination
+						option = RUS_POST_ASSASSINATION_KORNILOV_DENIKIN
+					}
+					has_game_rule = {
+						rule = RUS_forpol
+						option = RUS_FORPOL_REALPOLITIK
+					}
 				}
 			}
 		}
@@ -654,7 +656,7 @@ country_event = { #Kornilov-Savinkov Alliance
 			character = RUS_boris_savinkov
 			advisor = {
 				slot = second_in_command
-				idea_token = RUS_boris_savinkov
+				idea_token = RUS_boris_savinkov_sic
 				traits = { RUS_vozhd_sic second_in_command_trait }
 				cost = 0
 				removal_cost = -1
@@ -733,14 +735,9 @@ country_event = { #Kornilov's Death
 		}
 		complete_national_focus = RUS_Political_Stabilisation
 		hidden_effect = {
-			if = {
-				limit = { RUS_boris_savinkov = { is_character_slot = second_in_command } }
-				remove_advisor_role = {
-					character = RUS_boris_savinkov
-					slot = second_in_command
-				}
-				activate_advisor = RUS_state_duma_sic
-			}
+			RUS_boris_savinkov = { remove_second_in_command_role = yes }
+			clear_sic_slot = yes
+			activate_advisor = RUS_state_duma_sic
 			add_popularity = {
 				ideology = national_populist
 				popularity = 0.35
@@ -931,6 +928,7 @@ country_event = { #The final step? WRA can become tsar
 	trigger = {
 		is_subject = no
 		has_completed_focus = RUS_A_Firm_Hand
+		has_country_leader = { character = RUS_pyotr_wrangel }
 	}
 
 	option = { #keep military
@@ -5418,12 +5416,8 @@ country_event = { #NRPR is bankrupt
 			ideology = national_populist
 			popularity = -0.2
 		}
-		if = {
-			limit = { RUS_boris_savinkov = { is_character_slot = second_in_command } }
-			remove_advisor_role = {
-				character = RUS_boris_savinkov
-				slot = second_in_command
-			}
+		RUS_boris_savinkov = {
+			remove_second_in_command_role = yes
 		}
 	}
 }
@@ -5606,12 +5600,12 @@ country_event = { #Dmitriy Pavlovich's New Power
 		name = rusd.152.a
 		add_stability = 0.02
 		set_party_name = {
-			ideology = authoritarian_democrat
+			ideology = social_conservative
 			long_name = RUS_dmitry_party
 			name = RUS_dmitry_party
 		}
 		set_party_name = {
-			ideology = social_conservative
+			ideology = authoritarian_democrat
 			long_name = RUS_dmitry_party
 			name = RUS_dmitry_party
 		}
@@ -5620,6 +5614,13 @@ country_event = { #Dmitriy Pavlovich's New Power
 			long_name = RUS_dmitry_party
 			name = RUS_dmitry_party
 		}
+		custom_effect_tooltip = tooltip_white_line
+		set_temp_variable = { coalition_partner_var = token:social_conservative }
+		add_to_coalition = yes
+		set_temp_variable = { coalition_partner_var = token:authoritarian_democrat }
+		add_to_coalition = yes
+		set_temp_variable = { coalition_partner_var = token:paternal_autocrat }
+		add_to_coalition = yes
 	}
 }
 
@@ -7624,7 +7625,7 @@ country_event = { #Russia demands northern Mongolia
 	option = {
 		name = rusfor.1113.a #Bow down
 		FROM = {
-			effect_tooltip = { transfer_state = 329 }
+			transfer_state = 329 #Tuva
 			country_event = {
 				id = rusfor.1114
 				days = 2
@@ -7659,6 +7660,7 @@ country_event = { #Mongolia accepts!
 
 	option = {
 		name = rusfor.1114.a #Great!
+		transfer_state = 329 #Tuva
 	}
 }
 
@@ -7685,7 +7687,7 @@ country_event = { #Mongolia refused politely
 
 	option = {
 		name = rusfor.1116.a #Are they kidding? crush them!
-		declare_war_on = {
+		create_wargoal = {
 			target = FROM
 			type = annex_everything
 		}
@@ -9852,14 +9854,15 @@ country_event = { #SOV/INT offers to join the other side's wars
 
 	option = {
 		name = russoc.121.a
-		FROM = {
-			every_enemy_country = {
-				limit = { has_offensive_war_with = FROM }
-				ROOT = {
-					add_to_war = {
-						targeted_alliance = FROM
-						enemy = PREV
-					}
+		every_enemy_country = {
+			limit = {
+				has_offensive_war_with = ROOT
+				NOT = { has_war_with = FROM }
+			}
+			FROM = {
+				add_to_war = {
+					targeted_alliance = ROOT
+					enemy = PREV
 				}
 			}
 		}
@@ -9883,7 +9886,10 @@ country_event = { #SOV/INT calls the other to its defense
 		name = russoc.122.a
 		FROM = {
 			every_enemy_country = {
-				limit = { has_offensive_war_with = FROM }
+				limit = {
+					has_offensive_war_with = FROM
+					NOT = { has_war_with = ROOT }
+				}
 				ROOT = {
 					add_to_war = {
 						targeted_alliance = FROM
