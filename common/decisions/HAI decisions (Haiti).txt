@@ -836,17 +836,22 @@ foreign_politics = {
 		}
 
 		cost = 50
-		days_remove = 60
+		days_remove = 40
 		fire_only_once = yes
 		war_with_target_on_remove = yes
+		cancel_if_not_visible = yes
 
 		ai_will_do = {
 			base = 0
 		}
 
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled HAI_attack_DOM target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision HAI_attack_DOM target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 35 value = 1 }
 			FROM = { country_event = kr.political.30 } #warning event
 			setup_decision_attack_AI = yes
 		}
@@ -926,7 +931,6 @@ HAI_rubber_cultivation = {
 					days = 20
 					random_days = 5
 				}
-				activate_targeted_decision = { target = var:faction_leader decision = HAI_acquire_rubber }
 			}
 		}
 	}
@@ -934,12 +938,9 @@ HAI_rubber_cultivation = {
 		icon = GFX_decision_rubber
 		allowed = { always = no } # Activated by previous decision
 		visible = {
-			OR = {
-				has_country_flag = HAI_forced_sharing
-				has_country_flag = HAI_no_sharing
-			}
+			has_variable = HAI_rubber_target
 		}
-		cost = 50
+		cost = 40
 		fire_only_once = yes
 
 		ai_will_do = {
@@ -962,7 +963,10 @@ HAI_rubber_cultivation = {
 			activate_mission = HAI_rubber_cultivation_mission
 			activate_targeted_decision = { target = THIS decision = HAI_clear_land }
 			activate_targeted_decision = { target = THIS decision = HAI_expand_investment }
-			activate_targeted_decision = { target = var:faction_leader decision = HAI_expand_investment }
+			if = {
+				limit = { is_in_faction_with = var:HAI_rubber_target }
+				activate_targeted_decision = { target = var:HAI_rubber_target decision = HAI_expand_investment }
+			}
 		}
 	}
 	HAI_rubber_cultivation_mission = {
@@ -984,29 +988,32 @@ HAI_rubber_cultivation = {
 		timeout_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision timeout HAI_rubber_cultivation_mission"
 			activate_targeted_decision = { target = 318 decision = HAI_expand_rubber }
-			hidden_effect = {
-				remove_targeted_decision = { target = THIS decision = HAI_clear_land }
-				remove_targeted_decision = { target = THIS decision = HAI_expand_investment }
-				remove_targeted_decision = { target = var:faction_leader decision = HAI_expand_investment }
-			}
 			if = {
 				limit = {
 					has_country_flag = HAI_forced_sharing
+					is_in_faction_with = var:HAI_rubber_target
 				}
 				add_resource = {
 					type = rubber
 					amount = 4
 					state = 318
 				}
-				var:faction_leader = {
-					add_ideas = HAI_importing_haitian_rubber
-				}
+				var:HAI_rubber_target = { add_ideas = HAI_importing_haitian_rubber }
 			}
 			else = {
 				add_resource = {
 					type = rubber
-					amount = 8
+					amount = 10
 					state = 318
+				}
+			}
+			hidden_effect = {
+				remove_targeted_decision = { target = THIS decision = HAI_clear_land }
+				remove_targeted_decision = { target = THIS decision = HAI_expand_investment }
+				if = {
+					limit = { has_variable = HAI_rubber_target }
+					remove_targeted_decision = { target = var:HAI_rubber_target decision = HAI_expand_investment }
+					clear_variable = HAI_rubber_target
 				}
 			}
 		}
@@ -1016,7 +1023,7 @@ HAI_rubber_cultivation = {
 		allowed = { always = no } # Activated by previous decision
 		days_re_enable = 90
 
-		cost = 25
+		cost = 20
 		fire_only_once = no
 
 		ai_will_do = {
@@ -1034,7 +1041,7 @@ HAI_rubber_cultivation = {
 	HAI_expand_investment = {
 		icon = GFX_decision_cash_flow
 		allowed = { always = no } # Activated by previous decision
-		cost = 40
+		cost = 35
 		fire_only_once = no
 
 		ai_will_do = {
@@ -1091,7 +1098,7 @@ HAI_rubber_cultivation = {
 	HAI_expand_rubber = {
 		icon = GFX_decision_rubber
 		allowed = { always = no } # Activated by previous decision
-		cost = 50
+		cost = 40
 		fire_only_once = no
 		state_target = yes
 		ai_will_do = {

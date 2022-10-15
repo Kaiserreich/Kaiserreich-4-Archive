@@ -1,13 +1,6 @@
 on_actions = {
 	on_startup = {
 		effect = {
-			512 = {
-				create_unit = {
-					division = "division_template = \"Third Internationale Expeditionary Force\" start_experience_factor = 1.0 start_equipment_factor = 1.0"
-					owner = FOP
-					prioritize_location = 10953
-				}
-			}
 			FOP = { FOP_recruit_internationale_advisors = yes }
 
 			add_to_array = { global.CEN_tags_array = GUA }
@@ -99,6 +92,22 @@ on_actions = {
 	# ROOT is capitulated country, FROM is winner
 	on_capitulation_immediate = {
 		effect = {
+			### ARG naval transfer
+			if = {
+				limit = {
+					original_tag = ARG
+					has_war_with = FOP
+				}
+				transfer_navy = { target = FOP }
+			}
+			else_if = {
+				limit = {
+					original_tag = FOP
+					has_war_with = ARG
+				}
+				transfer_navy = { target = ARG }
+			}
+
 			# CEN/MEX vs ENT/GER peace deal
 			if = {
 				limit = {
@@ -159,7 +168,7 @@ on_actions = {
 					FROM = { tag = ARG }
 				}
 				FROM = { country_event = southern.9 }
-				log = "KR_Event_Logging;ARG KILLS FOP;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;ARG KILLS CHL;[GetDateText];[ROOT.GetName];[FROM.GetName]"
 			}
 		}
 	}
@@ -304,7 +313,7 @@ on_actions = {
 					tag = PAR
 					is_subject = yes
 				}
-				remove_ideas = PAR_prussia
+				remove_ideas = PAR_military_influence_idea
 			}
 			else_if = {
 				limit = {
@@ -540,30 +549,6 @@ on_actions = {
 					country_event = fop.360
 				}
 			}
-			### CEN annexing COS/PAN ###
-			if = {
-				limit = {
-					FROM = { tag = COS }
-					ROOT = {
-						tag = CEN
-						owns_state = 316 #Costa Rica
-					}
-				}
-				set_country_flag = CENmil_costa_dead_1_year
-			}
-			if = {
-				limit = {
-					FROM = { tag = PAN }
-					ROOT = {
-						tag = CEN
-						OR = {
-							owns_state = 304 #Panama
-							owns_state = 685 #Panama Canal
-						}
-					}
-				}
-				set_country_flag = CENmil_panama_dead_1_year
-			}
 
 			# Peace out URG if PAR capitulates
 			if = {
@@ -615,6 +600,22 @@ on_actions = {
 				limit = { tag = PRU }
 				country_event = { id = pru.104 days = 30 }
 			}
+			### CEN annexing COS/PAN ###
+			if = {
+				limit = {
+					ROOT = {
+						tag = PRU
+						owns_state = 854
+					}
+				}
+				if = {
+					limit = {
+						854 = { is_claimed_by = PRU }
+					}
+					remove_state_claim = 854
+					add_state_core = 854
+				}
+			}
 		}
 	}
 
@@ -638,6 +639,45 @@ on_actions = {
 				}
 				else = {
 					PRU_remove_socialist_generals = yes
+				}
+			}
+			else_if = {
+				limit = { original_tag = PAR }
+				clear_sic_slot = yes
+				if = {
+					limit = {
+						OR = {
+							will_have_socialist_government = yes
+							will_have_social_democrat_government = yes
+						}
+					}
+					activate_advisor = PAR_anselmo_jover_sic
+				}
+				else_if = {
+					limit = {
+						OR = {
+							will_have_social_liberal_government = yes
+							will_have_market_liberal_government = yes
+						}
+					}
+					activate_advisor = PAR_felix_pavia_sic
+				}
+				else_if = {
+					limit = { will_have_social_conservative_government = yes }
+					activate_advisor = PAR_juan_manuel_frutos_sic
+				}
+				else_if = {
+					limit = {
+						OR = {
+							will_have_authoritarian_democrat_government = yes
+							will_have_paternal_autocrat_government = yes
+						}
+					}
+					activate_advisor = PAR_luis_alberto_riart_sic
+				}
+				else_if = {
+					limit = { will_have_national_populist_government = yes }
+					activate_advisor = PAR_higinio_morinigo_martinez_sic
 				}
 			}
 		}
@@ -672,7 +712,6 @@ on_actions = {
 						}
 					}
 				}
-				URG = { country_event = urg.9 } # argentine navy join URG (will only actually happen when ARG is above 80% capitulation)
 				if = {
 					Limit = {
 						FROM.FROM = { state = 278 } #Buenos Aires

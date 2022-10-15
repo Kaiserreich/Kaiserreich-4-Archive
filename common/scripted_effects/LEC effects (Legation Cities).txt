@@ -5,28 +5,29 @@ LEC_change_currency_reserves = {
 	if = {
 		limit = { has_idea = var:LEC_currency_idea }
 		if = {
-			limit = { has_variable = LEC_currency_change }
-			if = {
-				limit = { check_variable = { LEC_currency_change < 0 } }
-				custom_effect_tooltip = LEC_currency_down
-			}
-			else = {
-				custom_effect_tooltip = LEC_currency_up
+			limit = { NOT = { has_variable = LEC_currency_change } }
+			set_temp_variable = { LEC_currency_change = 1 }
+		}
+		set_temp_variable = { LEC_currency_reserves_temp = LEC_currency_reserves }
+		add_to_temp_variable = { LEC_currency_reserves_temp = LEC_currency_change }
+		clamp_temp_variable = { var = LEC_currency_reserves_temp min = 1 max = 9 }
+		if = {
+			limit = { NOT = { check_variable = { LEC_currency_reserves = LEC_currency_reserves_temp } } }
+			effect_tooltip = {
+				swap_ideas = {
+					remove_idea = var:LEC_currency_idea
+					add_idea = var:LEC_currency_ideas^LEC_currency_reserves_temp
+				}
 			}
 			add_to_variable = { LEC_currency_reserves = LEC_currency_change }
-		}
-		else = {
-			custom_effect_tooltip = LEC_currency_up
-			add_to_variable = { LEC_currency_reserves = 1 }
-		}
-		clamp_variable = { var = LEC_currency_reserves min = 1 max = 10 }
-		hidden_effect = {
-			if = {
-				limit = {
-					NOT = { has_idea = var:LEC_currency_ideas^LEC_currency_reserves }
+			clamp_variable = { var = LEC_currency_reserves min = 1 max = 9 }
+			hidden_effect = {
+				#do not use swap_ideas here, it breaks the on_add/on_remove logic
+				if = {
+					limit = { NOT = { has_idea = var:LEC_currency_ideas^LEC_currency_reserves } }
+					remove_ideas = var:LEC_currency_idea
+					add_ideas = var:LEC_currency_ideas^LEC_currency_reserves
 				}
-				remove_ideas = var:LEC_currency_idea
-				add_ideas = var:LEC_currency_ideas^LEC_currency_reserves
 			}
 		}
 	}
@@ -365,7 +366,11 @@ LEC_is_dismantled = {
 		limit = { owns_state = 609 }
 		if = {
 			limit = {
-				JAP = { is_faction_leader = yes }
+				JAP = {
+					is_subject = no
+					var:525.controller = { is_ally_with = JAP }
+					var:527.controller = { is_ally_with = JAP }
+				}
 			}
 			JAP = { country_event = lectianjap.25 }
 		}
