@@ -324,8 +324,8 @@ country_event = { #Fate of Canada
 			}
 			CAN = {
 				every_unit_leader = {
-					limit = { has_trait = CAN_british_exile_trait }
-					remove_unit_leader_trait = CAN_british_exile_trait
+					limit = { has_trait = GBR_british_exile_trait }
+					remove_unit_leader_trait = GBR_british_exile_trait
 					set_nationality = GBR
 				}
 				every_character = {
@@ -336,17 +336,11 @@ country_event = { #Fate of Canada
 			}
 			GBR = { CAN_convert_british_pm_slots = yes }
 			if = {
-				limit = {
-					GBR = { is_ally_of_ROOT = yes }
-					NOT = { tag = GBR }
-				}
+				limit = { GBR = { is_ally_of_ROOT = yes } }
 				GBR = { save_event_target_as = british_target }
 			}
 			else_if = {
-				limit = {
-					ENT = { is_ally_of_ROOT = yes }
-					NOT = { tag = ENT }
-				}
+				limit = { ENT = { is_ally_of_ROOT = yes } }
 				ENT = { save_event_target_as = british_target }
 			}
 			if = {
@@ -476,7 +470,7 @@ country_event = { #Fate of Canada
 					CAN_transfer_king_base = yes
 					GBR = {
 						every_unit_leader = {
-							add_unit_leader_trait = CAN_british_exile_trait
+							add_unit_leader_trait = GBR_british_exile_trait
 							set_nationality = CAN
 						}
 						every_character = {
@@ -871,6 +865,15 @@ country_event = { # The fate of Central America
 		HON = { every_core_state = { add_core_of = var:tag_to_release } }
 		NIC = { every_core_state = { add_core_of = var:tag_to_release } }
 		if = {
+			limit = {
+				OR = {
+					NOT = { 311 = { is_core_of = ROOT } }
+					NOT = { 311 = { is_claimed_by = ROOT } }
+				}
+			}
+			var:tag_to_release = { add_state_claim = 311 } #Belize
+		}
+		else_if = {
 			limit = { NOT = { 311 = { is_core_of = GUA } } } #Belize
 			var:tag_to_release = { add_state_claim = 311 } #Belize
 		}
@@ -1324,13 +1327,13 @@ country_event = { #The Fate of Costa Rica
 			COS = {
 				COS_rafael_angel_calderon_guardia = {
 					set_nationality = PREV
-					promote_character = { ideology = social_democrat_subtype }
+					promote_character = social_democrat_subtype
 				}
 				COS_jose_figueres_ferrer = {
 					set_nationality = PREV
 					if = {
 						limit = { has_ideology = social_democrat_subtype }
-						promote_character = { ideology = social_democrat_subtype }
+						promote_character = social_democrat_subtype
 					}
 				}
 			}
@@ -1339,8 +1342,15 @@ country_event = { #The Fate of Costa Rica
 
 	option = { #restore costa rica
 		name = annex.2010.a
+		trigger = {
+			NOT = { original_tag = CEN }
+		}
 		ai_chance = {
-			base = 100
+			base = 1
+			modifier = {
+				factor = 0
+				CEN = { is_ally_of_ROOT = yes }
+			}
 		}
 		set_temp_variable = { tag_to_release = COS }
 		release_targeted_tag = yes
@@ -1351,17 +1361,24 @@ country_event = { #The Fate of Costa Rica
 		trigger = {
 			CEN = { is_ally_of_ROOT = yes }
 		}
-		ai_chance = {
-			base = 100
-		}
 		add_to_temp_array = { target_cores_to_release = COS }
 		set_temp_variable = { tag_to_release = CEN }
-		transfer_territory_from_core_regions_and_add_cores = yes
-		hidden_effect = {
-			event_target:COS_rafael_angel_calderon_guardia_target = { set_nationality = COS }
-			event_target:COS_jose_figueres_ferrer_target = { set_nationality = COS }
-			event_target:COS_fernando_figuls_quiros_target = { set_nationality = COS }
+		if = {
+			limit = { CEN = { is_subject = yes } }
+			transfer_territory_from_core_regions_and_add_cores = yes
 		}
+		else = {
+			transfer_territory_from_core_regions = yes
+		}
+	}
+
+	option = {
+		name = annex.integration #annex
+		trigger = {
+			original_tag = CEN
+		}
+		add_political_power = -100
+		COS = { every_core_state = { add_core_of = ROOT } }
 	}
 
 	option = { #occupy
@@ -1381,13 +1398,7 @@ country_event = { #Fate of Panama
 
 	is_triggered_only = yes
 
-	option = {
-		name = annex.2011.a #Liberate Panama
-		ai_chance = {
-			base = 30
-		}
-		set_temp_variable = { tag_to_release = PAN }
-		release_targeted_tag = yes
+	immediate = {
 		hidden_effect = {
 			PAN = {
 				remove_targeted_decision = { target = USA decision = PAN_seize_canal }
@@ -1396,34 +1407,45 @@ country_event = { #Fate of Panama
 				remove_targeted_decision = { target = COS decision = PAN_pressure_coto_2 }
 			}
 		}
+	}
+
+	option = {
+		name = annex.2011.a #Liberate Panama
+		trigger = {
+			NOT = { original_tag = CEN }
+			NOT = { has_cosmetic_tag = GCL }
+		}
+		ai_chance = {
+			base = 30
+		}
+		set_temp_variable = { tag_to_release = PAN }
+		release_targeted_tag = yes
 	}
 
 	option = {
 		name = annex.2011.b #Liberate Panama and take the Canal
 		trigger = {
 			owns_state = 685
+			NOT = { original_tag = CEN }
+			NOT = { has_cosmetic_tag = GCL }
 		}
 		ai_chance = {
 			base = 70
+			modifier = {
+				factor = 0
+				has_socialist_government = yes
+			}
 		}
-		add_political_power = -25
 		add_state_claim = 685
 		set_temp_variable = { tag_to_release = PAN }
 		release_targeted_tag = yes
-		hidden_effect = {
-			PAN = {
-				remove_targeted_decision = { target = USA decision = PAN_seize_canal }
-				remove_targeted_decision = { target = USA decision = PAN_remove_monroe }
-				remove_targeted_decision = { target = COS decision = PAN_pressure_coto_36 }
-				remove_targeted_decision = { target = COS decision = PAN_pressure_coto_2 }
-			}
-		}
 	}
 
 	option = {
 		name = annex.2011.c #Give Panama to CEN
 		trigger = {
 			CEN = { is_ally_of_ROOT = yes }
+			NOT = { has_cosmetic_tag = GCL }
 		}
 		ai_chance = {
 			base = 30
@@ -1436,29 +1458,45 @@ country_event = { #Fate of Panama
 	option = {
 		name = annex.2011.d #Give Panama to CEN, but keep the Canal
 		trigger = {
-			CEN = { is_ally_of_ROOT = yes }
 			owns_state = 685
+			CEN = { is_ally_of_ROOT = yes }
+			NOT = { has_cosmetic_tag = GCL }
 		}
 		ai_chance = {
 			base = 70
+			modifier = {
+				factor = 0
+				has_socialist_government = yes
+			}
 		}
-		add_political_power = -25
 		add_state_claim = 685
 		add_to_temp_array = { target_cores_to_release = PAN }
 		set_temp_variable = { tag_to_release = CEN }
-		transfer_territory_from_core_regions_and_add_cores = yes
+		if = {
+			limit = { CEN = { is_subject = yes } }
+			transfer_territory_from_core_regions_and_add_cores = yes
+		}
+		else = {
+			transfer_territory_from_core_regions = yes
+		}
 	}
 
-	option = { #Viva Bolívar
-		name = annex.2011.e
+	option = {
+		name = annex.2011.e #annex
 		trigger = {
 			has_cosmetic_tag = GCL
 		}
-		ai_chance = {
-			base = 100
+		occupy_small_country = yes
+		PAN = { every_core_state = { add_claim_by = ROOT } }
+	}
+
+	option = {
+		name = annex.integration #annex
+		trigger = {
+			original_tag = CEN
 		}
-		set_country_flag = PAN_CONQ
-		occupy_medium_country = yes
+		add_political_power = -75
+		PAN = { every_core_state = { add_core_of = ROOT } }
 	}
 
 	option = { #Occupy Panama
@@ -2482,6 +2520,13 @@ country_event = { #Fate of Bolivia
 				promote_character = BOL_german_busch_becerra
 				promote_character = BOL_bernardino_bilbao_rioja
 			}
+			if = {				# Add claim to Tarija if ROOT is natpop ARG
+				limit = {
+					tag = ARG
+					has_government = national_populist
+				}
+				1073 = { add_claim_by = ROOT }
+			}
 		}
 	}
 
@@ -2532,12 +2577,12 @@ country_event = { #Fate of Bolivia
 				}
 				BOL = {
 					NOT = {
-						has_completed_focus = BOL_1940_Elections
+						has_completed_focus = BOL_1938_Elections
 					}
 				}
 			}
 			BOL = {
-				complete_national_focus = BOL_1940_Elections
+				complete_national_focus = BOL_1938_Elections
 			}
 		}
 		if = {
@@ -5530,6 +5575,7 @@ country_event = { #Fate of Chile
 			}
 			else = {
 				CHL = { remove_ideas = CHL_home_of_south_american_syndicalism }
+				CHL = { FRA_remove_from_phalanstere = yes }
 			}
 		}
 	}

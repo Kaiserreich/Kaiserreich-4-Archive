@@ -2,9 +2,124 @@ on_actions = {
 	#ROOT is winner #FROM gets annexed - For civil wars on_civil_war_end is also fired
 	on_annex = {
 		effect = {
-			FROM = {
-				clr_country_flag = CAN_refused_iedc
-				CAN_remove_from_iedc = yes
+			if = {
+				limit = { FROM = { tag = event_target:KR_king_base } }
+				GBR = {
+					save_event_target_as = king_flees_to
+					CAN_transfer_king_base = yes
+				}
+			}
+			if = {
+				limit = { FROM = { tag = ENT } }
+				if = {
+					limit = { has_global_flag = CAN_iedc_created }
+					clr_global_flag = CAN_iedc_created
+					random_country = {
+						limit = { has_idea = CAN_iedc_main }
+						remove_ideas = CAN_iedc_main
+					}
+					every_country = {
+						clr_country_flag = CAN_refused_iedc
+						CAN_remove_from_iedc = yes
+					}
+				}
+				if = {
+					limit = { has_global_flag = CAN_isac_created }
+					clr_global_flag = CAN_isac_created
+					every_country = {
+						limit = { is_in_tech_sharing_group = entente_research }
+						remove_from_tech_sharing_group = entente_research
+					}
+				}
+				GBR = { save_global_event_target_as = KR_entente_leader }
+			}
+			else = {
+				FROM = {
+					clr_country_flag = CAN_refused_iedc
+					CAN_remove_from_iedc = yes
+					remove_from_tech_sharing_group = entente_research
+				}
+			}
+		}
+	}
+
+	# ROOT is the new faction leader FROM is the old faction leader
+	on_assume_faction_leadership = {
+		effect = {
+			if = {
+				limit = { FROM = { tag = ENT } }
+				save_global_event_target_as = KR_entente_leader
+				save_event_target_as = entente_transfer_to
+				CAN_transfer_entente_leader = yes
+				if = {
+					limit = { has_global_flag = CAN_iedc_created }
+					CAN_transfer_iedc_leadership = yes
+				}
+			}
+			if = {
+				limit = { FROM = { tag = event_target:KR_king_base } }
+				if = {
+					limit = {
+						NOT = { FROM = { original_tag = GBR } }
+						GBR = {
+							is_in_faction_with = FROM
+							surrender_progress < 0.30
+						}
+					}
+					GBR = { save_event_target_as = king_flees_to }
+				}
+				else_if = {
+					limit = {
+						NOT = { FROM = { original_tag = CAN } }
+						CAN = {
+							is_in_faction_with = FROM
+							surrender_progress < 0.30
+						}
+					}
+					CAN = { save_event_target_as = king_flees_to }
+				}
+				else_if = {
+					limit = {
+						NOT = { FROM = { original_tag = AST } }
+						AST = {
+							is_in_faction_with = FROM
+							surrender_progress < 0.30
+							NOT = { has_government = paternal_autocrat }
+						}
+					}
+					AST = { save_event_target_as = king_flees_to }
+				}
+				else_if = {
+					limit = {
+						NOT = { FROM = { original_tag = RAJ } }
+						RAJ = {
+							is_in_faction_with = FROM
+							surrender_progress < 0.30
+							NOT = { has_government = social_democrat }
+						}
+					}
+					RAJ = { save_event_target_as = king_flees_to }
+				}
+				else_if = {
+					limit = {
+						NOT = { FROM = { original_tag = SAF } }
+						SAF = {
+							is_in_faction_with = FROM
+							surrender_progress < 0.30
+						}
+					}
+					SAF = { save_event_target_as = king_flees_to }
+				}
+				if = {
+					limit = { has_event_target = king_flees_to }
+					event_target:king_flees_to = { CAN_transfer_king_base = yes }
+				}
+				else = {
+					GBR = {
+						save_event_target_as = king_flees_to
+						CAN_transfer_king_base = yes
+					}
+				}
 			}
 		}
 	}
@@ -43,6 +158,35 @@ on_actions = {
 				limit = { is_in_faction_with = ENT }
 				FROM = {
 					country_event = { id = entente.211 days = 1 random = 72 }
+				}
+			}
+			# adding to GBR Five Eyes program
+			if = {
+				limit = {
+					is_in_faction_with = GBR
+					GBR = { has_completed_focus = GBR_five_eyes_program }
+					FROM = {
+						num_of_civilian_factories > 5
+					}
+				}
+				FROM = {
+					country_event = uk.62
+				}
+			}
+			# adding to Imperial Preference program
+			if = {
+				limit = {
+					is_in_faction_with = GBR
+					GBR = { has_completed_focus = GBR_imperial_preference }
+					FROM = {
+						OR = {
+							CAN_is_commonwealth_tag = yes
+							is_subject_of = GBR
+						}
+					}
+				}
+				FROM = {
+					country_event = uk.64
 				}
 			}
 		}
@@ -158,12 +302,18 @@ on_actions = {
 				limit = {
 					OR = {
 						tag = GER
-						is_ally_with = ENT
+						AND = {
+							ENT = { exists = yes }
+							is_ally_with = ENT
+						}
 					}
 					FROM = {
 						OR = {
 							tag = GER
-							is_ally_with = ENT
+							AND = {
+								ENT = { exists = yes }
+								is_ally_with = ENT
+							}
 						}
 					}
 				}

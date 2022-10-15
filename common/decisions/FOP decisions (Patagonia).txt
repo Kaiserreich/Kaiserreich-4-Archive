@@ -13,7 +13,7 @@ FOP_industrial_planning_scheme_decisions = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			base = 10
 		}
 
 		cost = 0
@@ -23,16 +23,22 @@ FOP_industrial_planning_scheme_decisions = {
 			consumer_goods_factor = 0.10
 		}
 
-		days_remove = 120
+		days_remove = 150
 		fire_only_once = yes
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_progreso_stage_1_supply"
 			512 = {
-				add_building_construction = {
-					type = infrastructure
-					level = 1
-					instant_build = yes
+				if = {
+					limit = { infrastructure < 5 }
+					add_building_construction = {
+						type = infrastructure
+						level = 1
+						instant_build = yes
+					}
+				}
+				else = {
+					add_extra_state_shared_building_slots = 1
 				}
 				add_building_construction = {
 					type = supply_node
@@ -53,7 +59,7 @@ FOP_industrial_planning_scheme_decisions = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			base = 10
 		}
 
 		cost = 0
@@ -63,7 +69,7 @@ FOP_industrial_planning_scheme_decisions = {
 			consumer_goods_factor = 0.10
 		}
 
-		days_remove = 120
+		days_remove = 150
 		fire_only_once = yes
 
 		remove_effect = {
@@ -85,7 +91,7 @@ FOP_industrial_planning_scheme_decisions = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			base = 10
 		}
 
 		cost = 0
@@ -95,12 +101,12 @@ FOP_industrial_planning_scheme_decisions = {
 			consumer_goods_factor = 0.10
 		}
 
-		days_remove = 120
+		days_remove = 150
 		fire_only_once = yes
 		state_target = yes
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_progreso_south_build_slots_1"
+			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_progreso_stage_2_state_cat target: [From.GetName]"
 			FROM = {
 				increase_state_category_by_one_level = yes
 			}
@@ -115,7 +121,7 @@ FOP_industrial_planning_scheme_decisions = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			base = 10
 		}
 
 		cost = 0
@@ -125,26 +131,31 @@ FOP_industrial_planning_scheme_decisions = {
 			consumer_goods_factor = 0.10
 		}
 
-		days_remove = 140
+		days_remove = 150
 		fire_only_once = yes
 		state_target = yes
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_progreso_south_build_slots_1"
+			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_progreso_stage_3_infra target: [From.GetName]"
 			FROM = {
 				increase_state_category_by_one_level = yes
-				add_building_construction = {
-					type = infrastructure
-					level = 1
-					instant_build = yes
+				if = {
+					limit = { infrastructure < 5 }
+					add_building_construction = {
+						type = infrastructure
+						level = 1
+						instant_build = yes
+					}
 				}
 			}
 		}
 	}
 }
+
+#################### South American Socialist States Decisions ####################
 FOP_estados_socialistas_de_america_latina_decisions = {
-	FOP_invite_syndie_country = {
-		icon = generic_decision
+	FOP_SASS_invite_syndie_country = {
+		icon = GFX_decision_hand_out
 
 		available = {
 			if = {
@@ -154,12 +165,13 @@ FOP_estados_socialistas_de_america_latina_decisions = {
 			else = {
 				has_war = no
 			}
+			custom_trigger_tooltip = {
+				tooltip = FOP_faction_decisions_tooltip
+			}
 		}
 
 		visible = {
-			is_faction_leader = yes
 			FROM = {
-				exists = yes
 				has_socialist_government = yes
 				is_in_faction = no
 				is_subject = no
@@ -168,10 +180,10 @@ FOP_estados_socialistas_de_america_latina_decisions = {
 		}
 
 		fire_only_once = yes
-		cost = 0
+		cost = 20
 
 		ai_will_do = {
-			factor = 1
+			base = 1000
 			modifier = {
 				factor = 0
 				FROM = {
@@ -183,22 +195,206 @@ FOP_estados_socialistas_de_america_latina_decisions = {
 			}
 		}
 
-		targets = { BOL BRA CHL COL ECU PAR PRU URG VEN }
-		target_root_trigger = {
-			is_faction_leader = yes
-		}
+		target_array = global.south_american_tags_array
 		target_trigger = {
 			FROM = {
 				has_socialist_government = yes
 				is_in_faction = no
 				is_subject = no
-				NOT = { has_war_with = ROOT }
 			}
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision FOP_invite_syndie_country target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_SASS_invite_syndie_country target: [From.GetName]"
 			FROM = { country_event = fop.22 }
+		}
+	}
+
+	FOP_SASS_liberate_south_america = {
+		name = FOP_AND_invade_target
+		icon = GFX_decision_infiltrate_state
+
+		visible = {
+			can_declare_war_on = FROM
+			FROM = { has_socialist_government = no }
+		}
+
+		target_array = global.south_american_tags_array
+		target_trigger = {
+			can_declare_war_on = FROM
+			FROM = { has_socialist_government = no }
+		}
+
+		cost = 20
+		days_remove = 30
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
+
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					ROOT_is_threatened_cautious = yes
+					FROM = { default_attack_AI_trigger_FROM = yes }
+					NOT = {
+						OR = {
+							is_neighbor_of = FROM
+							any_allied_country = { is_neighbor_of = FROM }
+						}
+					}
+				}
+			}
+		}
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled FOP_SASS_liberate_south_america target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_SASS_liberate_south_america target: [From.GetName]"
+			FROM = { country_event = kr.political.30 } #warning event
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_SASS_liberate_south_america target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			declare_war_on = {
+				target = FROM
+				type = puppet_wargoal_focus
+			}
+		}
+	}
+	FOP_SASS_invite_to_research_group = {
+		icon = GFX_decision_generic_research
+
+		visible = {
+			FROM = {
+				is_in_faction_with = ROOT
+			}
+		}
+
+		target_array = global.south_american_tags_array
+		target_trigger = {
+			FROM = { is_in_faction_with = ROOT }
+		}
+
+		cost = 20
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+
+		ai_will_do = { base = 75 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_SASS_invite_to_research_group target: [From.GetName]"
+			FROM = {
+				add_to_tech_sharing_group = FOP_SASS_research_group
+				add_tech_bonus = {
+					name = FOP_SASS_research_group
+					category = electronics
+					category = infantry_tech
+					category = infantry_weapons
+					bonus = 0.33
+					uses = 2
+				}
+			}
+		}
+	}
+	FOP_SASS_industrial_support = {
+		icon = GFX_decision_factories
+
+		visible = {
+			FROM = {
+				is_in_faction_with = ROOT
+			}
+		}
+
+		available = {
+			has_country_flag = FOP_created_OSAEC
+			num_of_civilian_factories_available_for_projects > 4
+		}
+
+		target_array = global.south_american_tags_array
+		target_trigger = {
+			FROM = { is_in_faction_with = ROOT }
+		}
+
+		modifier = {
+			civilian_factory_use = 5
+		}
+
+		cost = 50
+		days_remove = 150
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
+
+		ai_will_do = { base = 30 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled FOP_SASS_industrial_support target: [From.GetName]"
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_SASS_industrial_support target: [From.GetName]"
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_SASS_industrial_support target: [From.GetName]"
+			effect_tooltip = {
+				FROM = {
+					custom_effect_tooltip = FOP_invite_to_OSAEC_tt
+					custom_effect_tooltip = tooltip_white_line
+					random_owned_controlled_state = {
+						limit = { is_capital = yes }
+						add_extra_state_shared_building_slots = 2
+						add_building_construction = {
+							type = industrial_complex
+							level = 2
+							instant_build = yes
+						}
+					}
+					add_tech_bonus = {
+						name = FOP_SASS_industrial_support_tt
+						bonus = 0.5
+						uses = 2
+						category = industry
+					}
+				}
+			}
+			FROM = { country_event = fop.390 }
+		}
+	}
+	FOP_SASS_create_OSAEC = {
+		icon = GFX_decision_hol_attract_foreign_investors
+		allowed = { always = no }
+
+		cost = 50
+		days_remove = 100
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+
+		ai_will_do = { base = 75 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled FOP_SASS_create_OSAEC"
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_SASS_create_OSAEC"
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_SASS_create_OSAEC"
+			custom_effect_tooltip = OSAEC_tt
+			set_country_flag = FOP_created_OSAEC
+			hidden_effect = {
+				set_variable = { var_OSAEC_members = 0.03 }
+				add_dynamic_modifier = { modifier = OSAEC_member_dynamic_modifier }
+			}
 		}
 	}
 }
@@ -210,17 +406,16 @@ FOP_falkland_coring_and_development_decisions = {
 			FOP_has_administrative_chaos = no
 		}
 
-		cost = 25
 		days_remove = 150
 		fire_only_once = yes
 
 		modifier = {
-			political_power_gain = -0.05
+			political_power_gain = -0.1
 			consumer_goods_factor = 0.02
 		}
 
 		ai_will_do = {
-			factor = 10
+			base = 500
 		}
 
 		remove_effect = {
@@ -235,7 +430,7 @@ FOP_falkland_coring_and_development_decisions = {
 		icon = generic_construction
 		allowed = { always = no } 			# Activated by previous decision
 		cost = 0
-		days_remove = 70
+		days_remove = 100
 		fire_only_once = yes
 		state_target = yes
 
@@ -245,16 +440,22 @@ FOP_falkland_coring_and_development_decisions = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			base = 10
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_falkland_road_dec target: [From.GetName]"
 			FROM = {
-				add_building_construction = {
-					type = infrastructure
-					level = 1
-					instant_build = yes
+				if = {
+					limit = { infrastructure < 5 }
+					add_building_construction = {
+						type = infrastructure
+						level = 1
+						instant_build = yes
+					}
+				}
+				else = {
+					add_extra_state_shared_building_slots = 1
 				}
 			}
 			activate_targeted_decision = { target = 299 decision = ARG_dockyards_dec }
@@ -264,7 +465,7 @@ FOP_falkland_coring_and_development_decisions = {
 		icon = generic_naval
 		allowed = { always = no } 			# Activated by previous decision
 		cost = 0
-		days_remove = 140
+		days_remove = 150
 		fire_only_once = yes
 		state_target = yes
 
@@ -274,7 +475,7 @@ FOP_falkland_coring_and_development_decisions = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			base = 10
 		}
 
 		remove_effect = {
@@ -301,49 +502,79 @@ FOP_immigration_decisions = {
 		name = FOP_Attract_Immigrants_decision
 		icon = generic_political_discourse
 		allowed = { always = no }				# Activated by effect FOP_increase_popular_support
+		available = {
+			has_stability > 0.4
+			has_war = no
+		}
 		fire_only_once = no
 		days_re_enable = 365
 		cost = 10
+		target_non_existing = yes
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision FOP_Attract_Immigrants_Small"
 			add_to_variable = { var = fop_im_factor value = 5 }
 			custom_effect_tooltip = IMMI_5
+			### Immigration modifier update
+			add_to_variable = { var = var_ARG_immigration_modifier_buff value = 0.002 }
+			add_to_variable = { var = var_ARG_immigration_modifier_debuff value = -0.001 }
+			clamp_variable = { var = var_ARG_immigration_modifier_buff min = 0 max = 0.30 }
+			clamp_variable = { var = var_ARG_immigration_modifier_debuff min = -0.15 max = 0.30 }
 		}
 
-		ai_will_do = { factor = 5 }
+		ai_will_do = { base = 1 }
 	}
 	FOP_Attract_Immigrants_Medium = {
 		name = FOP_Attract_Immigrants_decision
 		icon = generic_political_discourse
 		allowed = { always = no }				# Activated by effect FOP_increase_popular_support
+		available = {
+			has_stability > 0.4
+			has_war = no
+		}
 		fire_only_once = no
 		days_re_enable = 365
 		cost = 20
+		target_non_existing = yes
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision FOP_Attract_Immigrants_Medium"
 			add_to_variable = { var = fop_im_factor value = 10 }
 			custom_effect_tooltip = IMMI_10
+			### Immigration modifier update
+			add_to_variable = { var = var_ARG_immigration_modifier_buff value = 0.005 }
+			add_to_variable = { var = var_ARG_immigration_modifier_debuff value = -0.002 }
+			clamp_variable = { var = var_ARG_immigration_modifier_buff min = 0 max = 0.30 }
+			clamp_variable = { var = var_ARG_immigration_modifier_debuff min = -0.15 max = 0 }
 		}
 
-		ai_will_do = { factor = 5 }
+		ai_will_do = { base = 1 }
 	}
 	FOP_Attract_Immigrants_Big = {
 		name = FOP_Attract_Immigrants_decision
 		icon = generic_political_discourse
 		allowed = { always = no }				# Activated by effect FOP_increase_popular_support
+		available = {
+			has_stability > 0.4
+			has_war = no
+		}
 		fire_only_once = no
 		days_re_enable = 365
 		cost = 40
+		target_non_existing = yes
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision FOP_Attract_Immigrants_Big"
 			add_to_variable = { var = fop_im_factor value = 20 }
 			custom_effect_tooltip = IMMI_20
+			### Immigration modifier update
+			add_to_variable = { var = var_ARG_immigration_modifier_buff value = 0.01 }
+			add_to_variable = { var = var_ARG_immigration_modifier_debuff value = -0.005 }
+			clamp_variable = { var = var_ARG_immigration_modifier_buff min = 0 max = 0.30 }
+			clamp_variable = { var = var_ARG_immigration_modifier_debuff min = -0.15 max = 0 }
 		}
 
-		ai_will_do = { factor = 5 }
+		ai_will_do = { base = 1 }
 	}
 }
 FOP_resource_exploitation_decisions = {
@@ -354,17 +585,16 @@ FOP_resource_exploitation_decisions = {
 		visible = { owns_state = FROM }
 
 		modifier = {
-			political_power_gain = -0.05
+			political_power_gain = -0.15
 			consumer_goods_factor = 0.05
 		}
 
-		cost = 25
-		days_remove = 56
+		days_remove = 100
 		fire_only_once = yes
 		state_target = yes
 
 		ai_will_do = {
-			factor = 10
+			base = 50
 		}
 
 		complete_effect = {
@@ -391,17 +621,16 @@ FOP_resource_exploitation_decisions = {
 		visible = { owns_state = FROM }
 
 		modifier = {
-			political_power_gain = -0.05
+			political_power_gain = -0.15
 			consumer_goods_factor = 0.05
 		}
 
-		cost = 25
-		days_remove = 56
+		days_remove = 100
 		fire_only_once = yes
 		state_target = yes
 
 		ai_will_do = {
-			factor = 10
+			base = 50
 		}
 
 		complete_effect = {
@@ -428,17 +657,16 @@ FOP_resource_exploitation_decisions = {
 		visible = { owns_state = FROM }
 
 		modifier = {
-			political_power_gain = -0.05
+			political_power_gain = -0.15
 			consumer_goods_factor = 0.05
 		}
 
-		cost = 30
-		days_remove = 56
+		days_remove = 100
 		fire_only_once = yes
 		state_target = yes
 
 		ai_will_do = {
-			factor = 10
+			base = 50
 		}
 
 		complete_effect = {
@@ -451,7 +679,7 @@ FOP_resource_exploitation_decisions = {
 			1029 = {
 				add_resource = {
 					type = oil
-					amount = 6
+					amount = 3
 				}
 			}
 			add_manpower = 150
@@ -465,17 +693,16 @@ FOP_resource_exploitation_decisions = {
 		visible = { owns_state = FROM }
 
 		modifier = {
-			political_power_gain = -0.05
+			political_power_gain = -0.15
 			consumer_goods_factor = 0.05
 		}
 
-		cost = 30
-		days_remove = 56
+		days_remove = 100
 		fire_only_once = yes
 		state_target = yes
 
 		ai_will_do = {
-			factor = 10
+			factor = 50
 		}
 
 		complete_effect = {
@@ -489,7 +716,7 @@ FOP_resource_exploitation_decisions = {
 			1029 = {
 				add_resource = {
 					type = oil
-					amount = 6
+					amount = 3
 				}
 			}
 			add_manpower = 150
@@ -510,16 +737,15 @@ FOP_resource_exploitation_decisions = {
 		}
 
 		modifier = {
-			political_power_gain = -0.05
+			political_power_gain = -0.15
 			consumer_goods_factor = 0.05
 		}
 
-		cost = 40
-		days_remove = 50
+		days_remove = 100
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 10
+			factor = 50
 		}
 
 		complete_effect = {
@@ -532,13 +758,13 @@ FOP_resource_exploitation_decisions = {
 			512 = {
 				add_resource = {
 					type = steel
-					amount = 4
+					amount = 3
 				}
 			}
 			1029 = {
 				add_resource = {
 					type = oil
-					amount = 6
+					amount = 2
 				}
 			}
 			add_manpower = 200
@@ -557,11 +783,11 @@ FOP_anti_syndie_rebellion_decisions = {
 			has_war_support > 0.05
 		}
 
-		days_remove = 90
+		days_remove = 120
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 100
+			base = 1000
 		}
 
 		complete_effect = {
@@ -586,11 +812,11 @@ FOP_anti_syndie_rebellion_decisions = {
 			has_war_support > 0.05
 		}
 
-		days_remove = 90
+		days_remove = 120
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 100
+			base = 1000
 		}
 
 		complete_effect = {
@@ -615,11 +841,11 @@ FOP_anti_syndie_rebellion_decisions = {
 			has_war_support > 0.05
 		}
 
-		days_remove = 90
+		days_remove = 120
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 100
+			base = 1000
 		}
 
 		complete_effect = {
@@ -644,11 +870,11 @@ FOP_anti_syndie_rebellion_decisions = {
 			has_war_support > 0.05
 		}
 
-		days_remove = 90
+		days_remove = 120
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 100
+			base = 1000
 		}
 
 		complete_effect = {
@@ -673,19 +899,19 @@ FOP_economic_crisis_decisions = {
 		custom_cost_trigger = {
 			if = {
 				limit = { has_dlc = "Waking the Tiger" }
-				num_of_civilian_factories_available_for_projects > 4
+				num_of_civilian_factories_available_for_projects > 3
 			}
 		}
 
-		days_remove = 90
+		days_remove = 120
 		fire_only_once = yes
 
 		modifier = {
-			civilian_factory_use = 5
+			civilian_factory_use = 4
 		}
 
 		ai_will_do = {
-			factor = 100
+			base = 1000
 		}
 
 		complete_effect = {
@@ -705,19 +931,19 @@ FOP_economic_crisis_decisions = {
 		custom_cost_trigger = {
 			if = {
 				limit = { has_dlc = "Waking the Tiger" }
-				num_of_civilian_factories_available_for_projects > 4
+				num_of_civilian_factories_available_for_projects > 3
 			}
 		}
 
-		days_remove = 90
+		days_remove = 120
 		fire_only_once = yes
 
 		modifier = {
-			civilian_factory_use = 5
+			civilian_factory_use = 4
 		}
 
 		ai_will_do = {
-			factor = 100
+			base = 1000
 		}
 
 		complete_effect = {
@@ -737,19 +963,19 @@ FOP_economic_crisis_decisions = {
 		custom_cost_trigger = {
 			if = {
 				limit = { has_dlc = "Waking the Tiger" }
-				num_of_civilian_factories_available_for_projects > 4
+				num_of_civilian_factories_available_for_projects > 3
 			}
 		}
 
-		days_remove = 90
+		days_remove = 120
 		fire_only_once = yes
 
 		modifier = {
-			civilian_factory_use = 5
+			civilian_factory_use = 4
 		}
 
 		ai_will_do = {
-			factor = 100
+			base = 1000
 		}
 
 		complete_effect = {
@@ -769,19 +995,19 @@ FOP_economic_crisis_decisions = {
 		custom_cost_trigger = {
 			if = {
 				limit = { has_dlc = "Waking the Tiger" }
-				num_of_civilian_factories_available_for_projects > 4
+				num_of_civilian_factories_available_for_projects > 3
 			}
 		}
 
-		days_remove = 90
+		days_remove = 120
 		fire_only_once = yes
 
 		modifier = {
-			civilian_factory_use = 5
+			civilian_factory_use = 4
 		}
 
 		ai_will_do = {
-			factor = 100
+			base = 1000
 		}
 
 		complete_effect = {
@@ -800,11 +1026,11 @@ FOP_administrative_chaos_decisions = {
 		icon = generic_civil_support
 		allowed = { always = no }				# Activated by focus FOP_expand_the_bureacracy_to_the_north
 		cost = 40
-		days_remove = 95
+		days_remove = 120
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 1000
+			base = 1000
 		}
 
 		remove_effect = {
@@ -816,11 +1042,11 @@ FOP_administrative_chaos_decisions = {
 		icon = eng_trade_unions_support
 		allowed = { always = no }				# Activated by focus FOP_expand_the_bureacracy_to_the_north
 		cost = 40
-		days_remove = 95
+		days_remove = 120
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 1000
+			base = 1000
 		}
 
 		remove_effect = {
@@ -832,11 +1058,11 @@ FOP_administrative_chaos_decisions = {
 		icon = generic_construction
 		allowed = { always = no }				# Activated by focus FOP_expand_the_bureacracy_to_the_north
 		cost = 40
-		days_remove = 95
+		days_remove = 120
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 1000
+			base = 1000
 		}
 
 		remove_effect = {
@@ -848,11 +1074,11 @@ FOP_administrative_chaos_decisions = {
 		icon = eng_trade_unions_demand
 		allowed = { always = no }				# Activated by focus FOP_expand_the_bureacracy_to_the_north
 		cost = 40
-		days_remove = 95
+		days_remove = 120
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 1000
+			base = 1000
 		}
 
 		remove_effect = {
@@ -887,13 +1113,6 @@ FOP_Andesian_formation_decisions = {
 		}
 
 		targets = { COL VEN ECU PRU BOL CHL PAR URG }
-		target_root_trigger = {
-			is_ai = no
-			OR = {
-				NOT = { country_exists = FRA }
-				NOT = { country_exists = GER }
-			}
-		}
 		target_trigger = {
 			is_neighbor_of = FROM
 			OR = {
@@ -905,7 +1124,7 @@ FOP_Andesian_formation_decisions = {
 			}
 		}
 
-		cost = 0
+		cost = 20
 		days_remove = 30
 		fire_only_once = yes
 		war_with_target_on_remove = yes
@@ -934,9 +1153,13 @@ FOP_Andesian_formation_decisions = {
 			}
 		}
 
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled FOP_attack_country target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision FOP_attack_country target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 35 value = 1 }
 			if = {
 				limit = {
 					is_faction_leader = yes
@@ -978,7 +1201,6 @@ FOP_Andesian_formation_decisions = {
 			}
 		}
 	}
-
 	FOP_integrate_country = {
 		icon = eng_trade_unions_support
 
@@ -990,25 +1212,14 @@ FOP_Andesian_formation_decisions = {
 
 		visible = {
 			has_subject = FROM
-			OR = {
-				NOT = { country_exists = FRA }
-				NOT = { country_exists = GER }
-			}
 		}
 
 		targets = { COL VEN ECU PRU BOL CHL PAR URG }
-		target_root_trigger = {
-			is_ai = no
-			OR = {
-				NOT = { country_exists = FRA }
-				NOT = { country_exists = GER }
-			}
-		}
 		target_trigger = {
 			FROM = { is_subject_of = ROOT }
 		}
 
-		cost = 0
+		cost = 20
 		fire_only_once = yes
 
 		ai_will_do = {
@@ -1035,27 +1246,22 @@ FOP_Andesian_formation_decisions = {
 			}
 		}
 	}
-
 	FOP_declare_Andesia = {
 		icon = generic_nationalism
 
 		available = {
 			has_war = no
+			279 = { is_owned_and_controlled_by = ROOT }
+			300 = { is_owned_and_controlled_by = ROOT }
+			301 = { is_owned_and_controlled_by = ROOT }
+			302 = { is_owned_and_controlled_by = ROOT }
+			303 = { is_owned_and_controlled_by = ROOT }
+			305 = { is_owned_and_controlled_by = ROOT }
+			306 = { is_owned_and_controlled_by = ROOT }
+			307 = { is_owned_and_controlled_by = ROOT }
 			custom_trigger_tooltip = {
-				tooltip = FOP_weltkrieg_is_over
-				OR = {
-					NOT = { country_exists = FRA }
-					NOT = { country_exists = GER }
-				}
+				tooltip = FOP_AND_declare_andesia_tt
 			}
-			owns_state = 279
-			owns_state = 300
-			owns_state = 301
-			owns_state = 302
-			owns_state = 303
-			owns_state = 305
-			owns_state = 306
-			owns_state = 307
 		}
 
 		cost = 0
@@ -1068,11 +1274,13 @@ FOP_Andesian_formation_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision FOP_declare_Andesia"
 			set_cosmetic_tag = FOP_AND
-			add_timed_idea = {
-				idea = FOP_resistance_to_andesia
-				days = 3650
-			}
+			mark_focus_tree_layout_dirty = yes
+			complete_national_focus = FOP_AND_andesia_declared
+			custom_effect_tooltip = tooltip_white_line
+			add_ideas = FOP_resistance_to_andesia_political
+			add_ideas = FOP_resistance_to_andesia_economical
 			hidden_effect = {
+				country_event = fop.500
 				every_state = {
 					limit = {
 						is_on_continent = south_america
@@ -1086,6 +1294,246 @@ FOP_Andesian_formation_decisions = {
 					set_variable = { ambition_area_@ROOT = 1 }
 					add_claim_by = ROOT
 					set_state_flag = FOP_andesian_claim
+				}
+			}
+		}
+	}
+	FOP_AND_liberate_south_america = {
+		name = FOP_AND_invade_target
+		icon = hol_draw_up_staff_plans
+
+		visible = {
+			can_declare_war_on = FROM
+		}
+
+		target_array = global.south_american_tags_array
+		target_root_trigger = {
+			has_completed_focus = FOP_AND_liberate_south_america
+		}
+		target_trigger = {
+			can_declare_war_on = FROM
+		}
+
+		cost = 10
+		days_remove = 30
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
+
+		ai_will_do = {
+			factor = 20
+			modifier = {
+				factor = 0
+				OR = {
+					ROOT_is_threatened_cautious = yes
+					FROM = { default_attack_AI_trigger_FROM = yes }
+				}
+			}
+		}
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled FOP_AND_liberate_south_america target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_AND_liberate_south_america target: [From.GetName]"
+			FROM = { country_event = kr.political.30 } #warning event
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_AND_liberate_south_america target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			declare_war_on = {
+				target = FROM
+				type = puppet_wargoal_focus
+			}
+			if = {
+				limit = { FROM = { has_socialist_government = yes }}
+				custom_effect_tooltip = FOP_AND_liberate_attacking_socialists_tt
+				add_stability = -0.05
+				add_war_support = -0.05
+				every_owned_state = {
+					limit = {
+						is_controlled_by = ROOT
+						has_state_flag = FOP_andesian_claim
+						NOT = { is_core_of = ROOT }
+					}
+					add_resistance = 7.5
+				}
+			}
+		}
+	}
+	FOP_AND_liberate_central_america = {
+		name = FOP_AND_invade_target
+		icon = hol_draw_up_staff_plans
+
+		visible = {
+			can_declare_war_on = FROM
+		}
+
+		target_array = global.central_american_tags_array
+		target_root_trigger = {
+			has_completed_focus = FOP_AND_liberate_central_america
+		}
+		target_trigger = {
+			can_declare_war_on = FROM
+		}
+
+		cost = 10
+		days_remove = 30
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
+
+		ai_will_do = {
+			factor = 20
+			modifier = {
+				factor = 0
+				OR = {
+					ROOT_is_threatened_cautious = yes
+					FROM = { default_attack_AI_trigger_FROM = yes }
+				}
+			}
+		}
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled FOP_AND_liberate_central_america target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_AND_liberate_central_america target: [From.GetName]"
+			FROM = { country_event = kr.political.30 } #warning event
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_AND_liberate_central_america target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			declare_war_on = {
+				target = FROM
+				type = puppet_wargoal_focus
+			}
+			if = {
+				limit = { FROM = { has_socialist_government = yes }}
+				custom_effect_tooltip = FOP_AND_liberate_attacking_socialists_tt
+				add_stability = -0.05
+				add_war_support = -0.05
+				every_owned_state = {
+					limit = {
+						is_controlled_by = ROOT
+						has_state_flag = FOP_andesian_claim
+						NOT = { is_core_of = ROOT }
+					}
+					add_resistance = 7.5
+				}
+			}
+		}
+	}
+	FOP_AND_liberate_north_america = {
+		name = FOP_AND_invade_target
+		icon = hol_draw_up_staff_plans
+
+		visible = {
+			can_declare_war_on = FROM
+		}
+
+		target_array = global.north_american_tags_array
+		target_root_trigger = {
+			has_completed_focus = FOP_AND_liberate_north_america
+		}
+		target_trigger = {
+			can_declare_war_on = FROM
+		}
+
+		cost = 10
+		days_remove = 30
+		fire_only_once = yes
+		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
+
+		ai_will_do = {
+			factor = 20
+			modifier = {
+				factor = 0
+				OR = {
+					ROOT_is_threatened_cautious = yes
+					FROM = { default_attack_AI_trigger_FROM = yes }
+				}
+			}
+		}
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled FOP_AND_liberate_north_america target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_AND_liberate_north_america target: [From.GetName]"
+			FROM = { country_event = kr.political.30 } #warning event
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_AND_liberate_north_america target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			declare_war_on = {
+				target = FROM
+				type = puppet_wargoal_focus
+			}
+			if = {
+				limit = { FROM = { has_socialist_government = yes }}
+				custom_effect_tooltip = FOP_AND_liberate_attacking_socialists_tt
+				add_stability = -0.05
+				add_war_support = -0.05
+				every_owned_state = {
+					limit = {
+						is_controlled_by = ROOT
+						has_state_flag = FOP_andesian_claim
+						NOT = { is_core_of = ROOT }
+					}
+					add_resistance = 7.5
+				}
+			}
+		}
+	}
+	FOP_AND_integrate_new_state = {
+		icon = GFX_decision_eng_trade_unions_demand
+		allowed = { always = no }
+		visible = {
+			FROM = {
+				is_owned_by = ROOT
+				NOT = { is_core_of = ROOT }
+			}
+		}
+
+		available = {
+			FROM = {
+				is_fully_controlled_by = ROOT
+				compliance > 80
+				resistance < 10
+			}
+		}
+
+		cost = 20
+		days_remove = 150
+		fire_only_once = yes
+		state_target = yes
+
+		ai_will_do = {
+			factor = 1000
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_AND_integrate_new_state target: [From.GetName]"
+			FROM = {
+				add_state_modifier = {
+					modifier = {
+						local_building_slots_factor = 0.50
+						local_non_core_manpower = 0.10
+					}
 				}
 			}
 		}
@@ -1109,12 +1557,12 @@ FOP_core_Argentina_decisions = {
 
 		state_target = yes
 		cost = 75
-		days_remove = 50
+		days_remove = 210
 		on_map_mode = map_only
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 1000
+			base = 1000
 			modifier = {
 				add = FROM.state_strategic_value
 			}
@@ -1140,12 +1588,12 @@ FOP_core_Argentina_decisions = {
 
 		state_target = yes
 		cost = 50
-		days_remove = 50
+		days_remove = 150
 		on_map_mode = map_only
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 1000
+			base = 1000
 			modifier = {
 				add = FROM.state_strategic_value
 			}
@@ -1171,12 +1619,12 @@ FOP_core_Argentina_decisions = {
 
 		state_target = yes
 		cost = 25
-		days_remove = 50
+		days_remove = 120
 		on_map_mode = map_only
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 1000
+			base = 1000
 			modifier = {
 				add = FROM.state_strategic_value
 			}
@@ -1197,7 +1645,6 @@ FOP_strike_reactionaries_decisions = {
 		visible = {
 			can_declare_war_on = FROM
 			FROM = { has_socialist_government = no }
-			NOT = { has_completed_focus = FOP_the_socialist_party_moderates }
 		}
 
 		targets = { BRA URG PAR CHL }
@@ -1213,42 +1660,29 @@ FOP_strike_reactionaries_decisions = {
 		}
 
 		cost = 40
-		days_remove = 30
+		days_remove = 40
 		fire_only_once = yes
 		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
 
 		ai_will_do = {
-			factor = 50
+			base = 100
 			modifier = {
 				factor = 0
-				ROOT_is_threatened = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes }
+				OR = {
+					ROOT_is_threatened_cautious = yes
+					FROM = { dont_start_major_faction_wars = yes }
+					FROM = { default_attack_AI_trigger_FROM = yes }
+				}
 			}
 		}
 		cancel_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision cancelled FOP_strike_reactionary_country target: [From.GetName]"
 			add_political_power = 40
-			clr_country_flag = imminent_war
 			clear_decision_attack_AI = yes
 		}
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision FOP_strike_reactionary_country target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 35 value = 1 }
 			FROM = { country_event = kr.political.30 } #warning event
 			setup_decision_attack_AI = yes
 			hidden_effect = {
@@ -1276,7 +1710,7 @@ FOP_infrastructure_decisions = { #The Trains shall run on time
 		icon = eng_trade_unions_demand
 		allowed = { always = no }				# Activated by focus FOP_rural_development
 		cost = 0
-		days_remove = 120
+		days_remove = 150
 		fire_only_once = yes
 
 		modifier = {
@@ -1285,9 +1719,7 @@ FOP_infrastructure_decisions = { #The Trains shall run on time
 			production_speed_infrastructure_factor = -0.10
 		}
 
-		ai_will_do = {
-			factor = 50
-		}
+		ai_will_do = { base = 2 }
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_nationalize_british_rails"
@@ -1307,7 +1739,7 @@ FOP_infrastructure_decisions = { #The Trains shall run on time
 		icon = eng_trade_unions_demand
 		allowed = { always = no }				# Activated by focus FOP_rural_development
 		cost = 0
-		days_remove = 120
+		days_remove = 150
 		fire_only_once = yes
 
 		modifier = {
@@ -1316,9 +1748,7 @@ FOP_infrastructure_decisions = { #The Trains shall run on time
 			production_speed_infrastructure_factor = -0.10
 		}
 
-		ai_will_do = {
-			factor = 50
-		}
+		ai_will_do = { base = 2 }
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_nationalize_german_rails"
@@ -1334,135 +1764,6 @@ FOP_infrastructure_decisions = { #The Trains shall run on time
 			}
 		}
 	}
-	FOP_Develop_Rails = {
-		icon = GFX_decision_train
-		allowed = { always = no }				# Activated by focus FOP_rural_development
-		available = {
-			controls_state = FROM
-			if = {
-				limit = { has_dlc = "Waking the Tiger" }
-				num_of_civilian_factories_available_for_projects > 1
-			}
-			if = {
-				limit = {
-					FROM = {
-						OR = {
-							state = 902 #Cordoba
-							state = 511 #Mendoza
-							state = 449 #La Pampa
-							state = 510 #La Mesopotamia
-						}
-					}
-				}
-				custom_trigger_tooltip = {
-					tooltip = FOP_developed_rails_buenos_aires
-					278 = { has_state_flag = FOP_developed_rails }
-				}
-			}
-			else_if = {
-				limit = {
-					FROM = {
-						OR = {
-							state = 509 #Santiago del Estero
-							state = 904 #Rioja
-						}
-					}
-				}
-				custom_trigger_tooltip = {
-					tooltip = FOP_developed_rails_cordoba
-					902 = { has_state_flag = FOP_developed_rails }
-				}
-			}
-			else_if = {
-				limit = {
-					FROM = {
-						OR = {
-							state = 901 #Chaco Austral
-							state = 903 #Jujuy
-							state = 508 #Tucuman
-						}
-					}
-				}
-				custom_trigger_tooltip = {
-					tooltip = FOP_developed_rails_santiago_del_estero
-					509 = { has_state_flag = FOP_developed_rails }
-				}
-			}
-			else_if = {
-				limit = {
-					FROM = {
-						OR = {
-							state = 579 #Neuquen
-							state = 512 #Chubut
-						}
-					}
-				}
-				custom_trigger_tooltip = {
-					tooltip = FOP_developed_rails_la_pampa
-					449 = { has_state_flag = FOP_developed_rails }
-				}
-			}
-			else_if = {
-				limit = {
-					FROM = { state = 1074 } #Misiones
-				}
-				custom_trigger_tooltip = {
-					tooltip = FOP_developed_rails_entre_rios
-					510 = { has_state_flag = FOP_developed_rails }
-				}
-			}
-			else_if = {
-				limit = {
-					FROM = { state = 1029 } #Santa Cruz
-				}
-				custom_trigger_tooltip = {
-					tooltip = FOP_developed_rails_chubut
-					512 = { has_state_flag = FOP_developed_rails }
-				}
-			}
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		state_target = yes
-		custom_cost_text = FOP_develop_rails_cost
-		custom_cost_trigger = {
-			has_manpower > 1000
-		}
-
-		days_remove = 90
-		fire_only_once = yes
-		on_map_mode = map_only
-
-		modifier = {
-			civilian_factory_use = 2
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision FOP_Develop_Rails target: [From.GetName]"
-			FOP_add_non_dlc_costs = yes
-			hidden_effect = { add_manpower = -1000 }
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_Develop_Rails target: [From.GetName]"
-			add_manpower = 800
-			FROM = {
-				set_state_flag = FOP_developed_rails
-				increase_state_category_by_one_level = yes
-				add_building_construction = {
-					type = infrastructure
-					level = 1
-					instant_build = yes
-				}
-			}
-		}
-		ai_will_do = {
-			factor = 100
-		}
-	}
 }
 
 ### Industrial Decisions
@@ -1470,16 +1771,18 @@ FOP_industrial_expansion_decisions = {
 	FOP_civs_for_state = {
 		icon = GFX_decision_factories
 		allowed = { always = no }				# Activated by focus FOP_urban_development
-		available = {
-			controls_state = FROM
-		}
 
 		visible = {
 			owns_state = FROM
-			NOT = { has_variable = FROM.FOP_industrial_expansion }
-			has_completed_focus = FOP_urban_development
-			FOP_has_economic_fallout = no
-			FOP_has_resistance_to_socialism = no
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			FROM = { is_controlled_by = ROOT }
+		}
+
+		modifier = {
+			civilian_factory_use = 3
 		}
 
 		on_map_mode = map_and_decisions_view
@@ -1495,12 +1798,10 @@ FOP_industrial_expansion_decisions = {
 
 		cancel_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision cancelled FOP_civs_for_state target: [From.GetName]"
-			clear_variable = FROM.FOP_industrial_expansion
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision FOP_civs_for_state target: [From.GetName]"
-			set_variable = { FROM.FOP_industrial_expansion = 1 }
 		}
 
 		remove_effect = {
@@ -1515,43 +1816,38 @@ FOP_industrial_expansion_decisions = {
 			}
 		}
 
-		ai_will_do = {
-			factor = 750
-		}
+		ai_will_do = { base = 40 }
 	}
 	FOP_socialist_civs_for_state = {
 		icon = GFX_decision_generic_factory
 		allowed = { always = no }				# Activated by effect FOP_initialize_development_scheme_decisions
-		available = {
-			controls_state = FROM
-		}
 
 		visible = {
 			owns_state = FROM
-			NOT = { has_variable = FROM.FOP_economic_plan_expansion }
-			FOP_has_economic_fallout = no
-			FOP_has_resistance_to_socialism = no
+		}
+
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+			FROM = { is_controlled_by = ROOT }
+		}
+
+		modifier = {
+			civilian_factory_use = 3
 		}
 
 		on_map_mode = map_and_decisions_view
 		cost = 40
 		days_remove = 120
 		fire_only_once = yes
-
+		cancel_if_not_visible = yes
 		state_target = yes
-
-		cancel_trigger = {
-			NOT = { controls_state = FROM }
-		}
 
 		cancel_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision cancelled FOP_socialist_civs_for_state target: [From.GetName]"
-			clear_variable = FROM.FOP_economic_plan_expansion
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision FOP_socialist_civs_for_state target: [From.GetName]"
-			set_variable = { FROM.FOP_economic_plan_expansion = 1 }
 		}
 
 		remove_effect = {
@@ -1569,8 +1865,8 @@ FOP_industrial_expansion_decisions = {
 						FROM = {
 							OR = {
 								state = 278 #Buenos Aires
+								state = 510 #La Mesopotamia
 								state = 512 #Chubut
-								state = 1029 #Santa Cruz
 							}
 						}
 					}
@@ -1612,8 +1908,8 @@ FOP_industrial_expansion_decisions = {
 						FROM = {
 							OR = {
 								state = 278 #Buenos Aires
+								state = 510 #La Mesopotamia
 								state = 512 #Chubut
-								state = 1029 #Santa Cruz
 							}
 						}
 					}
@@ -1644,18 +1940,16 @@ FOP_industrial_expansion_decisions = {
 			}
 		}
 
-		ai_will_do = {
-			factor = 750
-		}
+		ai_will_do = { base = 40 }
 	}
 }
 
 FOP_sabotage_decisions_category = {
-	FOP_sabotage_decision = {
-		icon = generic_operation
+	FOP_infiltrate_state_decision = {
+		icon = GFX_decision_infiltrate_state
 		allowed = { always = no }				# Activated by focus FOP_strike_the_railroads
 		available = {
-			NOT = { has_country_flag = FOP_sabotage_ongoing }
+			NOT = { has_country_flag = FOP_infiltration_ongoing }
 		}
 
 		visible = {
@@ -1664,10 +1958,9 @@ FOP_sabotage_decisions_category = {
 		}
 
 		cost = 0
-		days_remove = 35
+		days_remove = 21
 		fire_only_once = yes
 		fixed_random_seed = no
-		on_map_mode = map_only
 
 		state_target = yes
 		ai_will_do = {
@@ -1675,29 +1968,115 @@ FOP_sabotage_decisions_category = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision FOP_sabotage_decision target: [From.GetName]"
-			set_country_flag = { flag = FOP_sabotage_ongoing days = 35 value = 1 }
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_infiltrate_state_decision target: [From.GetName]"
+			set_country_flag = { flag = FOP_infiltration_ongoing days = 21 value = 1 }
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_sabotage_decision target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_infiltrate_state_decision target: [From.GetName]"
 			random_list = {
-				80 = {
-					modifier = {
-						add = -75
-						FROM = { state = 278 } #Buenos Aires
-					}
-					FROM = { set_state_flag = FOP_sabotage_successful }
-					country_event = fop.350
-					add_to_variable = { FOP_sabotaged_states = 1 }
+				40 = {
+					FOP = { country_event = fop.350 }
+					activate_targeted_decision = { target = FROM decision = FOP_sabotage_railways_decision }
+					activate_targeted_decision = { target = FROM decision = FOP_prepare_resistance_decision }
 				}
 				20 = {
+					modifier = {
+						factor = 2
+						ARG = { has_completed_focus = ARG_Create_Espionage_Agency }
+					}
 					country_event = fop.351
+					hidden_effect = {
+						ARG = { country_event = { id = fop.353 random_days = 5 random_hours = 24 }}
+					}
 				}
 			}
 		}
 	}
-	FOP_resistance_decision = {
+
+	FOP_sabotage_railways_decision = {
+		icon = GFX_decision_onmap_recruit_operative
+		allowed = { always = no }				# Activated by focus FOP_strike_the_railroads
+		available = {
+			NOT = { has_country_flag = FOP_sabotage_ongoing }
+		}
+
+		visible = {
+			has_completed_focus = FOP_strike_the_railroads
+			FROM = { is_owned_and_controlled_by = ARG }
+			NOT = { has_war_with = ARG }
+		}
+
+		cost = 0
+		days_remove = 30
+		fire_only_once = yes
+		fixed_random_seed = no
+
+		state_target = yes
+		ai_will_do = {
+			factor = 50
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_sabotage_railways_decision target: [From.GetName]"
+			set_country_flag = { flag = FOP_sabotage_ongoing days = 30 value = 1 }
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_sabotage_railways_decision target: [From.GetName]"
+			FROM = { set_state_flag = FOP_sabotage_successful }
+			add_to_variable = { FOP_railways_sabotaged_states = 1 }
+			custom_effect_tooltip = FOP_sabotage_trains_effect_tooltip
+		}
+	}
+	FOP_enact_railways_sabotage = {
+		icon = GFX_decision_generic_ignite_civil_war
+		allowed = { always = no }				# Activated by focus FOP_strike_the_railroads
+		available = {
+			has_war_with = FROM
+			custom_trigger_tooltip = {
+				tooltip = FOP_sabotage_success_tooltip
+				check_variable = { FOP_railways_sabotaged_states > 0 }
+			}
+		}
+
+		cost = 0
+		fire_only_once = yes
+
+		ai_will_do = {
+			factor = 100
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_enact_railways_sabotage target: [From.GetName]"
+			FROM = {
+				country_event = fop.352
+				effect_tooltip = {
+					every_owned_state = {
+						limit = { has_state_flag = FOP_sabotage_successful }
+						if = {
+							limit = { rail_way > 0 }
+							if = {
+								limit = { ARG = { has_completed_focus = ARG_Create_Espionage_Agency } }
+								damage_building = {
+									type = rail_way
+									damage = 0.4
+								}
+							}
+							else = {
+								damage_building = {
+									type = rail_way
+									damage = 0.5
+								}
+							}
+						}
+						clr_state_flag = FOP_sabotage_successful
+					}
+				}
+			}
+		}
+	}
+	FOP_prepare_resistance_decision = {
 		icon = generic_operation
 		allowed = { always = no }				# Activated by focus FOP_infiltrator_cells
 		available = {
@@ -1705,15 +2084,15 @@ FOP_sabotage_decisions_category = {
 		}
 
 		visible = {
+			has_completed_focus = FOP_infiltrator_cells
 			FROM = { is_owned_and_controlled_by = ARG }
 			NOT = { has_war_with = ARG }
 		}
 
 		cost = 0
-		days_remove = 35
+		days_remove = 30
 		fire_only_once = yes
 		fixed_random_seed = no
-		on_map_mode = map_only
 		state_target = yes
 
 		ai_will_do = {
@@ -1721,78 +2100,28 @@ FOP_sabotage_decisions_category = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision FOP_resistance_decision target: [From.GetName]"
-			set_country_flag = { flag = FOP_resistance_ongoing days = 35 value = 1 }
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_prepare_resistance_decision target: [From.GetName]"
+			set_country_flag = { flag = FOP_resistance_ongoing days = 30 value = 1 }
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_resistance_decision target: [From.GetName]"
-			random_list = {
-				80 = {
-					modifier = {
-						add = -75
-						FROM = { state = 278 } #Buenos Aires
-					}
-					FROM = { set_state_flag = FOP_resistance_successful }
-					country_event = fop.353
-					add_to_variable = { FOP_resistance_states = 1 }
-				}
-				20 = {
-					country_event = fop.354
-				}
-			}
+			log = "[GetDateText]: [Root.GetName]: Decision remove FOP_prepare_resistance_decision target: [From.GetName]"
+			FROM = { set_state_flag = FOP_resistance_successful }
+			add_to_variable = { FOP_resistance_states = 1 }
+			custom_effect_tooltip = FOP_infiltrator_cells_effect_tooltip
 		}
 	}
-	FOP_enact_sabotage = {
+	FOP_enact_resistance_decision = {
 		icon = generic_operation
 		allowed = { always = no }				# Activated by focus FOP_infiltrating_the_north
 		available = {
-			custom_trigger_tooltip = {
-				tooltip = FOP_sabotage_success_tooltip
-				check_variable = { FOP_sabotaged_states > 0 }
-			}
-		}
-
-		visible = {
 			has_war_with = FROM
-		}
-
-		cost = 0
-		fire_only_once = yes
-
-		ai_will_do = {
-			factor = 100
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision FOP_enact_sabotage target: [From.GetName]"
-			FROM = {
-				country_event = fop.352
-				every_owned_state = {
-					limit = { has_state_flag = FOP_sabotage_successful }
-					add_dynamic_modifier = {
-						modifier = FOP_sabotage_modifier
-						days = 35
-					}
-					clr_state_flag = FOP_sabotage_successful
-				}
-			}
-		}
-	}
-	FOP_call_rebels = {
-		icon = generic_operation
-		allowed = { always = no }				# Activated by focus FOP_infiltrating_the_north
-		available = {
 			custom_trigger_tooltip = {
 				tooltip = FOP_resistance_success_tooltip
 				check_variable = { FOP_resistance_states > 0 }
 			}
 		}
 
-		visible = {
-			has_war_with = FROM
-		}
-
 		cost = 0
 		fire_only_once = yes
 
@@ -1801,7 +2130,7 @@ FOP_sabotage_decisions_category = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision FOP_call_rebels target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision FOP_enact_resistance_decision target: [From.GetName]"
 			FROM = {
 				country_event = fop.355
 				effect_tooltip = {
@@ -1809,11 +2138,43 @@ FOP_sabotage_decisions_category = {
 						limit = { has_state_flag = FOP_resistance_successful }
 						add_dynamic_modifier = {
 							modifier = FOP_resistance_modifier
-							days = 30
+							days = 40
 						}
+						if = {
+							limit = { industrial_complex > 0 }
+							if = {
+								limit = { ARG = { has_completed_focus = ARG_Create_Espionage_Agency } }
+								damage_building = {
+									type = industrial_complex
+									damage = 0.4
+								}
+							}
+							else = {
+								damage_building = {
+									type = industrial_complex
+									damage = 0.6
+								}
+							}
+						}
+						if = {
+							limit = { arms_factory > 0 }
+							if = {
+								limit = { ARG = { has_completed_focus = ARG_Create_Espionage_Agency } }
+								damage_building = {
+									type = arms_factory
+									damage = 0.4
+								}
+							}
+							else = {
+								damage_building = {
+									type = arms_factory
+									damage = 0.6
+								}
+							}
+						}
+						clr_state_flag = FOP_resistance_successful
 					}
 				}
-
 			}
 		}
 	}

@@ -62,13 +62,12 @@ NDefines.NDiplomacy.PEACE_SCORE_PER_PASS = 1.0								-- Vanilla is 0.2
 NDefines.NDiplomacy.PEACE_MIN_SCORE = 0.5									-- Vanilla is 0.3
 NDefines.NCountry.STATE_OCCUPATION_COST_MULTIPLIER = 0.10					-- Vanilla is 0.01
 
--- Air
-NDefines.NNavy.MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO = 0.75		-- Vanilla is 0.5
-
--- Air
-NDefines.NAir.NAVAL_STRIKE_DETECTION_BALANCE_FACTOR = 0.1					-- Vanilla is 0.7
-NDefines.NAir.NAVAL_STRIKE_DAMAGE_TO_STR = 1.0								-- Vanilla is 2.0
-NDefines.NAir.NAVAL_STRIKE_DAMAGE_TO_ORG = 1.25								-- Vanilla is 2.5
+-- Navy
+NDefines.NNavy.SUPREMACY_PER_SHIP_BASE = 75											-- Vanilla is 100
+NDefines.NNavy.MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO = 0.75				-- Vanilla is 0.5
+NDefines.NNavy.POSITIONING_PENALTY_FOR_SHIPS_JOINED_COMBAT_AFTER_IT_STARTS = 0.01	-- Vanilla is 0.05
+NDefines.NNavy.MAX_POSITIONING_PENALTY_FOR_NEWLY_JOINED_SHIPS = 0.025				-- Vanilla is 0.5
+NDefines.NNavy.POSITIONING_PENALTY_HOURLY_DECAY_FOR_NEWLY_JOINED_SHIPS = 0.05		-- Vanilla is 0.002
 
 -- Volunteers
 NDefines.NAI.SEND_VOLUNTEER_EVAL_BASE_DISTANCE = 1000.0  					-- Vanilla is 175.0
@@ -80,11 +79,7 @@ NDefines.NDiplomacy.VOLUNTEERS_PER_COUNTRY_ARMY = 0.025						-- Vanilla is 0.05
 -- Graphics
 NDefines.NGraphics.POLITICAL_GRID_SMALL_BOX_LIMIT = 12						-- Vanilla is 6
 NDefines.NGraphics.COUNTRY_FLAG_SMALL_TEX_WIDTH = 11						-- Vanilla is 10
-NDefines.NGraphics.COUNTRY_FLAG_TEX_MAX_SIZE = 2048							-- Vanilla is 256
-NDefines.NGraphics.COUNTRY_FLAG_SMALL_TEX_MAX_SIZE = 512					-- Vanilla is 64
 NDefines.NGraphics.COUNTRY_FLAG_STRIPE_TEX_MAX_WIDTH = 11					-- Vanilla is 10
-NDefines.NGraphics.COUNTRY_FLAG_STRIPE_TEX_MAX_HEIGHT = 8196				-- Vanilla is 2048
-NDefines.NGraphics.COUNTRY_FLAG_LARGE_STRIPE_MAX_HEIGHT = 26000				-- Vanilla is 8192 
 NDefines.NGraphics.VICTORY_POINT_MAP_ICON_TEXT_CUTOFF = {200, 350, 600}  	-- Vanilla is 100, 250, 500
 NDefines.NGraphics.VICTORY_POINTS_DISTANCE_CUTOFF = {300, 500, 1000} 		-- Vanilla is 300, 500, 1500
 
@@ -93,35 +88,37 @@ NDefines.NAI.RESEARCH_BONUS_FACTOR = 1.5									-- Vanilla is 0.9
 NDefines.NAI.MIN_AI_SCORE_TO_TRADE_LAW_OVERRIDE_HARD_CODED_SCORE = 0.0		-- Vanilla is 1000.0
 NDefines.NAI.XP_RATIO_REQUIRED_TO_RESEARCH_WITH_XP = 1.6					-- Vanilla is 2 - needed to make AI research naval techs with XP
 NDefines.NAI.RESEARCH_WITH_XP_AI_WEIGHT_MULT = 4.0							-- Vanilla is 1.2 - bigger prio for naval techs if can spend XP
- 
+
+NDefines.NAI.CALL_ALLY_NEUTRAL_DESIRE = 75									-- Vanilla is 25
+NDefines.NAI.JOIN_ALLY_NEUTRAL_DESIRE = 75									-- Vanilla is 25
+
 NDefines.NAI.FASCISTS_BEFRIEND_FASCISTS = 0									-- Vanilla is 10
 NDefines.NAI.FASCISTS_BEFRIEND_DEMOCRACIES = -25							-- Vanilla is -25
 NDefines.NAI.FASCISTS_BEFRIEND_COMMUNISTS = -25								-- Vanilla is -25
 NDefines.NAI.FASCISTS_ALLY_FASCISTS = 0										-- Vanilla is 0
-NDefines.NAI.FASCISTS_ALLY_DEMOCRACIES = -25								-- Vanilla is -100
-NDefines.NAI.FASCISTS_ALLY_COMMUNISTS = -50									-- Vanilla is -100
+NDefines.NAI.FASCISTS_ALLY_DEMOCRACIES = -100								-- Vanilla is -100
+NDefines.NAI.FASCISTS_ALLY_COMMUNISTS = -100								-- Vanilla is -100
 NDefines.NAI.FASCISTS_ANTAGONIZE_FASCISTS = -10								-- Vanilla is -10
 NDefines.NAI.FASCISTS_ANTAGONIZE_DEMOCRACIES = 10							-- Vanilla is 100
-NDefines.NAI.FASCISTS_ANTAGONIZE_COMMUNISTS = 50							-- Vanilla is 100
-NDefines.NAI.DEMOCRACIES_BEFRIEND_FASCISTS = -10							-- Vanilla is -25
+NDefines.NAI.FASCISTS_ANTAGONIZE_COMMUNISTS = 100							-- Vanilla is 100
+NDefines.NAI.DEMOCRACIES_BEFRIEND_FASCISTS = -25							-- Vanilla is -25
 NDefines.NAI.DEMOCRACIES_BEFRIEND_DEMOCRACIES = 0							-- Vanilla is 0
-NDefines.NAI.DEMOCRACIES_BEFRIEND_COMMUNISTS = -10							-- Vanilla is -25
+NDefines.NAI.DEMOCRACIES_BEFRIEND_COMMUNISTS = -25							-- Vanilla is -25
 NDefines.NAI.DEMOCRACIES_ALLY_FASCISTS = -50								-- Vanilla is -50
 NDefines.NAI.DEMOCRACIES_ALLY_DEMOCRACIES = 0								-- Vanilla is 0
 NDefines.NAI.DEMOCRACIES_ALLY_COMMUNISTS = -50								-- Vanilla is -50
 NDefines.NAI.DEMOCRACIES_ANTAGONIZE_FASCISTS = 0							-- Vanilla is 0
-NDefines.NAI.DEMOCRACIES_ANTAGONIZE_DEMOCRACIES = -10						-- Vanilla is -25
+NDefines.NAI.DEMOCRACIES_ANTAGONIZE_DEMOCRACIES = -25						-- Vanilla is -25
 NDefines.NAI.DEMOCRACIES_ANTAGONIZE_COMMUNISTS = 0							-- Vanilla is 0
 NDefines.NAI.COMMUNISTS_BEFRIEND_FASCISTS = -25								-- Vanilla is -25
-NDefines.NAI.COMMUNISTS_BEFRIEND_DEMOCRACIES = -10							-- Vanilla is -25
-NDefines.NAI.COMMUNISTS_BEFRIEND_COMMUNISTS = 25							-- Vanilla is 25
-NDefines.NAI.COMMUNISTS_ALLY_FASCISTS = -50									-- Vanilla is -100
-NDefines.NAI.COMMUNISTS_ALLY_DEMOCRACIES = -25								-- Vanilla is -50
+NDefines.NAI.COMMUNISTS_BEFRIEND_DEMOCRACIES = -25							-- Vanilla is -25
+NDefines.NAI.COMMUNISTS_BEFRIEND_COMMUNISTS = 50							-- Vanilla is 25
+NDefines.NAI.COMMUNISTS_ALLY_FASCISTS = -100								-- Vanilla is -100
+NDefines.NAI.COMMUNISTS_ALLY_DEMOCRACIES = -50								-- Vanilla is -50
 NDefines.NAI.COMMUNISTS_ALLY_COMMUNISTS = 25								-- Vanilla is 0
 NDefines.NAI.COMMUNISTS_ANTAGONIZE_FASCISTS = 50							-- Vanilla is 100
-NDefines.NAI.COMMUNISTS_ANTAGONIZE_DEMOCRACIES = 0							-- Vanilla is 10
-NDefines.NAI.COMMUNISTS_ANTAGONIZE_COMMUNISTS = 0							-- Vanilla is -10
-NDefines.NAI.COMMUNISTS_ANTAGONIZE_COMMUNISTS = -25							-- Vanilla is -10
+NDefines.NAI.COMMUNISTS_ANTAGONIZE_DEMOCRACIES = 10							-- Vanilla is 10
+NDefines.NAI.COMMUNISTS_ANTAGONIZE_COMMUNISTS = -10							-- Vanilla is -10
 
 -- Battleplan AI
 NDefines.NAI.HOUR_BAD_COMBAT_REEVALUATE = 42								-- Vanilla is 100

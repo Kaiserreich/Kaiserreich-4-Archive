@@ -23,9 +23,144 @@ country_event = { #Intro Event (donotlog)
 	}
 }
 
-################################
-### Generic Triggered Events ###
-################################
+###############################
+### Generic Faction Joining ###
+###############################
+
+country_event = { #Country requests to join faction
+	id = kr.political.10
+	immediate = { log = "[GetDateText]: [Root.GetName]: event kr.political.10 FROM = [From.GetName]" }
+	title = kr.political.10.t
+	desc = kr.political.10.d
+	picture = GFX_report_event_generic_diplomacy1
+
+	is_triggered_only = yes
+
+	option = {
+		name = kr.political.10.a
+		effect_tooltip = { add_to_faction = FROM }
+		FROM = { country_event = kr.political.11 }
+	}
+
+	option = {
+		name = kr.political.10.b
+		ai_chance = { base = 0 }
+		FROM = { country_event = kr.political.12 }
+	}
+}
+
+country_event = { #FROM accepts
+	id = kr.political.11
+	immediate = { log = "[GetDateText]: [Root.GetName]: event kr.political.11 FROM = [From.GetName]" }
+	title = kr.political.11.t
+	desc = kr.political.11.d
+	picture = GFX_report_event_generic_diplomacy1
+
+	is_triggered_only = yes
+
+	option = {
+		name = kr.political.11.a
+		FROM = { add_to_faction = ROOT }
+	}
+}
+
+country_event = { #FROM refuses
+	id = kr.political.12
+	immediate = { log = "[GetDateText]: [Root.GetName]: event kr.political.12 FROM = [From.GetName]" }
+	title = kr.political.12.t
+	desc = kr.political.12.d
+	picture = GFX_report_event_generic_diplomacy1
+
+	is_triggered_only = yes
+
+	option = {
+		name = kr.political.12.a
+		add_opinion_modifier = {
+			target = FROM
+			modifier = KR_outraged
+		}
+	}
+}
+
+country_event = { #Country is invited to faction
+	id = kr.political.13
+	immediate = { log = "[GetDateText]: [Root.GetName]: event kr.political.13 FROM = [From.GetName]" }
+	title = kr.political.13.t
+	desc = kr.political.13.d
+	picture = GFX_report_event_generic_diplomacy1
+
+	is_triggered_only = yes
+
+	option = {
+		name = kr.political.13.a
+		effect_tooltip = { FROM = { add_to_faction = ROOT } }
+		FROM = { country_event = kr.political.14 }
+	}
+
+	option = {
+		name = kr.political.13.b
+		ai_chance = { base = 0 }
+		FROM = { country_event = kr.political.15 }
+	}
+}
+
+country_event = { #FROM accepts
+	id = kr.political.14
+	immediate = { log = "[GetDateText]: [Root.GetName]: event kr.political.14 FROM = [From.GetName]" }
+	title = kr.political.14.t
+	desc = kr.political.14.d
+	picture = GFX_report_event_generic_diplomacy1
+
+	is_triggered_only = yes
+
+	option = {
+		name = kr.political.14.a
+		add_to_faction = FROM
+	}
+}
+
+country_event = { #FROM refuses
+	id = kr.political.15
+	immediate = { log = "[GetDateText]: [Root.GetName]: event kr.political.15 FROM = [From.GetName]" }
+	title = kr.political.15.t
+	desc = kr.political.15.d
+	picture = GFX_report_event_generic_diplomacy1
+
+	is_triggered_only = yes
+
+	option = {
+		name = kr.political.15.a
+		add_opinion_modifier = {
+			target = FROM
+			modifier = KR_disapproves_of_govt
+		}
+	}
+}
+
+#######################
+### Faction Joining ###
+#######################
+
+country_event = { #event to remove the alert after ten days (donotlog)
+	id = kr.political.20
+	hidden = yes
+
+	trigger = {
+		is_in_array = { global.faction_joining_alerts = THIS }
+	}
+
+	is_triggered_only = yes
+
+	option = {
+		remove_from_array = { global.faction_joining_alerts = THIS }
+		subtract_from_variable = { global.faction_joining_alert_dirty = 1 }
+		clear_variable = faction_joining_alert
+	}
+}
+
+#########################
+### Incoming War-ning ###
+#########################
 
 # Warning about impending declaration of war (used for decisions)
 country_event = { #donotlog
@@ -46,10 +181,7 @@ country_event = { #donotlog
 						has_guaranteed = ROOT
 						civilwar_target = ROOT
 					}
-					NOT = {
-						tag = FROM
-						is_subject_of = FROM
-					}
+					NOT = { is_ally_with = FROM }
 				}
 				country_event = kr.political.31
 			}
@@ -96,7 +228,10 @@ country_event = { #donotlog
 	is_triggered_only = yes
 
 	trigger = {
-		is_ally_with = GER
+		GER = {
+			exists = yes
+			is_ally_with = ROOT
+		}
 		NOT = { has_variable = GER_faction }
 	}
 
@@ -104,8 +239,14 @@ country_event = { #donotlog
 		every_other_country = {
 			limit = {
 				OR = {
-					is_ally_with = ENT
-					is_ally_with = INT
+					AND = {
+						ENT = { exists = yes }
+						is_ally_with = ENT
+					}
+					AND = {
+						INT = { exists = yes }
+						is_ally_with = INT
+					}
 				}
 			}
 			add_opinion_modifier = {
@@ -128,15 +269,24 @@ country_event = { #donotlog
 
 	trigger = {
 		has_variable = GER_faction
-		NOT = { is_ally_with = GER }
+		GER = {
+			exists = yes
+			NOT = { is_ally_with = ROOT }
+		}
 	}
 
 	immediate = {
 		every_other_country = {
 			limit = {
 				OR = {
-					is_ally_with = ENT
-					is_ally_with = INT
+					AND = {
+						ENT = { exists = yes }
+						is_ally_with = ENT
+					}
+					AND = {
+						INT = { exists = yes }
+						is_ally_with = INT
+					}
 				}
 			}
 			remove_opinion_modifier = {
@@ -161,7 +311,10 @@ country_event = { #donotlog
 	is_triggered_only = yes
 
 	trigger = {
-		is_ally_with = ENT
+		ENT = {
+			exists = yes
+			is_ally_with = ROOT
+		}
 		NOT = { has_variable = ENT_faction }
 	}
 
@@ -169,8 +322,14 @@ country_event = { #donotlog
 		every_other_country = {
 			limit = {
 				OR = {
-					is_ally_with = GER
-					is_ally_with = INT
+					AND = {
+						GER = { exists = yes }
+						is_ally_with = GER
+					}
+					AND = {
+						INT = { exists = yes }
+						is_ally_with = INT
+					}
 				}
 			}
 			add_opinion_modifier = {
@@ -178,7 +337,10 @@ country_event = { #donotlog
 				modifier = KR_factional_rivalry
 			}
 			if = {
-				limit = { is_ally_with = INT }
+				limit = {
+					INT = { exists = yes }
+					is_ally_with = INT
+				}
 				embargo_PREV = yes
 			}
 		}
@@ -193,15 +355,24 @@ country_event = { #donotlog
 
 	trigger = {
 		has_variable = ENT_faction
-		NOT = { is_ally_with = ENT }
+		ENT = {
+			exists = yes
+			NOT = { is_ally_with = ROOT }
+		}
 	}
 
 	immediate = {
 		every_other_country = {
 			limit = {
 				OR = {
-					is_ally_with = GER
-					is_ally_with = INT
+					AND = {
+						GER = { exists = yes }
+						is_ally_with = GER
+					}
+					AND = {
+						INT = { exists = yes }
+						is_ally_with = INT
+					}
 				}
 			}
 			remove_opinion_modifier = {
@@ -226,7 +397,10 @@ country_event = { #donotlog
 	is_triggered_only = yes
 
 	trigger = {
-		is_ally_with = INT
+		INT = {
+			exists = yes
+			is_ally_with = ROOT
+		}
 		NOT = { has_variable = INT_faction }
 	}
 
@@ -234,8 +408,14 @@ country_event = { #donotlog
 		every_other_country = {
 			limit = {
 				OR = {
-					is_ally_with = GER
-					is_ally_with = ENT
+					AND = {
+						GER = { exists = yes }
+						is_ally_with = GER
+					}
+					AND = {
+						ENT = { exists = yes }
+						is_ally_with = ENT
+					}
 				}
 			}
 			add_opinion_modifier = {
@@ -255,15 +435,24 @@ country_event = { #donotlog
 
 	trigger = {
 		has_variable = INT_faction
-		NOT = { is_ally_with = INT }
+		INT = {
+			exists = yes
+			NOT = { is_ally_with = ROOT }
+		}
 	}
 
 	immediate = {
 		every_other_country = {
 			limit = {
 				OR = {
-					is_ally_with = GER
-					is_ally_with = ENT
+					AND = {
+						GER = { exists = yes }
+						is_ally_with = GER
+					}
+					AND = {
+						INT = { exists = yes }
+						is_ally_with = INT
+					}
 				}
 			}
 			remove_opinion_modifier = {
@@ -1845,55 +2034,6 @@ country_event = {
 ##################################
 ###     White Peace Events     ###
 ##################################
-
-# Error checking to make sure subordinate countries peace out with the target
-country_event = {
-	id = kr.political.205
-	immediate = { log = "[GetDateText]: [Root.GetName]: event kr.political.205 FROM = [From.GetName]" }
-
-	hidden = yes
-	is_triggered_only = yes
-
-	trigger = {
-		has_war_with = FROM
-	}
-
-	immediate = {
-		white_peace = FROM
-	}
-}
-
-country_event = {
-	id = kr.political.206
-	immediate = { log = "[GetDateText]: [Root.GetName]: event kr.political.206 FROM = [From.GetName]" }
-
-	hidden = yes
-	is_triggered_only = yes
-
-	trigger = {
-		has_war_with = event_target:peace_country
-	}
-
-	immediate = {
-		white_peace = event_target:peace_country
-	}
-}
-
-country_event = {
-	id = kr.political.207
-	immediate = { log = "[GetDateText]: [Root.GetName]: event kr.political.207 FROM = [From.GetName]" }
-
-	hidden = yes
-	is_triggered_only = yes
-
-	trigger = {
-		has_war_with = event_target:white_peace_receiver
-	}
-
-	immediate = {
-		white_peace = event_target:white_peace_receiver
-	}
-}
 
 country_event = {
 	id = kr.political.208
