@@ -1,41 +1,5 @@
 political_actions = {
 
-	promises_of_peace = {
-		icon = generic_political_discourse
-
-		available = {
-			has_war = no
-			has_war_support > 0.2
-			has_stability < 1
-		}
-
-		remove_trigger = {
-			OR = {
-				has_war = yes
-				has_war_support < 0.05
-			}
-		}
-
-		modifier = {
-			stability_weekly = 0.005
-			war_support_weekly = -0.01
-			political_power_gain = -0.5
-		}
-
-		cost = 50
-		days_remove = 90
-		days_re_enable = 360
-
-		ai_will_do = {
-			base = 0
-			modifier = {
-				add = 1
-				has_stability < 0.4
-				has_political_power > 155 #Spend on other things first
-			}
-		}
-	}
-
 	generic_raise_stability = {
 		#Socialist -> 'Improve Worker Conditions'
 		icon = {
@@ -90,7 +54,7 @@ political_actions = {
 			modifier = {
 				add = 1
 				has_stability < 0.6
-				has_political_power > 155 #Spend on other things first
+				has_political_power > 175 #Spend on other things first
 			}
 			modifier = {
 				add = 1
@@ -135,21 +99,12 @@ political_actions = {
 		}
 
 		cost = 150
-		days_remove = 360
+		days_remove = 180
+		days_re_enable = 540
 
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision generic_raise_support"
-			hidden_effect = {
-				meta_effect = {
-					text = {
-						add_dynamic_modifier = {
-							modifier = hidden_raise_support_[IDEOLOGY]
-							days = 360
-						}
-					}
-					IDEOLOGY = "[?current_party_ideology_group.GetTokenKey]"
-				}
-			}
+		remove_effect = {
+			set_temp_variable = { ideology_change_var = 0.1 }
+			change_ruling_party_popularity = yes
 		}
 
 		ai_will_do = {
@@ -157,7 +112,7 @@ political_actions = {
 			modifier = {
 				add = 1
 				check_variable = { party_popularity@ruling_party < 0.5 }
-				has_political_power > 155 #Spend on other things first
+				has_political_power > 175 #Spend on other things first
 			}
 			modifier = {
 				add = 1
@@ -167,7 +122,7 @@ political_actions = {
 	}
 
 	seize_some_trains_woo = {
-		icon = GFX_decision_train
+		icon = GFX_decision_hol_draw_up_staff_plans
 
 		visible = {
 			has_tech = basic_train
@@ -185,6 +140,7 @@ political_actions = {
 			modifier = {
 				add = 1
 				has_stability > 0.74
+				has_equipment = { train_equipment < 15 }
 			}
 		}
 
@@ -199,7 +155,7 @@ political_actions = {
 	}
 
 	restructure_supply_system = { #one time boost to get a few cheap supply hubs
-		icon = GFX_decision_railroad
+		icon = GFX_decision_generic_construction
 
 		visible = {
 			OR = {
@@ -215,11 +171,7 @@ political_actions = {
 		fire_only_once = yes
 
 		ai_will_do = {
-			factor = 1
-			modifier = {
-				factor = 0
-				num_of_factories < 30
-			}
+			factor = 0		# AI doesn't build supply hubs
 		}
 
 		modifier = {
@@ -534,7 +486,7 @@ political_actions = {
 		icon = generic_independence
 
 		allowed = {
-			NOT = { has_dlc = "Together for Victory" }
+			has_subject_autonomy_feature = no
 		}
 
 		available = {
@@ -591,12 +543,11 @@ propaganda_efforts = {
 
 		available = {
 			NOT = { has_country_flag = war_propaganda_campaign_running }
-			threat > 0.5
 			has_war_support < 0.5
 		}
 
 		visible = {
-			has_war = no
+			has_war_with_non_exiled_country = yes
 		}
 
 		cost = 150
@@ -604,7 +555,7 @@ propaganda_efforts = {
 		days_re_enable = 180
 
 		modifier = {
-			war_support_weekly = 0.01
+			war_support_weekly = 0.05
 		}
 
 		cancel_trigger = {
@@ -629,83 +580,170 @@ propaganda_efforts = {
 		}
 	}
 
-	#Propaganda campaign against a country you're at war with
-	war_propaganda_against_warmonger = {
+	war_propaganda_casualties = {
 
-		icon = GFX_decision_eng_propaganda_campaigns
+		icon = generic_prepare_civil_war
 
 		available = {
-			NOT = { has_country_flag = war_propaganda_campaign_running }
-			# lower the cost for neighbors
-			if = {
-				limit = { is_neighbor_of = FROM }
-				set_temp_variable = { war_propaganda_cost = 50 }
-			}
+			has_casualties_war_support < 0
 		}
 
 		visible = {
-			FROM = {
-				OR = {
-					is_justifying_wargoal_against = ROOT
-					AND = {
-						has_war_with = ROOT
-						is_neighbor_of = ROOT
-					}
-				}
-				is_valid_peace_target = yes
-			}
+			has_war_with_non_exiled_country = yes
 		}
 
-		target_trigger = {
-			FROM = {
-				OR = {
-					is_justifying_wargoal_against = ROOT
-					AND = {
-						has_war_with = ROOT
-						is_neighbor_of = ROOT
-					}
-				}
-				is_valid_peace_target = yes
-			}
+		fire_only_once = no
+
+		days_remove = 180
+
+		remove_trigger = {
+			has_war = no
 		}
 
-		target_root_trigger = {
-			has_war = yes
-		}
-
-		target_array = potential_and_current_enemies
-
-		days_remove = 90
-		days_re_enable = 180
-
-		fire_only_once = yes
-
-		cost = var:war_propaganda_cost?75
+		cost = 100
 
 		modifier = {
-			war_support_weekly = 0.01
-		}
-
-		cancel_if_not_visible = yes
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancelled war_propaganda_against_warmonger target: [From.GetName]"
-			clr_country_flag = war_propaganda_campaign_running
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision war_propaganda_against_warmonger target: [From.GetName]"
-			set_country_flag = { flag = war_propaganda_campaign_running days = 90 value = 1 }
-		}
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove war_propaganda_against_warmonger target: [From.GetName]"
-			clr_country_flag = war_propaganda_campaign_running
+			weekly_casualties_war_support = 0.006
 		}
 
 		ai_will_do = {
-			factor = 1
+			base = 0
+			modifier = {
+				add = 10 #AI should probably just choose this one for general purposes.
+				has_war = yes
+				has_war_support < 0.7
+			}
+			modifier = {
+				add = 20
+				has_war = yes
+				has_war_support < 0.5
+			}
+			modifier = {
+				add = 30
+				has_war = yes
+				has_war_support < 0.3
+			}
+			modifier = {
+				add = 201 #ie; consider prio idea
+				has_war = yes
+				has_casualties_war_support < -0.25
+			}
 			modifier = {
 				factor = 0
-				has_war_support > 0.9
+				has_manpower < 100000
+				has_political_power < 250
+				OR = {
+					has_idea = volunteer_only
+					has_idea = limited_conscription
+					has_idea = extensive_conscription
+				}
+			}
+		}
+	}
+
+	war_propaganda_convoys = {
+
+		icon = GFX_decision_generic_naval
+
+		available = {
+			has_convoys_war_support < 0
+		}
+
+		visible = {
+			has_war_with_non_exiled_country = yes
+		}
+
+		fire_only_once = no
+
+		days_remove = 180
+
+		remove_trigger = {
+			has_war = no
+		}
+
+		cost = 100
+
+		modifier = {
+			weekly_convoys_war_support = 0.006
+		}
+
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 201 #ie; consider prio idea
+				has_war = yes
+				has_convoys_war_support < -0.29
+			}
+			modifier = {
+				factor = 0
+				has_manpower < 100000
+				has_political_power < 250
+				OR = {
+					has_idea = volunteer_only
+					has_idea = limited_conscription
+					has_idea = extensive_conscription
+				}
+			}
+		}
+	}
+
+	war_propaganda_bombing = {
+
+		icon = GFX_decision_generic_air
+
+		available = {
+			has_bombing_war_support < 0
+		}
+
+		visible = {
+			has_war_with_non_exiled_country = yes
+		}
+
+		fire_only_once = no
+
+		days_remove = 180
+
+		remove_trigger = {
+			has_war = no
+		}
+
+		cost = 100
+
+		modifier = {
+			weekly_bombing_war_support = 0.006
+		}
+
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 10 #AI should probably just choose this one for general purposes.
+				has_war = yes
+				has_war_support < 0.65
+			}
+			modifier = {
+				add = 20
+				has_war = yes
+				has_war_support < 0.50
+			}
+			modifier = {
+				add = 30
+				has_war = yes
+				has_war_support < 0.35
+			}
+			modifier = {
+				add = 201 #ie; consider prio idea
+				has_war = yes
+				has_bombing_war_support < -0.20
+			}
+			modifier = {
+				factor = 0
+				has_manpower < 100000
+				has_political_power < 250
+				OR = {
+					has_idea = volunteer_only
+					has_idea = limited_conscription
+					has_idea = extensive_conscription
+				}
 			}
 		}
 	}

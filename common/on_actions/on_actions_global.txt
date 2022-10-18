@@ -267,14 +267,6 @@ on_actions = {
 
 	on_startup = {
 		effect = {
-			#Set MP flag
-			if = {
-				limit = {
-					check_variable = { global.players^num > 1 }
-				}
-				set_global_flag = is_mp
-			}
-
 			every_possible_country = {
 				#Party Popularity Setup
 				if = {
@@ -460,13 +452,10 @@ on_actions = {
 			}
 
 			# Set up news events settings
-			if = {
-				limit = { has_global_flag = is_mp }
-				set_global_flag = NEWS_SOME
-			}
-			else = {
-				set_global_flag = NEWS_ALL
-			}
+			set_global_flag = NEWS_ALL
+			set_global_flag = NEWS_SOME
+			set_variable = { global.regional_news_frame = 2 }
+			set_variable = { global.world_news_frame = 2 }
 
 			#UI Setup
 			for_each_scope_loop = {
@@ -489,7 +478,10 @@ on_actions = {
 
 			#Faction Embargoes
 			every_possible_country = {
-				limit = { has_socialist_government = yes }
+				limit = {
+					has_socialist_government = yes
+					is_dynamic_country = no
+				}
 				for_each_scope_loop = {
 					array = ENT.faction_members
 					embargo_PREV = yes
@@ -516,7 +508,7 @@ on_actions = {
 			XXA = {
 				random_character = {
 					limit = { is_country_leader = yes }
-					save_global_event_target_as = renamer
+					owner = { set_variable = { renamer = PREV } }
 				}
 			}
 		}
@@ -606,6 +598,8 @@ on_actions = {
 				clr_country_flag = GER_capitulated
 				if = {
 					limit = { is_dynamic_country = yes }
+					drop_cosmetic_tag = yes
+					clear_government_flags = yes
 					every_state = {
 						limit = { is_claimed_by = PREV }
 						remove_claim_by = PREV
@@ -684,14 +678,7 @@ on_actions = {
 			log = "[GetDateText] [Root.GetName] on_ruling_party_change old_ideology_token: [?old_ideology_token.GetTokenKey]"
 
 			#Government Flags
-			clr_country_flag = KR_is_socialist
-			clr_country_flag = KR_is_elected
-			clr_country_flag = KR_is_democratic
-			clr_country_flag = KR_right_wing_democracy
-			clr_country_flag = KR_left_wing_democracy
-			clr_country_flag = KR_is_authoritarian
-			clr_country_flag = KR_is_dictatorship
-			clr_country_flag = KR_is_any_authoritarian
+			clear_government_flags = yes
 			if = {
 				limit = { will_have_totalist_government = yes }
 				set_country_flag = KR_is_socialist
@@ -722,75 +709,24 @@ on_actions = {
 				set_country_flag = KR_is_democratic
 				set_country_flag = KR_is_authoritarian
 				set_country_flag = KR_is_any_authoritarian
+				set_country_flag = KR_is_conservative
 			}
 			else = {
 				set_country_flag = KR_is_democratic
 				set_country_flag = KR_is_elected
 				if = {
-					limit = {
-						OR = {
-							will_have_market_liberal_government = yes
-							will_have_social_conservative_government = yes
-						}
-					}
+					limit = { will_have_social_conservative_government = yes }
 					set_country_flag = KR_right_wing_democracy
+					set_country_flag = KR_is_conservative
+				}
+				else_if = {
+					limit = { will_have_market_liberal_government = yes }
+					set_country_flag = KR_right_wing_democracy
+					set_country_flag = KR_is_liberal
 				}
 				else = {
 					set_country_flag = KR_left_wing_democracy
-				}
-			}
-
-			# update generic support decision modifier
-			if = {
-				limit = { has_decision = generic_raise_support }
-				if = {
-					limit = { has_dynamic_modifier = { modifier = hidden_raise_support_totalist } }
-					remove_dynamic_modifier = { modifier = hidden_raise_support_totalist }
-				}
-				else_if = {
-					limit = { has_dynamic_modifier = { modifier = hidden_raise_support_syndicalist } }
-					remove_dynamic_modifier = { modifier = hidden_raise_support_syndicalist }
-				}
-				else_if = {
-					limit = { has_dynamic_modifier = { modifier = hidden_raise_support_radical_socialist } }
-					remove_dynamic_modifier = { modifier = hidden_raise_support_radical_socialist }
-				}
-				else_if = {
-					limit = { has_dynamic_modifier = { modifier = hidden_raise_support_social_democrat } }
-					remove_dynamic_modifier = { modifier = hidden_raise_support_social_democrat }
-				}
-				else_if = {
-					limit = { has_dynamic_modifier = { modifier = hidden_raise_support_social_liberal } }
-					remove_dynamic_modifier = { modifier = hidden_raise_support_social_liberal }
-				}
-				else_if = {
-					limit = { has_dynamic_modifier = { modifier = hidden_raise_support_market_liberal } }
-					remove_dynamic_modifier = { modifier = hidden_raise_support_market_liberal }
-				}
-				else_if = {
-					limit = { has_dynamic_modifier = { modifier = hidden_raise_support_social_conservative } }
-					remove_dynamic_modifier = { modifier = hidden_raise_support_social_conservative }
-				}
-				else_if = {
-					limit = { has_dynamic_modifier = { modifier = hidden_raise_support_authoritarian_democrat } }
-					remove_dynamic_modifier = { modifier = hidden_raise_support_authoritarian_democrat }
-				}
-				else_if = {
-					limit = { has_dynamic_modifier = { modifier = hidden_raise_support_paternal_autocrat } }
-					remove_dynamic_modifier = { modifier = hidden_raise_support_paternal_autocrat }
-				}
-				else_if = {
-					limit = { has_dynamic_modifier = { modifier = hidden_raise_support_national_populist } }
-					remove_dynamic_modifier = { modifier = hidden_raise_support_national_populist }
-				}
-				meta_effect = {
-					text = {
-						add_dynamic_modifier = {
-							modifier = hidden_raise_support_[IDEOLOGY]
-							days = var:days_decision_timeout@generic_raise_support
-						}
-					}
-					IDEOLOGY = "[?old_ideology_token.GetTokenKey]"
+					set_country_flag = KR_is_liberal
 				}
 			}
 
@@ -1106,6 +1042,15 @@ on_actions = {
 				remove_ideas = ready_to_surrender
 			}
 
+			### transfer impassables to the correct targets
+			for_each_scope_loop = {
+				array = global.paired_impassable_states
+				if = {
+					limit = { NOT = { is_owned_by = var:paired_impassable:owner } }
+					transfer_state_to = paired_impassable:owner
+				}
+			}
+
 			### civil war tags should always annex each other
 			if = {
 				limit = {
@@ -1249,18 +1194,7 @@ on_actions = {
 	on_capitulation = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] (ROOT) on_capitulation FROM = [From.GetName]"
-			if = {
-				limit = {
-					is_in_faction = yes
-					NOT = {
-						AND = {
-							original_tag = JAP
-							is_subject = no
-						}
-					}
-				}
-				news_event = country_capitulated.0
-			}
+			news_event = country_capitulated.0
 
 			# Important countries for logalyzer
 			if = {
@@ -2168,6 +2102,103 @@ on_actions = {
 		effect = {
 			log = "[GetDateText]: on_war_relation_added attacker: [Root.GetName] defender: [From.GetName]"
 
+			# Civil war targets
+			if = {
+				limit = {
+					OR = {
+						#Spain
+						AND = {
+							original_tag = SPA
+							FROM = { original_tag = SPA }
+						}
+						#Argentina
+						AND = {
+							OR = {
+								original_tag = FOP
+								original_tag = ARG
+							}
+							FROM = {
+								OR = {
+									original_tag = FOP
+									original_tag = ARG
+								}
+							}
+						}
+						#India
+						AND = {
+							OR = {
+								original_tag = HND
+								original_tag = RAJ
+								original_tag = PRF
+							}
+							FROM = {
+								OR = {
+									original_tag = HND
+									original_tag = RAJ
+									original_tag = PRF
+								}
+							}
+						}
+						#China
+						AND = {
+							OR = {
+								original_tag = LEP
+								original_tag = ANQ
+								original_tag = CHI
+							}
+							FROM = {
+								OR = {
+									original_tag = LEP
+									original_tag = ANQ
+									original_tag = CHI
+								}
+							}
+						}
+						#Italy
+						AND = {
+							original_tag = SRI
+							FROM = {
+								OR = {
+									original_tag = ITA
+									original_tag = SIC
+									original_tag = PAP
+									original_tag = SRD
+									original_tag = LOM
+									original_tag = VNC
+								}
+							}
+						}
+						AND = {
+							FROM = { original_tag = SRI }
+							OR = {
+								original_tag = ITA
+								original_tag = SIC
+								original_tag = PAP
+								original_tag = SRD
+								original_tag = LOM
+								original_tag = VNC
+							}
+						}
+						#Russia
+						AND = {
+							OR = {
+								original_tag = RUS
+								original_tag = SOV
+								original_tag = TRM
+							}
+							FROM = {
+								OR = {
+									original_tag = RUS
+									original_tag = SOV
+									original_tag = TRM
+								}
+							}
+						}
+					}
+				}
+				add_civil_war_target = FROM
+			}
+
 			# Volunteers
 			save_event_target_as = volunteer_target
 			every_other_country = {
@@ -2395,5 +2426,24 @@ on_actions = {
 			log = "[GetDateText]: [Root.GetName] has paradropped into [This.GetName] from [From.GetName]"
 		}
 	}
-}
 
+	on_unit_leader_promote_from_ranks_veteran = { #Unit leader scope, FROM is unit
+		effect = {
+			FROM = {
+				add_random_valid_trait_from_unit = {
+					character = ROOT
+				}
+			}
+		}
+	}
+
+	on_unit_leader_promote_from_ranks_green = { #Unit leader scope, FROM is unit
+		effect = {
+		}
+	}
+
+	on_add_history = { #Unit Scope
+		effect = {
+		}
+	}
+}

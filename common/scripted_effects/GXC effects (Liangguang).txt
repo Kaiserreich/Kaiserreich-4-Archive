@@ -23,12 +23,8 @@ GXC_spawn_liangguang_clique = {
 				regiments = {
 					infantry = { x = 0 y = 0 }
 					infantry = { x = 0 y = 1 }
-					infantry = { x = 0 y = 2 }
-					infantry = { x = 0 y = 3 }
 					infantry = { x = 1 y = 0 }
 					infantry = { x = 1 y = 1 }
-					infantry = { x = 1 y = 2 }
-					infantry = { x = 1 y = 3 }
 				}
 			}
 			division_template = { #Guangxi Army
@@ -39,14 +35,9 @@ GXC_spawn_liangguang_clique = {
 					infantry = { x = 0 y = 0 }
 					infantry = { x = 0 y = 1 }
 					infantry = { x = 0 y = 2 }
-					infantry = { x = 0 y = 3 }
 					infantry = { x = 1 y = 0 }
 					infantry = { x = 1 y = 1 }
 					infantry = { x = 1 y = 2 }
-					infantry = { x = 1 y = 3 }
-				}
-				support = {
-					recon = { x = 0 y = 0 }
 				}
 			}
 			592 = {
@@ -98,23 +89,58 @@ GXC_spawn_liangguang_clique = {
 	}
 }
 
+#scope is destination
+GXC_move_new_guangxi_clique_characters = {
+	GXC = {
+		GXC_li_zongren = { set_nationality = PREV.PREV }
+		GXC_bai_chongxi = { set_nationality = PREV.PREV }
+		GXC_yu_zuobai = { set_nationality = PREV.PREV }
+	}
+}
+
+#scope is destination
+GXC_move_old_guangxi_clique_characters = {
+	GXC = {
+		GXC_ma_ji = { set_nationality = PREV.PREV }
+		GXC_lu_yuguang = { set_nationality = PREV.PREV }
+	}
+}
+
+#scope is destination
+GXC_move_federalist_generals = {
+	GXC = {
+		GXC_chen_jiongming = { set_nationality = PREV.PREV }
+		GXC_lin_hu = { set_nationality = PREV.PREV }
+		GXC_hong_zhaolin = { set_nationality = PREV.PREV }
+		GXC_ye_ju = { set_nationality = PREV.PREV }
+	}
+}
+
 setup_rebel_guangxi = {
 	set_global_flag = GXC_had_civil_war
 	hidden_effect = {
+		#remove all DMZs
 		every_owned_state = {
 			limit = { is_demilitarized_zone = yes }
 			set_demilitarized_zone = no
 		}
-		delete_units = { division_template = "Guangxi Bubing Zhen" }
+
+		#delete the locked units, unlock Guangdong's template
+		delete_units = { division_template = "Guangxi Bubing Zhen" disband = yes }
 		delete_units = { division_template = "Guangdong Bubing Zhen" disband = yes }
 		set_division_template_lock = { division_template = "Guangdong Bubing Zhen" is_locked = no }
+
+		#grab the correct ideology
 		if = {
 			limit = { has_global_flag = GXC_new_guangxi_clique_took_over }
 			set_temp_variable = { guangxi_ideology = token:authoritarian_democrat }
+			GXC_move_new_guangxi_clique_characters = yes
 		}
 		else = {
 			set_temp_variable = { guangxi_ideology = token:paternal_autocrat }
 		}
+
+		#start the civil war
 		start_civil_war = {
 			### basics ###
 			ideology = var:guangxi_ideology
@@ -131,13 +157,42 @@ setup_rebel_guangxi = {
 				}
 			}
 
-			### unit leaders ###
-			keep_unit_leaders_trigger = {
-				has_trait = GXC_guangdong_clique_officer
-			}
+			### characters ###
+			keep_all_characters = yes
 
 			### effects ###
+			save_global_event_target_as = GXC_civil_war_target
+		}
+		#save event target
+		save_global_event_target_as = GXC_original_target
+
+		#move all Guangxi characters to revolter
+		every_character = {
+			limit = { has_character_flag = GXC_guangxi_character }
+			set_nationality = event_target:GXC_civil_war_target
+		}
+
+		#setup revolter
+		event_target:GXC_civil_war_target = {
+			#set cosmetic tag
 			set_cosmetic_tag = GXC_Guangxi
+
+			#set leaders and ideology
+			if = {
+				limit = { check_variable = { guangxi_ideology = token:authoritarian_democrat } }
+				GXC_setup_new_guangxi_clique = yes
+				GXC_li_zongren = { promote_character = authoritarian_democrat_subtype }
+			}
+			else = {
+				GXC_setup_old_guangxi_clique = yes
+				GXC_ma_ji = { promote_character = paternal_autocrat_subtype }
+			}
+
+			#special characters
+			generate_generic_sics_and_activate = yes
+			china_generate_chinese_theorists = yes
+
+			#spawn units
 			capital_scope = {
 				create_unit = {
 					division = "division_template = \"Guangxi Bubing Zhen\" start_experience_factor = 0.2"
@@ -145,17 +200,29 @@ setup_rebel_guangxi = {
 					count = 6
 				}
 			}
-
-			if = {
-				limit = { check_variable = { guangxi_ideology = token:authoritarian_democrat } }
-				GXC_setup_new_guangxi_clique = yes
-			}
-			else = {
-				GXC_setup_old_guangxi_clique = yes
-			}
-			save_global_event_target_as = GXC_civil_war_target
 		}
+
+		#delete Guangxi template
 		delete_unit_template_and_units = { division_template = "Guangxi Bubing Zhen" }
+
+		#remove Guangxi popularities
+		set_political_party = { ideology = authoritarian_democrat popularity = 0 }
+		set_political_party = { ideology = paternal_autocrat popularity = 0 }
+
+		#spawn units
+		capital_scope = {
+			create_unit = {
+				division = "division_template = \"Guangdong Bubing Zhen\" start_experience_factor = 0.2"
+				owner = PREV
+				count = 5
+			}
+		}
+
+		#activate decisions
+		activate_targeted_decision = { decision = GXC_mobilize_merchant_corps target = THIS }
+		activate_targeted_decision = { decision = GXC_mobilize_gentry_militia target = THIS }
+
+		#if at war, give wargoal to enemies
 		every_enemy_country = {
 			limit = {
 				has_offensive_war_with = ROOT
@@ -166,44 +233,30 @@ setup_rebel_guangxi = {
 				type = annex_everything
 			}
 		}
-		every_character = {
-			limit = { has_trait = GXC_guangxi_clique_officer }
-			set_nationality = event_target:GXC_civil_war_target
-		}
-		save_global_event_target_as = GXC_original_target
-		activate_targeted_decision = { decision = GXC_mobilize_merchant_corps target = THIS }
-		activate_targeted_decision = { decision = GXC_mobilize_gentry_militia target = THIS }
-		set_political_party = {
-			ideology = authoritarian_democrat
-			popularity = 0
-		}
-		set_political_party = {
-			ideology = paternal_autocrat
-			popularity = 0
-		}
-		capital_scope = {
-			create_unit = {
-				division = "division_template = \"Guangdong Bubing Zhen\" start_experience_factor = 0.2"
-				owner = PREV
-				count = 5
-			}
-		}
 	}
 }
 
 setup_rebel_guangdong = {
+	#set global flag
 	set_global_flag = GXC_had_civil_war
+
 	hidden_effect = {
+		#remove all DMZs
 		every_owned_state = {
 			limit = { is_demilitarized_zone = yes }
 			set_demilitarized_zone = no
 		}
+
+		#delete the locked units, unlock Guangxi's template
 		delete_units = { division_template = "Guangxi Bubing Zhen" disband = yes }
-		delete_units = { division_template = "Guangdong Bubing Zhen" }
+		delete_units = { division_template = "Guangdong Bubing Zhen" disband = yes }
 		set_division_template_lock = { division_template = "Guangxi Bubing Zhen" is_locked = no }
+
+		#grab the correct ideologies
 		if = {
 			limit = { has_global_flag = GXC_new_guangxi_clique_took_over }
 			set_temp_variable = { guangxi_ideology = token:authoritarian_democrat }
+			GXC_move_new_guangxi_clique_characters = yes
 		}
 		else = {
 			set_temp_variable = { guangxi_ideology = token:paternal_autocrat }
@@ -219,6 +272,8 @@ setup_rebel_guangdong = {
 		else = {
 			set_temp_variable = { guangdong_ideology = token:social_liberal }
 		}
+
+		#start the civil war
 		start_civil_war = {
 			### basics ###
 			ruling_party = var:guangxi_ideology
@@ -236,20 +291,46 @@ setup_rebel_guangdong = {
 				}
 			}
 
-			### unit leaders ###
-			keep_unit_leaders_trigger = {
-				has_trait = GXC_guangxi_clique_officer
-			}
+			### characters ###
+			keep_all_characters = yes
 
 			### effects ###
-			capital_scope = {
-				create_unit = {
-					division = "division_template = \"Guangdong Bubing Zhen\" start_experience_factor = 0.2"
-					owner = PREV
-					count = 5
+			save_global_event_target_as = GXC_civil_war_target
+		}
+		#save event target
+		save_global_event_target_as = GXC_original_target
+
+		#move all Guangdong characters to revolter
+		every_character = {
+			limit = { has_character_flag = GXC_guangdong_character }
+			set_nationality = event_target:GXC_civil_war_target
+		}
+
+		#setup guangxi
+		if = {
+			limit = { has_global_flag = GXC_new_guangxi_clique_took_over }
+			GXC_setup_new_guangxi_clique = yes
+			GXC_li_zongren = { promote_character = authoritarian_democrat_subtype }
+		}
+		else = {
+			GXC_setup_old_guangxi_clique = yes
+		}
+
+		#setup revolter
+		event_target:GXC_civil_war_target = {
+			#set leaders
+			GXC_chen_mingshu = { promote_character = social_democrat_subtype }
+			GXC_chen_qiyou = { promote_character = social_liberal_subtype }
+			GXC_chen_lianbo = { promote_character = market_liberal_subtype }
+			if = {
+				limit = { has_character = GXC_chen_jiongming }
+				GXC_chen_jiongming = {
+					promote_character = social_democrat_subtype
+					promote_character = social_liberal_subtype
 				}
 			}
 
+			#set ideology
 			if = {
 				limit = { check_variable = { guangdong_ideology = token:social_democrat } }
 				GXC_setup_kmt = yes
@@ -297,9 +378,29 @@ setup_rebel_guangdong = {
 					national_populist = 0
 				}
 			}
-			save_global_event_target_as = GXC_civil_war_target
+
+			#special characters
+			generate_generic_sics_and_activate = yes
+			china_generate_chinese_theorists = yes
+
+			#spawn units
+			capital_scope = {
+				create_unit = {
+					division = "division_template = \"Guangdong Bubing Zhen\" start_experience_factor = 0.2"
+					owner = PREV
+					count = 5
+				}
+			}
+
+			#activate decisions
+			activate_targeted_decision = { decision = GXC_mobilize_merchant_corps target = THIS }
+			activate_targeted_decision = { decision = GXC_mobilize_gentry_militia target = THIS }
 		}
+
+		#delete Guangdong template
 		delete_unit_template_and_units = { division_template = "Guangdong Bubing Zhen" }
+
+		#if at war, give wargoal to enemies
 		every_enemy_country = {
 			limit = {
 				has_offensive_war_with = ROOT
@@ -310,63 +411,8 @@ setup_rebel_guangdong = {
 				type = annex_everything
 			}
 		}
-		every_character = {
-			limit = { has_trait = GXC_guangdong_clique_officer }
-			set_nationality = event_target:GXC_civil_war_target
-		}
-		if = {
-			limit = { has_character = GXC_chen_jiongming }
-			GXC_chen_jiongming = { set_nationality = event_target:GXC_civil_war_target }
-		}
-		if = {
-			limit = { has_character = GXC_chen_qiyou }
-			GXC_chen_qiyou = { set_nationality = event_target:GXC_civil_war_target }
-		}
-		if = {
-			limit = { has_character = GXC_chen_lianbo }
-			GXC_chen_lianbo = { set_nationality = event_target:GXC_civil_war_target }
-		}
-		if = {
-			limit = { has_character = GXC_chen_mingshu }
-			GXC_chen_mingshu = { set_nationality = event_target:GXC_civil_war_target }
-		}
-		event_target:GXC_civil_war_target = {
-			if = {
-				limit = { has_character = GXC_chen_mingshu }
-				GXC_chen_mingshu = {
-					promote_character = social_democrat_subtype
-				}
-			}
-			if = {
-				limit = { has_character = GXC_chen_qiyou }
-				GXC_chen_mingshu = {
-					promote_character = social_liberal_subtype
-				}
-			}
-			if = {
-				limit = { has_character = GXC_chen_lianbo }
-				GXC_chen_lianbo = {
-					promote_character = market_liberal_subtype
-				}
-			}
-			if = {
-				limit = { has_character = GXC_chen_jiongming }
-				GXC_chen_jiongming = {
-					promote_character = social_democrat_subtype
-					promote_character = social_liberal_subtype
-				}
-			}
-			activate_targeted_decision = { decision = GXC_mobilize_merchant_corps target = THIS }
-			activate_targeted_decision = { decision = GXC_mobilize_gentry_militia target = THIS }
-		}
-		save_global_event_target_as = GXC_original_target
-		if = {
-			limit = { has_global_flag = GXC_new_guangxi_clique_took_over }
-			GXC_setup_new_guangxi_clique = yes
-		}
-		else = {
-			GXC_setup_old_guangxi_clique = yes
-		}
+
+		#if at war, give wargoal to enemies
 		capital_scope = {
 			create_unit = {
 				division = "division_template = \"Guangxi Bubing Zhen\" start_experience_factor = 0.2"
@@ -422,11 +468,8 @@ GXC_setup_new_guangxi_clique = {
 		paternal_autocrat = 0
 		national_populist = 0
 	}
-	move_NGxC_generals = yes
-	YUN = {
-		country_event = lngcivilwar.22
-	}
 	load_focus_tree = { tree = KR_Guangxi_KMT keep_completed = yes } #pls don't break
+	YUN = { country_event = lngcivilwar.22 }
 }
 
 GXC_setup_old_guangxi_clique = {
@@ -452,24 +495,29 @@ GXC_setup_old_guangxi_clique = {
 
 GXC_old_guangxi_clique_flees = {
 	hidden_effect = {
-		event_target:GXC_ma_ji_target = {
-			remove_trait = { trait = GXC_guangxi_clique_officer }
-			demote_leader = yes
-			remove_military_advisor_roles = yes
-			add_advisor_role = {
-				advisor = {
-					slot = army_chief
-					idea_token = GXC_ma_ji
-					traits = { KR_army_chief_manoeuvre_2 }
-					cost = 100
+		GXC = {
+			if = {
+				limit = { has_character = GXC_ma_ji }
+				GXC_ma_ji = {
+					if = {
+						limit = { has_trait = GXC_guangxi_clique_officer }
+						remove_trait = { trait = GXC_guangxi_clique_officer }
+					}
+					demote_leader = yes
+					retire = yes
 				}
 			}
-			retire = yes
-		}
-		event_target:GXC_lu_yuguang_target = {
-			remove_trait = { trait = GXC_guangxi_clique_officer }
-			remove_civilian_advisor_roles = yes
-			retire = yes
+			if = {
+				limit = { has_character = GXC_lu_yuguang }
+				GXC_lu_yuguang = {
+					if = {
+						limit = { has_trait = GXC_guangxi_clique_officer }
+						remove_trait = { trait = GXC_guangxi_clique_officer }
+					}
+					remove_civilian_advisor_roles = yes
+					retire = yes
+				}
+			}
 		}
 		if = {
 			limit = {
@@ -526,77 +574,48 @@ purge_support_from_CHI = {
 	}
 }
 
-move_NGxC_generals = {
-	event_target:GXC_li_zongren_target = {
-		if = {
-			limit = { is_unit_leader = no }
-			add_field_marshal_role = {
-				desc = GXC_li_zongren_commander_desc
-				traits = {
-					GXC_guangxi_clique_officer
-					war_hero
-					offensive_doctrine
-					politically_connected
-					organizer
-					logistics_wizard
-				}
-				skill = 4
-				attack_skill = 3
-				defense_skill = 3
-				planning_skill = 3
-				logistics_skill = 4
-				legacy_id = 1209
-			}
-		}
-		if = {
-			limit = { NOT = { is_character_slot = army_chief } }
-			add_advisor_role = {
-				advisor = {
-					slot = army_chief
-					idea_token = GXC_li_zongren
-					traits = { KR_army_chief_offensive_2 }
-					cost = 100
-				}
-			}
-		}
-		set_nationality = PREV
-	}
-	event_target:GXC_bai_chongxi_target = { set_nationality = PREV }
-	event_target:GXC_yu_zuobai_target = { set_nationality = PREV }
-}
-
 GXC_new_guangxi_clique_flees = {
 	hidden_effect = {
-		if = {
-			limit = { has_character = GXC_li_zongren }
-			event_target:GXC_li_zongren_target = {
-				if = {
-					limit = { has_trait = GXC_guangxi_clique_officer }
-					remove_trait = { trait = GXC_guangxi_clique_officer }
+		GXC = {
+			if = {
+				limit = { has_character = GXC_li_zongren }
+				GXC_li_zongren = {
+					if = {
+						limit = { has_trait = GXC_guangxi_clique_officer }
+						remove_trait = { trait = GXC_guangxi_clique_officer }
+					}
+					retire = yes
 				}
-				retire = yes
 			}
-			event_target:GXC_bai_chongxi_target = {
-				if = {
-					limit = { has_trait = GXC_guangxi_clique_officer }
-					remove_trait = { trait = GXC_guangxi_clique_officer }
+			if = {
+				limit = { has_character = GXC_bai_chongxi }
+				GXC_bai_chongxi = {
+					if = {
+						limit = { has_trait = GXC_guangxi_clique_officer }
+						remove_trait = { trait = GXC_guangxi_clique_officer }
+					}
+					retire = yes
 				}
-				retire = yes
 			}
-			event_target:GXC_yu_zuobai_target = {
-				if = {
-					limit = { has_trait = GXC_guangxi_clique_officer }
-					remove_trait = { trait = GXC_guangxi_clique_officer }
+			if = {
+				limit = { has_character = GXC_yu_zuobai }
+				GXC_yu_zuobai = {
+					if = {
+						limit = { has_trait = GXC_guangxi_clique_officer }
+						remove_trait = { trait = GXC_guangxi_clique_officer }
+					}
+					retire = yes
 				}
-				retire = yes
 			}
 		}
-		if = {
-			limit = { YUN = { has_completed_focus = YUN_NRA_prevailed } }
-			YUN = { country_event = lngcivilwar.24 }
-		}
-		else = {
-			YUN = { set_country_flag = NGxC_in_hiding }
+		YUN = {
+			if = {
+				limit = { has_completed_focus = YUN_NRA_prevailed }
+				country_event = lngcivilwar.24
+			}
+			else = {
+				set_country_flag = NGxC_in_hiding
+			}
 		}
 	}
 }
@@ -604,22 +623,48 @@ GXC_new_guangxi_clique_flees = {
 GXC_federalists_flee = {
 	hidden_effect = {
 		if = {
-			limit = { has_event_target = GXC_chen_jiongming_target }
-			event_target:GXC_lin_hu_target = {
-				remove_trait = { trait = GXC_guangdong_clique_officer }
-				retire = yes
-			}
-			event_target:GXC_hong_zhaolin_target = {
-				remove_trait = { trait = GXC_guangdong_clique_officer }
-				retire = yes
-			}
-			event_target:GXC_ye_ju_target = {
-				remove_trait = { trait = GXC_guangdong_clique_officer }
-				retire = yes
-			}
-			event_target:GXC_chen_jiongming_target = {
-				remove_trait = { trait = GXC_guangdong_clique_officer }
-				retire = yes
+			limit = { GXC = { GXC_chen_jiongming = { is_dead = no } } }
+			GXC = {
+				if = {
+					limit = { has_character = GXC_chen_jiongming }
+					GXC_chen_jiongming = {
+						if = {
+							limit = { has_trait = GXC_guangdong_clique_officer }
+							remove_trait = { trait = GXC_guangdong_clique_officer }
+						}
+						retire = yes
+					}
+				}
+				if = {
+					limit = { has_character = GXC_lin_hu }
+					GXC_lin_hu = {
+						if = {
+							limit = { has_trait = GXC_guangdong_clique_officer }
+							remove_trait = { trait = GXC_guangdong_clique_officer }
+						}
+						retire = yes
+					}
+				}
+				if = {
+					limit = { has_character = GXC_hong_zhaolin }
+					GXC_hong_zhaolin = {
+						if = {
+							limit = { has_trait = GXC_guangdong_clique_officer }
+							remove_trait = { trait = GXC_guangdong_clique_officer }
+						}
+						retire = yes
+					}
+				}
+				if = {
+					limit = { has_character = GXC_ye_ju }
+					GXC_ye_ju = {
+						if = {
+							limit = { has_trait = GXC_guangdong_clique_officer }
+							remove_trait = { trait = GXC_guangdong_clique_officer }
+						}
+						retire = yes
+					}
+				}
 			}
 			if = {
 				limit = {
@@ -652,13 +697,6 @@ GXC_federalists_flee = {
 			}
 		}
 	}
-}
-
-GXC_move_federalist_generals = {
-	event_target:GXC_chen_jiongming_target = { set_nationality = ROOT }
-	event_target:GXC_lin_hu_target = { set_nationality = ROOT }
-	event_target:GXC_hong_zhaolin_target = { set_nationality = ROOT }
-	event_target:GXC_ye_ju_target = { set_nationality = ROOT }
 }
 
 GXC_remove_federalist_ideas = {
