@@ -6,6 +6,8 @@ ideas = {
 		undisturbed_isolation = {
 			on_add = { log = "[GetDateText]: [Root.GetName]: add idea undisturbed_isolation" }
 			level = 7
+			removal_cost = -1
+
 			allowed = { always = no }
 			cancel_if_invalid = no
 
@@ -40,6 +42,8 @@ ideas = {
 		isolation = {
 			on_add = { log = "[GetDateText]: [Root.GetName]: add idea isolation" }
 			level = 6
+			removal_cost = -1
+
 			allowed = { always = no }
 			cancel_if_invalid = no
 
@@ -207,7 +211,10 @@ ideas = {
 				factor = 1
 				modifier = { #don't increase if it would drop conscription to zero
 					factor = 0
-					target_conscription_amount > 0.03
+					OR = {
+						target_conscription_amount < 0.03
+						manpower_per_military_factory < 10000
+					}
 				}
 				modifier = { #Weight will overly overtake war economy if the AI has plenty of manpower
 					factor = 25
@@ -279,12 +286,6 @@ ideas = {
 				research_speed_factor = 0.1
 				civilian_intel_to_others = 40.0
 				navy_intel_to_others = 20.0
-			}
-
-			allowed_to_remove = {
-				NOT = {
-					has_idea = HON_free_market
-				}
 			}
 
 			ai_will_do = {
@@ -403,7 +404,15 @@ ideas = {
 				factor = 1
 				modifier = {
 					factor = 0
-					is_actual_major = no #only majors should choose limited exports
+					is_major = no #only majors should choose limited exports
+				}
+				modifier = {
+					factor = 0
+					is_in_faction = yes #don't screw over your allies
+				}
+				modifier = {
+					factor = 0
+					has_war = no #if at peace, prioritise the bonuses
 				}
 				modifier = {
 					check_variable = { resource_produced@steel > 0 }
@@ -464,7 +473,55 @@ ideas = {
 			}
 
 			ai_will_do = {
-				base = 0 #AI should never close its economy
+				factor = 1
+				modifier = {
+					factor = 0
+					is_major = no #only majors should choose limited exports
+				}
+				modifier = {
+					factor = 0
+					is_in_faction = yes #don't screw over your allies
+				}
+				modifier = {
+					factor = 0
+					has_war = no #if at peace, prioritise the bonuses
+				}
+				modifier = {
+					check_variable = { resource_produced@steel > 0 }
+
+					subtract_from_temp_variable = { steel_deficit = resource@steel }
+					add = steel_deficit
+				}
+				modifier = {
+					check_variable = { resource_produced@oil > 0 }
+
+					subtract_from_temp_variable = { oil_deficit = resource@oil }
+					add = oil_deficit
+				}
+				modifier = {
+					check_variable = { resource_produced@rubber > 0 }
+
+					subtract_from_temp_variable = { rubber_deficit = resource@rubber }
+					add = rubber_deficit
+				}
+				modifier = {
+					check_variable = { resource_produced@aluminium > 0 }
+
+					subtract_from_temp_variable = { aluminium_deficit = resource@aluminium }
+					add = aluminium_deficit
+				}
+				modifier = {
+					check_variable = { resource_produced@tungsten > 0 }
+
+					subtract_from_temp_variable = { tungsten_deficit = resource@tungsten }
+					add = tungsten_deficit
+				}
+				modifier = {
+					check_variable = { resource_produced@chromium > 0 }
+
+					subtract_from_temp_variable = { chromium_deficit = resource@chromium }
+					add = chromium_deficit
+				}
 			}
 		}
 	}
@@ -481,10 +538,6 @@ ideas = {
 
 			modifier = {
 				conscription = 0.01
-			}
-
-			ai_will_do = {
-				factor = 0
 			}
 		}
 
@@ -512,6 +565,8 @@ ideas = {
 
 			available = {
 				has_war_support > 0.1
+				NOT = { has_idea = undisturbed_isolation }
+				NOT = { has_idea = isolation }
 				NOT = { has_country_flag = cannot_have_conscription }
 			}
 
@@ -521,6 +576,10 @@ ideas = {
 
 			ai_will_do = {
 				factor = 1
+				modifier = { #one step at a time
+					factor = 0
+					NOT = { has_idea = volunteer_only }
+				}
 				modifier = { #ignore if high on manpower
 					factor = 0.5
 					manpower_per_military_factory > 5000
@@ -540,13 +599,8 @@ ideas = {
 
 			available = {
 				has_war_support > 0.2
-				OR = {
-					has_war_support > 0.5
-					AND = {
-						has_war = yes
-						enemies_strength_ratio > 0.5
-					}
-				}
+				has_war = yes
+				enemies_strength_ratio > 0.5
 				NOT = {
 					has_country_flag = cannot_have_conscription
 					has_country_flag = cannot_have_extensive_conscription
@@ -560,6 +614,10 @@ ideas = {
 
 			ai_will_do = {
 				factor = 1
+				modifier = { #one step at a time
+					factor = 0
+					NOT = { has_idea = limited_conscription }
+				}
 				modifier = { #ignore if high on manpower
 					factor = 0.5
 					manpower_per_military_factory > 3000
@@ -579,11 +637,11 @@ ideas = {
 
 			available = {
 				has_war = yes
-				enemies_strength_ratio > 0.6
 				OR = {
 					has_war_support > 0.6
 					surrender_progress > 0
 				}
+				enemies_strength_ratio > 0.6
 				NOT = {
 					has_country_flag = cannot_have_conscription
 					has_country_flag = cannot_have_extensive_conscription
@@ -600,6 +658,10 @@ ideas = {
 
 			ai_will_do = {
 				factor = 1
+				modifier = { #one step at a time
+					factor = 0
+					NOT = { has_idea = extensive_conscription }
+				}
 				modifier = { #already mobilising
 					factor = 0
 					NOT = { check_variable = { target_conscription_amount = current_conscription_amount } }
@@ -627,11 +689,11 @@ ideas = {
 
 			available = {
 				has_war = yes
-				enemies_strength_ratio > 0.75
 				OR = {
 					has_war_support > 0.7
 					surrender_progress > 0
 				}
+				enemies_strength_ratio > 0.75
 				NOT = {
 					has_country_flag = cannot_have_conscription
 					has_country_flag = cannot_have_extensive_conscription
@@ -649,13 +711,17 @@ ideas = {
 
 			ai_will_do = {
 				factor = 1
+				modifier = { #one step at a time
+					factor = 0
+					NOT = { has_idea = service_by_requirement }
+				}
 				modifier = { #already mobilising
 					factor = 0
 					NOT = { check_variable = { target_conscription_amount = current_conscription_amount } }
 				}
 				modifier = { #ignore if high on manpower
 					factor = 0
-					manpower_per_military_factory > 5000
+					manpower_per_military_factory > 2800
 				}
 				modifier = { #lower if decent manpower
 					factor = 0.5
@@ -676,11 +742,11 @@ ideas = {
 
 			available = {
 				has_war = yes
-				enemies_strength_ratio > 1
 				OR = {
 					has_war_support > 0.85
 					surrender_progress > 0.25
 				}
+				enemies_strength_ratio > 1
 				NOT = {
 					has_country_flag = cannot_have_conscription
 					has_country_flag = cannot_have_extensive_conscription
@@ -697,6 +763,10 @@ ideas = {
 
 			ai_will_do = {
 				factor = 1
+				modifier = { #one step at a time
+					factor = 0
+					NOT = { has_idea = all_adults_serve }
+				}
 				modifier = { #already mobilising
 					factor = 0
 					NOT = { check_variable = { target_conscription_amount = current_conscription_amount } }
