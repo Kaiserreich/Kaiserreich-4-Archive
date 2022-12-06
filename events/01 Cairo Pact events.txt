@@ -33,8 +33,8 @@ country_event = { #War in the Desert setup event
 		country_event = { id = cp.9 days = 1 random_days = 2 }
 		country_event = { id = ottlib.21 days = 55 }
 		country_event = { id = cp.12 days = 10 }
-		country_event = { id = cp.13 days = 30 random = 15 }
-		country_event = { id = ottgui.4 days = 10 random = 72 }
+		country_event = { id = cp.13 days = 30 random_days = 15 }
+		country_event = { id = ottgui.4 days = 10 random_days = 3 }
 		if = {
 			limit = {
 				LBA = { has_war_with = OTT }
@@ -65,10 +65,20 @@ country_event = { #War in the Desert setup event
 				increase_conscription = yes
 				increase_mobilisation = yes
 				load_oob = EGY_war_cheat
-				add_equipment_to_stockpile = {
-					type = small_plane_airframe_0
-					amount = 25
-					producer = ENG
+				if = {
+					limit = { has_dlc_bba = yes }
+					add_equipment_to_stockpile = {
+						type = small_plane_airframe_0
+						amount = 25
+						producer = ENG
+					}
+				}
+				else = {
+					add_equipment_to_stockpile = {
+						type = fighter_equipment_0
+						amount = 25
+						producer = ENG
+					}
 				}
 			}
 			PER = {
@@ -175,6 +185,17 @@ country_event = { #War in the Desert setup event
 			save_global_event_target_as = volunteer_target
 			GER = { send_volunteers_to_TARGET = yes }
 			AUS = { send_volunteers_to_TARGET = yes }
+			if = {
+				limit = {
+					BUL = {
+						exists = yes
+						is_subject = no
+						has_socialist_government = no
+						has_relation_modifier = { target = PREV modifier = volunteer_limit_plus_three }
+					}
+				}
+				BUL = { send_volunteers_to_TARGET = yes }
+			}
 		}
 		EGY = {
 			save_global_event_target_as = volunteer_target
@@ -182,6 +203,7 @@ country_event = { #War in the Desert setup event
 			FRA = { send_volunteers_to_TARGET = yes }
 			SRI = { send_volunteers_to_TARGET = yes }
 			SWF = { send_volunteers_to_TARGET = yes }
+			HND = { send_volunteers_to_TARGET = yes }
 		}
 
 		#Romanian flavor event
@@ -189,18 +211,8 @@ country_event = { #War in the Desert setup event
 		ROM = {
 			country_event = { id = romania.202 days = 50 }
 		}
-		#BUL gets an idea to give OTT extra volunteers if it signed an alliance with them
-		if = {
-			limit = {
-				has_global_flag = BUL_OTT_accepted_alliance
-				BUL = {
-					has_non_aggression_pact_with = OTT
-					has_socialist_government = no
-					is_subject = no
-				}
-			}
-			BUL = { add_ideas = BUL_OTT_Alliance_Cairo_War }
-		}
+
+		#add GEO decision to attack OTT
 		GEO = { activate_targeted_decision = { target = TUR decision = GEO_attack_ottos_decision } }
 
 		#add JBS decision to join up with OTT
@@ -269,8 +281,17 @@ country_event = {	#End of an Era
 		OTT_remove_ottoman_ambitions_claims = yes
 		EGY = { country_event = cp.2 }
 		hidden_effect = {
+			remove_relation_modifier = {
+				target = BUL
+				modifier = volunteer_limit_plus_three
+			}
+			BUL = {
+				remove_relation_modifier = {
+					target = TUR
+					modifier = volunteer_limit_plus_three
+				}
+			}
 			country_event = { id = tur.0 days = 20 }
-			BUL = { remove_ideas = BUL_OTT_Alliance_Cairo_War } #remove idea for BUL to support OTT in the war
 			IRQ = {
 				IRQ_yasin_al_hashimi = {
 					set_nationality = PREV
@@ -374,10 +395,7 @@ country_event = { #Victory in the Mashriq
 			YEM = {
 				if = {
 					limit = { is_in_faction_with = EGY }
-					country_event = {
-						id = cp.6
-						days = 3
-					}
+					country_event = { id = cp.6 days = 3 }
 				}
 			}
 
@@ -431,10 +449,7 @@ country_event = { #Victory in the Mashriq
 						}
 					}
 					SAU = {
-						country_event = {
-							id = cp.5
-							hours = 2
-						}
+						country_event = { id = cp.5 hours = 2 }
 					}
 				}
 				else_if = {
@@ -444,10 +459,7 @@ country_event = { #Victory in the Mashriq
 						}
 					}
 					JBS = {
-						country_event = {
-							id = cp.5
-							hours = 2
-						}
+						country_event = { id = cp.5 hours = 2 }
 					}
 				}
 			}
@@ -635,6 +647,7 @@ country_event = { #Victory in the Mashriq
 						OR = {
 							AND = {
 								state = 585 #Batumi
+								585 = { is_claimed_by = ARM }
 								NOT = { GEO = { has_country_flag = was_at_war_with_OTT } }
 							}
 							state = 998 #Highland Karabagh
@@ -845,11 +858,11 @@ country_event = { #Victory in the Mashriq
 				save_event_target_as = white_peace_receiver
 				every_enemy_country = {
 					limit = {
+						is_valid_peace_target = yes
 						NOT = {
 							is_owner_neighbor_of = PREV
 							any_allied_country = { is_owner_neighbor_of = PREV.PREV }
 						}
-						is_valid_peace_target = yes
 					}
 					white_peace_with_TARGET = yes
 				}
@@ -890,36 +903,35 @@ country_event = { #Victory in the Mashriq
 				if = {
 					limit = { is_faction_leader = yes }
 					every_other_country = {
-						limit = { is_in_faction_with = ROOT }
+						limit = {
+							is_in_faction_with = PREV
+							is_subject = no
+						}
 						add_to_temp_array = { ROOT.former_ottoman_allies = THIS }
 					}
 					dismantle_faction = yes
 				}
-				for_each_scope_loop = {
-					array = ROOT.former_ottoman_allies
-					every_enemy_country = {
-						limit = {
-							is_valid_peace_target = yes
-							NOT = {
-								is_owner_neighbor_of = PREV
-								PREV = {
-									any_controlled_state = { is_owned_by = var:v }
-								}
-							}
+				every_subject_country = {
+					overlord = {
+						set_autonomy = {
+							target = PREV
+							autonomy_state = autonomy_free
 						}
-						white_peace_with_ROOT = yes
 					}
+					add_to_temp_array = { ROOT.former_ottoman_allies = THIS }
 				}
 			}
-
-			### Free all Ottoman puppets
-			every_country = {
-				limit = { is_subject_of = OTT }
-				OTT = {
-					set_autonomy = {
-						target = PREV
-						autonomy_state = autonomy_free
+			for_each_scope_loop = {
+				array = ROOT.former_ottoman_allies
+				every_enemy_country = {
+					limit = {
+						is_valid_peace_target = yes
+						NOT = {
+							is_owner_neighbor_of = PREV
+							any_allied_country = { is_owner_neighbor_of = PREV.PREV }
+						}
 					}
+					white_peace_with_ROOT = yes
 				}
 			}
 		}
@@ -931,10 +943,7 @@ country_event = { #Victory in the Mashriq
 			base = 100
 			modifier = {
 				factor = 0
-				has_game_rule = {
-					rule = EGY_syria
-					option = EGY_SYR_Annexed
-				}
+				has_game_rule = { rule = EGY_syria option = EGY_SYRIA_ANNEX }
 			}
 		}
 		every_owned_state = {
@@ -1028,10 +1037,7 @@ country_event = { #Victory in the Mashriq
 			base = 0
 			modifier = {
 				add = 100
-				has_game_rule = {
-					rule = EGY_syria
-					option = EGY_SYR_Annexed
-				}
+				has_game_rule = { rule = EGY_syria option = EGY_SYRIA_ANNEX }
 			}
 		}
 		add_state_claim = 454 #Jerusalem
@@ -1174,10 +1180,7 @@ country_event = { #Future of Syria
 			base = 50
 			modifier = {
 				factor = 0
-				has_game_rule = {
-					rule = EGY_syria
-					option = EGY_SYR_Monarchy
-				}
+				has_game_rule = { rule = EGY_syria option = EGY_SYRIA_MONARCHY }
 			}
 		}
 		SYR = {
@@ -1211,10 +1214,7 @@ country_event = { #Future of Syria
 			base = 50
 			modifier = {
 				factor = 0
-				has_game_rule = {
-					rule = EGY_syria
-					option = EGY_SYR_Republic
-				}
+				has_game_rule = { rule = EGY_syria option = EGY_SYRIA_REPUBLIC }
 			}
 		}
 		puppet = SYR
@@ -1283,10 +1283,7 @@ country_event = { #Future of Syria
 					national_populist = 8
 				}
 			}
-			country_event = {
-				id = syrrep.1
-				days = 1
-			}
+			country_event = { id = syrrep.1 days = 1 }
 			change_tag_from = ROOT
 		}
 	}
@@ -1538,10 +1535,7 @@ country_event = {
 		add_ideas = OTT_Ottoman_Stand
 		custom_effect_tooltip = ott_cp_war_decisions_tt
 		hidden_effect = {
-			country_event = {
-				id = ottgui.5
-				days = 450
-			}
+			country_event = { id = ottgui.5 days = 450 }
 		}
 	}
 }
@@ -1786,7 +1780,7 @@ country_event = { #The Cypriot Issue
 				}
 			}
 			if = {
-				limit = { has_dlc_mtg = yes}
+				limit = { has_dlc_mtg = yes }
 				set_technology = { mtg_transport = 1 }
 			}
 			else = {
