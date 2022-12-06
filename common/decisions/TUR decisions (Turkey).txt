@@ -686,7 +686,7 @@ TUR_after_defeat_foreign = {
 					AND = {
 						exists = yes
 						is_in_faction = no
-						is_puppet = no
+						is_subject = no
 					}
 				}
 			}
@@ -767,20 +767,28 @@ TUR_after_defeat_foreign = {
 	# BUL :   can be attacked by Fevzi if not in a faction or naturally if in war with the RP and turkey is in
 	# Armenia can sign non-aggression pact with Turkey
 	# GEO : if they renounced Poti
+
 	TUR_demand_home_of_revolution = {
 		icon = GFX_decision_tur_unifying_the_country
+
 		allowed = { always = no }
+
 		visible = {
 			can_declare_war_on = FROM
-			FROM = {
-				owns_state = 989 #thesalonike
+			FROM = { owns_state = 989 } #Chalcidice
+		}
+
+		cancel_trigger = {
+			OR = {
+				is_subject = yes
+				NOT = { can_declare_war_on = FROM }
+				NOT = { FROM = { owns_state = 989 } } #Chalcidice
 			}
 		}
 
-		fire_only_once = yes
 		cost = 0
 		days_remove = 25
-		cancel_if_not_visible = yes
+		fire_only_once = yes
 		war_with_target_on_remove = yes
 
 		ai_will_do = {
@@ -795,39 +803,39 @@ TUR_after_defeat_foreign = {
 			}
 		}
 
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancelled TUR_demand_home_of_revolution target: [From.GetName]"
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision TUR_demand_home_of_revolution target: [From.GetName]"
-			add_war_support = 0.05
-		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove TUR_demand_home_of_revolution target: [From.GetName]"
-			FROM = { country_event = tur.84 }
+			add_war_support = 0.05
 			add_state_claim = 989 #Thessaloniki
 			add_state_claim = 769 #Eastern Salonica
 			add_state_claim = 184 #Western Thrace
+			FROM = { country_event = tur.84 }
 		}
 	}
+
 	TUR_intervene_in_war_against_egypt = {
 		icon = GFX_decision_oppression
+
 		allowed = { always = no }
 
 		available = {
-			FROM = {
-				surrender_progress > 0.3
-			}
+			FROM = { surrender_progress > 0.3 }
 		}
 
 		visible = {
 			can_declare_war_on = FROM
 		}
 
-		fire_only_once = yes
+		cancel_trigger = {
+			OR = {
+				is_subject = yes
+				NOT = { can_declare_war_on = FROM }
+			}
+		}
+
 		cost = 0
 		days_remove = 25
-		cancel_if_not_visible = yes
+		fire_only_once = yes
 		war_with_target_on_remove = yes
 
 		ai_will_do = {
@@ -864,51 +872,51 @@ TUR_after_defeat_foreign = {
 	}
 	TUR_invade_target = {
 		icon = GFX_decision_oppression
+
 		allowed = { always = no }
+
+		available = {
+			NOT = { has_non_aggression_pact_with = FROM }
+			OR = {
+				is_neighbor_of = FROM
+				FROM = { any_home_area_neighbor_country = { is_ally_with = ROOT } }
+			}
+		}
 
 		visible = {
 			can_declare_war_on = FROM
-		}
-		available = {
-			NOT = {
-				has_non_aggression_pact_with = FROM
-			}
-			if = {
-				limit = {
-					FROM = {
-						OR = {
-							tag = RUS
-							tag = SOV
-						}
-					}
-				}
-				FROM = { has_war_with = GER }
-			}
-			if = {
-				limit = { FROM = { tag = GRE } } #Greece can only be attacked if they went Megali
-				FROM = {
+			FROM = {
+				if = {
+					limit = { tag = GRE } #Greece can only be attacked if they went Megali
 					OR = {
-						controls_state = 341 #Adrianople
-						controls_state = 773 #Constantinople
-						controls_state = 339 #Smyrna
+						owns_state = 341 #Adrianople
+						owns_state = 773 #Constantinople
+						owns_state = 339 #Smyrna
 					}
 				}
-			}
-			if = {
-				limit = {
-					OR = {
-						FROM = { tag = GRE }
-						FROM = { tag = BUL }
-					}
-				}
-				FROM = { is_in_faction = no }
 			}
 		}
 
-		fire_only_once = yes
+		cancel_trigger = {
+			OR = {
+				is_subject = yes
+				NOT = { can_declare_war_on = FROM }
+				FROM = {
+					if = {
+						limit = { tag = GRE }
+						NOT = {
+							owns_state = 341 #Adrianople
+							owns_state = 773 #Constantinople
+							owns_state = 339 #Smyrna
+						}
+					}
+				}
+			}
+		}
+
 		cost = 0
 		days_remove = 25
-		cancel_if_not_visible = yes
+		fire_only_once = yes
 		war_with_target_on_remove = yes
 
 		ai_will_do = {
@@ -927,12 +935,14 @@ TUR_after_defeat_foreign = {
 			log = "[GetDateText]: [Root.GetName]: Decision cancelled TUR_invade_target target: [From.GetName]"
 			clear_decision_attack_AI = yes
 		}
+
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision TUR_invade_target target: [From.GetName]"
 			add_war_support = 0.05
 			setup_decision_attack_AI = yes
 			FROM = { country_event = kr.political.30 } #warning event
 		}
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove TUR_invade_target target: [From.GetName]"
 			clear_decision_attack_AI = yes
@@ -1190,23 +1200,48 @@ TUR_question_of_iskanderun = {
 	}
 }
 TUR_kurdish_revolt = {
-	TUR_kurdish_sentiment_increase = {
+	TUR_kurdish_restlessness = {
 		icon = generic_prepare_civil_war
 
-		activation = {
-			always = no
-		}
+		allowed = { always = no } #activated by tur.90
+
 		available = {
 			hidden_trigger = { always = no }
-			NOT = { has_war_with = KDR }
 		}
+
+		selectable_mission = no
+		is_good = no
+		days_mission_timeout = 280
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout TUR_kurdish_restlessness"
+			custom_effect_tooltip = TUR_kurdish_revolt_at_fifty_percent
+			set_variable = { TUR_kurdish_revolt_threshold = 50 }
+			hidden_effect = {
+				country_event = { id = tur.91 days = 1 random_days = 5 }
+				country_event = { id = tur.92 days = 1 random_days = 5 }
+			}
+		}
+	}
+	TUR_growing_kurdish_unrest = {
+		icon = generic_prepare_civil_war
+
+		allowed = { always = no } #activated by tur.90
+
+		available = {
+			hidden_trigger = { always = no }
+		}
+
 		cancel_trigger = {
 			OR = {
+				is_subject = yes
+				has_war_with = KDR
+				custom_trigger_tooltip = { tooltip = or_clarification_tooltip always = no }
 				NOT = {
-					has_variable = kurdish_situation
-				}
-				TUR = {
-					has_war_with = KDR
+					owns_state = 350
+					owns_state = 352
+					owns_state = 354
+					owns_state = 1000
 				}
 			}
 		}
@@ -1215,56 +1250,55 @@ TUR_kurdish_revolt = {
 		is_good = no
 		days_mission_timeout = 40
 
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled TUR_growing_kurdish_unrest"
+			TUR_disable_kurdish_decisions = yes
+			hidden_effect = {
+				if = {
+					limit = { is_subject = yes }
+					TUR_clear_kurdish_modifiers_and_resistance = yes
+				}
+			}
+		}
+
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout TUR_kurdish_sentiment_increase"
-			add_to_variable = {
-				kurdish_situation = 30
-				tooltip = TUR_increase_kurdish_independentism
-			}
-			add_to_variable = {
-				kurdish_round = 1
-			}
-			activate_mission = TUR_kurdish_sentiment_increase
+			log = "[GetDateText]: [Root.GetName]: Decision timeout TUR_growing_kurdish_unrest"
+			add_to_variable = { TUR_kurdish_unrest_round = 1 }
+			set_temp_variable = { TUR_unrest_change = 15 }
+			TUR_change_kurdish_unrest = yes
+			hidden_effect = { activate_mission = TUR_growing_kurdish_unrest }
 		}
 	}
 	TUR_literacy_campaign_in_kurdistan = {
 		icon = GFX_decision_generic_research
 
-		allowed = { always = yes	}
+		allowed = { always = no } #activated by tur.90
 
-		available = {
-			has_variable = kurdish_situation
-			check_variable = {
-				kurdish_situation > 79
-			}
-			NOT = { has_war_with = KDR }
-		}
-
-		visible = {
-			has_variable = kurdish_situation
-		}
 		modifier = {
-			political_power_gain = -0.10
-			research_speed_factor = 0.1
+			political_power_factor = -0.05
+			research_speed_factor = -0.1
 		}
 
 		cost = 60
 		days_remove = 60
 		fire_only_once = yes
+		target_non_existing = yes
 
 		ai_will_do = {
-			factor = 100
+			factor = 0
+			modifier = {
+				add = 100
+				check_variable = { TUR_kurdish_unrest_value > 30 }
+			}
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove TUR_literacy_campaign_in_kurdistan"
-			add_to_variable = {
-				kurdish_situation = -80
-				tooltip = TUR_decrease_kurdish_independentism_60
-			}
+			set_temp_variable = { TUR_unrest_change = -40 }
+			TUR_change_kurdish_unrest = yes
 			add_tech_bonus = {
 				name = TUR_literacy_campaign_in_kurdistan
-				bonus = 0.25
+				bonus = 1
 				uses = 1
 				category = industry
 			}
@@ -1273,125 +1307,118 @@ TUR_kurdish_revolt = {
 	TUR_hunt_down_rebels = {
 		icon = GFX_decision_generic_prepare_civil_war
 
-		allowed = { always = yes }
+		allowed = { always = no } #activated by tur.90
 
-		available = {
-			has_variable = kurdish_situation
-			check_variable = {
-				kurdish_situation > 19
-			}
-			NOT = { has_war_with = KDR }
+		custom_cost_text = need_for_operation
+		custom_cost_trigger = {
+			has_equipment = { infantry_equipment > 1000 }
 		}
 
-		visible = {
-			has_variable = kurdish_situation
-		}
+		days_remove = 30
+		days_re_enable = 15
+		target_non_existing = yes
+
 		modifier = {
+			political_power_factor = -0.05
 			army_org_factor = -0.1
 		}
 
-		custom_cost_trigger = {
-			has_equipment = {
-				infantry_equipment_1 > 1000
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 100
+				check_variable = { TUR_kurdish_unrest_value > 5 }
+			}
+			modifier = {
+				factor = 0
+				stockpile_ratio = { archetype = infantry_equipment ratio < 1.5 }
 			}
 		}
-		custom_cost_text = need_for_operation
-		days_remove = 30
 
-		ai_will_do = {
-			factor = 100
-		}
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision TUR_hunt_down_rebels"
 			add_equipment_to_stockpile = {
-				type = infantry_equipment_1
+				type = infantry_equipment
 				amount = -1000
 			}
 		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove TUR_hunt_down_rebels"
-			add_to_variable = {
-				kurdish_situation = -20
-				tooltip = TUR_decrease_kurdish_independentism_20
-			}
+			set_temp_variable = { TUR_unrest_change = -10 }
+			TUR_change_kurdish_unrest = yes
 		}
 	}
 	TUR_send_the_army = {
 		icon = GFX_decision_generic_military
 
-		allowed = { always = yes }
+		allowed = { always = no } #activated by tur.90
 
 		available = {
-			has_variable = kurdish_situation
-			check_variable = {
-				kurdish_situation > 49
+			if = {
+				limit = { owns_state = 350 }
+				divisions_in_state = { size > 1 state = 350 }
 			}
-			AND = {
-				divisions_in_state = {
-					size > 1
-					state = 345
-				}
-				divisions_in_state = {
-					size > 1
-					state = 355
-				}
+			if = {
+				limit = { owns_state = 352 }
+				divisions_in_state = { size > 1 state = 352 }
 			}
-			NOT = { has_war_with = KDR }
+			if = {
+				limit = { owns_state = 354 }
+				divisions_in_state = { size > 1 state = 354 }
+			}
+			if = {
+				limit = { owns_state = 1000 }
+				divisions_in_state = { size > 1 state = 1000 }
+			}
 		}
 
-		cost = 10
-		visible = {
-			has_variable = kurdish_situation
-		}
+		cost = 25
+		days_remove = 30
+		days_re_enable = 15
+		target_non_existing = yes
+
 		modifier = {
+			political_power_factor = -0.05
 			army_org_factor = -0.1
 		}
 
-		days_remove = 10
-
 		ai_will_do = {
-			factor = 100
+			factor = 0
+			modifier = {
+				add = 100
+				check_variable = { TUR_kurdish_unrest_value > 15 }
+			}
 		}
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove TUR_send_the_army"
-			add_to_variable = {
-				kurdish_situation = -50
-				tooltip = TUR_decrease_kurdish_independentism_20
-			}
 			army_experience = 10
+			set_temp_variable = { TUR_unrest_change = -25 }
+			TUR_change_kurdish_unrest = yes
 		}
 	}
 	TUR_arrest_leaders = {
 		icon = GFX_decision_generic_army_support
 
-		allowed = { always = yes	}
-
-		available = {
-			has_variable = kurdish_situation
-			check_variable = {
-				kurdish_situation > 49
-			}
-			NOT = { has_war_with = KDR }
-		}
-
-		visible = {
-			has_variable = kurdish_situation
-		}
+		allowed = { always = no } #activated by tur.90
 
 		cost = 70
 		days_remove = 40
 		fire_only_once = yes
+		target_non_existing = yes
 
 		ai_will_do = {
-			factor = 100
+			factor = 0
+			modifier = {
+				add = 100
+				check_variable = { TUR_kurdish_unrest_value > 15 }
+			}
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove TUR_arrest_leaders"
-			add_to_variable = {
-				kurdish_situation = -50
-				tooltip = TUR_decrease_kurdish_independentism_40
-			}
+			set_temp_variable = { TUR_unrest_change = -25 }
+			TUR_change_kurdish_unrest = yes
 			add_popularity = {
 				ideology = syndicalist
 				popularity = -0.05
@@ -1405,128 +1432,95 @@ TUR_kurdish_revolt = {
 	TUR_increase_police_presence = {
 		icon = GFX_decision_soldierly_discipline
 
-		allowed = { always = yes	}
+		allowed = { always = no } #activated by tur.90
 
-		available = {
-			has_variable = kurdish_situation
-			check_variable = {
-				kurdish_situation > 59
-			}
-			NOT = { has_war_with = KDR }
-		}
-
-		visible = {
-			has_variable = kurdish_situation
-		}
-		modifier = {
-			required_garrison_factor = -0.1
-		}
-
-		custom_cost_trigger = {
-			has_manpower > 500
-		}
 		custom_cost_text = manpower_for_police
-		days_remove = 20
+		custom_cost_trigger = { has_manpower > 1000 }
+
+		days_remove = 30
 		fire_only_once = yes
+		target_non_existing = yes
+
+		modifier = {
+			political_power_factor = -0.05
+			required_garrison_factor = 0.1
+		}
 
 		ai_will_do = {
-			factor = 100
+			factor = 0
+			modifier = {
+				add = 100
+				check_variable = { TUR_kurdish_unrest_value > 20 }
+			}
 		}
+
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision TUR_increase_police_presence"
-			add_manpower = -500
+			hidden_effect = { add_manpower = -1000 }
 		}
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove TUR_increase_police_presence"
-			add_to_variable = {
-				kurdish_situation = -60
-				tooltip = TUR_decrease_kurdish_independentism_40
-			}
-			add_stability = 0.02
+			add_stability = 0.05
+			set_temp_variable = { TUR_unrest_change = -30 }
+			TUR_change_kurdish_unrest = yes
 		}
 	}
 	TUR_grant_autonomy_to_kurdistan = {
 		icon = GFX_decision_freedom
 
-		allowed = { always = yes	}
+		allowed = { always = no } #activated by tur.90
 
 		available = {
-			has_variable = kurdish_situation
-			check_variable = {
-				kurdish_situation > 99
-			}
-			NOT = { has_war_with = KDR }
 			NOT = {
-				354 = {
-					has_dynamic_modifier = {
-						modifier = TUR_kemalist_loyalties
-					}
-				}
-				1000 = {
-					has_dynamic_modifier = {
-						modifier = TUR_kemalist_loyalties
+				KDR = {
+					any_core_state = {
+						hidden_trigger = { is_owned_by = ROOT }
+						has_dynamic_modifier = { modifier = TUR_kemalist_loyalties }
 					}
 				}
 			}
 		}
 
 		visible = {
-			has_variable = kurdish_situation
-			check_variable = {
-				kurdish_situation > 79
+			check_variable = { TUR_kurdish_unrest_value > 39 }
+		}
+
+		cost = 50
+		days_remove = 100
+		fire_only_once = yes
+		target_non_existing = yes
+
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 100
+				check_variable = { TUR_kurdish_unrest_value > 70 }
 			}
 		}
 
-		cost = 20
-		days_remove = 100
-		fire_only_once = yes
-
-		ai_will_do = {
-			factor = 50
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision TUR_grant_autonomy_to_kurdistan"
+			set_temp_variable = { TUR_unrest_change = -50 }
+			TUR_change_kurdish_unrest = yes
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove TUR_grant_autonomy_to_kurdistan"
-			add_to_variable = {
-				kurdish_situation = -100
-				tooltip = TUR_decrease_kurdish_independentism_80
-			}
-			if = {
-				limit = {
-					354 = {
-						is_owned_and_controlled_by = TUR
-					}
-				}
-				354 = {
-					add_dynamic_modifier = { modifier = TUR_kurdish_autonomy }
-				}
-			}
-			else_if = {
-				limit = {
-					1000 = {
-						is_owned_and_controlled_by = TUR
-					}
-				}
-				1000 = {
-					add_dynamic_modifier = { modifier = TUR_kurdish_autonomy }
-				}
-			}
 			add_stability = -0.1
+			every_owned_state = {
+				limit = { has_dynamic_modifier = { modifier = TUR_kurdish_unrest_modifier } }
+				add_dynamic_modifier = { modifier = TUR_kurdish_autonomy }
+			}
 		}
 	}
 	TUR_kurdish_revolt_timeout = {
 		icon = generic_prepare_civil_war
 
-		activation = {
-			always = no
-		}
+		allowed = { always = no } #activated by tur.92
+
 		available = {
-			NOT = { country_exists = KDR }
-		}
-		cancel_trigger = {
-			NOT = {
-				has_variable = kurdish_situation
-			}
+			NOT = { has_war_with = KDR }
 		}
 
 		selectable_mission = no
@@ -1536,19 +1530,18 @@ TUR_kurdish_revolt = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision TUR_kurdish_revolt_timeout"
 			add_stability = 0.10
-			clear_variable = kurdish_situation
 		}
 
 		timeout_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision timeout TUR_kurdish_revolt_timeout"
-			TUR = {
-				country_event = { id = tur.107 days = 3 }
+			effect_tooltip = {
+				add_stability = -0.3
+				KDR = { white_peace_with_ROOT = yes }
 			}
-			KDR = {
-				country_event = { id = kdr.1 days = 3 }
+			hidden_effect = {
+				country_event = tur.107
+				KDR = { country_event = anatolian_kurdistan.1 }
 			}
-			clear_variable = kurdish_situation
-			remove_mission = TUR_kurdish_sentiment_increase
 		}
 	}
 }

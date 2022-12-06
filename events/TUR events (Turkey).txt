@@ -3008,22 +3008,50 @@ country_event = { #Kurdish independentist sentiment
 	fire_only_once = yes
 	is_triggered_only = yes
 
-	option = { ####of course they want it
+	trigger = {
+		is_subject = no
+		OR = {
+			owns_state = 350 #Diyarbakir
+			owns_state = 352 #Van
+			owns_state = 354 #Erzurum
+			owns_state = 1000 #Kars
+		}
+	}
+
+	option = {
 		name = tur.90.a
-		set_variable = { kurdish_situation = 0 }
-		set_variable = { kurdish_round = 0 }
-		activate_mission = TUR_kurdish_sentiment_increase
+		set_variable = { TUR_kurdish_unrest_value = 0 }
+		activate_mission = TUR_growing_kurdish_unrest
 		every_owned_state = {
 			limit = {
 				OR = {
-					state = 354
-					state = 1000
+					state = 350 #Diyarbakir
+					state = 352 #Van
+					state = 354 #Erzurum
+					state = 1000 #Kars
 				}
 			}
-			set_demilitarized_zone = yes
+			set_state_flag = TUR_kurdish_unrest_state
+			hidden_effect = { add_core_of = KDR }
+			force_enable_resistance = { occupier = TUR occupied = KDR }
+			add_dynamic_modifier = { modifier = TUR_kurdish_unrest_modifier }
+			if = {
+				limit = { has_resistance = no }
+				start_resistance = yes
+			}
+		}
+		hidden_effect = {
+			activate_mission = TUR_kurdish_restlessness
+			activate_targeted_decision = { decision = TUR_literacy_campaign_in_kurdistan target = KDR }
+			activate_targeted_decision = { decision = TUR_send_the_army target = KDR }
+			activate_targeted_decision = { decision = TUR_hunt_down_rebels target = KDR }
+			activate_targeted_decision = { decision = TUR_arrest_leaders target = KDR }
+			activate_targeted_decision = { decision = TUR_increase_police_presence target = KDR }
+			activate_targeted_decision = { decision = TUR_grant_autonomy_to_kurdistan target = KDR }
 		}
 	}
 }
+
 country_event = { #Kurdish situation appeased
 	id = tur.91
 	immediate = { log = "[GetDateText]: [Root.GetName]: event tur.91 FROM = [From.GetName]" }
@@ -3031,52 +3059,35 @@ country_event = { #Kurdish situation appeased
 	desc = tur.91.d
 	picture = GFX_OTT_Gendarmerie
 
-	fire_only_once = yes
+	is_triggered_only = yes
 
 	trigger = {
-		tag = TUR
-		AND = {
-			check_variable = {
-				kurdish_situation < 100
-			}
-			check_variable = {
-				kurdish_round > 7
-			}
-		}
+		has_active_mission = TUR_growing_kurdish_unrest
+		NOT = { has_active_mission = TUR_kurdish_restlessness }
+		check_variable = { TUR_kurdish_unrest_value < TUR_kurdish_revolt_threshold?99 }
+	}
+
+	immediate = {
+		hidden_effect = { remove_mission = TUR_growing_kurdish_unrest }
 	}
 
 	option = {
 		name = tur.91.a
-		clear_variable = kurdish_situation
-		clear_variable = kurdish_round
-		hidden_effect = {
-			remove_decision = TUR_literacy_campaign_in_kurdistan
-			remove_decision = TUR_hunt_down_rebels
-			remove_decision = TUR_send_the_army
-			remove_decision = TUR_arrest_leaders
-			remove_decision = TUR_increase_police_presence
-			remove_decision = TUR_grant_autonomy_to_kurdistan
-		}
 		add_stability = 0.1
-		if = {
-			limit = {
-				owns_state = 354
-			}
-			354 = {
-				set_demilitarized_zone = no
-			}
-		}
-		if = {
-			limit = {
-				owns_state = 1000
-			}
-			1000 = {
-				set_demilitarized_zone = no
+		effect_tooltip = {
+			remove_mission = TUR_growing_kurdish_unrest
+			every_owned_state = {
+				limit = { has_dynamic_modifier = { modifier = TUR_kurdish_unrest_modifier } }
+				remove_dynamic_modifier = { modifier = TUR_kurdish_unrest_modifier }
+				force_enable_resistance = { occupier = TUR occupied = KDR clear = yes }
+				cancel_resistance = yes
 			}
 		}
-		remove_mission = TUR_kurdish_sentiment_increase
+		TUR_disable_kurdish_decisions = yes
+		TUR_clear_kurdish_modifiers_and_resistance = yes
 	}
 }
+
 country_event = { #Kurdish revolt
 	id = tur.92
 	immediate = { log = "[GetDateText]: [Root.GetName]: event tur.92 FROM = [From.GetName]" }
@@ -3084,83 +3095,55 @@ country_event = { #Kurdish revolt
 	desc = tur.92.d
 	picture = GFX_OTT_Barzani_Revolt
 
-	fire_only_once = yes
+	is_triggered_only = yes
 
 	trigger = {
-		tag = TUR
-		OR = {
-			AND = {
-				check_variable = {
-					kurdish_situation > 99
-				}
-				check_variable = {
-					kurdish_round > 7
-				}
-			}
-			check_variable = {
-				kurdish_situation > 199
-			}
-		}
+		has_active_mission = TUR_growing_kurdish_unrest
+		check_variable = { TUR_kurdish_unrest_value > TUR_kurdish_revolt_threshold?99 }
+		any_controlled_state = { has_dynamic_modifier = { modifier = TUR_kurdish_unrest_modifier } }
+	}
+
+	immediate = {
+		hidden_effect = { remove_mission = TUR_growing_kurdish_unrest }
 	}
 
 	option = {
 		name = tur.92.a
-		clear_variable = kurdish_round
-		activate_mission = TUR_kurdish_revolt_timeout
-		354 = {
-			set_demilitarized_zone = no
-		}
-		1000 = {
-			set_demilitarized_zone = no
-		}
 		add_timed_idea = {
 			idea = TUR_kurdish_crisis
 			days = 100
 		}
-		hidden_effect = {
-			remove_decision = TUR_literacy_campaign_in_kurdistan
-			remove_decision = TUR_hunt_down_rebels
-			remove_decision = TUR_send_the_army
-			remove_decision = TUR_arrest_leaders
-			remove_decision = TUR_increase_police_presence
-			remove_decision = TUR_grant_autonomy_to_kurdistan
-		}
-		### Anatolian Kurdistan
+		effect_tooltip = { remove_mission = TUR_growing_kurdish_unrest }
 		every_owned_state = {
 			limit = {
-				OR = {
-					state = 350
-					state = 352
-					state = 354
-					state = 1000
-				}
+				is_controlled_by = ROOT
+				has_dynamic_modifier = { modifier = TUR_kurdish_unrest_modifier }
 			}
-			KDR = {
-				add_state_core = PREV
-				transfer_state = PREV
+			transfer_state_to = KDR
+			teleport_armies = {
+				limit = { NOT = { tag = KDR } }
+				to_state_array = owned_controlled_states
 			}
 		}
-		if = {
-			limit = { country_exists = KDR }
-			KDR = {
-				load_oob = KDR_revolt
-				add_ideas = KDR_islamic_fervour
-				declare_war_on = {
-					target = TUR
-					type = annex_everything
-				}
+		TUR_disable_kurdish_decisions = yes
+		TUR_clear_kurdish_modifiers_and_resistance = yes
+		KDR = {
+			declare_war_on = {
+				target = TUR
+				type = independence_wargoal
+			}
+			hidden_effect = {
+				KDR_spawn_revolt_units = yes
 				set_politics = {
 					ruling_party = paternal_autocrat
 					elections_allowed = no
 				}
-				load_focus_tree = kdr_focus
-				complete_national_focus = KDR_kurdish_revolt
-				clear_variable = kurdish_situation
-				remove_mission = TUR_kurdish_sentiment_increase
 			}
 		}
+		activate_mission = TUR_kurdish_revolt_timeout
 	}
 }
+
 country_event = { #Syria refuse to cede Alexandretta
 	id = tur.93
 	immediate = { log = "[GetDateText]: [Root.GetName]: event tur.93 FROM = [From.GetName]" }
@@ -3461,13 +3444,12 @@ country_event = { #Kurdistan independent
 	title = tur.107.t
 	desc = tur.107.d
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	option = {
 		name = tur.107.a
 		add_stability = -0.3
-		clear_variable = kurdish_situation
+		KDR = { white_peace_with_ROOT = yes }
 	}
 }
 country_event = { #Russia wants to achieve us

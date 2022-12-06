@@ -4,23 +4,27 @@
 # By Zankoas and The Alpha Dog
 ################################
 
+@JAP_fading_sun_timeout = 180
+
 JAP_fading_sun = {
-	JAP_we_are_losing = {
+	JAP_fading_sun_timer = {
 		icon = revolt
 
-		available = {
-			var:525.owner = {
-				has_full_control_of_state = 525
-				has_full_control_of_state = 527
-			}
-		}
+		allowed = { always = no } #activated by japfor.229
 
-		activation = {
-			is_ai = yes
-			NOT = {
-				has_global_flag = JAP_will_surrender
-				525 = { is_controlled_by_ROOT_or_ally = yes }
-				527 = { is_controlled_by_ROOT_or_ally = yes }
+		available = {
+			525 = { owner = { has_full_control_of_state = PREV } }
+			527 = { owner = { has_full_control_of_state = PREV } }
+			if = {
+				limit = { has_subject = MAN }
+				MAN = { has_capitulated = yes }
+			}
+			else_if = {
+				limit = { NOT = { has_war_with = FNG } }
+				OR = {
+					NOT = { country_exists = FNG }
+					FNG = { has_capitulated = yes }
+				}
 			}
 		}
 
@@ -29,13 +33,99 @@ JAP_fading_sun = {
 		}
 
 		is_good = no
-		days_mission_timeout = 180
+		days_mission_timeout = @JAP_fading_sun_timeout
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancelled JAP_fading_sun_timer"
+			hidden_effect = {
+				every_country = {
+					limit = { has_active_mission = JAP_fading_sun_timer_enemy }
+					remove_mission = JAP_fading_sun_timer_enemy
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision JAP_fading_sun_timer"
+			hidden_effect = {
+				every_country = {
+					limit = { has_active_mission = JAP_fading_sun_timer_enemy }
+					remove_mission = JAP_fading_sun_timer_enemy
+				}
+			}
+		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_we_are_losing"
-			set_global_flag = JAP_will_surrender
+			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_fading_sun_timer"
+			if = {
+				limit = { is_ai = no }
+				add_stability = -0.1
+				add_war_support = -0.1
+				hidden_effect = {
+					activate_mission = JAP_fading_sun_timer
+					every_enemy_country = {
+						limit = {
+							is_ai = no
+							OR = {
+								is_chinese_tag = yes
+								is_russian_tag = yes
+							}
+						}
+						activate_mission = JAP_fading_sun_timer_enemy
+					}
+				}
+			}
+			else = {
+				set_global_flag = JAP_will_surrender
+			}
 		}
 	}
+	JAP_fading_sun_timer_enemy = {
+		icon = revolt
+
+		allowed = { always = no } #activated by japfor.229
+
+		available = {
+			525 = { owner = { has_full_control_of_state = PREV } }
+			527 = { owner = { has_full_control_of_state = PREV } }
+			if = {
+				limit = { JAP = { has_subject = MAN } }
+				MAN = { has_capitulated = yes }
+			}
+			else_if = {
+				limit = { NOT = { JAP = { has_war_with = FNG } } }
+				OR = {
+					NOT = { country_exists = FNG }
+					FNG = { has_capitulated = yes }
+				}
+			}
+		}
+
+		cancel_trigger = {
+			NOT = { has_war_with = JAP }
+		}
+
+		is_good = yes
+		days_mission_timeout = @JAP_fading_sun_timeout
+
+		timeout_effect = {
+			#no logging here - this mission is only meant to give a player information
+			effect_tooltip = {
+				if = {
+					limit = { JAP = { is_ai = no } }
+					JAP = {
+						add_stability = -0.1
+						add_war_support = -0.1
+					}
+				}
+				else = {
+					custom_effect_tooltip = JAP_will_surrender_if_forced_out_of_china
+					country_event = japfor.230
+				}
+			}
+		}
+	}
+
 	JAP_offer_peace_to_china = {
 		icon = peace_dove
 
@@ -48,7 +138,7 @@ JAP_fading_sun = {
 				limit = { is_ally_with = MAN }
 				MAN = { has_capitulated = yes }
 			}
-			if = {
+			else_if = {
 				limit = { NOT = { has_war_with = FNG } }
 				OR = {
 					NOT = { country_exists = FNG }
@@ -82,8 +172,8 @@ JAP_fading_sun = {
 		}
 
 		visible = {
-			is_valid_peace_target = yes
 			has_war_with = CHN
+			is_valid_peace_target = yes
 			has_capitulated = no
 		}
 
@@ -94,7 +184,10 @@ JAP_fading_sun = {
 			factor = 0
 			modifier = {
 				add = 1000
-				has_global_flag = JAP_will_surrender
+				OR = {
+					has_global_flag = JAP_will_surrender
+					surrender_progress > 0.1 #Japan was directly invaded
+				}
 			}
 		}
 
@@ -121,6 +214,7 @@ JAP_fading_sun = {
 			}
 		}
 	}
+
 	JAP_offer_peace_to_russia = {
 		icon = peace_dove
 
@@ -151,8 +245,8 @@ JAP_fading_sun = {
 		}
 
 		visible = {
-			is_valid_peace_target = yes
 			has_war_with = FROM
+			is_valid_peace_target = yes
 			has_capitulated = no
 			FROM = { is_valid_peace_target = yes }
 		}
@@ -177,7 +271,11 @@ JAP_fading_sun = {
 			factor = 0
 			modifier = {
 				add = 1000
-				has_global_flag = JAP_will_surrender
+				OR = {
+					has_global_flag = JAP_will_surrender
+					surrender_progress > 0.1 #Japan was directly invaded
+					strength_ratio = { tag = FROM ratio < 0.3 }
+				}
 			}
 		}
 
