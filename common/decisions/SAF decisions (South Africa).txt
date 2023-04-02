@@ -4,7 +4,7 @@ political_actions = {
 	SAF_core_south_west = {
 		icon = GFX_decision_generic_nationalism
 
-		allowed = { always = no } #activated by NMB annexation or saf.181-182
+		allowed = { original_tag = SAF }
 
 		available = {
 			has_full_control_of_state = 541
@@ -19,7 +19,6 @@ political_actions = {
 		}
 
 		cost = 25
-		target_non_existing = yes
 
 		highlight_states = {
 			highlight_state_targets = {
@@ -37,7 +36,6 @@ political_actions = {
 			541 = { remove_claim_and_add_core_of_ROOT = yes }
 			964 = { remove_claim_and_add_core_of_ROOT = yes }
 			hidden_effect = {
-				remove_targeted_decision = { decision = SAF_core_south_west target = NMB }
 				country_event = { id = saf.314 days = 90 random_days = 30 }
 			}
 		}
@@ -46,7 +44,7 @@ political_actions = {
 	SAF_core_mozambique = {
 		icon = GFX_decision_generic_nationalism
 
-		allowed = { always = no } #activated by MZB annexation, saf.183 or SAF_intervene_mozambique
+		allowed = { original_tag = SAF }
 
 		available = {
 			has_full_control_of_state = 950
@@ -58,7 +56,6 @@ political_actions = {
 		}
 
 		cost = 25
-		target_non_existing = yes
 
 		highlight_states = {
 			highlight_state_targets = { state = 950 }
@@ -127,7 +124,7 @@ political_actions = {
 }
 
 SAF_geopolitical_actions = {
-	SAF_SOC_defend_South_Africa_mission = {
+	SAF_defend_socialist_south_africa_mission = {
 		icon = generic_tank
 		allowed = { always = no }	#Activated by saf.176
 
@@ -135,21 +132,21 @@ SAF_geopolitical_actions = {
 			surrender_progress > 0.4
 		}
 
-		days_mission_timeout = 365
-		is_good = yes
-		fire_only_once = yes
-
 		cancel_trigger = {
 			NOT = { has_war_with = ENT }
 		}
 
+		days_mission_timeout = 365
+		is_good = yes
+		fire_only_once = yes
+
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SAF_SOC_defend_South_Africa_mission"
+			log = "[GetDateText]: [Root.GetName]: Decision SAF_defend_socialist_south_africa_mission"
 			custom_effect_tooltip = dei_tt_the_timer_will_be_reset
 		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout SAF_SOC_defend_South_Africa_mission"
+			log = "[GetDateText]: [Root.GetName]: Decision timeout SAF_defend_socialist_south_africa_mission"
 			ENT = { country_event = saf.174 } #Peace with ENT
 			if = {
 				limit = {
@@ -163,7 +160,7 @@ SAF_geopolitical_actions = {
 		}
 	}
 
-	ENT_SOC_defend_South_Africa_mission = {
+	ENT_invade_socialist_south_africa_mission = {
 		icon = generic_tank
 		allowed = { always = no }	#Activated by saf.176
 
@@ -171,24 +168,32 @@ SAF_geopolitical_actions = {
 			SAF = { surrender_progress > 0.4 }
 		}
 
-		days_mission_timeout = 365
-		is_good = no
-		fire_only_once = yes
-
 		cancel_trigger = {
 			NOT = { has_war_with = SAF }
 		}
 
+		days_mission_timeout = 365
+		is_good = no
+		fire_only_once = yes
+
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision ENT_SOC_defend_South_Africa_mission"
+			log = "[GetDateText]: [Root.GetName]: Decision ENT_invade_socialist_south_africa_mission"
 			custom_effect_tooltip = dei_tt_the_timer_will_be_reset
 		}
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout ENT_SOC_defend_South_Africa_mission"
+			log = "[GetDateText]: [Root.GetName]: Decision timeout ENT_invade_socialist_south_africa_mission"
 			effect_tooltip = {
-				country_event = saf.174 #Peace with SAF
-				INT = { country_event = saf.159 }
+				ENT = { country_event = saf.174 } #Peace with SAF
+				if = {
+					limit = {
+						INT = {
+							is_faction_leader = yes
+							NOT = { has_war_with = SAF }
+						}
+					}
+					INT = { country_event = saf.159 }
+				}
 			}
 		}
 	}
@@ -1667,9 +1672,6 @@ SAF_Decision_Group_Smuts_Doctrine = {
 				target = FROM
 				type = annex_everything
 			}
-			hidden_effect = {
-				activate_targeted_decision = { decision = SAF_core_mozambique target = MZB }
-			}
 		}
 	}
 
@@ -1872,9 +1874,6 @@ SAF_Decision_Group_Smuts_Doctrine = {
 			declare_war_on = {
 				target = FROM
 				type = annex_everything
-			}
-			hidden_effect = {
-				activate_targeted_decision = { decision = SAF_core_south_west target = NMB }
 			}
 		}
 	}
@@ -3203,17 +3202,30 @@ SAF_Decision_Group_Boer_War = {
 
 		timeout_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision timeout SAF_hold_natal_mission"
-			random_country = {
-				limit = {
-					OR = {
-						tag = ENT
-						tag = NAT
+			if = {
+				limit = { tag = NAT }
+				random_country = {
+					limit = {
+						is_ally_with = NAT
+						has_war_with = ZAR
+						is_valid_peace_target = yes
 					}
-					has_war_with = ZAR
-					is_valid_peace_target = yes
+					country_event = natal.12 #Newcastle Convention
+					set_country_flag = { flag = SAF_peace_deal_ongoing days = 16 value = 1 }
 				}
-				country_event = natal.12 #Newcastle Convention
-				set_country_flag = { flag = SAF_peace_deal_ongoing days = 5 value = 1 }
+			}
+			else = {
+				effect_tooltip = {
+					random_country = {
+						limit = {
+							is_ally_with = NAT
+							has_war_with = ZAR
+							is_valid_peace_target = yes
+						}
+						country_event = natal.12 #Newcastle Convention
+						set_country_flag = { flag = SAF_peace_deal_ongoing days = 16 value = 1 }
+					}
+				}
 			}
 		}
 	}
@@ -3244,10 +3256,7 @@ SAF_Decision_Group_Boer_War = {
 			effect_tooltip = {
 				random_country = {
 					limit = {
-						OR = {
-							tag = ENT
-							tag = NAT
-						}
+						is_ally_with = NAT
 						has_war_with = ZAR
 						is_valid_peace_target = yes
 					}
@@ -3297,6 +3306,20 @@ SAF_Decision_Group_Boer_War = {
 		icon = generic_tank
 
 		allowed = { always = no } #activated by effect
+
+		available = {
+			OR = {
+				ZAR = { surrender_progress > 0.1 }
+				AND = {
+					is_in_faction_with = ZIM
+					ZIM = { has_capitulated = no }
+				}
+				AND = {
+					is_in_faction_with = NAT
+					NAT = { has_capitulated = no }
+				}
+			}
+		}
 
 		cancel_trigger = {
 			NOT = { has_war_with = ZAR }

@@ -41,6 +41,41 @@ occupy_massive_country = {
 }
 
 # state scope
+occupy_state = {
+	set_state_flag = occupied_by_@PREV
+	recheck_annexations = yes
+}
+
+# state scope
+transfer_and_occupy_state = {
+	transfer_state_to = PREV
+	set_state_flag = occupied_by_@PREV
+	recheck_annexations = yes
+}
+
+# state scope
+occupy_state_temporary = {
+	set_state_flag = occupied_by_@PREV
+	set_state_flag = temporarily_occupied_by_@PREV
+	recheck_annexations = yes
+}
+
+# state scope
+transfer_and_occupy_state_temporary = {
+	transfer_state_to = PREV
+	set_state_flag = occupied_by_@PREV
+	set_state_flag = temporarily_occupied_by_@PREV
+	recheck_annexations = yes
+}
+
+# state scope
+clear_occupy_state = {
+	clr_state_flag = occupied_by_@PREV
+	clr_state_flag = temporarily_occupied_by_@PREV
+	recheck_annexations = yes
+}
+
+# state scope
 state_given_notification_effect = {
 	hidden_effect = {
 		save_event_target_as = granted_land
@@ -767,18 +802,18 @@ release_chinese_government_in_manchuria = {
 determine_chinese_ally = {
 	hidden_effect = {
 		if = {
-			limit = { any_subject_country = { has_country_flag = china_integration_unlocked } }
+			limit = { any_subject_country = { china_is_potential_government = yes } }
 			random_subject_country = {
-				limit = { has_country_flag = china_integration_unlocked }
+				limit = { china_is_potential_government = yes }
 				save_event_target_as = china_ally_target
 			}
 		}
 		else_if = {
-			limit = { any_allied_country = { has_country_flag = china_integration_unlocked } }
+			limit = { any_allied_country = { china_is_potential_government = yes } }
 			random_other_country = {
 				limit = {
 					is_in_faction_with = PREV
-					has_country_flag = china_integration_unlocked
+					china_is_potential_government = yes
 				}
 				save_event_target_as = china_ally_target
 			}
@@ -1017,3 +1052,51 @@ transfer_sinai_if_annexation_unavailable = {
 	}
 }
 
+release_canada = {
+	if = {
+		limit = { has_war = yes }
+		every_owned_state = {
+			limit = {
+				CAN = { PREV = { is_core_of = PREV } }
+				is_claim_or_core_of_ROOT = no
+				NOT = { has_state_flag = retain_state_@PREV }
+				NOT = { has_variable = retain_state_@THIS }
+			}
+			if = {
+				limit = { is_fully_controlled_by = owner }
+				CAN = { transfer_state = PREV }
+			}
+			else = {
+				CAN = { set_state_owner = PREV }
+				set_state_province_controller = {
+					controller = CAN
+					limit = { NOT = { has_war_with = CAN } }
+				}
+			}
+		}
+	}
+	else = {
+		every_owned_state = {
+			limit = {
+				CAN = { PREV = { is_core_of = PREV } }
+				is_claim_or_core_of_ROOT = no
+				NOT = { has_state_flag = retain_state_@PREV }
+				NOT = { has_variable = retain_state_@THIS }
+			}
+			CAN = { transfer_state = PREV }
+		}
+	}
+	clear_retained_states = yes
+	puppet = CAN
+	var:tag_to_release = {
+		mark_focus_tree_layout_dirty = yes
+		hidden_effect = {
+			transfer_technology_without_doctrines = yes
+			remove_ideas = ready_to_surrender
+			set_politics = {
+				ruling_party = var:current_party_ideology_group
+				elections_allowed = no
+			}
+		}
+	}
+}
