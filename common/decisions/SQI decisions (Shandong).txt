@@ -2,60 +2,6 @@
 # Shandong Clique Decisions by OMD
 ###########################################
 
-political_actions = {
-	SQI_join_qing_faction = {
-		icon = generic_civil_support
-
-		allowed = {
-			OR = {
-				tag = SQI
-				tag = SHX
-			}
-		}
-
-		available = {
-			has_war = no
-			is_puppet = no
-		}
-
-		visible = {
-			has_country_flag = QIE_alliance_@ROOT
-			FROM = {
-				is_faction_leader = yes
-				has_capitulated = no
-			}
-		}
-
-		targets = { QIE }
-		target_trigger = {
-			FROM = {
-				is_faction_leader = yes
-				has_capitulated = no
-			}
-		}
-
-		cost = 0
-		fire_only_once = yes
-
-		ai_will_do = {
-			factor = 1000
-			modifier = {
-				factor = 0
-				FROM = { surrender_progress > 0.5 }
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_join_qing_faction target: [From.GetName]"
-			hidden_effect = { country_event = lepcollapse.29 }
-			clr_country_flag = QIE_alliance_@ROOT
-			FROM = {
-				add_to_faction = ROOT
-			}
-		}
-	}
-}
-
 SQI_war_intervention_decisions = {
 	SQI_intervene_LEP = {
 		icon = generic_civil_support
@@ -64,11 +10,19 @@ SQI_war_intervention_decisions = {
 
 		available = {
 			is_neighbor_of = FROM
+			if = {
+				limit = { NOT = { has_government = paternal_autocrat } }
+				OR = {
+					has_global_flag = QIE_manchu_restoration
+					NOT = { QIE = { has_country_leader = { character = QIE_aisin_gioro_puyi } } }
+				}
+			}
 		}
 
 		visible = {
-			NOT = { has_global_flag = LEP_collapse_SQI_out }
 			can_declare_war_on = FROM
+			is_subject = no
+			NOT = { has_global_flag = LEP_collapse_SQI_out }
 			FROM = { has_war = yes }
 		}
 
@@ -84,6 +38,7 @@ SQI_war_intervention_decisions = {
 		cost = 0
 		days_remove = 10
 		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
 
 		ai_will_do = {
 			factor = 100
@@ -98,16 +53,22 @@ SQI_war_intervention_decisions = {
 				factor = 0
 				has_government = national_populist
 				QIE = {
-					NOT = { has_completed_focus = QIE_unrest }
+					NOT = { has_country_flag = QIE_yan_backs_coup }
 					NOT = { focus_progress = { focus = QIE_capitalize_politics progress > 0 } }
 					NOT = { focus_progress = { focus = QIE_placateassembly progress > 0 } }
 				}
 			}
 		}
 
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel SQI_intervene_LEP target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_intervene_LEP target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 12 value = 1 }
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_intervene_LEP target: [From.GetName]"
+			FROM = { country_event = kr.political.30 } #warning event
+			setup_decision_attack_AI = yes
 			every_state = {
 				limit = {
 					is_not_claim_or_core_of_ROOT = yes
@@ -123,6 +84,7 @@ SQI_war_intervention_decisions = {
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove SQI_intervene_LEP target: [From.GetName]"
+			clear_decision_attack_AI = yes
 			hidden_effect = { LEP_add_collapse_dm = yes }
 			declare_war_on = {
 				target = FROM
@@ -171,7 +133,7 @@ SQI_war_intervention_decisions = {
 		days_mission_timeout = 60
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_intervene_xuzhou"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_intervene_xuzhou"
 			custom_effect_tooltip = SQI_intervene_xuzhou_tt
 			hidden_effect = {
 				if = {
@@ -225,7 +187,7 @@ SQI_war_intervention_decisions = {
 		days_mission_timeout = 60
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_intervene_jiangsu"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_intervene_jiangsu"
 			custom_effect_tooltip = SQI_intervene_jiangsu_tt
 			hidden_effect = {
 				if = {
@@ -277,7 +239,6 @@ SQI_war_intervention_decisions = {
 			}
 		}
 
-		targets = { CHI ANQ }
 		target_trigger = {
 			can_declare_war_on = FROM
 		}
@@ -289,42 +250,14 @@ SQI_war_intervention_decisions = {
 
 		ai_will_do = {
 			factor = 100
-			#modifier = {
-			#	factor = 0
-			#	ROOT_is_threatened = yes
-			#}
-			#modifier = {
-			#	factor = 0
-			#	FROM = { is_stronger_than_ROOT_and_not_vulnerable = yes }
-			#}
-			#modifier = {
-			#	factor = 0
-			#	FROM = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			#}
-			#modifier = {
-			#	factor = 0
-			#	FROM = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			#}
-			#modifier = {
-			#	factor = 0
-			#	FROM = { guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			#}
 			modifier = {
 				factor = 0
-				strength_ratio = {
-					tag = LEP
-					ratio < 0.6
-				}
-			}
-			modifier = {
-				factor = 0
-				ANQ = { exists = yes }
-				FROM = { tag = CHI }
+				ROOT_is_threatened = yes
 			}
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_intervene_southeast target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_intervene_southeast target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 20 value = 1 }
 		}
 
@@ -433,16 +366,6 @@ SQI_war_intervention_decisions = {
 			}
 		}
 
-		targets = { HNN GXC }
-		target_root_trigger = {
-			is_subject = no
-			NOT = {
-				has_country_flag = SQI_Yingguang_beat_Zongchang
-				country_exists = LEP
-				country_exists = ANQ
-				country_exists = CHI
-			}
-		}
 		target_trigger = {
 			can_declare_war_on = FROM
 		}
@@ -486,7 +409,7 @@ SQI_war_intervention_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_intervene_southwest target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_intervene_southwest target: [From.GetName]"
 			set_country_flag = { flag = imminent_war days = 20 value = 1 }
 		}
 		remove_effect = {
@@ -523,7 +446,7 @@ SQI_war_intervention_decisions = {
 		days_remove = 15
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_xuzhou_garrison"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_xuzhou_garrison"
 			add_war_support = 0.01
 		}
 		remove_effect = {
@@ -560,101 +483,10 @@ SQI_war_intervention_decisions = {
 					allow_spawning_on_enemy_provs = yes
 					owner = ROOT
 				}
-
 			}
 		}
 		ai_will_do = {
 			factor = 100
-		}
-	}
-
-	SQI_unify_the_country = {
-		icon = generic_prepare_civil_war
-		allowed = { always = no }
-		available = {
-			is_neighbor_of = FROM
-			custom_trigger_tooltip = {
-				tooltip = SQI_intervene_southwest_tt_1
-				596 = { # Qiantang
-					is_core_of = ROOT
-					is_owned_and_controlled_by = ROOT
-				}
-				606 = { # Anqing
-					is_core_of = ROOT
-					is_owned_and_controlled_by = ROOT
-				}
-				613 = { # Nanjing
-					is_core_of = ROOT
-					is_owned_and_controlled_by = ROOT
-				}
-				1044 = { # Gandongbei
-					is_core_of = ROOT
-					is_owned_and_controlled_by = ROOT
-				}
-				1047 = { # Xuzhou
-					is_core_of = ROOT
-					is_owned_and_controlled_by = ROOT
-				}
-				1066 = { # Minhou
-					is_core_of = ROOT
-					is_owned_and_controlled_by = ROOT
-				}
-			}
-		}
-
-		visible = {
-			has_country_flag = SQI_national_government
-			NOT = { has_country_flag = SQI_Yingguang_beat_Zongchang }
-			is_subject = no
-			can_declare_war_on = FROM
-		}
-
-		targets = { HNN YUN GXC SZC XSM SHX }
-		target_root_trigger = {
-			has_country_flag = SQI_national_government
-			NOT = { has_country_flag = SQI_Yingguang_beat_Zongchang }
-			is_subject = no
-		}
-		target_trigger = {
-			can_declare_war_on = FROM
-		}
-
-		cost = 40
-		days_remove = 15
-		fire_only_once = yes
-		cancel_if_not_visible = yes
-		war_with_target_on_remove = yes
-
-		ai_will_do = {
-			factor = 20
-			modifier = {
-				factor = 0
-				has_war = yes
-			}
-			modifier = {
-				factor = 0
-				strength_ratio = {
-					tag = FROM
-					ratio < 0.7
-				}
-			}
-			modifier = {
-				factor = 0
-				has_country_flag = imminent_war
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_unify_the_country target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 20 value = 1 }
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SQI_unify_the_country target: [From.GetName]"
-			declare_war_on = {
-				type = annex_everything
-				target = FROM
-			}
 		}
 	}
 	SQI_create_LSP = {# Create the League of Six Provinces
@@ -738,7 +570,7 @@ SQI_riot_policy_decisions = {# dealing with Yiguandao
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_end_Yiguandao_riot"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_end_Yiguandao_riot"
 			hidden_effect = { add_command_power = -25 }
 		}
 		remove_effect = {
@@ -770,7 +602,7 @@ SQI_riot_policy_decisions = {# dealing with Yiguandao
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_end_peasant_riot"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_end_peasant_riot"
 			hidden_effect = { add_command_power = -25 }
 		}
 		remove_effect = {
@@ -802,7 +634,7 @@ SQI_riot_policy_decisions = {# dealing with Yiguandao
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_end_Zongchang_riot"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_end_Zongchang_riot"
 			hidden_effect = { add_command_power = -25 }
 		}
 		remove_effect = {
@@ -831,7 +663,7 @@ SQI_riot_policy_decisions = {# dealing with Yiguandao
 		cost = 50
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_Loyal_citizens"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_Loyal_citizens"
 			add_ideas = SQI_Loyal_citizens
 		}
 		ai_will_do = {
@@ -864,7 +696,7 @@ SQI_internal_decisions = {
 		ai_will_do = { base = 1 }
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_obtain_dockyard_access"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_obtain_dockyard_access target: [From.GetName]"
 			add_offsite_building = { type = dockyard level = 1 }
 			add_offsite_building = { type = industrial_complex level = 1 }
 			add_to_variable = { SQI_dockyard_count = 1 }
@@ -894,7 +726,7 @@ SQI_internal_decisions = {
 		ai_will_do = { base = 10 }
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_assemble_air_squadron"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_assemble_air_squadron target: [From.GetName]"
 			add_equipment_to_stockpile = {
 				type = small_plane_airframe
 				amount = 25
@@ -921,7 +753,7 @@ SQI_internal_decisions = {
 		ai_will_do = { base = 10 }
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_request_infantry_equipment"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_request_infantry_equipment target: [From.GetName]"
 			add_equipment_to_stockpile = {
 				type = infantry_equipment
 				amount = 1000
@@ -965,7 +797,7 @@ SQI_internal_decisions = {
 		ai_will_do = { base = 10 }
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_pull_strings_with_qing_industrialists"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_pull_strings_with_qing_industrialists target: [From.GetName]"
 			add_offsite_building = { type = industrial_complex level = 1 }
 
 			add_to_variable = { SQI_industrialist_count = 1 }
@@ -1008,7 +840,7 @@ SQI_raise_army = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SQI_raise_division target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SQI_raise_division target: [From.GetName]"
 		}
 
 		remove_effect = {

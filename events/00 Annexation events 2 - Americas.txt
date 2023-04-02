@@ -411,7 +411,7 @@ country_event = { #Fate of Canada
 		trigger = {
 			OR = {
 				tag = ENT
-				original_tag = GBR
+				tag = GBR
 			}
 		}
 		ai_chance = {
@@ -491,17 +491,18 @@ country_event = { #Fate of Canada
 			NOT = { has_event_target = british_target }
 		}
 		ai_chance = {
-			base = 10
+			base = 0
 			modifier = {
-				factor = 3
-				tag = TEX
-			}
-			modifier = {
-				factor = 0
-				tag = CSA
+				add = 30
+				has_authoritarian_government = yes
 			}
 		}
-		set_country_flag = CAN_CONQ
+		CAN = {
+			every_core_state = {
+				limit = { NOT = { is_core_of = QUE } }
+				add_claim_by = ROOT
+			}
+		}
 		occupy_small_country = yes
 		hidden_effect = {
 			CAN_activate_resources_decisions = yes
@@ -515,14 +516,10 @@ country_event = { #Fate of Canada
 			NOT = { has_event_target = british_target }
 		}
 		ai_chance = {
-			base = 20
+			base = 0
 			modifier = {
-				factor = 3
-				tag = TEX
-			}
-			modifier = {
-				factor = 0
-				tag = CSA
+				add = 70
+				has_authoritarian_government = yes
 			}
 		}
 		set_temp_variable = { tag_to_release = QUE }
@@ -533,7 +530,12 @@ country_event = { #Fate of Canada
 		}
 		custom_effect_tooltip = tooltip_white_line
 
-		set_country_flag = CAN_CONQ
+		CAN = {
+			every_core_state = {
+				limit = { NOT = { is_core_of = QUE } }
+				add_claim_by = ROOT
+			}
+		}
 		occupy_small_country = yes
 		hidden_effect = {
 			CAN_activate_resources_decisions = yes
@@ -1281,7 +1283,7 @@ country_event = { #Fate of Panama
 				has_socialist_government = yes
 			}
 		}
-		add_state_claim = 685
+		685 = { occupy_state_annexation = yes }
 		set_temp_variable = { tag_to_release = PAN }
 		release_targeted_tag = yes
 	}
@@ -1314,7 +1316,7 @@ country_event = { #Fate of Panama
 				has_socialist_government = yes
 			}
 		}
-		add_state_claim = 685
+		685 = { occupy_state_annexation = yes }
 		PAN = { set_transfer_target_cores = yes }
 		set_temp_variable = { tag_to_release = CEN }
 		if = {
@@ -1354,6 +1356,7 @@ country_event = { #Fate of Panama
 		}
 		set_country_flag = PAN_CONQ
 		occupy_small_country = yes
+		PAN = { every_core_state = { occupy_state_annexation = yes } }
 	}
 }
 
@@ -2115,10 +2118,17 @@ country_event = { #Fate of Bolivia
 						is_claimed_by = BOL
 					}
 					NOT = { region = 205 } #Altiplano
+					NOT = { state = 688 } #Chaco Boreal
+					NOT = { state = 1027 } #Bolivian Chaco
 				}
 				remove_core_of = BOL
 				remove_claim_by = BOL
 			}
+			506 = { retain_state = yes } #Antofagasta
+			688 = { retain_state = yes } #Chaco Boreal
+			872 = { retain_state = yes } #Tacna
+			873 = { retain_state = yes } #Tarapaca
+			1027 = { retain_state = yes } #Bolvian Chaco
 			PRU = {
 				every_character = {
 					limit = { has_character_flag = BOL_leader }
@@ -2131,160 +2141,60 @@ country_event = { #Fate of Bolivia
 				promote_character = BOL_carlos_quintanilla_quiroga
 				promote_character = BOL_german_busch_becerra
 				promote_character = BOL_bernardino_bilbao_rioja
+
+				remove_targeted_decision = { target = INT decision = BOL_Join_Internationale }
+				remove_targeted_decision = { target = PAR decision = BOL_kill_PAR }
+				remove_targeted_decision = { target = CHL decision = BOL_kill_CHL }
 			}
-			if = {				# Add claim to Tarija if ROOT is natpop ARG
+			if = {
 				limit = {
-					tag = ARG
+					original_tag = ARG
 					has_government = national_populist
 				}
-				1073 = { add_claim_by = ROOT }
+				add_state_claim = 1073 #Tarija
 			}
 		}
 	}
 
 	option = {
 		name = annex.2020.a #Liberate Bolivia
-		ai_chance = {
-			base = 100
-		}
 		set_temp_variable = { tag_to_release = BOL }
-		every_owned_state = {
-			limit = {
-				is_core_of = BOL
-				is_claim_or_core_of_ROOT = no
-				if = {
-					limit = {
-						OR = {
-							state = 506 #Antofagasta
-							state = 872 #Tacna
-							state = 873 #Tarapaca
-						}
-					}
-					CHL = { ROOT_can_grant_land = no }
-					PRU = { ROOT_can_grant_land = no }
-					279 = { is_valid_annexation_state = no } #Santiago
-					303 = { is_valid_annexation_state = no } #Lima
-				}
-				if = {
-					limit = {
-						OR = {
-							state = 688 #Chaco Boreal
-							state = 1027 #Bolvian Chaco
-						}
-					}
-					PAR = { ROOT_can_grant_land = no }
-					301 = { is_valid_annexation_state = no } #Paraguay
-				}
+		release_targeted_tag = yes
+		var:tag_to_release = {
+			if = {
+				limit = { has_government = national_populist }
+				unlock_national_focus = BOL_Disband_Parliament
 			}
-			transfer_state_to = var:tag_to_release
-		}
-		puppet_released_tag = yes
-		if = {
-			limit = {
-				OR = {
-					has_government = social_conservative
-					has_government = market_liberal
-					has_government = social_democrat
-					has_government = syndicalist
-				}
-				BOL = {
-					NOT = {
-						has_completed_focus = BOL_1938_Elections
+			else_if = {
+				limit = {
+					OR = {
+						has_government = authoritarian_democrat
+						has_government = paternal_autocrat
 					}
 				}
+				unlock_national_focus = BOL_Rewrite_the_Constitution
 			}
-			BOL = {
-				complete_national_focus = BOL_1938_Elections
-			}
-		}
-		if = {
-			limit = {
-				has_government = market_liberal
-				BOL = {
-					NOT = {
-						has_completed_focus = BOL_PLP_Victory
-					}
-				}
-			}
-			BOL = {
-				complete_national_focus = BOL_PLP_Victory
-			}
-		}
-		if = {
-			limit = {
-				has_government = social_democrat
-				BOL = {
-					NOT = {
-						has_completed_focus = BOL_MNR_Victory
-					}
-				}
-			}
-			BOL = {
-				complete_national_focus = BOL_MNR_Victory
-			}
-		}
-		if = {
-			limit = {
-				has_government = syndicalist
-				BOL = {
-					NOT = {
-						has_completed_focus = BOL_Syndicalism_in_Bolivia
-					}
-				}
-			}
-			BOL = {
-				complete_national_focus = BOL_Syndicalism_in_Bolivia
-			}
-		}
-		if = {
-			limit = {
-				has_government = social_conservative
-				BOL = {
-					NOT = {
-						has_completed_focus = BOL_PUR_Victory
-					}
-				}
-			}
-			BOL = {
-				complete_national_focus = BOL_PUR_Victory
-			}
-		}
-		if = {
-			limit = {
-				has_government = national_populist
-				BOL = {
-					NOT = {
-						has_completed_focus = BOL_Disband_Parliament
-					}
-				}
-			}
-			BOL = {
-				complete_national_focus = BOL_Disband_Parliament
-			}
-		}
-		if = {
-			limit = {
-				has_government = paternal_autocrat
-				BOL = {
-					NOT = {
-						has_completed_focus = BOL_Rewrite_the_Constitution
-					}
-				}
-			}
-			BOL = {
-				complete_national_focus = BOL_Rewrite_the_Constitution
-			}
-		}
-		hidden_effect = {
-			1027 = { add_core_of = BOL }
-			688 = { add_core_of = BOL }
-			BOL = {
-				remove_targeted_decision = { target = INT decision = BOL_Join_Internationale }
-				remove_targeted_decision = { target = PAR decision = BOL_kill_PAR }
-				remove_targeted_decision = { target = CHL decision = BOL_kill_CHL }
+			else = {
+				unlock_national_focus = BOL_1938_Elections
 				if = {
 					limit = { has_socialist_government = yes }
-					903 = { remove_claim_by = BOL }
+					unlock_national_focus = BOL_Syndicalism_in_Bolivia
+				}
+				else_if = {
+					limit = { has_government = social_democrat }
+					unlock_national_focus = BOL_MNR_Victory
+				}
+				else_if = {
+					limit = {
+						OR = {
+							has_government = social_liberal
+							has_government = market_liberal
+						}
+					}
+					unlock_national_focus = BOL_PLP_Victory
+				}
+				else = {
+					unlock_national_focus = BOL_PUR_Victory
 				}
 			}
 		}
@@ -2292,13 +2202,7 @@ country_event = { #Fate of Bolivia
 
 	option = { #Occupy Bolivia
 		name = annex.occupation
-		ai_chance = {
-			base = 0
-		}
-		hidden_effect = {
-			1027 = { add_core_of = BOL }
-			688 = { add_core_of = BOL }
-		}
+		ai_chance = { base = 0 }
 		set_country_flag = BOL_CONQ
 		occupy_small_country = yes
 	}
@@ -5190,6 +5094,9 @@ country_event = { #Fate of Chile
 				CHL = { remove_ideas = CHL_home_of_south_american_syndicalism }
 				CHL = { FRA_remove_from_phalanstere = yes }
 			}
+			506 = { retain_state = yes } #Antofagasta
+			872 = { retain_state = yes } #Tacna
+			873 = { retain_state = yes } #Tarapaca
 		}
 	}
 
@@ -5199,27 +5106,7 @@ country_event = { #Fate of Chile
 			base = 100
 		}
 		set_temp_variable = { tag_to_release = CHL }
-		every_owned_state = {
-			limit = {
-				is_core_of = CHL
-				is_claim_or_core_of_ROOT = no
-				if = {
-					limit = {
-						OR = {
-							state = 506 #Antofagasta
-							state = 872 #Tacna
-							state = 873 #Tarapaca
-						}
-					}
-					BOL = { ROOT_can_grant_land = no }
-					PRU = { ROOT_can_grant_land = no }
-					302 = { is_valid_annexation_state = no } #La Paz
-					303 = { is_valid_annexation_state = no } #Lima
-				}
-			}
-			transfer_state_to = var:tag_to_release
-		}
-		puppet_released_tag = yes
+		release_targeted_tag = yes
 
 		if = {
 			limit = {

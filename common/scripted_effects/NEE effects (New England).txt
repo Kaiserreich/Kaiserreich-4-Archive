@@ -583,13 +583,17 @@ NEE_Congress_Coalition = {
 		hidden_effect = {
 			set_variable = { NEE.coalition_stability = 0.2 }
 			set_temp_variable = { coalition_partner_var = token:social_liberal }
+			set_temp_variable = { coalition_partner_var = token:social_conservative }
 			add_to_coalition = yes
 		}
 	}
 	# Democrat #
 	else_if = {
 		limit = {
-			has_government = social_liberal
+			OR = {
+				has_government = social_liberal
+				has_government = social_conservative
+			}
 		}
 		# Add the Republican Party as a 20% coalition member
 		custom_effect_tooltip = NEE_Republican_cabinet_tooltip
@@ -620,7 +624,10 @@ NEE_Congress_set_up_popularity = {
 	# Democrat #
 	else_if = {
 		limit = {
-			has_government = social_liberal
+			OR = {
+				has_government = social_liberal
+				has_government = social_conservative
+			}
 		}
 		set_variable = { NEE_rep_cost = 15 }
 		set_variable = { NEE_dem_cost = 5 }
@@ -633,10 +640,9 @@ NEE_Congress_DEM_popularity_effect = {
 	# Clear Congress Flag
 	clr_country_flag = NEE_taking_congress_decision
 	# Add democratic popularity based on the boost value
-	add_popularity = {
-		ideology = social_liberal
-		popularity = NEE_dem_boost
-	}
+	set_temp_variable = { ideology_change_var = NEE_dem_boost }
+	change_ruling_party_popularity = yes
+
 	subtract_from_variable = { NEE_dem_boost = 0.01 }
 	clamp_variable = {
 		var = NEE_dem_boost
@@ -671,42 +677,29 @@ NEE_Congress_DEM_popularity_effect = {
 	subtract_from_temp_variable = {
 		temp_dem_count = temp_rep_count
 	}
-	if = { # No coalition exists
-		limit = {
-			NOT = {
-				has_coalition = yes
-			}
-		}
-		# Check if there are an even number of party policies passed
-		if = {
-			limit = {
-				check_variable = {
-					var = temp_dem_count
-					value = 0
-					compare = equals
-				}
-			}
-			# Add the Congress Coalition
-			NEE_Congress_Coalition = yes
-		}
-	}
 	if = { # Coalition exists
 		limit = {
-			has_coalition = yes
-		}
-		# Check if there is a difference greater than 1 between the number of party policies passed
-		if = {
-			limit = {
-				check_variable = {
-					var = temp_dem_count
-					value = 1
-					compare = greater_than
+			OR = {
+				is_in_coalition_with_market_liberal = yes
+				AND = {
+					has_government = market_liberal
+					OR = {
+						is_in_coalition_with_social_liberal = yes
+						is_in_coalition_with_social_conservative = yes
+					}
 				}
 			}
+		}
+		if = {
+			limit = { check_variable = { temp_dem_count > 1 } } # Check if there is a difference greater than 1 between the number of party policies passed
 			# Kill the coalition if one side is passing more policies than the other
 			custom_effect_tooltip = NEE_congress_coalition_end
 			end_coalition = yes
 		}
+	}
+	else_if = { # No coalition exists
+		limit = { check_variable = { temp_dem_count = 0 } } # Check if there are an even number of party policies passed
+		NEE_Congress_Coalition = yes
 	}
 }
 
@@ -752,35 +745,29 @@ NEE_Congress_REP_popularity_effect = {
 	subtract_from_temp_variable = {
 		temp_rep_count = temp_dem_count
 	}
-	if = { # No coalition exists
-		limit = { has_coalition = no }
-		# Check if there are an even number of party policies passed
-		if = {
-			limit = {
-				check_variable = {
-					var = temp_rep_count
-					value = 0
-					compare = equals
+	if = { # Coalition exists
+		limit = {
+			OR = {
+				is_in_coalition_with_market_liberal = yes
+				AND = {
+					has_government = market_liberal
+					OR = {
+						is_in_coalition_with_social_liberal = yes
+						is_in_coalition_with_social_conservative = yes
+					}
 				}
 			}
-			# Add the Congress Coalition
-			NEE_Congress_Coalition = yes
 		}
-	}
-	else = { # Coalition exists
-		# Check if there is a difference greater than 1 between the number of party policies passed
 		if = {
-			limit = {
-				check_variable = {
-					var = temp_rep_count
-					value = 1
-					compare = greater_than
-				}
-			}
+			limit = { check_variable = { temp_rep_count > 1 } } # Check if there is a difference greater than 1 between the number of party policies passed
 			# Kill the coalition if one side is passing more policies than the other
 			custom_effect_tooltip = NEE_congress_coalition_end
 			end_coalition = yes
 		}
+	}
+	else_if = { # No coalition exists
+		limit = { check_variable = { temp_rep_count = 0 } } # Check if there are an even number of party policies passed
+		NEE_Congress_Coalition = yes
 	}
 }
 
@@ -1483,7 +1470,7 @@ NEE_Determine_Legitimacy = {
 				}
 			}
 			set_country_flag = NEE_Leader
-			log = "KR_Event_Logging;NEE WINS ACW;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			log = "KR_Event_Logging;NEE WINS ACW;[GetDateText]"
 		}
 		else_if = {
 			limit = {
@@ -1492,7 +1479,7 @@ NEE_Determine_Legitimacy = {
 				}
 			}
 			set_country_flag = PSA_Leader
-			log = "KR_Event_Logging;PSA WINS ACW;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			log = "KR_Event_Logging;PSA WINS ACW;[GetDateText]"
 		}
 	}
 }
@@ -2032,18 +2019,18 @@ NEE_winner_logging = { # Excludes NEE as a winner. To be used with Quid Pro Quo
 	hidden_effect = {
 		if = {
 			limit = { USA = { exists = yes } }
-			log = "KR_Event_Logging;USA WINS ACW;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			log = "KR_Event_Logging;USA WINS ACW;[GetDateText]"
 		}
 		else_if = {
 			limit = { PSA = { exists = yes } }
-			log = "KR_Event_Logging;PSA WINS ACW;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			log = "KR_Event_Logging;PSA WINS ACW;[GetDateText]"
 		}
 		else_if = {
 			limit = { TEX = { exists = yes } }
-			log = "KR_Event_Logging;TEX WINS ACW;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			log = "KR_Event_Logging;TEX WINS ACW;[GetDateText]"
 		}
 		else = { #CSA exists
-			log = "KR_Event_Logging;CSA WINS ACW;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+			log = "KR_Event_Logging;CSA WINS ACW;[GetDateText]"
 		}
 	}
 }

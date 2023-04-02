@@ -917,7 +917,7 @@ SAF_add_socialist_generals = {
 	}
 	else = {
 		XXA = {
-			every_unit_leader = {
+			every_character = {
 				limit = {
 					OR = {
 						is_character = SAF_william_henry_andrews
@@ -939,7 +939,7 @@ SAF_remove_socialist_generals = {
 			limit = { SAF_james_arnold_la_guma = { is_unit_leader = yes } }
 			SAF_james_arnold_la_guma = { remove_unit_leader_role = yes }
 		}
-		every_unit_leader = {
+		every_character = {
 			limit = {
 				OR = {
 					is_character = SAF_william_henry_andrews
@@ -1060,9 +1060,7 @@ SAF_rhodesia_secedes = {
 			target = ROOT
 			type = annex_everything
 		}
-		activate_mission = ZIM_hold_rhodesia_mission
 	}
-	activate_mission = SAF_hold_rhodesia_mission
 }
 
 SAF_natal_secedes = {
@@ -1195,21 +1193,15 @@ SAF_natal_secedes = {
 		}
 	}
 	NAT = {
-		every_character = {
-			limit = {
-				is_unit_leader = no
-				has_any_advisor_role = yes
-			}
-			meta_effect = {
-				text = { set_character_name = [CHARACTER_NAME] }
-				CHARACTER_NAME = "\"[?THIS.GetTokenLocalizedKey]\""
-			}
-		}
-		clear_sic_slot = yes
 		activate_advisor = SAF_south_african_parliament_sic
 		activate_mission = SAF_hold_natal_mission
 	}
 	activate_mission = SAF_conquer_natal_mission
+	if = {
+		limit = { has_war_with = ZIM }
+		ZIM = { activate_mission = ZIM_hold_rhodesia_mission }
+		activate_mission = SAF_conquer_rhodesia_mission
+	}
 }
 
 SAF_natal_secedes_play_as_natal = {
@@ -1296,35 +1288,11 @@ SAF_natal_secedes_play_as_natal = {
 		paternal_autocrat = 36
 		national_populist = 0
 	}
-	add_advisor_role = {
-		character = SAF_francis_richard_gurney_hoare
-		advisor = {
-			slot = theorist
-			idea_token = SAF_francis_richard_gurney_hoare_theorist
-			allowed = { original_tag = SAF }
-			ledger = air
-			available = {
-				not_already_hired_except_as = theorist
-			}
-			traits = { KR_air_warfare_theorist }
-			cost = 100
-		}
-	}
 	every_character = {
 		limit = { has_character_flag = SAF_boer_character }
 		set_nationality = event_target:SAF_boers
 	}
 	event_target:SAF_boers = {
-		every_character = {
-			limit = {
-				is_unit_leader = no
-				has_any_advisor_role = yes
-			}
-			meta_effect = {
-				text = { set_character_name = [CHARACTER_NAME] }
-				CHARACTER_NAME = "\"[?THIS.GetTokenLocalizedKey]\""
-			}
-		}
 		set_character_name = {
 			character = SAF_union_defence_council
 			name = SAF_union_defence_council
@@ -1338,9 +1306,13 @@ SAF_natal_secedes_play_as_natal = {
 			planning_skill = 1
 			logistics_skill = 1
 		}
-		clear_sic_slot = yes
 		activate_advisor = SAF_south_african_parliament_sic
 		activate_mission = SAF_conquer_natal_mission
+		if = {
+			limit = { has_war_with = ZIM }
+			ZIM = { activate_mission = ZIM_hold_rhodesia_mission }
+			activate_mission = SAF_conquer_rhodesia_mission
+		}
 	}
 	activate_mission = SAF_hold_natal_mission
 	division_template = {
@@ -1443,13 +1415,17 @@ SAF_spawn_natalian_militias = {
 }
 
 SAF_end_civil_war = {
+	### this is an extremely unelegant solution, but there's no way around it - white_peace makes either side annex the other
 	if = {
 		limit = { has_wargoal_against = NAT }
 		remove_wargoal = { target = NAT type = all }
 	}
 	every_owned_state = {
-		remove_claim_by = NAT
-		remove_core_of = NAT
+		limit = { NOT = { is_fully_controlled_by = ZAR } }
+		set_state_province_controller = {
+			controller = ZAR
+			limit = { tag = NAT }
+		}
 	}
 	NAT = {
 		if = {
@@ -1457,9 +1433,62 @@ SAF_end_civil_war = {
 			remove_wargoal = { target = ZAR type = all }
 		}
 		every_owned_state = {
+			limit = { NOT = { is_fully_controlled_by = NAT } }
+			set_state_province_controller = {
+				controller = NAT
+				limit = { tag = ZAR }
+			}
+		}
+		get_current_government_type = yes
+		if = {
+			limit = { ENT = { any_allied_country = { has_war = no } } }
+			random_other_country = {
+				limit = {
+					is_in_faction_with = ENT
+					has_war = no
+				}
+				set_autonomy = {
+					target = NAT
+					autonomy_state = kr_occupied_puppet
+				}
+				set_autonomy = {
+					target = NAT
+					autonomy_state = autonomy_free
+				}
+			}
+		}
+		else = {
+			random_other_country = {
+				limit = {
+					is_in_faction = no
+					has_war = no
+				}
+				set_autonomy = {
+					target = NAT
+					autonomy_state = kr_occupied_puppet
+				}
+				set_autonomy = {
+					target = NAT
+					autonomy_state = autonomy_free
+				}
+			}
+		}
+		set_country_flag = SAF_is_natal #just in case
+		restore_previous_government_type = yes
+		if = {
+			limit = { NOT = { is_in_faction_with = ENT } }
+			leave_faction = yes
+			set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
+			ENT = { add_to_faction = PREV }
+		}
+		every_owned_state = {
 			remove_core_of = ZAR
 			remove_claim_by = ZAR
 		}
+	}
+	every_owned_state = {
+		remove_claim_by = NAT
+		remove_core_of = NAT
 	}
 }
 
@@ -1616,40 +1645,35 @@ SAF_load_natal_content = {
 
 SAF_nzula_sic = {
 	if = {
-		limit = { NOT = { has_idea = SAF_albert_thomas_nzula_sic } }
-		clear_sic_slot = yes
+		limit = { SAF_albert_thomas_nzula = { is_second_in_command = no } }
 		activate_advisor = SAF_albert_thomas_nzula_sic
 	}
 }
 
 SAF_sachs_sic = {
 	if = {
-		limit = { NOT = { has_idea = SAF_emil_solomon_sachs_sic } }
-		clear_sic_slot = yes
+		limit = { SAF_emil_solomon_sachs = { is_second_in_command = no } }
 		activate_advisor = SAF_emil_solomon_sachs_sic
 	}
 }
 
 SAF_kotane_sic = {
 	if = {
-		limit = { NOT = { has_idea = SAF_moses_mauane_kotane_sic } }
-		clear_sic_slot = yes
+		limit = { SAF_moses_mauane_kotane = { is_second_in_command = no } }
 		activate_advisor = SAF_moses_mauane_kotane_sic
 	}
 }
 
 SAF_gomas_sic = {
 	if = {
-		limit = { NOT = { has_idea = SAF_john_stephen_gomas_sic } }
-		clear_sic_slot = yes
+		limit = { SAF_john_stephen_gomas = { is_second_in_command = no } }
 		activate_advisor = SAF_john_stephen_gomas_sic
 	}
 }
 
 SAF_madeley_sic = {
 	if = {
-		limit = { NOT = { has_idea = SAF_walter_bayley_madeley_sic } }
-		clear_sic_slot = yes
+		limit = { SAF_walter_bayley_madeley = { is_second_in_command = no } }
 		activate_advisor = SAF_walter_bayley_madeley_sic
 	}
 }
@@ -1662,14 +1686,12 @@ SAF_smuts_sic = {
 	else_if = {
 		limit = { has_character = SAF_jan_christian_smuts }
 		if = {
-			limit = { NOT = { has_idea = SAF_jan_christian_smuts_sic } }
-			clear_sic_slot = yes
+			limit = { SAF_jan_christian_smuts = { is_second_in_command = no } }
 			activate_advisor = SAF_jan_christian_smuts_sic
 		}
 	}
 	else_if = {
-		limit = { NOT = { has_idea = SAF_jacobus_gideon_nel_strauss_sic } }
-		clear_sic_slot = yes
+		limit = { SAF_jacobus_gideon_nel_strauss = { is_second_in_command = no } }
 		activate_advisor = SAF_jacobus_gideon_nel_strauss_sic
 	}
 	if = {
@@ -1695,8 +1717,7 @@ SAF_strauss_sic = {
 		SAF_parliament_sic = yes
 	}
 	else_if = {
-		limit = { NOT = { has_idea = SAF_jacobus_gideon_nel_strauss_sic } }
-		clear_sic_slot = yes
+		limit = { SAF_jacobus_gideon_nel_strauss = { is_second_in_command = no } }
 		activate_advisor = SAF_jacobus_gideon_nel_strauss_sic
 	}
 }
@@ -1709,14 +1730,12 @@ SAF_hertzog_sic = {
 	else_if = {
 		limit = { has_character = SAF_james_barry_munnik_hertzog }
 		if = {
-			limit = { NOT = { has_idea = SAF_james_barry_munnik_hertzog_sic } }
-			clear_sic_slot = yes
+			limit = { SAF_james_barry_munnik_hertzog = { is_second_in_command = no } }
 			activate_advisor = SAF_james_barry_munnik_hertzog_sic
 		}
 	}
 	else_if = {
-		limit = { NOT = { has_idea = SAF_nicolaas_christiaan_havenga_sic } }
-		clear_sic_slot = yes
+		limit = { SAF_nicolaas_christiaan_havenga = { is_second_in_command = no } }
 		activate_advisor = SAF_nicolaas_christiaan_havenga_sic
 	}
 	if = {
@@ -1734,8 +1753,7 @@ SAF_havenga_sic = {
 		SAF_parliament_sic = yes
 	}
 	else_if = {
-		limit = { NOT = { has_idea = SAF_nicolaas_christiaan_havenga_sic } }
-		clear_sic_slot = yes
+		limit = { SAF_nicolaas_christiaan_havenga = { is_second_in_command = no } }
 		activate_advisor = SAF_nicolaas_christiaan_havenga_sic
 	}
 	if = {
@@ -1753,8 +1771,7 @@ SAF_malan_sic = {
 		SAF_parliament_sic = yes
 	}
 	else_if = {
-		limit = { NOT = { has_idea = SAF_daniel_francois_malan_sic } }
-		clear_sic_slot = yes
+		limit = { SAF_daniel_francois_malan = { is_second_in_command = no } }
 		activate_advisor = SAF_daniel_francois_malan_sic
 	}
 	set_temp_variable = { coalition_partner_var = token:national_populist }
@@ -1763,8 +1780,7 @@ SAF_malan_sic = {
 
 SAF_parliament_sic = {
 	if = {
-		limit = { NOT = { has_idea = SAF_south_african_parliament_sic } }
-		clear_sic_slot = yes
+		limit = { SAF_south_african_parliament = { is_second_in_command = no } }
 		activate_advisor = SAF_south_african_parliament_sic
 	}
 }

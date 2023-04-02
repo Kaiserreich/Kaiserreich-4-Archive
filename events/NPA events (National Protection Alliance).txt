@@ -20,12 +20,18 @@ country_event = {#Formation of the NPA
 
 	option = {
 		name = npa.1.a
+		add_political_power = 75
 		set_global_flag = npa_formed
 		save_global_event_target_as = npa_leader
-		create_faction = npa_faction
+		if = {
+			limit = { capital_scope = { state = 594 } } #Nanning
+			set_cosmetic_tag = national_protection_alliance_guangxi
+		}
+		else = {
+			set_cosmetic_tag = national_protection_alliance
+		}
 		set_potential_national_government = yes
-		add_political_power = 75
-		unlock_decision_tooltip = CHS_NPA_second_northern_expedition
+		china_enable_all_demand_submission_decisions = yes
 	}
 }
 country_event = {#x wishes to join the NPA
@@ -39,23 +45,13 @@ country_event = {#x wishes to join the NPA
 
 	option = {#Yes!
 		name = npa.2.a
-		ai_chance = {
-			base = 95
-		}
-		add_to_faction = FROM
-		FROM = {
-			country_event = { id = npa.3 days = 1 }
-		}
+		effect_tooltip = { china_puppet_FROM_effect = yes }
+		FROM = { country_event = npa.3 }
 	}
 	option = {#Nah
 		name = npa.2.b
-		ai_chance = {
-			base = 5
-		}
-		add_political_power = -15
-		FROM = {
-			country_event = { id = npa.4 days = 1 }
-		}
+		ai_chance = { base = 0 }
+		FROM = { country_event = npa.4 }
 	}
 }
 country_event = {#NPA accepts
@@ -70,6 +66,7 @@ country_event = {#NPA accepts
 	option = {#Good
 		name = npa.3.a
 		add_political_power = 10
+		FROM = { china_puppet_ROOT_effect = yes }
 	}
 }
 country_event = {#NPA refuses
@@ -84,7 +81,6 @@ country_event = {#NPA refuses
 	option = {#???
 		name = npa.4.a
 		add_political_power = -5
-		set_country_flag = refused_npa
 	}
 }
 country_event = {#x invited to join the NPA
@@ -99,17 +95,14 @@ country_event = {#x invited to join the NPA
 	option = {#Yes!
 		name = npa.5.a
 		FROM = {
-			add_to_faction = ROOT
-			country_event = { id = npa.6 days = 1 }
+			effect_tooltip = { china_puppet_ROOT_effect = yes }
+			country_event = npa.6
 		}
 	}
 	option = {#Nah
 		name = npa.5.b
 		add_political_power = -15
-		set_country_flag = refused_npa
-		FROM = {
-			country_event = { id = npa.7 days = 1 }
-		}
+		FROM = { country_event = npa.7 }
 	}
 }
 country_event = {#x accepts
@@ -124,6 +117,7 @@ country_event = {#x accepts
 	option = {#Good
 		name = npa.6.a
 		add_political_power = 10
+		china_puppet_FROM_effect = yes
 	}
 }
 country_event = {#x refuses
@@ -154,7 +148,6 @@ country_event = {#Beijing falls
 
 	trigger = {
 		is_ally_with = 608.owner
-		is_faction_leader = yes
 		has_war = no
 	}
 
@@ -162,17 +155,9 @@ country_event = {#Beijing falls
 		name = npa.8.a
 		#annex puppets
 		if = {
-			limit = {
-				any_allied_country = {
-					is_han_chinese_tag = yes
-					is_subject = no
-				}
-			}
-			every_other_country = {
-				limit = {
-					is_in_faction_with = ROOT
-					is_subject = no
-				}
+			limit = { any_subject_country = { china_is_governorate = yes } }
+			every_subject_country = {
+				limit = { china_is_governorate = yes }
 				country_event = { id = npa.10 days = 1 }
 			}
 		}
@@ -220,9 +205,6 @@ country_event = {#Join ProvGovt?
 				NOT = { has_government = paternal_autocrat }
 			}
 		}
-		get_current_government_type = yes
-		FROM = { puppet = ROOT }
-		restore_previous_government_type = yes
 	}
 	option = {#Start power struggle
 		name = npa.10.b
@@ -234,6 +216,9 @@ country_event = {#Join ProvGovt?
 				NOT = { has_government = paternal_autocrat }
 			}
 		}
+		set_global_flag = NPA_revolt
+		set_country_flag = NPA_revolt
+		FROM = { china_break_puppet_effect = yes }
 	}
 }
 country_event = {#Hidden event: Checks if anyone revolted
@@ -249,12 +234,7 @@ country_event = {#Hidden event: Checks if anyone revolted
 	option = {
 		name = npa.11.a
 		if = {
-			limit = {
-				any_allied_country = {
-					is_han_chinese_tag = yes
-					is_subject = no
-				}
-			}
+			limit = { has_global_flag = NPA_revolt }
 			country_event = npa.12
 		}
 		else = {
@@ -274,10 +254,10 @@ country_event = {#Civil War begins
 
 	option = {#it's treason then haha look at me making a prequel meme in my code!!!!
 		name = npa.12.a
-		every_other_country = {
-			limit = { is_in_faction_with = ROOT }
+		every_subject_country = {
+			limit = { china_is_governorate = yes }
 			set_country_flag = NPA_revolt
-			leave_faction = yes
+			china_break_puppet_effect = yes
 			effect_tooltip = {
 				declare_war_on = {
 					target = ROOT
@@ -300,7 +280,7 @@ country_event = {#Claimants DoW each other
 		set_country_flag = NPA_revolt
 		every_country = {
 			limit = { has_country_flag = NPA_revolt }
-			every_country = {
+			every_other_country = {
 				limit = {
 					has_country_flag = NPA_revolt
 					can_declare_war_on = PREV
@@ -405,120 +385,6 @@ country_event = {#National assembly elections
 		add_stability = 0.10
 		set_temp_variable = { ideology_change_var = 0.2 }
 		change_ruling_party_popularity = yes
-	}
-}
-country_event = {#Choosing a capital
-	id = npa.18
-	immediate = { log = "[GetDateText]: [Root.GetName]: event npa.18 FROM = [From.GetName]" }
-	title = npa.18.t
-	desc = npa.18.d
-	picture = GFX_report_event_CHI_beijing_beiyang_flag
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	option = {#Nanjing
-		name = npa.18.a
-		set_capital = { state = 613 remember_old_capital = no }
-	}
-	option = {#Beijing
-		name = npa.18.b
-		set_capital = { state = 608 remember_old_capital = no }
-	}
-	option = {#Wuhan
-		name = npa.18.c
-		set_capital = { state = 1048 remember_old_capital = no }
-	}
-	option = {#Guangzhou
-		name = npa.18.e
-		set_capital = { state = 592 remember_old_capital = no }
-	}
-}
-country_event = {#x get ultimatum from NPA
-	id = npa.19
-	immediate = { log = "[GetDateText]: [Root.GetName]: event npa.19 FROM = [From.GetName]" }
-	title = npa.19.t
-	desc = npa.19.d
-	picture = GFX_report_event_CHI_official_announcement
-
-	is_triggered_only = yes
-
-	option = {#Okay
-		name = npa.19.a
-		ai_chance = {
-			base = 10
-			modifier = {
-				factor = 0
-				OR = {
-					AND = {
-						tag = FNG
-						FNG_JAP_hostile = no
-					}
-					AND = {
-						tag = LEP
-						country_exists = GEA
-					}
-					AND = {
-						tag = ANQ
-						ANQ_is_profengtian = yes
-					}
-				}
-			}
-			modifier = {
-				factor = 3
-				NOT = {
-					tag = FNG
-					tag = LEP
-					tag = ANQ
-				}
-				alliance_strength_ratio > 0.8
-
-			}
-		}
-		if = {
-			limit = {
-				is_ai = no
-			}
-			FROM = {
-				change_tag_from = ROOT
-			}
-		}
-		FROM = {
-			country_event = npa.20
-		}
-	}
-	option = {#Nah
-		name = npa.19.b
-		ai_chance = {
-			base = 70
-			modifier = {
-				factor = 0
-				is_in_faction_with = FROM
-			}
-		}
-		FROM = {
-			country_event = { id = npa.21 days = 1 }
-		}
-	}
-}
-country_event = {#x annexed
-	id = npa.20
-	immediate = { log = "[GetDateText]: [Root.GetName]: event npa.20 FROM = [From.GetName]" }
-	title = npa.20.t
-	desc = npa.20.d
-	picture = GFX_report_event_CHI_warlords
-
-	is_triggered_only = yes
-
-	option = {#Good
-		name = npa.20.a
-		FROM = {
-			transfer_navy = { target = ROOT }
-			transfer_all_unit_leaders_to_ROOT = yes
-		}
-		annex_country = {
-			target = FROM transfer_troops = yes
-		}
 	}
 }
 country_event = {#FROM refuses

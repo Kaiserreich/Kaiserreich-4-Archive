@@ -67,26 +67,16 @@ country_event = {#Tang decides whether he's a cunt or actually follows Chen
 	option = {#Tang betrays Federalism
 		name = lngupc.102.a
 		ai_chance = {
-			base = 50
+			base = 0
 			modifier = {
-				factor = 0
-				OR = {
-					has_war = yes
-					has_game_rule = { rule = YUN_path option = YUN_PATH_TANG_PATAUT_FED }
-				}
-			}
-			modifier = {
-				factor = 1.6
-				FROM = { tag = SZC }
+				add = 20
+				FROM = { original_tag = SZC }
 			}
 		}
 		set_country_flag = YUN_isolationists_chosen
 		custom_effect_tooltip = GXC_tang_betrays_federalism_tt
 		clr_country_flag = attending_shantou_conference
-		if = {
-			limit = { is_in_faction_with = FROM }
-			leave_faction = yes
-		}
+		remove_puppet_and_leave_faction = yes
 		create_wargoal = {
 			target = FROM
 			type = annex_everything
@@ -96,7 +86,7 @@ country_event = {#Tang decides whether he's a cunt or actually follows Chen
 	option = {#Tang is a good boi
 		name = lngupc.102.b
 		ai_chance = {
-			base = 50
+			base = 80
 			modifier = {
 				factor = 0
 				OR = {
@@ -105,10 +95,6 @@ country_event = {#Tang decides whether he's a cunt or actually follows Chen
 					has_game_rule = { rule = YUN_path option = YUN_PATH_TANG_PATAUT_NPA }
 					has_game_rule = { rule = YUN_path option = YUN_PATH_TANG_PATAUT_FNG }
 				}
-			}
-			modifier = {
-				factor = 0.4
-				FROM = { tag = SZC }
 			}
 		}
 		YUN_tang_turns_federalist = yes
@@ -132,11 +118,17 @@ country_event = {#Declaration of the UPC
 		name = lngupc.103.a
 		if = {
 			limit = { original_tag = GXC }
-			set_cosmetic_tag = GXC_government
+			set_cosmetic_tag = GXC_government_guangzhou
 		}
 		every_other_country = {
 			limit = { has_country_flag = attending_shantou_conference }
-			country_event = lngupc.104
+			if = {
+				limit = { has_war = yes }
+				country_event = { id = lngupc.104 hours = 4 }
+			}
+			else = {
+				country_event = lngupc.104
+			}
 		}
 		hidden_effect = {
 			country_event = { id = lngupc.105 days = 1 }
@@ -173,9 +165,9 @@ country_event = {#Finalize the Conference (join UPC?)
 		name = lngupc.104.b
 		ai_chance = { base = 0 }
 		if = {
-			limit = { is_in_faction_with = FROM }
+			limit = { is_ally_with = FROM }
 			effect_tooltip = {
-				leave_faction = yes
+				remove_puppet_and_leave_faction = yes
 				every_enemy_country = {
 					limit = {
 						is_valid_peace_target = yes
@@ -248,7 +240,7 @@ country_event = {#Tang betrays the movement
 		add_political_power = -50
 		if = {
 			limit = { original_tag = GXC }
-			set_cosmetic_tag = GXC_government
+			set_cosmetic_tag = GXC_government_guangzhou
 		}
 		every_other_country = {
 			limit = { has_country_flag = attending_shantou_conference }
@@ -272,10 +264,6 @@ country_event = {#Finalize the Conference (join UPC?), but Tang is a moron
 		name = lngupc.108.a
 		ai_chance = { base = 70 }
 		if = {
-			limit = { tag = SZC }
-			set_variable = { SZC_alliance = GXC }
-		}
-		if = {
 			limit = { has_war = yes }
 			save_event_target_as = volunteer_target
 			custom_effect_tooltip = UPC_will_join_faction_after_war
@@ -295,13 +283,13 @@ country_event = {#Finalize the Conference (join UPC?), but Tang is a moron
 			base = 30
 			modifier = {
 				factor = 0
-				is_in_faction_with = FROM
+				is_ally_with = FROM
 			}
 		}
 		if = {
-			limit = { is_in_faction_with = FROM }
+			limit = { is_ally_with = FROM }
 			effect_tooltip = {
-				leave_faction = yes
+				remove_puppet_and_leave_faction = yes
 				every_enemy_country = {
 					limit = {
 						is_valid_peace_target = yes
@@ -371,7 +359,8 @@ country_event = {#Join the UPC after war
 		has_country_flag = UPC_will_join_faction_after_war
 		is_subject = no
 		is_in_faction = no
-		UPC = { is_faction_leader = yes }
+		country_exists = UPC
+		UPC = { china_is_potential_government = yes }
 	}
 
 	is_triggered_only = yes
@@ -411,14 +400,7 @@ country_event = { #Country Joins the UPC
 
 	option = {
 		name = lngupc.112.a
-		if = {
-			limit = { FROM = { has_war = no } }
-			add_to_faction = FROM
-		}
-		else = {
-			FROM = { set_country_flag = UPC_will_join_faction_after_war }
-			custom_effect_tooltip = UPC_will_join_faction_after_war_FROM
-		}
+		china_puppet_FROM_effect = yes
 	}
 }
 
@@ -443,9 +425,9 @@ country_event = { #Country Betrays the UPC
 	immediate = {
 		hidden_effect = {
 			if = {
-				limit = { is_in_faction_with = FROM }
+				limit = { is_ally_with = FROM }
 				FROM = {
-					leave_faction = yes
+					remove_puppet_and_leave_faction = yes
 					every_enemy_country = {
 						limit = {
 							is_valid_peace_target = yes
@@ -469,13 +451,7 @@ country_event = { #Country Betrays the UPC
 
 	option = {
 		name = lngupc.113.b
-		ai_chance = {
-			base = 0
-			modifier = {
-				add = 1
-				surrender_progress > 0.5
-			}
-		}
+		ai_chance = { base = 0 }
 	}
 }
 
@@ -541,35 +517,9 @@ country_event = {#Chen nationalizes the federal army
 				has_government = paternal_autocrat
 			}
 		}
-		if = {
-			limit = { can_become_china = no }
-			every_owned_state = {
-				limit = { is_china_proper = yes }
-				transfer_state_to = FROM
-			}
-		}
-		every_subject_country = {
-			get_current_government_type = yes
-			FROM = {
-				set_autonomy = {
-					target = PREV
-					autonomy_state = kr_default_puppet
-					end_wars = no
-				}
-			}
-			restore_previous_government_type = yes
-		}
-		get_current_government_type = yes
+		effect_tooltip = { china_autonomy_level_down = yes }
 		FROM = {
-			set_autonomy = {
-				target = ROOT
-				autonomy_state = kr_default_puppet
-				end_wars = no
-			}
-		}
-		restore_previous_government_type = yes
-		hidden_effect = {
-			FROM = { country_event = lngupc.5 }
+			country_event = { id = lngupc.5 tooltip = lngupc.5.tb }
 		}
 	}
 	option = {#Oops, changed my mind
@@ -582,15 +532,15 @@ country_event = {#Chen nationalizes the federal army
 				has_government = paternal_autocrat
 			}
 		}
-		leave_faction = yes
+		remove_puppet_and_leave_faction = yes
 		FROM = {
-			create_wargoal = {
-				type = puppet_wargoal_focus
-				target = ROOT
+			effect_tooltip = {
+				create_wargoal = {
+					type = puppet_wargoal_focus
+					target = ROOT
+				}
 			}
-			hidden_effect = {
-				country_event = lngupc.5
-			}
+			country_event = { id = lngupc.5 tooltip = lngupc.5.ta }
 		}
 	}
 }
@@ -627,6 +577,16 @@ country_event = {#UPC members respond
 
 	option = {#Okay
 		name = lngupc.5.a
+		if = {
+			limit = { NOT = { has_subject = FROM } }
+			create_wargoal = {
+				type = annex_everything
+				target = FROM
+			}
+		}
+		else = {
+			FROM = { china_autonomy_level_down = yes }
+		}
 	}
 }
 country_event = {#Provisional Constitution
@@ -678,7 +638,7 @@ country_event = {#Choosing the national flag
 
 	option = {#5-nations flag
 		name = lngupc.8.a
-		set_cosmetic_tag = UPC_wuzu
+		hidden_effect = { set_cosmetic_tag = united_china_federalist_five_races }
 	}
 	option = {#keep the party flag
 		name = lngupc.8.b
@@ -722,7 +682,6 @@ country_event = {#CZGP congress
 	desc = lngupc.11.d
 	picture = GFX_report_event_GXC_federalist_party_2
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	immediate = {
@@ -737,7 +696,10 @@ country_event = {#CZGP congress
 			base = 80
 		}
 		custom_effect_tooltip = UPC_chen_will_become_CE
-		set_country_flag = UPC_tang_shafted_by_CZGP
+		if = {
+			limit = { has_country_flag = UPC_tang_is_a_good_boi }
+			set_country_flag = UPC_tang_shafted_by_CZGP
+		}
 		set_party_name = {
 			ideology = social_democrat
 			name = UPC_social_democrat_party
@@ -754,11 +716,25 @@ country_event = {#CZGP congress
 		}
 		custom_effect_tooltip = UPC_tang_will_become_CE
 		set_country_flag = UPC_tang_jiyao_somehow_leads
-		create_country_leader = {
-			name = YUN_tang_jiyao
-			desc = YUN_tang_jiyao_UPC_leader_desc
-			picture = "gfx/leaders/YUN/Portrait_Yunnan_Tang_Jiyao.png"
-			ideology = social_liberal_subtype
+		YUN = {
+			YUN_tang_jiyao = {
+				hidden_effect = {
+					set_nationality = ROOT
+					remove_all_country_leader_roles = yes
+					set_portraits = {
+						civilian = {
+							large = "gfx/leaders/YUN/Portrait_Yunnan_Tang_Jiyao_Suit.png"
+						}
+					}
+				}
+				add_country_leader_role = {
+					country_leader = {
+						ideology = social_liberal_subtype
+						desc = YUN_tang_jiyao_UPC_leader_desc
+					}
+					promote_leader = yes
+				}
+			}
 		}
 		set_party_name = {
 			ideology = social_democrat
@@ -779,7 +755,6 @@ country_event = {#SocCon congress
 	desc = lngupc.12.d
 	picture = GFX_report_event_CHI_beijing_beiyang_flag
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	immediate = {
@@ -790,18 +765,27 @@ country_event = {#SocCon congress
 
 	option = {#Yan Huiqing
 		name = lngupc.12.a
-		create_country_leader = {
-			name = QIE_yan_huiqing
-			desc = QIE_yan_huiqing_UPC_leader_desc
-			picture = "gfx/leaders/QIE/Portrait_QIE_Yan_Huiqing.png"
-			ideology = social_conservative_subtype
+		QIE = {
+			QIE_yan_huiqing = {
+				hidden_effect = {
+					set_nationality = ROOT
+					remove_country_leader_role_social_conservative = yes
+				}
+				add_country_leader_role = {
+					country_leader = {
+						ideology = social_conservative_subtype
+						desc = QIE_yan_huiqing_UPC_leader_desc
+					}
+					promote_leader = yes
+				}
+				set_variable = { ROOT.UPC_DCP_leader = THIS }
+			}
 		}
 		set_party_name = {
 			ideology = social_conservative
 			name = UPC_social_conservative_party
 			long_name = UPC_social_conservative_party_long
 		}
-		set_country_flag = UPC_DCP_Yan
 	}
 	option = {#Tang Jiyao (lmao)
 		name = lngupc.12.b
@@ -810,33 +794,56 @@ country_event = {#SocCon congress
 			has_country_flag = UPC_tang_shafted_by_CZGP
 		}
 		custom_effect_tooltip = UPC_tang_will_become_CE
-		create_country_leader = {
-			name = YUN_tang_jiyao
-			desc = YUN_tang_jiyao_UPC_soccon_leader_desc
-			picture = "gfx/leaders/YUN/Portrait_Yunnan_Tang_Jiyao.png"
-			ideology = social_conservative_subtype
+		YUN = {
+			YUN_tang_jiyao = {
+				hidden_effect = {
+					set_nationality = ROOT
+					remove_all_country_leader_roles = yes
+					set_portraits = {
+						civilian = {
+							large = "gfx/leaders/YUN/Portrait_Yunnan_Tang_Jiyao_Suit.png"
+						}
+					}
+				}
+				add_country_leader_role = {
+					country_leader = {
+						ideology = social_conservative_subtype
+						desc = YUN_tang_jiyao_UPC_soccon_leader_desc
+					}
+					promote_leader = yes
+				}
+				set_variable = { ROOT.UPC_DCP_leader = THIS }
+			}
 		}
 		set_party_name = {
 			ideology = social_conservative
 			name = UPC_social_conservative_party
 			long_name = UPC_social_conservative_party_long
 		}
-		set_country_flag = UPC_DCP_Tang
 	}
 	option = {#Hu Shih
 		name = lngupc.12.c
-		create_country_leader = {
-			name = QIE_hu_shih
-			desc = QIE_hu_shih_UPC_leader_desc
-			picture = "gfx/leaders/QIE/Portrait_QIE_Hu_Shih.png"
-			ideology = social_conservative_subtype
+		QIE = {
+			QIE_hu_shih = {
+				hidden_effect = {
+					set_nationality = ROOT
+					remove_country_leader_role_social_conservative = yes
+				}
+				add_country_leader_role = {
+					country_leader = {
+						ideology = social_conservative_subtype
+						desc = QIE_hu_shih_UPC_leader_desc
+					}
+					promote_leader = yes
+				}
+				set_variable = { ROOT.UPC_DCP_leader = THIS }
+			}
 		}
 		set_party_name = {
 			ideology = social_conservative
 			name = UPC_social_conservative_party
 			long_name = UPC_social_conservative_party_long
 		}
-		set_country_flag = UPC_DCP_Hu
 	}
 }
 country_event = {#CDL congress
@@ -844,14 +851,14 @@ country_event = {#CDL congress
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.13 FROM = [From.GetName]" }
 	title = lngupc.13.t
 	desc = lngupc.13.d
-	picture = GFX_report_event_CHI_new_government
+	picture = GFX_report_event_zhang_junmai
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	immediate = {
 		hidden_effect = {
 			country_event = { id = lngupc.14 days = 5 }
+			GXC = { GXC_zhang_junmai = { set_nationality = ROOT } }
 		}
 	}
 
@@ -864,23 +871,19 @@ country_event = {#CDL congress
 					NOT = { has_country_flag = UPC_tang_is_a_good_boi }
 				}
 			}
-			create_country_leader = {
-				name = UPC_zhang_junmai
-				desc = UPC_zhang_junmai_leader_desc
-				picture = "gfx/leaders/GXC/Portrait_GXC_Zhang_Junmai.png"
-				ideology = social_liberal_subtype
-			}
+			set_country_flag = UPC_CDL_electable
 			set_party_name = {
 				ideology = social_liberal
 				name = UPC_market_liberal_party
 				long_name = UPC_market_liberal_party_long
 			}
-			set_country_flag = UPC_CDL_electable
+			promote_character = {
+				character = GXC_zhang_junmai
+				ideology = social_liberal_subtype
+			}
 		}
-		create_country_leader = {
-			name = UPC_zhang_junmai
-			desc = UPC_zhang_junmai_leader_desc
-			picture = "gfx/leaders/GXC/Portrait_GXC_Zhang_Junmai.png"
+		promote_character = {
+			character = GXC_zhang_junmai
 			ideology = market_liberal_subtype
 		}
 		set_party_name = {
@@ -897,7 +900,6 @@ country_event = {#KMT congress
 	desc = lngupc.14.d
 	picture = GFX_report_event_CHI_successful_northern_expedition_flag
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	immediate = {
@@ -906,20 +908,28 @@ country_event = {#KMT congress
 		}
 	}
 
-	option = {#Song Qingling of course
+	option = {#Wang Jingwei of course
 		name = lngupc.14.a
 		set_party_name = {
 			ideology = radical_socialist
 			name = UPC_radical_socialist_party
 			long_name = UPC_radical_socialist_party_long
 		}
-		create_country_leader = {
-			name = CHI_song_qingling
-			picture = "gfx/leaders/CHI/Portrait_CHI_Song_Qingling.png"
-			ideology = radical_socialist_subtype
+		CHI = {
+			CHI_wang_jingwei = { set_nationality = ROOT }
+		}
+		CHI_wang_jingwei = {
+			hidden_effect = { remove_all_country_leader_roles = yes }
+			add_country_leader_role = {
+				country_leader = {
+					ideology = radical_socialist_subtype
+				}
+				promote_leader = yes
+			}
 		}
 	}
 }
+
 country_event = {#CSP congress
 	id = lngupc.15
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.15 FROM = [From.GetName]" }
@@ -927,7 +937,6 @@ country_event = {#CSP congress
 	desc = lngupc.15.d
 	picture = GFX_report_event_CHI_worker
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	immediate = {
@@ -943,20 +952,35 @@ country_event = {#CSP congress
 			name = UPC_syndicalist_party
 			long_name = UPC_syndicalist_party_long
 		}
-		create_country_leader = {
-			name = CHI_chen_duxiu
-			picture = "gfx/leaders/CHI/Portrait_CHI_Chen_Duxiu.png"
-			ideology = syndicalist_subtype
-		}
 		set_party_name = {
 			ideology = totalist
 			name = UPC_totalist_party
 			long_name = UPC_totalist_party_long
 		}
-		create_country_leader = {
-			name = CHI_chen_duxiu
-			picture = "gfx/leaders/CHI/Portrait_CHI_Chen_Duxiu.png"
-			ideology = totalist_subtype
+		CHI = {
+			CHI_chen_duxiu = {
+				hidden_effect = { set_nationality = ROOT }
+				if = {
+					limit = { has_ideology = totalist_subtype }
+					promote_character = totalist_subtype
+				}
+				else = {
+					add_country_leader_role = {
+						country_leader = { ideology = totalist_subtype }
+						promote_leader = yes
+					}
+				}
+				if = {
+					limit = { has_ideology = syndicalist_subtype }
+					promote_character = syndicalist_subtype
+				}
+				else = {
+					add_country_leader_role = {
+						country_leader = { ideology = syndicalist_subtype }
+						promote_leader = yes
+					}
+				}
+			}
 		}
 	}
 }
@@ -967,7 +991,6 @@ country_event = {#beginning of a progressive democracy?
 	desc = lngupc.16.d
 	picture = GFX_report_event_CHI_new_government
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	option = {#introducing the rest
@@ -977,11 +1000,20 @@ country_event = {#beginning of a progressive democracy?
 			name = UPC_authoritarian_democrat_party
 			long_name = UPC_authoritarian_democrat_party
 		}
-		create_country_leader = {
-			name = FNG_zhang_xueliang
-			desc = FNG_zhang_xueliang_UPC_leader_desc
-			picture = "gfx/leaders/FNG/Portrait_FNG_Zhang_Xueliang.png"
-			ideology = authoritarian_democrat_subtype
+		FNG = {
+			FNG_zhang_xueliang = {
+				hidden_effect = {
+					set_nationality = ROOT
+					remove_country_leader_role_authoritarian_democrat = yes
+				}
+				add_country_leader_role = {
+					country_leader = {
+						ideology = national_populist_subtype
+						desc = FNG_zhang_xueliang_UPC_leader_desc
+					}
+					promote_leader = yes
+				}
+			}
 		}
 		set_party_name = {
 			ideology = paternal_autocrat
@@ -993,164 +1025,24 @@ country_event = {#beginning of a progressive democracy?
 			name = UPC_national_populist_party
 			long_name = UPC_national_populist_party
 		}
-		create_country_leader = {
-			name = SQI_sun_suzhen
-			picture = "gfx/leaders/SQI/Portrait_Shandong_Sun_Suzhen.png"
-			ideology = national_populist_subtype
+		SQI = {
+			SQI_sun_suzhen = {
+				hidden_effect = { set_nationality = ROOT }
+				if = {
+					limit = { has_ideology = national_populist_subtype }
+					promote_character = national_populist_subtype
+				}
+				else = {
+					add_country_leader_role = {
+						country_leader = { ideology = national_populist_subtype }
+						promote_leader = yes
+					}
+				}
+			}
 		}
 	}
 }
 ### UPC Reunification
-country_event = {#Thinly-veiled ultimatum
-	id = lngupc.17
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.17 FROM = [From.GetName]" }
-	title = lngupc.17.t
-	desc = lngupc.17.d
-	picture = GFX_report_event_GXC_federalist_troops_rally
-
-	is_triggered_only = yes
-
-	option = {#Submit
-		name = lngupc.17.a
-		ai_chance = {
-			base = 10
-			modifier = {
-				factor = 8
-				has_country_leader = { character = HNN_tang_shengzhi }
-			}
-			modifier = {
-				factor = 0
-				is_ruled_by_right_kmt = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { tag = SZC }
-			}
-			modifier = {
-				factor = 10
-				tag = SZC
-				SZC_has_officer_government = yes
-			}
-			modifier = {
-				factor = 8
-				tag = SZC
-				SZC_has_baoding_government = yes
-			}
-			modifier = {
-				factor = 10
-				has_country_leader = { character = YUN_tang_jiyao }
-				has_country_flag = YUN_federalists_chosen
-			}
-			modifier = {
-				factor = 0
-				has_authoritarian_government = yes
-			}
-		}
-		if = {
-			limit = {
-				is_ai = no
-			}
-			get_current_government_type = yes
-			FROM = {
-				set_autonomy = {
-					target = ROOT
-					autonomy_state = kr_default_puppet
-					end_wars = no
-				}
-			}
-			hidden_effect = {
-				restore_previous_government_type = yes
-			}
-		}
-		else = {
-			FROM = { country_event = lngupc.18 }
-		}
-	}
-	option = {#Fuck off Chen
-		name = lngupc.17.b
-		ai_chance = {
-			base = 90
-			modifier = {
-				factor = 0.2
-				has_country_leader = { character = HNN_tang_shengzhi }
-			}
-			modifier = {
-				factor = 0
-				has_country_leader = { character = YUN_tang_jiyao }
-				has_country_flag = YUN_federalists_chosen
-				NOT = {
-					FROM = { tag = SZC }
-				}
-			}
-			modifier = {
-				factor = 0
-				tag = SZC
-				SZC_has_officer_government = yes
-			}
-			modifier = {
-				factor = 0.2
-				tag = SZC
-				SZC_has_baoding_government = yes
-			}
-			modifier = { #always join if no other choice available
-				factor = 0
-				tag = SZC
-				SZC_has_baoding_government = yes
-				QIE = { has_global_flag = QIE_manchu_restoration }
-				NOT = {
-					YUN = { is_ruled_by_right_kmt = yes }
-				}
-			}
-		}
-		set_country_flag = UPC_refused_ultimatum
-		FROM = {
-			country_event = lngupc.19
-		}
-	}
-}
-country_event = {#x submits
-	id = lngupc.18
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.18 FROM = [From.GetName]" }
-	title = lngupc.18.t
-	desc = lngupc.18.d
-	picture = GFX_report_event_GXC_federalist_troops_rally
-
-	is_triggered_only = yes
-
-	option = {#Long live the Republic!
-		name = lngupc.18.a
-		FROM = { get_current_government_type = yes }
-		set_autonomy = {
-			target = FROM
-			autonomy_state = kr_default_puppet
-			end_wars = no
-		}
-		FROM = { restore_previous_government_type = yes }
-		if = {
-			limit = {
-				FROM = { has_country_leader = { character = YUN_tang_jiyao } }
-			}
-			set_country_flag = UPC_tang_is_a_good_boi
-		}
-	}
-}
-country_event = {#x refuses
-	id = lngupc.19
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.19 FROM = [From.GetName]" }
-	title = lngupc.19.t
-	desc = lngupc.19.d
-	picture = GFX_report_event_CHI_warlord_observer
-
-	is_triggered_only = yes
-
-	option = {#time to L I B E R A T E
-		name = lngupc.19.a
-		create_wargoal = {
-			type = annex_everything
-			target = FROM
-		}
-	}
-}
 country_event = {#CHI warned about Fed mobilization
 	id = lngupc.20
 	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.20 FROM = [From.GetName]" }
@@ -1163,40 +1055,6 @@ country_event = {#CHI warned about Fed mobilization
 
 	option = {#Traitors! Usurpers!
 		name = lngupc.20.a
-	}
-}
-country_event = {#FNG/Zhili receives federalist ouvertures - Zhang/Wu automatically refuses
-	id = lngupc.21
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.21 FROM = [From.GetName]" }
-	title = lngupc.21.t
-	desc = lngupc.21.d
-	picture = GFX_report_event_CHI_warlords
-
-	is_triggered_only = yes
-
-	option = {#They will fall like Wu did
-		name = lngupc.21.a
-		set_country_flag = UPC_refused_ultimatum
-		FROM = {
-			country_event = lngupc.211
-		}
-	}
-}
-country_event = {#Feds snubbed by Zhang/Wu
-	id = lngupc.211
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.211 FROM = [From.GetName]" }
-	title = lngupc.211.t
-	desc = lngupc.211.d
-	picture = GFX_report_event_CHI_warlords
-
-	is_triggered_only = yes
-
-	option = {#destroy the Japanese lapdop
-		name = lngupc.211.a
-		create_wargoal = {
-			type = annex_everything
-			target = FROM
-		}
 	}
 }
 country_event = {#QIE warned about Fed mobilization
@@ -1238,17 +1096,8 @@ country_event = {#Attending the National Conference
 
 	option = {#Woop woop long live the Federal Republic
 		name = lngupc.24.a
-		if = {
-			limit = {
-				is_ai = no
-			}
-			FROM = {
-				change_tag_from = ROOT
-			}
-		}
-		FROM = {
-			country_event = lngupc.25
-		}
+		effect_tooltip = { china_autonomy_level_down = yes }
+		FROM = { country_event = lngupc.25 }
 	}
 }
 country_event = {#Annexing puppets
@@ -1262,86 +1111,7 @@ country_event = {#Annexing puppets
 
 	option = {#Woop woop long live the Federal Republic
 		name = lngupc.25.a
-		FROM = {
-			transfer_units_fraction = {
-				target = ROOT
-				size = 1
-				keep_unit_leaders_trigger = { always = yes }
-			}
-			transfer_all_unit_leaders_to_ROOT = yes
-		}
-		annex_country = {
-			target = FROM
-			transfer_troops = yes
-		}
-	}
-}
-country_event = {#Dealing with separatists
-	id = lngupc.26
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.26 FROM = [From.GetName]" }
-	title = lngupc.26.t
-	desc = lngupc.26.d
-	picture = GFX_report_event_GXC_federalist_party_3
-
-	is_triggered_only = yes
-
-	option = {#Trade agreement and recognition from UPC
-		name = lngupc.26.a
-		ai_chance = {
-			base = 80
-		}
-		set_country_flag = UPC_dealt_with_feds
-		add_opinion_modifier = {
-			target = FROM
-			modifier = KR_trade_agreement
-		}
-		FROM = {
-			country_event = lngupc.27
-		}
-	}
-	option = {#Trade?!?!?!
-		name = lngupc.26.b
-		ai_chance = {
-			base = 20
-		}
-		set_country_flag = UPC_refused_compromise
-		FROM = {
-			country_event = lngupc.28
-		}
-	}
-}
-country_event = {#MON/ETS accepts
-	id = lngupc.27
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.27 FROM = [From.GetName]" }
-	title = lngupc.27.t
-	desc = lngupc.27.d
-	picture = GFX_report_event_CHI_official_announcement
-
-	is_triggered_only = yes
-
-	option = {#good
-		name = lngupc.27.a
-		add_opinion_modifier = {
-			target = FROM
-			modifier = KR_trade_agreement
-		}
-	}
-}
-country_event = {#MON/ETS refuses
-	id = lngupc.28
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.28 FROM = [From.GetName]" }
-	title = lngupc.28.t
-	desc = lngupc.28.d
-	picture = GFX_report_event_CHI_warlord_observer
-
-	is_triggered_only = yes
-
-	option = {#welp
-		name = lngupc.28.a
-		add_opinion_modifier = {
-			target = FROM
-			modifier = KR_outraged
-		}
+		FROM = { china_autonomy_level_down = yes }
 	}
 }
 country_event = {#first national assembly election
@@ -1354,12 +1124,6 @@ country_event = {#first national assembly election
 	fire_only_once = yes
 	is_triggered_only = yes
 
-	immediate = {
-		hidden_effect = {
-			set_country_flag = UPC_had_first_election
-		}
-	}
-
 	option = {#CZGP (Chen Qiyou)
 		name = lngupc.29.a
 		ai_chance = {
@@ -1368,12 +1132,21 @@ country_event = {#first national assembly election
 		trigger = {
 			has_country_flag = UPC_tang_shafted_by_CZGP
 		}
-		retire_ideology_leader = social_democrat
-		create_country_leader = {
-			name = GXC_chen_qiyou
-			desc = GXC_chen_qiyou_UPC_leader_desc
-			picture = "gfx/leaders/GXC/Portrait_GXC_Chen_Qiyou.png"
-			ideology = social_democrat_subtype
+		retire_character = GXC_chen_jiongming
+		GXC = {
+			GXC_chen_qiyou = {
+				hidden_effect = {
+					set_nationality = ROOT
+					remove_country_leader_role_social_democrat = yes
+				}
+				add_country_leader_role = {
+					country_leader = {
+						ideology = social_democrat_subtype
+						desc = GXC_chen_qiyou_UPC_leader_desc
+					}
+					promote_leader = yes
+				}
+			}
 		}
 		if = {
 			limit = { has_government = social_democrat }
@@ -1409,12 +1182,21 @@ country_event = {#first national assembly election
 		trigger = {
 			has_country_flag = UPC_tang_jiyao_somehow_leads
 		}
-		retire_ideology_leader = social_democrat
-		create_country_leader = {
-			name = GXC_chen_qiyou
-			desc = GXC_chen_qiyou_UPC_leader_desc
-			picture = "gfx/leaders/GXC/Portrait_GXC_Chen_Qiyou.png"
-			ideology = social_democrat_subtype
+		retire_character = GXC_chen_jiongming
+		GXC = {
+			GXC_chen_qiyou = {
+				hidden_effect = {
+					set_nationality = ROOT
+					remove_country_leader_role_social_democrat = yes
+				}
+				add_country_leader_role = {
+					country_leader = {
+						ideology = social_democrat_subtype
+						desc = GXC_chen_qiyou_UPC_leader_desc
+					}
+					promote_leader = yes
+				}
+			}
 		}
 		if = {
 			limit = { has_government = social_liberal }
@@ -1452,12 +1234,21 @@ country_event = {#first national assembly election
 		trigger = {
 			has_country_flag = UPC_CDL_electable
 		}
-		retire_ideology_leader = social_democrat
-		create_country_leader = {
-			name = GXC_chen_qiyou
-			desc = GXC_chen_qiyou_UPC_leader_desc
-			picture = "gfx/leaders/GXC/Portrait_GXC_Chen_Qiyou.png"
-			ideology = social_democrat_subtype
+		retire_character = GXC_chen_jiongming
+		GXC = {
+			GXC_chen_qiyou = {
+				hidden_effect = {
+					set_nationality = ROOT
+					remove_country_leader_role_social_democrat = yes
+				}
+				add_country_leader_role = {
+					country_leader = {
+						ideology = social_democrat_subtype
+						desc = GXC_chen_qiyou_UPC_leader_desc
+					}
+					promote_leader = yes
+				}
+			}
 		}
 		if = {
 			limit = { has_government = social_liberal }
@@ -1490,15 +1281,24 @@ country_event = {#first national assembly election
 			base = 0
 			modifier = {
 				add = 20
-				has_country_flag = UPC_DCP_Tang
+				YUN = { YUN_tang_jiyao = { is_character = var:UPC_DCP_leader } }
 			}
 		}
-		retire_ideology_leader = social_democrat
-		create_country_leader = {
-			name = GXC_chen_qiyou
-			desc = GXC_chen_qiyou_UPC_leader_desc
-			picture = "gfx/leaders/GXC/Portrait_GXC_Chen_Qiyou.png"
-			ideology = social_democrat_subtype
+		retire_character = GXC_chen_jiongming
+		GXC = {
+			GXC_chen_qiyou = {
+				hidden_effect = {
+					set_nationality = ROOT
+					remove_country_leader_role_social_democrat = yes
+				}
+				add_country_leader_role = {
+					country_leader = {
+						ideology = social_democrat_subtype
+						desc = GXC_chen_qiyou_UPC_leader_desc
+					}
+					promote_leader = yes
+				}
+			}
 		}
 		if = {
 			limit = { has_government = social_conservative }
@@ -1532,10 +1332,6 @@ country_event = {#later national assembly election)
 	title = lngupc.30.t
 	desc = lngupc.30.d
 	picture = GFX_report_event_CHI_vote
-
-	trigger = {
-		has_country_flag = UPC_had_first_election
-	}
 
 	is_triggered_only = yes
 
@@ -1611,417 +1407,7 @@ country_event = {#later national assembly election)
 		}
 	}
 }
-country_event = {
-	id = lngupc.31 #UPC Demands integration - yes - tag switch if human
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.31 FROM = [From.GetName]" }
-	title = lngupc.31.t
-	desc = lngupc.31.d
-	picture = GFX_report_event_GXC_federalist_troops_march
-	is_triggered_only = yes
 
-	option = {
-		name = lngupc.31.a #okay
-		china_integrate_ally_effect = yes
-	}
-}
-###LEC/GEA events utterly lifted from QIE I'm sorry mantis but ilu
-country_event = {
-	id = lngupc.32 #UPC seizes Macau
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.32 FROM = [From.GetName]" }
-	title = lngupc.32.t
-	desc = lngupc.32.d
-	picture = GFX_report_event_GXC_federalist_troops_march
-
-	is_triggered_only = yes
-
-	option = { #put up a token resistance and surrender
-		name = lngupc.32.a
-		ai_chance = {
-			base = 95
-			modifier = {
-				add = 100
-				OR = {
-					has_war_with = FRA
-					has_war_with = RUS
-					has_war_with = GER
-				}
-			}
-		}
-		FROM = {
-			transfer_state = 729
-			country_event = { id = lngupc.320 hours = 6 }
-		}
-		add_political_power = -50
-		add_stability = -0.05
-	}
-	option = { #we will fight!
-		name = lngupc.32.b
-		ai_chance = {
-			base = 5
-		}
-		declare_war_on = {
-			target = FROM
-			type = annex_everything
-		}
-	}
-}
-
-country_event = {
-	id = lngupc.320 #we get macau!
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.320 FROM = [From.GetName]" }
-	title = lngupc.320.t
-	desc = lngupc.320.d
-	picture = GFX_report_event_POR_entente
-
-	is_triggered_only = yes
-
-	option = {
-		name = lngupc.320.a #great!
-		add_political_power = 25
-		add_war_support = 0.05
-	}
-}
-
-country_event = {
-	id = lngupc.33 #UPC threatens us
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.33 FROM = [From.GetName]" }
-	title = lngupc.33.t
-	desc = {
-		text = lngupc.33.d_AST
-		trigger = {
-			tag = AST
-		}
-	}
-	desc = {
-		text = lngupc.33.d_LEC
-		trigger = {
-			tag = LEC
-		}
-	}
-	picture = GFX_report_event_GXC_federalist_troops_rally
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	immediate = {
-		FROM = { save_event_target_as = zhili_leader }
-	}
-
-	option = {
-		name = lngupc.33.a #ask canada for help!
-		CAN = {
-			country_event = { id = lngupc.330 hours = 6 }
-		}
-	}
-}
-
-country_event = {
-	id = lngupc.330 #UPC is threatening LEC/HK - for CAN
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.330 FROM = [From.GetName]" }
-	title = lngupc.330.t
-	desc = lngupc.330.d
-	picture = GFX_report_event_GXC_federalist_troops_rally
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	option = {
-		name = lngupc.330.a #tell beijing we will defend our interests!
-		ai_chance = {
-			base = 100
-			modifier = {
-				factor = 0
-				surrender_progress > 0.5
-			}
-			modifier = {
-				factor = 0.5
-				surrender_progress > 0.25
-			}
-		}
-		add_war_support = 0.025
-		FROM = {
-			country_event = { id = lngupc.331 hours = 3 }
-		}
-	}
-	option = {
-		name = lngupc.330.b #they're on their own!, AI CAN will only pick this if they're losing bad/have troops on the ground in ENG/FRA
-		ai_chance = {
-			base = 0
-			modifier = {
-				add = 50
-				surrender_progress > 0.5
-			}
-			modifier = {
-				add = 100
-				surrender_progress > 0.75
-			}
-			modifier = {
-				add = 100
-				any_of_scopes = {
-					array = ENG.core_states
-					ROOT = {
-						divisions_in_state = {
-							state = PREV
-							size > 0
-						}
-					}
-				}
-			}
-			modifier = {
-				add = 100
-				any_of_scopes = {
-					array = ENG.core_states
-					ROOT = {
-						divisions_in_state = {
-							state = PREV
-							size > 0
-						}
-					}
-				}
-			}
-		}
-		add_war_support = -0.025
-		FROM = { country_event = lngupc.334 }
-	}
-}
-
-country_event = {
-	id = lngupc.332 #UPC is notified that CAN is backing HK/LEC
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.332 FROM = [From.GetName]" }
-	title = lngupc.332.t
-	desc = lngupc.332.d
-	picture = GFX_report_event_CAN_propaganda
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	option = {
-		name = lngupc.332.a #damn
-		add_political_power = -50
-		ai_chance = {
-			base = 100
-		}
-	}
-	option = {
-		name = lngupc.332.b # who cares, they're far away
-		ai_chance = {
-			base = 0
-		}
-		declare_war_on = {
-			target = FROM
-			type = annex_everything
-		}
-	}
-}
-
-country_event = {
-	id = lngupc.331 #LEC/AST is notified that CAN is backing HK/LEC
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.331 FROM = [From.GetName]" }
-	title = lngupc.331.t
-	desc = lngupc.331.d
-	picture = GFX_report_event_CAN_propaganda
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	option = {
-		name = lngupc.331.a #great!
-		add_war_support = 0.05
-		event_target:zhili_leader = {
-			country_event = { id = lngupc.332 days = 3 }
-		}
-	}
-}
-
-country_event = {
-	id = lngupc.334 #LEC/AST is notified that CAN can't help, AST will cede HK, LEC will get booted from faction then UPC will DoW them
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.334 FROM = [From.GetName]" }
-	title = lngupc.334.t
-	desc = lngupc.334.d
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	option = {
-		name = lngupc.334.a #curses!
-		if = {
-			limit = { tag = AST }
-			UPC = { transfer_state = 326 }
-			set_country_flag = abandoned_HK
-		}
-		else_if = {
-			limit = { tag = LEC }
-			leave_faction = yes
-			set_country_flag = abandoned_LEC
-		}
-		UPC = {
-			country_event = { id = lngupc.333 days = 1 }
-		}
-	}
-}
-
-country_event = {
-	id = lngupc.333 #CAN is losing, UPC gets free reign to do whatever they want
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.333 FROM = [From.GetName]" }
-	title = lngupc.333.t
-	desc = {
-		text = lngupc.333.d_HK
-		trigger = {
-			FROM = {
-				has_country_flag = abandoned_HK
-			}
-		}
-	}
-	desc = {
-		text = lngupc.333.d_LEC
-		trigger = {
-			FROM = {
-				has_country_flag = abandoned_LEC
-			}
-		}
-	}
-
-	picture = GFX_report_event_GXC_federalist_party_3
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	option = { #we get HK
-		name = lngupc.333.a
-		trigger = {
-			FROM = {
-				has_country_flag = abandoned_HK
-			}
-		}
-		add_political_power = 25
-	}
-	option = { #we get LEC
-		name = lngupc.333.b
-		trigger = {
-			FROM = {
-				has_country_flag = abandoned_LEC
-			}
-		}
-		add_political_power = 25
-		create_wargoal = {
-			target = FROM
-			type = annex_everything
-		}
-	}
-}
-country_event = {
-	id = lngupc.34
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.34 FROM = [From.GetName]" }
-	title = lngupc.34.t
-	desc = lngupc.34.d
-	picture = GFX_report_event_GXC_federalist_troops_rally
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	option = {
-		name = lngupc.34.a #let's cede them, don't want trouble
-		ai_chance = {
-			base = 0
-			modifier = {
-				add = 100
-				FROM = {
-					is_ai = no
-				}
-			}
-			modifier = {
-				add = 100
-				OR = {
-					has_war_with = FRA
-					has_war_with = RUS
-					has_war_with = USA
-				}
-			}
-		}
-		add_political_power = -50
-		if = {
-			limit = {
-				has_full_control_of_state = 996
-			}
-			FROM = {
-				transfer_state = 996
-			}
-		}
-		if = {
-			limit = {
-				has_full_control_of_state = 744
-			}
-			FROM = {
-				transfer_state = 744
-			}
-		}
-		if = {
-			limit = {
-				has_full_control_of_state = 728
-			}
-			FROM = {
-				transfer_state = 728
-			}
-		}
-		FROM = {
-			country_event = { id = lngupc.340 days = 1 }
-		}
-	}
-	option = {
-		name = lngupc.34.b #tell them no
-		add_political_power = 10
-		ai_chance = {
-			base = 0
-			modifier = {
-				add = 100
-				has_war = no
-			}
-		}
-		FROM = {
-			country_event = { id = lngupc.341 days = 1 }
-		}
-	}
-}
-
-country_event = {
-	id = lngupc.340 #ger says yes
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.340 FROM = [From.GetName]" }
-	title = lngupc.340.t
-	desc = lngupc.340.d
-	picture = GFX_report_event_GEA_coltroops
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	option = {
-		name = lngupc.340.a #great!
-		add_stability = 0.05
-	}
-}
-
-country_event = {
-	id = lngupc.341 #ger says no
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.341 FROM = [From.GetName]" }
-	title = lngupc.341.t
-	desc = lngupc.341.d
-	picture = GFX_report_event_GEA_coltroops
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	option = {
-		name = lngupc.341.a #this isn't worth a war
-		add_political_power = -100
-	}
-	option = {
-		name = lngupc.341.b #attack!
-		declare_war_on = {
-			target = GEA
-			type = annex_everything
-		}
-	}
-}
-###
 country_event = { #Successful Healthcare Expansion
 	id = fedchi.100
 	immediate = { log = "[GetDateText]: [Root.GetName]: event fedchi.100 FROM = [From.GetName]" }
@@ -2195,10 +1581,12 @@ country_event = { #UPC repeals unequal treaties
 	option = { #stop trade with them
 		name = fedchi.200.b
 		add_political_power = -25
-		set_country_flag = UPC_sactions
 		add_opinion_modifier = {
 			target = UPC
 			modifier = KR_trade_sanctions
+		}
+		hidden_effect = {
+			FROM = { activate_targeted_decision = { decision = UPC_trade_treaty target = ROOT } }
 		}
 	}
 }
@@ -2244,7 +1632,6 @@ country_event = { #UPC asks for new treaty
 			target = UPC
 			modifier = KR_trade_agreement
 		}
-		clr_country_flag = UPC_sactions
 	}
 
 	option = { #refuse
@@ -2274,83 +1661,3 @@ country_event = { #x refuses to sign new treaty
 		}
 	}
 }
-
-country_event = {#x get ultimatum from UPC
-	id = lngupc.35
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.35 FROM = [From.GetName]" }
-	title = lngupc.35.t
-	desc = lngupc.35.d
-	picture = GFX_report_event_CHI_official_announcement
-
-	is_triggered_only = yes
-
-	option = {#Okay
-		name = lngupc.35.a
-		ai_chance = {
-			base = 90
-		}
-		if = {
-			limit = {
-				is_ai = no
-			}
-			FROM = {
-				change_tag_from = ROOT
-			}
-		}
-		FROM = {
-			country_event = npa.20
-		}
-	}
-	option = {#Nah
-		name = lngupc.35.b
-		ai_chance = {
-			base = 10
-			modifier = {
-				factor = 0
-				is_in_faction_with = FROM
-			}
-		}
-		FROM = {
-			country_event = { id = lngupc.36 days = 1 }
-		}
-	}
-}
-country_event = {#x annexed
-	id = lngupc.36
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.36 FROM = [From.GetName]" }
-	title = lngupc.36.t
-	desc = lngupc.36.d
-	picture = GFX_report_event_CHI_warlords
-
-	is_triggered_only = yes
-
-	option = {#Good
-		name = lngupc.36.a
-		FROM = {
-			transfer_navy = { target = ROOT }
-			transfer_all_unit_leaders_to_ROOT = yes
-		}
-		annex_country = {
-			target = FROM
-			transfer_troops = yes
-		}
-	}
-}
-country_event = {#FROM refuses
-	id = lngupc.37
-	immediate = { log = "[GetDateText]: [Root.GetName]: event lngupc.37 FROM = [From.GetName]" }
-	title = lngupc.37.t
-	desc = lngupc.37.d
-	picture = GFX_report_event_CHI_warlord_observer
-
-	is_triggered_only = yes
-
-	option = {#They chose death
-		name = lngupc.37.a
-		declare_war_on = {
-			target = FROM
-			type = annex_everything
-		}
-	}
-}
-
