@@ -37,9 +37,7 @@ focus_tree = {
 			is_subject = yes
 		}
 
-		ai_will_do = {
-			factor = 200
-		}
+		ai_will_do = { factor = 200 }
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SAF_general_elections"
@@ -67,9 +65,7 @@ focus_tree = {
 			}
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_general_elections
 		}
@@ -92,9 +88,7 @@ focus_tree = {
 			NOT = { is_in_faction_with = ENT }
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_proclaim_the_republic
 		}
@@ -141,7 +135,7 @@ focus_tree = {
 			focus = SAF_flags_amendment_act
 		}
 		mutually_exclusive = {
-			focus = SAF_expel_rensburg_pirow
+			focus = SAF_expel_rensburg
 		}
 
 		completion_reward = {
@@ -168,15 +162,19 @@ focus_tree = {
 		cost = 8
 		relative_position_id = SAF_general_elections
 		available = {
-			has_authoritarian_government = yes
+			OR = {
+				has_dictatorship_government = yes
+				AND = {
+					has_government = authoritarian_democrat
+					NOT = { has_country_flag = SAF_fusion }
+				}
+			}
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_reorganise_the_national_party
-			focus = SAF_expel_rensburg_pirow
+			focus = SAF_expel_rensburg
 		}
 
 		completion_reward = {
@@ -316,14 +314,21 @@ focus_tree = {
 		relative_position_id = SAF_general_elections
 		available = {
 			OR = {
-				has_government = authoritarian_democrat
 				has_government = paternal_autocrat
+				AND = {
+					has_government = authoritarian_democrat
+					OR = {
+						NOT = { has_country_flag = SAF_fusion }
+						AND = {
+							has_country_flag = SAF_fusion_havenga
+							has_country_flag = saf_flag_fusion_elections_held
+						}
+					}
+				}
 			}
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_general_elections
 		}
@@ -348,12 +353,9 @@ focus_tree = {
 		relative_position_id = SAF_general_elections
 		available = {
 			has_authoritarian_government = yes
-			NOT = { has_country_flag = SAF_fusion }
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_native_representation_act
 		}
@@ -361,7 +363,11 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SAF_gerrymander_districts"
 			add_political_power = 100
-			custom_effect_tooltip = saf_tt_gerrymandered
+			if = {
+				limit = { has_country_flag = SAF_fusion_havenga }
+				custom_effect_tooltip = saf_tt_gerrymandered_united
+			}
+			else = { custom_effect_tooltip = saf_tt_gerrymandered }
 		}
 		search_filters = { FOCUS_FILTER_POLITICAL }
 	}
@@ -377,9 +383,7 @@ focus_tree = {
 			has_authoritarian_government = yes
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_gerrymander_districts
 		}
@@ -397,7 +401,7 @@ focus_tree = {
 	}
 
 	focus = {
-		id = SAF_expel_rensburg_pirow
+		id = SAF_expel_rensburg
 		icon = GFX_goal_SAF_national
 		x = 0
 		y = 4
@@ -425,7 +429,7 @@ focus_tree = {
 		}
 
 		completion_reward = {
-			log = "[GetDateText]: [Root.GetName]: Focus SAF_expel_rensburg_pirow"
+			log = "[GetDateText]: [Root.GetName]: Focus SAF_expel_rensburg"
 			add_political_power = 100
 			country_event = saf.38
 		}
@@ -443,7 +447,10 @@ focus_tree = {
 				has_government = social_liberal
 				AND = {
 					has_government = social_conservative
-					NOT = { has_country_flag = SAF_national_conservative_party_formed }
+					NOT = {
+						has_country_flag = SAF_national_conservative_party_formed
+						has_country_flag = SAF_fusion
+					}
 				}
 			}
 			NOT = { has_country_flag = saf_flag_cea_failed }
@@ -460,10 +467,23 @@ focus_tree = {
 			factor = 100
 			modifier = {
 				factor = 0
-				AND = {
-					has_game_rule = { rule = SAF_path option = SAF_PATH_SOCLIB }
-					NOT = { has_completed_focus = SAF_natives_consolidation_act }
+				AND = { #if they got a game rule that needs this to pass, don't take it until they have right conditions
+					OR = {
+						has_game_rule = { rule = SAF_path option = SAF_PATH_SOCLIB }
+						has_game_rule = { rule = SAF_path option = SAF_PATH_SOCDEM }
+						has_game_rule = { rule = SAF_path option = SAF_PATH_UNITED_SOCLIB }
+					}
+					NOT = {
+						OR = {
+							has_completed_focus = SAF_natives_consolidation_act
+							has_country_flag = SAF_liberal_labour_coalition
+						}
+					}
 				}
+			}
+			modifier = {
+				factor = 0
+				has_game_rule = { rule = SAF_path option = SAF_PATH_UNITED_SOCCON }
 			}
 		}
 		prerequisite = {
@@ -472,7 +492,10 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SAF_coloured_enfranchisement_act"
-			custom_effect_tooltip = SAF_tt_warning_stuck_up_conservatives
+			if = {
+				limit = { NOT = { has_country_flag = SAF_liberal_labour_coalition }}
+				custom_effect_tooltip = SAF_tt_warning_stuck_up_conservatives
+			}
 			country_event = saf.48
 		}
 		search_filters = { FOCUS_FILTER_POLITICAL }
@@ -496,9 +519,7 @@ focus_tree = {
 			}
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_coloured_enfranchisement_act
 			focus = SAF_native_representation_act
@@ -520,12 +541,19 @@ focus_tree = {
 		cost = 8
 		relative_position_id = SAF_general_elections
 		available = {
-			has_government = social_conservative
+			OR = {
+				has_government = social_conservative
+				AND = {
+					has_government = social_liberal
+					OR = {
+						has_country_flag = SAF_liberal_united_coalition
+						has_country_flag = SAF_fusion_hofmeyr
+					}
+				}
+			}
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_general_elections
 		}
@@ -546,12 +574,19 @@ focus_tree = {
 		cost = 8
 		relative_position_id = SAF_general_elections
 		available = {
-			has_government = social_conservative
+			OR = {
+				has_government = social_conservative
+				AND = {
+					has_government = social_liberal
+					OR = {
+						has_country_flag = SAF_liberal_united_coalition
+						has_country_flag = SAF_fusion_hofmeyr
+					}
+				}
+			}
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_asiatic_land_tenure_act
 		}
@@ -577,9 +612,7 @@ focus_tree = {
 			has_civil_war = no
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_native_trust_and_land_act
 			focus = SAF_natives_consolidation_act
@@ -609,9 +642,7 @@ focus_tree = {
 			has_civil_war = no
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_vaalhart_irrigation_scheme
 		}
@@ -642,9 +673,7 @@ focus_tree = {
 			is_subject = no
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_expand_krugerpark
 		}
@@ -667,7 +696,7 @@ focus_tree = {
 			activate_targeted_decision = { target = BRD decision = SAF_intervene_taganyika }
 			activate_targeted_decision = { target = TZN decision = SAF_intervene_taganyika }
 			activate_targeted_decision = { target = UGA decision = SAF_intervene_uganda }
-			activate_targeted_decision = { target = ZZB decision = SAF_intervene_zanzibar }
+			activate_targeted_decision = { target = ZAN decision = SAF_intervene_zanzibar }
 			activate_targeted_decision = { target = KTG decision = SAF_demand_katanga_pulls_back }
 			activate_targeted_decision = { target = KIV decision = SAF_demand_kivu_pulls_back }
 			activate_targeted_decision = { target = SOM decision = SAF_demand_somalia_pulls_back }
@@ -679,29 +708,20 @@ focus_tree = {
 				limit = { has_global_flag = MAF_collapse }
 				custom_effect_tooltip = SAF_tt_decisions_to_retake_british_africa
 			}
-			else = {
-				every_state = {
-					limit = {
-						OR = {
-							region = 188 #Lake Victoria
-							region = 199 #Zambesi Basin
-							state = 541 #Namaqualand
-							state = 964 #Damaraland
-							state = 871 #Nyasaland
-							state = 892 #Jubaland
-						}
+			every_state = {
+				limit = {
+					OR = {
+						region = 188 #Lake Victoria
+						region = 199 #Zambesi Basin
+						region = 242 #Kalahari
+						state = 892 #Jubaland
 					}
-					add_claim_by = SAF
-					if = {
-						limit = {
-							NOT = {
-								state = 541 #Namaqualand
-								state = 964 #Damaraland
-							}
-						}
-						set_state_flag = SAF_the_empire_strikes_back
-						add_to_array = { SAF.potential_colonies_to_return = THIS }
-					}
+				}
+				add_claim_by = ROOT
+				if = {
+					limit = { NOT = { is_core_of = NMB } }
+					set_state_flag = SAF_the_empire_strikes_back
+					add_to_array = { SAF.potential_colonies_to_return = THIS }
 				}
 			}
 		}
@@ -722,9 +742,7 @@ focus_tree = {
 			}
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_vaalhart_irrigation_scheme
 		}
@@ -749,9 +767,7 @@ focus_tree = {
 			has_completed_focus = SAF_coloured_enfranchisement_act
 		}
 
-		ai_will_do = {
-			factor = 100
-		}
+		ai_will_do = { factor = 100 }
 		prerequisite = {
 			focus = SAF_expand_krugerpark
 		}

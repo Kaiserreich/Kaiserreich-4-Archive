@@ -1,9 +1,9 @@
 ###############################
-### Kaiserreich Beta 0.24.1 ###
+### Kaiserreich Beta 0.24.2 ###
 ###############################
 
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This version is designed for Hearts of Iron IV version 1.12.10.
+This version is designed for Hearts of Iron IV version 1.12.11.
 It should be compatible with all hotfixes but it isn't guaranteed.
 
 Manual Installation Instructions

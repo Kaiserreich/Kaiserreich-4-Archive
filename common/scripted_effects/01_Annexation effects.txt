@@ -88,7 +88,7 @@ state_given_notification_effect = {
 
 # state scope
 retain_state = {
-	set_state_flag = { flag = retain_state_@PREV days = 16 value = 1 }
+	set_state_flag = { flag = retain_state_@ROOT days = 16 value = 1 }
 	set_temp_variable = { retain_state_@THIS = 1 }
 }
 
@@ -315,16 +315,19 @@ remove_all_cores_and_claims_of_tags = {
 		limit = {
 			any_of = {
 				array = core_removal_array
-				OR = {
-					is_core_of = var:v
-					is_claimed_by = var:v
-				}
+				is_claimed_by = var:v
 			}
 		}
 		for_each_loop = {
 			array = core_removal_array
-			remove_core_of = var:v
 			remove_claim_by = var:v
+		}
+	}
+	for_each_scope_loop = {
+		array = core_removal_array
+		every_core_state = {
+			limit = { check_variable = { core_countries^num > 1 } }
+			remove_core_of = PREV
 		}
 	}
 }
@@ -370,6 +373,17 @@ transfer_targeted_territory = {
 
 # global scope
 transfer_targeted_territory_and_add_claims = {
+	every_state = {
+		limit = {
+			OR = {
+				has_variable = state_transfer_target_@THIS
+				any_country_with_core = { has_variable = transfer_target_@THIS }
+			}
+			NOT = { is_core_of = var:tag_to_release }
+			NOT = { is_claimed_by = var:tag_to_release }
+		}
+		add_claim_by = var:tag_to_release
+	}
 	if = {
 		limit = { has_war = yes }
 		every_owned_state = {
@@ -383,10 +397,6 @@ transfer_targeted_territory_and_add_claims = {
 					has_variable = state_transfer_target_@THIS
 					any_country_with_core = { has_variable = transfer_target_@THIS }
 				}
-			}
-			if = {
-				limit = { NOT = { is_core_of = var:tag_to_release } }
-				add_claim_by = var:tag_to_release
 			}
 			transfer_state_without_overriding_occupation = yes
 		}
@@ -403,10 +413,6 @@ transfer_targeted_territory_and_add_claims = {
 					has_variable = state_transfer_target_@THIS
 					any_country_with_core = { has_variable = transfer_target_@THIS }
 				}
-			}
-			if = {
-				limit = { NOT = { is_core_of = var:tag_to_release } }
-				add_claim_by = var:tag_to_release
 			}
 			transfer_state_to = var:tag_to_release
 		}
@@ -417,6 +423,17 @@ transfer_targeted_territory_and_add_claims = {
 
 # global scope
 transfer_targeted_territory_and_add_cores = {
+	every_state = {
+		limit = {
+			OR = {
+				has_variable = state_transfer_target_@THIS
+				any_country_with_core = { has_variable = transfer_target_@THIS }
+			}
+			NOT = { is_core_of = var:tag_to_release }
+		}
+		hidden_effect = { remove_claim_by = var:tag_to_release }
+		add_core_of = var:tag_to_release
+	}
 	if = {
 		limit = { has_war = yes }
 		every_owned_state = {
@@ -431,7 +448,6 @@ transfer_targeted_territory_and_add_cores = {
 					any_country_with_core = { has_variable = transfer_target_@THIS }
 				}
 			}
-			add_core_of = var:tag_to_release
 			transfer_state_without_overriding_occupation = yes
 		}
 	}
@@ -448,7 +464,6 @@ transfer_targeted_territory_and_add_cores = {
 					any_country_with_core = { has_variable = transfer_target_@THIS }
 				}
 			}
-			add_core_of = var:tag_to_release
 			transfer_state_to = var:tag_to_release
 		}
 	}
