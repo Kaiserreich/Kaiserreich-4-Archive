@@ -10,7 +10,7 @@ POL_percent_to_absolute = {
 
 POL_add_royal_influence = {
 	if = {
-		limit = { POL_has_monarchy = yes }
+		limit = { is_monarchy = yes }
 		POL_percent_to_absolute = yes
 
 		custom_effect_tooltip = POL_add_royal_influence
@@ -66,7 +66,7 @@ POL_add_royal_influence = {
 
 POL_account_for_disabled_royal_influence = {
 	if = {
-		limit = { POL_has_monarchy = no }
+		limit = { is_monarchy = no }
 		#calculate the total non-royal influence
 		set_temp_variable = { POL_non_royal_total = POL_soc_influence }
 		set_temp_variable = { POL_non_royal_total = POL_rep_influence }
@@ -502,7 +502,7 @@ POL_reduce_black_monday = {
 
 POL_add_ruling_influence = {
 	if = {
-		limit = { POL_has_monarchy = yes }
+		limit = { is_monarchy = yes }
 		POL_add_royal_influence = yes
 	}
 	else_if = {
@@ -644,11 +644,8 @@ POL_nationalist_coup = {
 			has_socialist_government = no
 			OR = {
 				AND = {
-					check_variable = { POL_nat_influence > 20 }
-					OR = {
-						has_idea = POL_republic_instability1
-						has_idea = POL_republic_instability2
-					}
+					check_variable = { POL_nat_influence > 25 }
+					has_idea = POL_republic_instability1
 					NOT = { has_country_flag = POL_rydz_coup_attempt }
 					if = {
 						limit = {
@@ -811,8 +808,10 @@ POL_return_purged_generals = {
 POL_create_rydz = {
 	show_unit_leaders_tooltip = POL_edward_rydz_smigly
 	hidden_effect = {
-		POL_edward_rydz_smigly = { set_nationality = ROOT }
-		POL_edward_rydz_smigly = { promote_character = paternal_autocrat_subtype }
+		POL_edward_rydz_smigly = {
+			set_nationality = PREV
+			promote_character = paternal_autocrat_subtype
+		}
 	}
 }
 POL_remove_guderian = {
@@ -829,11 +828,20 @@ POL_remove_monarchy = {
 }
 POL_overthrow_monarchy = {
 	hidden_effect = {
-		GER = { end_puppet = POL }
-		GER_remove_from_mitteleuropa = yes
-		MIE_remove_from_intermarium = yes
-		separate_peace_all_wars = yes
 		POL_remove_monarchy = yes
+		GER = { end_puppet = POL }
+		if = {
+			limit = { NOT = { is_in_faction_with = GER } }
+			GER_remove_from_mitteleuropa = yes
+		}
+		if = {
+			limit = { NOT = { is_in_faction_with = MIE } }
+			MIE_remove_from_intermarium = yes
+		}
+		if = {
+			limit = { is_subject = no }
+			separate_peace_all_wars = yes
+		}
 		set_party_name = {
 			ideology = radical_socialist
 			long_name = POL_radical_socialist_party_long
@@ -1414,56 +1422,37 @@ POL_puppet_setup = {
 			}
 		}
 		else_if = {
-			limit = { ROOT = { tag = AUS is_ai = no } }
-			if = {
-				limit = { GAL = { has_character = AUS_karl_albrecht_von_habsburg } }
-				GAL = {
-					AUS_karl_albrecht_von_habsburg = {
-						set_nationality = POL
-						set_character_name = AUS_karl_albrecht_von_habsburg_regnal
-						add_country_leader_role = {
-							country_leader = {
-								ideology = social_democrat_subtype
-								desc = AUS_karl_albrecht_von_habsburg_POL_leader_desc
-							}
-							promote_leader = yes
+			limit = {
+				ROOT = {
+					original_tag = AUS
+					AUS_has_habsburgs = yes
+				}
+			}
+			AUS = {
+				AUS_karl_albrecht_von_habsburg = {
+					set_nationality = POL
+					set_character_name = AUS_karl_albrecht_von_habsburg_regnal
+					set_character_flag = is_monarch
+					hidden_effect = { remove_all_country_leader_roles = yes }
+					add_country_leader_role = {
+						country_leader = {
+							ideology = social_democrat_subtype
+							desc = AUS_karl_albrecht_von_habsburg_POL_leader_desc
 						}
-						add_country_leader_role = {
-							country_leader = {
-								ideology = social_liberal_subtype
-								desc = AUS_karl_albrecht_von_habsburg_POL_leader_desc
-							}
-							promote_leader = yes
+						promote_leader = yes
+					}
+					add_country_leader_role = {
+						country_leader = {
+							ideology = social_liberal_subtype
+							desc = AUS_karl_albrecht_von_habsburg_POL_leader_desc
 						}
+						promote_leader = yes
 					}
 				}
 			}
-			else_if = {
-				limit = { AUS = { has_character = AUS_karl_albrecht_von_habsburg } }
-				AUS = {
-					AUS_karl_albrecht_von_habsburg = {
-						set_nationality = POL
-						set_character_name = AUS_karl_albrecht_von_habsburg_regnal
-						add_country_leader_role = {
-							country_leader = {
-								ideology = social_democrat_subtype
-								desc = AUS_karl_albrecht_von_habsburg_POL_leader_desc
-							}
-							promote_leader = yes
-						}
-						add_country_leader_role = {
-							country_leader = {
-								ideology = social_liberal_subtype
-								desc = AUS_karl_albrecht_von_habsburg_POL_leader_desc
-							}
-							promote_leader = yes
-						}
-					}
-				}
-			}
-			POL = {
-				POL_overthrow_monarchy = yes
-				hidden_effect = {
+			hidden_effect = {
+				POL = {
+					POL_overthrow_monarchy = yes
 					set_cosmetic_tag = POL_AUS_kingdom
 					if = {
 						limit = { AUS = { has_government = social_democrat } }
@@ -1471,15 +1460,19 @@ POL_puppet_setup = {
 							ruling_party = social_democrat
 							elections_allowed = yes
 						}
+						set_political_party = {
+							ideology = social_democrat
+							popularity = 60
+						}
 					}
 					else = {
 						set_politics = {
 							ruling_party = social_liberal
 							elections_allowed = yes
 						}
-						add_popularity = {
+						set_political_party = {
 							ideology = social_liberal
-							popularity = 0.40
+							popularity = 60
 						}
 					}
 				}
@@ -1647,5 +1640,33 @@ POL_galicia_joins_poland = {
 				transfer_troops = yes
 			}
 		}
+	}
+}
+
+POL_galicia_joins_poland_ukraine = {
+	POL = {
+		add_state_core = 88 #Krakow
+		add_state_claim = 91 #Lwow
+		GAL_characters_join_poland_immediate = yes
+		hidden_effect = {
+			POL_transfer_popularity = yes
+			add_popularity = {
+				ideology = authoritarian_democrat
+				popularity = -0.25
+			}
+			country_event = { id = polandflavor.29 days = 365 }
+		}
+		if = {
+			limit = { country_exists = GAL }
+			annex_country = {
+				target = GAL
+				transfer_troops = yes
+			}
+		}
+	}
+	UKR = {
+		add_state_core = 89 #Stanislaviv
+		GAL_characters_join_ukraine_immediate = yes
+		89 = { transfer_state_to = UKR }
 	}
 }

@@ -206,7 +206,6 @@ on_actions = {
 				if = {
 					limit = {
 						has_trait = operative_linguist
-						NOT = { operative_leader_mission = no_mission }
 						NOT = { has_nationality = FROM }
 					}
 					random_list = {
@@ -510,7 +509,11 @@ on_actions = {
 			#UI Setup
 			for_each_scope_loop = {
 				array = global.players
-				set_country_flag = show_welcome_splash
+				if = {
+					limit = { tag_has_country_intro = yes }
+					set_variable = { KR_welcome_splash_variable = 1 }
+				}
+				else = { set_variable = { KR_welcome_splash_variable = 4 } }
 			}
 
 			#Events
@@ -636,63 +639,51 @@ on_actions = {
 			}
 
 			### Integration Check
-			FROM.FROM = { force_enable_resistance = { occupied = XXA clear = yes } }
-			if = {
-				limit = {
-					FROM.FROM = {
-						has_resistance = yes
-						NOT = { occupied = { ROOT = { has_country_flag = can_integrate_@PREV } } }
-						any_country_with_core = {
-							ROOT = {
-								has_country_flag = can_integrate_@PREV
-								set_temp_variable = { integration_target = PREV }
+			FROM.FROM = {
+				if = {
+					limit = {
+						NOT = { is_core_of = ROOT }
+						impassable = no
+					}
+					if = {
+						limit = {
+							any_country_with_core = {
+								has_variable = ROOT.can_integrate_@THIS
+								set_temp_variable = { integration_target = THIS }
 							}
 						}
-					}
-				}
-				FROM.FROM = {
-					set_temp_variable = { previous_compliance = compliance }
-					set_temp_variable = { previous_resistance = resistance }
-					cancel_resistance = yes
-
-					start_resistance = var:integration_target
-					set_compliance = var:previous_compliance
-					set_resistance = var:previous_resistance
-				}
-				var:integration_target = { set_occupation_law_where_available = territorial_integration }
-			}
-			if = {
-				limit = {
-					FROM.FROM = {
-						impassable = no
-						has_state_flag = can_integrate_@ROOT
-						NOT = {
-							is_core_of = ROOT
-							AND = {
-								has_resistance = yes
-								OR = {
-									occupied = { original_tag = XXA }
-									occupied = { ROOT = { has_country_flag = can_integrate_@PREV } }
+						if = {
+							limit = {
+								NOT = {
+									AND = {
+										has_resistance = yes
+										occupied = { has_variable = ROOT.can_integrate_@THIS }
+									}
 								}
 							}
+							if = {
+								limit = { has_resistance = yes }
+								set_temp_variable = { previous_compliance = compliance }
+								set_temp_variable = { previous_resistance = resistance }
+								cancel_resistance = yes
+							}
+							start_resistance = var:integration_target
+							set_compliance = var:previous_compliance
+							set_resistance = var:previous_resistance
 						}
+						ROOT = { var:integration_target = { set_occupation_law_where_available = territorial_integration } }
+					}
+					else_if = {
+						limit = { has_variable = can_integrate_@ROOT }
+						start_state_integration_resistance = yes
+					}
+					else = {
+						clear_state_integration_resistance = yes
 					}
 				}
-				FROM.FROM = {
-					add_core_of = XXA
-					if = {
-						limit = { has_resistance = yes }
-						set_temp_variable = { previous_compliance = compliance }
-						set_temp_variable = { previous_resistance = resistance }
-						cancel_resistance = yes
-					}
-					force_enable_resistance = { occupied = XXA }
-					start_resistance = XXA
-					set_compliance = var:previous_compliance
-					set_resistance = var:previous_resistance
-					remove_core_of = XXA
+				else = {
+					clear_state_integration_resistance = yes
 				}
-				XXA = { set_occupation_law_where_available = territorial_integration }
 			}
 
 			#Important countries for logalyzer
@@ -746,26 +737,14 @@ on_actions = {
 				# clear tag cores and claims if set to
 				if = {
 					limit = { remove_cores_of_tag_if_non_existent = yes }
-					every_core_state = {
-						limit = {
-							check_variable = { core_countries^num > 1 } #is not the state's last core
-							NOT = {
-								AND = {
-									NOT = { is_core_of = owner }
-									owner = { has_country_flag = can_integrate_@FROM }
-								}
-							}
-							any_country_with_core = { has_country_flag = can_integrate_@FROM }
-						}
-						remove_core_of = FROM
-					}
+					clear_cores_of_tag_if_possible = yes
 					every_state = { remove_claim_by = FROM }
 				}
 			}
 			recheck_annexations = yes
 
 			every_occupied_country = {
-				limit = { ROOT = { has_country_flag = can_integrate_@PREV } }
+				limit = { has_variable = ROOT.can_integrate_@THIS }
 				set_occupation_law_where_available = territorial_integration
 			}
 		}
@@ -1169,6 +1148,86 @@ on_actions = {
 		effect = {
 			log = "[GetDateText] on_peaceconference_ended ROOT = [Root.GetName] FROM = [From.GetName]"
 
+			#Remove redundant wargoals
+			if = {
+				limit = { has_wargoal_against = FROM }
+				remove_wargoal = { target = FROM type = all }
+			}
+			FROM = {
+				if = {
+					limit = { has_wargoal_against = ROOT }
+					remove_wargoal = { target = ROOT type = all }
+				}
+			}
+
+			# Important countries for logalyzer
+			FROM = {
+				if = {
+					limit = { exists = no }
+					if = {
+						limit = { tag = GER }
+						log = "KR_Event_Logging;GER FALLS;[GetDateText]"
+					}
+					else_if = {
+						limit = { tag = FRA }
+						log = "KR_Event_Logging;FRA FALLS;[GetDateText]"
+					}
+					else_if = {
+						limit = { tag = ENG }
+						log = "KR_Event_Logging;ENG FALLS;[GetDateText]"
+					}
+					else_if = {
+						limit = {
+							tag = RUS
+							NOT = { ROOT = { tag = SOV } } #ignore civil war annexation
+						}
+						log = "KR_Event_Logging;RUS FALLS;[GetDateText]"
+					}
+					else_if = {
+						limit = {
+							tag = SOV
+							NOT = { ROOT = { tag = RUS } } #ignore civil war annexation
+						}
+						log = "KR_Event_Logging;SOV FALLS;[GetDateText]"
+					}
+					else_if = {
+						limit = { tag = AUS }
+						log = "KR_Event_Logging;AUS FALLS;[GetDateText]"
+					}
+					### Those are fired for every winner, thus they can't be used
+					# else_if = {
+					# 	limit = { tag = CAN }
+					# 	log = "KR_Event_Logging;CAN FALLS - BY [ROOT.GetTag];[GetDateText]"
+					# }
+					# else_if = {
+					# 	limit = { tag = NFA }
+					# 	log = "KR_Event_Logging;NFA FALLS - BY [ROOT.GetTag];[GetDateText]"
+					# }
+					else_if = {
+						limit = {
+							tag = BRA
+							ROOT = {
+								OR = {
+									tag = ARG
+									tag = FOP
+								}
+							}
+						}
+						log = "KR_Event_Logging;Argentina WINS ARG-BRA WAR;[GetDateText]"
+					}
+					else_if = {
+						limit = {
+							OR = {
+								tag = ARG
+								tag = FOP
+							}
+							ROOT = { tag = BRA }
+						}
+						log = "KR_Event_Logging;Brazil WINS ARG-BRA WAR;[GetDateText]"
+					}
+				}
+			}
+
 			# post-PC data cleanup
 			if = {
 				limit = {
@@ -1295,45 +1354,51 @@ on_actions = {
 
 			# Important countries for logalyzer
 			if = {
-				limit = { ROOT = { tag = GER } }
+				limit = { tag = GER }
 				log = "KR_Event_Logging;GER FALLS;[GetDateText]"
 			}
 			else_if = {
-				limit = { ROOT = { tag = FRA } }
+				limit = { tag = FRA }
 				log = "KR_Event_Logging;FRA FALLS;[GetDateText]"
 			}
 			else_if = {
-				limit = { ROOT = { tag = ENG } }
+				limit = { tag = ENG }
 				log = "KR_Event_Logging;ENG FALLS;[GetDateText]"
 			}
 			else_if = {
-				limit = { ROOT = { tag = RUS } }
+				limit = {
+					tag = RUS
+					NOT = { FROM = { tag = SOV } }
+				}
 				log = "KR_Event_Logging;RUS FALLS;[GetDateText]"
 			}
 			else_if = {
-				limit = { ROOT = { tag = SOV } }
+				limit = {
+					tag = SOV
+					NOT = { FROM = { tag = RUS } }
+				}
 				log = "KR_Event_Logging;SOV FALLS;[GetDateText]"
 			}
 			else_if = {
-				limit = { ROOT = { tag = AUS } }
+				limit = { tag = AUS }
 				log = "KR_Event_Logging;AUS FALLS;[GetDateText]"
 			}
 			else_if = {
-				limit = { ROOT = { tag = CAN } }
+				limit = { tag = CAN }
 				log = "KR_Event_Logging;CAN FALLS - BY [FROM.GetTag];[GetDateText]"
 			}
 			else_if = {
-				limit = { ROOT = { tag = NFA } }
+				limit = { tag = NFA }
 				log = "KR_Event_Logging;NFA FALLS - BY [FROM.GetTag];[GetDateText]"
 			}
 
 			if = {
 				limit = {
-					ROOT = {
-						tag = BRA
+					tag = BRA
+					FROM = {
 						OR = {
-							has_war_with = ARG
-							has_war_with = FOP
+							tag = ARG
+							tag = FOP
 						}
 					}
 				}
@@ -1341,13 +1406,11 @@ on_actions = {
 			}
 			else_if = {
 				limit = {
-					ROOT = {
-						OR = {
-							tag = ARG
-							tag = FOP
-						}
-						has_war_with = BRA
+					OR = {
+						tag = ARG
+						tag = FOP
 					}
+					FROM = { tag = BRA }
 				}
 				log = "KR_Event_Logging;Brazil WINS ARG-BRA WAR;[GetDateText]"
 			}
@@ -1456,6 +1519,13 @@ on_actions = {
 	on_send_volunteers = {
 		effect = {
 			log = "[GetDateText] [Root.GetName] is sending volunteers to [From.GetName]"
+		}
+	}
+
+	# FROM = country losing volunteers, ROOT = country recalling volunteers
+	on_recall_volunteers = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] is recalling volunteers from [From.GetName]"
 		}
 	}
 
@@ -1616,6 +1686,7 @@ on_actions = {
 				else_if = {
 					limit = { NOT = { is_in_array = { global.faction_joining_alerts = THIS } } }
 					add_to_array = { global.faction_joining_alerts = THIS }
+					sound_effect = diplomatic_notification
 					set_variable_to_random = global.kaiserreich_alerts_dirty
 					country_event = { id = kr.political.20 days = 10 }
 				}
@@ -1646,10 +1717,9 @@ on_actions = {
 				else_if = {
 					limit = {
 						OR = {
-							original_tag = RUS
 							tag = INT
-							original_tag = SOV
 							original_tag = JAP
+							is_russian_tag = yes
 						}
 						NOT = { FROM = { has_country_flag = world_tension_joined_radical_faction } }
 					}

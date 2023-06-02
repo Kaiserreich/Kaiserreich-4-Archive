@@ -22,6 +22,7 @@ country_event = {
 			limit = {
 				OR = {
 					tag = RAJ
+					tag = PRF
 					tag = HND
 				}
 			}
@@ -30,7 +31,7 @@ country_event = {
 				remove_core_of = ROOT
 				if = {
 					limit = { is_owned_by = ROOT }
-					transfer_state_to = NEP
+					transfer_state_to = FROM
 				}
 			}
 			887 = {
@@ -38,12 +39,18 @@ country_event = {
 				remove_core_of = ROOT
 				if = {
 					limit = { is_owned_by = ROOT }
-					transfer_state_to = NEP
+					transfer_state_to = FROM
 				}
 			}
 		}
 		else = {
 			RAJ = {
+				if = {
+					limit = { is_ally_with = ROOT }
+					country_event = nepal.11
+				}
+			}
+			PRF = {
 				if = {
 					limit = { is_ally_with = ROOT }
 					country_event = nepal.11
@@ -55,7 +62,7 @@ country_event = {
 					country_event = nepal.11
 				}
 			}
-			NEP = { white_peace_with_ROOT = yes }
+			FROM = { white_peace_with_ROOT = yes }
 		}
 	}
 	option = {
@@ -83,7 +90,7 @@ country_event = {
 			remove_core_of = ROOT
 			if = {
 				limit = { is_owned_by = ROOT }
-				transfer_state_to = NEP
+				transfer_state_to = FROM.FROM
 			}
 		}
 		887 = {
@@ -91,7 +98,7 @@ country_event = {
 			remove_core_of = ROOT
 			if = {
 				limit = { is_owned_by = ROOT }
-				transfer_state_to = NEP
+				transfer_state_to = FROM.FROM
 			}
 		}
 	}
@@ -104,19 +111,18 @@ country_event = { #Stalemate in War with Nepal
 
 	desc = {
 		text = nepal.20.d.claims
-		trigger = {
-			NEP = {
-				any_owned_state = {
-					is_claim_or_core_of_ROOT = yes
-					is_controlled_by_ROOT_or_ally = yes
-				}
-			}
-		}
+		trigger = { has_event_target = claimant }
 	}
 	desc = {
 		text = nepal.20.d.noclaims
-		trigger = {
-			NOT = {
+		trigger = { NOT = { has_event_target = claimant } }
+	}
+
+	is_triggered_only = yes
+
+	immediate = {
+		if = {
+			limit = {
 				NEP = {
 					any_owned_state = {
 						is_claim_or_core_of_ROOT = yes
@@ -124,87 +130,29 @@ country_event = { #Stalemate in War with Nepal
 					}
 				}
 			}
+			save_event_target_as = claimant
 		}
 	}
-
-	is_triggered_only = yes
 
 	option = {
 		log = "[GetLogInfo]: event nepal.20 option nepal.20.a"
 		name = nepal.20.a #Yes, let's end this now
 		trigger = {
-			OR = {
-				is_valid_peace_target = yes
-				AND = {
-					is_in_faction = yes
-					is_faction_leader = no
-					NOT = { faction_leader = { has_war_with = NEP } }
-				}
-				AND = {
-					is_subject = yes
-					NOT = {
-						overlord = { has_war_with = NEP }
-						AND = {
-							is_in_faction = yes
-							is_faction_leader = no
-							faction_leader = { has_war_with = NEP }
-						}
-					}
-				}
-			}
+			is_valid_peace_target_against_FROM = yes
 		}
-		if = {
-			limit = {
-				NEP = {
-					any_owned_state = {
-						is_claim_or_core_of_ROOT = yes
-						is_controlled_by_ROOT_or_ally = yes
-					}
-				}
-			}
-			set_country_flag = NEP_take_claims
-		}
-		save_event_target_as = claimant
 		NEP = { country_event = nepal.22 }
 	}
+
 	option = {
 		log = "[GetLogInfo]: event nepal.20 option nepal.20.b"
 		name = nepal.20.b #We will ask our faction leader to negotiate a peace
 		trigger = {
-			OR = {
-				AND = {
-					is_subject = yes
-					overlord = { has_war_with = NEP }
-				}
-				AND = {
-					is_in_faction = yes
-					is_faction_leader = no
-					faction_leader = { has_war_with = NEP }
-				}
-			}
+			is_valid_peace_target_against_FROM = no
 		}
-		if = {
-			limit = {
-				NEP = {
-					any_owned_state = {
-						is_claim_or_core_of_ROOT = yes
-						is_controlled_by_ROOT_or_ally = yes
-					}
-				}
-			}
-			set_country_flag = NEP_take_claims
-		}
-		if = {
-			limit = {
-				is_in_faction = yes
-				faction_leader = { has_war_with = NEP }
-			}
-			faction_leader = { country_event = nepal.21 }
-		}
-		else = {
-			overlord = { country_event = nepal.21 }
-		}
+		select_correct_peace_event_receiver = yes
+		var:target = { country_event = nepal.21 }
 	}
+
 	option = {
 		log = "[GetLogInfo]: event nepal.20 option nepal.20.c"
 		name = nepal.20.c #No! We will take Kathmandu or die trying
@@ -221,15 +169,11 @@ country_event = { #Peace with Nepal?
 
 	desc = {
 		text = nepal.21.d.claims
-		trigger = {
-			FROM = { has_country_flag = NEP_take_claims }
-		}
+		trigger = { has_event_target = claimant }
 	}
 	desc = {
 		text = nepal.21.d.noclaims
-		trigger = {
-			NOT = { FROM = { has_country_flag = NEP_take_claims } }
-		}
+		trigger = { NOT = { has_event_target = claimant } }
 	}
 
 	is_triggered_only = yes
@@ -237,19 +181,19 @@ country_event = { #Peace with Nepal?
 	option = {
 		log = "[GetLogInfo]: event nepal.21 option nepal.21.a"
 		name = nepal.21.a #Then let's end this now
-		FROM = { save_event_target_as = claimant }
 		NEP = { country_event = nepal.22 }
 	}
+
 	option = {
 		log = "[GetLogInfo]: event nepal.21 option nepal.21.b"
 		name = nepal.21.b #The war doesn't end until Kathmandu falls
 		ai_chance = { base = 0 }
+		add_war_support = -0.05
+		add_stability = -0.05
 		FROM = {
 			add_war_support = -0.10
 			add_stability = -0.10
 		}
-		add_war_support = -0.05
-		add_stability = -0.05
 	}
 }
 
@@ -260,19 +204,11 @@ country_event = { #Peace with India?
 
 	desc = {
 		text = nepal.22.d.claims
-		trigger = {
-			event_target:claimant = {
-				has_country_flag = NEP_take_claims
-			}
-		}
+		trigger = { has_event_target = claimant }
 	}
 	desc = {
 		text = nepal.22.d.noclaims
-		trigger = {
-			event_target:claimant = {
-				NOT = { has_country_flag = NEP_take_claims }
-			}
-		}
+		trigger = { NOT = { has_event_target = claimant } }
 	}
 
 	is_triggered_only = yes
@@ -281,11 +217,8 @@ country_event = { #Peace with India?
 		log = "[GetLogInfo]: event nepal.22 option nepal.22.a"
 		name = nepal.22.a #Yes, let's end this now
 		if = {
-			limit = {
-				event_target:claimant = { has_country_flag = NEP_take_claims }
-			}
+			limit = { has_event_target = claimant }
 			add_political_power = -100
-			event_target:claimant = { clr_country_flag = NEP_take_claims }
 			every_owned_state = {
 				limit = {
 					OR = {
@@ -309,6 +242,7 @@ country_event = { #Peace with India?
 		}
 		FROM = { white_peace_with_ROOT = yes }
 	}
+
 	option = {
 		log = "[GetLogInfo]: event nepal.22 option nepal.22.b"
 		name = nepal.22.b #Absolutely not!
@@ -317,4 +251,3 @@ country_event = { #Peace with India?
 		add_stability = -0.10
 	}
 }
-

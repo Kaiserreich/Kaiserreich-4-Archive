@@ -12,24 +12,6 @@ add_namespace = japfeng
 # Opening Events - 1936
 ###########################
 
-country_event = { #Recovering from the Lost Decade, triggered at game start
-	id = japdom.1
-	title = japdom.1.t
-	desc = japdom.1.d
-	picture = GFX_report_event_JAP_lost_decade
-
-	fire_only_once = yes
-	is_triggered_only = yes
-
-	option = {
-		log = "[GetLogInfo]: event japdom.1 option japdom.1.a"
-		name = japdom.1.a
-		hidden_effect = {
-			country_event = { id = japdom.2 days = 21 }
-		}
-	}
-}
-
 country_event = { #Dissolution of the Diet, triggered soon after start
 	id = japdom.2
 	title = japdom.2.t
@@ -3954,7 +3936,7 @@ country_event = { #Japan threatens us!
 		random_owned_controlled_state = {
 			limit = { is_in_home_area = yes }
 			create_unit = {
-				division = " division_template = \"Militia\""
+				division = "division_template = \"Militia\""
 				owner = ROOT
 			}
 		}
@@ -5601,7 +5583,7 @@ country_event = { #Russia offers us peace
 				limit = {
 					OR = {
 						state = 537 #Sakhalin
-						state = 555 #Kurils
+						state = 555 #Kuril Islands
 						is_siberia = yes
 						is_russian_far_east = yes
 					}
@@ -5710,15 +5692,8 @@ country_event = { # Japan seizes Guam
 		log = "[GetLogInfo]: event japfor.226 option japfor.226.a"
 		name = japfor.226.a
 		FROM = { transfer_state = 638 }
-		if = {
-			limit = { 638 = { is_core_of = ROOT } }
-			remove_state_core = 638
-			add_state_claim = 638
-		}
-		else_if = {
-			limit = { 638 = { is_not_claim_or_core_of_ROOT = yes } }
-			add_state_claim = 638
-		}
+		remove_state_core = 638
+		add_state_claim = 638
 	}
 }
 
@@ -5758,8 +5733,8 @@ country_event = { #hidden event to fire the peace mission
 	trigger = {
 		original_tag = JAP
 		has_war = yes
-		has_capitulated = no
 		is_valid_peace_target = yes
+		NOT = { surrender_progress > 0.15 }
 		NOT = { has_active_mission = JAP_fading_sun_timer }
 		OR = {
 			is_ai = no
@@ -5806,7 +5781,7 @@ country_event = { #hidden event to fire the peace mission
 					any_owned_state = {
 						is_china_claim_area = yes
 						NOT = { state = 524 } #Taiwan
-						NOT = { state = 745 } #Dalian
+						NOT = { state = 745 } #Kwantung
 						is_controlled_by = ROOT
 					}
 				}
@@ -5876,7 +5851,13 @@ country_event = { #Japan Offers Peace
 		trigger = {
 			JAP = {
 				owns_state = 524
-				enemies_naval_strength_ratio < 4
+				NOT = {
+					enemies_naval_strength_ratio > 4
+					AND = {
+						surrender_progress > 0.15
+						any_home_area_neighbor_country = { is_ally_with = ROOT }
+					}
+				}
 			}
 			NOT = {
 				var:524.controller = {
@@ -5891,7 +5872,13 @@ country_event = { #Japan Offers Peace
 		trigger = {
 			JAP = {
 				owns_state = 524
-				enemies_naval_strength_ratio > 4
+				OR = {
+					enemies_naval_strength_ratio > 4
+					AND = {
+						surrender_progress > 0.15
+						any_home_area_neighbor_country = { is_ally_with = ROOT }
+					}
+				}
 			}
 			NOT = {
 				var:524.controller = {
@@ -6029,6 +6016,10 @@ country_event = { #Japan Offers Peace
 						owns_state = 524
 						OR = {
 							enemies_naval_strength_ratio > 4
+							AND = {
+								surrender_progress > 0.15
+								any_home_area_neighbor_country = { is_ally_with = ROOT }
+							}
 							var:524.controller = {
 								is_tag_in_china_area = yes
 								has_war_with = event_target:japan
@@ -6146,7 +6137,13 @@ country_event = { #Peace Goes Into Effect
 			has_event_target = JAP_peace_with_china
 			owns_state = 524 #Taiwan
 			controls_state = 524 #Taiwan
-			enemies_naval_strength_ratio < 4
+			NOT = {
+				enemies_naval_strength_ratio > 4
+				AND = {
+					surrender_progress > 0.15
+					any_home_area_neighbor_country = { is_ally_with = ROOT }
+				}
+			}
 		}
 	}
 	desc = {
@@ -6155,7 +6152,13 @@ country_event = { #Peace Goes Into Effect
 			has_event_target = JAP_peace_with_china
 			owns_state = 524 #Taiwan
 			controls_state = 524 #Taiwan
-			enemies_naval_strength_ratio > 4
+			OR = {
+				enemies_naval_strength_ratio > 4
+				AND = {
+					surrender_progress > 0.15
+					any_home_area_neighbor_country = { is_ally_with = ROOT }
+				}
+			}
 		}
 	}
 	desc = {
@@ -6291,7 +6294,13 @@ country_event = { #Peace Goes Into Effect
 					}
 					AND = {
 						controls_state = 524
-						enemies_naval_strength_ratio > 4
+						OR = {
+							enemies_naval_strength_ratio > 4
+							AND = {
+								surrender_progress > 0.15
+								any_home_area_neighbor_country = { is_ally_with = ROOT }
+							}
+						}
 					}
 				}
 			}
@@ -6429,16 +6438,6 @@ country_event = { #Peace Goes Into Effect
 				relation = non_aggression_pact
 			}
 			set_truce = { target = ROOT days = 730 }
-			if = {
-				limit = { has_wargoal_against = ROOT }
-				remove_wargoal = { target = ROOT type = all }
-			}
-			ROOT = {
-				if = {
-					limit = { has_wargoal_against = PREV }
-					remove_wargoal = { target = PREV type = all }
-				}
-			}
 		}
 
 		### Clear flags
@@ -6552,41 +6551,16 @@ country_event = { #Japan Offers Peace
 			}
 		}
 		effect_tooltip = {
-			every_other_country = {
-				limit = {
-					is_subject_of = FROM
-					OR = {
-						is_tag_in_china_area = yes
-						original_tag = TRM
-						original_tag = SIB
-						original_tag = KOR
-					}
-				}
-				overlord = {
-					set_autonomy = {
-						target = PREV
-						autonomy_state = autonomy_free
-					}
-				}
-			}
-			every_other_country = {
-				limit = {
-					is_in_faction_with = FROM
-					OR = {
-						is_tag_in_china_area = yes
-						original_tag = TRM
-						original_tag = SIB
-						original_tag = KOR
-					}
-				}
-				leave_faction = yes
-			}
 			every_state = {
 				limit = {
 					is_owned_by = FROM
 					OR = {
 						state = 537 #Sakhalin
-						state = 555 #Kurils
+						state = 555 #Kuril Islands
+						AND = {
+							is_core_of = KOR
+							controller = { is_ally_with = FROM }
+						}
 						AND = {
 							is_manchuria = yes
 							OR = {
@@ -6617,6 +6591,35 @@ country_event = { #Japan Offers Peace
 					}
 				}
 				transfer_state_to = ROOT
+			}
+			every_other_country = {
+				limit = {
+					is_subject_of = FROM
+					OR = {
+						is_tag_in_china_area = yes
+						original_tag = TRM
+						original_tag = SIB
+						original_tag = KOR
+					}
+				}
+				overlord = {
+					set_autonomy = {
+						target = PREV
+						autonomy_state = autonomy_free
+					}
+				}
+			}
+			every_other_country = {
+				limit = {
+					is_in_faction_with = FROM
+					OR = {
+						is_tag_in_china_area = yes
+						original_tag = TRM
+						original_tag = SIB
+						original_tag = KOR
+					}
+				}
+				leave_faction = yes
 			}
 			FROM = { white_peace_with_ROOT = yes }
 			diplomatic_relation = {
@@ -6688,6 +6691,44 @@ country_event = { #Russia Accepts Peace
 		name = japfor.239.a
 		clr_global_flag = JAP_will_surrender
 
+		### Hand over Sakhalin, the Kurils and all claims of RUS/SOV and its allies
+		every_owned_state = {
+			limit = {
+				set_temp_variable = { current_state = THIS }
+				OR = {
+					state = 537 #Sakhalin
+					state = 555 #Kuril Islands
+					AND = {
+						is_core_of = KOR
+						controller = { is_ally_with = FROM }
+					}
+					AND = {
+						is_manchuria = yes
+						OR = {
+							controller = { is_ally_with = FROM }
+							var:716.controller = { is_ally_with = FROM }
+							MAN = { is_subject_of = FROM }
+						}
+					}
+					AND = {
+						is_china_proper = yes
+						OR = {
+							controller = { is_ally_with = FROM }
+							var:608.controller = { is_ally_with = FROM }
+							FNG = { is_ally_with = FROM }
+						}
+					}
+					ROOT = {
+						any_enemy_country = {
+							is_ally_with = FROM
+							var:current_state = { is_claim_or_core_of_PREV = yes }
+						}
+					}
+				}
+			}
+			transfer_state_to = FROM
+		}
+
 		### Remove all Russian ambition areas from the CPS
 		every_subject_country = {
 			limit = {
@@ -6718,58 +6759,6 @@ country_event = { #Russia Accepts Peace
 			leave_faction = yes
 		}
 
-		### Hand over Sakhalin, the Kurils and all claims of RUS/SOV and its allies
-		every_owned_state = {
-			limit = {
-				set_temp_variable = { current_state = THIS }
-				OR = {
-					state = 537 #Sakhalin
-					state = 555 #Kurils
-					AND = {
-						is_manchuria = yes
-						OR = {
-							controller = { is_ally_with = FROM }
-							var:716.controller = { is_ally_with = FROM }
-							MAN = { is_subject_of = FROM }
-						}
-					}
-					AND = {
-						is_china_proper = yes
-						OR = {
-							controller = { is_ally_with = FROM }
-							var:608.controller = { is_ally_with = FROM }
-							FNG = { is_ally_with = FROM }
-						}
-					}
-					ROOT = {
-						any_enemy_country = {
-							is_ally_with = FROM
-							var:current_state = { is_claim_or_core_of_PREV = yes }
-						}
-					}
-				}
-			}
-			transfer_state_to = FROM
-		}
-
-		### Hand over Korea if occupied by RUS/SOV or its allies
-		if = {
-			limit = {
-				owns_state = 525
-				var:524.controller = { is_ally_with = FROM }
-			}
-			remove_state_claim = 525
-			FROM = { transfer_state = 525 }
-		}
-		if = {
-			limit = {
-				owns_state = 527
-				var:524.controller = { is_ally_with = FROM }
-			}
-			remove_state_claim = 527
-			FROM = { transfer_state = 527 }
-		}
-
 		### Peace everyone out
 		FROM = {
 			white_peace_with_ROOT = yes
@@ -6787,16 +6776,6 @@ country_event = { #Russia Accepts Peace
 				relation = non_aggression_pact
 			}
 			set_truce = { target = ROOT days = 730 }
-			if = {
-				limit = { has_wargoal_against = ROOT }
-				remove_wargoal = { target = ROOT type = all }
-			}
-			ROOT = {
-				if = {
-					limit = { has_wargoal_against = PREV }
-					remove_wargoal = { target = PREV type = all }
-				}
-			}
 		}
 	}
 }
@@ -6849,6 +6828,7 @@ country_event = { #Inform former faction members of peace
 # The Fading Sun
 news_event = {
 	id = japfor.252
+	immediate = { log = "[GetLogInfo]: event japfor.252" }
 	title = japfor.252.t
 	desc = japfor.252.d
 	picture = GFX_news_event_JAP_coup
@@ -6866,7 +6846,6 @@ news_event = {
 	is_triggered_only = yes
 
 	option = {
-		log = "[GetLogInfo]: event japfor.252 option japfor.251.a"
 		name = japfor.251.a
 	}
 }
@@ -7685,39 +7664,12 @@ country_event = { #sphere member joins another faction
 
 	is_triggered_only = yes
 
-	trigger = {
-		tag = JAP
-		has_completed_focus = JAP_osaka_conference
-		is_faction_leader = yes
-		any_of_scopes = {
-			array = global.asian_economic_sphere
-			is_in_faction = yes
-			NOT = { is_in_faction_with = ROOT }
-		}
-	}
-
-	immediate = {
-		hidden_effect = {
-			random_country = {
-				limit = {
-					has_country_flag = JAP_economic_sphere_member
-					NOT = { tag = JAP }
-					is_in_faction = yes
-					NOT = { is_in_faction_with = ROOT }
-				}
-				save_event_target_as = withdraw_country
-			}
-		}
-	}
-
 	option = {
 		log = "[GetLogInfo]: event japfor.411 option japfor.411.a"
 		name = japfor.411.a
 		event_target:withdraw_country = {
 			custom_effect_tooltip = JAP_THIS_withdraws_from_sphere
-			hidden_effect = {
-				country_event = japfor.412
-			}
+			hidden_effect = { country_event = japfor.412 }
 		}
 	}
 }
@@ -8517,6 +8469,7 @@ country_event = { #Japan Rewards Our Loyalty
 
 news_event = {
 	id = japfor.470
+	immediate = { log = "[GetLogInfo]: event japfor.470" }
 	title = japfor.470.t
 	desc = japfor.470.d
 	picture = news_event_NFA_shell_algiers
@@ -8529,13 +8482,13 @@ news_event = {
 	}
 
 	option = {
-		log = "[GetLogInfo]: event japfor.470 option 1"
 		name = "[THIS.worldnews_japan_vs_america]"
 	}
 }
 
 news_event = { #The Rising Sun
 	id = japfor.471
+	immediate = { log = "[GetLogInfo]: event japfor.471" }
 	title = japfor.471.t
 
 	desc = {
@@ -8562,7 +8515,6 @@ news_event = { #The Rising Sun
 	}
 
 	option = {
-		log = "[GetLogInfo]: event japfor.471 option japfor.471.a"
 		name = japfor.471.a
 		effect_tooltip = {
 			add_named_threat = {

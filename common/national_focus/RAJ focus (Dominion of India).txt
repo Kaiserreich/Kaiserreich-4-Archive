@@ -1822,9 +1822,9 @@ focus_tree = {
 
 	focus = {
 		id = RAJ_prepare1
-		icon = GFX_goal_india_dominion
+		icon = GFX_focus_RAJ_indianisation_of_army
 		available = {
-			has_army_manpower = { size > 249999 }
+			threat > 0.15
 		}
 		x = 26
 		y = 0
@@ -1847,52 +1847,9 @@ focus_tree = {
 			log = "[GetDateText]: [Root.GetName]: Focus RAJ_prepare1"
 			add_political_power = 75
 			add_war_support = 0.1
+			add_stability = 0.1
 		}
 		search_filters = { FOCUS_FILTER_POLITICAL }
-	}
-
-	focus = {
-		id = RAJ_prepare2
-		icon = GFX_goal_generic_military_sphere
-		relative_position_id = RAJ_prepare1
-		x = 0
-		y = 1
-		cost = 7
-		prerequisite = { focus = RAJ_prepare1 }
-
-		ai_will_do = {
-			factor = 5
-			modifier = {
-				factor = 0
-				has_army_manpower = { size < 275000 }
-				has_war = no
-				PRF = { has_war = no }
-				HND = { has_war = no }
-			}
-			modifier = {
-				factor = 3
-				OR = {
-					has_war_with = PRF
-					has_war_with = HND
-				}
-			}
-			modifier = {
-				factor = 100
-				PRF = { has_war_with = HND }
-			}
-		}
-
-		bypass = {
-			NOT = { country_exists = PRF }
-			NOT = { country_exists = HND }
-		}
-
-		completion_reward = {
-			log = "[GetDateText]: [Root.GetName]: Focus RAJ_prepare2"
-			add_stability = 0.10
-			add_timed_idea = { idea = RAJ_war_fever days = 365 }
-		}
-		search_filters = { FOCUS_FILTER_STABILITY }
 	}
 
 	focus = {
@@ -1901,32 +1858,55 @@ focus_tree = {
 		will_lead_to_war_with = HND
 		available = {
 			is_subject = no
-			can_declare_war_on = 431.owner #Calcutta
+			can_declare_war_on = 431.owner #West Bengal
 			NOT = { has_non_aggression_pact_with = 431.owner }
-			OR = {
-				has_army_manpower = { size > 299999 }
-				var:431.owner = { strength_ratio = { tag = ROOT ratio < 0.5 } }
-				var:431.owner = { enemies_strength_ratio > 0.75 }
-			}
 		}
-		prerequisite = { focus = RAJ_prepare2 }
+		prerequisite = { focus = RAJ_prepare1 }
 		mutually_exclusive = { focus = RAJ_revoltHND }
 		relative_position_id = RAJ_prepare1
 		x = -3
-		y = 2
+		y = 1
 		cost = 5
 
 		ai_will_do = {
 			factor = 1000
 			modifier = {
 				factor = 0
-				NOT = { has_game_rule = { rule = HND_lucknow option = DEFAULT } }
+				NOT = {
+					has_game_rule = { rule = HND_lucknow option = DEFAULT }
+					has_country_flag = RAJ_lucknow_denied
+				}
+			}
+			modifier = {
+				factor = 0 #wait for Gandhi to propose Lucknow
+				has_government = social_democrat
+				HND = {
+					has_country_leader = { character = HND_mohandas_karamchand_gandhi }
+					NOT = { focus_progress = { focus = HND_home_guard progress > 0 } }
+					NOT = { has_completed_focus = HND_reunite_india }
+					OR = {
+						has_country_flag = RAJ_lucknow_agreed
+						NOT = { has_country_flag = RAJ_lucknow_denied }
+					}
+				}
 			}
 			modifier = {
 				factor = 0
-				OR = {
-					ROOT_is_threatened = yes
-					431 = { owner = { default_attack_AI_trigger_FROM = yes } }
+				ROOT_is_threatened = yes
+			}
+			modifier = {
+				factor = 0
+				if = {
+					limit = {
+						HND = {
+							owns_state = 431 #West Bengal
+							has_country_leader = { character = HND_mohandas_karamchand_gandhi }
+						}
+					}
+					RAJ = { has_war = yes }
+				}
+				else = {
+					var:431.owner = { default_attack_AI_trigger_FROM = yes }
 				}
 			}
 			modifier = {
@@ -1944,7 +1924,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 0
-				432 = { is_owned_and_controlled_by = HND } #Assam
+				430 = { is_owned_and_controlled_by = HND } #East Bengal
 			}
 		}
 
@@ -1955,7 +1935,7 @@ focus_tree = {
 		select_effect = {
 			log = "[GetDateText]: [Root.GetName]: Select Focus RAJ_invadeHND"
 			var:431.owner = {
-				country_event = kr.political.30
+				incoming_war_notification_effect = yes
 				save_event_target_as = attack_target
 			}
 			every_other_country = {
@@ -1966,6 +1946,13 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus RAJ_invadeHND"
+			if = {
+				limit = { has_idea = RAJ_war_fever }
+				modify_timed_idea = { idea = RAJ_war_fever days = 365 }
+			}
+			else = {
+				add_timed_idea = { idea = RAJ_war_fever days = 365 }
+			}
 			declare_war_on = {
 				target = 431.owner
 				type = annex_everything
@@ -1982,30 +1969,48 @@ focus_tree = {
 			is_subject = no
 			can_declare_war_on = HND
 			NOT = { has_non_aggression_pact_with = HND }
-			432 = { is_owned_and_controlled_by = HND } #Assam
-			OR = {
-				has_army_manpower = { size > 299999 }
-				HND = { strength_ratio = { tag = ROOT ratio < 0.5 } }
-				HND = { enemies_strength_ratio > 0.75 }
-			}
+			430 = { is_owned_and_controlled_by = HND } #East Bengal
 		}
-		prerequisite = { focus = RAJ_prepare2 }
+		prerequisite = { focus = RAJ_prepare1 }
 		mutually_exclusive = { focus = RAJ_invadeHND }
 		relative_position_id = RAJ_prepare1
 		x = -1
-		y = 2
-		cost = 8
+		y = 1
+		cost = 10
 
 		ai_will_do = {
 			factor = 1000
 			modifier = {
 				factor = 0
-				NOT = { has_game_rule = { rule = HND_lucknow option = DEFAULT } }
+				NOT = {
+					has_game_rule = { rule = HND_lucknow option = DEFAULT }
+					has_country_flag = RAJ_lucknow_denied
+				}
+			}
+			modifier = {
+				factor = 0 #wait for Gandhi to propose Lucknow
+				has_government = social_democrat
+				HND = {
+					has_country_leader = { character = HND_mohandas_karamchand_gandhi }
+					NOT = { focus_progress = { focus = HND_home_guard progress > 0 } }
+					NOT = { has_completed_focus = HND_reunite_india }
+					OR = {
+						has_country_flag = RAJ_lucknow_agreed
+						NOT = { has_country_flag = RAJ_lucknow_denied }
+					}
+				}
 			}
 			modifier = {
 				factor = 0
-				OR = {
-					ROOT_is_threatened = yes
+				ROOT_is_threatened = yes
+			}
+			modifier = {
+				factor = 0
+				if = {
+					limit = { HND = { has_country_leader = { character = HND_mohandas_karamchand_gandhi } } }
+					PRF = { has_war = yes }
+				}
+				else = {
 					HND = { default_attack_AI_trigger_FROM = yes }
 				}
 			}
@@ -2024,14 +2029,10 @@ focus_tree = {
 			}
 		}
 
-		bypass = {
-			owns_state = 431
-		}
-
 		select_effect = {
 			log = "[GetDateText]: [Root.GetName]: Select Focus RAJ_revoltHND"
 			HND = {
-				country_event = kr.political.30
+				incoming_war_notification_effect = yes
 				save_event_target_as = attack_target
 			}
 			every_other_country = {
@@ -2042,10 +2043,47 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus RAJ_revoltHND"
+			if = {
+				limit = { has_idea = RAJ_war_fever }
+				modify_timed_idea = { idea = RAJ_war_fever days = 365 }
+			}
+			else = {
+				add_timed_idea = { idea = RAJ_war_fever days = 365 }
+			}
 			declare_war_on = { target = HND type = annex_everything }
-			custom_effect_tooltip = RAJ_HND_revolters
-			set_state_controller = 432
-			hidden_effect = { load_oob = RAJ_HND_revolters }
+			hidden_effect = {
+				if = {
+					limit = { has_template = "Bengali Rebels" }
+					delete_unit_template_and_units = { division_template = "Bengali Rebels" disband = yes } #no cheating
+				}
+			}
+			division_template = {
+				name = "Bengali Rebels"
+				division_names_group = RAJ_MIL_02
+				regiments = {
+					infantry = { x = 0 y = 0 }
+					infantry = { x = 0 y = 1 }
+					infantry = { x = 0 y = 2 }
+					infantry = { x = 1 y = 0 }
+					infantry = { x = 1 y = 1 }
+					infantry = { x = 1 y = 2 }
+					infantry = { x = 2 y = 0 }
+					infantry = { x = 2 y = 1 }
+					infantry = { x = 2 y = 2 }
+				}
+			}
+			set_state_controller = 430 #East Bengal
+			430 = {
+				teleport_armies = {
+					limit = { is_ally_with = HND }
+					to_state = HND.capital
+				}
+				create_unit = {
+					division = "division_template = \"Bengali Rebels\" start_experience_factor = 0.2"
+					owner = ROOT
+					count = 3
+				}
+			}
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION }
 	}
@@ -2059,17 +2097,12 @@ focus_tree = {
 			is_neighbor_of = 427.owner
 			can_declare_war_on = 427.owner #Hyderabad
 			NOT = { has_non_aggression_pact_with = 427.owner }
-			OR = {
-				has_army_manpower = { size > 299999 }
-				var:427.owner = { strength_ratio = { tag = ROOT ratio < 0.5 } }
-				var:427.owner = { enemies_strength_ratio > 0.75 }
-			}
 		}
-		prerequisite = { focus = RAJ_prepare2 }
+		prerequisite = { focus = RAJ_prepare1 }
 		mutually_exclusive = { focus = RAJ_revoltPRF }
 		relative_position_id = RAJ_prepare1
 		x = 1
-		y = 2
+		y = 1
 		cost = 5
 
 		ai_will_do = {
@@ -2078,7 +2111,7 @@ focus_tree = {
 				factor = 0
 				OR = {
 					ROOT_is_threatened = yes
-					427 = { owner = { default_attack_AI_trigger_FROM = yes } }
+					var:427.owner = { default_attack_AI_trigger_FROM = yes }
 				}
 			}
 			modifier = {
@@ -2104,7 +2137,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 0
-				867 = { is_owned_and_controlled_by = PRF } #Travancore
+				320 = { is_owned_and_controlled_by = PRF } #Madras
 			}
 		}
 
@@ -2115,7 +2148,7 @@ focus_tree = {
 		select_effect = {
 			log = "[GetDateText]: [Root.GetName]: Select Focus RAJ_invadePRF"
 			var:427.owner = {
-				country_event = kr.political.30
+				incoming_war_notification_effect = yes
 				save_event_target_as = attack_target
 			}
 			every_other_country = {
@@ -2126,6 +2159,13 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus RAJ_invadePRF"
+			if = {
+				limit = { has_idea = RAJ_war_fever }
+				modify_timed_idea = { idea = RAJ_war_fever days = 365 }
+			}
+			else = {
+				add_timed_idea = { idea = RAJ_war_fever days = 365 }
+			}
 			declare_war_on = {
 				target = 427.owner
 				type = annex_everything
@@ -2143,19 +2183,14 @@ focus_tree = {
 			is_neighbor_of = PRF
 			can_declare_war_on = PRF
 			NOT = { has_non_aggression_pact_with = PRF }
-			867 = { is_owned_and_controlled_by = PRF } #Travancore
-			OR = {
-				has_army_manpower = { size > 299999 }
-				PRF = { strength_ratio = { tag = ROOT ratio < 0.5 } }
-				PRF = { enemies_strength_ratio > 0.75 }
-			}
+			320 = { is_owned_and_controlled_by = PRF } #Madras
 		}
-		prerequisite = { focus = RAJ_prepare2 }
+		prerequisite = { focus = RAJ_prepare1 }
 		mutually_exclusive = { focus = RAJ_invadePRF }
 		relative_position_id = RAJ_prepare1
 		x = 3
-		y = 2
-		cost = 8
+		y = 1
+		cost = 10
 
 		ai_will_do = {
 			factor = 1000
@@ -2189,14 +2224,10 @@ focus_tree = {
 			}
 		}
 
-		bypass = {
-			owns_state = 427
-		}
-
 		select_effect = {
 			log = "[GetDateText]: [Root.GetName]: Select Focus RAJ_revoltPRF"
 			PRF = {
-				country_event = kr.political.30
+				incoming_war_notification_effect = yes
 				save_event_target_as = attack_target
 			}
 			every_other_country = {
@@ -2207,22 +2238,59 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus RAJ_revoltPRF"
+			if = {
+				limit = { has_idea = RAJ_war_fever }
+				modify_timed_idea = { idea = RAJ_war_fever days = 365 }
+			}
+			else = {
+				add_timed_idea = { idea = RAJ_war_fever days = 365 }
+			}
 			declare_war_on = { target = PRF type = annex_everything }
-			custom_effect_tooltip = RAJ_PRF_revolters
-			set_state_controller = 867
-			hidden_effect = { load_oob = RAJ_PRF_revolters }
+			hidden_effect = {
+				if = {
+					limit = { has_template = "British Loyalist Rebels" }
+					delete_unit_template_and_units = { division_template = "British Loyalist Rebels" disband = yes } #no cheating
+				}
+			}
+			division_template = {
+				name = "British Loyalist Rebels"
+				division_names_group = RAJ_MIL_02
+				regiments = {
+					infantry = { x = 0 y = 0 }
+					infantry = { x = 0 y = 1 }
+					infantry = { x = 0 y = 2 }
+					infantry = { x = 1 y = 0 }
+					infantry = { x = 1 y = 1 }
+					infantry = { x = 1 y = 2 }
+					infantry = { x = 2 y = 0 }
+					infantry = { x = 2 y = 1 }
+					infantry = { x = 2 y = 2 }
+				}
+			}
+			set_state_controller = 320 #Madras
+			320 = {
+				teleport_armies = {
+					limit = { is_ally_with = PRF }
+					to_state = PRF.capital
+				}
+				create_unit = {
+					division = "division_template = \"British Loyalist Rebels\" start_experience_factor = 0.2"
+					owner = ROOT
+					count = 3
+				}
+			}
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION }
 	}
 
 	focus = {
 		id = RAJ_unifyindia
-		icon = GFX_goal_india_united
+		icon = GFX_goal_india_dominion
 		available = {
 			NOT = { country_exists = PRF }
 			NOT = { country_exists = HND }
 			427 = { is_owned_and_controlled_by = ROOT } #Hyderabad
-			431 = { is_owned_and_controlled_by = ROOT } #Calcutta
+			431 = { is_owned_and_controlled_by = ROOT } #West Bengal
 			439 = { is_owned_and_controlled_by = ROOT } #Delhi
 		}
 		x = 26
@@ -2239,8 +2307,8 @@ focus_tree = {
 			country_event = beng.200
 			hidden_effect = {
 				if = {
-					limit = { NOT = { has_cosmetic_tag = RAJ_IND } }
-					set_cosmetic_tag = RAJ_india
+					limit = { has_cosmetic_tag = RAJ_entente }
+					set_cosmetic_tag = RAJ_india_entente
 					news_event = worldnews.72
 				}
 			}
@@ -2665,7 +2733,6 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus RAJ_unifyindia_2"
 			add_political_power = 100
-			set_cosmetic_tag = RAJ_IND
 		}
 		search_filters = { FOCUS_FILTER_POLITICAL }
 	}
@@ -2814,7 +2881,7 @@ focus_tree = {
 
 	focus = {
 		id = RAJ_assam_question
-		icon = GFX_PRF_plantations
+		icon = GFX_goal_Cotton
 		cost = 7
 		prerequisite = {
 			focus = RAJ_industry_question
@@ -2855,7 +2922,7 @@ focus_tree = {
 
 	focus = {
 		id = RAJ_orissa_question
-		icon = GFX_PRF_zamindar
+		icon = GFX_goal_generic_land_reform
 		cost = 7
 		prerequisite = {
 			focus = RAJ_industry_question
@@ -2884,7 +2951,7 @@ focus_tree = {
 				limit = {
 					OR = {
 						state = 426 #Orissa
-						state = 436 #Jabalpur
+						state = 436 #Raipur
 						state = 889 #Vizagapatnam
 					}
 					has_resistance = yes

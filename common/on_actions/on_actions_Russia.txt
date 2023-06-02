@@ -1,16 +1,12 @@
 on_actions = {
 	on_startup = {
 		effect = {
-			#Russian integration arrays
 			for_each_scope_loop = {
 				array = RUS.owned_states
 				add_to_array = { RUS.RUS_starting_states_array = THIS }
 			}
 			add_to_array = { RUS.RUS_starting_states_array = 408.id } #Vladivostok
 			add_to_array = { RUS.RUS_starting_states_array = 409.id } #Khabarovsk
-			880 = { #Dvinsk
-				add_dynamic_modifier = { modifier = BAT_Latgale_autonomous_region }
-			}
 
 			#Central Asian integration
 			ALO = {
@@ -39,27 +35,100 @@ on_actions = {
 	#ROOT is winner #FROM gets annexed - For civil wars on_civil_war_end is also fired
 	on_annex = {
 		effect = {
-			if = {
-				limit = { FROM = { original_tag = TRM } }
-				every_state = {
-					limit = { is_claim_or_core_of_FROM = yes }
-					remove_claim_by = FROM
-					remove_core_of = FROM
-				}
-			}
-			else_if = {
-				limit = { FROM = { original_tag = RUS } }
-				clr_global_flag = RUS_war_for_bessarabia
-				TRM = {
-					if = {
-						limit = { has_cosmetic_tag = TRM_free_russia }
-						set_cosmetic_tag = TRM_RUS
+			FROM = {
+				if = {
+					limit = { original_tag = TRM }
+					every_state = {
+						limit = { is_claim_or_core_of_FROM = yes }
+						remove_claim_by = FROM
+						remove_core_of = FROM
 					}
 				}
+				else_if = {
+					limit = { original_tag = RUS }
+					clr_global_flag = RUS_war_for_bessarabia
+					TRM = {
+						if = {
+							limit = { has_cosmetic_tag = TRM_free_russia }
+							set_cosmetic_tag = TRM_RUS
+						}
+					}
+				}
+				else_if = {
+					limit = { original_tag = ROM }
+					clr_global_flag = RUS_war_for_bessarabia
+				}
+				else_if = {
+					limit = { has_variable = RUS_alliance_disabled_integration }
+					var:RUS_alliance_disabled_integration = {
+						PREV = { enable_coring_at_eighty_compliance = yes }
+						if = {
+							limit = { PREV = { original_tag = UKR } }
+							73 = { enable_state_integration_80_compliance = yes } #Transcarpathia
+							78 = { enable_state_integration_80_compliance = yes } #Bessarabia
+							80 = { enable_state_integration_80_compliance = yes } #Cernauti
+							89 = { enable_state_integration_80_compliance = yes } #Stanislawow
+							91 = { enable_state_integration_80_compliance = yes } #Lwow
+							1088 = { enable_state_integration_80_compliance = yes } #Chelm
+
+							241 = { disable_state_integration = yes } #Gomel
+						}
+						else_if = {
+							limit = { PREV = { original_tag = JAP } }
+							537 = { enable_state_integration_80_compliance = yes } #Sakhalin
+							555 = { enable_state_integration_80_compliance = yes } #Kuril Islands
+						}
+						else_if = {
+							limit = { PREV = { original_tag = LIT } }
+							188 = { enable_state_integration_80_compliance = yes } #Memel
+						}
+						else_if = {
+							limit = { PREV = { original_tag = POL } }
+							97 = { enable_state_integration_80_compliance = yes } #Bialystok
+						}
+						else_if = {
+							limit = { PREV = { original_tag = FIN } }
+							146 = { enable_state_integration_80_compliance = yes } #Vyborg
+						}
+						else_if = {
+							limit = { PREV = { original_tag = ROM } }
+							78 = { enable_state_integration_80_compliance = yes } #Bessarabia
+						}
+						else_if = {
+							limit = { PREV = { original_tag = GEO } }
+							585 = { enable_state_integration_80_compliance = yes } #Batumi
+						}
+						else_if = {
+							limit = { PREV = { original_tag = ARM } }
+							1000 = { enable_state_integration_80_compliance = yes } #Kars
+						}
+						else_if = {
+							limit = { PREV = { original_tag = PER } }
+							418 = { enable_state_integration_80_compliance = yes } #Ashkhabad
+						}
+					}
+					clear_variable = RUS_alliance_disabled_integration
+				}
+			}
+		}
+	}
+
+	#ROOT is winner #FROM gets annexed
+	on_civil_war_end = {
+		effect = {
+			if = {
+				limit = {
+					original_tag = SOV
+					FROM = { original_tag = RUS }
+				}
+				log = "KR_Event_Logging;SOV WINS RCW;[GetDateText]"
 			}
 			else_if = {
-				limit = { FROM = { original_tag = ROM } }
-				clr_global_flag = RUS_war_for_bessarabia
+				limit = {
+					original_tag = RUS
+					FROM = { original_tag = SOV }
+				}
+				log = "KR_Event_Logging;RUS WINS RCW;[GetDateText]"
 			}
 		}
 	}
@@ -144,6 +213,88 @@ on_actions = {
 		}
 	}
 
+	#FROM is country getting invited.
+	on_offer_join_faction = {
+		effect = {
+			if = {
+				limit = {
+					is_russian_tag = yes
+					has_variable = can_integrate_@FROM
+				}
+				set_variable = { FROM.RUS_alliance_disabled_integration = ROOT }
+				FROM = { disable_coring = yes }
+				if = {
+					limit = { FROM = { original_tag = UKR } }
+					73 = { disable_state_integration = yes } #Transcarpathia
+					73 = { disable_state_integration = yes } #Bessarabia
+					80 = { disable_state_integration = yes } #Cernauti
+					89 = { disable_state_integration = yes } #Stanislawow
+					91 = { disable_state_integration = yes } #Lwow
+					1088 = { disable_state_integration = yes } #Chelm
+
+					if = {
+						limit = { owns_state = 243 } #Krichev
+						241 = { enable_state_integration_80_compliance = yes } #Gomel
+					}
+				}
+				else_if = {
+					limit = { FROM = { original_tag = LIT } }
+					188 = { disable_state_integration = yes } #Memel
+				}
+				else_if = {
+					limit = { FROM = { original_tag = POL } }
+					if = {
+						limit = { NOT = { owns_state = 97 } }
+						97 = { disable_state_integration = yes } #Bialystok
+					}
+				}
+				else_if = {
+					limit = { FROM = { original_tag = GEO } }
+					585 = { disable_state_integration = yes } #Batumi
+				}
+				else_if = {
+					limit = { FROM = { original_tag = ARM } }
+					1000 = { disable_state_integration = yes } #Kars
+				}
+				else_if = {
+					limit = { FROM = { is_subject = no } }
+					else_if = {
+						limit = { FROM = { original_tag = JAP } }
+						if = {
+							limit = { NOT = { owns_state = 537 } }
+							537 = { disable_state_integration = yes } #Sakhalin
+						}
+						if = {
+							limit = { NOT = { owns_state = 555 } }
+							555 = { disable_state_integration = yes } #Kuril Islands
+						}
+					}
+					else_if = {
+						limit = { FROM = { original_tag = ROM } }
+						if = {
+							limit = { NOT = { owns_state = 78 } }
+							78 = { disable_state_integration = yes } #Bessarabia
+						}
+					}
+					else_if = {
+						limit = { FROM = { original_tag = FIN } }
+						if = {
+							limit = { NOT = { owns_state = 146 } }
+							146 = { disable_state_integration = yes } #Vyborg
+						}
+					}
+					if = {
+						limit = { FROM = { original_tag = PER } }
+						if = {
+							limit = { NOT = { owns_state = 418 } }
+							418 = { disable_state_integration = yes } #Ashkhabad
+						}
+					}
+				}
+			}
+		}
+	}
+
 	#ROOT is winner #FROM is loser
 	on_peaceconference_ended = {
 		effect = {
@@ -159,6 +310,111 @@ on_actions = {
 				if = {
 					limit = { FROM = { tag = SOV } }
 					country_event = { id = russia.1951 days = 1 random_hours = 30 }
+				}
+			}
+		}
+	}
+
+	on_ruling_party_change = {
+		effect = {
+			if = {
+				limit = {
+					has_variable = RUS_alliance_disabled_integration
+					NOT = { is_ally_with = var:RUS_alliance_disabled_integration }
+				}
+				var:RUS_alliance_disabled_integration = {
+					PREV = { enable_coring_at_eighty_compliance = yes }
+					if = {
+						limit = { FROM = { original_tag = UKR } }
+						73 = { enable_state_integration_80_compliance = yes } #Transcarpathia
+						78 = { enable_state_integration_80_compliance = yes } #Bessarabia
+						80 = { enable_state_integration_80_compliance = yes } #Cernauti
+						89 = { enable_state_integration_80_compliance = yes } #Stanislawow
+						91 = { enable_state_integration_80_compliance = yes } #Lwow
+						1088 = { enable_state_integration_80_compliance = yes } #Chelm
+
+						241 = { disable_state_integration = yes } #Gomel
+					}
+					else_if = {
+						limit = { FROM = { original_tag = JAP } }
+						537 = { enable_state_integration_80_compliance = yes } #Sakhalin
+						555 = { enable_state_integration_80_compliance = yes } #Kuril Islands
+					}
+					else_if = {
+						limit = { FROM = { original_tag = LIT } }
+						188 = { enable_state_integration_80_compliance = yes } #Memel
+					}
+					else_if = {
+						limit = { FROM = { original_tag = POL } }
+						97 = { enable_state_integration_80_compliance = yes } #Bialystok
+					}
+					else_if = {
+						limit = { FROM = { original_tag = FIN } }
+						146 = { enable_state_integration_80_compliance = yes } #Vyborg
+					}
+					else_if = {
+						limit = { FROM = { original_tag = ROM } }
+						78 = { enable_state_integration_80_compliance = yes } #Bessarabia
+					}
+					else_if = {
+						limit = { FROM = { original_tag = GEO } }
+						585 = { enable_state_integration_80_compliance = yes } #Batumi
+					}
+					else_if = {
+						limit = { FROM = { original_tag = ARM } }
+						1000 = { enable_state_integration_80_compliance = yes } #Kars
+					}
+					else_if = {
+						limit = { FROM = { original_tag = PER } }
+						418 = { enable_state_integration_80_compliance = yes } #Ashkhabad
+					}
+				}
+				clear_variable = RUS_alliance_disabled_integration
+			}
+			if = {
+				limit = {
+					is_subject = yes
+					overlord = {
+						is_russian_tag = yes
+						has_variable = can_integrate_@ROOT
+					}
+				}
+				set_variable = { FROM.RUS_alliance_disabled_integration = overlord }
+				overlord = {
+					ROOT = { disable_coring = yes }
+					if = {
+						limit = { ROOT = { original_tag = UKR } }
+						73 = { disable_state_integration = yes } #Transcarpathia
+						78 = { disable_state_integration = yes } #Bessarabia
+						80 = { disable_state_integration = yes } #Cernauti
+						89 = { disable_state_integration = yes } #Stanislawow
+						91 = { disable_state_integration = yes } #Lwow
+						1088 = { disable_state_integration = yes } #Chelm
+
+						if = {
+							limit = { owns_state = 243 } #Krichev
+							241 = { enable_state_integration_80_compliance = yes } #Gomel
+						}
+					}
+					else_if = {
+						limit = { ROOT = { original_tag = LIT } }
+						188 = { disable_state_integration = yes } #Memel
+					}
+					else_if = {
+						limit = { ROOT = { original_tag = POL } }
+						if = {
+							limit = { NOT = { owns_state = 97 } }
+							97 = { disable_state_integration = yes } #Bialystok
+						}
+					}
+					else_if = {
+						limit = { ROOT = { original_tag = GEO } }
+						585 = { disable_state_integration = yes } #Batumi
+					}
+					else_if = {
+						limit = { ROOT = { original_tag = ARM } }
+						1000 = { disable_state_integration = yes } #Kars
+					}
 				}
 			}
 		}

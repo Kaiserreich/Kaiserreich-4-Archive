@@ -148,7 +148,7 @@ RUS_Zemstvo_Funding_decisions = {
 				controls_state = 246 #Rzhev
 				controls_state = 755 #Vitebsk
 				controls_state = 210 #Velikiye Luki
-				controls_state = 880 #Dvinsk
+				controls_state = 880 #Latgale
 				controls_state = 247 #Tver
 				controls_state = 248 #Yarolavl
 				controls_state = 351 #Vologda
@@ -520,7 +520,7 @@ prospect_for_resources = {
 		allowed = { always = no } #activated by effect
 
 		available = {
-			FROM = { is_owned_and_controlled_by = ROOT } #Pechenga
+			FROM = { is_owned_and_controlled_by = ROOT } #Petsamo
 			has_tech = excavation2
 			num_of_civilian_factories_available_for_projects > 2
 		}
@@ -1059,7 +1059,13 @@ RUS_Alliance_decisions = {
 		targets = { ROM }
 		target_root_trigger = {
 			has_completed_focus = RUS_Seek_Allies
-			has_completed_focus = RUS_Realpolitik
+			OR = {
+				has_completed_focus = RUS_Realpolitik
+				AND = {
+					GER = { exists = no }
+					SER = { is_in_faction_with = RUS }
+				}
+			}
 		}
 		target_trigger = {
 			is_faction_leader = yes
@@ -1445,14 +1451,14 @@ RUS_Foreign_Policy_decisions = {
 				limit = { has_completed_focus = RUS_Crush_The_German_Hegemony }
 				OR = {
 					NOT = { can_declare_war_on = FROM }
-					NOT = { 146 = { is_owned_by = FROM } } #Viipuri
+					NOT = { 146 = { is_owned_by = FROM } } #Karelia
 					has_non_aggression_pact_with = FROM
 				}
 			}
 			else = {
 				OR = {
 					NOT = { can_declare_war_on = FROM }
-					NOT = { 146 = { is_owned_by = FROM } } #Viipuri
+					NOT = { 146 = { is_owned_by = FROM } } #Karelia
 					has_non_aggression_pact_with = FROM
 					FROM = { is_in_faction = yes }
 					FROM = { is_guaranteed_by = GER }
@@ -1466,7 +1472,7 @@ RUS_Foreign_Policy_decisions = {
 		}
 		target_trigger = {
 			can_declare_war_on = FROM
-			FROM = { owns_state = 146 } #Viipuri
+			FROM = { owns_state = 146 } #Karelia
 		}
 
 		cost = 10
@@ -1536,6 +1542,59 @@ RUS_Foreign_Policy_decisions = {
 			}
 		}
 	}
+	UKR_RUS_invade_ukraine = { #Invade neutral (in practice: socialist) Ukraine
+		icon = RUS_Attack_Region
+
+		allowed = { always = no }
+		visible = {
+			UKR = { exists = yes }
+			has_country_flag = UKR_invasion
+			NOT = { has_war_with = UKR }
+			can_declare_war_on = FROM
+		}
+		cancel_trigger = {
+			has_war_with = UKR
+		}
+
+		targets = { UKR }
+		target_root_trigger = {
+			has_country_flag = UKR_invasion
+		}
+		target_trigger = {
+			can_declare_war_on = FROM
+		}
+
+		days_remove = 45
+		war_with_target_on_remove = yes
+		fire_only_once = yes
+
+		ai_will_do = { factor = 1000 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel UKR_RUS_invade_ukraine target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			clr_country_flag = UKR_invasion
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete UKR_RUS_invade_ukraine target: [From.GetName]"
+			setup_decision_attack_AI = yes
+			if = {
+				limit = { NOT = { has_global_flag = second_weltkrieg_has_started } }
+				add_named_threat = {
+					threat = 25
+					name = RUS_aggression_threat_FROM
+				}
+			}
+			GER = { country_event = { id = ukraine_borotbist.102 days = 25 } }
+			UKR = { country_event = { id = ukraine_borotbist.102 days = 10 } }
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove UKR_RUS_invade_ukraine target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			clr_country_flag = UKR_invasion
+		}
+	}
 	RUS_Attack_Europe = {
 		name = RUS_Attack_Region
 		icon = hol_draw_up_staff_plans
@@ -1557,6 +1616,11 @@ RUS_Foreign_Policy_decisions = {
 				has_completed_focus = RUS_Crush_The_German_Hegemony
 			}
 			NOT = { has_non_aggression_pact_with = FROM }
+			hidden_trigger = {
+				FROM = {
+					NOT = { has_country_flag = UKR_dont_attack_normally }
+				}
+			}
 		}
 
 		cancel_trigger = {
@@ -1577,7 +1641,7 @@ RUS_Foreign_Policy_decisions = {
 			}
 		}
 
-		targets = { EST LAT LIT WHR UKR }
+		targets = { EST LAT LIT WHR }
 		target_root_trigger = {
 			has_completed_focus = RUS_The_Road_To_War
 		}
@@ -1639,7 +1703,7 @@ RUS_Foreign_Policy_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete RUS_Attack_Europe target: [From.GetName]"
-			FROM = { country_event = kr.political.30 } #warning event
+			FROM = { incoming_war_notification_effect = yes }
 			setup_decision_attack_AI = yes
 		}
 
@@ -1648,18 +1712,9 @@ RUS_Foreign_Policy_decisions = {
 			clear_decision_attack_AI = yes
 			if = {
 				limit = { NOT = { has_global_flag = second_weltkrieg_has_started } }
-				if = {
-					limit = { FROM = { tag = UKR } }
-					add_named_threat = {
-						threat = 10
-						name = RUS_aggression_threat_FROM
-					}
-				}
-				else = {
-					add_named_threat = {
-						threat = 2
-						name = RUS_aggression_threat_FROM
-					}
+				add_named_threat = {
+					threat = 2
+					name = RUS_aggression_threat_FROM
 				}
 			}
 			declare_war_on = {
@@ -1734,7 +1789,7 @@ RUS_Foreign_Policy_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete RUS_Attack_Caucasus target: [From.GetName]"
-			FROM = { country_event = kr.political.30 } #warning event
+			FROM = { incoming_war_notification_effect = yes }
 			setup_decision_attack_AI = yes
 		}
 
@@ -1802,7 +1857,7 @@ RUS_Foreign_Policy_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete RUS_Attack_Azerbaijan target: [From.GetName]"
-			FROM = { country_event = kr.political.30 } #warning event
+			FROM = { incoming_war_notification_effect = yes }
 			setup_decision_attack_AI = yes
 		}
 
@@ -1894,6 +1949,7 @@ RUS_Foreign_Policy_decisions = {
 				78 = { transfer_state_to = ROOT } #Bessarabia
 			}
 			custom_effect_tooltip = if_they_refuse_tt
+			set_country_flag = RUS_declared_war_on_romania
 			set_global_flag = RUS_war_for_bessarabia
 			declare_war_on = {
 				target = FROM
@@ -1923,13 +1979,6 @@ RUS_Foreign_Policy_decisions = {
 			NOT = { owns_state = 78 }
 		}
 
-		cancel_trigger = {
-			FROM = {
-				NOT = { owns_state = 78 }
-				NOT = { overlord = { is_in_faction_with = ROOT } }
-			}
-		}
-
 		targets = { ROM }
 		target_root_trigger = {
 			has_completed_focus = RUS_Seek_Allies
@@ -1939,7 +1988,6 @@ RUS_Foreign_Policy_decisions = {
 		}
 
 		cost = 10
-		days_remove = 40
 		fire_only_once = yes
 
 		ai_will_do = { factor = 100 }
@@ -1947,19 +1995,14 @@ RUS_Foreign_Policy_decisions = {
 		cancel_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision cancel RUS_Request_Bessarabia target: [From.GetName]"
 			add_political_power = 10
-			clr_country_flag = RUS_request_bessarabia_ally
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete RUS_Request_Bessarabia target: [From.GetName]"
+			save_event_target_as = RUS_request_bessarabia_ally
 			var:FROM.overlord = {
 				country_event = { id = rusfor.1183 days = 2 random_days = 2 } #request event
 			}
-			set_country_flag = RUS_request_bessarabia_ally
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove RUS_Request_Bessarabia target: [From.GetName]"
 			custom_effect_tooltip = if_they_accept_tt
 			effect_tooltip = {
 				78 = { transfer_state_to = ROOT } #Bessarabia
@@ -2136,7 +2179,7 @@ RUS_Foreign_Policy_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete RUS_Attack_Poland target: [From.GetName]"
-			FROM = { country_event = kr.political.30 } #warning event
+			FROM = { incoming_war_notification_effect = yes }
 			setup_decision_attack_AI = yes
 		}
 
@@ -2392,7 +2435,7 @@ RUS_Foreign_Policy_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete RUS_Attack_Ottomans target: [From.GetName]"
-			FROM = { country_event = kr.political.30 } #warning event
+			FROM = { incoming_war_notification_effect = yes }
 			setup_decision_attack_AI = yes
 			set_country_flag = RUS_attacking_ottomans
 		}
@@ -2595,7 +2638,7 @@ RUS_Foreign_Policy_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete RUS_Attack_Persia target: [From.GetName]"
-			FROM = { country_event = kr.political.30 } #warning event
+			FROM = { incoming_war_notification_effect = yes }
 			setup_decision_attack_AI = yes
 		}
 
@@ -2673,7 +2716,7 @@ RUS_Foreign_Policy_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete RUS_Attack_Afghanistan target: [From.GetName]"
-			FROM = { country_event = kr.political.30 } #warning event
+			FROM = { incoming_war_notification_effect = yes }
 			setup_decision_attack_AI = yes
 		}
 

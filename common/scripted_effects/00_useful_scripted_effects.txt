@@ -106,10 +106,7 @@ clear_all_relations = {
 			}
 		}
 	}
-	if = {
-		limit = { has_country_flag = CAN_joined_iedc }
-		CAN_remove_from_iedc = yes
-	}
+	CAN_remove_from_iedc = yes
 	if = {
 		limit = { is_in_tech_sharing_group = entente_research }
 		remove_from_tech_sharing_group = entente_research
@@ -123,6 +120,101 @@ clear_all_relations = {
 	if = {
 		limit = { is_in_tech_sharing_group = phalanstere_research }
 		remove_from_tech_sharing_group = phalanstere_research
+	}
+}
+
+# clears all relations with a specific country and its allies, does not end wars
+# requires temp variable target = TAG
+clear_all_relations_with_TARGET = {
+	if = {
+		limit = { var:target = { is_ally_with = ENT } }
+		CAN_remove_from_iedc = yes
+		if = {
+			limit = { is_in_tech_sharing_group = entente_research }
+			remove_from_tech_sharing_group = entente_research
+		}
+	}
+	else_if = {
+		limit = { var:target = { is_ally_with = GER } }
+		GER_remove_from_mitteleuropa = yes
+		MIE_remove_from_intermarium = yes
+		if = {
+			limit = { is_in_tech_sharing_group = german_research }
+			remove_from_tech_sharing_group = german_research
+		}
+	}
+	else_if = {
+		limit = { var:target = { is_ally_with = INT } }
+		if = {
+			limit = { is_in_tech_sharing_group = phalanstere_research }
+			remove_from_tech_sharing_group = phalanstere_research
+		}
+	}
+	if = {
+		limit = { has_subject = var:target }
+		set_autonomy = {
+			target = PREV
+			autonomy_state = autonomy_free
+		}
+	}
+	else_if = {
+		limit = { is_subject_of = var:target }
+		overlord = {
+			set_autonomy = {
+				target = PREV
+				autonomy_state = autonomy_free
+			}
+		}
+	}
+	if = {
+		limit = { is_in_faction_with = var:target }
+		leave_faction = yes
+	}
+	every_other_country = {
+		limit = {
+			has_guaranteed = PREV
+			is_ally_with = var:target
+		}
+		diplomatic_relation = {
+			country = PREV
+			relation = guarantee
+			active = no
+		}
+	}
+	every_other_country = {
+		limit = {
+			has_non_aggression_pact_with = PREV
+			is_ally_with = var:target
+		}
+		diplomatic_relation = {
+			country = PREV
+			relation = military_access
+			active = no
+		}
+	}
+	every_other_country = {
+		limit = {
+			has_military_access_to = PREV
+			is_ally_with = var:target
+		}
+		diplomatic_relation = {
+			country = PREV
+			relation = military_access
+			active = no
+		}
+	}
+	every_other_country = {
+		limit = {
+			gives_military_access_to = PREV
+			is_ally_with = var:target
+		}
+		PREV = {
+			diplomatic_relation = {
+				country = PREV
+				relation = military_access
+				active = no
+			}
+		}
 	}
 }
 
@@ -175,10 +267,7 @@ clear_all_relations_except_wars = {
 			active = no
 		}
 	}
-	if = {
-		limit = { has_country_flag = CAN_joined_iedc }
-		CAN_remove_from_iedc = yes
-	}
+	CAN_remove_from_iedc = yes
 	if = {
 		limit = { is_in_tech_sharing_group = entente_research }
 		remove_from_tech_sharing_group = entente_research
@@ -460,6 +549,11 @@ get_current_government_type = {
 	clear_variable = original_government_type
 	set_variable = { original_government_type = current_party_ideology_group }
 
+	if = {
+		limit = { has_elections = yes }
+		set_country_flag = original_government_type_had_elections
+	}
+
 	clear_array = original_popularities
 	add_to_array = { original_popularities = party_popularity_100@totalist }
 	add_to_array = { original_popularities = party_popularity_100@syndicalist }
@@ -491,7 +585,20 @@ restore_previous_government_type = {
 	hidden_effect = {
 		if = {
 			limit = { has_variable = original_government_type } #needed to avoid a CTD
-			set_politics = { ruling_party = var:original_government_type }
+			if = {
+				limit = { has_country_flag = original_government_type_had_elections }
+				clr_country_flag = original_government_type_had_elections
+				set_politics = {
+					ruling_party = var:original_government_type
+					elections_allowed = yes
+				}
+			}
+			else = {
+				set_politics = {
+					ruling_party = var:original_government_type
+					elections_allowed = no
+				}
+			}
 		}
 		clear_variable = original_government_type
 
@@ -964,99 +1071,103 @@ add_research_slot_until_six = {
 # 	}
 
 save_current_factory_count = {
-	if = {
-		limit = { industrial_complex > 0 }
-		set_variable = { previous_industrial_complex_count = building_level@industrial_complex }
-	}
-	if = {
-		limit = { arms_factory > 0 }
-		set_variable = { previous_arms_factory_count = building_level@arms_factory }
-	}
-	if = {
-		limit = { dockyard > 0 }
-		set_variable = { previous_dockyard_count = building_level@dockyard }
-	}
-	if = {
-		limit = { synthetic_refinery > 0 }
-		set_variable = { previous_synthetic_refinery_count = building_level@synthetic_refinery }
-	}
-	if = {
-		limit = { fuel_silo > 0 }
-		set_variable = { previous_fuel_silo_count = building_level@fuel_silo }
-	}
-	if = {
-		limit = { rocket_site > 0 }
-		set_variable = { previous_rocket_site_count = building_level@rocket_site }
-	}
-	if = {
-		limit = { nuclear_reactor > 0 }
-		set_variable = { previous_nuclear_reactor_count = building_level@nuclear_reactor }
+	hidden_effect = {
+		if = {
+			limit = { industrial_complex > 0 }
+			set_variable = { previous_industrial_complex_count = building_level@industrial_complex }
+		}
+		if = {
+			limit = { arms_factory > 0 }
+			set_variable = { previous_arms_factory_count = building_level@arms_factory }
+		}
+		if = {
+			limit = { dockyard > 0 }
+			set_variable = { previous_dockyard_count = building_level@dockyard }
+		}
+		if = {
+			limit = { synthetic_refinery > 0 }
+			set_variable = { previous_synthetic_refinery_count = building_level@synthetic_refinery }
+		}
+		if = {
+			limit = { fuel_silo > 0 }
+			set_variable = { previous_fuel_silo_count = building_level@fuel_silo }
+		}
+		if = {
+			limit = { rocket_site > 0 }
+			set_variable = { previous_rocket_site_count = building_level@rocket_site }
+		}
+		if = {
+			limit = { nuclear_reactor > 0 }
+			set_variable = { previous_nuclear_reactor_count = building_level@nuclear_reactor }
+		}
 	}
 }
 
 restore_previous_factory_count = {
-	if = {
-		limit = { has_variable = previous_industrial_complex_count }
-		subtract_from_variable = { previous_industrial_complex_count = building_level@industrial_complex }
+	hidden_effect = {
 		if = {
-			limit = { check_variable = { previous_industrial_complex_count > 0 } }
-			add_building_construction = { type = industrial_complex level = previous_industrial_complex_count instant_build = yes }
+			limit = { has_variable = previous_industrial_complex_count }
+			subtract_from_variable = { previous_industrial_complex_count = building_level@industrial_complex }
+			if = {
+				limit = { check_variable = { previous_industrial_complex_count > 0 } }
+				add_building_construction = { type = industrial_complex level = previous_industrial_complex_count instant_build = yes }
+			}
+			clear_variable = previous_industrial_complex_count
 		}
-		clear_variable = previous_industrial_complex_count
-	}
-	if = {
-		limit = { has_variable = previous_arms_factory_count }
-		subtract_from_variable = { previous_arms_factory_count = building_level@arms_factory }
 		if = {
-			limit = { check_variable = { previous_arms_factory_count > 0 } }
-			add_building_construction = { type = arms_factory level = previous_arms_factory_count instant_build = yes }
+			limit = { has_variable = previous_arms_factory_count }
+			subtract_from_variable = { previous_arms_factory_count = building_level@arms_factory }
+			if = {
+				limit = { check_variable = { previous_arms_factory_count > 0 } }
+				add_building_construction = { type = arms_factory level = previous_arms_factory_count instant_build = yes }
+			}
+			clear_variable = previous_arms_factory_count
 		}
-		clear_variable = previous_arms_factory_count
-	}
-	if = {
-		limit = { has_variable = previous_dockyard_count }
-		subtract_from_variable = { previous_dockyard_count = building_level@dockyard }
 		if = {
-			limit = { check_variable = { previous_dockyard_count > 0 } }
-			add_building_construction = { type = dockyard level = previous_dockyard_count instant_build = yes }
+			limit = { has_variable = previous_dockyard_count }
+			subtract_from_variable = { previous_dockyard_count = building_level@dockyard }
+			if = {
+				limit = { check_variable = { previous_dockyard_count > 0 } }
+				add_building_construction = { type = dockyard level = previous_dockyard_count instant_build = yes }
+			}
+			clear_variable = previous_dockyard_count
 		}
-		clear_variable = previous_dockyard_count
-	}
-	if = {
-		limit = { has_variable = previous_synthetic_refinery_count }
-		subtract_from_variable = { previous_synthetic_refinery_count = building_level@synthetic_refinery }
 		if = {
-			limit = { check_variable = { previous_synthetic_refinery_count > 0 } }
-			add_building_construction = { type = synthetic_refinery level = previous_synthetic_refinery_count instant_build = yes }
+			limit = { has_variable = previous_synthetic_refinery_count }
+			subtract_from_variable = { previous_synthetic_refinery_count = building_level@synthetic_refinery }
+			if = {
+				limit = { check_variable = { previous_synthetic_refinery_count > 0 } }
+				add_building_construction = { type = synthetic_refinery level = previous_synthetic_refinery_count instant_build = yes }
+			}
+			clear_variable = previous_synthetic_refinery_count
 		}
-		clear_variable = previous_synthetic_refinery_count
-	}
-	if = {
-		limit = { has_variable = previous_fuel_silo_count }
-		subtract_from_variable = { previous_fuel_silo_count = building_level@fuel_silo }
 		if = {
-			limit = { check_variable = { previous_fuel_silo_count > 0 } }
-			add_building_construction = { type = fuel_silo level = previous_fuel_silo_count instant_build = yes }
+			limit = { has_variable = previous_fuel_silo_count }
+			subtract_from_variable = { previous_fuel_silo_count = building_level@fuel_silo }
+			if = {
+				limit = { check_variable = { previous_fuel_silo_count > 0 } }
+				add_building_construction = { type = fuel_silo level = previous_fuel_silo_count instant_build = yes }
+			}
+			clear_variable = previous_fuel_silo_count
 		}
-		clear_variable = previous_fuel_silo_count
-	}
-	if = {
-		limit = { has_variable = previous_rocket_site_count }
-		subtract_from_variable = { previous_rocket_site_count = building_level@rocket_site }
 		if = {
-			limit = { check_variable = { previous_rocket_site_count > 0 } }
-			add_building_construction = { type = rocket_site level = previous_rocket_site_count instant_build = yes }
+			limit = { has_variable = previous_rocket_site_count }
+			subtract_from_variable = { previous_rocket_site_count = building_level@rocket_site }
+			if = {
+				limit = { check_variable = { previous_rocket_site_count > 0 } }
+				add_building_construction = { type = rocket_site level = previous_rocket_site_count instant_build = yes }
+			}
+			clear_variable = previous_rocket_site_count
 		}
-		clear_variable = previous_rocket_site_count
-	}
-	if = {
-		limit = { has_variable = previous_nuclear_reactor_count }
-		subtract_from_variable = { previous_nuclear_reactor_count = building_level@nuclear_reactor }
 		if = {
-			limit = { check_variable = { previous_nuclear_reactor_count > 0 } }
-			add_building_construction = { type = nuclear_reactor level = previous_nuclear_reactor_count instant_build = yes }
+			limit = { has_variable = previous_nuclear_reactor_count }
+			subtract_from_variable = { previous_nuclear_reactor_count = building_level@nuclear_reactor }
+			if = {
+				limit = { check_variable = { previous_nuclear_reactor_count > 0 } }
+				add_building_construction = { type = nuclear_reactor level = previous_nuclear_reactor_count instant_build = yes }
+			}
+			clear_variable = previous_nuclear_reactor_count
 		}
-		clear_variable = previous_nuclear_reactor_count
 	}
 }
 
@@ -1326,4 +1437,13 @@ remove_puppet_and_leave_faction = {
 			}
 		}
 	}
+}
+
+incoming_war_notification_effect = {
+	hidden_effect = { country_event = kr.political.30 } #warning event
+}
+
+calculate_days_since_game_start = {
+	add_to_temp_variable = { days_to_event = 706640 }
+	subtract_from_temp_variable = { days_to_event = global.num_days }
 }

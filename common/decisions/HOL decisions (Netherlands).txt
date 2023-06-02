@@ -4,30 +4,6 @@
 # By Denizz and Thomahawk2k
 ###########################
 
-political_actions = {
-	hol_emancipate_the_colonies = {
-		icon = GFX_decision_eng_trade_unions_support
-		allowed = {
-			original_tag = HOL
-		}
-		available = {
-			has_country_flag = dei_insulindia_ready_for_koninkrijksstatuut
-		}
-		visible = {
-			has_subject = DEI
-			NOT = { has_global_flag = insulindian_revolution_fired }
-			hol_politics_stabilised_all = yes
-		}
-		fire_only_once = yes
-		cost = 0
-		ai_will_do = { factor = 10 }
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete hol_emancipate_the_colonies"
-			country_event = dei.48
-		}
-	}
-}
-
 HOL_geopolitical_actions = {
 	hol_join_reichspakt_decision = {
 		icon = generic_political_discourse
@@ -130,7 +106,14 @@ HOL_geopolitical_actions = {
 		fire_only_once = yes
 		cost = 0
 
-		ai_will_do = { factor = 10 }
+		ai_will_do = {
+			factor = 10
+			modifier = {
+				factor = 0
+				NOT = { has_global_flag = second_weltkrieg_has_started }
+			}
+		}
+
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete hol_formulate_policy_belgium"
 			country_event = holfocus.86
@@ -181,11 +164,16 @@ HOL_geopolitical_actions = {
 
 		available = {
 			FROM = {
-				OR = {
+				if = {
+					limit = { owns_state = 6 }
 					has_full_control_of_state = 6
+				}
+				if = {
+					limit = { owns_state = 925 }
 					has_full_control_of_state = 925
 				}
 			}
+			NOT = { has_non_aggression_pact_with = FROM }
 			if = {
 				limit = { FROM = { is_in_faction = yes } }
 				has_global_flag = second_weltkrieg_has_started
@@ -194,28 +182,35 @@ HOL_geopolitical_actions = {
 
 		visible = {
 			is_subject = no
-			OR = {
-				has_country_flag = hol_claimed_flanders
-				NOT = {
-					country_exists = BEL
-					country_exists = FLA
-				}
-			}
 			can_declare_war_on = FROM
 			FROM = {
 				OR = {
-					controls_state = 6
-					controls_state = 925
+					owns_state = 6
+					owns_state = 925
 				}
 			}
 		}
-		fire_only_once = yes
+
+		cancel_trigger = {
+			OR = {
+				is_subject = yes
+				NOT = { can_declare_war_on = FROM }
+				has_non_aggression_pact_with = FROM
+				FROM = {
+					NOT = { has_full_control_of_state = 6 }
+					NOT = { has_full_control_of_state = 925 }
+				}
+			}
+		}
+
 		cost = 0
+		days_remove = 30
+		fire_only_once = no
 
 		targets = { 6.OWNER 925.OWNER }
 		target_root_trigger = {
 			OR = {
-				has_country_flag = hol_claimed_flanders
+				6 = { is_claimed_by = ROOT }
 				NOT = {
 					country_exists = BEL
 					country_exists = FLA
@@ -225,6 +220,12 @@ HOL_geopolitical_actions = {
 		}
 		target_trigger = {
 			can_declare_war_on = FROM
+			FROM = {
+				OR = {
+					owns_state = 6
+					owns_state = 925
+				}
+			}
 		}
 
 		ai_will_do = {
@@ -262,22 +263,58 @@ HOL_geopolitical_actions = {
 				has_game_rule = { rule = wk2_begin_options option = RESTRICTED }
 			}
 		}
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel hol_demand_flanders target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete hol_demand_flanders target: [From.GetName]"
-			if = {
-				limit = {
-					FROM = { is_subject = yes }
+			setup_decision_attack_AI = yes
+			FROM = {
+				if = {
+					limit = { is_subject = yes }
+					overlord = { country_event = { id = holfocus.87 days = 4 } }
 				}
-				var:FROM.overlord = {
-					save_event_target_as = fla_controller
-					country_event = holfocus.87
+				else = {
+					country_event = { id = holfocus.87 days = 4 }
 				}
 			}
-			else = {
-				FROM = {
-					save_event_target_as = fla_controller
-					country_event = holfocus.87
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove hol_demand_flanders target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			custom_effect_tooltip = if_they_accept_tt
+			effect_tooltip = {
+				if = {
+					limit = { FROM = { owns_state = 6 } }
+					6 = {
+						transfer_state_to = ROOT
+						add_claim_by = ROOT
+					}
 				}
+				if = {
+					limit = { FROM = { owns_state = 29 } }
+					29 = {
+						transfer_state_to = ROOT
+						add_claim_by = ROOT
+					}
+				}
+				if = {
+					limit = { FROM = { owns_state = 925 } }
+					925 = {
+						transfer_state_to = ROOT
+						add_claim_by = ROOT
+					}
+				}
+			}
+			custom_effect_tooltip = if_they_refuse_tt
+			declare_war_on = {
+				target = FROM
+				type = take_state_focus
+				generator = { 6 29 925 }
 			}
 		}
 	}

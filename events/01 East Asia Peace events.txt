@@ -10,7 +10,8 @@ country_event = { #Reichspakt is defeated in Asia
 	trigger = {
 		original_tag = GER
 		has_war = yes
-		is_faction_leader = yes
+		is_in_faction = yes
+		is_subject = no
 		any_enemy_country = {
 			OR = {
 				is_in_asia = yes
@@ -48,7 +49,11 @@ country_event = { #Reichspakt is defeated in Asia
 		log = "[GetLogInfo]: event asiapeace.1 option asiapeace.1.a"
 		name = asiapeace.1.a
 		if = {
-			limit = { has_war_with = JAP }
+			limit = {
+				has_subject = GEA
+				has_war_with = JAP
+				JAP = { is_faction_leader = yes }
+			}
 			log = "KR_Event_Logging;JAP WINS GEA-JAP WAR;[GetDateText]"
 		}
 		custom_effect_tooltip = asian_reichspakt_will_proceed_to_peacedeal_we_white_peace
@@ -109,7 +114,13 @@ country_event = { #Reichspakt is defeated in Asia
 							set_temp_variable = { ceylon_target = HND }
 						}
 						else_if = {
-							limit = { is_ally_with = JAP }
+							limit = {
+								is_ally_with = JAP
+								JAP = {
+									is_subject = no
+									has_socialist_government = no
+								}
+							}
 							set_temp_variable = { ceylon_target = JAP }
 						}
 						else = {
@@ -140,7 +151,13 @@ country_event = { #Reichspakt is defeated in Asia
 						set_temp_variable = { ceylon_target = HND }
 					}
 					else_if = {
-						limit = { has_war_with = JAP }
+						limit = {
+							has_war_with = JAP
+							JAP = {
+								is_subject = no
+								has_socialist_government = no
+							}
+						}
 						set_temp_variable = { ceylon_target = JAP }
 					}
 				}
@@ -160,6 +177,7 @@ country_event = { #Reichspakt is defeated in Asia
 				}
 				else = {
 					release = CEY
+					var:320.owner = { transfer_state = 818 }
 				}
 			}
 
@@ -178,7 +196,13 @@ country_event = { #Reichspakt is defeated in Asia
 						}
 					}
 					else_if = {
-						limit = { has_war_with = JAP }
+						limit = {
+							has_war_with = JAP
+							JAP = {
+								is_subject = no
+								has_socialist_government = no
+							}
+						}
 						every_owned_state = {
 							limit = { is_indonesia = yes }
 							transfer_state_to = JAP
@@ -218,62 +242,51 @@ country_event = { #Reichspakt is defeated in Asia
 						is_in_asia = yes
 						is_in_australia = yes
 					}
-					is_guaranteed_by = ROOT
 				}
-				ROOT = {
+				if = {
+					limit = { has_non_aggression_pact_with = ROOT }
 					diplomatic_relation = {
-						country = PREV
-						relation = guarantee
+						country = ROOT
+						relation = non_aggression_pact
 						active = no
 					}
 				}
-			}
-			every_other_country = {
-				limit = {
-					OR = {
-						is_in_asia = yes
-						is_in_australia = yes
-					}
-					has_non_aggression_pact_with = ROOT
-				}
-				diplomatic_relation = {
-					country = ROOT
-					relation = non_aggression_pact
-					active = no
-				}
-			}
-			every_other_country = {
-				limit = {
-					OR = {
-						is_in_asia = yes
-						is_in_australia = yes
-					}
-					has_military_access_to = ROOT
-				}
-				ROOT = {
+				if = {
+					limit = { gives_military_access_to = ROOT }
 					diplomatic_relation = {
-						country = PREV
+						country = ROOT
 						relation = military_access
 						active = no
 					}
 				}
-			}
-			every_other_country = {
-				limit = {
-					OR = {
-						is_in_asia = yes
-						is_in_australia = yes
+				ROOT = {
+					if = {
+						limit = { has_guaranteed = PREV }
+						diplomatic_relation = {
+							country = PREV
+							relation = guarantee
+							active = no
+						}
 					}
-					gives_military_access_to = ROOT
-				}
-				diplomatic_relation = {
-					country = ROOT
-					relation = military_access
-					active = no
+					if = {
+						limit = { gives_military_access_to = PREV }
+						diplomatic_relation = {
+							country = PREV
+							relation = military_access
+							active = no
+						}
+					}
+					if = {
+						limit = { has_wargoal_against = PREV }
+						remove_wargoal = { target = PREV type = all }
+					}
 				}
 			}
 
-			LEC_remove_from_legation_council = yes
+			every_country = {
+				limit = { is_ally_with = ROOT }
+				LEC_remove_from_legation_council = yes
+			}
 		}
 	}
 
@@ -298,21 +311,32 @@ country_event = { #Reichspakt surrenders
 		name = asiapeace.2.a
 		ai_chance = { base = 100 }
 		custom_effect_tooltip = asian_reichspakt_will_proceed_to_peacedeal_we_white_peace
-		hidden_effect = {
-			if = {
-				limit = {
-					AUS = {
-						has_war_together_with = GER
-						has_war_with = JAP
-					}
-				}
+		if = {
+			limit = {
 				AUS = {
-					white_peace_with_ROOT = yes
+					has_war_with = ROOT
+					has_war_together_with = FROM
+					is_valid_peace_target = yes
 				}
 			}
-			GER = {
-				white_peace_with_ROOT = yes
+			AUS = { white_peace_with_ROOT = yes }
+			every_other_country = {
+				limit = { is_ally_with = AUS }
+				diplomatic_relation = {
+					country = ROOT
+					relation = non_aggression_pact
+				}
+				set_truce = { target = ROOT days = 730 }
 			}
+		}
+		FROM = { white_peace_with_ROOT = yes }
+		every_other_country = {
+			limit = { is_ally_with = FROM }
+			diplomatic_relation = {
+				country = ROOT
+				relation = non_aggression_pact
+			}
+			set_truce = { target = ROOT days = 730 }
 		}
 	}
 
@@ -322,9 +346,7 @@ country_event = { #Reichspakt surrenders
 		ai_chance = { base = 0 }
 		add_war_support = -0.1
 		add_stability = -0.1
-		GER = {
-			country_event = { id = asiapeace.3 days = 1 }
-		}
+		FROM = { country_event = { id = asiapeace.3 days = 1 } }
 	}
 }
 
@@ -462,9 +484,14 @@ country_event = { #Netherlands surrenders
 		log = "[GetLogInfo]: event asiapeace.5 option asiapeace.5.a"
 		name = asiapeace.5.a
 		ai_chance = { base = 100 }
-		custom_effect_tooltip = asian_reichspakt_will_proceed_to_peacedeal_we_white_peace
-		hidden_effect = {
-			FROM = { white_peace_with_ROOT = yes }
+		FROM = { white_peace_with_ROOT = yes }
+		every_other_country = {
+			limit = { is_ally_with = FROM }
+			diplomatic_relation = {
+				country = ROOT
+				relation = non_aggression_pact
+			}
+			set_truce = { target = ROOT days = 730 }
 		}
 	}
 
