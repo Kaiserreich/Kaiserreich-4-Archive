@@ -563,9 +563,7 @@ political_actions = {
 	GRE_nationalize_german_industry = {
 		icon = generic_industry
 
-		allowed = {
-			original_tag = GRE
-		}
+		allowed = { original_tag = GRE }
 
 		available = {
 			has_completed_focus = GRE_recovery
@@ -619,9 +617,7 @@ political_actions = {
 	GRE_nationalize_austrian_industry = {
 		icon = generic_industry
 
-		allowed = {
-			original_tag = GRE
-		}
+		allowed = { original_tag = GRE }
 
 		available = {
 			has_completed_focus = GRE_recovery
@@ -668,9 +664,7 @@ political_actions = {
 	GRE_balkans_mission = {
 		icon = generic_agreement
 
-		allowed = {
-			original_tag = GRE
-		}
+		allowed = { original_tag = GRE }
 
 		available = {
 			controls_all_owned_states = yes
@@ -758,7 +752,11 @@ political_actions = {
 GRE_regaining_greece = {
 	GRE_fight_for_macedonia = {
 		icon = generic_ignite_civil_war
-		allowed = { tag = GRE }
+
+		visible = {
+			is_subject = no
+			can_declare_war_on = FROM
+		}
 
 		cancel_trigger = {
 			OR = {
@@ -798,6 +796,7 @@ GRE_regaining_greece = {
 				target = FROM
 				type = annex_everything
 			}
+			add_to_array = { GRE_megali_enemies = FROM }
 		}
 
 		ai_will_do = {
@@ -850,11 +849,10 @@ GRE_regaining_greece = {
 	GRE_megali_war = {
 		icon = generic_ignite_civil_war
 
-		allowed = {
-			original_tag = GRE
-		}
+		allowed = { original_tag = GRE }
 
 		available = {
+			has_civil_war = no
 			surrender_progress < 0.05
 			if = {
 				limit = {
@@ -865,9 +863,15 @@ GRE_regaining_greece = {
 			}
 		}
 
+		visible = {
+			is_subject = no
+			can_declare_war_on = FROM
+		}
+
 		cancel_trigger = {
 			OR = {
 				is_subject = yes
+				has_civil_war = yes
 				NOT = { can_declare_war_on = FROM }
 				NOT = { FROM = { any_owned_state = { is_claim_or_core_of_ROOT = yes } } }
 				AND = {
@@ -881,7 +885,6 @@ GRE_regaining_greece = {
 		targets = { TUR BUL ALB }
 		target_root_trigger = { has_country_flag = GRE_may_start_megali }
 		target_trigger = {
-			is_subject = no
 			can_declare_war_on = FROM
 			FROM = { any_owned_state = { is_claim_or_core_of_ROOT = yes } }
 		}
@@ -905,7 +908,7 @@ GRE_regaining_greece = {
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove GRE_megali_war target: [From.GetName]"
-			set_country_flag = GRE_megali_war_@FROM
+			add_to_array = { GRE_megali_enemies = FROM }
 			clear_decision_attack_AI = yes
 			declare_war_on = {
 				target = FROM
@@ -933,22 +936,28 @@ GRE_regaining_greece = {
 	GRE_megali_make_peace = {
 		icon = generic_ignite_civil_war
 
-		allowed = {
-			original_tag = GRE
-		}
+		allowed = { original_tag = GRE }
 
 		available = {
-			ROOT = { controls_all_owned_states = yes }
+			has_civil_war = no
+			surrender_progress < 0.05
 			if = {
 				limit = {
-					has_country_flag = GRE_chose_megali
 					FROM = {
-						tag = TUR
-						is_subject = no
+						is_in_faction = yes
+						is_faction_leader = no
 					}
 				}
 				FROM = {
-					surrender_progress > 0.65
+					custom_trigger_tooltip = {
+						tooltip = GRE_allies_capitulated
+						NOT = {
+							any_allied_country = {
+								any_owned_state = { is_claim_or_core_of_ROOT = yes }
+								has_capitulated = no
+							}
+						}
+					}
 				}
 			}
 			else_if = {
@@ -962,34 +971,8 @@ GRE_regaining_greece = {
 				}
 			}
 			else_if = {
-				limit = {
-					FROM = {
-						is_faction_leader = yes
-						NOT = {
-							any_owned_state = { is_claim_or_core_of_ROOT = yes }
-						}
-					}
-				}
-				FROM = {
-					custom_trigger_tooltip = {
-						tooltip = GRE_allies_capitulated
-						NOT = {
-							any_allied_country = {
-								any_owned_state = { is_claim_or_core_of_ROOT = yes }
-								NOT = { has_capitulated = yes }
-							}
-						}
-					}
-				}
-			}
-			else_if = {
-				limit = {
-					FROM = {
-						tag = TUR
-						has_war_with = EGY
-					}
-				}
-				FROM = { surrender_progress > 0.40 }
+				limit = { FROM = { original_tag = TUR } }
+				FROM = { surrender_progress > 0.65 }
 			}
 			else = {
 				FROM = { surrender_progress > 0.50 }
@@ -1009,118 +992,32 @@ GRE_regaining_greece = {
 		}
 
 		visible = {
-			has_war = yes
 			is_subject = no
-			NOT = { has_country_flag = GRE_megali_peace_@FROM }
-			OR = {
-				is_in_faction = no
-				is_faction_leader = yes
-				has_country_flag = GRE_megali_war_@FROM
-			}
-			if = {
-				limit = {
-					tag = BPL
-					has_global_flag = balkan_war_started
-					NOT = { has_global_flag = balkan_war_ended }
-				}
-				NOT = { FROM = { tag = BUL } }
-			}
-			FROM = {
-				has_war_with = ROOT
-				OR = {
-					is_in_faction = no
-					is_faction_leader = yes
-				}
-				OR = {
-					is_subject = no
-					overlord = {
-						NOT = {
-							any_owned_state = {
-								is_claim_or_core_of_ROOT = yes
-							}
-						}
-					}
-				}
-				OR = {
-					any_owned_state = { is_claim_or_core_of_ROOT = yes }
-					AND = {
-						is_faction_leader = yes
-						any_allied_country = {
-							any_owned_state = { is_claim_or_core_of_ROOT = yes }
-						}
-					}
-					AND = {
-						tag = TUR
-						ROOT = {
-							has_subject = CYP
-							has_country_flag = CYP_war_for_enosis
-						}
-					}
-				}
-			}
+			has_war_with = FROM
 		}
 
-		target_array = enemies
-
-		target_root_trigger = {
-			has_war = yes
-		}
-
+		target_array = ROOT.GRE_megali_enemies
+		target_root_trigger = { has_war = yes }
 		target_trigger = {
-			FROM = {
-				OR = {
-					is_in_faction = no
-					is_faction_leader = yes
-				}
-				OR = {
-					is_subject = no
-					overlord = {
-						NOT = {
-							any_owned_state = {
-								is_claim_or_core_of_ROOT = yes
-							}
-						}
-					}
-				}
-				has_war_with = ROOT
-				OR = {
-					any_owned_state = { is_claim_or_core_of_ROOT = yes }
-					AND = {
-						is_faction_leader = yes
-						any_allied_country = {
-							any_owned_state = { is_claim_or_core_of_ROOT = yes }
-						}
-					}
-					AND = {
-						tag = TUR
-						ROOT = {
-							has_subject = CYP
-							has_country_flag = CYP_war_for_enosis
-						}
-					}
-				}
-			}
+			has_war_with = FROM
 		}
-
-		fire_only_once = no
 
 		cost = 0
+		fire_only_once = no
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision GRE_megali_make_peace target: [From.GetName]"
-			set_country_flag = GRE_megali_peace_@FROM
 			FROM = {
+				save_event_target_as = peace_country
 				if = {
 					limit = {
 						is_in_faction = yes
 						is_faction_leader = no
 					}
-					save_event_target_as = peace_country
 					faction_leader = { country_event = gre.254 }
 				}
 				else_if = {
 					limit = { is_subject = yes }
-					save_event_target_as = peace_country
 					overlord = { country_event = gre.254 }
 				}
 				else = {
@@ -1210,6 +1107,7 @@ GRE_regaining_greece = {
 
 	GRE_core_turkish_lands = {
 		icon = generic_form_nation
+
 		allowed = { original_tag = GRE }
 
 		available = {
@@ -1288,9 +1186,7 @@ special_projects = {
 	GRE_shipbuilding_program_1 = {
 		icon = generic_naval
 
-		allowed = {
-			original_tag = GRE
-		}
+		allowed = { original_tag = GRE }
 
 		available = {
 			has_capitulated = no
@@ -1352,9 +1248,7 @@ special_projects = {
 	GRE_shipbuilding_program_2 = {
 		icon = generic_naval
 
-		allowed = {
-			original_tag = GRE
-		}
+		allowed = { original_tag = GRE }
 
 		available = {
 			has_capitulated = no
@@ -1429,9 +1323,7 @@ special_projects = {
 	GRE_shipbuilding_program_3 = {
 		icon = generic_naval
 
-		allowed = {
-			original_tag = GRE
-		}
+		allowed = { original_tag = GRE }
 
 		available = {
 			has_capitulated = no
