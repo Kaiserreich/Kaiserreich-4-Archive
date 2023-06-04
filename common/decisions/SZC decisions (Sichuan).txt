@@ -10,6 +10,7 @@ foreign_politics = {
 		allowed = { tag = SZC }
 
 		available = {
+			is_neighbor_of = FROM
 			if = {
 				limit = { SZC_has_industrial_government = yes }
 				has_completed_focus = SZC_Family_Matters
@@ -18,56 +19,30 @@ foreign_politics = {
 
 		visible = {
 			has_global_flag = northwest_conflict_begun
+			NOT = { has_rule = can_not_declare_war }
 			NOT = { has_global_flag = northwest_conflict_ended }
 			can_declare_war_on = FROM
 			FROM = {
 				has_war_with = XSM
 				owns_state = 693
-			}
-			if = {
-				limit = { is_ruled_by_pro_zhili = yes }
-				FROM = { is_ruled_by_pro_zhili = no }
-			}
-			else_if = {
-				limit = { is_ruled_by_pro_kmt = yes }
-				FROM = { is_ruled_by_pro_kmt = no }
-			}
-			else_if = {
-				limit = { is_ruled_by_federalists = yes }
-				FROM = { is_ruled_by_federalists = no }
+				china_compatible_alignment_to_PREV = no
 			}
 		}
 
 		cancel_trigger = {
 			OR = {
+				has_rule = can_not_declare_war
 				NOT = { can_declare_war_on = FROM }
 				NOT = { FROM = { has_war_with = XSM } }
 				NOT = { FROM = { owns_state = 693 } }
-				if = {
-					limit = { is_ruled_by_pro_zhili = yes }
-					FROM = { is_ruled_by_pro_zhili = yes }
-				}
-				else_if = {
-					limit = { is_ruled_by_pro_kmt = yes }
-					FROM = { is_ruled_by_pro_kmt = yes }
-				}
-				else_if = {
-					limit = { is_ruled_by_federalists = yes }
-					FROM = { is_ruled_by_federalists = yes }
-				}
-				else = {
-					hidden_trigger = { always = no }
-				}
+				china_compatible_alignment_to_FROM = yes
 			}
 		}
 
 		targets = { TIB }
 		target_root_trigger = {
 			has_global_flag = northwest_conflict_begun
-			NOT = {
-				is_in_faction_with = TIB
-				has_global_flag = northwest_conflict_ended
-			}
+			NOT = { has_global_flag = northwest_conflict_ended }
 		}
 		target_trigger = {
 			can_declare_war_on = FROM
@@ -78,7 +53,7 @@ foreign_politics = {
 		}
 
 		cost = 10
-		days_remove = 10
+		days_remove = 25
 		fire_only_once = yes
 		war_with_target_on_remove = yes
 
@@ -98,11 +73,15 @@ foreign_politics = {
 			}
 		}
 
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel SZC_Intervene_In_Northwestern_War target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Intervene_In_Northwestern_War target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 15 value = 1 }
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Intervene_In_Northwestern_War target: [From.GetName]"
 			hidden_effect = {
-				FROM = { country_event = sichuan.20 }
+				FROM = { country_event = sichuan.21 }    #warning event
 			}
 			setup_decision_attack_AI = yes
 		}
@@ -117,208 +96,6 @@ foreign_politics = {
 			hidden_effect = {
 				TIB = {
 					country_event = { id = tib.124 days = 3 }
-				}
-			}
-		}
-	}
-}
-
-Sichuan_Civil_War_decisions = {
-	SZC_Break_Siege_Of_Chengdu = {
-		icon = generic_scorched_earth
-		priority = 100
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			has_country_flag = SZC_siege_broken
-		}
-
-		days_mission_timeout = 40
-		is_good = no
-
-		cancel_trigger = {
-			NOT = { has_idea = SZC_civil_war_idea }
-		}
-
-		highlight_states = {
-			highlight_provinces = { 4925 }
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Break_Siege_Of_Chengdu"
-			add_war_support = 0.05
-			clr_country_flag = SZC_siege_broken
-			hidden_effect = {
-				remove_targeted_decision = { decision = SZC_Mobilise_Our_Troops target = THIS }
-			}
-		}
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout SZC_Break_Siege_Of_Chengdu"
-			set_country_flag = SZC_took_too_long
-			country_event = sichuan.81
-			hidden_effect = {
-				remove_targeted_decision = { decision = SZC_Mobilise_Our_Troops target = THIS }
-			}
-		}
-	}
-
-	SZC_Ask_for_Zhili_Support = {
-		icon = generic_political_discourse
-
-		allowed = { always = no } #activated by effect, targets QIE
-
-		visible = {
-			has_government = authoritarian_democrat
-			country_exists = FROM
-			NOT = {
-				has_war_with = FROM
-				FROM = { has_global_flag = QIE_manchu_restoration }
-			}
-		}
-
-		cost = 0
-		days_remove = 2
-		fire_only_once = yes
-
-		ai_will_do = {
-			factor = 1000
-			modifier = {
-				factor = 0
-				OR = {
-					has_game_rule = { rule = SZC_path option = SZC_PATH_PATAUT_FNG }
-					has_game_rule = { rule = SZC_path option = SZC_PATH_PATAUT_INDEPENDENT }
-					has_game_rule = { rule = SZC_path option = SZC_PATH_PATAUT_NPA }
-				}
-			}
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Ask_for_Zhili_Support target: [From.GetName]"
-			FROM = { country_event = sichuan.50 }
-		}
-	}
-
-	SZC_Mobilise_Our_Troops = {
-		icon = eng_blackshirt_march
-
-		allowed = { always = no } #activated by effect
-
-		available = {
-			NOT = {
-				has_decision = SZC_Conscript_Farmers
-				has_decision = SZC_Hire_Bandits_For_The_Army
-			}
-		}
-
-		cost = 0
-		days_remove = 7
-		fire_only_once = yes
-
-		ai_will_do = { factor = 1000 }
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Mobilise_Our_Troops"
-			if = {
-				limit = { has_government = authoritarian_democrat }
-				country_event = sichuan.64
-			}
-			else = {
-				country_event = sichuan.82
-			}
-		}
-	}
-
-	SZC_Conscript_Farmers = {
-		icon = generic_civil_support
-
-		allowed = { always = no } #activated by effect
-
-		available = {
-			NOT = { has_decision = SZC_Hire_Bandits_For_The_Army }
-		}
-
-		cost = 80
-		days_remove = 12
-		fire_only_once = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				OR = {
-					has_game_rule = { rule = SZC_path option = SZC_PATH_PATAUT_FNG }
-					has_game_rule = { rule = SZC_path option = SZC_PATH_PATAUT_INDEPENDENT }
-					has_game_rule = { rule = SZC_path option = SZC_PATH_PATAUT_NPA }
-				}
-			}
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Conscript_Farmers"
-			custom_effect_tooltip = SZC_Recruitment_tooltip
-			hidden_effect = {
-				add_popularity = { ideology = paternal_autocrat popularity = -0.03 }
-				add_popularity = { ideology = social_democrat popularity = -0.02 }
-				add_popularity = {
-					ideology = social_democrat
-					popularity = -0.02
-				}
-				if = {
-					limit = { has_government = authoritarian_democrat }
-					add_popularity = { ideology = authoritarian_democrat popularity = 0.05 }
-				}
-				else = {
-					add_popularity = { ideology = social_conservative popularity = 0.05 }
-				}
-			}
-		}
-	}
-
-	SZC_Hire_Bandits_For_The_Army = {
-		icon = soldierly_discipline
-
-		allowed = { always = no } #activated by effect
-
-		available = {
-			NOT = { has_decision = SZC_Conscript_Farmers }
-		}
-
-		cost = 60
-		days_remove = 12
-		fire_only_once = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				OR = {
-					has_game_rule = { rule = SZC_path option = SZC_PATH_PATAUT_FNG }
-					has_game_rule = { rule = SZC_path option = SZC_PATH_PATAUT_INDEPENDENT }
-					has_game_rule = { rule = SZC_path option = SZC_PATH_PATAUT_NPA }
-				}
-			}
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Hire_Bandits_For_The_Army"
-			set_country_flag = SZC_bandits_hired
-			custom_effect_tooltip = SZC_Recruitment_tooltip
-			custom_effect_tooltip = SZC_Hire_Bandits_For_The_Army_tooltip
-			hidden_effect = {
-				add_popularity = { ideology = paternal_autocrat popularity = -0.03 }
-				add_popularity = { ideology = social_democrat popularity = -0.02 }
-				add_popularity = {
-					ideology = social_democrat
-					popularity = -0.02
-				}
-				if = {
-					limit = { has_government = authoritarian_democrat }
-					add_popularity = { ideology = authoritarian_democrat popularity = 0.05 }
-				}
-				else = {
-					add_popularity = { ideology = social_conservative popularity = 0.05 }
 				}
 			}
 		}
@@ -356,7 +133,7 @@ Sichuan_Famine_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Service_For_Food target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Service_For_Food target: [From.GetName]"
 			set_country_flag = SZC_chose_famine_relief
 			remove_targeted_decision = { decision = SZC_Labour_Relief target = FROM }
 		}
@@ -391,7 +168,7 @@ Sichuan_Famine_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Labour_Relief target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Labour_Relief target: [From.GetName]"
 			set_country_flag = SZC_chose_famine_relief
 			set_country_flag = SZC_chose_famine_relief_labour
 			remove_targeted_decision = { decision = SZC_Service_For_Food target = FROM }
@@ -447,7 +224,7 @@ Sichuan_Famine_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Enact_Price_Controls"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Enact_Price_Controls"
 			add_to_variable = {
 				SZC_famine_PP = 120
 				tooltip = SZC_famine_PP_tooltip
@@ -479,7 +256,7 @@ Sichuan_Famine_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Increase_Relief_Efforts"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Increase_Relief_Efforts"
 			subtract_from_variable = { SZC_famine_PP = 30 }
 		}
 		remove_effect = {
@@ -512,7 +289,7 @@ Sichuan_Famine_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Food_Banks"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Food_Banks"
 			subtract_from_variable = { SZC_famine_PP = 60 }
 		}
 		remove_effect = {
@@ -545,7 +322,7 @@ Sichuan_Famine_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Subsidise_Food_Production"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Subsidise_Food_Production"
 			subtract_from_variable = { SZC_famine_PP = 60 }
 		}
 		remove_effect = {
@@ -565,9 +342,9 @@ Sichuan_Famine_decisions = {
 		days_remove = 40
 		fire_only_once = yes
 
-		custom_cost_text = SZC_famine_PP_80_tooltip
+		custom_cost_text = SZC_famine_PP_50_tooltip
 		custom_cost_trigger = {
-			check_variable = { SZC_famine_PP > 79.99 }
+			check_variable = { SZC_famine_PP > 49.99 }
 		}
 
 		ai_will_do = {
@@ -578,8 +355,8 @@ Sichuan_Famine_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Child_Protection_Programme"
-			subtract_from_variable = { SZC_famine_PP = 80 }
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Child_Protection_Programme"
+			subtract_from_variable = { SZC_famine_PP = 50 }
 			hidden_effect = {
 				country_event = { id = sichuan.167 days = 15 random_days = 10 }
 			}
@@ -680,12 +457,12 @@ Sichuan_Famine_decisions = {
 		}
 
 		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancelled SZC_Request_Aid target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision cancel SZC_Request_Aid target: [From.GetName]"
 			clr_country_flag = SZC_seeking_help
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Request_Aid target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Request_Aid target: [From.GetName]"
 			set_country_flag = { flag = SZC_seeking_help days = 15 value = 1 }
 		}
 
@@ -774,7 +551,7 @@ Sichuan_Famine_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Import_Grain target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Import_Grain target: [From.GetName]"
 			if = {
 				limit = {
 					has_country_flag = SZC_importing_grain
@@ -897,7 +674,7 @@ Sichuan_Opium_Monopoly_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Forced_Acquisitions"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Forced_Acquisitions"
 			hidden_effect = {
 				add_command_power = -30
 			}
@@ -937,7 +714,7 @@ Sichuan_Opium_Monopoly_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Tax_Harvesting_Scheme"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Tax_Harvesting_Scheme"
 			set_temp_variable = { ideology_change_var = -2.5 }
 			change_ruling_party_popularity = yes
 		}
@@ -978,7 +755,7 @@ Sichuan_Opium_Monopoly_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Transit_Tariffs"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Transit_Tariffs"
 			hidden_effect = {
 				add_command_power = -15
 			}
@@ -1024,7 +801,7 @@ Sichuan_Opium_Monopoly_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Farmer_Licensing"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Farmer_Licensing"
 			add_stability = -0.1
 			set_temp_variable = { ideology_change_var = -5 }
 			change_ruling_party_popularity = yes
@@ -1093,7 +870,7 @@ Sichuan_Opium_Monopoly_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Combat_Corruption"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Combat_Corruption"
 			hidden_effect = {
 				country_event = { id = sichuan.207 days = 2 random_days = 5 }
 			}
@@ -1186,7 +963,7 @@ Sichuan_Opium_Removal_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Poppy_Burning_Campaign"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Poppy_Burning_Campaign"
 			hidden_effect = {
 				add_command_power = -15
 			}
@@ -1257,7 +1034,7 @@ Sichuan_Opium_Removal_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Anti_Corruption_Campaigns"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Anti_Corruption_Campaigns"
 			hidden_effect = {
 				country_event = { id = sichuan.207 days = 2 random_days = 5 }
 			}
@@ -1299,7 +1076,7 @@ Sichuan_Opium_Removal_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Purge_The_Administration"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Purge_The_Administration"
 			add_stability = -0.2
 		}
 
@@ -1353,7 +1130,7 @@ Sichuan_Opium_Removal_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Anti_Smuggling_Measures"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Anti_Smuggling_Measures"
 			hidden_effect = {
 				add_command_power = -30
 			}
@@ -1404,7 +1181,7 @@ Sichuan_Opium_Removal_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Break_The_Black_Market"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Break_The_Black_Market"
 			hidden_effect = {
 				add_command_power = -50
 				add_equipment_to_stockpile = {
@@ -1519,7 +1296,7 @@ Sichuan_Diarchy_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Favour_The_Militarists"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Favour_The_Militarists"
 			set_country_flag = { flag = SZC_diarchy_influence days = 60 value = 1 }
 			add_popularity = {
 				ideology = social_conservative
@@ -1586,7 +1363,7 @@ Sichuan_Diarchy_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Favour_The_Bureaucrats"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Favour_The_Bureaucrats"
 			set_country_flag = { flag = SZC_diarchy_influence days = 60 value = 1 }
 			add_popularity = {
 				ideology = market_liberal
@@ -1616,41 +1393,37 @@ Sichuan_Foreign_Policy_decisions = {
 		visible = {
 			has_government = paternal_autocrat
 			has_completed_focus = SZC_The_Lord_Of_Sichuan
-			is_in_faction = no
-			NOT = { has_variable = SZC_alliance }
+			is_subject = no
 			FROM = {
 				exists = yes
+				is_subject = no
+				NOT = { has_war_with = ROOT }
+				china_is_potential_government = yes
 				if = {
 					limit = { original_tag = GXC }
-					is_ruled_by_federalists = yes
-				}
-				OR = {
-					is_in_faction = no
-					is_faction_leader = yes
+					china_is_aligned_with_federalists = yes
 				}
 			}
 		}
 
-		targets = {	FNG GXC }
+		targets = { FNG GXC }
 		target_root_trigger = {
 			has_completed_focus = SZC_The_Lord_Of_Sichuan
 		}
 		target_trigger = {
 			FROM = {
+				is_subject = no
+				NOT = { has_war_with = ROOT }
+				china_is_potential_government = yes
 				if = {
 					limit = { original_tag = GXC }
-					is_ruled_by_federalists = yes
-				}
-				OR = {
-					is_in_faction = no
-					is_faction_leader = yes
+					china_is_aligned_with_federalists = yes
 				}
 			}
 		}
 
 		cost = 40
 		fire_only_once = yes
-		cancel_if_not_visible = yes
 
 		ai_will_do = {
 			base = 100
@@ -1664,68 +1437,16 @@ Sichuan_Foreign_Policy_decisions = {
 				add = -80
 				FROM = { tag = FNG }
 				GXC = {
-					is_ruled_by_federalists = yes
+					exists = yes
+					is_subject = no
+					china_is_aligned_with_federalists = yes
 				}
 			}
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Negotiate_With_Faction target: [From.GetName]"
-			FROM = {
-				country_event = sichuan.10
-			}
-		}
-	}
-
-	#Join faction if already aligned
-	SZC_Join_Faction = {
-		icon = generic_flags
-
-		visible = {
-			is_in_faction = no
-			has_variable = SZC_alliance
-			FROM = {
-				is_faction_leader = yes
-				NOT = { has_war_with = ROOT }
-			}
-		}
-
-		targets = {	SZC_alliance }
-		target_root_trigger = {
-			is_in_faction = no
-		}
-		target_trigger = {
-			FROM = {
-				is_faction_leader = yes
-				NOT = { has_war_with = ROOT }
-			}
-		}
-
-		cost = 0
-		cancel_if_not_visible = yes
-
-		ai_will_do = {
-			base = 1000
-			modifier = {
-				factor = 0
-				FROM = {
-					surrender_progress > 0.2
-				}
-			}
-			modifier = {
-				factor = 0
-				has_war = yes
-				FROM = {
-					has_war = yes
-				}
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Join_Faction target: [From.GetName]"
-			FROM = {
-				add_to_faction = ROOT
-			}
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Negotiate_With_Faction target: [From.GetName]"
+			FROM = { country_event = sichuan.10 }
 		}
 	}
 
@@ -1741,126 +1462,83 @@ Sichuan_Foreign_Policy_decisions = {
 			has_completed_focus = SZC_Bring_Peace_to_Sichuan
 			FROM = {
 				exists = yes
-				OR = {
-					is_in_faction = no
-					is_faction_leader = yes
-				}
 				has_government = authoritarian_democrat
 				NOT = { has_war_with = ROOT }
+				is_subject = no
 			}
 		}
 
-		targets = {	QIE }
+		targets = { QIE }
 		target_root_trigger = {
 			has_completed_focus = SZC_Bring_Peace_to_Sichuan
 		}
 		target_trigger = {
 			FROM = {
-				OR = {
-					is_in_faction = no
-					is_faction_leader = yes
-				}
 				has_government = authoritarian_democrat
 				NOT = { has_war_with = ROOT }
+				is_subject = no
 			}
 		}
 
 		cost = 25
-		days_remove = 7
 		fire_only_once = yes
-		cancel_if_not_visible = yes
 
 		ai_will_do = {
 			base = 1000
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Declare_Loyalty_To_The_Zhili target: [From.GetName]"
-			set_variable = { SZC_alliance = QIE }
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Declare_Loyalty_To_The_Zhili target: [From.GetName]"
-			give_guarantee = FROM
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Declare_Loyalty_To_The_Zhili target: [From.GetName]"
 			FROM = {
+				effect_tooltip = { china_puppet_ROOT_effect = yes }
 				country_event = sichuan.262
 			}
-			custom_effect_tooltip = SZC_Declare_Loyalty_To_The_Zhili_tooltip
+			if = {
+				limit = { QIE = { has_country_flag = wu_intervenes_proANQ } }
+				activate_targeted_decision = { decision = SZC_Help_The_LEP target = ANQ }
+			}
+			else = {
+				activate_targeted_decision = { decision = SZC_Help_The_LEP target = LEP }
+			}
 		}
 	}
 
 	SZC_Help_The_LEP = {
 		icon = infiltrate_state
 
+		allowed = { always = no } #activated by SZC_Declare_Loyalty_To_The_Zhili
+
 		visible = {
-			check_variable = { SZC_alliance = QIE }
+			is_subject_of = QIE
 			has_government = authoritarian_democrat
-			FROM = {
-				OR = {
-					has_war_with = SQI
-					has_war_with = CHI
-					has_war_with = ANQ
-					has_war_with = LEP
-				}
-				NOT = { has_war_with = ROOT }
-				OR = {
-					AND = {
-						tag = LEP
-						NOT = {
-							QIE = { has_country_flag = wu_intervenes_proANQ }
-						}
-					}
-					AND = {
-						tag = ANQ
-						QIE = { has_country_flag = wu_intervenes_proANQ }
-					}
-				}
-			}
 		}
 
-		targets = {	ANQ LEP }
+		targets = { ANQ LEP }
 		target_root_trigger = {
-			check_variable = { SZC_alliance = QIE }
+			is_subject_of = QIE
 		}
 		target_trigger = {
 			FROM = {
-				OR = {
-					has_war_with = SQI
-					has_war_with = CHI
-					has_war_with = ANQ
-					has_war_with = LEP
-				}
+				has_civil_war = yes
 				NOT = { has_war_with = ROOT }
-				OR = {
-					AND = {
-						tag = LEP
-						NOT = {
-							QIE = { has_country_flag = wu_intervenes_proANQ }
-						}
-					}
-					AND = {
-						tag = ANQ
-						QIE = { has_country_flag = wu_intervenes_proANQ }
-					}
-				}
 			}
 		}
 
 		cost = 20
-		days_remove = 7
 		fire_only_once = yes
-		cancel_if_not_visible = yes
 
 		ai_will_do = {
 			base = 100
 		}
 
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Help_The_LEP target: [From.GetName]"
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Help_The_LEP target: [From.GetName]"
 			add_ideas = SZC_support_the_zhili_idea
 			FROM = {
-				country_event = sichuan.263
+				save_global_event_target_as = volunteer_target
+				country_event = { id = sichuan.263 days = 1 }
 			}
+			send_volunteers_to_TARGET = yes
 		}
 	}
 
@@ -1870,48 +1548,34 @@ Sichuan_Foreign_Policy_decisions = {
 
 		visible = {
 			has_left_democratic_government = yes
+			has_completed_focus = SZC_Restore_The_Provincial_Assembly
 			is_subject = no
 			is_in_faction = no
-			has_completed_focus = SZC_Restore_The_Provincial_Assembly
-			NOT = {
-				has_variable = SZC_alliance
-				has_war_with = FROM
-			}
 			FROM = {
 				exists = yes
-				if = {
-					limit = { original_tag = GXC }
-					is_ruled_by_federalists = yes
-				}
-				OR = {
-					is_in_faction = no
-					is_faction_leader = yes
-				}
+				is_subject = no
+				NOT = { has_war_with = ROOT }
+				china_compatible_alignment_to_PREV = yes
+				china_is_potential_government = yes
 			}
 		}
 
-		targets = {	GXC CHI }
+		targets = { GXC CHI }
 		target_root_trigger = {
 			has_completed_focus = SZC_Restore_The_Provincial_Assembly
-			NOT = { has_variable = SZC_alliance }
+			is_subject = no
 		}
 		target_trigger = {
-			NOT = { has_war_with = FROM }
 			FROM = {
-				if = {
-					limit = { original_tag = GXC }
-					is_ruled_by_federalists = yes
-				}
-				OR = {
-					is_in_faction = no
-					is_faction_leader = yes
-				}
+				is_subject = no
+				NOT = { has_war_with = ROOT }
+				china_compatible_alignment_to_PREV = yes
+				china_is_potential_government = yes
 			}
 		}
 
 		cost = 40
 		fire_only_once = yes
-		cancel_if_not_visible = yes
 
 		ai_will_do = {
 			base = 30
@@ -1926,10 +1590,7 @@ Sichuan_Foreign_Policy_decisions = {
 				multiply_temp_variable = { SZC_federalist_faction_desire = -1 }
 				add = SZC_federalist_faction_desire
 
-				FROM = {
-					original_tag = GXC
-					is_ruled_by_federalists = yes
-				}
+				FROM = { china_is_aligned_with_federalists = yes }
 			}
 			#Lü Chao pushes for KMT alignment
 			modifier = {
@@ -1937,14 +1598,12 @@ Sichuan_Foreign_Policy_decisions = {
 				multiply_temp_variable = { SZC_kmt_faction_desire = -1 }
 				add = SZC_kmt_faction_desire
 
-				FROM = {
-					tag = CHI
-				}
+				FROM = { china_is_aligned_with_left_kmt = yes }
 			}
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Ask_To_Join_Faction target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Ask_To_Join_Faction target: [From.GetName]"
 			FROM = {
 				country_event = sichuan.10
 			}
@@ -1955,67 +1614,31 @@ Sichuan_Foreign_Policy_decisions = {
 		icon = eng_trade_unions_support
 
 		visible = {
-			has_completed_focus = SZC_The_Diarchy
 			is_subject = no
 			is_in_faction = no
-			NOT = { has_variable = SZC_alliance }
 			FROM = {
-				exists = yes
-				OR = {
-					is_in_faction = no
-					is_faction_leader = yes
-				}
+				is_subject = no
 				NOT = { has_war_with = ROOT }
-				if = {
-					limit = { tag = YUN }
-					is_ruled_by_kmt = yes
-				}
-				else_if = {
-					limit = { original_tag = GXC }
-					OR = {
-						is_ruled_by_federalists = yes
-						AND = {
-							is_ruled_by_kmt = yes
-							YUN = { is_ruled_by_kmt = no }
-						}
-					}
-				}
+				china_is_aligned_with_republicans = yes
+				china_is_potential_government = yes
 			}
 		}
 
-		targets = {	YUN GXC CHI }
+		targets = { YUN GXC CHI }
 		target_root_trigger = {
 			has_completed_focus = SZC_The_Diarchy
-			NOT = { has_variable = SZC_alliance }
 		}
 		target_trigger = {
-			country_exists = FROM
 			FROM = {
-				OR = {
-					is_in_faction = no
-					is_faction_leader = yes
-				}
+				is_subject = no
 				NOT = { has_war_with = ROOT }
-				if = {
-					limit = { tag = YUN }
-					is_ruled_by_kmt = yes
-				}
-				else_if = {
-					limit = { original_tag = GXC }
-					OR = {
-						is_ruled_by_federalists = yes
-						AND = {
-							is_ruled_by_kmt = yes
-							YUN = { is_ruled_by_kmt = no }
-						}
-					}
-				}
+				china_is_aligned_with_republicans = yes
+				china_is_potential_government = yes
 			}
 		}
 
 		cost = 25
 		fire_only_once = yes
-		cancel_if_not_visible = yes
 
 		ai_will_do = {
 			base = -30
@@ -2031,51 +1654,38 @@ Sichuan_Foreign_Policy_decisions = {
 				multiply_temp_variable = { SZC_federalist_faction_desire = 0.75 }
 				add = SZC_federalist_faction_desire
 
-				FROM = {
-					original_tag = GXC
-					is_ruled_by_federalists = yes
-				}
+				FROM = { china_is_aligned_with_federalists = yes }
 			}
 			#Liu Wenhui pushes for KMT alignment
 			modifier = {
 				add = party_popularity_100@market_liberal
 
-				FROM = { tag = YUN }
+				FROM = { china_is_aligned_with_kmt = yes }
 			}
+			#Lu Chao pushes for LKMT alignment
 			modifier = {
-				add = party_popularity_100@market_liberal
+				add = party_popularity_100@social_democrat
 
-				FROM = {
-					original_tag = GXC
-					is_ruled_by_kmt = yes
-				}
+				FROM = { china_is_aligned_with_left_kmt = yes }
 			}
-			modifier = {
-				add = party_popularity_100@market_liberal
 
-				FROM = {
-					tag = CHI
-					is_ruled_by_kmt = yes
-				}
-			}
 			#Prefers neighbours
 			modifier = {
 				add = -10
 				NOT = { is_neighbor_of = FROM }
+			}
+			#Threatened by someone else
+			modifier = {
+				add = 40
+				any_claim = yes
 			}
 			#Threatened by Yunnan
 			modifier = {
 				add = 40
 				YUN = {
 					OR = {
-						focus_progress = {
-							focus = YUN_go_after_Sichuan
-							progress > 0
-						}
-						focus_progress = {
-							focus = YUN_Ultimatium_To_Sichuan2
-							progress > 0
-						}
+						focus_progress = { focus = YUN_go_after_Sichuan progress > 0 }
+						focus_progress = { focus = YUN_Ultimatium_To_Sichuan2 progress > 0 }
 					}
 				}
 			}
@@ -2084,10 +1694,7 @@ Sichuan_Foreign_Policy_decisions = {
 				add = 40
 				QIE = {
 					OR = {
-						focus_progress = {
-							focus = QIE_destroy_isolated_warlords
-							progress > 0
-						}
+						focus_progress = { focus = QIE_restore_order_in_china progress > 0 }
 						has_country_flag = prepped_for_southern_attacks
 					}
 				}
@@ -2095,395 +1702,18 @@ Sichuan_Foreign_Policy_decisions = {
 			#Threatened by the Kuomintang
 			modifier = {
 				add = 40
-				CHI = {
-					has_decision = CHI_dec_west_warlord_expedition
-				}
+				CHI = { focus_progress = { focus = CHI_plan_western progress > 0 } }
 			}
 			#Threatened by Liangguang
 			modifier = {
 				add = 40
-				GXC = {
-					has_decision = GXC_UPC_ultimatums
-				}
+				GXC = { has_completed_focus = GXC_Military_Nationalization }
 			}
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Align_With_Faction target: [From.GetName]"
-			FROM = {
-				country_event = sichuan.10
-			}
-		}
-	}
-}
-
-Sichuan_Federalist_decisions = {
-	SZC_Unify_The_South = {
-		icon = generic_prepare_civil_war
-
-		available = {
-			OR = {
-				is_neighbor_of = FROM
-				any_allied_country = { is_neighbor_of = FROM }
-			}
-		}
-
-		visible = {
-			can_declare_war_on = FROM
-		}
-
-		targets = { HNN CHI ANQ LEP SQI YUN SHX }
-		target_root_trigger = {
-			has_completed_focus = SZC_Revive_The_Federal_Project
-		}
-		target_trigger = {
-			can_declare_war_on = FROM
-		}
-
-		fire_only_once = yes
-		cost = 20
-		days_remove = 14
-		cancel_if_not_visible = yes
-		war_with_target_on_remove = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				ROOT_is_threatened = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Unify_The_South target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 15 value = 1 }
-			FROM = {
-				if = {
-					limit = { tag = CHI }
-					country_event = lngupc.20
-				}
-				else = {
-					hidden_effect = { country_event = sichuan.20 }
-				}
-			}
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Unify_The_South target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			if = {
-				limit = {
-					FROM = { tag = CHI }
-				}
-				declare_war_on = {
-					target = FROM
-					type = annex_everything
-				}
-			}
-			else = {
-				FROM = { country_event = lngupc.17 }
-			}
-		}
-	}
-
-	SZC_Negotiate_With_The_North = {
-		icon = eng_trade_unions_support
-
-		available = {
-			custom_trigger_tooltip = {
-				tooltip = hunan_aligned_tt
-				HNN = {
-					OR = {
-						exists = no
-						is_in_faction_with = QIE
-						is_in_faction_with = FNG
-						is_in_faction_with = ROOT
-					}
-				}
-			}
-			custom_trigger_tooltip = {
-				tooltip = yunnan_aligned_tt
-				YUN = {
-					OR = {
-						exists = no
-						is_in_faction_with = QIE
-						is_in_faction_with = FNG
-						is_in_faction_with = ROOT
-					}
-				}
-			}
-			custom_trigger_tooltip = {
-				tooltip = liangguang_aligned_tt
-				GXC = {
-					OR = {
-						exists = no
-						is_in_faction_with = QIE
-						is_in_faction_with = FNG
-						is_in_faction_with = ROOT
-					}
-				}
-			}
-		}
-
-		visible = {
-			FROM = {
-				exists = yes
-				if = {
-					limit = { tag = QIE }
-					has_country_flag = QIE_coup_failed
-				}
-				else_if = {
-					limit = { tag = FNG }
-					OR = {
-						NOT = { country_exists = QIE }
-						owns_state = 608
-					}
-				}
-				has_war = no
-				is_subject = no
-			}
-			has_completed_focus = SZC_Revive_The_Federal_Project
-		}
-
-		targets = { QIE FNG }
-		target_root_trigger = {
-			has_completed_focus = SZC_Revive_The_Federal_Project
-		}
-		target_trigger = {
-			FROM = {
-				if = {
-					limit = { tag = QIE }
-					has_country_flag = QIE_coup_failed
-				}
-				else_if = {
-					limit = { tag = FNG }
-					OR = {
-						NOT = { country_exists = QIE }
-						owns_state = 608
-					}
-				}
-				has_war = no
-				is_subject = no
-			}
-		}
-
-		fire_only_once = yes
-		cost = 0
-		days_remove = 14
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				ROOT_is_threatened = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Negotiate_With_The_North target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 15 value = 1 }
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Negotiate_With_The_North target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			FROM = { country_event = lngupc.21 }
-		}
-	}
-
-	SZC_Attack_North = {
-		icon = oppression
-
-		available = {
-			OR = {
-				is_neighbor_of = FROM
-				any_allied_country = { is_neighbor_of = FROM }
-			}
-		}
-
-		visible = {
-			has_completed_focus = SZC_From_Chongqing_To_Beijing
-			can_declare_war_on = FROM
-			FROM = { owns_state = 608 }
-		}
-
-		targets = { QIE SHX SQI }
-		target_root_trigger = {
-			has_completed_focus = SZC_From_Chongqing_To_Beijing
-		}
-		target_trigger = {
-			can_declare_war_on = FROM
-			FROM = { owns_state = 608 }
-		}
-
-		fire_only_once = yes
-		cost = 20
-		days_remove = 14
-		war_with_target_on_remove = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				ROOT_is_threatened = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Attack_North target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 15 value = 1 }
-			hidden_effect = {
-				FROM = { country_event = sichuan.20 }
-			}
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Attack_North target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
-			}
-		}
-	}
-
-	SZC_Liberate_the_Northeast = {
-		icon = oppression
-
-		available = {
-			OR = {
-				is_neighbor_of = FROM
-				any_allied_country = {
-					is_neighbor_of = FROM
-				}
-			}
-		}
-
-		visible = {
-			has_completed_focus = SZC_From_Chongqing_To_Beijing
-			can_declare_war_on = FROM
-			FROM = {
-				OR = {
-					is_subject = yes
-					has_country_flag = UPC_refused_ultimatum
-				}
-			}
-		}
-
-		cancel_trigger = {
-			NOT = { can_declare_war_on = FROM }
-		}
-
-		fire_only_once = yes
-		cost = 20
-		days_remove = 14
-		war_with_target_on_remove = yes
-
-		targets = { FNG MAN }
-		target_root_trigger = {
-			has_completed_focus = SZC_From_Chongqing_To_Beijing
-		}
-		target_trigger = {
-			can_declare_war_on = FROM
-			FROM = {
-				OR = {
-					is_subject = yes
-					has_country_flag = UPC_refused_ultimatum
-				}
-			}
-		}
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				ROOT_is_threatened = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Liberate_the_Northeast target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 15 value = 1 }
-			hidden_effect = {
-				FROM = { country_event = sichuan.20 }
-			}
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Liberate_the_Northeast target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
-			}
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Align_With_Faction target: [From.GetName]"
+			FROM = { country_event = sichuan.10 }
 		}
 	}
 }
@@ -2520,7 +1750,7 @@ Sichuan_Zhili_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Set_Up_Border_Defenses"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Set_Up_Border_Defenses"
 			hidden_effect = {
 				add_command_power = -60
 			}
@@ -2595,7 +1825,7 @@ Sichuan_Zhili_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Mobilise_Troop_Remnants"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Mobilise_Troop_Remnants"
 			if = {
 				limit = {
 					NOT = { has_variable = SZC_zhili_mobilisation }
@@ -2616,20 +1846,17 @@ Sichuan_Zhili_decisions = {
 			hidden_effect = {
 				if = {
 					limit = {
-						NOT = { has_template = "Zhili Remnant Division" }
+						NOT = { has_template = "Zhili Canbu Bubing Shi" }
 					}
 					division_template = {
-						name = "Zhili Remnant Division"
+						name = "Zhili Canbu Bubing Shi"
 						division_names_group = QIE_INF_01
 						is_locked = yes
 						regiments = {
-							infantry = { x = 0 y = 0 }
-							infantry = { x = 0 y = 1 }
-							infantry = { x = 1 y = 0 }
-							infantry = { x = 1 y = 1 }
-						}
-						support = {
-							artillery = { x = 0 y = 0 }
+							irregular_infantry = { x = 0 y = 0 }
+							irregular_infantry = { x = 0 y = 1 }
+							irregular_infantry = { x = 1 y = 0 }
+							irregular_infantry = { x = 1 y = 1 }
 						}
 					}
 				}
@@ -2642,7 +1869,7 @@ Sichuan_Zhili_decisions = {
 						}
 					}
 					create_unit = {
-						division = "division_template = \"Zhili Remnant Division\" start_experience_factor = 0.3 start_equipment_factor = 1.0"
+						division = "division_template = \"Zhili Canbu Bubing Shi\" start_experience_factor = 0.3 start_equipment_factor = 1.0"
 						owner = SZC
 					}
 				}
@@ -2672,10 +1899,10 @@ Sichuan_Zhili_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Reorganise_The_Remnant_Divisions"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SZC_Reorganise_The_Remnant_Divisions"
 			if = {
-				limit = { has_template = "Zhili Remnant Division" }
-				delete_unit_template_and_units = { division_template = "Zhili Remnant Division" }
+				limit = { has_template = "Zhili Canbu Bubing Shi" }
+				delete_unit_template_and_units = { division_template = "Zhili Canbu Bubing Shi" }
 			}
 		}
 
@@ -2684,7 +1911,7 @@ Sichuan_Zhili_decisions = {
 			custom_effect_tooltip = SZC_Reorganise_The_Remnant_Divisions_tooltip
 			hidden_effect = {
 				division_template = {
-					name = "Zhili Division"
+					name = "Zhili Bubing Shi"
 					division_names_group = "QIE_INF_01"
 					regiments = {
 						infantry = { x = 0 y = 0 }
@@ -2706,200 +1933,35 @@ Sichuan_Zhili_decisions = {
 			hidden_effect = {
 				random_owned_controlled_state = {
 					create_unit = {
-						division = "division_template = \"Zhili Division\" start_experience_factor = 0.3 start_equipment_factor = 1.0"
+						division = "division_template = \"Zhili Bubing Shi\" start_experience_factor = 0.3 start_equipment_factor = 1.0"
 						owner = SZC
 						prioritize_location = 6999
 					}
 					create_unit = {
-						division = "division_template = \"Zhili Division\" start_experience_factor = 0.3 start_equipment_factor = 1.0"
+						division = "division_template = \"Zhili Bubing Shi\" start_experience_factor = 0.3 start_equipment_factor = 1.0"
 						owner = SZC
 						prioritize_location = 1893
 					}
 				}
 				random_owned_controlled_state = {
 					create_unit = {
-						division = "division_template = \"Zhili Division\" start_experience_factor = 0.3 start_equipment_factor = 1.0"
+						division = "division_template = \"Zhili Bubing Shi\" start_experience_factor = 0.3 start_equipment_factor = 1.0"
 						owner = SZC
 						prioritize_location = 4925
 					}
 					create_unit = {
-						division = "division_template = \"Zhili Division\" start_experience_factor = 0.3 start_equipment_factor = 1.0"
+						division = "division_template = \"Zhili Bubing Shi\" start_experience_factor = 0.3 start_equipment_factor = 1.0"
 						owner = SZC
 						prioritize_location = 1367
 					}
 				}
 				random_owned_controlled_state = {
 					create_unit = {
-						division = "division_template = \"Zhili Division\" start_experience_factor = 0.3 start_equipment_factor = 1.0"
+						division = "division_template = \"Zhili Bubing Shi\" start_experience_factor = 0.3 start_equipment_factor = 1.0"
 						owner = SZC
 						prioritize_location = 11865
 					}
 				}
-			}
-		}
-	}
-	SZC_Ally_With_Warlord = {
-		icon = generic_form_nation
-
-		available = {
-			if = {
-				limit = {
-					FROM = {
-						NOT = { tag = LEP }
-					}
-				}
-				OR = {
-					is_neighbor_of = FROM
-					any_allied_country = {
-						is_neighbor_of = FROM
-					}
-				}
-			}
-		}
-
-		visible = {
-			has_completed_focus = SZC_Gather_Allies
-			NOT = { has_war_with = FROM }
-			FROM = {
-				exists = yes
-				is_in_faction = no
-				is_ruled_by_pro_zhili = yes
-				if = {
-					limit = { tag = LEP }
-					NOT = {
-						has_war_with = ANQ
-						has_war_with = CHI
-						has_war_with = SQI
-					}
-				}
-				if = {
-					limit = { tag = XSM }
-					has_global_flag = northwest_conflict_ended
-				}
-				if = {
-					limit = { tag = KUM }
-					NOT = {
-						has_war_with = SIK
-						has_war_with = ETS
-					}
-				}
-			}
-		}
-
-		targets = { HNN XSM KUM LEP GXC }
-		target_root_trigger = {
-			has_completed_focus = SZC_Gather_Allies
-		}
-		target_trigger = {
-			NOT = { has_war_with = FROM }
-			FROM = {
-				is_in_faction = no
-				is_ruled_by_pro_zhili = yes
-				if = {
-					limit = { tag = LEP }
-					NOT = {
-						has_war_with = ANQ
-						has_war_with = CHI
-						has_war_with = SQI
-					}
-				}
-				if = {
-					limit = { tag = XSM }
-					has_global_flag = northwest_conflict_ended
-				}
-				if = {
-					limit = { tag = KUM }
-					NOT = {
-						has_war_with = SIK
-						has_war_with = ETS
-					}
-				}
-			}
-		}
-
-		cost = 20
-		days_remove = 7
-		fire_only_once = yes
-		cancel_if_not_visible = yes
-
-		ai_will_do = {
-			base = 100
-			modifier = {
-				factor = 0
-				FROM = { has_war = yes }
-			}
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Ally_With_Warlord target: [From.GetName]"
-			FROM = {
-				country_event = sichuan.270
-			}
-		}
-	}
-
-	SZC_Return_To_Beijing = {
-		icon = jap_conquer_china
-
-		visible = {
-			has_completed_focus = SZC_Shining_Republic
-			can_declare_war_on = FROM
-			FROM = { owns_state = 608 }
-		}
-
-		targets = { QIE }
-		target_root_trigger = {
-			has_completed_focus = SZC_Shining_Republic
-		}
-		target_trigger = {
-			can_declare_war_on = FROM
-			FROM = { owns_state = 608 }
-		}
-
-		cost = 0
-		days_remove = 10
-		fire_only_once = yes
-		war_with_target_on_remove = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				ROOT_is_threatened = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Return_To_Beijing target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 15 value = 1 }
-			hidden_effect = {
-				FROM = { country_event = sichuan.20 }
-			}
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Return_To_Beijing target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
 			}
 		}
 	}
@@ -3092,669 +2154,3 @@ Sichuan_Arms_Purchases_decisions = {
 		}
 	}
 }
-
-Sichuan_The_Road_To_Unification_decisions = {
-	SZC_End_The_Zhili_Hegemony = {
-		icon = jap_conquer_china
-
-		visible = {
-			has_completed_focus = SZC_A_Grandiose_Plan
-			has_government = paternal_autocrat
-			can_declare_war_on = FROM
-			OR = {
-				is_in_faction = no
-				is_faction_leader = yes
-			}
-		}
-
-		targets = { QIE }
-		target_root_trigger = {
-			has_completed_focus = SZC_A_Grandiose_Plan
-		}
-		target_trigger = {
-			can_declare_war_on = FROM
-		}
-
-		cost = 20
-		days_remove = 20
-		fire_only_once = yes
-		cancel_if_not_visible = yes
-		war_with_target_on_remove = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				ROOT_is_threatened = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_End_The_Zhili_Hegemony target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 25 value = 1 }
-			hidden_effect = {
-				FROM = { country_event = sichuan.20 }
-			}
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_End_The_Zhili_Hegemony target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
-			}
-		}
-	}
-	SZC_Destroy_Warlord = {
-		name = SZC_zhili_attack_decision
-		icon = hol_draw_up_staff_plans
-
-		available = {
-			is_neighbor_of = FROM
-			NOT = { country_exists = QIE }
-		}
-
-		visible = {
-			OR = {
-				has_completed_focus = SZC_One_China_One_Government
-				has_completed_focus = SZC_A_Grandiose_Plan
-			}
-			can_declare_war_on = FROM
-		}
-
-		targets = { CHI FNG SHX GXC HNN YUN LEP ANQ SQI }
-		target_root_trigger = {
-			OR = {
-				has_completed_focus = SZC_One_China_One_Government
-				has_completed_focus = SZC_A_Grandiose_Plan
-			}
-		}
-		target_trigger = {
-			can_declare_war_on = FROM
-		}
-
-		cost = 20
-		days_remove = 10
-		fire_only_once = yes
-		war_with_target_on_remove = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				ROOT_is_threatened = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Destroy_Warlord target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 15 value = 1 }
-			hidden_effect = {
-				FROM = { country_event = sichuan.20 }
-			}
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Destroy_Warlord target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
-			}
-		}
-	}
-
-	SZC_Destroy_Outlier = {
-		name = SZC_zhili_attack_decision
-		icon = hol_draw_up_staff_plans
-
-		available = {
-			is_neighbor_of = FROM
-		}
-
-		visible = {
-			OR = {
-				has_completed_focus = SZC_Tie_Up_Loose_Ends
-				has_completed_focus = SZC_Towards_Unification
-			}
-			can_declare_war_on = FROM
-		}
-
-		targets = { XSM MON TIB SIK KUM ETS }
-		target_root_trigger = {
-			OR = {
-				has_completed_focus = SZC_Tie_Up_Loose_Ends
-				has_completed_focus = SZC_Towards_Unification
-			}
-		}
-		target_trigger = {
-			can_declare_war_on = FROM
-		}
-
-		fire_only_once = yes
-		cost = 20
-		days_remove = 10
-		war_with_target_on_remove = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				ROOT_is_threatened = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { overlord_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes }
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Destroy_Outlier target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 15 value = 1 }
-			hidden_effect = {
-				FROM = { country_event = sichuan.20 }
-			}
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Destroy_Outlier target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
-			}
-		}
-	}
-
-	SZC_Integrate_Allies = {
-		icon = generic_form_nation
-
-		available = {
-			is_neighbor_of = FROM
-			received_expeditionary_forces = { sender = FROM value < 1 }
-		}
-
-		visible = {
-			is_faction_leader = yes
-			OR = {
-				has_completed_focus = SZC_Tie_Up_Loose_Ends
-				has_completed_focus = SZC_Towards_Unification
-			}
-			is_ally_with = FROM
-		}
-
-		target_array = faction_members
-		target_array = subjects
-		target_root_trigger = {
-			is_faction_leader = yes
-			OR = {
-				has_completed_focus = SZC_Tie_Up_Loose_Ends
-				has_completed_focus = SZC_Towards_Unification
-			}
-		}
-		target_trigger = {
-			FROM = { can_become_china = yes }
-		}
-
-		cost = 50
-		days_remove = 40
-		fire_only_once = yes
-
-		modifier = {
-			political_power_cost = 0.1
-		}
-
-		ai_will_do = {
-			factor = 100
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Integrate_Allies target: [From.GetName]"
-			FROM = {
-				country_event = { id = qiefor.49 hours = 12 }
-			}
-		}
-	}
-	SZC_Seize_Macau = {
-		icon = infiltrate_state
-
-		available = {
-			OR = {
-				is_neighbor_of = FROM
-				any_allied_country = { is_neighbor_of = FROM }
-			}
-			FROM = { has_war = yes }
-		}
-
-		visible = {
-			OR = {
-				has_completed_focus = SZC_Eradicate_The_Concessions
-				has_completed_focus = SZC_Towards_Unification
-			}
-			can_declare_war_on = FROM
-			FROM = { owns_state = 729 }
-		}
-
-		targets = { POR }
-		target_root_trigger = {
-			OR = {
-				has_completed_focus = SZC_Eradicate_The_Concessions
-				has_completed_focus = SZC_Towards_Unification
-			}
-		}
-		target_trigger = {
-			can_declare_war_on = FROM
-			FROM = { owns_state = 729 }
-		}
-
-		cost = 0
-		days_remove = 10
-		fire_only_once = yes
-		war_with_target_on_remove = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				has_war = yes
-			}
-			modifier = {
-				factor = 0
-				has_country_flag = imminent_war
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Seize_Macau target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 15 value = 1 }
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Seize_Macau target: [From.GetName]"
-			FROM = {
-				country_event = { id = qiefor.50 hours = 6 }
-			}
-			clear_decision_attack_AI = yes
-		}
-	}
-	SZC_Deal_With_LEC = {
-		icon = eng_trade_unions_support
-
-		available = {
-			is_neighbor_of = FROM
-		}
-
-		visible = {
-			OR = {
-				has_completed_focus = SZC_Eradicate_The_Concessions
-				has_completed_focus = SZC_Towards_Unification
-			}
-			can_declare_war_on = FROM
-		}
-
-		cost = 40
-		days_remove = 30
-		fire_only_once = yes
-		war_with_target_on_remove = yes
-
-		targets = { LEC }
-		target_root_trigger = {
-			OR = {
-				has_completed_focus = SZC_Eradicate_The_Concessions
-				has_completed_focus = SZC_Towards_Unification
-			}
-		}
-		target_trigger = {
-			can_declare_war_on = FROM
-		}
-
-		ai_will_do = {
-			base = 0
-			modifier = {
-				add = 100
-				FROM = {
-					is_in_faction = no
-					LEC_is_guaranteed = no
-				}
-			}
-			modifier = {
-				add = 100
-				FROM = {
-					is_in_faction = yes
-					faction_leader = {
-						surrender_progress > 0.5
-					}
-				}
-			}
-			modifier = {
-				add = 100 #Invaded directly
-				ENT = {
-					is_in_faction_with = FROM
-					any_enemy_country = {
-						is_neighbor_of = ENT
-						OR = {
-							is_american_tag = yes #vs CAN
-							is_actual_major = yes #vs AST
-							is_subject_of = GER #vs SAF
-						}
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				has_war = yes
-			}
-			modifier = {
-				factor = 0
-				has_country_flag = imminent_war
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Deal_With_LEC target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 45 value = 1 }
-			setup_decision_attack_AI = yes
-			FROM = {
-				if = {
-					limit = {
-						OR = {
-							has_country_leader = { character = LEC_nelson_trusler_johnson }
-							AND = {
-								has_government = paternal_autocrat
-								ROOT = { has_completed_focus = SZC_Contact_An_Old_Ally }
-							}
-						}
-					}
-					country_event = { id = qiefor.114 days = 1 }
-				}
-				else_if = {
-					limit = {
-						is_in_faction_with = CAN
-					}
-					country_event = { id = qiefor.126 days = 1 }
-				}
-				else = {
-					hidden_effect = { country_event = sichuan.20 }
-				}
-			}
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Deal_With_LEC target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			if = {
-				limit = {
-					FROM = {
-						NOT = {
-							has_country_leader = { character = LEC_nelson_trusler_johnson }
-							AND = {
-								has_government = paternal_autocrat
-								ROOT = { has_completed_focus = SZC_Contact_An_Old_Ally }
-							}
-							is_in_faction_with = CAN
-						}
-					}
-				}
-				declare_war_on = {
-					target = FROM
-					type = annex_everything
-				}
-			}
-		}
-	}
-
-	SZC_Seize_Hong_Kong = {
-		icon = infiltrate_state
-
-		available = {
-			is_neighbor_of = FROM
-			FROM = { has_war = yes }
-		}
-
-		visible = {
-			OR = {
-				has_completed_focus = SZC_Eradicate_The_Concessions
-				has_completed_focus = SZC_Towards_Unification
-			}
-			can_declare_war_on = FROM
-			FROM = { owns_state = 326 } #Hong Kong
-		}
-
-		targets = { AST }
-		target_root_trigger = {
-			OR = {
-				has_completed_focus = SZC_Eradicate_The_Concessions
-				has_completed_focus = SZC_Towards_Unification
-			}
-		}
-		target_trigger = {
-			can_declare_war_on = FROM
-			FROM = { owns_state = 326 } #Hong Kong
-		}
-
-		cost = 20
-		days_remove = 10
-		fire_only_once = yes
-		war_with_target_on_remove = yes
-
-		ai_will_do = {
-			base = 0
-			modifier = {
-				add = 100 #Invaded directly
-				ENT = {
-					is_in_faction_with = FROM
-					any_enemy_country = {
-						is_neighbor_of = ENT
-						OR = {
-							is_american_tag = yes #vs CAN
-							is_actual_major = yes #vs AST
-							is_subject_of = GER #vs SAF
-						}
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				has_war = yes
-			}
-			modifier = {
-				factor = 0
-				has_country_flag = imminent_war
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Seize_Hong_Kong target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 20 value = 1 }
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Seize_Hong_Kong target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			FROM = {
-				country_event = { id = qiefor.126 hours = 6 }
-			}
-		}
-	}
-
-	SZC_Threaten_GEA = {
-		icon = eng_trade_unions_demand
-
-		available = {
-			is_neighbor_of = FROM
-			FROM = { has_war = yes }
-		}
-
-		visible = {
-			OR = {
-				has_completed_focus = SZC_Eradicate_The_Concessions
-				has_completed_focus = SZC_Towards_Unification
-			}
-			NOT = { has_completed_focus = SZC_Contact_An_Old_Ally }
-			can_declare_war_on = FROM
-			FROM = {
-				OR = {
-					has_full_control_of_state = 996
-					has_full_control_of_state = 744
-					has_full_control_of_state = 728
-				}
-			}
-		}
-
-		cost = 20
-		days_remove = 10
-		fire_only_once = yes
-		war_with_target_on_remove = yes
-
-		targets = { GEA }
-		target_root_trigger = {
-			OR = {
-				has_completed_focus = SZC_Eradicate_The_Concessions
-				has_completed_focus = SZC_Towards_Unification
-			}
-			NOT = { has_completed_focus = SZC_Contact_An_Old_Ally }
-		}
-		target_trigger = {
-			can_declare_war_on = FROM
-			FROM = {
-				OR = {
-					has_full_control_of_state = 996
-					has_full_control_of_state = 744
-					has_full_control_of_state = 728
-				}
-			}
-		}
-
-		ai_will_do = {
-			base = 0
-			modifier = {
-				add = 300
-				GEA = { has_war = yes }
-			}
-			modifier = {
-				factor = 0
-				has_war = yes
-			}
-			modifier = {
-				factor = 0
-				has_country_flag = imminent_war
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision SZC_Threaten_GEA target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 20 value = 1 }
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Threaten_GEA target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			FROM = {
-				country_event = { id = qiefor.119 days = 3 }
-			}
-		}
-	}
-
-	SZC_Negotiate_With_GEA = {
-		icon = eng_trade_unions_support
-
-		available = {
-			is_neighbor_of = FROM
-			FROM = { has_war = yes }
-		}
-
-		visible = {
-			has_completed_focus = SZC_Eradicate_The_Concessions
-			has_completed_focus = SZC_Contact_An_Old_Ally
-			FROM = {
-				OR = {
-					has_full_control_of_state = 996
-					has_full_control_of_state = 744
-					has_full_control_of_state = 728
-				}
-			}
-		}
-
-		targets = { GEA }
-		target_root_trigger = {
-			has_completed_focus = SZC_Eradicate_The_Concessions
-			has_completed_focus = SZC_Contact_An_Old_Ally
-		}
-		target_trigger = {
-			FROM = {
-				OR = {
-					has_full_control_of_state = 996
-					has_full_control_of_state = 744
-					has_full_control_of_state = 728
-				}
-			}
-		}
-
-		cost = 20
-		days_remove = 30
-		fire_only_once = yes
-
-		ai_will_do = {
-			factor = 1000
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SZC_Negotiate_With_GEA target: [From.GetName]"
-			FROM = {
-				country_event = { id = qiefor.122 days = 1 }
-			}
-		}
-	}
-}
-

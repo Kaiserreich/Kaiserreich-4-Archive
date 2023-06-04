@@ -1036,6 +1036,19 @@ country_event = { #Fate of Siberia
 		}
 		ai_chance = {
 			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					var:398.owner = {
+						OR = {
+							original_tag = RUS
+							original_tag = SOV
+						}
+						ROOT_can_grant_land = yes
+					}
+					TRM = { is_ally_of_ROOT = yes }
+				}
+			}
 		}
 		hidden_effect = {
 			every_state = {
@@ -1060,9 +1073,11 @@ country_event = { #Fate of Siberia
 		name = annex.3008.c #give it to Russia
 		trigger = {
 			var:398.owner = {
-				NOT = { tag = TRM }
-				is_russian_tag = yes
-				is_ally_with = ROOT
+				OR = {
+					original_tag = RUS
+					original_tag = SOV
+				}
+				ROOT_can_grant_land = yes
 			}
 		}
 		ai_chance = {
@@ -1070,6 +1085,10 @@ country_event = { #Fate of Siberia
 			modifier = {
 				factor = 0
 				is_german_tag = yes
+			}
+			modifier = {
+				factor = 0
+				TRM = { is_ally_of_ROOT = yes }
 			}
 		}
 		set_temp_variable = { tag_to_release = 398.owner }
@@ -1187,8 +1206,18 @@ country_event = { #Fate of the Russian Far East
 		ai_chance = {
 			base = 100
 			modifier = {
-				factor = 0.5
-				SIB = { is_ally_of_ROOT = yes }
+				factor = 0
+				OR = {
+					var:566.owner = { #Irkutsk
+						OR = {
+							original_tag = RUS
+							original_tag = SOV
+						}
+						ROOT_can_grant_land = yes
+					}
+					SIB = { is_ally_of_ROOT = yes }
+					TRM = { is_ally_of_ROOT = yes }
+				}
 			}
 		}
 		every_state = {
@@ -1206,10 +1235,10 @@ country_event = { #Fate of the Russian Far East
 		trigger = {
 			var:566.owner = { #Irkutsk
 				OR = {
-					tag = RUS
-					tag = SOV
+					original_tag = RUS
+					original_tag = SOV
 				}
-				is_ally_with = ROOT
+				ROOT_can_grant_land = yes
 			}
 		}
 		ai_chance = {
@@ -1217,6 +1246,13 @@ country_event = { #Fate of the Russian Far East
 			modifier = {
 				factor = 0
 				is_german_tag = yes
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					SIB = { is_ally_of_ROOT = yes }
+					TRM = { is_ally_of_ROOT = yes }
+				}
 			}
 		}
 		set_temp_variable = { tag_to_release = 566.owner }
@@ -1242,6 +1278,10 @@ country_event = { #Fate of the Russian Far East
 		}
 		ai_chance = {
 			base = 200
+			modifier = {
+				factor = 0
+				TRM = { is_ally_of_ROOT = yes }
+			}
 		}
 		set_temp_variable = { tag_to_release = SIB }
 		hidden_effect = {
@@ -1308,34 +1348,41 @@ country_event = { #Fate of China
 		hidden_effect = {
 			determine_chinese_ally = yes
 			if = {
-				limit = { tag = LEC }
+				limit = { original_tag = LEC }
 				every_owned_state = {
 					limit = {
-						is_not_claim_or_core_of_ROOT = yes
-						OR = {
-							state = 592 #Guangzhou
-							state = 728 #Guangzhouwan
-							state = 729 #Macao
-							state = 744 #Kiaochow
-							state = 802 #Xiamen
-							state = 803 #Wenzhou
-							state = 996 #Weihaiwei
-							state = 1075 #Nantong
-						}
+						is_possible_legation_cities_state = yes
+						NOT = { is_core_of = ROOT }
 					}
 					add_claim_by = LEC
 				}
+			}
+			if = {
+				limit = {
+					original_tag = JAP
+					any_owned_state = {
+						is_china_claim_of_JAP = yes
+						is_manchuria = no
+						has_variable = ambition_area_@ROOT
+					}
+				}
+				save_event_target_as = japan_can_annex_coast
 			}
 		}
 	}
 
 	option = { #Release China
-		name = annex.3010.a
+		name = annex.china.release_china
 		trigger = {
 			has_event_target = china_release_target
+			NOT = { has_event_target = japan_forced_return }
 		}
 		ai_chance = {
 			base = 10
+			modifier = {
+				factor = 0
+				has_event_target = japan_can_annex_coast
+			}
 		}
 		set_temp_variable = { tag_to_release = event_target:china_release_target }
 		release_chinese_government = yes
@@ -1343,17 +1390,15 @@ country_event = { #Fate of China
 	}
 
 	option = { #Release FNG, keep the coastline
-		name = annex.3010.b
+		name = annex.china.release_china_take_coastline
 		trigger = {
-			tag = JAP
+			original_tag = JAP
+			NOT = { has_event_target = japan_forced_return }
 			has_event_target = china_release_target
-			any_owned_state = {
-				is_china_claim_of_JAP = yes
-				has_variable = ambition_area_@ROOT
-			}
+			has_event_target = japan_can_annex_coast
 		}
 		ai_chance = {
-			base = 90
+			base = 100
 		}
 		set_temp_variable = { japan_keeps_coast = 1 }
 		set_temp_variable = { tag_to_release = event_target:china_release_target }
@@ -1362,44 +1407,108 @@ country_event = { #Fate of China
 	}
 
 	option = { #Give to a Chinese ally
-		name = annex.3010.c
+		name = annex.china.give_to_china
 		trigger = {
 			has_event_target = china_ally_target
+			NOT = { has_event_target = japan_forced_return }
 		}
 		ai_chance = {
 			base = 90
+			modifier = {
+				factor = 0
+				has_event_target = china_release_target
+			}
+			modifier = {
+				factor = 0
+				has_event_target = japan_can_annex_coast
+			}
 		}
 		reverse_add_opinion_modifier = { target = event_target:china_ally_target modifier = KR_returned_land }
 		every_owned_state = {
 			limit = {
-				is_controlled_chinese_region = yes
+				is_china_proper = yes
+				is_claim_or_core_of_ROOT = no
 				OR = {
+					ROOT = { NOT = { has_country_flag = LEC_CONQ } }
+					743 = { is_valid_annexation_state = no }
 					is_possible_legation_cities_state = no
-					ROOT = {
-						NOT = { has_country_flag = LEC_CONQ }
-					}
-				}
-				is_not_claim_or_core_of_ROOT = yes
-				if = {
-					limit = { ROOT = { tag = JAP } }
-					NOT = { has_variable = ambition_area_@ROOT }
 				}
 			}
 			transfer_state_to = event_target:china_ally_target
 		}
 	}
 
+	option = { #Give to a Chinese ally, keep the coastline
+		name = annex.china.give_to_china_take_coastline
+		trigger = {
+			original_tag = JAP
+			NOT = { has_event_target = japan_forced_return }
+			has_event_target = china_ally_target
+			has_event_target = japan_can_annex_coast
+		}
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_event_target = china_release_target
+			}
+		}
+		reverse_add_opinion_modifier = { target = event_target:china_ally_target modifier = KR_hates_govt }
+		every_owned_state = {
+			limit = {
+				is_china_proper = yes
+				is_claim_or_core_of_ROOT = no
+				NOT = { has_variable = ambition_area_@ROOT }
+				OR = {
+					ROOT = { NOT = { has_country_flag = LEC_CONQ } }
+					743 = { is_valid_annexation_state = no }
+					is_possible_legation_cities_state = no
+				}
+			}
+			transfer_state_to = event_target:china_ally_target
+		}
+	}
+
+	option = { #Return to China (for defeated Japan)
+		name = annex.china.fading_sun_return_to_china
+		trigger = {
+			has_event_target = japan_forced_return
+		}
+		every_owned_state = {
+			limit = { is_china_proper = yes }
+			hidden_effect = { remove_core_of = ROOT }
+			remove_claim_by = ROOT
+			set_state_flag = japan_forced_return
+			transfer_state_to = event_target:japan_forced_return
+		}
+		event_target:japan_forced_return = { country_event = annex.300 }
+	}
+
+	option = { #International China Easter egg (for LEC)
+		name = annex.3010.a
+		trigger = {
+			original_tag = LEC
+		}
+		ai_chance = { base = 0 }
+		set_cosmetic_tag = LEC_china
+		every_state = {
+			limit = {
+				is_core_china = yes
+				NOT = { is_core_of = ROOT }
+			}
+			add_claim_by = ROOT
+		}
+	}
+
 	option = { #Full occupation
 		name = annex.occupation
-		ai_chance = {
-			base = 0
+		trigger = {
+			NOT = { original_tag = LEC }
+			NOT = { has_event_target = japan_forced_return }
 		}
+		ai_chance = { base = 0 }
 		occupy_massive_country = yes
 		set_country_flag = CHI_CONQ
-		if = {
-			limit = { tag = LEC }
-			set_cosmetic_tag = LEC_china
-		}
 	}
 }
 
@@ -1432,11 +1541,14 @@ country_event = { #Fate of Tibet
 
 	option = { #Release Tibet
 		name = annex.3011.a
+		trigger = {
+			NOT = { has_event_target = japan_forced_return }
+		}
 		ai_chance = {
 			base = 60
 			modifier = {
 				factor = 0
-				can_become_china = no
+				is_chinese_tag = no
 				any_owned_state = {
 					OR = {
 						region = 220 #Xibei
@@ -1447,14 +1559,7 @@ country_event = { #Fate of Tibet
 		}
 		set_temp_variable = { tag_to_release = TIB }
 		release_targeted_tag = yes
-		hidden_effect = {
-			TIB_puppet_setup = yes
-			TIB = {
-				add_state_claim = 858 #Tawang
-				add_state_claim = 601 #Xikang
-				add_state_claim = 604 #Xining
-			}
-		}
+		hidden_effect = { TIB_puppet_setup = yes }
 	}
 
 	option = { #Release Greater Tibet
@@ -1463,7 +1568,8 @@ country_event = { #Fate of Tibet
 			base = 60
 		}
 		trigger = {
-			can_become_china = no
+			NOT = { has_event_target = japan_forced_return }
+			is_chinese_tag = no
 			any_owned_state = {
 				is_not_claim_or_core_of_ROOT = yes
 				OR = {
@@ -1499,15 +1605,15 @@ country_event = { #Fate of Tibet
 		}
 		set_temp_variable = { tag_to_release = TIB }
 		puppet_released_tag = yes
-		hidden_effect = {
-			TIB_puppet_setup = yes
-		}
+		hidden_effect = { TIB_puppet_setup = yes }
 	}
 
 	option = { #Split between Tibet and China
 		name = annex.3011.c
 		trigger = {
-			can_become_china = no
+			NOT = { has_event_target = japan_forced_return }
+			has_event_target = china_ally_target
+			is_chinese_tag = no
 			any_owned_state = {
 				is_not_claim_or_core_of_ROOT = yes
 				OR = {
@@ -1516,13 +1622,13 @@ country_event = { #Fate of Tibet
 					state = 693 #Chamdo
 				}
 			}
-			has_event_target = china_ally_target
 		}
 		ai_chance = {
-			base = 20
+			base = 60
 			modifier = {
-				factor = 3
-				is_ally_with = event_target:china_ally_target
+				factor = 0
+				is_major = yes
+				event_target:china_ally_target = { is_ally_of_ROOT = no }
 			}
 		}
 		every_owned_state = {
@@ -1546,19 +1652,23 @@ country_event = { #Fate of Tibet
 		}
 		set_temp_variable = { tag_to_release = TIB }
 		puppet_released_tag = yes
-		hidden_effect = {
-			TIB_puppet_setup = yes
-		}
+		hidden_effect = { TIB_puppet_setup = yes }
 	}
 
 	option = { #Give it to China
-		name = annex.3011.d
+		name = annex.china.give_to_china
 		trigger = {
-			can_become_china = no
+			NOT = { has_event_target = japan_forced_return }
 			has_event_target = china_ally_target
+			is_chinese_tag = no
 		}
 		ai_chance = {
 			base = 20
+			modifier = {
+				factor = 0
+				is_major = yes
+				event_target:china_ally_target = { is_ally_of_ROOT = no }
+			}
 		}
 		reverse_add_opinion_modifier = { target = event_target:china_ally_target modifier = KR_returned_land }
 		every_owned_state = {
@@ -1574,8 +1684,26 @@ country_event = { #Fate of Tibet
 		}
 	}
 
+	option = { #Return to China (for defeated Japan)
+		name = annex.china.fading_sun_return_to_china
+		trigger = {
+			has_event_target = japan_forced_return
+		}
+		every_owned_state = {
+			limit = { is_core_of = TIB }
+			hidden_effect = { remove_core_of = ROOT }
+			remove_claim_by = ROOT
+			set_state_flag = japan_forced_return
+			transfer_state_to = event_target:japan_forced_return
+		}
+		event_target:japan_forced_return = { country_event = annex.300 }
+	}
+
 	option = { #Annex
-		name = annex.3011.e
+		name = annex.3011.d
+		trigger = {
+			is_chinese_tag = yes
+		}
 		ai_chance = {
 			base = 30
 			modifier = {
@@ -1591,9 +1719,6 @@ country_event = { #Fate of Tibet
 				tag = UPC
 			}
 		}
-		trigger = {
-			china_is_potential_government = yes #Chinese tags
-		}
 		occupy_medium_country = yes
 		TIB = {
 			every_core_state = {
@@ -1606,7 +1731,8 @@ country_event = { #Fate of Tibet
 	option = { #occupy
 		name = annex.occupation
 		trigger = {
-			china_is_potential_government = no
+			NOT = { has_event_target = japan_forced_return }
+			is_chinese_tag = no
 		}
 		ai_chance = { base = 0 }
 		occupy_medium_country = yes
@@ -1634,7 +1760,7 @@ country_event = { #Fate of Xinjiang
 				save_event_target_as = united_central_asia
 			}
 			if = {
-				limit = { china_is_potential_government = yes }
+				limit = { is_chinese_tag = yes }
 				SIK = { set_cosmetic_tag = ETS_puppet }
 			}
 			else = {
@@ -1645,11 +1771,14 @@ country_event = { #Fate of Xinjiang
 
 	option = { #Release an independent Xinjiang
 		name = annex.3012.a
+		trigger = {
+			NOT = { has_event_target = japan_forced_return }
+		}
 		ai_chance = {
 			base = 50
 		}
 		if = {
-			limit = { china_is_potential_government = yes }
+			limit = { is_chinese_tag = yes }
 			set_temp_variable = { tag_to_release = SIK }
 		}
 		else = {
@@ -1673,15 +1802,17 @@ country_event = { #Fate of Xinjiang
 	option = { #Give it to Turkestan
 		name = annex.3012.b
 		trigger = {
-			can_become_china = no
+			NOT = { has_event_target = japan_forced_return }
+			is_chinese_tag = no
 			NOT = { has_event_target = united_central_asia }
 			TRK = { ROOT_can_grant_land = yes }
 		}
 		ai_chance = {
 			base = 50
 			modifier = {
-				factor = 2
-				TRK = { is_ally_of_ROOT = yes }
+				factor = 0
+				is_major = yes
+				TRK = { is_ally_of_ROOT = no }
 			}
 		}
 		set_temp_variable = { tag_to_release = TRK }
@@ -1697,14 +1828,16 @@ country_event = { #Fate of Xinjiang
 	option = { #Give it to Central Asian Federation
 		name = annex.3012.c
 		trigger = {
-			can_become_china = no
+			NOT = { has_event_target = japan_forced_return }
 			has_event_target = united_central_asia
+			is_chinese_tag = no
 		}
 		ai_chance = {
 			base = 50
 			modifier = {
-				factor = 2
-				is_ally_with = event_target:china_ally_target
+				factor = 0
+				is_major = yes
+				event_target:united_central_asia = { is_ally_of_ROOT = no }
 			}
 		}
 		set_temp_variable = { tag_to_release = event_target:united_central_asia }
@@ -1718,16 +1851,17 @@ country_event = { #Fate of Xinjiang
 	}
 
 	option = { #Give it to China
-		name = annex.3012.d
+		name = annex.china.give_to_china
 		trigger = {
-			can_become_china = no
 			has_event_target = china_ally_target
+			is_chinese_tag = no
 		}
 		ai_chance = {
 			base = 50
 			modifier = {
-				factor = 2
-				is_ally_with = event_target:china_ally_target
+				factor = 0
+				is_major = yes
+				event_target:china_ally_target = { is_ally_of_ROOT = no }
 			}
 		}
 		reverse_add_opinion_modifier = { target = event_target:china_ally_target modifier = KR_returned_land }
@@ -1740,8 +1874,23 @@ country_event = { #Fate of Xinjiang
 		}
 	}
 
+	option = { #Return to China (for defeated Japan)
+		name = annex.china.fading_sun_return_to_china
+		trigger = {
+			has_event_target = japan_forced_return
+		}
+		every_owned_state = {
+			limit = { is_xinjiang = yes }
+			hidden_effect = { remove_core_of = ROOT }
+			remove_claim_by = ROOT
+			set_state_flag = japan_forced_return
+			transfer_state_to = event_target:japan_forced_return
+		}
+		event_target:japan_forced_return = { country_event = annex.300 }
+	}
+
 	option = { #Annex
-		name = annex.3012.e
+		name = annex.3012.d
 		ai_chance = {
 			base = 50
 			modifier = {
@@ -1754,7 +1903,7 @@ country_event = { #Fate of Xinjiang
 			}
 		}
 		trigger = {
-			china_is_potential_government = yes #Chinese tags
+			is_chinese_tag = yes
 		}
 		every_state = {
 			limit = {
@@ -1769,11 +1918,10 @@ country_event = { #Fate of Xinjiang
 	option = { #occupy
 		name = annex.occupation
 		trigger = {
-			china_is_potential_government = no
+			NOT = { has_event_target = japan_forced_return }
+			is_chinese_tag = no
 		}
-		ai_chance = {
-			base = 0
-		}
+		ai_chance = { base = 0 }
 		occupy_medium_country = yes
 		set_country_flag = SIK_CONQ
 	}
@@ -1800,11 +1948,14 @@ country_event = { #Fate of Mongolia
 
 	option = { #Release Mongolia
 		name = annex.3013.a
+		trigger = {
+			NOT = { has_event_target = japan_forced_return }
+		}
 		ai_chance = {
-			base = 60
+			base = 40
 			modifier = {
 				factor = 0
-				can_become_china = no
+				is_chinese_tag = no
 				any_owned_state = { region = 222 } #Inner Mongolia
 			}
 		}
@@ -1823,10 +1974,11 @@ country_event = { #Fate of Mongolia
 	option = { #Release Greater Mongolia
 		name = annex.3013.b
 		ai_chance = {
-			base = 60
+			base = 40
 		}
 		trigger = {
-			can_become_china = no
+			NOT = { has_event_target = japan_forced_return }
+			is_chinese_tag = no
 			any_owned_state = { region = 222 } #Inner Mongolia
 		}
 		every_owned_state = {
@@ -1849,17 +2001,19 @@ country_event = { #Fate of Mongolia
 
 	option = { #Split between Mongolia and China
 		name = annex.3013.c
-		ai_chance = {
-			base = 20
-			modifier = {
-				factor = 3
-				is_ally_with = event_target:china_ally_target
-			}
-		}
 		trigger = {
-			can_become_china = no
-			any_owned_state = { region = 222 } #Inner Mongolia
 			has_event_target = china_ally_target
+			NOT = { has_event_target = japan_forced_return }
+			is_chinese_tag = no
+			any_owned_state = { region = 222 } #Inner Mongolia
+		}
+		ai_chance = {
+			base = 60
+			modifier = {
+				factor = 0
+				is_major = yes
+				event_target:china_ally_target = { is_ally_of_ROOT = no }
+			}
 		}
 		every_owned_state = {
 			limit = {
@@ -1881,13 +2035,18 @@ country_event = { #Fate of Mongolia
 	}
 
 	option = { #Give it to China
-		name = annex.3013.d
+		name = annex.china.give_to_china
+		trigger = {
+			has_event_target = china_ally_target
+			is_chinese_tag = no
+		}
 		ai_chance = {
 			base = 20
-		}
-		trigger = {
-			can_become_china = no
-			has_event_target = china_ally_target
+			modifier = {
+				factor = 0
+				is_major = yes
+				event_target:china_ally_target = { is_ally_of_ROOT = no }
+			}
 		}
 		reverse_add_opinion_modifier = { target = event_target:china_ally_target modifier = KR_returned_land }
 		every_owned_state = {
@@ -1902,8 +2061,28 @@ country_event = { #Fate of Mongolia
 		}
 	}
 
+	option = { #Return to China (for defeated Japan)
+		name = annex.china.fading_sun_return_to_china
+		trigger = {
+			has_event_target = japan_forced_return
+		}
+		every_owned_state = {
+			limit = {
+				OR = {
+					region = 152 #Outer Mongolia
+					region = 222 #Inner Mongolia
+				}
+			}
+			hidden_effect = { remove_core_of = ROOT }
+			remove_claim_by = ROOT
+			set_state_flag = japan_forced_return
+			transfer_state_to = event_target:japan_forced_return
+		}
+		event_target:japan_forced_return = { country_event = annex.300 }
+	}
+
 	option = { #Annex
-		name = annex.3013.e
+		name = annex.3013.d
 		ai_chance = {
 			base = 30
 			modifier = {
@@ -1920,7 +2099,7 @@ country_event = { #Fate of Mongolia
 			}
 		}
 		trigger = {
-			china_is_potential_government = yes #Chinese tags
+			is_chinese_tag = yes
 		}
 		occupy_medium_country = yes
 		MON = {
@@ -1934,7 +2113,8 @@ country_event = { #Fate of Mongolia
 	option = { #occupy
 		name = annex.occupation
 		trigger = {
-			china_is_potential_government = no
+			NOT = { has_event_target = japan_forced_return }
+			is_chinese_tag = no
 		}
 		ai_chance = { base = 0 }
 		occupy_medium_country = yes
@@ -1954,7 +2134,7 @@ country_event = { #Fate of Tuva
 	option = { #Give it to Mongolia
 		name = annex.3014.a
 		trigger = {
-			NOT = { tag = MON }
+			NOT = { original_tag = MON }
 			MON = { is_ally_of_ROOT = yes }
 		}
 		ai_chance = {
@@ -1968,11 +2148,11 @@ country_event = { #Fate of Tuva
 	option = { #Give it to the Russians
 		name = annex.3014.b
 		trigger = {
-			NOT = { tag = MON }
+			NOT = { original_tag = MON }
 			var:811.owner = { #Minusinsk
 				OR = {
 					is_russian_tag = yes
-					tag = SIB
+					original_tag = SIB
 				}
 				is_ally_with = ROOT
 			}
@@ -1988,19 +2168,19 @@ country_event = { #Fate of Tuva
 	option = { #Integrate
 		name = annex.1005.c
 		trigger = {
-			tag = MON
+			original_tag = MON
 		}
 		ai_chance = {
 			base = 100
 		}
-		occupy_small_country = yes
 		add_state_claim = 329
+		occupy_small_country = yes
 	}
 
 	option = { #occupy
 		name = annex.occupation
 		trigger = {
-			NOT = { tag = MON }
+			NOT = { original_tag = MON }
 		}
 		ai_chance = { base = 0 }
 		occupy_small_country = yes
@@ -2019,97 +2199,84 @@ country_event = { #Fate of Manchuria
 
 	immediate = {
 		determine_chinese_ally = yes
+		if = {
+			limit = {
+				original_tag = JAP
+				any_owned_state = {
+					is_manchuria = yes
+					has_variable = ambition_area_@ROOT
+				}
+			}
+			save_event_target_as = japan_can_annex_coast
+		}
 	}
 
 	option = { #Release Independent Manchuria
 		name = annex.3015.a
 		trigger = {
+			NOT = { has_event_target = japan_forced_return }
 			NOT = { country_exists = MAN }
 		}
 		ai_chance = {
-			base = 5
+			base = 20
 			modifier = {
-				add = 85
-				tag = JAP
+				factor = 0
+				has_event_target = japan_can_annex_coast
 			}
 		}
 		set_temp_variable = { tag_to_release = MAN }
+		hidden_effect = {
+			every_state = {
+				limit = { is_manchuria = yes }
+				add_core_of = var:tag_to_release
+			}
+		}
 		every_owned_state = {
 			limit = {
 				is_manchuria = yes
-				is_not_claim_or_core_of_ROOT = yes
+				is_claim_or_core_of_ROOT = no
 			}
-			var:tag_to_release = {
-				add_state_core = PREV
-				transfer_state = PREV
-			}
+			var:tag_to_release = { transfer_state = PREV }
 		}
-		if = {
-			limit = { tag = JAP }
-			hidden_effect = {
-				puppet_released_tag = yes
-				FNG = { FNG_yang_yuting = { set_nationality = var:tag_to_release } }
-			}
-			set_autonomy = {
-				target = var:tag_to_release
-				autonomy_state = kr_special_autonomous_dependency
-				end_wars = no
-			}
-			var:tag_to_release = {
-				set_politics = {
-					ruling_party = market_liberal
-					elections_allowed = no
-				}
-				hidden_effect = {
-					FNG_yang_yuting = { promote_character = yes }
-					set_popularities = {
-						totalist = 0
-						radical_socialist = 0
-						syndicalist = 0
-						social_democrat = 2
-						social_liberal = 6
-						market_liberal = 47
-						social_conservative = 12
-						authoritarian_democrat = 15
-						paternal_autocrat = 6
-						national_populist = 12
-					}
-				}
-			}
+		MAN_puppet_setup = yes
+	}
+
+	option = { #Release Independent Manchuria, keep coastline
+		name = annex.3015.b
+		trigger = {
+			original_tag = JAP
+			NOT = { has_event_target = japan_forced_return }
+			NOT = { country_exists = MAN }
+			has_event_target = japan_can_annex_coast
 		}
-		else = {
-			puppet_released_tag = yes
-			hidden_effect = {
-				var:tag_to_release = {
-					if = {
-						limit = { has_character = FNG_yang_yuting }
-						retire_character = FNG_yang_yuting
-					}
-				}
-			}
+		ai_chance = {
+			base = 100
 		}
+		set_temp_variable = { tag_to_release = MAN }
 		hidden_effect = {
-			FNG = { FNG_guan_xiangying = { set_nationality = MAN } }
-			MAN = {
-				if = {
-					limit = { has_character = FNG_guan_xiangying }
-					FNG_guan_xiangying = {
-						promote_character = totalist_subtype
-						promote_character = syndicalist_subtype
-						promote_character = radical_socialist_subtype
-					}
-				}
+			every_state = {
+				limit = { is_manchuria = yes }
+				add_core_of = var:tag_to_release
 			}
 		}
+		every_owned_state = {
+			limit = {
+				is_manchuria = yes
+				is_claim_or_core_of_ROOT = no
+				NOT = { has_variable = ambition_area_@ROOT }
+			}
+			var:tag_to_release = { transfer_state = PREV }
+		}
+		MAN_puppet_setup = yes
 	}
 
 	option = { #Release China
-		name = annex.3010.a
+		name = annex.china.release_china
 		trigger = {
 			has_event_target = china_release_target
 		}
 		ai_chance = {
-			base = 10
+			base = 0
 		}
 		set_temp_variable = { tag_to_release = event_target:china_release_target }
 		release_chinese_government_in_manchuria = yes
@@ -2117,17 +2284,15 @@ country_event = { #Fate of Manchuria
 	}
 
 	option = { #Release FNG, keep the coastline
-		name = annex.3010.b
+		name = annex.china.release_china_take_coastline
 		trigger = {
-			tag = JAP
+			original_tag = JAP
+			NOT = { has_event_target = japan_forced_return }
 			has_event_target = china_release_target
-			any_owned_state = {
-				is_manchuria = yes
-				has_variable = ambition_area_@ROOT
-			}
+			has_event_target = japan_can_annex_coast
 		}
 		ai_chance = {
-			base = 90
+			base = 0
 		}
 		set_temp_variable = { japan_keeps_coast = 1 }
 		set_temp_variable = { tag_to_release = event_target:china_release_target }
@@ -2136,30 +2301,74 @@ country_event = { #Fate of Manchuria
 	}
 
 	option = { #Give it to China
-		name = annex.3010.c
-		ai_chance = {
-			base = 100
-		}
+		name = annex.china.give_to_china
 		trigger = {
-			can_become_china = no
 			has_event_target = china_ally_target
+		}
+		ai_chance = {
+			base = 80
+			modifier = {
+				factor = 0
+				original_tag = JAP
+			}
+			modifier = {
+				factor = 0
+				is_major = yes
+				event_target:china_ally_target = { is_ally_of_ROOT = no }
+			}
 		}
 		reverse_add_opinion_modifier = { target = event_target:china_ally_target modifier = KR_returned_land }
 		every_owned_state = {
 			limit = {
-				is_not_claim_or_core_of_ROOT = yes
 				is_manchuria = yes
-				if = {
-					limit = { ROOT = { tag = JAP } }
-					NOT = { has_variable = ambition_area_@ROOT }
-				}
+				is_claim_or_core_of_ROOT = no
 			}
 			transfer_state_to = event_target:china_ally_target
 		}
 	}
 
+	option = { #Give it to China, keep the coastline
+		name = annex.china.give_to_china_take_coastline
+		ai_chance = {
+			base = 0
+		}
+		trigger = {
+			original_tag = JAP
+			NOT = { has_event_target = japan_forced_return }
+			has_event_target = china_ally_target
+			has_event_target = japan_can_annex_coast
+		}
+		reverse_add_opinion_modifier = { target = event_target:china_ally_target modifier = KR_hates_govt }
+		every_owned_state = {
+			limit = {
+				is_manchuria = yes
+				is_claim_or_core_of_ROOT = no
+				NOT = { has_variable = ambition_area_@ROOT }
+			}
+			transfer_state_to = event_target:china_ally_target
+		}
+	}
+
+	option = { #Return to China (for defeated Japan)
+		name = annex.china.fading_sun_return_to_china
+		trigger = {
+			has_event_target = japan_forced_return
+		}
+		every_owned_state = {
+			limit = { is_manchuria = yes }
+			hidden_effect = { remove_core_of = ROOT }
+			remove_claim_by = ROOT
+			set_state_flag = japan_forced_return
+			transfer_state_to = event_target:japan_forced_return
+		}
+		event_target:japan_forced_return = { country_event = annex.300 }
+	}
+
 	option = { #occupy
 		name = annex.occupation
+		trigger = {
+			NOT = { has_event_target = japan_forced_return }
+		}
 		ai_chance = { base = 0 }
 		occupy_large_country = yes
 		set_country_flag = MAN_CONQ
@@ -2182,6 +2391,7 @@ country_event = { #Fate of the Legation Cities
 	option = { #Release the Legation Cities
 		name = annex.3016.a
 		trigger = {
+			NOT = { has_event_target = japan_forced_return }
 			has_socialist_government = no
 		}
 		ai_chance = {
@@ -2252,7 +2462,10 @@ country_event = { #Fate of the Legation Cities
 				}
 			}
 			else_if = {
-				limit = { is_in_faction_with = ENT }
+				limit = {
+					is_in_faction_with = ENT
+					is_american_tag = no
+				}
 				LEC = {
 					set_politics = {
 						ruling_party = social_conservative
@@ -2309,12 +2522,16 @@ country_event = { #Fate of the Legation Cities
 						}
 						AND = {
 							tag = CAN
+							is_in_faction_with = ENT
 							NOT = { country_exists = GBR }
 						}
 						tag = GBR
 						AND = {
 							tag = NFA
-							ROOT = { is_in_faction_with = ENT }
+							OR = {
+								owns_state = 16 #Paris
+								ROOT = { is_in_faction_with = ENT }
+							}
 						}
 						tag = JAP
 						tag = RUS
@@ -2335,13 +2552,17 @@ country_event = { #Fate of the Legation Cities
 	}
 
 	option = { #Give it to China
-		name = annex.3010.c
+		name = annex.china.give_to_china
+		trigger = {
+			has_event_target = china_ally_target
+		}
 		ai_chance = {
 			base = 80
-		}
-		trigger = {
-			can_become_china = no
-			has_event_target = china_ally_target
+			modifier = {
+				factor = 0
+				is_major = yes
+				event_target:china_ally_target = { is_ally_of_ROOT = no }
+			}
 		}
 		reverse_add_opinion_modifier = { target = event_target:china_ally_target modifier = KR_returned_land }
 		every_owned_state = {
@@ -2355,20 +2576,32 @@ country_event = { #Fate of the Legation Cities
 			transfer_state_to = event_target:china_ally_target
 		}
 		if = {
-			limit = {
-				event_target:china_ally_target = {
-					tag = FNG
-				}
-			}
+			limit = { event_target:china_ally_target = { tag = FNG } }
 			country_event = { id = fengtian.322 days = 2 }
 		}
 	}
 
+	option = { #Return to China (for defeated Japan)
+		name = annex.china.give_to_china_take_coastline
+		trigger = {
+			has_event_target = japan_forced_return
+		}
+		every_owned_state = {
+			limit = { is_possible_legation_cities_state = yes }
+			hidden_effect = { remove_core_of = ROOT }
+			remove_claim_by = ROOT
+			set_state_flag = japan_forced_return
+			transfer_state_to = event_target:japan_forced_return
+		}
+		event_target:japan_forced_return = { country_event = annex.300 }
+	}
+
 	option = { #occupy
 		name = annex.occupation
-		ai_chance = {
-			base = 0
+		trigger = {
+			NOT = { has_event_target = japan_forced_return }
 		}
+		ai_chance = { base = 0 }
 		occupy_small_country = yes
 		set_country_flag = LEC_CONQ
 	}
@@ -2385,26 +2618,20 @@ country_event = { #Fate of Korea
 
 	immediate = {
 		hidden_effect = {
-			KOR = {
-				drop_cosmetic_tag = yes
-			}
+			KOR = { drop_cosmetic_tag = yes }
 		}
 	}
 
 	option = { #Liberate Korea
 		name = annex.3017.a
-		ai_chance = {
-			base = 100
-		}
 		set_temp_variable = { tag_to_release = KOR }
 		release_targeted_tag = yes
 		KOR_return_of_the_provisional_government = yes
 	}
+
 	option = { #Occupy it
 		name = annex.occupation
-		ai_chance = {
-			base = 0
-		}
+		ai_chance = { base = 0 }
 		set_country_flag = KOR_CONQ
 		occupy_medium_country = yes
 	}
@@ -2883,8 +3110,8 @@ country_event = { #Fate of Taiwan
 	option = { #Release Taiwan
 		name = annex.3020.a
 		trigger = {
-			can_become_china = no
-			NOT = { tag = JAP }
+			NOT = { original_tag = JAP }
+			NOT = { has_country_flag = is_chinese_tag }
 		}
 		ai_chance = {
 			base = 100
@@ -2911,49 +3138,49 @@ country_event = { #Fate of Taiwan
 		name = annex.3020.b
 		trigger = {
 			has_event_target = china_ally_target
-			can_become_china = no
-			NOT = { tag = JAP }
+			NOT = { original_tag = JAP }
+			NOT = { has_country_flag = is_chinese_tag }
 		}
 		ai_chance = {
 			base = 50
 		}
-		event_target:china_ally_target = { transfer_state = 524 }
+		set_temp_variable = { tag_to_release = event_target:china_ally_target }
+		524 = { transfer_state_and_add_claim = yes }
 	}
 
 	option = { #Give it to Japan
 		name = annex.3020.c
 		trigger = {
-			can_become_china = no
+			NOT = { has_country_flag = is_chinese_tag }
 			JAP = { is_ally_of_ROOT = yes }
 		}
 		ai_chance = {
 			base = 50
 		}
-		JAP = {
-			add_state_claim = 524
-			transfer_state = 524
-		}
+		set_temp_variable = { tag_to_release = JAP }
+		524 = { transfer_state_and_add_claim = yes }
 	}
 
 	option = { #Integrate
 		name = annex.integration
 		trigger = {
 			OR = {
-				tag = JAP
-				can_become_china = yes
+				original_tag = JAP
+				has_country_flag = is_chinese_tag
 			}
 		}
 		ai_chance = {
 			base = 1000
 		}
 		add_state_claim = 524
+		recheck_annexations = yes
 	}
 
 	option = { #occupy
 		name = annex.occupation
 		trigger = {
-			can_become_china = no
-			NOT = { tag = JAP }
+			NOT = { original_tag = JAP }
+			NOT = { has_country_flag = is_chinese_tag }
 		}
 		ai_chance = { base = 0 }
 		occupy_small_country = yes
@@ -2991,6 +3218,13 @@ country_event = { #Fate of Siam
 				remove_core_of = SIA
 				remove_claim_by = SIA
 			}
+			if = {
+				limit = {
+					original_tag = YUN
+					has_country_flag = YUN_kill_Siam
+				}
+				clr_country_flag = YUN_kill_Siam
+			}
 		}
 	}
 
@@ -2998,15 +3232,13 @@ country_event = { #Fate of Siam
 
 	option = { #puppet - Chakri
 		name = annex.3021.a
-		ai_chance = {
-			base = 99
-		}
 		trigger = {
 			NOT = {
-				tag = GER
+				original_tag = GER
+				original_tag = GEA
 				tag = GEX
-				tag = RUS
-				tag = UKR
+				original_tag = RUS
+				original_tag = UKR
 			}
 			has_socialist_government = no
 		}
@@ -3016,8 +3248,8 @@ country_event = { #Fate of Siam
 
 		hidden_effect = {
 			SIA = {
-				SIA_create_mahidol_leaders = yes
-				SIA_remove_royal_titles = yes
+				SIA_create_prajadhipok = yes
+				SIA_reinstall_royal_titles = yes
 				SIA_royal_template = yes
 				if = {
 					limit = { has_country_flag = SIA_byebye_Bangkok }
@@ -3030,16 +3262,17 @@ country_event = { #Fate of Siam
 	option = { #puppet - Chakrabongse
 		name = annex.3021.b
 		ai_chance = {
-			base = 99
+			base = 100
 		}
 		trigger = {
 			OR = {
-				tag = GER
+				original_tag = GER
+				original_tag = GEA
 				tag = GEX
-				tag = GEA
-				tag = RUS
-				tag = UKR
+				original_tag = RUS
+				original_tag = UKR
 			}
+			has_socialist_government = no
 		}
 		set_temp_variable = { tag_to_release = SIA }
 		release_targeted_tag = yes
@@ -3047,7 +3280,7 @@ country_event = { #Fate of Siam
 
 		hidden_effect = {
 			SIA = {
-				SIA_create_chakrabongse_leaders = yes
+				SIA_create_chula_chakrabongse = yes
 				SIA_reinstall_royal_titles = yes
 				SIA_royal_template = yes
 				if = {
@@ -3061,14 +3294,15 @@ country_event = { #Fate of Siam
 	option = { #puppet - Paribatra
 		name = annex.3021.c
 		ai_chance = {
-			base = 198
+			base = 100
 		}
 		trigger = {
 			OR = {
-				tag = GER
+				original_tag = GER
+				original_tag = GEA
 				tag = GEX
-				tag = GEA
 			}
+			has_socialist_government = no
 		}
 		set_temp_variable = { tag_to_release = SIA }
 		release_targeted_tag = yes
@@ -3076,7 +3310,7 @@ country_event = { #Fate of Siam
 
 		hidden_effect = {
 			SIA = {
-				SIA_create_paribatra_leaders = yes
+				SIA_create_paribatra_sukhumbhand = yes
 				SIA_reinstall_royal_titles = yes
 				SIA_royal_template = yes
 				if = {
@@ -3088,14 +3322,14 @@ country_event = { #Fate of Siam
 	}
 	option = { #puppet - Republican
 		name = annex.3021.e
-		ai_chance = {
-			base = 99
-		}
 		trigger = {
-			NOT = {
-				tag = GER
-				tag = GEX
-				tag = GEA
+			OR = {
+				has_socialist_government = yes
+				NOT = {
+					original_tag = GER
+					original_tag = GEA
+					tag = GEX
+				}
 			}
 		}
 		set_temp_variable = { tag_to_release = SIA }
@@ -3116,9 +3350,7 @@ country_event = { #Fate of Siam
 	}
 	option = { # Occupation
 		name = annex.occupation
-		ai_chance = {
-			base = 0
-		}
+		ai_chance = { base = 0 }
 		occupy_medium_country = yes
 		set_country_flag = SIA_CONQ
 	}
@@ -3186,6 +3418,7 @@ country_event = { #Fate of Indochina
 			NOT = {
 				tag = GEA
 				tag = SIA
+				tag = CHI
 				has_subject = GEA
 			}
 		}
@@ -3276,6 +3509,18 @@ country_event = { #Fate of Indochina
 			remove_claim_and_add_core_of_ROOT = yes
 		}
 	}
+	option = { #Release VNQQD
+		name = annex.3022.kmt
+		trigger = { tag = CHI }
+		ai_chance = { base = 100 }
+		every_state = {
+			limit = { region = 196 } #Indochina
+			add_core_of = INC
+		}
+		set_temp_variable = { tag_to_release = INC }
+		release_targeted_tag = yes
+		INC_released_by_chi = yes
+	}
 
 	option = { #occupy
 		name = annex.occupation
@@ -3342,6 +3587,10 @@ country_event = { #Fate of Vietnam
 			else = {
 				INC = { country_event = { id = viet.1955 hours = 8 } }
 			}
+		}
+		if = { #Empower the VNQQD
+			limit = { china_is_aligned_with_left_kmt = yes }
+			VIN_released_by_chi = yes
 		}
 	}
 
@@ -4286,6 +4535,30 @@ country_event = { #Fate of Malaysia
 		}
 	}
 
+	option = { #Restore GEA
+		name = annex.3029.f
+		trigger = {
+			tag = GER
+			has_socialist_government = no
+			NOT = { country_exists = GEA }
+		}
+		ai_chance = {
+			base = 1000
+		}
+		set_temp_variable = { tag_to_release = GEA }
+		every_state = {
+			limit = {
+				region = 194 #Malay Peninsula
+				is_claim_or_core_of_ROOT = no
+				NOT = { state = 336 } #Singapore
+			}
+			add_core_of_target_and_transfer_if_owned = yes
+		}
+		var:tag_to_release = {
+			hidden_effect = { GEA_restored_effect = yes }
+		}
+	}
+
 	option = { #integrate
 		name = annex.integration
 		ai_chance = {
@@ -4452,12 +4725,11 @@ country_event = { #Fate of Sarawak
 			INS = { is_ally_of_ROOT = yes }
 		}
 		set_temp_variable = { tag_to_release = INS }
-		every_state = {
-			limit = {
-				is_core_of = SAR
-				is_claim_or_core_of_ROOT = no
+		SAR = {
+			every_core_state = {
+				limit = { is_claim_or_core_of_ROOT = no }
+				add_claim_of_target_and_transfer_if_owned = yes
 			}
-			add_claim_of_target_and_transfer_if_owned = yes
 		}
 	}
 
@@ -4470,10 +4742,10 @@ country_event = { #Fate of Sarawak
 			has_subject = GEA
 		}
 		set_temp_variable = { tag_to_release = GEA }
-		MAL = {
+		SAR = {
 			every_core_state = {
 				limit = { is_claim_or_core_of_ROOT = no }
-				add_core_of_target_and_transfer_if_owned = yes
+				add_claim_of_target_and_transfer_if_owned = yes
 			}
 		}
 	}
@@ -4491,7 +4763,7 @@ country_event = { #Fate of Sarawak
 			has_subject = DEI
 		}
 		set_temp_variable = { tag_to_release = DEI }
-		MAL = {
+		SAR = {
 			every_core_state = {
 				limit = { is_claim_or_core_of_ROOT = no }
 				add_core_of_target_and_transfer_if_owned = yes
@@ -4507,7 +4779,6 @@ country_event = { #Fate of Sarawak
 		trigger = {
 			OR = {
 				original_tag = MAL
-				original_tag = GEA
 				original_tag = DEI
 			}
 		}
@@ -4522,7 +4793,10 @@ country_event = { #Fate of Sarawak
 			base = 100
 		}
 		trigger = {
-			original_tag = INS
+			OR = {
+				original_tag = GEA
+				original_tag = INS
+			}
 		}
 		add_state_claim = 333
 		add_state_claim = 828
@@ -4554,7 +4828,7 @@ country_event = { #Fate of Sarawak
 country_event = { #Fate of India
 	id = annex.3031
 	immediate = { log = "[GetDateText]: [Root.GetName]: event annex.3031 FROM = [From.GetName]" }
-	immediate = { log = "KR_Event_Logging;INDIA IS CONQUERED BY FOREIGN POWER;[GetDateText];[ROOT.GetName];[FROM.GetName]" }
+	immediate = { log = "KR_Event_Logging;INDIA IS CONQUERED BY FOREIGN POWER;[GetDateText]" }
 	title = annexation_IND_CONQ
 	desc = annexation_IND_CONQ_desc
 	picture = GFX_report_event_generic_conference2
@@ -10028,7 +10302,11 @@ country_event = { #Fate of Bhutan
 	option = { #puppet
 		name = annex.3053.a
 		ai_chance = {
-			base = 10
+			base = 1
+			modifier = {
+				factor = 0
+				original_tag = TIB
+			}
 		}
 		set_temp_variable = { tag_to_release = BHU }
 		release_targeted_tag = yes
@@ -10036,9 +10314,8 @@ country_event = { #Fate of Bhutan
 
 	option = { #integrate
 		name = annex.integration
-		trigger = { tag = TIB }
-		ai_chance = {
-			base = 1000
+		trigger = {
+			original_tag = TIB
 		}
 		add_state_core = 324
 		occupy_small_country = yes
@@ -10046,9 +10323,10 @@ country_event = { #Fate of Bhutan
 
 	option = { #occupation
 		name = annex.occupation
-		ai_chance = {
-			base = 0
+		trigger = {
+			NOT = { original_tag = TIB }
 		}
+		ai_chance = { base = 0 }
 		set_country_flag = BHU_CONQ
 		occupy_small_country = yes
 	}
@@ -11026,6 +11304,9 @@ country_event = { #Fate of Hawaii
 				limit = { is_american_pacific_islands = yes }
 				add_core_of = HAW
 			}
+			HAW = {
+				HAW_lydia_liliuokalani_kawananakoa = { remove_all_country_leader_roles = yes }
+			}
 		}
 	}
 
@@ -11035,7 +11316,7 @@ country_event = { #Fate of Hawaii
 			base = 5
 			modifier = {
 				factor = 0
-				tag = JAP
+				original_tag = JAP
 			}
 			modifier = {
 				factor = 0
@@ -11045,12 +11326,6 @@ country_event = { #Fate of Hawaii
 		set_temp_variable = { tag_to_release = HAW }
 		release_targeted_tag = yes
 		var:tag_to_release = {
-			hidden_effect = {
-				promote_character = HAW_john_henry_wilson
-				promote_character = HAW_samuel_wilder_king
-				promote_character = HAW_lawrence_mccully_judd
-				promote_character = HAW_henry_alexander_baldwin
-			}
 			if = {
 				limit = { has_completed_focus = HAW_monarchy_restoration }
 				uncomplete_national_focus = {
@@ -11083,12 +11358,14 @@ country_event = { #Fate of Hawaii
 
 	option = { #Release Hawaii as a monarchy
 		name = annex.3061.b
-		trigger = { has_elected_government = yes }
+		trigger = {
+			has_elected_government = yes
+		}
 		ai_chance = {
 			base = 5
 			modifier = {
 				factor = 0
-				tag = JAP
+				original_tag = JAP
 			}
 			modifier = {
 				factor = 0
@@ -11099,57 +11376,23 @@ country_event = { #Fate of Hawaii
 		release_targeted_tag = yes
 		HAW = {
 			set_cosmetic_tag = HAW_kingdom
-			HAW_lydia_liliuokalani_kawananakoa = { set_character_name = HAW_lydia_liliuokalani_kawananakoa_regnal }
-			if = {
-				limit = { HAW_lydia_liliuokalani_kawananakoa = { has_ideology = social_democrat_subtype } }
-				promote_character = {
-					character = HAW_lydia_liliuokalani_kawananakoa
-					ideology = social_democrat_subtype
-				}
-			}
-			else = {
+			HAW_lydia_liliuokalani_kawananakoa = {
+				set_character_name = HAW_lydia_liliuokalani_kawananakoa_regnal
 				add_country_leader_role = {
 					character = HAW_lydia_liliuokalani_kawananakoa
 					country_leader = { ideology = social_democrat_subtype }
 					promote_leader = yes
 				}
-			}
-			if = {
-				limit = { HAW_lydia_liliuokalani_kawananakoa = { has_ideology = social_liberal_subtype } }
-				promote_character = {
-					character = HAW_lydia_liliuokalani_kawananakoa
-					ideology = social_liberal_subtype
-				}
-			}
-			else = {
 				add_country_leader_role = {
 					character = HAW_lydia_liliuokalani_kawananakoa
 					country_leader = { ideology = social_liberal_subtype }
 					promote_leader = yes
 				}
-			}
-			if = {
-				limit = { HAW_lydia_liliuokalani_kawananakoa = { has_ideology = market_liberal_subtype } }
-				promote_character = {
-					character = HAW_lydia_liliuokalani_kawananakoa
-					ideology = market_liberal_subtype
-				}
-			}
-			else = {
 				add_country_leader_role = {
 					character = HAW_lydia_liliuokalani_kawananakoa
 					country_leader = { ideology = market_liberal_subtype }
 					promote_leader = yes
 				}
-			}
-			if = {
-				limit = { HAW_lydia_liliuokalani_kawananakoa = { has_ideology = social_conservative_subtype } }
-				promote_character = {
-					character = HAW_lydia_liliuokalani_kawananakoa
-					ideology = social_conservative_subtype
-				}
-			}
-			else = {
 				add_country_leader_role = {
 					character = HAW_lydia_liliuokalani_kawananakoa
 					country_leader = { ideology = social_conservative_subtype }
@@ -11185,7 +11428,8 @@ country_event = { #Fate of Hawaii
 			base = 90
 			modifier = {
 				factor = 0
-				tag = JAP
+				original_tag = JAP
+				NOT = { is_ally_with = 797.owner }
 			}
 		}
 		every_owned_state = {
@@ -11198,7 +11442,6 @@ country_event = { #Fate of Hawaii
 	option = { #Give it to Japan
 		name = annex.3061.d
 		trigger = {
-			NOT = { tag = JAP }
 			JAP = { is_ally_of_ROOT = yes }
 		}
 		ai_chance = {
@@ -11232,10 +11475,15 @@ country_event = { #Fate of Hawaii
 	option = { #Integrate
 		name = annex.3061.f
 		trigger = {
-			tag = JAP
+			original_tag = JAP
 		}
 		ai_chance = {
 			base = 100
+			modifier = {
+				factor = 0
+				original_tag = JAP
+				is_ally_with = 797.owner
+			}
 		}
 		every_state = {
 			limit = { is_american_pacific_islands = yes }
@@ -12281,8 +12529,7 @@ country_event = { #Fate of Singapore
 				}
 			}
 		}
-		add_state_claim = 336 #Singapore
-		recheck_annexations = yes
+		336 = { occupy_state_annexation = yes } #Singapore
 	}
 
 	option = {
@@ -12397,16 +12644,16 @@ country_event = { #Fate of Singapore
 		name = annex.integration
 		trigger = {
 			OR = {
-				tag = SIA
-				tag = INS
-				tag = GEA
+				original_tag = SIA
+				original_tag = INS
+				original_tag = GEA
 			}
 		}
 		ai_chance = {
 			base = 1000
 		}
 		if = {
-			limit = { tag = GEA }
+			limit = { original_tag = GEA }
 			add_state_core = 336
 		}
 		else = {
@@ -12419,9 +12666,9 @@ country_event = { #Fate of Singapore
 		name = annex.occupation
 		trigger = {
 			NOT = {
-				tag = SIA
-				tag = INS
-				tag = GEA
+				original_tag = SIA
+				original_tag = INS
+				original_tag = GEA
 				has_subject = GEA
 				AND = {
 					is_actual_major = yes
@@ -12433,7 +12680,95 @@ country_event = { #Fate of Singapore
 			base = 0
 		}
 		set_country_flag = SINGAPORE_CONQ
-		recheck_annexations = yes
 		occupy_small_country = yes
+		336 = { occupy_state_annexation = yes }
+	}
+}
+
+country_event = { #Fate of East Timor
+	id = annex.3069
+	immediate = { log = "[GetDateText]: [Root.GetName]: event annex.3069 FROM = [From.GetName]" }
+	title = annexation_EAST_TIMOR_CONQ
+	desc = annexation_EAST_TIMOR_CONQ_desc
+	picture = GFX_report_event_generic_conference2
+
+	is_triggered_only = yes
+
+	option = { #Give to INS
+		name = annex.3069.a
+		trigger = {
+			INS = { ROOT_can_grant_land = yes }
+		}
+		ai_chance = {
+			base = 50
+			modifier = {
+				factor = 0
+				OR = {
+					DEI = { is_ally_of_ROOT = yes }
+					GEA = { is_ally_of_ROOT = yes }
+				}
+			}
+		}
+		set_temp_variable = { tag_to_release = INS }
+		721 = {
+			transfer_state_and_add_core = yes
+			state_given_notification_effect = yes
+		}
+	}
+
+	option = { #Give to DEI
+		name = annex.3069.b
+		trigger = {
+			DEI = { is_ally_of_ROOT = yes }
+		}
+		ai_chance = {
+			base = 50
+		}
+		set_temp_variable = { tag_to_release = DEI }
+		721 = {
+			transfer_state_and_add_core = yes
+			state_given_notification_effect = yes
+		}
+	}
+
+	option = { #Give to GEA
+		name = annex.3069.c
+		trigger = {
+			GEA = { is_ally_of_ROOT = yes }
+		}
+		ai_chance = {
+			base = 50
+		}
+		set_temp_variable = { tag_to_release = GEA }
+		721 = {
+			transfer_state_and_add_claim = yes
+			state_given_notification_effect = yes
+		}
+	}
+
+	option = { #integrate
+		name = annex.integration
+		ai_chance = {
+			base = 100
+		}
+		trigger = {
+			original_tag = INS
+		}
+		add_state_core = 721
+		recheck_annexations = yes
+	}
+
+	option = { #occupy
+		name = annex.occupation
+		trigger = {
+			NOT = {
+				original_tag = INS
+				has_subject = DEI
+				has_subject = GEA
+			}
+		}
+		ai_chance = { base = 0 }
+		occupy_small_country = yes
+		set_country_flag = EAST_TIMOR_CONQ
 	}
 }

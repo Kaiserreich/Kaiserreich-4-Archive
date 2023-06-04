@@ -494,7 +494,9 @@ on_actions = {
 
 			# Set up news events settings
 			set_global_flag = NEWS_ALL
+			set_variable = { global.world_news_frame = 2 }
 			set_global_flag = NEWS_SOME
+			set_variable = { global.regional_news_frame = 2 }
 
 			# Enable STT if set in rules
 			if = {
@@ -552,6 +554,29 @@ on_actions = {
 					add_to_variable = { THIS.KR_data_logging_months = 1 }
 				}
 			}
+
+			#Disable WT decreases for starting pro-German tags
+			every_country = {
+				limit = {
+					OR = {
+						is_ally_with = GER
+						is_ally_with = AUS
+						is_ally_with = ENT
+					}
+				}
+				set_country_flag = world_tension_joined_conservative_faction
+			}
+			every_country = {
+				limit = {
+					OR = {
+						is_ally_with = ENG
+						is_ally_with = FRA
+						is_ally_with = JAP
+						is_ally_with = RUS
+					}
+				}
+				set_country_flag = world_tension_joined_radical_faction
+			}
 		}
 	}
 
@@ -593,21 +618,30 @@ on_actions = {
 				country_event = kr.political.209
 			}
 
-			### Fixing state control when occupying occupied territory
+			### Integration Check
+			set_occupation_law_where_available = territorial_integration
 			if = {
 				limit = {
 					FROM.FROM = {
-						owner = {
-							NOT = { tag = ROOT }
-							OR = {
-								is_in_faction_with = ROOT
-								is_subject_of = ROOT
-								has_subject = ROOT
+						has_resistance = yes
+						NOT = { occupied = { ROOT = { has_country_flag = can_integrate_@PREV } } }
+						any_country_with_core = {
+							ROOT = {
+								has_country_flag = can_integrate_@PREV
+								set_temp_variable = { integration_target = PREV }
 							}
 						}
 					}
 				}
-				FROM.FROM = { set_state_controller_to = owner }
+				FROM.FROM = {
+					set_temp_variable = { previous_compliance = compliance }
+					set_temp_variable = { previous_resistance = resistance }
+					cancel_resistance = yes
+
+					start_resistance = var:integration_target
+					set_compliance = var:previous_compliance
+					set_resistance = var:previous_resistance
+				}
 			}
 
 			#Important countries for logalyzer
@@ -616,14 +650,14 @@ on_actions = {
 					ROOT = { tag = CAN }
 					FROM = { tag = ENG }
 				}
-				log = "KR_Event_Logging;CANADA LANDS IN BRITAIN;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;CANADA LANDS IN BRITAIN;[GetDateText]"
 			}
 			else_if = {
 				limit = {
 					ROOT = { tag = NFA }
 					FROM = { tag = FRA }
 				}
-				log = "KR_Event_Logging;FRANCE LANDS IN FRANCE;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;FRANCE LANDS IN FRANCE;[GetDateText]"
 			}
 		}
 	}
@@ -637,6 +671,8 @@ on_actions = {
 				clr_country_flag = KR_can_become_free
 				clr_country_flag = KR_operative_nationality_check
 				clr_country_flag = GER_capitulated
+
+				# reset dynamic tags
 				if = {
 					limit = {
 						is_dynamic_country = yes
@@ -649,8 +685,28 @@ on_actions = {
 						remove_claim_by = PREV
 					}
 				}
+
+				# clear tag cores and claims if set to
+				if = {
+					limit = { remove_cores_of_tag_if_non_existent = yes }
+					every_core_state = {
+						limit = {
+							check_variable = { core_countries^num > 1 } #is not the state's last core
+							NOT = {
+								AND = {
+									NOT = { is_core_of = owner }
+									owner = { has_country_flag = can_integrate_@PREV.PREV }
+								}
+							}
+							any_country_with_core = { has_country_flag = can_integrate_@PREV.PREV }
+						}
+						remove_core_of = PREV
+					}
+					every_state = { remove_claim_by = PREV }
+				}
 			}
 			recheck_annexations = yes
+			set_occupation_law_where_available = territorial_integration
 		}
 	}
 
@@ -759,7 +815,6 @@ on_actions = {
 						NOT = { has_idea = empowered_trade_unions_sic }
 						will_have_socialist_government = yes
 					}
-					clear_sic_slot = yes
 					activate_advisor = empowered_trade_unions_sic
 				}
 				else_if = {
@@ -768,7 +823,6 @@ on_actions = {
 						NOT = { has_idea = empowered_executive_sic }
 						will_have_authoritarian_government = yes
 					}
-					clear_sic_slot = yes
 					activate_advisor = empowered_executive_sic
 				}
 				else_if = {
@@ -777,7 +831,6 @@ on_actions = {
 						NOT = { has_idea = empowered_legislative_sic }
 						will_have_elected_government = yes
 					}
-					clear_sic_slot = yes
 					activate_advisor = empowered_legislative_sic
 				}
 			}
@@ -1139,52 +1192,35 @@ on_actions = {
 			# Important countries for logalyzer
 			if = {
 				limit = { ROOT = { tag = GER } }
-				log = "KR_Event_Logging;GER FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;GER FALLS;[GetDateText]"
 			}
 			else_if = {
 				limit = { ROOT = { tag = FRA } }
-				log = "KR_Event_Logging;FRA FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;FRA FALLS;[GetDateText]"
 			}
 			else_if = {
 				limit = { ROOT = { tag = ENG } }
-				log = "KR_Event_Logging;ENG FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;ENG FALLS;[GetDateText]"
 			}
 			else_if = {
 				limit = { ROOT = { tag = RUS } }
-				log = "KR_Event_Logging;RUS FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;RUS FALLS;[GetDateText]"
 			}
 			else_if = {
 				limit = { ROOT = { tag = SOV } }
-				log = "KR_Event_Logging;SOV FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;SOV FALLS;[GetDateText]"
 			}
 			else_if = {
 				limit = { ROOT = { tag = AUS } }
-				log = "KR_Event_Logging;AUS FALLS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;AUS FALLS;[GetDateText]"
 			}
 			else_if = {
 				limit = { ROOT = { tag = CAN } }
-				log = "KR_Event_Logging;CAN FALLS - BY [FROM.GetTag];[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;CAN FALLS - BY [FROM.GetTag];[GetDateText]"
 			}
 			else_if = {
 				limit = { ROOT = { tag = NFA } }
-				log = "KR_Event_Logging;NFA FALLS - BY [FROM.GetTag];[GetDateText];[ROOT.GetName];[FROM.GetName]"
-			}
-
-			# Fixes for vanilla bugs
-			restore_control_of_all_non_enemy_states = yes
-			if = {
-				limit = { is_faction_leader = yes }
-				every_country = {
-					limit = { is_ally_with = ROOT }
-					every_controlled_state = {
-						limit = {
-							owner = {
-								NOT = { has_war_with = ROOT }
-							}
-						}
-						set_state_controller_to = owner
-					}
-				}
+				log = "KR_Event_Logging;NFA FALLS - BY [FROM.GetTag];[GetDateText]"
 			}
 
 			# transfer the navy if set to
@@ -1219,7 +1255,7 @@ on_actions = {
 						}
 					}
 				}
-				log = "KR_Event_Logging;ARG WINS AGAINST BRA;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;Argentina WINS ARG-BRA WAR;[GetDateText]"
 			}
 			else_if = {
 				limit = {
@@ -1231,7 +1267,7 @@ on_actions = {
 						has_war_with = BRA
 					}
 				}
-				log = "KR_Event_Logging;BRA WINS AGAINST ARG;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;Brazil WINS ARG-BRA WAR;[GetDateText]"
 			}
 		}
 	}
@@ -1308,7 +1344,7 @@ on_actions = {
 					ROOT = { tag = EGY }
 					FROM = { tag = LBA }
 				}
-				log = "KR_Event_Logging;CYRENAICA REVOLTS AGAINST OTT;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;Cyrenaica REVOLTS AGAINST OTT;[GetDateText]"
 			}
 		}
 	}
@@ -1511,10 +1547,13 @@ on_actions = {
 					limit = {
 						OR = {
 							original_tag = GER
-							original_tag = ENT
+							original_tag = AUS
+							tag = ENT
 						}
+						NOT = { FROM = { has_country_flag = world_tension_joined_conservative_faction } }
 					}
 					FROM = {
+						set_country_flag = world_tension_joined_conservative_faction
 						calculate_faction_joining_tension = yes
 						multiply_temp_variable = { threat_value = -0.75 }
 						add_named_threat = {
@@ -1527,12 +1566,14 @@ on_actions = {
 					limit = {
 						OR = {
 							original_tag = RUS
-							original_tag = INT
+							tag = INT
 							original_tag = SOV
 							original_tag = JAP
 						}
+						NOT = { FROM = { has_country_flag = world_tension_joined_radical_faction } }
 					}
 					FROM = {
+						set_country_flag = world_tension_joined_radical_faction
 						calculate_faction_joining_tension = yes
 						add_named_threat = {
 							threat = threat_value
@@ -2103,21 +2144,6 @@ on_actions = {
 								original_tag = VNC
 							}
 						}
-						#Russia
-						AND = {
-							OR = {
-								original_tag = RUS
-								original_tag = SOV
-								original_tag = TRM
-							}
-							FROM = {
-								OR = {
-									original_tag = RUS
-									original_tag = SOV
-									original_tag = TRM
-								}
-							}
-						}
 						#Arabia
 						AND = {
 							OR = {
@@ -2210,21 +2236,21 @@ on_actions = {
 					ROOT = { tag = FRA }
 					FROM = { tag = AUS }
 				}
-				log = "KR_Event_Logging;AUSTRIA IN 2WK;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;AUSTRIA IN 2WK;[GetDateText]"
 			}
 			else_if = {
 				limit = {
 					ROOT = { tag = JAP }
 					FROM = { tag = RUS }
 				}
-				log = "KR_Event_Logging;JAP DECLARES ON RUS;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;JAP DECLARES ON RUS;[GetDateText]"
 			}
 			else_if = {
 				limit = {
 					ROOT = { tag = RUS }
 					FROM = { tag = JAP }
 				}
-				log = "KR_Event_Logging;RUS DECLARES ON JAP;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;RUS DECLARES ON JAP;[GetDateText]"
 			}
 			else_if = {
 				limit = {
@@ -2236,7 +2262,7 @@ on_actions = {
 						}
 					}
 				}
-				log = "KR_Event_Logging;ENTENTE ENTERS 2WK;[GetDateText];[ROOT.GetName];[FROM.GetName]"
+				log = "KR_Event_Logging;ENTENTE ENTERS 2WK;[GetDateText]"
 			}
 
 			#TEMP WORKAROUND FOR ENGINE BUG: subjects cannot call their own subjects into wars
@@ -2295,14 +2321,8 @@ on_actions = {
 			}
 
 			# Independence
-			if = {
-				limit = { has_country_flag = KR_independence_war }
-				clr_country_flag = KR_independence_war
-			}
-			if = {
-				limit = { has_country_flag = KR_independence_war_overlord }
-				clr_country_flag = KR_independence_war_overlord
-			}
+			clr_country_flag = KR_independence_war
+			clr_country_flag = KR_independence_war_overlord
 
 			# Italian countries
 			if = {
@@ -2316,13 +2336,6 @@ on_actions = {
 			every_other_country = {
 				limit = { has_country_flag = sent_volunteers_@PREV }
 				clear_volunteers_to_TARGET = yes
-			}
-
-			# Disable wartime major status
-			if = {
-				limit = { has_country_flag = granted_major_status_during_war }
-				clr_country_flag = granted_major_status_during_war
-				set_major = no
 			}
 		}
 	}

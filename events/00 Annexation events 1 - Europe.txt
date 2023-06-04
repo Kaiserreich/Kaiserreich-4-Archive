@@ -137,7 +137,10 @@ country_event = { #Check for possible annexations (donotlog)
 			original_tag = IKH #not meant to survive
 			AND = {
 				has_civil_war = yes
-				any_enemy_country = { is_dynamic_country = yes } #== start_civil_war
+				any_enemy_country = {
+					is_dynamic_country = yes
+					civilwar_target = ROOT #== start_civil_war
+				}
 			}
 		}
 	}
@@ -1557,7 +1560,7 @@ country_event = { #Fate of Prussia
 			limit = {
 				is_valid_annexation_state = yes
 				OR = {
-					region = 38 #Vistula Basin
+					region = 38 #Poland
 					state = 63 #Farther Pomerania
 					state = 66 #Lower Silesia
 					state = 68 #Neumark
@@ -2477,6 +2480,10 @@ country_event = { #Fate of Poland
 					limit = { has_character = POL_konstanty_rokossowski }
 					retire_character = POL_konstanty_rokossowski
 				}
+				if = {
+					limit = { has_cosmetic_tag = POL_AUS_kingdom }
+					drop_cosmetic_tag = yes
+				}
 			}
 			every_state = {
 				limit = {
@@ -2569,9 +2576,11 @@ country_event = { #Fate of Poland
 				}
 			}
 		}
-		puppet_released_tag_nocosmetic = yes
-		POL_puppet_setup = yes
-		POL_galicia_joins_poland = yes
+		hidden_effect = {
+			puppet_released_tag_nocosmetic = yes
+			POL_galicia_joins_poland = yes
+			POL_puppet_setup = yes
+		}
 	}
 
 	option = { #annex
@@ -3361,18 +3370,11 @@ country_event = { #Fate of Lithuania
 						LIT_nationalist_welfare
 					}
 				}
-			}
-			BAT = {
-				every_unit_leader = {
-					limit = {
-						OR = {
-							is_character = LIT_vincas_vitkauskas
-							is_character = LIT_kazys_ladiga
-							is_character = LIT_povilas_julius_labanauskas
-						}
-					}
-					set_nationality = LIT
-				}
+
+				#move back the generals in BAT
+				LIT_vincas_vitkauskas = { set_nationality = LIT }
+				LIT_kazys_ladiga = { set_nationality = LIT }
+				LIT_povilas_julius_labanauskas = { set_nationality = LIT }
 			}
 		}
 	}
@@ -4245,7 +4247,11 @@ country_event = { #Fate of Galicia and Lodomeria
 	option = {
 		name = annex.1022.j #Keep Ukrainian Galicia, liberate the rest
 		trigger = {
-			original_tag = UKR
+			OR = {
+				original_tag = UKR
+				is_russian_tag = yes #In case Poland is hostile
+			}
+			owns_state = 792 #Volhynia
 			has_event_target = polish_galicia
 			has_event_target = ukrainian_galicia
 			NOT = { country_exists = GAL }
@@ -4263,6 +4269,10 @@ country_event = { #Fate of Galicia and Lodomeria
 		custom_effect_tooltip = tooltip_white_line
 		set_temp_variable = { tag_to_release = GAL }
 		release_targeted_tag = yes
+		if = {
+			limit = { tag = UKR }
+			GAL_characters_join_ukraine = yes
+		}
 	}
 
 	option = {
@@ -4301,6 +4311,7 @@ country_event = { #Fate of Galicia and Lodomeria
 		custom_effect_tooltip = tooltip_white_line
 		set_country_flag = GAL_CONQ
 		occupy_small_country = yes
+		GAL_characters_join_ukraine = yes
 	}
 
 	option = { #split with POL, Lwow to Poland
@@ -4388,7 +4399,10 @@ country_event = { #Fate of Galicia and Lodomeria
 		name = annex.integration
 		trigger = {
 			is_russian_tag = yes
-			NOT = { has_event_target = polish_galicia }
+			OR = {
+				RUS_is_expansionist = yes
+				NOT = { has_event_target = polish_galicia }
+			}
 		}
 		ai_chance = {
 			base = 1000
@@ -4399,6 +4413,10 @@ country_event = { #Fate of Galicia and Lodomeria
 					RUS_is_expansionist = no
 				}
 			}
+		}
+		if = {
+			limit = { RUS_is_expansionist = yes }
+			88 = { add_claim_of_ROOT = yes }
 		}
 		89 = { add_claim_of_ROOT = yes }
 		91 = { add_claim_of_ROOT = yes }
@@ -7888,17 +7906,7 @@ country_event = { #Fate of France
 		FRA = { set_transfer_target_cores = yes }
 		transfer_targeted_territory_and_add_claims = yes
 		puppet_released_tag = yes
-		hidden_effect = {
-			var:tag_to_release = {
-				if = {
-					limit = { has_completed_focus = NATFRA_Reconstruction_Commission }
-					every_state = {
-						limit = { is_european_france = yes }
-						PREV = { activate_targeted_decision = { decision = NFA_Integrate_Metropole target = PREV } }
-					}
-				}
-			}
-		}
+		hidden_effect = { NFA_puppet_setup = yes }
 	}
 
 	option = {
@@ -9299,7 +9307,6 @@ country_event = { #Fate of Ireland
 					ruling_party = social_conservative
 					elections_allowed = no
 				}
-				clear_sic_slot = yes
 				activate_advisor = IRE_james_dillon_sic
 				if = {
 					limit = { has_character = IRE_frank_macdermot }
@@ -9358,7 +9365,6 @@ country_event = { #Fate of Ireland
 					ruling_party = social_conservative
 					elections_allowed = no
 				}
-				clear_sic_slot = yes
 				activate_advisor = IRE_james_dillon_sic
 				if = {
 					limit = { has_character = IRE_frank_macdermot }
@@ -9457,7 +9463,6 @@ country_event = { #Fate of Ireland
 					ruling_party = syndicalist
 					elections_allowed = no
 				}
-				clear_sic_slot = yes
 				activate_advisor = IRE_william_x_obrien_sic
 			}
 			IRE = {
@@ -10337,6 +10342,7 @@ country_event = { #Fate of Denmark
 		hidden_effect = {
 			DEN = {
 				remove_ideas = {
+					DEN_idea_opposition_controlled_landsting
 					# Republican/socialist ideas
 					DEN_idea_rigsfagforbund
 					DEN_idea_danish_republic
@@ -10381,6 +10387,7 @@ country_event = { #Fate of Denmark
 		hidden_effect = {
 			DEN = {
 				remove_ideas = {
+					DEN_idea_opposition_controlled_landsting
 					# Monarchist ideas
 					DEN_idea_danish_monarchy
 					DEN_idea_danish_monarchy2
@@ -10412,6 +10419,15 @@ country_event = { #Fate of Iceland
 				every_character = {
 					limit = { has_character_flag = ICE_leader }
 					set_nationality = ICE
+				}
+			}
+			ICE = {
+				set_country_flag = ICE_was_annexed
+				remove_ideas = {
+					ICE_Personal_Union
+					ICE_Independent_Althing
+					ICE_danish_bailout
+					ICE_canadian_bailout
 				}
 			}
 		}
@@ -10857,6 +10873,7 @@ country_event = { #Fate of Sweden
 					}
 				}
 			}
+			145 = { retain_state = yes } #Aland
 		}
 	}
 
@@ -10865,21 +10882,7 @@ country_event = { #Fate of Sweden
 		ai_chance = { base = 100 }
 		trigger = { has_socialist_government = no }
 		set_temp_variable = { tag_to_release = SWE }
-		every_owned_state = {
-			limit = {
-				is_core_of = SWE
-				is_claim_or_core_of_ROOT = no
-				if = {
-					limit = { state = 145 } #Aland
-					NOT = {
-						SWE = { ROOT_can_grant_land = yes }
-						FIN = { ROOT_can_grant_land = yes }
-					}
-				}
-			}
-			transfer_state_to = var:tag_to_release
-		}
-		puppet_released_tag = yes
+		release_targeted_tag = yes
 		var:tag_to_release = {
 			SWE_create_gustaf = yes
 			SWE_add_reactionary_generals = yes
@@ -10895,25 +10898,15 @@ country_event = { #Fate of Sweden
 			if = {
 				limit = {
 					OR = {
-						tag = GER
-						tag = AUS
+						original_tag = GER
+						original_tag = AUS
 					}
 				}
 				has_socialist_government = yes
 			}
 		}
 		set_temp_variable = { tag_to_release = SWE }
-		every_owned_state = {
-			limit = {
-				is_core_of = SWE
-				is_claim_or_core_of_ROOT = no
-				NOT = {
-					state = 145 #Aland
-				}
-			}
-			transfer_state_to = var:tag_to_release
-		}
-		puppet_released_tag = yes
+		release_targeted_tag = yes
 		var:tag_to_release = {
 			if = {
 				limit = { has_socialist_government = yes }
@@ -11109,7 +11102,7 @@ country_event = { #Fate of Finland
 				add_state_claim = 146 #Karelia
 				if = {
 					limit = { RUS_is_expansionist = yes }
-					add_state_claim = 145 #Åland
+					add_state_claim = 145 #Aland
 				}
 			}
 			else_if = {
@@ -11117,8 +11110,9 @@ country_event = { #Fate of Finland
 					tag = SWE
 					has_socialist_government = no
 				}
-				add_state_claim = 145 #Åland
+				add_state_claim = 145 #Aland
 			}
+			145 = { retain_state = yes } #Aland
 		}
 	}
 
@@ -11137,45 +11131,63 @@ country_event = { #Fate of Finland
 						tag = SWE
 						has_government = national_populist
 					}
+					AND = {
+						original_tag = GER
+						has_socialist_government = no
+					}
 				}
-
 			}
 		}
 		set_temp_variable = { tag_to_release = FIN }
-		every_owned_state = {
-			limit = {
-				is_core_of = FIN
-				is_claim_or_core_of_ROOT = no
-				NOT = { state = 145 } #Aland
-			}
-			transfer_state_to = var:tag_to_release
+		release_targeted_tag = yes
+	}
+
+	option = { #liberate as kingdom
+		name = annex.1058.b
+		trigger = {
+			original_tag = GER
+			has_socialist_government = no
 		}
-		puppet_released_tag = yes
-		if = {
-			limit = { tag = GER }
-			FIN = {
-				set_cosmetic_tag = FIN_kingdom
-				if = {
-					limit = { has_character = FIN_friedrich_karl_von_hessen_kassel }
-					promote_character = FIN_friedrich_karl_von_hessen_kassel
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					AND = {
+						RUS_is_empire = yes
+						RUS_is_expansionist = yes
+					}
+					AND = {
+						tag = SWE
+						has_government = national_populist
+					}
 				}
-				else = {
-					promote_character = FIN_wolfgang_von_hessen_kassel
-				}
-				set_politics = {
-					ruling_party = paternal_autocrat
-					elections_allowed = no
-				}
-				set_political_party = {
-					ideology = paternal_autocrat
-					popularity = 60
-				}
+			}
+		}
+		set_temp_variable = { tag_to_release = FIN }
+		release_targeted_tag = yes
+		var:tag_to_release = {
+			set_cosmetic_tag = FIN_kingdom
+			if = {
+				limit = { has_character = FIN_friedrich_karl_von_hessen_kassel }
+				promote_character = FIN_friedrich_karl_von_hessen_kassel
+			}
+			else = {
+				promote_character = FIN_wolfgang_von_hessen_kassel
+			}
+			set_politics = {
+				ruling_party = paternal_autocrat
+				elections_allowed = no
+			}
+			set_political_party = {
+				ideology = paternal_autocrat
+				popularity = 60
 			}
 		}
 	}
 
 	option = { #annex
-		name = annex.1058.b
+		name = annex.1058.c
 		trigger = {
 			OR = {
 				RUS_is_expansionist = yes
@@ -11459,40 +11471,16 @@ country_event = { #Fate of the Ukraine
 		}
 	}
 
-	option = { #TUR - take Crimea
+	option = { #OTT - take Crimea
 		name = annex.1060.b
 		trigger = {
-			tag = TUR
-			owns_state = 137
+			tag = OTT
+			137 = { is_valid_annexation_state = yes }
 		}
 		ai_chance = { base = 50 }
 		add_state_claim = 137
 		set_temp_variable = { tag_to_release = UKR }
-		every_owned_state = {
-			limit = {
-				is_core_of = UKR
-				is_claim_or_core_of_ROOT = no
-				if = {
-					limit = { state = 93 } #Brest
-					NOT = {
-						ROOT = { tag = POL }
-						ROOT = { tag = WHR }
-						POL = { ROOT_can_grant_land = yes }
-						WHR = {
-							OR = {
-								owns_state = 997 #Polesia
-								997 = { is_valid_annexation_state = yes }
-							}
-							ROOT_can_grant_land = yes
-						}
-						10 = { is_valid_annexation_state = yes } #Warsaw
-						206 = { is_valid_annexation_state = yes } #Minsk
-					}
-				}
-			}
-			transfer_state_to = var:tag_to_release
-		}
-		puppet_released_tag_nocosmetic = yes
+		release_targeted_tag_nocosmetic = yes
 	}
 
 	option = { #Integrate
@@ -12180,8 +12168,8 @@ country_event = { #Fate of Belarus
 					name = WHR_paternal_autocrat2_party
 					long_name = WHR_paternal_autocrat2_party_long
 				}
-				hidden_effect = { WHR_werner_kempf = { set_nationality = PREV } }
 				WHR_werner_kempf = {
+					set_nationality = PREV
 					if = {
 						limit = { is_unit_leader = no }
 						add_field_marshal_role = {
@@ -12193,18 +12181,13 @@ country_event = { #Fate of Belarus
 							logistics_skill = 2
 						}
 					}
-					if = {
-						limit = { has_ideology = paternal_autocrat_subtype }
-						promote_character = paternal_autocrat_subtype
-					}
-					else = {
-						add_country_leader_role = {
-							country_leader = {
-								desc = WHR_werner_kempf_leader_desc
-								ideology = paternal_autocrat_subtype
-							}
-							promote_leader = yes
+					hidden_effect = { remove_all_country_leader_roles = yes }
+					add_country_leader_role = {
+						country_leader = {
+							desc = WHR_werner_kempf_leader_desc
+							ideology = paternal_autocrat_subtype
 						}
+						promote_leader = yes
 					}
 				}
 				hidden_effect = { WHR_kanstancin_jezavitau = { retire = yes } }
@@ -12571,6 +12554,7 @@ country_event = { #Fate of Russia
 			RUS = {
 				drop_cosmetic_tag = yes
 				RUS_remove_monarchy = yes
+				RUS_pavel_bermondt_avalov = { remove_all_country_leader_roles = yes }
 				set_party_name = {
 					ideology = social_democrat
 					name = RUS_social_democrat_party
@@ -12995,7 +12979,7 @@ country_event = { #Fate of Albania
 				BUL_is_monarchy = yes
 				BUL_kyril_sakskoburggotski = { is_country_leader = no }
 			}
-			BUL_kyril_sakskoburggotski = { set_nationality = ALB }
+			BUL_kyril_sakskoburggotski = { }
 			ALB = {
 				set_politics = {
 					ruling_party = authoritarian_democrat
@@ -13007,21 +12991,14 @@ country_event = { #Fate of Albania
 					ideology = authoritarian_democrat
 					popularity = 60
 				}
-				if = {
-					limit = { has_character = BUL_kyril_sakskoburggotski }
-					BUL_kyril_sakskoburggotski = {
-						set_character_name = BUL_kyril_sakskoburggotski_regnal
-						if = {
-							limit = { has_ideology = authoritarian_democrat_subtype }
-							promote_character = authoritarian_democrat_subtype
-						}
-						else = {
-							add_country_leader_role = {
-								country_leader = { ideology = authoritarian_democrat_subtype }
-								promote_leader = yes
-							}
-						}
-					}
+			}
+			BUL_kyril_sakskoburggotski = {
+				set_nationality = ALB
+				set_character_name = BUL_kyril_sakskoburggotski_regnal
+				hidden_effect = { remove_all_country_leader_roles = yes }
+				add_country_leader_role = {
+					country_leader = { ideology = authoritarian_democrat_subtype }
+					promote_leader = yes
 				}
 			}
 		}
@@ -13031,6 +13008,7 @@ country_event = { #Fate of Albania
 				if = {
 					limit = {
 						OR = {
+							has_government = market_liberal
 							has_government = social_conservative
 							has_authoritarian_government = yes
 						}
@@ -13066,7 +13044,10 @@ country_event = { #Fate of Montenegro
 		hidden_effect = {
 			MNT = {
 				drop_cosmetic_tag = yes
-				retire_character = MNT_mihailo_petrovic_njegos
+				if = {
+					limit = { has_character = MNT_mihailo_petrovic_njegos }
+					retire_character = MNT_mihailo_petrovic_njegos
+				}
 				if = {
 					limit = { NOT = { has_character = MNT_blazo_jovanovic } }
 					SER = { MNT_blazo_jovanovic = { set_nationality = MNT } }
@@ -13084,10 +13065,10 @@ country_event = { #Fate of Montenegro
 	option = { #liberate
 		name = annex.1069.a
 		ai_chance = {
-			base = 100
+			base = 50
 			modifier = {
 				factor = 0
-				tag = SER
+				original_tag = SER
 			}
 		}
 		set_temp_variable = { tag_to_release = MNT }
@@ -13100,10 +13081,15 @@ country_event = { #Fate of Montenegro
 		trigger = { has_socialist_government = no }
 		ai_chance = {
 			base = 50
+			modifier = {
+				factor = 0
+				original_tag = SER
+			}
 		}
 		set_temp_variable = { tag_to_release = MNT }
-		release_targeted_tag = yes
-		MNT = {
+		var:tag_to_release = { transfer_state = 105 } #Montenegro
+		puppet_released_tag = yes
+		var:tag_to_release = {
 			set_cosmetic_tag = MTN_kingdom
 			MNT_create_mihailo = yes
 		}
@@ -13115,17 +13101,15 @@ country_event = { #Fate of Montenegro
 			base = 100
 		}
 		trigger = {
-			CRO = {
-				is_ally_of_ROOT = yes
-				owns_state = 163
-			}
-			NOT = {
-				tag = CRO
-				tag = SER
-			}
+			CRO = { ROOT_can_grant_land = yes }
+			NOT = { original_tag = CRO }
+			NOT = { original_tag = SER }
 		}
 		set_temp_variable = { tag_to_release = CRO }
-		105 = { transfer_state_and_add_core = yes }
+		105 = {
+			transfer_state_and_add_core = yes
+			state_given_notification_effect = yes
+		}
 	}
 
 	option = { #Give it to Serbia
@@ -13141,22 +13125,23 @@ country_event = { #Fate of Montenegro
 			}
 		}
 		trigger = {
-			SER = { is_ally_of_ROOT = yes }
-			NOT = {
-				tag = CRO
-				tag = SER
-			}
+			SER = { ROOT_can_grant_land = yes }
+			NOT = { original_tag = CRO }
+			NOT = { original_tag = SER }
 		}
 		set_temp_variable = { tag_to_release = SER }
-		105 = { transfer_state_and_add_core = yes }
+		105 = {
+			transfer_state_and_add_core = yes
+			state_given_notification_effect = yes
+		}
 	}
 
 	option = { #annex
 		name = annex.integration
 		trigger = {
 			OR = {
-				tag = CRO
-				tag = SER
+				original_tag = CRO
+				original_tag = SER
 			}
 		}
 		ai_chance = {
@@ -13168,10 +13153,8 @@ country_event = { #Fate of Montenegro
 	option = { #occupy
 		name = annex.occupation
 		trigger = {
-			NOT = {
-				tag = CRO
-				tag = SER
-			}
+			NOT = { original_tag = CRO }
+			NOT = { original_tag = SER }
 		}
 		ai_chance = { base = 0 }
 		set_country_flag = MNT_CONQ
@@ -14397,13 +14380,8 @@ country_event = { #Fate of Bulgaria
 					ideology = authoritarian_democrat
 					popularity = 40
 				}
-				if = {
-					limit = { BUL_alexander_stamboliyski = { has_ideology = authoritarian_democrat_subtype } }
-					BUL_alexander_stamboliyski = {
-						promote_character = authoritarian_democrat_subtype
-					}
-				}
-				else = {
+				BUL_alexander_stamboliyski = {
+					hidden_effect = { remove_all_country_leader_roles = yes }
 					add_country_leader_role = {
 						character = BUL_alexander_stamboliyski
 						country_leader = {
@@ -15516,35 +15494,18 @@ country_event = { #Fate of Spain
 			}
 			set_cosmetic_tag = SPA_republic
 			SPA_gil_robles = {
-				if = {
-					limit = { has_ideology = authoritarian_democrat_subtype }
-					promote_character = authoritarian_democrat_subtype
+				hidden_effect = { remove_all_country_leader_roles = yes }
+				add_country_leader_role = {
+					country_leader = { ideology = authoritarian_democrat_subtype }
+					promote_leader = yes
 				}
-				else = {
-					add_country_leader_role = {
-						country_leader = { ideology = authoritarian_democrat_subtype }
-						promote_leader = yes
-					}
+				add_country_leader_role = {
+					country_leader = { ideology = paternal_autocrat_subtype }
+					promote_leader = yes
 				}
-				if = {
-					limit = { has_ideology = paternal_autocrat_subtype }
-					promote_character = paternal_autocrat_subtype
-				}
-				else = {
-					add_country_leader_role = {
-						country_leader = { ideology = paternal_autocrat_subtype }
-						promote_leader = yes
-					}
-				}
-				if = {
-					limit = { has_ideology = national_populist_subtype }
-					promote_character = national_populist_subtype
-				}
-				else = {
-					add_country_leader_role = {
-						country_leader = { ideology = national_populist_subtype }
-						promote_leader = yes
-					}
+				add_country_leader_role = {
+					country_leader = { ideology = national_populist_subtype }
+					promote_leader = yes
 				}
 			}
 		}
@@ -15594,35 +15555,18 @@ country_event = { #Fate of Spain
 			}
 			set_cosmetic_tag = SPA_republic
 			SPA_gil_robles = {
-				if = {
-					limit = { has_ideology = authoritarian_democrat_subtype }
-					promote_character = authoritarian_democrat_subtype
+				hidden_effect = { remove_all_country_leader_roles = yes }
+				add_country_leader_role = {
+					country_leader = { ideology = authoritarian_democrat_subtype }
+					promote_leader = yes
 				}
-				else = {
-					add_country_leader_role = {
-						country_leader = { ideology = authoritarian_democrat_subtype }
-						promote_leader = yes
-					}
+				add_country_leader_role = {
+					country_leader = { ideology = paternal_autocrat_subtype }
+					promote_leader = yes
 				}
-				if = {
-					limit = { has_ideology = paternal_autocrat_subtype }
-					promote_character = paternal_autocrat_subtype
-				}
-				else = {
-					add_country_leader_role = {
-						country_leader = { ideology = paternal_autocrat_subtype }
-						promote_leader = yes
-					}
-				}
-				if = {
-					limit = { has_ideology = national_populist_subtype }
-					promote_character = national_populist_subtype
-				}
-				else = {
-					add_country_leader_role = {
-						country_leader = { ideology = national_populist_subtype }
-						promote_leader = yes
-					}
+				add_country_leader_role = {
+					country_leader = { ideology = national_populist_subtype }
+					promote_leader = yes
 				}
 			}
 		}
@@ -15632,14 +15576,14 @@ country_event = { #Fate of Spain
 	option = { #occupy
 		name = annex.1084.g
 		ai_chance = { base = 0 }
-		occupy_large_country = yes #guerrilla time
+		occupy_large_country = yes #guerilla time
 		set_country_flag = SPA_CONQ
 	}
 
 	option = { #occupy all
 		name = annex.occupation
 		ai_chance = { base = 0 }
-		occupy_massive_country = yes #guerrilla time
+		occupy_massive_country = yes #guerilla time
 		set_country_flag = SPA_CONQ
 		set_country_flag = GLC_CONQ
 		set_country_flag = BAS_CONQ
@@ -15659,7 +15603,11 @@ country_event = { #Fate of Galicia
 	option = { #puppet
 		name = annex.1085.a
 		ai_chance = {
-			base = 99
+			base = 100
+			modifier = {
+				factor = 0
+				SPA = { ROOT_can_grant_land = yes }
+			}
 		}
 		set_temp_variable = { tag_to_release = GLC }
 		release_targeted_tag = yes
@@ -15673,8 +15621,8 @@ country_event = { #Fate of Galicia
 		ai_chance = {
 			base = 100
 		}
+		set_temp_variable = { tag_to_release = SPA }
 		GLC = { set_transfer_target_cores = yes }
-		set_temp_variable = { tag_to_release = 174.owner }
 		transfer_targeted_territory_and_add_cores = yes
 	}
 
@@ -15717,7 +15665,7 @@ country_event = { #Fate of Euskadi
 		ai_chance = {
 			base = 0
 		}
-		set_temp_variable = { tag_to_release = 176.owner }
+		set_temp_variable = { tag_to_release = SPA }
 		172 = { transfer_state_and_add_core = yes }
 		custom_effect_tooltip = tooltip_white_line
 		set_temp_variable = { tag_to_release = BAS }
@@ -15733,8 +15681,8 @@ country_event = { #Fate of Euskadi
 		ai_chance = {
 			base = 100
 		}
+		set_temp_variable = { tag_to_release = SPA }
 		BAS = { set_transfer_target_cores = yes }
-		set_temp_variable = { tag_to_release = 176.owner }
 		transfer_targeted_territory_and_add_cores = yes
 	}
 
@@ -15784,7 +15732,7 @@ country_event = { #Fate of Catalonia
 		ai_chance = {
 			base = 0
 		}
-		set_temp_variable = { tag_to_release = 166.owner }
+		set_temp_variable = { tag_to_release = SPA }
 		167 = { add_core_of_target_and_transfer_if_owned = yes } #Valencia
 		177 = { add_core_of_target_and_transfer_if_owned = yes } #Balearic Islands
 		custom_effect_tooltip = tooltip_white_line
@@ -15801,8 +15749,8 @@ country_event = { #Fate of Catalonia
 		ai_chance = {
 			base = 100
 		}
+		set_temp_variable = { tag_to_release = SPA }
 		CAT = { set_transfer_target_cores = yes }
-		set_temp_variable = { tag_to_release = 166.owner }
 		transfer_targeted_territory_and_add_cores = yes
 	}
 
@@ -16063,17 +16011,7 @@ country_event = { #Fate of Southern France
 		FRA = { set_transfer_target_cores = yes }
 		transfer_targeted_territory_and_add_claims = yes
 		puppet_released_tag = yes
-		hidden_effect = {
-			var:tag_to_release = {
-				if = {
-					limit = { has_completed_focus = NATFRA_Reconstruction_Commission }
-					every_state = {
-						limit = { is_european_france = yes }
-						PREV = { activate_targeted_decision = { decision = NFA_Integrate_Metropole target = PREV } }
-					}
-				}
-			}
-		}
+		hidden_effect = { NFA_puppet_setup = yes }
 	}
 
 	option = {
@@ -16528,7 +16466,6 @@ country_event = { #Fate of Italy
 				set_capital = { state = 2 remember_old_capital = no }
 			}
 		}
-
 	}
 	option = {
 		name = annex.1092.c #Give to ITA allies
@@ -17266,33 +17203,20 @@ country_event = { #Fate of Lombardy
 			}
 		}
 
-		every_owned_state = {
-			limit = {
-				OR = {
-					state = 159
-					state = 160
-					state = 759
-				}
-				is_not_claim_or_core_of_ROOT = yes
-			}
-			transfer_state_to = var:tag_to_release
-		}
+		159 = { transfer_if_owned = yes }
+		160 = { transfer_if_owned = yes }
+		759 = { transfer_if_owned = yes }
 		every_subject_country = {
 			limit = {
 				is_ai = yes
 				is_italian_tag = yes
 			}
-			every_unit_leader = { set_nationality = ITA }
-			ITA = {
-				annex_country = { target = PREV transfer_troops = yes }
-			}
+			every_unit_leader = { set_nationality = var:tag_to_release }
+			var:tag_to_release = { annex_country = { target = PREV transfer_troops = yes } }
 		}
-
-		reverse_add_opinion_modifier = { target = ITA modifier = KR_liberated_us }
 		puppet_released_tag = yes
-
 		hidden_effect = {
-			ITA = {
+			var:tag_to_release = {
 				set_politics = {
 					ruling_party = authoritarian_democrat
 					elections_allowed = no
@@ -17301,77 +17225,43 @@ country_event = { #Fate of Lombardy
 					ideology = authoritarian_democrat
 					popularity = 0.2
 				}
+				remove_ideas = ITA_republic_federation
 				if = {
-					limit = { has_idea = ITA_republic_federation }
-					remove_ideas = ITA_republic_federation
+					limit = { has_completed_focus = ITA_stable_institutions }
+					add_ideas = ITA_federation_secure
+					remove_ideas = ITA_federation_transition
 				}
-				if = {
-					limit = {
-						NOT = { has_idea = ITA_federation_transition }
-						NOT = { has_completed_focus = ITA_stable_institutions }
-					}
+				else = {
 					add_ideas = ITA_federation_transition
 				}
 				if = {
 					limit = {
-						NOT = { has_idea = ITA_federation_secure }
-						has_completed_focus = ITA_stable_institutions
-					}
-					add_ideas = ITA_federation_secure
-				}
-				if = {
-					limit = {
 						ROOT = { tag = AUS }
-						NOT = { TUS = { has_character = ITA_pietro_ferdinando } }
+						NOT = {
+							TUS = {
+								exists = yes
+								has_country_leader = { character = ITA_pietro_ferdinando }
+							}
+						}
 					}
-					ITA_pietro_ferdinando = { set_nationality = PREV }
 					ITA_pietro_ferdinando = {
+						set_nationality = PREV
 						set_character_name = ITA_pietro_ferdinando
-						if = {
-							limit = { has_ideology = authoritarian_democrat_subtype }
-							promote_character = authoritarian_democrat_subtype
-						}
-						else = {
-							add_country_leader_role = {
-								country_leader = { ideology = authoritarian_democrat_subtype }
-								promote_leader = yes
-							}
+						remove_all_country_leader_roles = yes
+						add_country_leader_role = {
+							country_leader = { ideology = authoritarian_democrat_subtype }
+							promote_leader = yes
 						}
 					}
 				}
-				else_if = {
-					limit = { NOT = { LOM = { has_character = ITA_adriano_visconti } } }
-					ITA_adriano_visconti = { set_nationality = PREV }
+				else = {
 					ITA_adriano_visconti = {
+						set_nationality = PREV
 						set_character_name = ITA_adriano_visconti
-						if = {
-							limit = { has_ideology = authoritarian_democrat_subtype }
-							promote_character = authoritarian_democrat_subtype
-						}
-						else = {
-							add_country_leader_role = {
-								country_leader = { ideology = authoritarian_democrat_subtype }
-								promote_leader = yes
-							}
-						}
-					}
-				}
-				else_if = {
-					limit = { NOT = { country_exists = VNC } }
-					VNC = { VNC_giuseppe_volpi = { set_nationality = PREV.PREV } }
-					if = {
-						limit = { has_character = VNC_giuseppe_volpi }
-						VNC_giuseppe_volpi = {
-							if = {
-								limit = { has_ideology = authoritarian_democrat_subtype }
-								promote_character = authoritarian_democrat_subtype
-							}
-							else = {
-								add_country_leader_role = {
-									country_leader = { ideology = authoritarian_democrat_subtype }
-									promote_leader = yes
-								}
-							}
+						remove_all_country_leader_roles = yes
+						add_country_leader_role = {
+							country_leader = { ideology = authoritarian_democrat_subtype }
+							promote_leader = yes
 						}
 					}
 				}
@@ -17419,7 +17309,6 @@ country_event = { #Fate of Lombardy
 				add_claim_by = var:tag_to_release
 			}
 		}
-		reverse_add_opinion_modifier = { target = SRI modifier = KR_liberated_us }
 		release_targeted_tag = yes
 		every_subject_country = {
 			limit = {
@@ -17431,7 +17320,6 @@ country_event = { #Fate of Lombardy
 				annex_country = { target = PREV transfer_troops = yes }
 			}
 		}
-
 	}
 	option = {
 		name = annex.1095.a #Release as LOM duchy
@@ -17466,50 +17354,11 @@ country_event = { #Fate of Lombardy
 				}
 			}
 		}
-		hidden_effect = {
-			ITA = {
-				ITA_adriano_visconti = { set_nationality = LOM }
-				every_character = {
-					limit = { has_character_flag = ITA_lombard_leader }
-					set_nationality = LOM
-				}
-			}
-			LOM = {
-				every_character = {
-					limit = { has_character_flag = ITA_lombard_leader }
-					promote_character = yes
-				}
-				if = {
-					limit = { has_character = ITA_adriano_visconti }
-					ITA_adriano_visconti = {
-						if = {
-							limit = { has_ideology = authoritarian_democrat_subtype }
-							promote_character = authoritarian_democrat_subtype
-						}
-						else = {
-							add_country_leader_role = {
-								country_leader = {
-									desc = ITA_adriano_visconti_leader_desc
-									ideology = authoritarian_democrat_subtype
-								}
-								promote_leader = yes
-							}
-						}
-					}
-				}
-			}
-		}
-
-		LOM = {
-			add_state_core = 159
-			transfer_state = 159
-		}
-		reverse_add_opinion_modifier = { target = LOM modifier = KR_liberated_us }
 		set_temp_variable = { tag_to_release = LOM }
-		puppet_released_tag = yes
-
+		var:tag_to_release = { add_state_core = 159 }
+		release_targeted_tag = yes
 		hidden_effect = {
-			LOM = {
+			var:tag_to_release = {
 				if = {
 					limit = {
 						NOT = {
@@ -17521,7 +17370,28 @@ country_event = { #Fate of Lombardy
 						ruling_party = authoritarian_democrat
 						elections_allowed = no
 					}
-					add_popularity = { ideology = authoritarian_democrat popularity = 0.20 }
+					set_political_party = { ideology = authoritarian_democrat popularity = 60 }
+				}
+			}
+			ITA = {
+				every_character = {
+					limit = { has_character_flag = ITA_lombard_leader }
+					set_nationality = var:tag_to_release
+					if = {
+						limit = { can_be_country_leader = yes }
+						promote_character = yes
+					}
+				}
+				ITA_adriano_visconti = {
+					set_nationality = var:tag_to_release
+					remove_country_leader_role_authoritarian_democrat = yes
+					add_country_leader_role = {
+						country_leader = {
+							desc = ITA_adriano_visconti_leader_desc
+							ideology = authoritarian_democrat_subtype
+						}
+						promote_leader = yes
+					}
 				}
 			}
 		}
@@ -17537,8 +17407,6 @@ country_event = { #Fate of Lombardy
 				tag = SIC
 				tag = SRD
 				has_government = authoritarian_democrat
-			}
-			NOT = {
 				AND = {
 					tag = AUS
 					country_exists = VNC
@@ -17561,58 +17429,40 @@ country_event = { #Fate of Lombardy
 			}
 		}
 		set_temp_variable = { tag_to_release = LOM }
-		LOM = {
-			add_state_core = 159
-			transfer_state = 159
-		}
-		reverse_add_opinion_modifier = { target = LOM modifier = KR_liberated_us }
-		puppet_released_tag = yes
-
+		var:tag_to_release = { add_state_core = 159 }
+		release_targeted_tag = yes
 		hidden_effect = {
-			ITA = {
-				ITA_adriano_visconti = { set_nationality = var:tag_to_release }
-				every_character = {
-					limit = { has_character_flag = ITA_lombard_leader }
-					set_nationality = LOM
-				}
-			}
-			LOM = {
-				every_character = {
-					limit = { has_character_flag = ITA_lombard_leader }
-					promote_character = yes
-				}
+			var:tag_to_release = {
+				clr_country_flag = LOM_constitutional_monarchy
 				if = {
-					limit = { has_character = ITA_adriano_visconti }
-					ITA_adriano_visconti = {
-						if = {
-							limit = { has_ideology = authoritarian_democrat_subtype }
-							promote_character = authoritarian_democrat_subtype
-						}
-						else = {
-							add_country_leader_role = {
-								country_leader = {
-									desc = ITA_adriano_visconti_leader_desc
-									ideology = authoritarian_democrat_subtype
-								}
-								promote_leader = yes
-							}
-						}
-					}
-				}
-				if = {
-					limit = { has_country_flag = LOM_constitutional_monarchy }
-					clr_country_flag = LOM_constitutional_monarchy
-				}
-				if = {
-					limit = { has_elected_government = no }
+					limit = { has_government = authoritarian_democrat }
 					set_politics = {
 						ruling_party = social_liberal
 						elections_allowed = no
 					}
-					add_popularity = { ideology = social_liberal popularity = 0.20 }
+					set_political_party = { ideology = social_liberal popularity = 60 }
 				}
 			}
 			ITA = {
+				every_character = {
+					limit = { has_character_flag = ITA_lombard_leader }
+					set_nationality = var:tag_to_release
+					if = {
+						limit = { can_be_country_leader = yes }
+						promote_character = yes
+					}
+				}
+				ITA_adriano_visconti = {
+					set_nationality = var:tag_to_release
+					remove_country_leader_role_authoritarian_democrat = yes
+					add_country_leader_role = {
+						country_leader = {
+							desc = ITA_adriano_visconti_leader_desc
+							ideology = authoritarian_democrat_subtype
+						}
+						promote_leader = yes
+					}
+				}
 			}
 		}
 	}
@@ -17628,16 +17478,14 @@ country_event = { #Fate of Lombardy
 			modifier = {
 				factor = 0
 				OR = {
-					tag = ITA
 					tag = SRI
 					tag = SIC
 					tag = SRD
 				}
 			}
 		}
-		reverse_add_opinion_modifier = { target = ITA modifier = KR_returned_land }
-		ITA = { transfer_state = 159 }
-		recheck_annexations = yes
+		set_temp_variable = { tag_to_release = ITA }
+		159 = { add_claim_of_target_and_transfer_if_owned = yes }
 	}
 	option = {
 		name = annex.1092.e #Give to SRI allies
@@ -17652,15 +17500,13 @@ country_event = { #Fate of Lombardy
 				factor = 0
 				OR = {
 					tag = ITA
-					tag = SRI
 					tag = SIC
 					tag = SRD
 				}
 			}
 		}
-		reverse_add_opinion_modifier = { target = SRI modifier = KR_returned_land }
-		SRI = { transfer_state = 159 }
-		recheck_annexations = yes
+		set_temp_variable = { tag_to_release = SRI }
+		159 = { add_claim_of_target_and_transfer_if_owned = yes }
 	}
 	option = {
 		name = annex.1092.f #Give to SIC allies
@@ -17690,14 +17536,12 @@ country_event = { #Fate of Lombardy
 				OR = {
 					tag = ITA
 					tag = SRI
-					tag = SIC
 					tag = SRD
 				}
 			}
 		}
-		reverse_add_opinion_modifier = { target = SIC modifier = KR_returned_land }
-		SIC = { transfer_state = 159 }
-		recheck_annexations = yes
+		set_temp_variable = { tag_to_release = SIC }
+		159 = { transfer_if_owned = yes }
 	}
 	option = {
 		name = annex.1092.g #Give to SRD allies
@@ -17728,13 +17572,11 @@ country_event = { #Fate of Lombardy
 					tag = ITA
 					tag = SRI
 					tag = SIC
-					tag = SRD
 				}
 			}
 		}
-		reverse_add_opinion_modifier = { target = SRD modifier = KR_returned_land }
-		SRD = { transfer_state = 159 }
-		recheck_annexations = yes
+		set_temp_variable = { tag_to_release = SRD }
+		159 = { add_claim_of_target_and_transfer_if_owned = yes }
 	}
 	option = {
 		name = annex.1095.b #Give to VNC
@@ -17746,8 +17588,8 @@ country_event = { #Fate of Lombardy
 				has_country_flag = VNC_republican_revolt
 			}
 		}
-		VNC = { transfer_state = 159 }
-		recheck_annexations = yes
+		set_temp_variable = { tag_to_release = VNC }
+		159 = { transfer_if_owned = yes }
 	}
 	option = {
 		name = annex.occupation
@@ -17769,12 +17611,6 @@ country_event = { #Fate of Venice
 
 	is_triggered_only = yes
 
-	immediate = {
-		hidden_effect = {
-			set_country_flag = VNC_CONQ
-		}
-	}
-
 	option = {
 		name = annex.1096.a #Release as VNC
 		trigger = {
@@ -17791,47 +17627,20 @@ country_event = { #Fate of Venice
 				}
 			}
 		}
-		clr_country_flag = VNC_CONQ
-
-		hidden_effect = {
-			VNC = {
-				add_state_core = 160
-				add_state_core = 759
-			}
+		VNC = {
+			add_state_core = 160
+			add_state_core = 759
 		}
-
-		every_owned_state = {
-			limit = {
-				is_core_of = VNC
-				is_not_claim_or_core_of_ROOT = yes
-			}
-			transfer_state_to = VNC
-		}
-
-		reverse_add_opinion_modifier = { target = VNC modifier = KR_liberated_us }
 		set_temp_variable = { tag_to_release = VNC }
-		puppet_released_tag = yes
-
+		release_targeted_tag = yes
 		hidden_effect = {
-			if = {
-				limit = { ITA = { has_character = VNC_giuseppe_volpi } }
-
-				VNC = {
-					VNC_giuseppe_volpi = { set_nationality = PREV }
-					if = {
-						limit = { has_character = VNC_giuseppe_volpi }
-						VNC_giuseppe_volpi = {
-							if = {
-								limit = { has_ideology = paternal_autocrat_subtype }
-								promote_character = paternal_autocrat_subtype
-							}
-							else = {
-								add_country_leader_role = {
-									country_leader = { ideology = paternal_autocrat_subtype }
-									promote_leader = yes
-								}
-							}
-						}
+			ITA = {
+				VNC_giuseppe_volpi = {
+					set_nationality = VNC
+					remove_country_leader_role_paternal_autocrat = yes
+					add_country_leader_role = {
+						country_leader = { ideology = paternal_autocrat_subtype }
+						promote_leader = yes
 					}
 				}
 			}
@@ -17849,29 +17658,15 @@ country_event = { #Fate of Venice
 			modifier = {
 				factor = 0
 				OR = {
-					tag = ITA
 					tag = SRI
 					tag = SIC
 					tag = SRD
 				}
 			}
 		}
-		clr_country_flag = VNC_CONQ
-
-		reverse_add_opinion_modifier = { target = ITA modifier = KR_returned_land }
-
-		ITA = { transfer_state = 160 }
-
-		if = {
-			limit = {
-				759 = {
-					is_owned_and_controlled_by = ROOT
-					is_not_claim_or_core_of_ROOT = yes
-				}
-			}
-			ITA = { transfer_state = 759 }
-		}
-		recheck_annexations = yes
+		set_temp_variable = { tag_to_release = ITA }
+		160 = { add_claim_of_target_and_transfer_if_owned = yes }
+		759 = { add_claim_of_target_and_transfer_if_owned = yes }
 	}
 	option = {
 		name = annex.1092.e #Give to SRI allies
@@ -17886,28 +17681,14 @@ country_event = { #Fate of Venice
 				factor = 0
 				OR = {
 					tag = ITA
-					tag = SRI
 					tag = SIC
 					tag = SRD
 				}
 			}
 		}
-		clr_country_flag = VNC_CONQ
-
-		reverse_add_opinion_modifier = { target = SRI modifier = KR_returned_land }
-
-		SRI = { transfer_state = 160 }
-
-		if = {
-			limit = {
-				759 = {
-					is_owned_and_controlled_by = ROOT
-					is_not_claim_or_core_of_ROOT = yes
-				}
-			}
-			SRI = { transfer_state = 759 }
-		}
-		recheck_annexations = yes
+		set_temp_variable = { tag_to_release = SRI }
+		160 = { add_claim_of_target_and_transfer_if_owned = yes }
+		759 = { add_claim_of_target_and_transfer_if_owned = yes }
 	}
 	option = {
 		name = annex.1092.f #Give to SIC allies
@@ -17927,27 +17708,13 @@ country_event = { #Fate of Venice
 				OR = {
 					tag = ITA
 					tag = SRI
-					tag = SIC
 					tag = SRD
 				}
 			}
 		}
-		clr_country_flag = VNC_CONQ
-
-		reverse_add_opinion_modifier = { target = SIC modifier = KR_returned_land }
-
-		SIC = { transfer_state = 160 }
-
-		if = {
-			limit = {
-				759 = {
-					is_owned_and_controlled_by = ROOT
-					is_not_claim_or_core_of_ROOT = yes
-				}
-			}
-			SIC = { transfer_state = 759 }
-		}
-		recheck_annexations = yes
+		set_temp_variable = { tag_to_release = SIC }
+		160 = { add_claim_of_target_and_transfer_if_owned = yes }
+		759 = { add_claim_of_target_and_transfer_if_owned = yes }
 	}
 	option = {
 		name = annex.1092.g #Give to SRD allies
@@ -17968,26 +17735,12 @@ country_event = { #Fate of Venice
 					tag = ITA
 					tag = SRI
 					tag = SIC
-					tag = SRD
 				}
 			}
 		}
-		clr_country_flag = VNC_CONQ
-
-		reverse_add_opinion_modifier = { target = SRD modifier = KR_returned_land }
-
-		SRD = { transfer_state = 160 }
-
-		if = {
-			limit = {
-				759 = {
-					is_owned_and_controlled_by = ROOT
-					is_not_claim_or_core_of_ROOT = yes
-				}
-			}
-			SRD = { transfer_state = 759 }
-		}
-		recheck_annexations = yes
+		set_temp_variable = { tag_to_release = SRD }
+		160 = { add_claim_of_target_and_transfer_if_owned = yes }
+		759 = { add_claim_of_target_and_transfer_if_owned = yes }
 	}
 	option = {
 		name = annex.occupation
@@ -17995,6 +17748,7 @@ country_event = { #Fate of Venice
 			NOT = { has_country_flag = SIC_confed }
 		}
 		ai_chance = { base = 0 }
+		set_country_flag = VNC_CONQ
 		occupy_medium_country = yes
 	}
 }
@@ -18007,12 +17761,6 @@ country_event = { #Fate of Emilia
 	picture = GFX_report_event_generic_conference2
 
 	is_triggered_only = yes
-
-	immediate = {
-		hidden_effect = {
-			set_country_flag = EMI_CONQ
-		}
-	}
 
 	option = {
 		name = annex.1097.a #Release as EMI
@@ -18038,25 +17786,14 @@ country_event = { #Fate of Emilia
 				}
 			}
 		}
-		clr_country_flag = EMI_CONQ
-
-		hidden_effect = {
-			EMI = {
-				add_state_core = 1004
-			}
-		}
-
-		EMI = { transfer_state = 1004 }
-		reverse_add_opinion_modifier = { target = EMI modifier = KR_liberated_us }
 		set_temp_variable = { tag_to_release = EMI }
+		var:tag_to_release = {
+			add_state_core = 1004
+			transfer_state = 1004
+		}
 		puppet_released_tag = yes
-
 		hidden_effect = {
-			ITA = { ITA_carlo_bergamini = { set_nationality = var:tag_to_release } }
-			hidden_effect = {
-				EMI = { ITA_carlo_bergamini = { promote_character = yes } }
-			}
-			SRI = { SRI_dardano_fenulli = { set_nationality = var:tag_to_release } }
+			EMI_move_relevant_characters = yes
 			if = {
 				limit = {
 					NOT = { has_government = authoritarian_democrat }
@@ -18100,144 +17837,14 @@ country_event = { #Fate of Emilia
 				}
 			}
 		}
-		clr_country_flag = EMI_CONQ
-
-		EMI = {
+		set_temp_variable = { tag_to_release = EMI }
+		var:tag_to_release = {
 			add_state_core = 1004
 			transfer_state = 1004
+			EMI_create_elia = yes
 		}
-		set_temp_variable = { tag_to_release = EMI }
-		puppet_released_tag = yes
-		hidden_effect = {
-			SRI = { SRI_dardano_fenulli = { set_nationality = var:tag_to_release } }
-			if = {
-				limit = {
-					ITA = {
-						exists = yes
-						has_character = ITA_carlo_bergamini
-					}
-				}
-				ITA = { country_event = emi.13 }
-			}
-			else = {
-				ITA_carlo_bergamini = { set_nationality = var:tag_to_release }
-				hidden_effect = {
-					EMI = { ITA_carlo_bergamini = { promote_character = yes } }
-				}
-			}
-			if = {
-				limit = {
-					SRD = {
-						exists = yes
-						OR = {
-							has_character = SRD_mario_roatta
-							has_character = SRD_bruno_malaguti
-						}
-					}
-				}
-				SRD = { country_event = emi.15 }
-			}
-			else = {
-				EMI_move_sardinian_characters_to_emilia = yes
-			}
-			EMI = {
-				set_cosmetic_tag = EMI_PAR
-				EMI_elia_borbone = {
-					if = {
-						limit = { has_ideology = social_democrat_subtype }
-						promote_character = social_democrat_subtype
-					}
-					else = {
-						add_country_leader_role = {
-							country_leader = {
-								desc = EMI_elia_borbone_leader_desc
-								ideology = social_democrat_subtype
-							}
-							promote_leader = yes
-						}
-					}
-					if = {
-						limit = { has_ideology = social_liberal_subtype }
-						promote_character = social_liberal_subtype
-					}
-					else = {
-						add_country_leader_role = {
-							country_leader = {
-								desc = EMI_elia_borbone_leader_desc
-								ideology = social_liberal_subtype
-							}
-							promote_leader = yes
-						}
-					}
-					if = {
-						limit = { has_ideology = market_liberal_subtype }
-						promote_character = market_liberal_subtype
-					}
-					else = {
-						add_country_leader_role = {
-							country_leader = {
-								desc = EMI_elia_borbone_leader_desc
-								ideology = market_liberal_subtype
-							}
-							promote_leader = yes
-						}
-					}
-					if = {
-						limit = { has_ideology = social_conservative_subtype }
-						promote_character = social_conservative_subtype
-					}
-					else = {
-						add_country_leader_role = {
-							country_leader = {
-								desc = EMI_elia_borbone_leader_desc
-								ideology = social_conservative_subtype
-							}
-							promote_leader = yes
-						}
-					}
-					if = {
-						limit = { has_ideology = authoritarian_democrat_subtype }
-						promote_character = authoritarian_democrat_subtype
-					}
-					else = {
-						add_country_leader_role = {
-							country_leader = {
-								desc = EMI_elia_borbone_leader_desc
-								ideology = authoritarian_democrat_subtype
-							}
-							promote_leader = yes
-						}
-					}
-					if = {
-						limit = { has_ideology = paternal_autocrat_subtype }
-						promote_character = paternal_autocrat_subtype
-					}
-					else = {
-						add_country_leader_role = {
-							country_leader = {
-								desc = EMI_elia_borbone_leader_desc
-								ideology = paternal_autocrat_subtype
-							}
-							promote_leader = yes
-						}
-					}
-					if = {
-						limit = { has_ideology = national_populist_subtype }
-						promote_character = national_populist_subtype
-					}
-					else = {
-						add_country_leader_role = {
-							country_leader = {
-								desc = EMI_elia_borbone_leader_desc
-								ideology = national_populist_subtype
-							}
-							promote_leader = yes
-						}
-					}
-				}
-			}
-		}
-		reverse_add_opinion_modifier = { target = EMI modifier = KR_liberated_us }
+		puppet_released_tag_nocosmetic = yes
+		hidden_effect = { EMI_move_relevant_characters = yes }
 	}
 	option = {
 		name = annex.1092.c #Give to ITA allies
@@ -18258,10 +17865,6 @@ country_event = { #Fate of Emilia
 				}
 			}
 		}
-		clr_country_flag = EMI_CONQ
-
-		reverse_add_opinion_modifier = { target = ITA modifier = KR_returned_land }
-
 		ITA = { transfer_state = 1004 }
 		recheck_annexations = yes
 	}
@@ -18284,11 +17887,8 @@ country_event = { #Fate of Emilia
 				}
 			}
 		}
-		clr_country_flag = EMI_CONQ
-
-		reverse_add_opinion_modifier = { target = SRI modifier = KR_returned_land }
-
 		SRI = { transfer_state = 1004 }
+		recheck_annexations = yes
 	}
 	option = {
 		name = annex.1092.f #Give to SIC allies
@@ -18313,10 +17913,6 @@ country_event = { #Fate of Emilia
 				}
 			}
 		}
-		clr_country_flag = EMI_CONQ
-
-		reverse_add_opinion_modifier = { target = SIC modifier = KR_returned_land }
-
 		SIC = { transfer_state = 1004 }
 		recheck_annexations = yes
 	}
@@ -18343,10 +17939,6 @@ country_event = { #Fate of Emilia
 				}
 			}
 		}
-		clr_country_flag = EMI_CONQ
-
-		reverse_add_opinion_modifier = { target = SRD modifier = KR_returned_land }
-
 		SRD = { transfer_state = 1004 }
 		recheck_annexations = yes
 	}
@@ -18356,6 +17948,7 @@ country_event = { #Fate of Emilia
 			NOT = { has_country_flag = SIC_confed }
 		}
 		ai_chance = { base = 0 }
+		set_country_flag = EMI_CONQ
 		occupy_medium_country = yes
 	}
 }
@@ -18428,27 +18021,24 @@ country_event = { #Fate of Tuscany
 					}
 				}
 			}
-			ITA = { ITA_pietro_ferdinando = { set_nationality = TUS } }
-			TUS = {
-				if = {
-					limit = { has_character = ITA_pietro_ferdinando }
-					ITA_pietro_ferdinando = {
-						remove_all_country_leader_roles = yes
-						set_character_name = TUS_pietro_ferdinando_regnal
-						add_country_leader_role = {
-							country_leader = {
-								ideology = authoritarian_democrat_subtype
-								desc = TUS_pietro_ferdinando_leader_desc
-							}
-							promote_leader = yes
+			ITA = {
+				ITA_pietro_ferdinando = {
+					set_nationality = TUS
+					remove_all_country_leader_roles = yes
+					set_character_name = TUS_pietro_ferdinando_regnal
+					add_country_leader_role = {
+						country_leader = {
+							ideology = authoritarian_democrat_subtype
+							desc = TUS_pietro_ferdinando_leader_desc
 						}
-						add_country_leader_role = {
-							country_leader = {
-								ideology = paternal_autocrat_subtype
-								desc = TUS_pietro_ferdinando_leader_desc
-							}
-							promote_leader = yes
+						promote_leader = yes
+					}
+					add_country_leader_role = {
+						country_leader = {
+							ideology = paternal_autocrat_subtype
+							desc = TUS_pietro_ferdinando_leader_desc
 						}
+						promote_leader = yes
 					}
 				}
 			}
@@ -20295,6 +19885,14 @@ country_event = { #Fate of Gomel
 
 	immediate = {
 		241 = { clear_retain_state = yes }
+		random_other_country = {
+			limit = {
+				is_russian_tag = yes
+				ROOT_can_grant_land = yes
+				241 = { any_neighbor_state = { is_owned_by = PREV.PREV } }
+			}
+			save_event_target_as = russia
+		}
 	}
 
 	option = { #give to UKR
@@ -20306,7 +19904,10 @@ country_event = { #Fate of Gomel
 			base = 60
 			modifier = {
 				factor = 0
-				WHR = { is_ally_of_ROOT = yes }
+				OR = {
+					WHR = { is_ally_of_ROOT = yes }
+					event_target:russia = { is_ally_of_ROOT = yes }
+				}
 				NOT = { is_ally_with = UKR }
 			}
 		}
@@ -20323,11 +19924,34 @@ country_event = { #Fate of Gomel
 			base = 40
 			modifier = {
 				factor = 0
-				UKR = { is_ally_of_ROOT = yes }
+				OR = {
+					UKR = { is_ally_of_ROOT = yes }
+					event_target:russia = { is_ally_of_ROOT = yes }
+				}
 				NOT = { is_ally_with = WHR }
 			}
 		}
 		set_temp_variable = { tag_to_release = WHR }
+		241 = { transfer_state_and_add_claim = yes }
+	}
+
+	option = { #give to Russia
+		name = annex.1108.c
+		trigger = {
+			has_event_target = russia
+		}
+		ai_chance = {
+			base = 40
+			modifier = {
+				factor = 0
+				OR = {
+					UKR = { is_ally_of_ROOT = yes }
+					WHR = { is_ally_of_ROOT = yes }
+				}
+				NOT = { is_ally_with = event_target:russia }
+			}
+		}
+		set_temp_variable = { tag_to_release = RUS }
 		241 = { transfer_state_and_add_claim = yes }
 	}
 
@@ -20882,7 +20506,7 @@ country_event = { #Fate of Roussillon
 				limit = {
 					var:165.owner = {
 						OR = {
-							original_tag = SPR
+							original_tag = SPA
 							original_tag = CAT
 						}
 						ROOT_can_grant_land = yes
@@ -20936,7 +20560,7 @@ country_event = { #Fate of Roussillon
 		trigger = {
 			OR = {
 				original_tag = CAT
-				original_tag = SPR
+				original_tag = SPA
 				is_french_tag = yes
 			}
 		}
@@ -20951,7 +20575,7 @@ country_event = { #Fate of Roussillon
 		trigger = {
 			NOT = {
 				original_tag = CAT
-				original_tag = SPR
+				original_tag = SPA
 				is_french_tag = yes
 			}
 		}
@@ -21042,6 +20666,131 @@ country_event = { #Fate of Chelm
 		}
 		ai_chance = { base = 0 }
 		set_country_flag = CHELM_CONQ
+		occupy_small_country = yes
+	}
+}
+
+country_event = { #Fate of Labourd
+	id = annex.1114
+	immediate = { log = "[GetDateText]: [Root.GetName]: event annex.1114 FROM = [From.GetName]" }
+	title = annexation_LABOURD_CONQ
+	desc = annexation_LABOURD_CONQ_desc
+	picture = GFX_report_event_generic_conference2
+
+	is_triggered_only = yes
+
+	immediate = {
+		817 = { clear_retain_state = yes }
+		hidden_effect = {
+			if = {
+				limit = {
+					var:19.owner = {
+						is_french_tag = yes
+						ROOT_can_grant_land = yes
+					}
+				}
+				var:19.owner = { save_event_target_as = france }
+			}
+			else_if = {
+				limit = {
+					var:984.owner = {
+						is_french_tag = yes
+						ROOT_can_grant_land = yes
+					}
+				}
+				var:984.owner = { save_event_target_as = france }
+			}
+			if = {
+				limit = {
+					var:1070.owner = {
+						OR = {
+							original_tag = SPA
+							original_tag = BAS
+						}
+						ROOT_can_grant_land = yes
+					}
+				}
+				var:1070.owner = { save_event_target_as = spain }
+			}
+			else_if = {
+				limit = {
+					var:172.owner = {
+						OR = {
+							original_tag = SPA
+							original_tag = BAS
+						}
+						ROOT_can_grant_land = yes
+					}
+				}
+				var:172.owner = { save_event_target_as = spain }
+			}
+		}
+	}
+
+	option = { #Give it to Basque/Spain
+		name = annex.1114.a
+		trigger = {
+			has_event_target = spain
+		}
+		ai_chance = {
+			base = 20
+			modifier = {
+				factor = 4
+				event_target:spain = { original_tag = BAS }
+			}
+			modifier = {
+				factor = 0
+				is_ally_with = event_target:france
+				NOT = { is_ally_with = event_target:spain }
+			}
+		}
+		set_temp_variable = { tag_to_release = event_target:spain }
+		779 = { transfer_state_and_add_core = yes }
+	}
+
+	option = { #Give it to France
+		name = annex.1114.b
+		trigger = {
+			has_event_target = france
+		}
+		ai_chance = {
+			base = 80
+			modifier = {
+				factor = 0
+				is_ally_with = event_target:spain
+				NOT = { is_ally_with = event_target:france }
+			}
+		}
+		set_temp_variable = { tag_to_release = event_target:france }
+		779 = { transfer_state_and_add_core = yes }
+	}
+
+	option = { #Integrate
+		name = annex.integration
+		trigger = {
+			OR = {
+				original_tag = BAS
+				original_tag = SPA
+				is_french_tag = yes
+			}
+		}
+		ai_chance = {
+			base = 1000
+		}
+		779 = { remove_claim_and_add_core_of_ROOT = yes }
+	}
+
+	option = { #occupy
+		name = annex.occupation
+		trigger = {
+			NOT = {
+				original_tag = CAT
+				original_tag = SPA
+				is_french_tag = yes
+			}
+		}
+		ai_chance = { base = 0 }
+		set_country_flag = LABOURD_CONQ
 		occupy_small_country = yes
 	}
 }

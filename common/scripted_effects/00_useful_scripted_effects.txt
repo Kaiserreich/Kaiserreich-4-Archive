@@ -7,15 +7,19 @@ separate_peace_all_wars = {
 	if = {
 		limit = { has_war = yes }
 		effect_tooltip = {
-			every_enemy_country = { white_peace = ROOT }
+			every_enemy_country = {
+				limit = { NOT = { civilwar_target = PREV } }
+				white_peace = PREV
+			}
 		}
 		hidden_effect = {
-			save_event_target_as = peace_country
-
 			# first peace out with faction leaders
 			every_enemy_country = {
-				limit = { is_faction_leader = yes }
-				event_target:peace_country = { white_peace = PREV }
+				limit = {
+					is_faction_leader = yes
+					NOT = { civilwar_target = PREV }
+				}
+				white_peace = PREV
 			}
 
 			# then all non-puppets whose faction leaders aren't in the war
@@ -23,9 +27,10 @@ separate_peace_all_wars = {
 				limit = {
 					is_subject = no
 					is_in_faction = yes
-					faction_leader = { NOT = { has_war_with = ROOT } }
+					faction_leader = { NOT = { has_war_with = PREV.PREV } }
+					NOT = { civilwar_target = PREV }
 				}
-				event_target:peace_country = { white_peace = PREV }
+				white_peace = PREV
 			}
 
 			# then all non-puppets who aren't in factions
@@ -33,17 +38,19 @@ separate_peace_all_wars = {
 				limit = {
 					is_subject = no
 					is_in_faction = no
+					NOT = { civilwar_target = PREV }
 				}
-				event_target:peace_country = { white_peace = PREV }
+				white_peace = PREV
 			}
 
 			# then all puppets whose overlords aren't in the war
 			every_enemy_country = {
 				limit = {
 					is_subject = yes
-					overlord = { NOT = { has_war_with = ROOT } }
+					overlord = { NOT = { has_war_with = PREV.PREV } }
+					NOT = { civilwar_target = PREV }
 				}
-				event_target:peace_country = { white_peace = PREV }
+				white_peace = PREV
 			}
 		}
 	}
@@ -135,24 +142,24 @@ clear_all_relations_except_wars = {
 		leave_faction = yes
 	}
 	every_other_country = {
-		limit = { has_guaranteed = ROOT }
+		limit = { has_guaranteed = PREV }
 		diplomatic_relation = {
-			country = ROOT
+			country = PREV
 			relation = guarantee
 			active = no
 		}
 	}
 	every_other_country = {
-		limit = { has_non_aggression_pact_with = ROOT }
+		limit = { has_non_aggression_pact_with = PREV }
 		diplomatic_relation = {
-			country = ROOT
+			country = PREV
 			relation = military_access
 			active = no
 		}
 	}
 	every_other_country = {
-		limit = { has_military_access_to = ROOT }
-		ROOT = {
+		limit = { has_military_access_to = PREV }
+		PREV = {
 			diplomatic_relation = {
 				country = PREV
 				relation = military_access
@@ -161,9 +168,9 @@ clear_all_relations_except_wars = {
 		}
 	}
 	every_other_country = {
-		limit = { gives_military_access_to = ROOT }
+		limit = { gives_military_access_to = PREV }
 		diplomatic_relation = {
-			country = ROOT
+			country = PREV
 			relation = military_access
 			active = no
 		}
@@ -517,93 +524,6 @@ restore_previous_government_type = {
 	}
 }
 
-# this is used in scripted peace events to ensure that all states
-# currently controlled by countries not at war with the state's owner
-# have control restored to the owner - this is needed to avoid a peace conference bug
-# which would draw the owner into a peace conference and be annexed
-restore_control_of_all_non_enemy_states = {
-	every_state = {
-		limit = {
-			NOT = {
-				is_controlled_by = owner
-				controller = { has_war_with = var:PREV.owner }
-			}
-		}
-		if = {
-			limit = {
-				controller = { is_in_faction = yes }
-			}
-			every_country = {
-				limit = { is_ally_with = PREV.controller }
-				give_military_access = var:v
-			}
-			set_state_controller_to = owner
-		}
-		else = {
-			if = {
-				limit = {
-					controller = { is_subject = yes }
-				}
-				owner = { give_military_access = var:PREV.controller:overlord }
-			}
-			owner = {
-				give_military_access = PREV.controller
-				set_state_controller = PREV
-			}
-		}
-	}
-
-	# additional check for any states which are only partially controlled and have non-enemy units in them
-	# this will grant military access to the non-enemy and any of its allies
-	every_country = {
-		limit = {
-			OR = {
-				is_government_in_exile = yes
-				has_capitulated = yes
-			}
-			any_owned_state = {
-				controller = {
-					has_war_with = PREV.PREV
-					NOT = { has_full_control_of_state = PREV }
-				}
-			}
-		}
-		save_event_target_as = original_owner
-		every_owned_state = {
-			limit = {
-				controller = {
-					has_war_with = event_target:original_owner
-					NOT = { has_full_control_of_state = PREV }
-				}
-			}
-			controller = {
-				every_enemy_country = {
-					limit = {
-						divisions_in_state = { state = PREV.PREV size > 0 }
-						NOT = {
-							is_ally_with = event_target:original_owner
-							has_military_access_to = event_target:original_owner
-							has_war_with = event_target:original_owner
-						}
-					}
-					event_target:original_owner = { give_military_access = PREV }
-					every_other_country = {
-						limit = {
-							is_ally_with = PREV
-							NOT = {
-								is_ally_with = event_target:original_owner
-								has_military_access_to = event_target:original_owner
-								has_war_with = event_target:original_owner
-							}
-						}
-						event_target:original_owner = { give_military_access = PREV }
-					}
-				}
-			}
-		}
-	}
-}
-
 embargo_ROOT = {
 	if = {
 		limit = {
@@ -863,10 +783,8 @@ increase_state_category_by_one_level = {
 		limit = { has_state_category = eleven }
 		set_state_category = twelve
 	}
-	else_if = {
-		limit = { has_state_category = twelve }
-		add_extra_state_shared_building_slots = 1
-	}
+	else = { add_extra_state_shared_building_slots = 1 }
+	custom_effect_tooltip = increase_state_category_by_one_level_tt
 }
 increase_state_category_by_two_levels = {
 	if = {
@@ -914,10 +832,8 @@ increase_state_category_by_two_levels = {
 		set_state_category = twelve
 		add_extra_state_shared_building_slots = 1
 	}
-	else_if = {
-		limit = { has_state_category = twelve }
-		add_extra_state_shared_building_slots = 2
-	}
+	else = { add_extra_state_shared_building_slots = 2 }
+	custom_effect_tooltip = increase_state_category_by_two_levels_tt
 }
 decrease_state_category_by_one_level = {
 	if = {
@@ -963,6 +879,28 @@ decrease_state_category_by_one_level = {
 	else_if = {
 		limit = { has_state_category = two }
 		set_state_category = one
+	}
+	custom_effect_tooltip = decrease_state_category_by_one_level_tt
+}
+
+### adds research slots until three, then gives a temporary research speed bonus
+add_research_slot_until_three = {
+	if = {
+		limit = { amount_research_slots < 3 }
+		add_research_slot = 1
+	}
+	else_if = {
+		limit = { has_idea = generic_research_advances }
+		modify_timed_idea = {
+			idea = generic_research_advances
+			days = 730
+		}
+	}
+	else = {
+		add_timed_idea = {
+			idea = generic_research_advances
+			days = 730
+		}
 	}
 }
 
@@ -1383,25 +1321,7 @@ log_RP_eastern_military = {
 			value = max_divisions
 		}
 	}
-	log = "KRU_nit;[GetDateText];Reichspakt East;[?GER.ee_divcount];[?GER.ee_divlimit]"
-}
-
-log_AUS_full_empire = {
-	set_variable = { AUS.empire_divcount = 0 }
-	set_variable = { AUS.empire_divlimit = 0 }
-	set_variable = { AUS.empire_armysize = 0 }
-	every_country = {
-		limit = { has_autonomy_state = kr_crownland }
-		add_to_variable = {
-			var = AUS.empire_divcount
-			value = num_divisions
-		}
-		add_to_variable = {
-			var = AUS.empire_divlimit
-			value = max_divisions
-		}
-	}
-	log = "KR_Unit;[GetDateText];Full Austrian Empire;[?AUS.empire_divcount];[?AUS.empire_divlimit]"
+	log = "KR_Unit;[GetDateText];Reichspakt East;[?GER.ee_divcount];[?GER.ee_divlimit]"
 }
 
 # scope is the country being freed
@@ -1410,7 +1330,7 @@ remove_puppet_and_leave_faction = {
 		limit = { is_in_faction = yes }
 		leave_faction = yes
 	}
-	else_if = {
+	if = {
 		limit = { is_subject = yes }
 		overlord = {
 			set_autonomy = {

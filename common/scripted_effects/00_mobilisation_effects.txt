@@ -235,6 +235,27 @@ disband_fifty_percent_units = {
 	}
 }
 
+calculate_manpower_based_on_compliance = {
+	set_temp_variable = { state_manpower = 0.02 }
+	add_to_temp_variable = { state_manpower = modifier@local_non_core_manpower }
+	multiply_temp_variable = { state_manpower = state_population_k }
+}
+
+calculate_available_factories_based_on_compliance = {
+	set_temp_variable = { state_factories_non_core = building_level@industrial_complex }
+	add_to_temp_variable = { state_factories_non_core = building_level@arms_factory }
+	add_to_temp_variable = { state_factories_non_core = building_level@dockyard }
+
+	set_temp_variable = { compliance_multiplier = 0.75 }
+	add_to_temp_variable = { compliance_multiplier = modifier@local_factories } #negative
+	add_to_temp_variable = { compliance_multiplier = 0.25 }
+	clamp_temp_variable = { var = compliance_multiplier max = 1 }
+
+	multiply_temp_variable = { state_factories_non_core = compliance_multiplier }
+	round_temp_variable = state_factories_non_core
+	add_to_temp_variable = { factory_points = state_factories_non_core }
+}
+
 calculate_maximum_divisions = {
 	### calculate base values - population and total factory count
 	clear_variable = non_core_base
@@ -254,13 +275,10 @@ calculate_maximum_divisions = {
 			add_to_temp_variable = { factory_points = building_level@dockyard }
 		}
 		else = {
-			add_to_variable = { PREV.non_core_base = state_population_k }
+			calculate_manpower_based_on_compliance = yes
+			add_to_variable = { PREV.non_core_base = state_manpower }
 
-			set_temp_variable = { state_factories_non_core = building_level@industrial_complex }
-			add_to_temp_variable = { state_factories_non_core = building_level@arms_factory }
-			add_to_temp_variable = { state_factories_non_core = building_level@dockyard }
-			multiply_temp_variable = { state_factories_non_core = 0.02 }
-			add_to_temp_variable = { factory_points = state_factories_non_core }
+			calculate_available_factories_based_on_compliance = yes
 		}
 	}
 
@@ -280,14 +298,10 @@ calculate_maximum_divisions = {
 					add_to_temp_variable = { factory_points = building_level@dockyard }
 				}
 				else = {
-					add_to_variable = { PREV.PREV.base_states = 0.02 }
-					add_to_variable = { PREV.PREV.non_core_base = state_population_k }
+					calculate_manpower_based_on_compliance = yes
+					add_to_variable = { PREV.PREV.non_core_base = state_manpower }
 
-					set_temp_variable = { state_factories_non_core = building_level@industrial_complex }
-					add_to_temp_variable = { state_factories_non_core = building_level@arms_factory }
-					add_to_temp_variable = { state_factories_non_core = building_level@dockyard }
-					multiply_temp_variable = { state_factories_non_core = 0.02 }
-					add_to_temp_variable = { factory_points = state_factories_non_core }
+					calculate_available_factories_based_on_compliance = yes
 				}
 			}
 		}
@@ -322,13 +336,10 @@ calculate_maximum_divisions = {
 					add_to_temp_variable = { factory_points = building_level@dockyard }
 				}
 				else = {
-					add_to_temp_variable = { non_core_base_temp = state_population_k }
+					calculate_manpower_based_on_compliance = yes
+					add_to_temp_variable = { non_core_base_temp = state_manpower }
 
-					set_temp_variable = { state_factories_non_core = building_level@industrial_complex }
-					add_to_temp_variable = { state_factories_non_core = building_level@arms_factory }
-					add_to_temp_variable = { state_factories_non_core = building_level@dockyard }
-					multiply_temp_variable = { state_factories_non_core = 0.02 }
-					add_to_temp_variable = { factory_points = state_factories_non_core }
+					calculate_available_factories_based_on_compliance = yes
 				}
 			}
 			multiply_temp_variable = { base_units_temp = modifier@unit_limit_subject_bonus }
@@ -341,14 +352,12 @@ calculate_maximum_divisions = {
 		add_to_variable = { base_units = subject_base_units }
 		divide_variable = { subject_base_units = 1000 } #for the tooltip
 
-		# non-cores only give 2% of the population
-		divide_variable = { subject_non_core_base = 50 }
+		# non-cores
 		add_to_variable = { base_units = subject_non_core_base }
 		divide_variable = { subject_non_core_base = 1000 } #for the tooltip
 	}
 
-	# non-cores only give 2% of the population
-	divide_variable = { non_core_base = 50 }
+	# non-cores
 	add_to_variable = { base_units = non_core_base }
 	divide_variable = { non_core_base = 1000 } #for the tooltip
 
