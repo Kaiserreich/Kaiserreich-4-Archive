@@ -2396,7 +2396,9 @@ country_event = { #Fate of Poland
 					NOT = {
 						state = 10 #Warsaw
 						state = 87 #Kalisz
+						state = 88 #Krakow
 						state = 90 #Kielce
+						state = 91 #Lwow
 						state = 92 #Lublin
 						state = 97 #Bialystok
 						state = 98 #Plock
@@ -2407,6 +2409,7 @@ country_event = { #Fate of Poland
 				remove_claim_by = POL
 			}
 			80 = { retain_state = yes } #Cernauti
+			97 = { retain_state = yes } #Bialystok
 			713 = { retain_state = yes } #Suceava
 			1088 = { retain_state = yes } #Chelm
 		}
@@ -2446,16 +2449,11 @@ country_event = { #Fate of Poland
 				91 = { is_valid_annexation_state = yes } #Lwow
 			}
 		}
-		every_owned_state = {
-			limit = {
-				OR = {
-					is_core_of = POL
-					region = 155 #Galicia
-				}
-				is_claim_or_core_of_ROOT = no
-			}
-			transfer_state_to = POL
-		}
+		1088 = { clear_retain_state = yes } #Chelm
+		set_temp_variable = { tag_to_release = POL }
+		POL = { set_transfer_target = yes }
+		GAL = { set_transfer_target = yes }
+		transfer_territory_from_core_regions_and_add_claims = yes
 		if = {
 			limit = { has_subject = GAL }
 			hidden_effect = {
@@ -2478,7 +2476,6 @@ country_event = { #Fate of Poland
 				}
 			}
 		}
-		set_temp_variable = { tag_to_release = POL }
 		puppet_released_tag_nocosmetic = yes
 		POL_puppet_setup = yes
 		GAL_characters_join_poland = yes
@@ -2911,7 +2908,7 @@ country_event = { #Fate of Estonia
 			}
 		}
 		set_temp_variable = { tag_to_release = BAT }
-		add_to_temp_array = { target_cores_to_release = EST }
+		EST = { set_transfer_target = yes }
 		transfer_territory_from_core_regions = yes
 		hidden_effect = {
 			EST = { EST_johan_pitka = { set_nationality = BAT } }
@@ -3144,7 +3141,7 @@ country_event = { #Fate of Latvia
 			}
 		}
 		set_temp_variable = { tag_to_release = BAT }
-		add_to_temp_array = { target_cores_to_release = LAT }
+		LAT = { set_transfer_target = yes }
 		transfer_territory_from_core_regions_and_add_cores = yes
 	}
 
@@ -3795,8 +3792,8 @@ country_event = { #Fate of Bohemia
 			}
 		}
 		set_temp_variable = { tag_to_release = CZE }
-		add_to_temp_array = { target_cores_to_release = CZE }
-		add_to_temp_array = { target_cores_to_release = SLO }
+		CZE = { set_transfer_target = yes }
+		SLO = { set_transfer_target = yes }
 		71 = { retain_state = yes } #Danubian Plain
 		73 = { retain_state = yes } #Transcarpathia
 		1090 = { retain_state = yes } #Pressburg
@@ -3817,7 +3814,7 @@ country_event = { #Fate of Bohemia
 			base = 1000
 		}
 		set_temp_variable = { tag_to_release = AUS }
-		add_to_temp_array = { target_cores_to_release = CZE }
+		CZE = { set_transfer_target = yes }
 		if = {
 			limit = { has_subject = AUS }
 			transfer_territory_from_core_regions_and_add_cores = yes
@@ -7659,46 +7656,76 @@ country_event = { #Fate of France
 
 	immediate = {
 		hidden_effect = {
+			every_state = {
+				limit = {
+					OR = {
+						is_core_of = FRA
+						is_claimed_by = FRA
+					}
+					is_european_france = no
+					NOT = { state = 1 } #Corsica
+				}
+				remove_core_of = FRA
+				remove_claim_by = FRA
+			}
+			28 = { retain_state = yes } #Alsace-Lorraine
 			817 = { retain_state = yes } #Roussillon
+			if = {
+				limit = { is_italian_tag = yes }
+				1 = { retain_state = yes } #Corsica
+				735 = { retain_state = yes } #Savoy
+				762 = { retain_state = yes } #Nice
+				943 = { retain_state = yes } #Upper Savoy
+			}
 		}
 	}
 
 	option = {
 		name = annex.1041.a #Restore the Commune of France!
 		ai_chance = {
-			base = 1000
+			base = 100
 		}
 		trigger = {
 			has_socialist_government = yes
 			NOT = { country_exists = FRA }
 		}
 		set_temp_variable = { tag_to_release = FRA }
-		release_france = yes
+		release_targeted_tag = yes
 	}
 
 	option = {
 		name = annex.1041.b #Restore the French Republic!
 		ai_chance = {
-			base = 1000
+			base = 100
 		}
 		trigger = {
-			has_socialist_government = no
-			ENT = { is_ally_with = ROOT }
+			is_ally_with = ENT
 			NOT = { country_exists = NFA }
+			has_socialist_government = no
 		}
 		set_temp_variable = { tag_to_release = NFA }
-		release_france = yes
-		NFA = {
-			set_capital = { state = 16 remember_old_capital = no }
+		FRA = { set_transfer_target = yes }
+		transfer_territory_from_core_regions_and_add_claims = yes
+		puppet_released_tag = yes
+		hidden_effect = {
+			var:tag_to_release = {
+				if = {
+					limit = { has_completed_focus = NATFRA_Reconstruction_Commission }
+					every_state = {
+						limit = { is_european_france = yes }
+						PREV = { activate_targeted_decision = { decision = NFA_Integrate_Metropole target = PREV } }
+					}
+				}
+			}
 		}
 	}
 
 	option = {
 		name = annex.1041.c #Set up a French Puppet Government
 		ai_chance = {
-			base = 90
-			modifier = { # Make the GER AI, more likely to go to the Congress of Lyon if NFA is a player
-				factor = 0.5
+			base = 70
+			modifier = {
+				factor = 0
 				tag = GER
 				NFA = { is_ai = no }
 			}
@@ -7706,33 +7733,42 @@ country_event = { #Fate of France
 		trigger = {
 			has_socialist_government = no
 			NOT = {
-				ENT = { is_ally_with = ROOT }
-				NFA = { is_ally_of_ROOT = yes }
+				is_ally_with = ENT
+				is_ally_with = NFA
 				country_exists = FRP
 			}
 		}
 		set_temp_variable = { tag_to_release = FRP }
-		release_france = yes
+		FRA = { set_transfer_target = yes }
+		transfer_territory_from_core_regions_and_add_cores = yes
+		puppet_released_tag = yes
+
+		if = {
+			limit = { country_exists = NFA }
+			reverse_add_opinion_modifier = {
+				target = NFA
+				modifier = occupied_france
+			}
+		}
 	}
 
 	option = {
 		name = annex.1041.d #Set up a French Puppet Government and liberate Brittany
 		ai_chance = {
 			base = 30
+			modifier = {
+				factor = 0
+				tag = GER
+				NFA = { is_ai = no }
+			}
 		}
 		trigger = {
 			has_socialist_government = no
 			owns_state = 14
 			NOT = {
-				ENT = { is_ally_with = ROOT }
-				NFA = { is_ally_of_ROOT = yes }
+				is_ally_with = ENT
+				is_ally_with = NFA
 				country_exists = FRP
-				AND = {
-					tag = GER
-					NFA = {
-						any_owned_state = { is_european_france = yes }
-					}
-				}
 			}
 		}
 		BRI = {
@@ -7743,52 +7779,40 @@ country_event = { #Fate of France
 		release_targeted_tag = yes
 
 		set_temp_variable = { tag_to_release = FRP }
-		release_france = yes
+		FRA = { set_transfer_target = yes }
+		transfer_territory_from_core_regions_and_add_cores = yes
+		puppet_released_tag = yes
+
+		if = {
+			limit = { country_exists = NFA }
+			reverse_add_opinion_modifier = {
+				target = NFA
+				modifier = occupied_france
+			}
+		}
 	}
 
 	option = {
 		name = annex.1041.e #Give it to our French allies
 		trigger = {
-			NFA = { is_ally_of_ROOT = yes }
+			is_ally_with = NFA
 		}
 		ai_chance = {
-			base = 1000
+			base = 100
 		}
-		every_owned_state = {
-			limit = {
-				is_european_france = yes
-				is_claim_or_core_of_ROOT = no
-				if = {
-					limit = {
-						ROOT = { is_italian_tag = yes }
-					}
-					NOT = {
-						state = 762 #Nice
-						state = 735 #Savoy
-						state = 943 #Upper Savoy
-					}
-				}
-				else_if = {
-					limit = {
-						ROOT = { is_germany_or_splinter_tag = yes }
-					}
-					NOT = { state = 28 } #Alsace-Lorraine
-				}
-			}
-			transfer_state_to = NFA
-		}
+		set_temp_variable = { tag_to_release = NFA }
+		FRA = { set_transfer_target = yes }
+		transfer_territory_from_core_regions_and_add_claims = yes
 	}
 
 	option = {
 		name = annex.1041.f #Meet with the French
 		trigger = {
 			tag = GER
-			NFA = {
-				any_owned_state = { is_european_france = yes }
-			}
+			NFA = { any_owned_state = { is_european_france = yes } }
 		}
 		ai_chance = {
-			base = 225
+			base = 100
 		}
 		NFA = { country_event = nfa.120 }
 	}
@@ -7799,6 +7823,8 @@ country_event = { #Fate of France
 			NOT = { is_ally_with = NFA }
 		}
 		ai_chance = { base = 0 }
+		occupy_large_country = yes
+		set_country_flag = FRA_CONQ
 		if = {
 			limit = { country_exists = NFA }
 			reverse_add_opinion_modifier = {
@@ -7806,8 +7832,6 @@ country_event = { #Fate of France
 				modifier = occupied_france
 			}
 		}
-		occupy_large_country = yes
-		set_country_flag = FRA_CONQ
 	}
 }
 
@@ -9870,7 +9894,7 @@ country_event = { #Fate of Flanders
 		ai_chance = {
 			base = 50
 		}
-		add_to_temp_array = { target_cores_to_release = FLA }
+		FLA = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = HOL }
 		transfer_territory_from_core_regions = yes
 	}
@@ -9887,7 +9911,7 @@ country_event = { #Fate of Flanders
 		ai_chance = {
 			base = 25
 		}
-		add_to_temp_array = { target_cores_to_release = FLA }
+		FLA = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = WAL }
 		transfer_territory_from_core_regions = yes
 	}
@@ -9900,7 +9924,7 @@ country_event = { #Fate of Flanders
 		ai_chance = {
 			base = 25
 		}
-		add_to_temp_array = { target_cores_to_release = FLA }
+		FLA = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = WAL }
 		transfer_territory_from_core_regions = yes
 		WAL = {
@@ -10075,7 +10099,7 @@ country_event = { #Fate of Wallonia
 		ai_chance = {
 			base = 25
 		}
-		add_to_temp_array = { target_cores_to_release = WAL }
+		WAL = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = 24.owner }
 		transfer_territory_from_core_regions_and_add_claims = yes
 	}
@@ -10088,7 +10112,7 @@ country_event = { #Fate of Wallonia
 		ai_chance = {
 			base = 25
 		}
-		add_to_temp_array = { target_cores_to_release = WAL }
+		WAL = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = FLA }
 		transfer_territory_from_core_regions = yes
 		FLA = {
@@ -11370,7 +11394,7 @@ country_event = { #Fate of the Ukraine
 				is_german_tag = yes
 			}
 		}
-		add_to_temp_array = { target_cores_to_release = UKR }
+		UKR = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = 219.owner }
 		transfer_territory_from_core_regions = yes
 	}
@@ -12084,7 +12108,7 @@ country_event = { #Fate of Belarus
 				is_ally_with = ROOT
 			}
 		}
-		add_to_temp_array = { target_cores_to_release = WHR }
+		WHR = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = 219.owner }
 		transfer_territory_from_core_regions = yes
 	}
@@ -12543,9 +12567,9 @@ country_event = { #Fate of Russia
 				}
 			}
 		}
-		add_to_temp_array = { target_cores_to_release = RUS }
-		add_to_temp_array = { target_cores_to_release = SOV }
-		add_to_temp_array = { target_cores_to_release = TRM }
+		RUS = { set_transfer_target = yes }
+		SOV = { set_transfer_target = yes }
+		TRM = { set_transfer_target = yes }
 		if = {
 			limit = { has_socialist_government = yes }
 			set_temp_variable = { tag_to_release = SOV }
@@ -12834,7 +12858,7 @@ country_event = { #Fate of the Don-Kuban Union
 		1006 = { add_claim_of_target_and_transfer_if_owned = yes } #Novorossiysk
 
 		custom_effect_tooltip = tooltip_white_line
-		add_to_temp_array = { target_cores_to_release = DKB }
+		DKB = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = 219.owner }
 		transfer_territory_from_core_regions = yes
 	}
@@ -12855,7 +12879,7 @@ country_event = { #Fate of the Don-Kuban Union
 				is_ally_with = event_target:russia
 			}
 		}
-		add_to_temp_array = { target_cores_to_release = DKB }
+		DKB = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = 219.owner }
 		transfer_territory_from_core_regions = yes
 	}
@@ -12875,7 +12899,7 @@ country_event = { #Fate of the Don-Kuban Union
 		occupy_small_country = yes
 
 		custom_effect_tooltip = tooltip_white_line
-		add_to_temp_array = { target_cores_to_release = DKB }
+		DKB = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = 219.owner }
 		transfer_territory_from_core_regions = yes
 	}
@@ -14658,7 +14682,7 @@ country_event = { #Fate of Constantinople
 	id = annex.1078
 	immediate = { log = "[GetDateText]: [Root.GetName]: event annex.1078 FROM = [From.GetName]" }
 	title = annexation_CONSTANTINOPLE_CONQ
-	desc = annexation_CONSTANTINOPLE_CONQ_DESC
+	desc = annexation_CONSTANTINOPLE_CONQ_desc
 	picture = GFX_report_event_generic_conference2
 
 	is_triggered_only = yes
@@ -15813,7 +15837,7 @@ country_event = { #Fate of Galicia
 		ai_chance = {
 			base = 100
 		}
-		add_to_temp_array = { target_cores_to_release = GLC }
+		GLC = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = 174.owner }
 		transfer_territory_from_core_regions_and_add_cores = yes
 	}
@@ -15873,7 +15897,7 @@ country_event = { #Fate of Euskadi
 		ai_chance = {
 			base = 100
 		}
-		add_to_temp_array = { target_cores_to_release = BAS }
+		BAS = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = 176.owner }
 		transfer_territory_from_core_regions_and_add_cores = yes
 	}
@@ -15943,7 +15967,7 @@ country_event = { #Fate of Catalonia
 		ai_chance = {
 			base = 100
 		}
-		add_to_temp_array = { target_cores_to_release = CAT }
+		CAT = { set_transfer_target = yes }
 		set_temp_variable = { tag_to_release = 166.owner }
 		transfer_territory_from_core_regions_and_add_cores = yes
 	}
@@ -16044,7 +16068,7 @@ country_event = { #Fate of Portugal
 					}
 					set_temp_variable = { tag_to_release = THIS }
 				}
-				add_to_temp_array = { target_cores_to_release = POR }
+				POR = { set_transfer_target = yes }
 				release_targeted_tag = yes
 			}
 		}
@@ -16153,6 +16177,31 @@ country_event = { #Fate of Southern France
 
 	is_triggered_only = yes
 
+	immediate = {
+		hidden_effect = {
+			every_state = {
+				limit = {
+					OR = {
+						is_core_of = FRA
+						is_claimed_by = FRA
+					}
+					is_european_france = no
+					NOT = { state = 1 } #Corsica
+				}
+				remove_core_of = FRA
+				remove_claim_by = FRA
+			}
+			817 = { retain_state = yes } #Roussillon
+			if = {
+				limit = { is_italian_tag = yes }
+				1 = { retain_state = yes } #Corsica
+				735 = { retain_state = yes } #Savoy
+				762 = { retain_state = yes } #Nice
+				943 = { retain_state = yes } #Upper Savoy
+			}
+		}
+	}
+
 	option = {
 		name = annex.1090.a #Restore the Commune of France!
 		ai_chance = {
@@ -16163,11 +16212,7 @@ country_event = { #Fate of Southern France
 			NOT = { country_exists = FRA }
 		}
 		set_temp_variable = { tag_to_release = FRA }
-		release_france = yes
-		set_autonomy = {
-			target = var:tag_to_release
-			autonomy_state = autonomy_free
-		}
+		release_targeted_tag = yes
 	}
 
 	option = {
@@ -16176,15 +16221,24 @@ country_event = { #Fate of Southern France
 			base = 1000
 		}
 		trigger = {
-			has_socialist_government = no
-			ENT = { is_ally_of_ROOT = yes }
+			is_ally_with = ENT
 			NOT = { country_exists = NFA }
+			has_socialist_government = no
 		}
 		set_temp_variable = { tag_to_release = NFA }
-		release_france = yes
-		set_autonomy = {
-			target = var:tag_to_release
-			autonomy_state = autonomy_free
+		FRA = { set_transfer_target = yes }
+		transfer_territory_from_core_regions_and_add_claims = yes
+		puppet_released_tag = yes
+		hidden_effect = {
+			var:tag_to_release = {
+				if = {
+					limit = { has_completed_focus = NATFRA_Reconstruction_Commission }
+					every_state = {
+						limit = { is_european_france = yes }
+						PREV = { activate_targeted_decision = { decision = NFA_Integrate_Metropole target = PREV } }
+					}
+				}
+			}
 		}
 	}
 
@@ -16196,58 +16250,44 @@ country_event = { #Fate of Southern France
 		trigger = {
 			has_socialist_government = no
 			NOT = {
-				ENT = { is_ally_of_ROOT = yes }
-				NFA = { is_ally_of_ROOT = yes }
+				is_ally_with = ENT
+				is_ally_with = NFA
 				country_exists = FRP
 			}
 		}
 		set_temp_variable = { tag_to_release = FRP }
-		release_france = yes
+		FRA = { set_transfer_target = yes }
+		transfer_territory_from_core_regions_and_add_cores = yes
+		puppet_released_tag = yes
+
+		if = {
+			limit = { country_exists = NFA }
+			reverse_add_opinion_modifier = {
+				target = NFA
+				modifier = occupied_france
+			}
+		}
 	}
 
 	option = {
 		name = annex.1090.d #Give it to our French allies
 		trigger = {
-			OR = {
-				FRA = { is_ally_of_ROOT = yes }
-				NFA = { is_ally_of_ROOT = yes }
-				FRP = { is_ally_of_ROOT = yes }
+			var:16.owner = { #Paris
+				is_french_tag = yes
+				is_ally_with = ROOT
 			}
 		}
 		ai_chance = {
 			base = 10
 		}
-		hidden_effect = {
-			random_other_country = {
-				limit = {
-					is_french_tag = yes
-					is_ally_with = ROOT
-				}
-				set_temp_variable = { tag_to_release = THIS }
-			}
+		set_temp_variable = { tag_to_release = 16.owner }
+		FRA = { set_transfer_target = yes }
+		if = {
+			limit = { var:tag_to_release = { tag = NFA } }
+			transfer_territory_from_core_regions_and_add_claims = yes
 		}
-		every_owned_state = {
-			limit = {
-				is_european_france = yes
-				is_claim_or_core_of_ROOT = no
-				if = {
-					limit = {
-						ROOT = { is_italian_tag = yes }
-					}
-					NOT = {
-						state = 762 #Nice
-						state = 735 #Savoy
-						state = 943 #Upper Savoy
-					}
-				}
-				else_if = {
-					limit = {
-						ROOT = { is_germany_or_splinter_tag = yes }
-					}
-					NOT = { state = 28 } #Alsace-Lorraine
-				}
-			}
-			transfer_state_to = var:tag_to_release
+		else = {
+			transfer_territory_from_core_regions_and_add_cores = yes
 		}
 	}
 
@@ -16266,6 +16306,13 @@ country_event = { #Fate of Southern France
 		ai_chance = { base = 0 }
 		occupy_medium_country = yes
 		set_country_flag = SOUTHFRANCE_CONQ
+		if = {
+			limit = { country_exists = NFA }
+			reverse_add_opinion_modifier = {
+				target = NFA
+				modifier = occupied_france
+			}
+		}
 	}
 }
 
