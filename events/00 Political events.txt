@@ -1577,119 +1577,6 @@ country_event = {
 ###   Demobilization Events    ###
 ##################################
 
-# unit limit calculations
-country_event = { #donotlog
-	id = kr.political.119
-
-	hidden = yes
-	is_triggered_only = yes
-
-	option = {
-		calculate_maximum_divisions = yes
-
-		if = {
-			limit = {
-				NOT = { has_game_rule = { rule = unit_limit_options option = NONE } }
-				OR = {
-					has_game_rule = { rule = unit_limit_options option = STANDARD }
-					is_ai = yes
-				}
-			}
-			# step one, calculate num of actual divisions
-			set_variable = { num_actual_divisions = num_divisions }
-
-			# ignore fake intel divisions
-			subtract_from_variable = { num_actual_divisions = num_fake_intel_divisions }
-
-			# expeditionaries should count towards the sender's limit, not the receiver's
-			clear_variable = num_expeditionary_divisions_sent
-			clear_variable = num_expeditionary_divisions_received
-			for_each_scope_loop = {
-				array = faction_members
-				if = {
-					limit = {
-						received_expeditionary_forces = { sender = ROOT value > 0 }
-					}
-					set_temp_variable = { expeditionary_division_sent_temp = 0 }
-					while_loop_effect = {
-						limit = {
-							received_expeditionary_forces = { sender = ROOT value > expeditionary_division_sent_temp }
-						}
-						add_to_temp_variable = { expeditionary_division_sent_temp = 1 }
-					}
-					add_to_variable = { ROOT.num_expeditionary_divisions_sent = expeditionary_division_sent_temp }
-				}
-				if = {
-					limit = {
-						ROOT = { received_expeditionary_forces = { sender = PREV value > 0 } }
-					}
-					set_temp_variable = { expeditionary_division_received_temp = 0 }
-					while_loop_effect = {
-						limit = {
-							ROOT = { received_expeditionary_forces = { sender = PREV value > expeditionary_division_received_temp } }
-						}
-						add_to_temp_variable = { expeditionary_division_received_temp = 1 }
-					}
-					add_to_variable = { ROOT.num_expeditionary_divisions_received = expeditionary_division_received_temp }
-				}
-			}
-			subtract_from_variable = { num_actual_divisions = num_expeditionary_divisions_received }
-			add_to_variable = { num_actual_divisions = num_expeditionary_divisions_sent }
-
-			# if already suffering penalties, check if they still apply
-			if = {
-				limit = { has_dynamic_modifier = { modifier = mobilisation_penalty_modifier } }
-				if = {
-					limit = {
-						OR = {
-							is_ai = yes
-							has_reached_maximum_divisions = no
-						}
-					}
-					clear_variable = mobilisation_penalty_var
-					clear_variable = mobilisation_penalty_var_positive
-					remove_dynamic_modifier = { modifier = mobilisation_penalty_modifier }
-				}
-				else = {
-					calculate_mobilisation_penalty = yes
-				}
-			}
-			# if not suffering penalties, check if they should apply
-			else_if = {
-				limit = {
-					is_ai = no
-					has_reached_maximum_divisions = yes
-				}
-				calculate_mobilisation_penalty = yes
-				add_dynamic_modifier = { modifier = mobilisation_penalty_modifier }
-			}
-		}
-
-		# check if demobilisation missions should apply
-		if = {
-			limit = {
-				is_ai = no
-				has_war = no
-				has_game_rule = { rule = demobilization_options option = STANDARD }
-			}
-			if = {
-				limit = {
-					has_unsupported_economic_law = yes
-					NOT = { has_active_mission = demobilization_economic }
-				}
-				activate_mission = demobilization_economic
-			}
-			if = {
-				limit = {
-					has_unsupported_manpower_law = yes
-					NOT = { has_active_mission = demobilization_manpower }
-				}
-				activate_mission = demobilization_manpower
-			}
-		}
-	}
-}
-
 # Check after a war whether we should be demobilizing
 country_event = {
 	id = kr.political.120
@@ -1835,8 +1722,7 @@ country_event = {
 	hidden = yes
 	is_triggered_only = yes
 
-	immediate = {
-		calculate_maximum_divisions = yes
+	option = {
 		if = {
 			limit = {
 				is_ai = yes
@@ -1868,7 +1754,7 @@ country_event = { #donotlog
 	hidden = yes
 	is_triggered_only = yes
 
-	immediate = {
+	option = {
 		every_country = {
 			limit = { has_intelligence_agency = yes }
 			every_operative = { add_operative_nationalities = yes }
