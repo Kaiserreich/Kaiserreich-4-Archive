@@ -228,6 +228,9 @@ on_actions = {
 				}
 				update_operation_ai = yes
 			}
+
+			#bypass not calling puppets into war exploit
+			country_event = ai_events.100
 		}
 	}
 
@@ -517,7 +520,22 @@ on_actions = {
 			}
 
 			#Ambition Areas
-			every_state = { create_ambition_areas = yes }
+			every_state = {
+				create_ambition_areas = yes
+				if = {
+					limit = {
+						OR = {
+							has_state_category = wasteland
+							has_state_category = major_port
+							has_state_category = port
+							has_state_category = minor_port
+							has_state_category = one_island
+							has_state_category = zero_island
+						}
+					}
+					set_state_flag = is_insignificant_state_for_peace_conference
+				}
+			}
 
 			#Faction Embargoes
 			every_possible_country = {
@@ -529,7 +547,6 @@ on_actions = {
 					array = ENT.faction_members
 					embargo_PREV = yes
 					PRF = { embargo_PREV = yes } #PRF vs RAJ
-					MDR = { embargo_PREV = yes }
 				}
 				for_each_scope_loop = {
 					array = GER.faction_members
@@ -619,7 +636,7 @@ on_actions = {
 			}
 
 			### Integration Check
-			set_occupation_law_where_available = territorial_integration
+			FROM.FROM = { force_enable_resistance = { occupied = XXA clear = yes } }
 			if = {
 				limit = {
 					FROM.FROM = {
@@ -642,71 +659,40 @@ on_actions = {
 					set_compliance = var:previous_compliance
 					set_resistance = var:previous_resistance
 				}
+				var:integration_target = { set_occupation_law_where_available = territorial_integration }
 			}
 			if = {
 				limit = {
 					FROM.FROM = {
-						NOT = { is_core_of = ROOT }
-						NOT = { occupied = { ROOT = { has_country_flag = can_integrate_@PREV } } }
-						has_state_flag = can_be_integrated_by_@ROOT
-					}
-				}
-				if = {
-					limit = { NOT = { has_country_flag = can_integrate_@ROOT } }
-					set_country_flag = can_integrate_@ROOT
-					set_country_flag = can_integrate_50_@ROOT
-				}
-				FROM.FROM = {
-					force_enable_resistance = { occupier = ROOT }
-
-					if = {
-						limit = { check_variable = { core_countries^num > 0 } }
-						if = {
-							limit = { has_resistance = yes }
-							set_temp_variable = { previous_compliance = compliance }
-							set_temp_variable = { previous_resistance = resistance }
-							cancel_resistance = yes
+						impassable = no
+						has_state_flag = can_integrate_@ROOT
+						NOT = {
+							is_core_of = ROOT
+							AND = {
+								has_resistance = yes
+								OR = {
+									occupied = { original_tag = XXA }
+									occupied = { ROOT = { has_country_flag = can_integrate_@PREV } }
+								}
+							}
 						}
-
-						for_each_loop = {
-							array = core_countries
-							add_to_temp_array = { cores_to_remove = v } #can't remove from an array while iterating it
-						}
-						for_each_loop = {
-							array = cores_to_remove
-							remove_core_of = var:v #remove all cores
-						}
-
-						start_resistance = yes #without any cores, occupied == occupier
-						set_compliance = var:previous_compliance
-						set_resistance = var:previous_resistance
-
-						for_each_loop = {
-							array = cores_to_remove
-							add_core_of = var:v #restore the cores
-						}
-					}
-					else = {
-						start_resistance = yes
-					}
-				}
-			}
-			if = {
-				limit = { FROM.FROM = { has_state_flag = can_be_integrated_by_@FROM } }
-				FROM = {
-					if = {
-						limit = {
-							has_country_flag = can_integrate_@FROM
-							NOT = { any_controlled_state = { has_state_flag = can_be_integrated_by_@FROM } }
-						}
-						clr_country_flag = can_integrate_@FROM
-						clr_country_flag = can_integrate_50_@ROOT
-						clr_country_flag = can_integrate_80_@ROOT
 					}
 				}
 				FROM.FROM = {
-					force_enable_resistance = { occupier = ROOT clear = yes }
+					add_core_of = XXA
+					if = {
+						limit = { has_resistance = yes }
+						set_temp_variable = { previous_compliance = compliance }
+						set_temp_variable = { previous_resistance = resistance }
+						cancel_resistance = yes
+					}
+					force_enable_resistance = { occupied = XXA }
+					start_resistance = XXA
+					set_compliance = var:previous_compliance
+					set_resistance = var:previous_resistance
+					remove_core_of = XXA
 				}
+				XXA = { set_occupation_law_where_available = territorial_integration }
 			}
 
 			#Important countries for logalyzer
@@ -751,6 +737,12 @@ on_actions = {
 					}
 				}
 
+				# clear notifications
+				if = {
+					limit = { is_in_array = { global.faction_joining_alerts = THIS } }
+					remove_from_array = { global.faction_joining_alerts = THIS }
+				}
+
 				# clear tag cores and claims if set to
 				if = {
 					limit = { remove_cores_of_tag_if_non_existent = yes }
@@ -760,18 +752,22 @@ on_actions = {
 							NOT = {
 								AND = {
 									NOT = { is_core_of = owner }
-									owner = { has_country_flag = can_integrate_@PREV.PREV }
+									owner = { has_country_flag = can_integrate_@FROM }
 								}
 							}
-							any_country_with_core = { has_country_flag = can_integrate_@PREV.PREV }
+							any_country_with_core = { has_country_flag = can_integrate_@FROM }
 						}
-						remove_core_of = PREV
+						remove_core_of = FROM
 					}
-					every_state = { remove_claim_by = PREV }
+					every_state = { remove_claim_by = FROM }
 				}
 			}
 			recheck_annexations = yes
-			set_occupation_law_where_available = territorial_integration
+
+			every_occupied_country = {
+				limit = { ROOT = { has_country_flag = can_integrate_@PREV } }
+				set_occupation_law_where_available = territorial_integration
+			}
 		}
 	}
 
@@ -1173,7 +1169,7 @@ on_actions = {
 		effect = {
 			log = "[GetDateText] on_peaceconference_ended ROOT = [Root.GetName] FROM = [From.GetName]"
 
-			#post-PC data cleanup
+			# post-PC data cleanup
 			if = {
 				limit = {
 					set_temp_variable = { last_winner_index = global.pc_winners_array^num }
@@ -1192,7 +1188,7 @@ on_actions = {
 				every_country = { recheck_annexations = yes }
 			}
 
-			# Remove the force-surrender idea, just in case it's still there
+			# remove the force-surrender idea, just in case it's still there
 			FROM = {
 				remove_ideas = ready_to_surrender
 			}
@@ -1203,6 +1199,27 @@ on_actions = {
 				if = {
 					limit = { NOT = { is_owned_by = var:paired_impassable:owner } }
 					transfer_state_to = paired_impassable:owner
+				}
+			}
+
+			### give temporary military access after scripted peaces
+			if = {
+				limit = {
+					country_exists = ROOT
+					country_exists = FROM
+					NOT = { is_neighbor_of = FROM }
+					NOT = { is_ally_with = FROM } #just in case
+					NOT = { FROM = { any_neighbor_country = { is_ally_with = ROOT } } }
+				}
+				if = {
+					limit = { any_owned_state = { FROM = { divisions_in_state = { state = PREV size > 0 } } } }
+					give_military_access = FROM
+				}
+				FROM = {
+					if = {
+						limit = { any_owned_state = { ROOT = { divisions_in_state = { state = PREV size > 0 } } } }
+						give_military_access = ROOT
+					}
 				}
 			}
 
@@ -1254,6 +1271,28 @@ on_actions = {
 			log = "[GetDateText] [Root.GetName] (ROOT) on_capitulation FROM = [From.GetName]"
 			news_event = country_capitulated.0
 
+			# transfer the navy if set to
+			if = {
+				limit = { has_variable = transfer_navy_to }
+				if = {
+					limit = {
+						country_exists = var:transfer_navy_to
+						FROM = { is_ally_with = var:transfer_navy_to }
+					}
+					var:transfer_navy_to = {
+						ROOT = { transfer_navy = { target = PREV } }
+					}
+				}
+				clear_variable = transfer_navy_to
+			}
+		}
+	}
+
+	# ROOT is capitulated country, FROM is winner
+	on_capitulation_immediate = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] (ROOT) on_capitulation_immediate FROM = [From.GetName]"
+
 			# Important countries for logalyzer
 			if = {
 				limit = { ROOT = { tag = GER } }
@@ -1288,28 +1327,6 @@ on_actions = {
 				log = "KR_Event_Logging;NFA FALLS - BY [FROM.GetTag];[GetDateText]"
 			}
 
-			# transfer the navy if set to
-			if = {
-				limit = { has_variable = transfer_navy_to }
-				if = {
-					limit = {
-						country_exists = var:transfer_navy_to
-						FROM = { is_ally_with = var:transfer_navy_to }
-					}
-					var:transfer_navy_to = {
-						ROOT = { transfer_navy = { target = PREV } }
-					}
-				}
-				clear_variable = transfer_navy_to
-			}
-		}
-	}
-
-	# ROOT is capitulated country, FROM is winner
-	on_capitulation_immediate = {
-		effect = {
-			log = "[GetDateText] [Root.GetName] (ROOT) on_capitulation_immediate FROM = [From.GetName]"
-			# Logalyzer logging
 			if = {
 				limit = {
 					ROOT = {
@@ -1598,9 +1615,8 @@ on_actions = {
 				}
 				else_if = {
 					limit = { NOT = { is_in_array = { global.faction_joining_alerts = THIS } } }
-					set_variable = { FROM.faction_joining_alert = PREV }
 					add_to_array = { global.faction_joining_alerts = THIS }
-					add_to_variable = { global.faction_joining_alert_dirty = 1 }
+					set_variable_to_random = global.kaiserreich_alerts_dirty
 					country_event = { id = kr.political.20 days = 10 }
 				}
 			}
@@ -2328,6 +2344,34 @@ on_actions = {
 					}
 				}
 				log = "KR_Event_Logging;ENTENTE ENTERS 2WK;[GetDateText]"
+			}
+			else_if = {
+				limit = {
+					OR = {
+						tag = BPL
+						tag = SER
+					}
+					is_subject = no
+					FROM = {
+						tag = AUS
+						is_subject = no
+					}
+				}
+				log = "KR_Event_Logging;PACT IN 2WK;[GetDateText]"
+			}
+			else_if = {
+				limit = {
+					tag = AUS
+					is_subject = no
+					FROM = {
+						OR = {
+							tag = BPL
+							tag = SER
+						}
+						is_subject = no
+					}
+				}
+				log = "KR_Event_Logging;PACT IN 2WK;[GetDateText]"
 			}
 
 			#TEMP WORKAROUND FOR ENGINE BUG: subjects cannot call their own subjects into wars

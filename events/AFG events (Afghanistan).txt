@@ -9,7 +9,6 @@ add_namespace = afg
 # 5th Anglo-Afghan War
 country_event = { #attack Delhi
 	id = afg.0
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.0 FROM = [From.GetName]" }
 	title = afg.0.t
 	desc = afg.0.d
 	picture = GFX_report_event_british_artillery
@@ -19,17 +18,14 @@ country_event = { #attack Delhi
 		is_subject = no
 		owns_state = 442 #Peshawar
 		owns_state = 445 #Quetta
-		RAJ = {
-			exists = yes
-			NOT = {
-				is_in_faction_with = AFG
-			}
-		}
+		can_declare_war_on = RAJ
+		is_neighbor_of = RAJ
 	}
 
 	is_triggered_only = yes
 
 	option = {
+		log = "[GetLogInfo]: event afg.0 option afg.0.a"
 		name = afg.0.a
 		ai_chance = {
 			base = 100
@@ -84,6 +80,7 @@ country_event = { #attack Delhi
 	}
 
 	option = {
+		log = "[GetLogInfo]: event afg.0 option afg.0.b"
 		name = afg.0.b
 		ai_chance = {
 			base = 0
@@ -102,7 +99,6 @@ country_event = { #attack Delhi
 # Delhi wins the war
 country_event = {
 	id = afg.1
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.1 FROM = [From.GetName]" }
 	title = afg.1.t
 	picture = GFX_report_event_PRF_war
 
@@ -130,6 +126,7 @@ country_event = {
 	is_triggered_only = yes
 
 	option = {
+		log = "[GetLogInfo]: event afg.1 option afg.1.a"
 		name = afg.1.a
 	}
 }
@@ -137,7 +134,6 @@ country_event = {
 # Afghanistan wins the war
 country_event = {
 	id = afg.2
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.2 FROM = [From.GetName]" }
 	title = afg.2.t
 	desc = afg.2.d
 	picture = GFX_report_event_PRF_war
@@ -147,10 +143,18 @@ country_event = {
 	trigger = {
 		tag = AFG
 		is_valid_peace_target = yes
-		has_war_with = RAJ
 		has_global_flag = RAJ_afghan_war
-		RAJ = { surrender_progress > 0.6 }
 		surrender_progress < 0.2
+		OR = {
+			RAJ = {
+				has_war_with = ROOT
+				surrender_progress > 0.8
+			}
+			AND = {
+				NOT = { country_exists = RAJ }
+				owns_state = 443 #Sindh
+			}
+		}
 	}
 
 	mean_time_to_happen = {
@@ -164,40 +168,36 @@ country_event = {
 	}
 
 	option = {
+		log = "[GetLogInfo]: event afg.2 option afg.2.a"
 		name = afg.2.a #Let us claim Kashmir and carve a path to the Mouth of the Indus!
-		ai_chance = {
-			base = 98
-		}
 		add_stability = -0.10
 		add_state_core = 441 #Kashmir
 		add_state_core = 444 #Baluchistan
 		add_state_core = 891 #Lahore
-		RAJ = {
-			country_event = afg.3
+		if = {
+			limit = { has_war_with = RAJ }
+			RAJ = { country_event = afg.3 }
 		}
 	}
 	option = {
+		log = "[GetLogInfo]: event afg.2 option afg.2.b"
 		name = afg.2.b #I shall be the emancipator and liberator of all Mohammedans in the Indus Valley!
-		ai_chance = {
-			base = 1
-		}
-		add_political_power = -100
+		ai_chance = { base = 0 }
+		add_political_power = -200
 		add_stability = -0.20
-		add_state_core = 441 #Kashmir
-		add_state_core = 444 #Baluchistan
-		add_state_core = 891 #Lahore
-		add_state_core = 440 #Punjab
-		add_state_core = 443 #Sindh
-		add_state_core = 890 #Shimla
 		RAJ = {
-			country_event = afg.3
+			every_owned_state = { add_core_of = ROOT }
+			if = {
+				limit = { has_war_with = ROOT }
+				country_event = afg.3
+			}
 		}
 	}
 	option = {
+		log = "[GetLogInfo]: event afg.2 option afg.2.c"
 		name = afg.2.c #No peace with idol-worshippers, let us complete our conquest!
-		ai_chance = {
-			base = 1
-		}
+		trigger = { has_war_with = RAJ }
+		ai_chance = { base = 0 }
 		add_war_support = -0.20
 		add_political_power = -200
 	}
@@ -206,36 +206,58 @@ country_event = {
 # Delhi receives the peace demand
 country_event = {
 	id = afg.3
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.3 FROM = [From.GetName]" }
 	title = afg.3.t
 	desc = afg.3.d
 	picture = GFX_report_event_PRF_war
 
 	is_triggered_only = yes
 
-	option = {
-		name = afg.3.a #We yield because we have no other choice...
-		add_political_power = -200
-		AFG = { white_peace_with_ROOT = yes }
-		every_owned_state = {
-			limit = { is_core_of = AFG }
-			transfer_state_to = AFG
+	immediate = {
+		if = {
+			limit = { is_in_faction = yes }
+			faction_leader = { save_event_target_as = white_peace_receiver }
+		}
+		else_if = {
+			limit = { is_subject = yes }
+			overlord = { save_event_target_as = white_peace_receiver }
+		}
+		else = {
+			save_event_target_as = white_peace_receiver
 		}
 	}
+
 	option = {
+		log = "[GetLogInfo]: event afg.3 option afg.3.a"
+		name = afg.3.a #We yield because we have no other choice...
+		add_political_power = -200
+		if = {
+			limit = {
+				is_in_faction = yes
+				443 = { is_core_of = FROM }
+			}
+			leave_faction = yes
+			custom_effect_tooltip = GAME_OVER_TT
+		}
+		else = {
+			every_owned_state = {
+				limit = { is_core_of = FROM }
+				transfer_state_to = FROM
+			}
+		}
+		FROM = { white_peace_with_TARGET = yes }
+	}
+	option = {
+		log = "[GetLogInfo]: event afg.3 option afg.3.b"
 		name = afg.3.b #They must be joking, Hindustan Zindabad!
 		ai_chance = { base = 0 }
 		add_political_power = -200
-		AFG = {
-			country_event = { id = afg.4 days = 1 }
-		}
+		FROM = { country_event = { id = afg.4 days = 1 } }
 	}
 }
 
 # Delhi refuses the peace demand
 country_event = {
 	id = afg.4
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.4 FROM = [From.GetName]" }
 	title = afg.4.t
 	desc = afg.4.d
 	picture = GFX_report_event_PRF_war
@@ -243,6 +265,7 @@ country_event = {
 	is_triggered_only = yes
 
 	option = {
+		log = "[GetLogInfo]: event afg.4 option afg.4.a"
 		name = afg.4.a
 		add_war_support = 0.10
 	}
@@ -257,7 +280,6 @@ country_event = {
 ###Shia muslims flee the war###
 country_event = {
 	id = afg.5
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.5 FROM = [From.GetName]" }
 	title = afg.5.t
 	desc = afg.5.d
 
@@ -268,6 +290,7 @@ country_event = {
 	is_triggered_only = yes
 
 	option = {
+		log = "[GetLogInfo]: event afg.5 option afg.5.a"
 		name = afg.5.a
 		add_manpower = -5000
 		PER = {
@@ -279,24 +302,21 @@ country_event = {
 ###Shia muslims flee the war - PER message###
 country_event = {
 	id = afg.6
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.6 FROM = [From.GetName]" }
 	title = afg.6.t
 	desc = afg.6.d
 
 	is_triggered_only = yes
 
 	option = { #Welcome them
-		ai_chance = {
-			base = 70
-		}
+		log = "[GetLogInfo]: event afg.6 option afg.6.a"
+		ai_chance = { base = 70 }
 		name = afg.6.a
 		add_manpower = 5000
 	}
 
 	option = { #Close the borders
-		ai_chance = {
-			base = 30
-		}
+		log = "[GetLogInfo]: event afg.6 option afg.6.b"
+		ai_chance = { base = 30 }
 		name = afg.6.b
 		AFG = {
 			country_event = { id = afg.7 days = 4 }
@@ -307,13 +327,13 @@ country_event = {
 ###Shia refugees return from Persia###
 country_event = {
 	id = afg.7
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.7 FROM = [From.GetName]" }
 	title = afg.7.t
 	desc = afg.7.d
 
 	is_triggered_only = yes
 
 	option = {
+		log = "[GetLogInfo]: event afg.7 option afg.7.a"
 		name = afg.7.a
 		add_manpower = 5000
 	}
@@ -322,13 +342,13 @@ country_event = {
 ###Political Instability after the war###
 country_event = {
 	id = afg.8
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.8 FROM = [From.GetName]" }
 	title = afg.8.t
 	desc = afg.8.d
 
 	is_triggered_only = yes
 
 	option = { #Keep current leader
+		log = "[GetLogInfo]: event afg.8 option afg.8.a"
 		ai_chance = {
 			base = 30
 			modifier = {
@@ -356,6 +376,7 @@ country_event = {
 	}
 
 	option = { #New King
+		log = "[GetLogInfo]: event afg.8 option afg.8.c"
 		ai_chance = {
 			base = 35
 			modifier = {
@@ -377,13 +398,13 @@ country_event = {
 ###Order Restored###
 country_event = {
 	id = afg.9
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.9 FROM = [From.GetName]" }
 	title = afg.9.t
 	desc = afg.9.d
 
 	is_triggered_only = yes
 
 	option = {
+		log = "[GetLogInfo]: event afg.9 option afg.9.a"
 		name = afg.9.a
 		add_stability = 0.60 #Initial recovery
 	}
@@ -392,13 +413,13 @@ country_event = {
 ###Chaos in Afganistan###
 country_event = {
 	id = afg.10
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.10 FROM = [From.GetName]" }
 	title = afg.10.t
 	desc = afg.10.d
 
 	is_triggered_only = yes
 
 	option = { #New King
+		log = "[GetLogInfo]: event afg.10 option afg.10.b"
 		name = afg.10.b
 		retire_character = AFG_amanullah_khan
 		promote_character = AFG_mohammad_nadir_khan
@@ -413,13 +434,13 @@ country_event = {
 ### Nadir's Claims to the Throne###
 country_event = {
 	id = afg.14
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.14 FROM = [From.GetName]" }
 	title = afg.14.t
 	desc = afg.14.d
 
 	is_triggered_only = yes
 
 	option = { # Call a jirga
+		log = "[GetLogInfo]: event afg.14 option afg.14.a"
 		name = afg.14.a
 		add_stability = 0.02
 		country_event = { id = afg.15 days = 7 }
@@ -429,16 +450,14 @@ country_event = {
 ### Jirga decide what to do with Nadir###
 country_event = {
 	id = afg.15
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.15 FROM = [From.GetName]" }
 	title = afg.15.t
 	desc = afg.15.d
 
 	is_triggered_only = yes
 
 	option = { # Accept him
-		ai_chance = {
-			base = 90
-		}
+		log = "[GetLogInfo]: event afg.15 option afg.15.a"
+		ai_chance = { base = 90 }
 		name = afg.15.a
 		add_political_power = 10
 		add_stability = 0.03
@@ -446,9 +465,8 @@ country_event = {
 	}
 
 	option = { # Denounce him
-		ai_chance = {
-			base = 10
-		}
+		log = "[GetLogInfo]: event afg.15 option afg.15.b"
+		ai_chance = { base = 10 }
 		name = afg.15.b
 		add_political_power = -60
 		add_stability = -0.10
@@ -459,7 +477,6 @@ country_event = {
 ### Choose new HoG ###
 country_event = {
 	id = afg.16
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.16 FROM = [From.GetName]" }
 	title = afg.16.t
 	desc = afg.16.d
 
@@ -467,9 +484,8 @@ country_event = {
 	is_triggered_only = yes
 
 	option = { # Muhammed Ghobar
-		ai_chance = {
-			base = 30
-		}
+		log = "[GetLogInfo]: event afg.16 option afg.16.a"
+		ai_chance = { base = 30 }
 		name = afg.16.a
 		AFG_mohammad_ghobar_sic = yes
 		add_stability = -0.03
@@ -479,9 +495,8 @@ country_event = {
 	}
 
 	option = { # Abdul Hadi Dawai
-		ai_chance = {
-			base = 20
-		}
+		log = "[GetLogInfo]: event afg.16 option afg.16.b"
+		ai_chance = { base = 20 }
 		name = afg.16.b
 		AFG_abdul_hadi_dawi_sic = yes
 		add_stability = -0.03
@@ -491,9 +506,8 @@ country_event = {
 	}
 
 	option = { # Mahmud Khan
-		ai_chance = {
-			base = 50
-		}
+		log = "[GetLogInfo]: event afg.16 option afg.16.c"
+		ai_chance = { base = 50 }
 		name = afg.16.c
 		add_stability = -0.1
 		add_popularity = {
@@ -505,7 +519,6 @@ country_event = {
 ### Status of Amanullah's Reforms ###
 country_event = {
 	id = afg.17
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.17 FROM = [From.GetName]" }
 	title = afg.17.t
 	desc = afg.17.d
 
@@ -522,9 +535,8 @@ country_event = {
 	}
 
 	option = { # Only Agrarian reforms
-		ai_chance = {
-			base = 60
-		}
+		log = "[GetLogInfo]: event afg.17 option afg.17.a"
+		ai_chance = { base = 60 }
 		name = afg.17.a
 		add_stability = -0.05
 		add_political_power = -50
@@ -555,17 +567,15 @@ country_event = {
 	}
 
 	option = { # Do Nothing
-		ai_chance = {
-			base = 30
-		}
+		log = "[GetLogInfo]: event afg.17 option afg.17.b"
+		ai_chance = { base = 30 }
 		name = afg.17.b
 		add_stability = 0.04
 	}
 
 	option = { # Full Reforms
-		ai_chance = {
-			base = 10
-		}
+		log = "[GetLogInfo]: event afg.17 option afg.17.c"
+		ai_chance = { base = 10 }
 		name = afg.17.c
 		add_stability = -0.15
 		add_political_power = -100
@@ -622,7 +632,6 @@ country_event = {
 ###Indian sarrafs (money changers) left our country###
 country_event = {
 	id = afg.18
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.18 FROM = [From.GetName]" }
 	title = afg.18.t
 	desc = afg.18.d
 
@@ -633,6 +642,7 @@ country_event = {
 	is_triggered_only = yes
 
 	option = {
+		log = "[GetLogInfo]: event afg.18 option afg.18.a"
 		name = afg.18.a
 		add_political_power = -20
 		set_country_flag = AFG_sar_gone
@@ -642,7 +652,6 @@ country_event = {
 ###War is over, sarrafs traders came back###
 country_event = {
 	id = afg.19
-	immediate = { log = "[GetDateText]: [Root.GetName]: event afg.19 FROM = [From.GetName]" }
 	title = afg.19.t
 	desc = afg.19.d
 
@@ -659,6 +668,7 @@ country_event = {
 	is_triggered_only = yes
 
 	option = {
+		log = "[GetLogInfo]: event afg.19 option afg.19.a"
 		name = afg.19.a
 		add_political_power = 15
 		clr_country_flag = AFG_sar_gone

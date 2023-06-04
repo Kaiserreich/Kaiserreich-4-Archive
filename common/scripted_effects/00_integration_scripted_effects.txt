@@ -2,6 +2,8 @@ enable_coring_at_fifty_compliance = {
 	PREV = {
 		set_country_flag = can_integrate_@PREV
 		set_country_flag = can_integrate_50_@PREV
+
+		clr_country_flag = can_integrate_80_@PREV
 	}
 }
 
@@ -9,6 +11,8 @@ enable_coring_at_eighty_compliance = {
 	PREV = {
 		set_country_flag = can_integrate_@PREV
 		set_country_flag = can_integrate_80_@PREV
+
+		clr_country_flag = can_integrate_50_@PREV
 	}
 }
 
@@ -20,19 +24,65 @@ disable_coring = {
 	}
 }
 
-add_cores_upon_reaching_compliance_threshold = {
+enable_state_integration_50_compliance = {
+	set_state_flag = can_integrate_@PREV
+	set_state_flag = can_integrate_50_@PREV
+	enable_state_integration_50_tooltip = yes
+}
+
+enable_state_integration_50_tooltip = {
+	custom_effect_tooltip = state_integration_at_fifty_compliance
+	custom_effect_tooltip = state_integration_law_unlocked
+}
+
+enable_state_integration_80_compliance = {
+	set_state_flag = can_integrate_@PREV
+	set_state_flag = can_integrate_80_@PREV
+	enable_state_integration_80_tooltip = yes
+}
+
+enable_state_integration_80_tooltip = {
+	custom_effect_tooltip = state_integration_at_eighty_compliance
+	custom_effect_tooltip = state_integration_law_unlocked
+}
+
+add_state_core_upon_reaching_compliance_threshold = {
+	add_core_of = ROOT
+	hidden_effect = {
+		remove_claim_by = ROOT
+		force_enable_resistance = { occupier = ROOT clear = yes }
+		if = {
+			limit = { has_resistance = yes }
+			cancel_resistance = yes
+		}
+		if = {
+			limit = {
+				is_ai = no
+				NOT = { is_in_array = { ROOT.state_integration_alerts = THIS } }
+			}
+			add_to_array = { ROOT.state_integration_alerts = THIS }
+			set_variable_to_random = global.kaiserreich_alerts_dirty
+		}
+	}
+}
+
+add_country_cores_upon_reaching_compliance_threshold = {
 	if = {
 		limit = {
 			NOT = { country_exists = FROM }
 			FROM = { remove_cores_of_tag_if_non_existent = yes }
 		}
 		every_controlled_state = {
-			limit = { is_core_of = FROM }
+			limit = {
+				is_core_of = FROM
+				NOT = { is_core_of = ROOT }
+			}
 			add_core_of = ROOT
 			hidden_effect = {
 				remove_claim_by = ROOT
 				remove_core_of = FROM
 			}
+			flag_specific_integrated_states = yes
 		}
 		hidden_effect = {
 			every_state = { remove_claim_by = FROM }
@@ -40,13 +90,36 @@ add_cores_upon_reaching_compliance_threshold = {
 	}
 	else = {
 		every_controlled_state = {
-			limit = { is_core_of = FROM }
+			limit = {
+				is_core_of = FROM
+				NOT = { is_core_of = ROOT }
+			}
 			add_core_of = ROOT
 			hidden_effect = { remove_claim_by = ROOT }
+			flag_specific_integrated_states = yes
 		}
 	}
 	hidden_effect = {
+		if = {
+			limit = {
+				is_ai = no
+				NOT = { is_in_array = { ROOT.country_integration_alerts = FROM } }
+			}
+			add_to_array = { ROOT.country_integration_alerts = FROM }
+			set_variable_to_random = global.kaiserreich_alerts_dirty
+		}
 		fire_country_specific_integration_content = yes
+	}
+}
+
+flag_specific_integrated_states = {
+	if = {
+		limit = { state = 463 } #Alaska
+		save_event_target_as = USA_cored_alaska
+	}
+	else_if = {
+		limit = { state = 950 } #Inhambane & Gaza
+		save_event_target_as = SAF_cored_lourenco_marques
 	}
 }
 
@@ -54,5 +127,41 @@ fire_country_specific_integration_content = {
 	if = {
 		limit = { original_tag = ANQ }
 		country_event = { id = anq.181 days = 1 }
+	}
+	if = {
+		limit = { original_tag = RUS }
+		country_event = { id = rusfor.1273 days = 150 }
+	}
+	if = {
+		limit = { original_tag = SAF }
+		if = {
+			limit = { FROM = { original_tag = NMB } }
+			country_event = { id = saf.314 days = 90 random_days = 30 }
+		}
+		else_if = {
+			limit = { has_event_target = SAF_cored_lourenco_marques }
+			950 = { set_state_name = STATE_950_SOUTH_AFRICAN }
+			country_event = { id = saf.313 days = 90 random_days = 30 }
+		}
+	}
+	else_if = {
+		limit = {
+			OR = {
+				original_tag = USA
+				original_tag = PSA
+			}
+		}
+		if = {
+			limit = { FROM = { original_tag = PUE } }
+			country_event = ustates.155 #Puerto Rico statehood
+		}
+		else_if = {
+			limit = { FROM = { original_tag = HAW } }
+			country_event = ustates.154 #Hawaii statehood
+		}
+		else_if = {
+			limit = { has_event_target = USA_cored_alaska }
+			country_event = ustates.153 #Alaska statehood
+		}
 	}
 }
