@@ -1,11 +1,22 @@
 on_actions = {
 	on_startup = {
 		effect = {
-			for_each_scope_loop = {
-				array = GER.owned_states
+			every_state = {
+				limit = { is_full_germany = yes }
 				if = {
-					limit = { is_full_germany = yes }
-					add_to_array = { global.GER_germany_region = THIS }
+					limit = { is_germany = yes }
+					GRU = { PREV = { enable_state_integration_50_compliance = yes } }
+					RHI = { PREV = { enable_state_integration_50_compliance = yes } }
+					PRE = { PREV = { enable_state_integration_50_compliance = yes } }
+					NGF = { PREV = { enable_state_integration_50_compliance = yes } }
+					BAY = { PREV = { enable_state_integration_50_compliance = yes } }
+				}
+				else = {
+					GRU = { PREV = { enable_state_integration_80_compliance = yes } }
+					RHI = { PREV = { enable_state_integration_80_compliance = yes } }
+					PRE = { PREV = { enable_state_integration_80_compliance = yes } }
+					NGF = { PREV = { enable_state_integration_80_compliance = yes } }
+					BAY = { PREV = { enable_state_integration_80_compliance = yes } }
 				}
 			}
 		}
@@ -136,12 +147,13 @@ on_actions = {
 			}
 			if = {
 				limit = {
-					GER_is_in_mitteleuropa = no
 					is_subject = yes
 					GER = {
-						is_major = yes
 						is_in_faction_with = var:PREV.overlord
+						GER_is_in_mitteleuropa = yes
 					}
+					GER_is_in_mitteleuropa = no
+					is_in_europe = yes
 					NOT = {
 						has_country_flag = AUS_intervened_in_weltkrieg
 						has_country_flag = AUS_former_faction_member
@@ -180,6 +192,7 @@ on_actions = {
 					limit = {
 						FROM = {
 							GER_is_in_mitteleuropa = no
+							is_in_europe = yes
 							NOT = {
 								has_country_flag = AUS_intervened_in_weltkrieg
 								has_country_flag = AUS_former_faction_member
@@ -189,8 +202,12 @@ on_actions = {
 					FROM = { country_event = { id = germit.6 days = 2 } }
 				}
 			}
-			#Country leaves Mitteleuropa
-			else = {
+			#Country kicked out of Mitteleuropa if allied to a hostile faction
+			else_if = {
+				limit = {
+					NOT = { is_ally_with = GER } #just in case
+					is_country_in_faction_hostile_to_germany = yes
+				}
 				FROM = { country_event = germit.4 }
 			}
 
@@ -234,16 +251,23 @@ on_actions = {
 			if = {
 				limit = {
 					GER_is_in_mitteleuropa = yes
-					GER = { is_ally_with = FROM }
+					OR = {
+						FROM = { is_ally_with = GER } #== attacked the Reichspakt
+						FROM = { GER_is_in_mitteleuropa = yes }
+					}
 				}
+				set_country_flag = GER_kicked_from_mitteleuropa
 				country_event = { id = germit.4 hours = 8 }
 			}
 			else_if = {
 				limit = {
 					FROM = { GER_is_in_mitteleuropa = yes }
-					is_ally_with = GER
+					is_ally_with = GER #== attacked by the Reichspakt
 				}
-				FROM = { country_event = { id = germit.4 hours = 8 } }
+				FROM = {
+					set_country_flag = GER_kicked_from_mitteleuropa
+					country_event = { id = germit.4 hours = 8 }
+				}
 			}
 		}
 	}

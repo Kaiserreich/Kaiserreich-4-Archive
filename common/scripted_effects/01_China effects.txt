@@ -103,9 +103,7 @@ find_next_chinese_target = {
 		var = global.china_target_tag
 	}
 	if = {
-		limit = {
-			NOT = { country_exists = CHN }
-		}
+		limit = { NOT = { country_exists = CHN } }
 		set_variable = { global.china_target_tag = FNG }
 	}
 }
@@ -700,6 +698,7 @@ china_puppet_setup = {
 		else = {
 			set_cosmetic_tag = united_china_federalist
 			load_focus_tree = Federalist_China_Tree
+			save_global_event_target_as = UPC_leader
 			set_politics = {
 				ruling_party = social_liberal
 				elections_allowed = no
@@ -807,8 +806,28 @@ china_integrate_TARGET_effect = {
 		}
 		custom_effect_tooltip = tooltip_white_line
 		if = {
-			limit = { var:integrator = { has_country_flag = can_integrate_@event_target:target } }
-			every_core_state = { add_core_of = var:integrator }
+			limit = { has_variable = integrator:can_integrate_@event_target:target }
+			every_core_state = {
+				limit = {
+					NOT = { is_core_of = var:integrator }
+					core_of_PREV_can_be_integrated_by_ROOT = yes
+				}
+				add_core_of = var:integrator
+			}
+			every_core_state = {
+				limit = {
+					is_china_claim_area = yes
+					NOT = { is_core_of = var:integrator }
+					core_of_PREV_can_be_integrated_by_ROOT = no
+				}
+				add_claim_by = var:integrator
+			}
+			hidden_effect = {
+				every_core_state = {
+					limit = { check_variable = { core_countries^num > 1 } }
+					remove_core_of = PREV
+				}
+			}
 		}
 		else = {
 			every_core_state = {
@@ -836,33 +855,25 @@ china_kmt_set_cosmetic_effect = {
 		limit = { var:new_overlord = { china_is_aligned_with_kmt = yes } }
 		#In Alphabetical Order for ease of search
 		if = {
-			limit = { tag = GXC }
+			limit = { original_tag = GXC }
 			set_cosmetic_tag = GXC_KMT
 		}
 		#No HNN cosmetic flag
-		if = {
-			limit = { tag = MON }
-			set_cosmetic_tag = MON_KMT
-		}
-		if = {
-			limit = { tag = SHX }
+		else_if = {
+			limit = { original_tag = SHX }
 			set_cosmetic_tag = SHX_KMT
 		}
 		#No SIK cosmetic flag
-		if = {
-			limit = { tag = SZC }
+		else_if = {
+			limit = { original_tag = SZC }
 			set_cosmetic_tag = SZC_KMT
 		}
-		if = {
-			limit = { tag = TIB }
-			set_cosmetic_tag = TIB_KMT
-		}
-		if = {
-			limit = { tag = XSM }
+		else_if = {
+			limit = { original_tag = XSM }
 			set_cosmetic_tag = XSM_KMT
 		}
-		if = {
-			limit = { tag = YUN }
+		else_if = {
+			limit = { original_tag = YUN }
 			set_cosmetic_tag = YUN_KMT
 		}
 	}
@@ -905,12 +916,20 @@ china_puppet_ROOT_effect = {
 		end_wars = no
 	}
 	hidden_effect = {
+		if = {
+			limit = { has_wargoal_against = ROOT }
+			remove_wargoal = { target = ROOT type = all }
+		}
 		ROOT = {
 			restore_previous_government_type = yes
 			clear_potential_national_government = yes
 			every_owned_state = {
 				limit = { is_core_china = yes }
 				remove_claim_by = PREV
+			}
+			if = {
+				limit = { has_wargoal_against = PREV }
+				remove_wargoal = { target = PREV type = all }
 			}
 			china_kmt_set_cosmetic_effect = yes
 		}
@@ -954,12 +973,20 @@ china_puppet_PREV_effect = {
 		end_wars = no
 	}
 	hidden_effect = {
+		if = {
+			limit = { has_wargoal_against = PREV }
+			remove_wargoal = { target = PREV type = all }
+		}
 		PREV = {
 			restore_previous_government_type = yes
 			clear_potential_national_government = yes
 			every_owned_state = {
 				limit = { is_core_china = yes }
 				remove_claim_by = PREV.PREV
+			}
+			if = {
+				limit = { has_wargoal_against = PREV }
+				remove_wargoal = { target = PREV type = all }
 			}
 			china_kmt_set_cosmetic_effect = yes
 		}
@@ -1058,10 +1085,8 @@ china_break_puppet_effect = {
 			limit = {
 				OR = {
 					has_cosmetic_tag = GXC_KMT
-					has_cosmetic_tag = MON_KMT
 					has_cosmetic_tag = SHX_KMT
 					has_cosmetic_tag = SZC_KMT
-					has_cosmetic_tag = TIB_KMT
 					has_cosmetic_tag = XSM_KMT
 					has_cosmetic_tag = YUN_KMT
 				}
@@ -1435,6 +1460,10 @@ china_enable_all_attack_decisions = {
 
 china_enable_outskirts_decisions = {
 	if = {
+		limit = { can_declare_war_on = XSM }
+		activate_targeted_decision = { decision = china_demand_submission target = XSM }
+	}
+	if = {
 		limit = { can_declare_war_on = MON }
 		activate_targeted_decision = { decision = china_demand_annexation target = MON }
 	}
@@ -1448,7 +1477,13 @@ china_enable_outskirts_decisions = {
 	}
 	if = {
 		limit = { can_declare_war_on = KUM }
-		activate_targeted_decision = { decision = china_demand_submission target = KUM }
+		if = {
+			limit = { KUM = { has_country_flag = is_chinese_tag } }
+			activate_targeted_decision = { decision = china_demand_submission target = KUM }
+		}
+		else = {
+			activate_targeted_decision = { decision = china_demand_annexation target = KUM }
+		}
 	}
 	if = {
 		limit = { can_declare_war_on = ETS }
@@ -1625,4 +1660,20 @@ china_army_reform_remove_officer_penalty = {
 	else = {
 		remove_ideas = china_poor_army_0
 	}
+}
+
+china_merges_wuhan = {
+	1048 = { set_state_flag = wuhan_formed }
+	set_victory_points = { province = 7167 value = 0 } #Wuchang
+	set_victory_points = { province = 12467 value = 0 } #Hankou
+	set_victory_points = { province = 4619 value = 20 } #Wuchang/Wuhan
+	set_province_name = { id = 4619 name = VICTORY_POINTS_4619_WUHAN }
+}
+
+china_splits_wuhan = {
+	1048 = { clr_state_flag = wuhan_formed }
+	set_victory_points = { province = 4619 value = 12 } #Wuchang
+	set_victory_points = { province = 12467 value = 5 } #Hanyang
+	set_victory_points = { province = 7167 value = 5 } #Hankou
+	set_province_name = { id = 4619 name = VICTORY_POINTS_4619 }
 }

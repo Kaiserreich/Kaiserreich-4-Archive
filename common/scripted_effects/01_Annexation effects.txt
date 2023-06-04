@@ -81,8 +81,11 @@ clear_occupy_state = {
 # state scope
 state_given_notification_effect = {
 	hidden_effect = {
-		save_event_target_as = granted_land
-		state_event = { id = annex.2 trigger_for = owner }
+		if = {
+			limit = { owner = { is_ai = no } }
+			save_event_target_as = granted_land
+			state_event = { id = annex.2 trigger_for = owner }
+		}
 	}
 }
 
@@ -124,9 +127,32 @@ transfer_state_without_overriding_occupation = {
 }
 
 # state scope
+temporarily_disable_country_annexation = {
+	hidden_effect = {
+		every_core_state = { set_state_flag = { flag = temporarily_disabled_annexation_@ROOT value = 1 days = 32 } }
+		country_event = { id = annex.1 days = 32 }
+	}
+}
+
+# state scope
+temporarily_disable_annexation = {
+	hidden_effect = {
+		set_state_flag = { flag = temporarily_disabled_annexation_@ROOT value = 1 days = 32 }
+		country_event = { id = annex.1 days = 32 }
+	}
+}
+
+# state scope
+save_as_offered_state = {
+	temporarily_disable_annexation = yes
+	add_to_array = { PREV.offered_states_array = THIS }
+}
+
+# state scope
 transfer_state_and_add_core = {
 	remove_claim_and_add_core_of_target = yes
 	transfer_state_without_overriding_occupation = yes
+	state_given_notification_effect = yes
 	ROOT = { recheck_annexations = yes }
 }
 
@@ -134,6 +160,7 @@ transfer_state_and_add_core = {
 transfer_state_and_add_claim = {
 	add_claim_of_target = yes
 	transfer_state_without_overriding_occupation = yes
+	state_given_notification_effect = yes
 	ROOT = { recheck_annexations = yes }
 }
 
@@ -216,6 +243,7 @@ transfer_if_owned = {
 	if = {
 		limit = { is_valid_annexation_state = yes }
 		transfer_state_without_overriding_occupation = yes
+		state_given_notification_effect = yes
 	}
 	ROOT = { recheck_annexations = yes }
 }
@@ -227,12 +255,9 @@ add_claim_of_target_and_transfer_if_owned = {
 		add_claim_of_target = yes
 	}
 	if = {
-		limit = {
-			NOT = { has_state_flag = retain_state_@PREV }
-			NOT = { has_variable = retain_state_@THIS }
-			is_valid_annexation_state = yes
-		}
+		limit = { is_valid_annexation_state = yes }
 		transfer_state_without_overriding_occupation = yes
+		state_given_notification_effect = yes
 	}
 	ROOT = { recheck_annexations = yes }
 }
@@ -244,12 +269,9 @@ add_core_of_target_and_transfer_if_owned = {
 		remove_claim_and_add_core_of_target = yes
 	}
 	if = {
-		limit = {
-			NOT = { has_state_flag = retain_state_@PREV }
-			NOT = { has_variable = retain_state_@THIS }
-			is_valid_annexation_state = yes
-		}
+		limit = { is_valid_annexation_state = yes }
 		transfer_state_without_overriding_occupation = yes
+		state_given_notification_effect = yes
 	}
 	ROOT = { recheck_annexations = yes }
 }
@@ -260,6 +282,7 @@ add_core_and_transfer_if_owned_else_add_claim = {
 		limit = { is_valid_annexation_state = yes }
 		remove_claim_and_add_core_of_target = yes
 		transfer_state_without_overriding_occupation = yes
+		state_given_notification_effect = yes
 	}
 	else_if = {
 		limit = { is_claim_or_core_of_ROOT = no }
@@ -273,8 +296,8 @@ add_core_if_owned_else_add_claim = {
 	if = {
 		limit = {
 			OR = {
-				is_valid_annexation_state = yes
 				is_owned_by = var:tag_to_release
+				is_valid_annexation_state = yes
 			}
 		}
 		remove_claim_and_add_core_of_target = yes
@@ -290,8 +313,8 @@ add_core_if_owned_else_add_claim = {
 add_core_or_claim_of_target_and_transfer_if_owned = {
 	if = {
 		limit = { has_state_flag = was_core_of_@var:tag_to_release }
-		add_core_of_target_and_transfer_if_owned = yes
 		clr_state_flag = was_core_of_@var:tag_to_release
+		add_core_of_target_and_transfer_if_owned = yes
 	}
 	else_if = {
 		limit = { is_claim_or_core_of_ROOT = no }
@@ -312,22 +335,10 @@ set_transfer_target_state = {
 # global scope
 remove_all_cores_and_claims_of_tags = {
 	every_state = {
-		limit = {
-			any_of = {
-				array = core_removal_array
-				is_claimed_by = var:v
-			}
-		}
 		for_each_loop = {
 			array = core_removal_array
+			remove_core_of = var:v
 			remove_claim_by = var:v
-		}
-	}
-	for_each_scope_loop = {
-		array = core_removal_array
-		every_core_state = {
-			limit = { check_variable = { core_countries^num > 1 } }
-			remove_core_of = PREV
 		}
 	}
 }
@@ -707,45 +718,6 @@ release_spain = {
 	puppet_released_tag_nocosmetic = yes
 }
 
-setup_romanian_puppet_leaders = {
-	hidden_effect = {
-		ROM = {
-			if = {
-				limit = {
-					ROOT = {
-						OR = {
-							tag = UPC
-							is_american_tag = yes
-							AND = {
-								is_russian_tag = yes
-								has_elected_government = yes
-							}
-						}
-					}
-				}
-				promote_character = { character = ROM_ion_mihalache ideology = social_democrat_subtype }
-				promote_character = { character = ROM_ion_mihalache ideology = social_liberal_subtype }
-				promote_character = { character = ROM_dinu_bratianu ideology = market_liberal_subtype }
-				promote_character = { character = ROM_dinu_bratianu ideology = social_conservative_subtype }
-			}
-			if = {
-				limit = {
-					has_country_leader = { character = ROM_carol_ii }
-				}
-				promote_character = { character = ROM_mihai_i ideology = paternal_autocrat_subtype }
-				promote_character = ROM_alexandru_cantacuzino
-			}
-			if = {
-				limit = {
-					has_government = national_populist
-					has_country_leader = { character = ROM_mihai_i }
-				}
-				promote_character = ROM_alexandru_cantacuzino
-			}
-		}
-	}
-}
-
 release_chinese_government = {
 	if = {
 		limit = {
@@ -784,6 +756,17 @@ release_chinese_government = {
 				add_claim_by = var:tag_to_release
 			}
 			transfer_state_to = var:tag_to_release
+		}
+	}
+	hidden_effect = {
+		if = {
+			limit = {
+				693 = { is_valid_annexation_state = yes } #Chamdo
+				322 = { is_valid_annexation_state = no } #Tibet
+				NOT = { has_country_flag = TIB_CONQ }
+				NOT = { is_ally_with = TIB }
+			}
+			693 = { transfer_state_without_overriding_occupation = yes }
 		}
 	}
 	puppet_released_tag = yes
@@ -877,6 +860,7 @@ determine_chinese_ally = {
 					china_is_potential_government = yes
 					exists = yes
 					is_subject = no
+					NOT = { has_war_with = JAP }
 				}
 			}
 			get_highest_scored_country_temp = { scorer = strongest_chinese_government }

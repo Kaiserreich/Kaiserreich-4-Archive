@@ -10,6 +10,7 @@ india_claim_ceylon_effect = {
 		add_claim_by = ROOT
 		enable_state_integration_80_tooltip = yes
 	}
+	CEY = { enable_coring_at_eighty_compliance = yes }
 	if = {
 		limit = {
 			var:422.owner = {
@@ -17,13 +18,31 @@ india_claim_ceylon_effect = {
 					tag = GER
 					is_subject_of = GER
 				}
-				has_full_control_of_state = 422
+				controls_state = 422
 			}
 		}
 		if = {
 			limit = { is_in_faction_with = GER }
 			custom_effect_tooltip = tooltip_white_line
 			GER = { country_event = prf.195 }
+			custom_effect_tooltip = if_they_accept_tt
+			effect_tooltip = {
+				every_state = {
+					limit = {
+						OR = {
+							is_core_of = CEY
+							state = 733 #Andaman Islands
+							state = 818 #Pondicherry
+						}
+						OR = {
+							is_owned_by = GER
+							owner = { is_subject_of = GER }
+						}
+						is_controlled_by = owner
+					}
+					transfer_state_to = ROOT
+				}
+			}
 		}
 		else_if = {
 			limit = {
@@ -34,8 +53,33 @@ india_claim_ceylon_effect = {
 			}
 			custom_effect_tooltip = tooltip_white_line
 			GER = { country_event = prf.194 }
+			effect_tooltip = {
+				every_state = {
+					limit = {
+						OR = {
+							is_core_of = CEY
+							state = 733 #Andaman Islands
+							state = 818 #Pondicherry
+						}
+						OR = {
+							is_owned_by = GER
+							owner = { is_subject_of = GER }
+						}
+						is_controlled_by = owner
+					}
+					transfer_state_to = ROOT
+				}
+			}
 		}
-		else = {
+		else_if = {
+			limit = {
+				var:422.owner = {
+					OR = {
+						tag = GER
+						is_subject_of = GER
+					}
+				}
+			}
 			custom_effect_tooltip = tooltip_white_line
 			custom_effect_tooltip = india_will_seize_ceylon_if_germany_at_war
 		}
@@ -132,11 +176,26 @@ india_claim_burma_effect = {
 }
 
 india_claim_nepal_effect = {
-	add_state_claim = 888 #Sikkim
+	add_ai_strategy = {
+		type = ignore_claim
+		id = "NEP"
+		value = -1
+	}
+	if = {
+		limit = { 888 = { is_claim_or_core_of_ROOT = no } } #Sikkim
+		add_state_claim = 888
+	}
 	if = {
 		limit = { can_declare_war_on = NEP }
 		if = {
-			limit = { NEP = { is_subject = yes } }
+			limit = {
+				NEP = {
+					OR = {
+						is_subject = yes
+						has_capitulated = yes
+					}
+				}
+			}
 			create_wargoal = {
 				type = annex_everything
 				target = NEP
@@ -185,21 +244,15 @@ india_claim_bhutan_effect = {
 }
 
 HND_puppet_setup = {
-	HND = {
-		if = {
-			limit = { has_socialist_government = no }
+	hidden_effect = {
+		var:tag_to_release = {
+			set_cosmetic_tag = HND_india
 			if = {
-				limit = { has_event_target = HND_will_be_india }
-				set_cosmetic_tag = HND_india
-			}
-			else = {
-				set_cosmetic_tag = HND_hindustan
-			}
-			load_focus_tree = {
-				tree = generic_focus
-				keep_completed = yes
-			}
-			hidden_effect = {
+				limit = { has_socialist_government = no }
+				load_focus_tree = {
+					tree = generic_focus
+					keep_completed = yes
+				}
 				remove_ideas = {
 					FRA_bhartiya_support
 					HND_divided_government
@@ -212,13 +265,106 @@ HND_puppet_setup = {
 					HND_army_reformed
 				}
 			}
-		}
-		else_if = {
-			limit = { has_event_target = HND_will_be_india }
-			load_focus_tree = {
-				tree = KR_Bharatiya_Commune
-				keep_completed = yes
+			else = {
+				load_focus_tree = {
+					tree = KR_Bharatiya_Commune
+					keep_completed = yes
+				}
 			}
 		}
 	}
+}
+
+india_reset_cores_claims = {
+	if = {
+		limit = {
+			NOT = { country_exists = RAJ }
+			NOT = { country_exists = PRF }
+		}
+		BRM = {
+			every_core_state = {
+				remove_core_of = HND
+				remove_claim_by = HND
+				remove_core_of = RAJ
+				remove_claim_by = RAJ
+				remove_core_of = PRF
+				remove_claim_by = PRF
+			}
+		}
+		CEY = {
+			every_core_state = {
+				remove_core_of = HND
+				remove_claim_by = HND
+				remove_core_of = RAJ
+				remove_claim_by = RAJ
+				remove_core_of = PRF
+				remove_claim_by = PRF
+				retain_state = yes
+			}
+		}
+	}
+	else_if = {
+		limit = { NOT = { country_exists = RAJ } }
+		BRM = {
+			every_core_state = {
+				remove_core_of = HND
+				remove_claim_by = HND
+				remove_core_of = RAJ
+				remove_claim_by = RAJ
+			}
+		}
+		CEY = {
+			every_core_state = {
+				remove_core_of = HND
+				remove_claim_by = HND
+				remove_core_of = RAJ
+				remove_claim_by = RAJ
+				retain_state = yes
+			}
+		}
+	}
+	else_if = {
+		limit = { NOT = { country_exists = PRF } }
+		BRM = {
+			every_core_state = {
+				remove_core_of = HND
+				remove_claim_by = HND
+				remove_core_of = PRF
+				remove_claim_by = PRF
+			}
+		}
+		CEY = {
+			every_core_state = {
+				remove_core_of = HND
+				remove_claim_by = HND
+				remove_core_of = PRF
+				remove_claim_by = PRF
+				retain_state = yes
+			}
+		}
+	}
+	else = {
+		BRM = {
+			every_core_state = {
+				remove_core_of = HND
+				remove_claim_by = HND
+			}
+		}
+		CEY = {
+			every_core_state = {
+				remove_core_of = HND
+				remove_claim_by = HND
+				retain_state = yes
+			}
+		}
+	}
+}
+
+india_ignore_claims_until_unification = {
+	add_ai_strategy = { type = ignore_claim id = "POR" value = 1 }
+	add_ai_strategy = { type = ignore_claim id = "GER" value = 1 }
+	add_ai_strategy = { type = ignore_claim id = "NEP" value = 1 }
+	add_ai_strategy = { type = ignore_claim id = "SIK" value = 1 }
+	add_ai_strategy = { type = ignore_claim id = "ETS" value = 1 }
+	add_ai_strategy = { type = ignore_claim id = "KUM" value = 1 }
 }

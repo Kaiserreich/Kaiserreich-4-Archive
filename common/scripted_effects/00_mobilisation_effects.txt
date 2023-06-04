@@ -399,7 +399,7 @@ calculate_maximum_divisions = {
 	multiply_variable = { max_divisions = limit_multiplier }
 
 	# all countries get five free divisions
-	add_to_variable = { max_divisions = 5 }
+	add_to_variable = { max_divisions = global.base_unit_limit_bonus }
 
 	# add any specific bonuses to the limit
 	add_to_variable = { max_divisions = modifier@unit_limit_bonus }
@@ -445,33 +445,17 @@ unit_limit_calculation_effect = {
 		# expeditionaries should count towards the sender's limit, not the receiver's
 		clear_variable = num_expeditionary_divisions_sent
 		clear_variable = num_expeditionary_divisions_received
-		for_each_scope_loop = {
-			array = faction_members
-			if = {
-				limit = {
-					received_expeditionary_forces = { sender = PREV value > 0 }
-				}
-				set_temp_variable = { expeditionary_division_sent_temp = 0 }
-				while_loop_effect = {
-					limit = {
-						received_expeditionary_forces = { sender = PREV value > expeditionary_division_sent_temp }
-					}
-					add_to_temp_variable = { expeditionary_division_sent_temp = 1 }
-				}
-				add_to_variable = { PREV.num_expeditionary_divisions_sent = expeditionary_division_sent_temp }
+		if = {
+			limit = { is_in_faction = yes }
+			for_each_scope_loop = {
+				array = faction_members
+				unit_limit_exclude_expeditionaries = yes
 			}
-			if = {
-				limit = {
-					PREV = { received_expeditionary_forces = { sender = PREV value > 0 } }
-				}
-				set_temp_variable = { expeditionary_division_received_temp = 0 }
-				while_loop_effect = {
-					limit = {
-						PREV = { received_expeditionary_forces = { sender = PREV value > expeditionary_division_received_temp } }
-					}
-					add_to_temp_variable = { expeditionary_division_received_temp = 1 }
-				}
-				add_to_variable = { PREV.num_expeditionary_divisions_received = expeditionary_division_received_temp }
+		}
+		else = {
+			for_each_scope_loop = {
+				array = subjects
+				unit_limit_exclude_expeditionaries = yes
 			}
 		}
 		subtract_from_variable = { num_actual_divisions = num_expeditionary_divisions_received }
@@ -527,5 +511,34 @@ unit_limit_calculation_effect = {
 			}
 			activate_mission = demobilization_manpower
 		}
+	}
+}
+
+unit_limit_exclude_expeditionaries = {
+	if = {
+		limit = {
+			received_expeditionary_forces = { sender = PREV value > 0 }
+		}
+		set_temp_variable = { expeditionary_division_sent_temp = 0 }
+		while_loop_effect = {
+			limit = {
+				received_expeditionary_forces = { sender = PREV value > expeditionary_division_sent_temp }
+			}
+			add_to_temp_variable = { expeditionary_division_sent_temp = 1 }
+		}
+		add_to_variable = { PREV.num_expeditionary_divisions_sent = expeditionary_division_sent_temp }
+	}
+	if = {
+		limit = {
+			PREV = { received_expeditionary_forces = { sender = PREV value > 0 } }
+		}
+		set_temp_variable = { expeditionary_division_received_temp = 0 }
+		while_loop_effect = {
+			limit = {
+				PREV = { received_expeditionary_forces = { sender = PREV value > expeditionary_division_received_temp } }
+			}
+			add_to_temp_variable = { expeditionary_division_received_temp = 1 }
+		}
+		add_to_variable = { PREV.num_expeditionary_divisions_received = expeditionary_division_received_temp }
 	}
 }

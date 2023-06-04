@@ -3159,7 +3159,7 @@ country_event = { #Prinsjesdag 1938 - black flags flying
 
 	trigger = {
 		has_elected_government = yes
-		HOL_is_republic = no
+		is_monarchy = yes
 	}
 
 	option = { #Have the police remove them
@@ -3906,7 +3906,7 @@ country_event = { #Elections 1941 - Cabinet Oud sat out the ride
 		date > 1938.1.1
 		date < 1942.1.1
 		has_government = social_democrat
-		HOL_is_republic = no
+		is_monarchy = yes
 	}
 
 	option = {
@@ -4330,7 +4330,7 @@ country_event = { #Elections 1941 - Cabinet Colijn V sat out the ride
 		date > 1938.1.1
 		date < 1942.1.1
 		has_government = social_conservative
-		HOL_is_republic = no
+		is_monarchy = yes
 	}
 
 	option = {
@@ -4840,7 +4840,7 @@ country_event = { #Pensionary Elections $Year$
 	is_triggered_only = yes
 
 	trigger = {
-		HOL_is_republic = yes
+		is_monarchy = no
 		has_elected_government = yes
 	}
 
@@ -5467,7 +5467,7 @@ country_event = { #Elections $YEAR$ - unending loop of Reijnders - you're welcom
 	trigger = {
 		date > 1942.1.1
 		has_completed_focus = HOL_restore_democracy
-		HOL_is_republic = no
+		is_monarchy = yes
 	}
 
 	option = {
@@ -5511,7 +5511,7 @@ country_event = { #Election [GetYear] - VDB and SDAP election loop
 	trigger = {
 		date > 1942.1.1
 		has_completed_focus = HOL_VDB_SDAP
-		HOL_is_republic = no
+		is_monarchy = yes
 	}
 
 	option = {
@@ -5865,7 +5865,7 @@ country_event = { #Elections [GetYear] another loop
 		date > 1942.1.1
 		has_elected_government = yes
 		has_completed_focus = HOL_CNA_gamble_worked
-		HOL_is_republic = no
+		is_monarchy = yes
 	}
 
 	option = {
@@ -9038,7 +9038,6 @@ country_event = { #Policy on Belgium
 			}
 		}
 		ai_chance = { base = 80 }
-		set_country_flag = hol_claimed_flanders
 		add_state_claim = 6
 		add_state_claim = 29
 		add_state_claim = 925
@@ -9130,21 +9129,8 @@ country_event = { #The Netherlands demands Flanders
 			}
 			modifier = {
 				factor = 3
-				NOT = {
-					owns_state = 925
-					925 = { is_core_of = ROOT }
-				}
-				NOT = {
-					owns_state = 925
-					925 = { is_core_of = ROOT }
-				}
-				OR = {
-					NOT = {
-						owns_state = 29
-						29 = { is_core_of = ROOT }
-					}
-					NOT = { has_full_control_of_state = 29 }
-				}
+				NOT = { 6 = { is_core_of = ROOT } }
+				NOT = { 925 = { is_core_of = ROOT } }
 			}
 			modifier = {
 				factor = 2
@@ -9169,21 +9155,21 @@ country_event = { #The Netherlands demands Flanders
 				FROM = { is_in_faction = yes }
 			}
 		}
-		if = {
-			limit = { var:6.owner = { is_ally_with = ROOT } }
-			FROM = { transfer_state = 6 }
+		effect_tooltip = {
+			if = {
+				limit = { var:6.owner = { is_ally_with = ROOT } }
+				6 = { transfer_state_to = FROM }
+			}
+			if = {
+				limit = { var:29.owner = { is_ally_with = ROOT } }
+				29 = { transfer_state_to = FROM }
+			}
+			if = {
+				limit = { var:925.owner = { is_ally_with = ROOT } }
+				925 = { transfer_state_to = FROM }
+			}
 		}
-		if = {
-			limit = { var:29.owner = { is_ally_with = ROOT } }
-			FROM = { transfer_state = 29 }
-		}
-		if = {
-			limit = { var:925.owner = { is_ally_with = ROOT } }
-			FROM = { transfer_state = 925 }
-		}
-		FROM = {
-			country_event = holfocus.88
-		}
+		FROM = { country_event = { id = holfocus.88 days = 2 } }
 	}
 
 	option = { # we'll keep it >:P
@@ -9196,9 +9182,7 @@ country_event = { #The Netherlands demands Flanders
 				surrender_progress > 0.6
 			}
 		}
-		FROM = {
-			country_event = holfocus.89
-		}
+		FROM = { country_event = { id = holfocus.89 days = 2 } }
 	}
 }
 
@@ -9212,14 +9196,29 @@ country_event = { #[From.GetNameDef] cedes Flanders
 	option = { #Woohoo!
 		log = "[GetLogInfo]: event holfocus.88 option holfocus.88.a"
 		name = holfocus.88.a
-		add_state_core = 6
-		add_state_core = 925
-		if = {
-			limit = { owns_state = 29 }
-			add_state_core = 29
-		}
 		add_stability = 0.07
 		add_political_power = 100
+		if = {
+			limit = { var:6.owner = { is_ally_with = ROOT } }
+			6 = {
+				transfer_state_to = ROOT
+				add_claim_by = ROOT
+			}
+		}
+		if = {
+			limit = { var:29.owner = { is_ally_with = ROOT } }
+			29 = {
+				transfer_state_to = ROOT
+				add_claim_by = ROOT
+			}
+		}
+		if = {
+			limit = { var:925.owner = { is_ally_with = ROOT } }
+			925 = {
+				transfer_state_to = ROOT
+				add_claim_by = ROOT
+			}
+		}
 	}
 }
 
@@ -9233,11 +9232,13 @@ country_event = { #[From.GetNameDef] refuses to cede Flanders
 	option = { #War it is!
 		log = "[GetLogInfo]: event holfocus.89 option holfocus.89.a"
 		name = holfocus.89.a
-		create_wargoal = {
-			target = FROM
-			type = take_state_focus
-			generator = { 6 925 }
-		}
+	}
+
+	option = { #They called our bluff...
+		log = "[GetLogInfo]: event holfocus.89 option holfocus.89.a"
+		name = holfocus.89.a
+		ai_chance = { base = 0 }
+		remove_targeted_decision = { decision = hol_demand_flanders target = FROM }
 	}
 }
 

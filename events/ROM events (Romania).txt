@@ -1933,10 +1933,22 @@ country_event = {
 					artillery = { x = 0 y = 0 }
 				}
 			}
-			capital_scope = {
-				create_unit = {
-					division = "name = \"Mota-Marin Legionary Corps\" division_template = \"Legionary Veterans\" start_experience_factor = 0.5"
-					owner = ROOT
+			if = {
+				limit = { controls_state = capital }
+				capital_scope = {
+					create_unit = {
+						division = "name = \"Mota-Marin Legionary Corps\" division_template = \"Legionary Veterans\" start_experience_factor = 0.5"
+						owner = ROOT
+					}
+				}
+			}
+			else = {
+				random_owned_controlled_state = {
+					limit = { valid_state_for_spawning_friendly_unit = yes }
+					create_unit = {
+						division = "name = \"Mota-Marin Legionary Corps\" division_template = \"Legionary Veterans\" start_experience_factor = 0.5"
+						owner = ROOT
+					}
 				}
 			}
 			if = {
@@ -1989,10 +2001,22 @@ country_event = {
 					artillery = { x = 0 y = 0 }
 				}
 			}
-			capital_scope = {
-				create_unit = {
-					division = "name = \"Mota-Marin Legionary Corps\" division_template = \"Romanian Volunteers\" start_experience_factor = 1.0"
-					owner = ROOT
+			if = {
+				limit = { controls_state = capital }
+				capital_scope = {
+					create_unit = {
+						division = "name = \"Mota-Marin Legionary Corps\" division_template = \"Romanian Volunteers\" start_experience_factor = 1.0"
+						owner = ROOT
+					}
+				}
+			}
+			else = {
+				random_owned_controlled_state = {
+					limit = { valid_state_for_spawning_friendly_unit = yes }
+					create_unit = {
+						division = "name = \"Mota-Marin Legionary Corps\" division_template = \"Romanian Volunteers\" start_experience_factor = 1.0"
+						owner = ROOT
+					}
 				}
 			}
 		}
@@ -3842,36 +3866,36 @@ country_event = {
 					country_event = { id = romania.99 days = 1 }
 				}
 			}
-			else = {
-				activate_advisor = ROM_alexandru_cantacuzino_sic
-				hidden_effect = {
-					random_list = {
-						20 = { #stabilisation
-							modifier = {
-								factor = 2
-								has_stability > 0.2
-							}
-							modifier = {
-								factor = 2
-								has_stability > 0.4
-							}
-							modifier = {
-								factor = 3
-								national_populist > 0.5
-							}
-							country_event = { id = romania.103 days = 10 }
+		}
+		else = {
+			activate_advisor = ROM_alexandru_cantacuzino_sic
+			hidden_effect = {
+				random_list = {
+					20 = { #stabilisation
+						modifier = {
+							factor = 2
+							has_stability > 0.2
 						}
-						10 = { #michael steps in
-							modifier = {
-								factor = 2
-								has_stability < 0
-							}
-							modifier = {
-								factor = 2
-								national_populist < 0.5
-							}
-							country_event = { id = romania.84 days = 10 }
+						modifier = {
+							factor = 2
+							has_stability > 0.4
 						}
+						modifier = {
+							factor = 3
+							national_populist > 0.5
+						}
+						country_event = { id = romania.103 days = 10 }
+					}
+					10 = { #michael steps in
+						modifier = {
+							factor = 2
+							has_stability < 0
+						}
+						modifier = {
+							factor = 2
+							national_populist < 0.5
+						}
+						country_event = { id = romania.84 days = 10 }
 					}
 				}
 			}
@@ -5403,7 +5427,6 @@ country_event = {#Give up on Bessarabia for alliance with ROM?
 	picture = GFX_report_event_generic_diplomacy4
 
 	is_triggered_only = yes
-	fire_only_once = yes
 
 	option = {#Sure
 		log = "[GetLogInfo]: event romania.144 option romania.144.a"
@@ -5411,16 +5434,8 @@ country_event = {#Give up on Bessarabia for alliance with ROM?
 		ai_chance = {
 			base = 5
 			modifier = {
-				add = -5
-				has_authoritarian_government = yes
-			}
-			modifier = {
-				add = -5
-				ROM = { has_dictatorship_government = yes }
-			}
-			modifier = {
-				add = 25
-				owns_state = 78 #No reason to say no if they own Bessarabia already
+				factor = 0
+				RUS_is_expansionist = yes
 			}
 			modifier = {
 				factor = 0
@@ -5429,26 +5444,34 @@ country_event = {#Give up on Bessarabia for alliance with ROM?
 					has_game_rule = { rule = BPL_dissolution option = BPL_DISSOLUTION_GRE_INT_BEATEN }
 				}
 			}
+			modifier = {
+				add = -5
+				has_authoritarian_government = yes
+			}
+			modifier = {
+				add = -5
+				ROM = { has_dictatorship_government = yes }
+			}
 		}
 		if = {
 			limit = {
-				ROM = {
+				FROM = {
 					has_country_flag = ALB_aligned
 					NOT = { has_war_with = ALB }
 				}
 				ALB = { is_valid_peace_target = yes }
 			}
-			add_to_faction = ROM
 			add_to_faction = ALB
 		}
-		else = { add_to_faction = ROM }
+		add_to_faction = FROM
+		remove_state_claim = 78
+		remove_state_core = 78
 		if = {
-			limit = { NOT = { owns_state = 78 } }
-			remove_state_claim = 78 #Bessarabia
+			limit = { owns_state = 78 }
+			save_event_target_as = returned_bessarabia
+			78 = { transfer_state_to = FROM }
 		}
-		ROM = {
-			country_event = romania.145
-		}
+		FROM = { country_event = romania.145 }
 	}
 	option = {#lol no
 		log = "[GetLogInfo]: event romania.144 option romania.144.b"
@@ -5465,9 +5488,7 @@ country_event = {#Give up on Bessarabia for alliance with ROM?
 				}
 			}
 		}
-		ROM = {
-			country_event = romania.146
-		}
+		FROM = { country_event = romania.146 }
 	}
 }
 country_event = {#RUS accepted
@@ -5477,12 +5498,21 @@ country_event = {#RUS accepted
 	picture = GFX_report_event_generic_diplomacy4
 
 	is_triggered_only = yes
-	fire_only_once = yes
 
 	option = {#Whew
 		log = "[GetLogInfo]: event romania.145 option romania.145.a"
 		name = romania.145.a
 		add_political_power = 25
+		effect_tooltip = {
+			FROM = {
+				remove_state_claim = 78
+				remove_state_core = 78
+			}
+			if = {
+				limit = { has_event_target = returned_bessarabia }
+				transfer_state = 78
+			}
+		}
 	}
 }
 country_event = {#RUS refused
@@ -5492,7 +5522,6 @@ country_event = {#RUS refused
 	picture = GFX_report_event_generic_diplomacy4
 
 	is_triggered_only = yes
-	fire_only_once = yes
 
 	option = {#Welp
 		log = "[GetLogInfo]: event romania.146 option romania.146.a"
@@ -5572,6 +5601,7 @@ country_event = {#GER refused
 }
 news_event = {
 	id = romania.150
+	immediate = { log = "[GetLogInfo]: event romania.150" }
 	title = romania.150.t
 	desc = romania.150.d
 	picture = GFX_news_event_ROM_michael_office
@@ -5592,12 +5622,12 @@ news_event = {
 	}
 
 	option = {
-		log = "[GetLogInfo]: event romania.150 option romania.150.a"
 		name = romania.150.a
 	}
 }
 news_event = {
 	id = romania.151
+	immediate = { log = "[GetLogInfo]: event romania.151" }
 	title = romania.151.t
 	desc = romania.151.d
 	picture = GFX_news_event_ROM_parade
@@ -5616,12 +5646,12 @@ news_event = {
 	}
 
 	option = {
-		log = "[GetLogInfo]: event romania.151 option romania.151.a"
 		name = romania.151.a
 	}
 }
 news_event = {
 	id = romania.152
+	immediate = { log = "[GetLogInfo]: event romania.152" }
 	title = romania.152.t
 	desc = romania.152.d
 	picture = GFX_news_event_ROM_michael_carol
@@ -5640,12 +5670,12 @@ news_event = {
 	}
 
 	option = {
-		log = "[GetLogInfo]: event romania.152 option romania.152.a"
 		name = romania.152.a
 	}
 }
 news_event = {
 	id = romania.153
+	immediate = { log = "[GetLogInfo]: event romania.153" }
 	title = romania.153.t
 	desc = romania.153.d
 	picture = GFX_news_event_ROM_FRN_speech
@@ -5664,7 +5694,6 @@ news_event = {
 	}
 
 	option = {
-		log = "[GetLogInfo]: event romania.153 option romania.153.a"
 		name = romania.153.a
 	}
 }
@@ -7836,7 +7865,6 @@ country_event = {
 	desc = romania.245.d
 
 	is_triggered_only = yes
-	fire_only_once = yes
 
 	option = {
 		log = "[GetLogInfo]: event romania.245 option romania.245.a"
@@ -7848,8 +7876,31 @@ country_event = {
 				faction_leader = { is_ai = no }
 			}
 		}
+		effect_tooltip = {
+			if = {
+				limit = { FROM = { is_faction_leader = yes } }
+				FROM = { add_to_faction = ROOT }
+			}
+			else_if = {
+				limit = { is_faction_leader = yes }
+				add_to_faction = FROM
+			}
+			else = {
+				leave_faction = yes
+				FROM = {
+					leave_faction = yes
+					create_faction = blood_pact
+					add_to_faction = ROOT
+				}
+			}
+		}
+		hidden_effect = {
+			remove_targeted_decision = { decision = ROM_blood_pact target = FROM }
+			FROM = { remove_targeted_decision = { decision = ROM_blood_pact target = ROOT } }
+		}
 		FROM = { country_event = romania.246 }
 	}
+
 	option = {
 		log = "[GetLogInfo]: event romania.245 option romania.245.b"
 		name = romania.245.b
@@ -7860,28 +7911,35 @@ country_event = {
 				FROM = { is_ai = no }
 			}
 		}
+		set_global_flag = ROM_pact_of_blood_refused
+		hidden_effect = {
+			remove_targeted_decision = { decision = ROM_blood_pact target = FROM }
+			FROM = { remove_targeted_decision = { decision = ROM_blood_pact target = ROOT } }
+		}
 	}
 }
+
 country_event = {
 	id = romania.246
 	title = romania.246.t
 	desc = romania.246.d
 
 	is_triggered_only = yes
-	fire_only_once = yes
 
 	option = {
 		log = "[GetLogInfo]: event romania.246 option romania.246.a"
 		name = romania.246.a
 		if = {
-			limit = { ITA = { is_in_faction = yes } }
-			leave_faction = yes
+			limit = { is_faction_leader = yes }
+			add_to_faction = FROM
 		}
-		if = {
-			limit = { ROM = { is_in_faction = yes } }
-			leave_faction = yes
+		else_if = {
+			limit = { FROM = { is_faction_leader = yes } }
+			FROM = { add_to_faction = ROOT }
 		}
-		ROOT = {
+		else = {
+			FROM = { leave_faction = yes }
+			leave_faction = yes
 			create_faction = blood_pact
 			add_to_faction = FROM
 		}
