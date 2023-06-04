@@ -808,42 +808,12 @@ germany_flees_to_africa = {
 }
 
 germany_capitulates = {
-	# add the idea which lowers Germany's surrender level, so they'll go in two days (after their allies)
-	country_event = { id = capt.11 days = 2 }
-
 	# free all remaining puppets
-	every_subject_country = {
-		GER = {
-			set_autonomy = { target = PREV autonomy_state = autonomy_free }
-		}
-	}
-
-	# let Austria reform the Donau-Adriabund, if it's currently in the Reichspakt
-	if = {
-		limit = {
-			NOT = { has_global_flag = AUS_treaty_of_budapest }
-			AUS = {
-				is_in_faction_with = ROOT
-				has_country_flag = AUS_intervened_in_weltkrieg
-				has_capitulated = no
+	GER = {
+		every_subject_country = {
+			PREV = {
+				set_autonomy = { target = PREV autonomy_state = autonomy_free }
 			}
-		}
-		AUS = {
-			leave_faction = yes
-			create_faction = austrian_sphere
-			clr_country_flag = AUS_intervened_in_weltkrieg
-			set_country_flag = former_reichspakt_member
-			country_event = { id = aus.tree.4016 hours = 8 }
-		}
-		every_other_country = {
-			limit = {
-				is_subject = no
-				is_in_faction_with = ROOT
-				has_country_flag = AUS_former_faction_member
-			}
-			clr_country_flag = AUS_former_faction_member
-			set_country_flag = former_reichspakt_member
-			AUS = { add_to_faction = PREV }
 		}
 	}
 
@@ -867,6 +837,34 @@ germany_capitulates = {
 				limit = { NOT = { tag = PREV } }
 				give_military_access = PREV
 			}
+		}
+	}
+
+	# let Austria reform the Donau-Adriabund, if it's currently in the Reichspakt
+	if = {
+		limit = {
+			NOT = { has_global_flag = AUS_treaty_of_budapest }
+			AUS = {
+				has_country_flag = former_reichspakt_member
+				has_country_flag = AUS_intervened_in_weltkrieg
+				exists = yes
+				has_capitulated = no
+				is_subject = no
+			}
+		}
+		AUS = {
+			create_faction = austrian_sphere
+			set_country_flag = former_reichspakt_member
+			country_event = { id = aus.tree.4016 hours = 8 }
+		}
+		every_other_country = {
+			limit = {
+				has_country_flag = AUS_former_faction_member
+				has_country_flag = former_reichspakt_member
+				is_subject = no
+			}
+			clr_country_flag = AUS_former_faction_member
+			AUS = { add_to_faction = PREV }
 		}
 	}
 
@@ -980,12 +978,12 @@ germany_capitulates = {
 		limit = {
 			has_war = yes
 			is_subject = no
-			NOT = { has_country_flag = former_reichspakt_member }
-			any_enemy_country = { has_country_flag = former_reichspakt_member }
 			OR = {
 				is_in_faction = no
 				is_faction_leader = yes
 			}
+			NOT = { has_country_flag = former_reichspakt_member }
+			any_enemy_country = { has_country_flag = former_reichspakt_member }
 		}
 		country_event = capt.10
 	}
@@ -1123,6 +1121,7 @@ CAN_give_connected_USA_states_PSA = {
 
 white_peace_with_ROOT = {
 	hidden_effect = {
+		set_global_flag = scripted_peace
 		if = {
 			limit = {
 				is_in_faction = yes
@@ -1177,6 +1176,7 @@ white_peace_with_ROOT = {
 			}
 		}
 	}
+	clr_global_flag = scripted_peace
 }
 
 # This can be used normally: TAG = { white_peace_with_PREV = yes }
@@ -1185,6 +1185,7 @@ white_peace_with_ROOT = {
 # meaning it will ensure peace with all faction members and puppets on either side
 
 white_peace_with_PREV = {
+	set_global_flag = scripted_peace
 	hidden_effect = {
 		if = {
 			limit = {
@@ -1240,6 +1241,7 @@ white_peace_with_PREV = {
 			}
 		}
 	}
+	clr_global_flag = scripted_peace
 }
 
 # NOTE: "save_event_target_as = white_peace_receiver" needs to be performed first
@@ -1249,6 +1251,7 @@ white_peace_with_PREV = {
 # remember: if you don't use TAG and just use "white_peace_with_TARGET = yes" then the event target is making peace with ROOT
 
 white_peace_with_TARGET = {
+	set_global_flag = scripted_peace
 	hidden_effect = {
 		if = {
 			limit = {
@@ -1304,12 +1307,12 @@ white_peace_with_TARGET = {
 			}
 		}
 	}
+	clr_global_flag = scripted_peace
 }
 
 faction_collapse_member_peace_effect = {
 	leave_faction = yes
 	#Step one: peace out with any faction leaders who aren't neighbours of/invading PREV or claiming PREV territory
-	save_event_target_as = peace_country
 	every_enemy_country = {
 		limit = {
 			is_faction_leader = yes
@@ -1321,7 +1324,7 @@ faction_collapse_member_peace_effect = {
 				civilwar_target = PREV #do not peace out civil wars
 				PREV = {
 					OR = {
-						any_home_area_neighbor_country = { tag = PREV.PREV } #== invading
+						any_home_area_neighbor_country = { is_in_faction_with = PREV.PREV } #== invading
 						any_owned_state = {
 							OR = {
 								is_core_of = PREV.PREV
@@ -1331,21 +1334,20 @@ faction_collapse_member_peace_effect = {
 					}
 				}
 				any_allied_country = {
-					event_target:peace_country = {
-						OR = {
-							any_home_area_neighbor_country = { tag = PREV.PREV } #== invading
-							any_owned_state = {
-								OR = {
-									is_core_of = PREV.PREV
-									is_claimed_by = PREV.PREV
-								}
+					PREV.PREV = {
+						any_owned_state = {
+							OR = {
+								is_core_of = PREV.PREV
+								is_claimed_by = PREV.PREV
 							}
 						}
 					}
 				}
 			}
 		}
+		set_global_flag = scripted_peace
 		white_peace = PREV
+		clr_global_flag = scripted_peace
 	}
 
 	#Step two: peace out with any factionless non-neighbours not on the same continent who aren't invading PREV or claiming PREV territory
@@ -1377,25 +1379,19 @@ faction_collapse_member_peace_effect = {
 					}
 				}
 				any_subject_country = {
-					event_target:peace_country = {
-						OR = {
-							any_home_area_neighbor_country = { #== invading
-								OR = {
-									tag = PREV.PREV
-									is_subject_of = PREV.PREV
-								}
-							}
-							any_owned_state = {
-								OR = {
-									is_core_of = PREV.PREV
-									is_claimed_by = PREV.PREV
-								}
+					PREV.PREV = {
+						any_owned_state = {
+							OR = {
+								is_core_of = PREV.PREV
+								is_claimed_by = PREV.PREV
 							}
 						}
 					}
 				}
 			}
 		}
+		set_global_flag = scripted_peace
 		white_peace = PREV
+		clr_global_flag = scripted_peace
 	}
 }

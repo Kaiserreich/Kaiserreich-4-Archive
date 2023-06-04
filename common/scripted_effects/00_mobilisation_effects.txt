@@ -260,41 +260,63 @@ calculate_maximum_divisions = {
 		limit = { has_civil_war = yes }
 		every_enemy_country = {
 			limit = { civilwar_target = ROOT }
-			add_to_variable = { ROOT.base_states = num_owned_states }
-			add_to_temp_variable = { factory_points = num_of_owned_factories }
 			every_owned_state = {
 				if = {
-					limit = { is_core_of = PREV }
+					limit = { is_core_of = ROOT }
+					add_to_variable = { ROOT.base_states = 1 }
 					add_to_variable = { ROOT.base_units = state_population_k }
+
+					add_to_temp_variable = { factory_points = building_level@industrial_complex }
+					add_to_temp_variable = { factory_points = building_level@arms_factory }
+					add_to_temp_variable = { factory_points = building_level@dockyard }
 				}
 				else = {
+					add_to_variable = { ROOT.base_states = 0.02 }
 					add_to_variable = { ROOT.non_core_base = state_population_k }
+
+					set_temp_variable = { state_factories_non_core = building_level@industrial_complex }
+					add_to_temp_variable = { state_factories_non_core = building_level@arms_factory }
+					add_to_temp_variable = { state_factories_non_core = building_level@dockyard }
+					multiply_temp_variable = { state_factories_non_core = 0.02 }
+					add_to_temp_variable = { factory_points = state_factories_non_core }
 				}
 			}
 		}
 	}
 
 	### if an overlord, check if any puppets should transfer part of their bases
+	clear_variable = subject_states
+	clear_variable = subject_base_units
+	clear_variable = subject_non_core_base
 	if = {
 		limit = { num_subjects > 0 }
-		clear_variable = subject_states
-		clear_variable = subject_base_units
-		clear_variable = subject_non_core_base
-		set_temp_variable = { subject_factory_points = 0 }
-
 		every_subject_country = {
 			limit = { check_variable = { modifier@unit_limit_subject_bonus > 0 } }
-			add_to_variable = { ROOT.subject_states = num_owned_states }
-			add_to_temp_variable = { factory_points = num_of_owned_factories }
+
+			set_temp_variable = { states_temp = num_owned_states }
+			multiply_temp_variable = { states_temp = modifier@unit_limit_subject_bonus }
+			add_to_variable = { ROOT.subject_states = states_temp }
+
+			set_temp_variable = { factories_temp = num_of_owned_factories }
+			multiply_temp_variable = { factories_temp = modifier@unit_limit_subject_bonus }
+			add_to_temp_variable = { factory_points = factories_temp }
+
+			set_temp_variable = { base_units_temp = 0 }
+			set_temp_variable = { non_core_base_temp = 0 }
 			every_owned_state = {
 				if = {
 					limit = { is_core_of = PREV }
-					add_to_variable = { ROOT.subject_base_units = state_population_k }
+					add_to_temp_variable = { base_units_temp = state_population_k }
 				}
 				else = {
-					add_to_variable = { ROOT.subject_non_core_base = state_population_k }
+					add_to_temp_variable = { non_core_base_temp = state_population_k }
 				}
 			}
+			multiply_temp_variable = { base_units_temp = modifier@unit_limit_subject_bonus }
+			add_to_variable = { ROOT.subject_base_units = base_units_temp }
+
+			multiply_temp_variable = { non_core_base_temp = modifier@unit_limit_subject_bonus }
+			add_to_variable = { ROOT.subject_non_core_base = non_core_base_temp }
 		}
 		add_to_variable = { base_states = subject_states }
 		add_to_variable = { base_units = subject_base_units }
