@@ -8,6 +8,7 @@
 ## related to diplomacy
 # alliance
 # antagonize
+# avoid_starting_wars
 # asking_foreign_garrison
 # befriend
 # conquer
@@ -97,7 +98,44 @@
 # min_wanted_supply_trains
 # wanted_supply_trains
 
+## Related to airforce
+# strategic_air_importance
+
 # -----------------------------------------
+
+### UNIT RATIOS
+# AIR
+# For air types unit_ratio strategy values behave like weights. If no value is set it defaults to 0. If a plane type is DLC locked its set ratio is ignored and 0 is used instead.
+# 
+# Land-based and carrier plane types are handled completely separate.
+# 
+# First we calculate the total number of planes that the AI want to produce:
+# 
+# For land-based planes:
+# - Sum up the total air base capacity (excluding carriers), and multiply it by WANTED_LAND_PLANES_PER_BASE_CAPACITY_FACTOR.
+# - Add the number of divisions the AI wants multiplied by WANTED_LAND_PLANES_PER_DIVISION.
+# - Subtract the number of planes in airwings.
+# - Clamp the value between 0 and the number of wanted divisions multiplied by WANTED_LAND_PLANES_TOTAL_MAX_PER_DIVISION.
+# - The result is then multiplied by hardcoded value AI_FOCUS_AVIATION, which beforehand has been multiplied by modifier ai_focus_aviation_factor.
+# 
+# For carrier planes:
+# - Sum up the total carrier deck capacity, and multiply it by WANTED_CARRIER_PLANES_PER_CARRIER_CAPACITY_FACTOR.
+# - Sum up the total deck capacity of carriers in production, where the carrier will be done in no more than CARRIER_CAPACITY_IN_PRODUCTION_MAX_DAYS_LEFT_TO_INCLUDE_FACTOR days, and multiply it by WANTED_CARRIER_PLANES_PER_CARRIER_CAPACITY_IN_PRODUCTION_FACTOR.
+# - Subtract the number of carrier planes in airwings.
+# - Clamp the value to minimum 0.
+# - The result is then multiplied by hardcoded value AI_FOCUS_NAVAL_AIR, which beforehand has been multiplied by modifier ai_focus_naval_air_factor.
+# 
+# Finally we calculate and set the build_airplane strategy values:
+# - For each land-based type we take the unit_ratio, divide it by the sum of all land-based unit_ratio values, and multiply it by the above calculated number of wanted land-based planes.
+# - We do the same for carrier planes.
+# 
+# ALL BUT AIR
+# Unit ratios are calculated as a base of 100 plus the value indicated in the strategy.
+# A unit type ratio of -40 would result in only 60% of the wanted number being set as a goal
+# how the AI meets its goals thereafter can also be altered by other factors.
+
+### EQUIPMENT PRODUCTION FACTOR
+# Same as above, with the percentage of calculated factories to meet need added to by the strategy
 
 ### Examples of AI strategy usage ###
 
@@ -118,6 +156,26 @@
 #		type = intelligence_agency_branch_desire_factor
 #		id = branch_defense
 #		value = -50    # -50% on the AI weight
+#	}
+#}
+
+# Example of strategy for avoid_starting_wars
+#example_strategy = {
+#
+#	enable = {
+#		original_tag = FRA
+#	}
+#
+#	ai_strategy = {
+#		type = avoid_starting_wars
+#		# no need of id for this one
+#		value = -200 # this value is additive with the 'conquer' strategy, and is targetless. It is meant for very specific situations, and should not be used widely.
+#	}
+#
+#	ai_strategy = {
+#		type = conquer
+#		id = GER
+#		value = 200 # This would therefore stack with the above value to reach a conquer weight of 0 for targeting Germany, and -200 for everyone else.
 #	}
 #}
 
@@ -226,6 +284,21 @@
 #	value = 100 # This strategy is binary, any value > 0 activates it, while <= 0 deactivates it.
 # }
 
+# Low-level frontline control. Good for example to force the AI to blitz an area.
+# ai_strategy = {
+#	type = front_control
+#
+#	tag = HOL  # Can also target country, state, strategic_region, area. Can also specify multiple targets, each on its own line
+#
+#	ratio = 0.25  # At least this ratio of the frontline provinces need to be targeted for the AI strat to apply
+#
+#	priority = 100  # Higher prio strats will override lower
+#	ordertype = front  # Can be either {front, invasion}
+#	execution_type = rush  # Can be either {careful, balanced, rush, rush_weak}
+#	execute_order = yes  # If set, will force activate/deactivate execution
+#	manual_attack = yes  # If set the AI will try manual poke attacks (for front orders)
+# }
+
 # Makes AI increase unit demand for the war fronts and area defense fronts belonging to the theatre that contains the specified state
 # ai_strategy = {
 #	type = theatre_distribution_demand_increase
@@ -239,3 +312,9 @@
 #	id = "CZE"
 #	value = 200
 #}
+
+#ai_strategy = {
+#	type = strategic_air_importance
+#	id = 1 #Strategic Region ID - Southern England
+#	value = 10000 #value of stocked main front in active combat is usually around 35,000
+#}	

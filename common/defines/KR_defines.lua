@@ -168,7 +168,7 @@ NDefines.NAI.MAX_FULLY_TRAINED_SHIP_RATIO_FOR_TRAINING = 0.99				-- Vanilla is 0
 NDefines.NAI.REFIT_SHIP_PERCENTAGE_OF_FORCES = 0.25							-- Vanilla is 0.1
 NDefines.NAI.DESIRE_USE_XP_TO_UPGRADE_AIR_EQUIPMENT = 1.5					-- Vanilla is 1 - AI more eagerly upgrades its planes, they are much more important than doctrines
 NDefines.NAI.UPGRADE_PERCENTAGE_OF_FORCES = 0.25							-- Vanilla is 0.1
-NDefines.NAI.UPGRADES_DEFICIT_LIMIT_DAYS = 365							    -- Vanilla is 50 - upgrade your army
+NDefines.NAI.UPGRADES_DEFICIT_LIMIT_DAYS = 180							    -- Vanilla is 50
 
 -- Research AI
 NDefines.NAI.MAX_AHEAD_RESEARCH_PENALTY = 1.5				                -- Vanilla is 2 - AI will take tech with smaller ahead of time penalties

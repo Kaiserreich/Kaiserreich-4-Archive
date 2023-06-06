@@ -131,6 +131,9 @@ disband_units_setup = {
 	}
 }
 
+### IMPORTANT NOTE: transfer_units_fraction has several rounding problems and hardcoded behaviours, and the scripts below account for that
+### DO NOT CHANGE THIS unless you're absolutely sure you know what you're doing
+
 disband_units_transfer_manpower = {
 	delete_unit = { disband = yes }
 
@@ -145,7 +148,7 @@ disband_units_transfer_manpower = {
 	}
 
 	multiply_temp_variable = { manpower_diff = 1000 }
-	var:disband_country = { add_manpower = PREV.manpower_diff }
+	var:disband_country = { add_manpower = manpower_diff }
 
 	multiply_temp_variable = { manpower_diff = -1 }
 	add_manpower = manpower_diff
@@ -153,6 +156,23 @@ disband_units_transfer_manpower = {
 
 disband_units_finalise = {
 	var:disband_state = { transfer_state_to = var:disband_state_owner }
+}
+
+disband_one_to_three_divisions = {
+	custom_effect_tooltip = disband_ten_percent_units
+	hidden_effect = {
+		disband_units_setup = yes
+		transfer_units_fraction = {
+			target = var:debug_tag_instance
+			size = 0
+			keep_unit_leaders_trigger = { always = yes }
+		}
+		var:debug_tag_instance = {
+			disband_units_transfer_manpower = yes
+			send_equipment_fraction = { target = var:disband_country value = 1 }
+		}
+		disband_units_finalise = yes
+	}
 }
 
 disband_ten_percent_units = {
@@ -163,9 +183,7 @@ disband_ten_percent_units = {
 			target = var:debug_tag_instance
 			size = 0
 			army_ratio = 0.1
-			keep_unit_leaders_trigger = {
-				always = yes
-			}
+			keep_unit_leaders_trigger = { always = yes }
 		}
 		var:debug_tag_instance = {
 			disband_units_transfer_manpower = yes
@@ -183,9 +201,7 @@ disband_twenty_percent_units = {
 			target = var:debug_tag_instance
 			size = 0
 			army_ratio = 0.2
-			keep_unit_leaders_trigger = {
-				always = yes
-			}
+			keep_unit_leaders_trigger = { always = yes }
 		}
 		var:debug_tag_instance = {
 			disband_units_transfer_manpower = yes
@@ -223,9 +239,7 @@ disband_fifty_percent_units = {
 			target = var:debug_tag_instance
 			size = 0
 			army_ratio = 0.5
-			keep_unit_leaders_trigger = {
-				always = yes
-			}
+			keep_unit_leaders_trigger = { always = yes }
 		}
 		var:debug_tag_instance = {
 			disband_units_transfer_manpower = yes
@@ -468,7 +482,7 @@ unit_limit_calculation_effect = {
 				limit = {
 					OR = {
 						is_ai = yes
-						has_reached_maximum_divisions = no
+						has_exceeded_maximum_divisions = no
 					}
 				}
 				clear_variable = mobilisation_penalty_var
@@ -483,7 +497,7 @@ unit_limit_calculation_effect = {
 		else_if = {
 			limit = {
 				is_ai = no
-				has_reached_maximum_divisions = yes
+				has_exceeded_maximum_divisions = yes
 			}
 			calculate_mobilisation_penalty = yes
 			add_dynamic_modifier = { modifier = mobilisation_penalty_modifier }

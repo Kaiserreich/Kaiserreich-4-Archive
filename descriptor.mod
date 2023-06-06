@@ -48,6 +48,7 @@ replace_path = "common/technology_tags"
 replace_path = "common/units/codenames_operatives"
 replace_path = "common/units/names"
 replace_path = "common/units/names_divisions"
+replace_path = "common/units/names_railway_guns"
 replace_path = "common/units/names_ships"
 
 replace_path = "events"
@@ -74,6 +75,6 @@ tags = {
 	"Gameplay"
 }
 picture = "KR.jpg"
-version = "0.25"
+version = "0.25.1"
 supported_version = "1.12.14"
 remote_file_id = "1521695605"
