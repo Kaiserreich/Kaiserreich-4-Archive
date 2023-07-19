@@ -862,18 +862,21 @@ UKR_eastern_threat = {
 					set_technology = { tech_irregulars = 1 popup = no }
 					activate_targeted_decision = { decision = UKR_demobilize_volunteers target = ROOT }
 				}
-				division_template = {
-					name = "Dobrovolchyi Zahin"
-					division_names_group = UKR_MIL_01
-					is_locked = yes
-					regiments = {
-						irregular_infantry = { x = 0 y = 0 }
-						irregular_infantry = { x = 0 y = 1 }
-						irregular_infantry = { x = 0 y = 2 }
-						irregular_infantry = { x = 1 y = 0 }
-						irregular_infantry = { x = 1 y = 1 }
+				if = {
+					limit = { NOT = { has_template = "Dobrovolchyi Zahin" } }
+					division_template = {
+						name = "Dobrovolchyi Zahin"
+						division_names_group = UKR_MIL_01
+						is_locked = yes
+						regiments = {
+							irregular_infantry = { x = 0 y = 0 }
+							irregular_infantry = { x = 0 y = 1 }
+							irregular_infantry = { x = 0 y = 2 }
+							irregular_infantry = { x = 1 y = 0 }
+							irregular_infantry = { x = 1 y = 1 }
+						}
+						template_counter = 68
 					}
-					template_counter = 68
 				}
 				random_owned_controlled_state = {
 					prioritize = { 202 }
@@ -1378,7 +1381,7 @@ UKR_AntiHetmanRevolt_skoro = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete UKR_negotiate_surrender"
 			set_country_flag = UKR_rebel_endgame_started
 		}
-	
+
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove UKR_negotiate_surrender"
 			set_country_flag = UKR_negotiated_surrender_with_republicans
@@ -3094,7 +3097,7 @@ UKR_industrialisation_category = {
 				}
 				else_if = {
 					limit = { check_variable = { UKR_industrial_score > 89 } }
-					add_ideas = UKR_industrialisation_protofis_6
+					add_ideas = UKR_industrialisation_protofis_7
 				}
 			}
 			#else_if = { #Nationalist Spirits
@@ -5701,33 +5704,31 @@ UKR_republic_decisions = {
 
 		available = {
 			OR = {
-				SOV = { exists = yes }
+				country_exists = SOV
 				GER = {
 					has_war_with = FRA
 					surrender_progress > 0.25
 				}
 				any_neighbor_country = { is_in_faction_with = INT }
-				hidden_trigger = {
-					AND = {
-						is_ai = no
-						RUS = { has_capitulated = yes }
-					}
+				if = {
+					limit = { is_ai = no }
+					RUS = { is_faction_leader = no }
+				}
+				else = {
+					always = no
 				}
 			}
-			hidden_trigger = {
-				NOT = { has_country_flag = UKR_revbloc_collapse } 
+			OR = {
+				NOT = { country_exists = GER }
+				GER = { has_war_with = INT }
+				GER = { has_war_with = SOV }
 			}
-			NOT = { has_completed_focus = UKR_a_dream_come_true }
 		}
+
 		visible = {
-			GER = {
-				OR = {
-					has_war_with = FRA
-					has_war_with = SOV
-				}
-			}
 			has_country_leader = { character = UKR_volodymyr_vynnychenko }
 			NOT = { has_completed_focus = UKR_a_dream_come_true }
+			NOT = { has_country_flag = UKR_revbloc_collapse }
 		}
 
 		fire_only_once = yes
@@ -5738,117 +5739,91 @@ UKR_republic_decisions = {
 				add = 500
 				SOV = { exists = no }
 				GER = {
-					has_war_with = FRA
+					has_war_with = INT
 					surrender_progress > 0.80
 				}
 			}
 			modifier = {
 				add = 500
-				SOV = {
-					has_war_with = GER
-				}
+				SOV = { has_war_with = GER }
 			}
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove UKR_revolution_within_a_revolution"
 			remove_puppet_and_leave_faction = yes
+			peace_out_non_neighbours_after_leaving_faction = yes
 			UKR_update_military = yes
-			every_country = {
-				limit = {
-					has_war_with = UKR
-					NOT = { is_in_faction_with = RUS }
-				}
-				white_peace_with_ROOT = yes
-			}
 			if = {
-				limit = {
-					GER = { exists = yes }
-				}
+				limit = { country_exists = GER }
 				custom_effect_tooltip = UKR_revolution_within_revolution_tt
 			}
 			country_event = ukraine_republican.5
 		}
 	}
-	UKR_join_moscow = {
-		icon = generic_prepare_civil_war
-		available = {
-			if = {
-				limit = {
-					has_government = radical_socialist
-				}
-				GER = {
-					OR = {
-						has_war_with = SOV
-						exists = no
-					}
-				}
-			}
-			else_if = {
-				limit = {
-					has_government = syndicalist
-				}
-				OR = {
-					GER = {
-						exists = no
-					}
-					SOV = {
-						exists = yes
-					}
-				}
-			}
-		}
-		visible = {
-			is_in_faction = no
-			is_subject = no
-			is_valid_peace_target = yes
-			FROM = {
-				is_faction_leader = yes
-				NOT = { has_war_with = ROOT }
-			}
-			has_socialist_government = yes
-		}
-		targets = { SOV }
-
-		fire_only_once = yes
-
-		ai_will_do = { factor = 100 }
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete UKR_join_moscow target: [From.GetName]"
-			SOV = { country_event = kr.political.10 }
-			custom_effect_tooltip = tooltip_white_line
-			custom_effect_tooltip = UKR_SOV_will_puppet_tt
-			hidden_effect = {
-				country_event = { id = ukraine_borotbist.115 days = 180 }
-			}
-		}
-	}
 	UKR_join_internationale = {
 		icon = generic_prepare_civil_war
+
+		available = {
+			if = {
+				limit = { FROM = { tag = SOV } }
+				if = {
+					limit = { has_government = radical_socialist }
+					GER = { has_war_with = FROM }
+				}
+				else = {
+					NOT = { country_exists = GER }
+				}
+			}
+			else = {
+				any_neighbor_country = { is_ally_with = FROM }
+			}
+			at_peace_or_same_enemies_as_FROM = yes
+		}
+
 		visible = {
-			NOT = { has_war_with = RUS }
-			is_in_faction = no
-			is_subject = no
+			has_socialist_government = yes
 			is_valid_peace_target = yes
 			FROM = {
 				is_faction_leader = yes
 				NOT = { has_war_with = ROOT }
 			}
-			has_socialist_government = yes
-			SOV = { exists = no }
-			any_neighbor_country = { is_in_faction_with = INT }
 		}
 
-		targets = { INT }
+		targets = { INT SOV }
+		target_root_trigger = { has_socialist_government = yes }
+		target_trigger = {
+			is_valid_peace_target = yes
+			FROM = {
+				is_faction_leader = yes
+				NOT = { has_war_with = ROOT }
+			}
+		}
 
 		fire_only_once = yes
 
-		ai_will_do = { factor = 100 }
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				FROM = { tag = SOV }
+				country_exists = GER
+				NOT = { surrender_progress > 0.4 }
+				NOT = { any_neighbor_country = { is_ally_with = INT } }
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete UKR_join_internationale target: [From.GetName]"
-			INT = { country_event = kr.political.10 }
+			FROM = { country_event = kr.political.10 }
+			if = {
+				limit = { FROM = { tag = SOV } }
+				custom_effect_tooltip = tooltip_white_line
+				custom_effect_tooltip = UKR_SOV_will_puppet_tt
+				hidden_effect = {
+					country_event = { id = ukraine_borotbist.115 days = 180 }
+				}
+			}
 		}
 	}
 	UKR_expand_workers_rights_usdrp = {
@@ -6054,7 +6029,7 @@ UKR_republic_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete UKR_landreform_election_promises"
 			add_political_power = 75
-			add_stability = 0.7
+			add_stability = 0.07
 			set_temp_variable = { ideology_change_var = 5 }
 			change_ruling_party_popularity = yes
 		}
@@ -6717,8 +6692,8 @@ UKR_black_sea_doctrine = {
 			has_non_aggression_pact_with = FROM
 		}
 
-		target_trigger = { 
-			can_declare_war_on = FROM 
+		target_trigger = {
+			can_declare_war_on = FROM
 			country_exists = FROM
 		}
 
@@ -7218,9 +7193,9 @@ UKR_integration_decisions = {
 						state = 961 #Chechnya
 						state = 713 #Suceava
 					}
-			    }
-		   }
-	   }
+				}
+			}
+		}
 	}
 }
 
