@@ -28,6 +28,7 @@ set_potential_national_government = {
 				add_to_array = { PREV.china_government_ambitions = THIS }
 				set_variable = { ambition_area_@PREV = 1 }
 			}
+			CHI_warn_of_rkmt_government_effect = yes #If its a RKMT leader, effect will fire an event for CHI
 		}
 	}
 }
@@ -171,7 +172,8 @@ LEP_league_war_find_victor = {
 		}
 		set_variable = { LEP.LEP_league_war_victor = CHI }
 		CHI = {
-			country_event = { id = chi_dom.11 days = 2 }
+			country_event = { id = CHI.midgame.000 days = 2 }
+			country_event = { id = CHI.earlygame.005 days = 100 } #Friends on the Other Side
 		}
 	}
 	else_if = {
@@ -190,6 +192,7 @@ LEP_league_war_find_victor = {
 		ANQ = {
 			set_country_flag = ANQ_feng_aid_undecided
 			country_event = { id = anq.64 days = 2 }
+			country_event = { id = CHI.earlygame.004 days = 10 } #A Shadowy Defector
 		}
 	}
 	if = {
@@ -485,17 +488,7 @@ china_puppet_setup = {
 	if = {
 		limit = { tag = CHI }
 		set_cosmetic_tag = united_china_kuomintang
-		if = {
-			limit = { ROOT = { has_socialist_government = no } }
-			set_politics = {
-				ruling_party = social_democrat
-				elections_allowed = no
-			}
-			set_political_party = {
-				ideology = social_democrat
-				popularity = 60
-			}
-		}
+		CHI_puppet_setup_effect = yes
 	}
 	else_if = {
 		limit = { tag = LEP }
@@ -686,6 +679,13 @@ china_puppet_setup = {
 			limit = { ROOT = { has_authoritarian_government = yes } }
 			set_cosmetic_tag = united_china_kuomintang
 			load_focus_tree = KR_RKMT
+			if = {
+				limit = { original_tag = GXC }
+				GXC_li_zongren = {
+					set_nationality = GXC
+					promote_character = yes
+				}
+			}
 			set_politics = {
 				ruling_party = authoritarian_democrat
 				elections_allowed = no
@@ -754,6 +754,10 @@ china_puppet_setup = {
 }
 
 china_integrate_ally_effect = {
+	if = {
+		limit = { FROM = { tag = CHI } }
+		CHI_recruit_all_generals_from_THIS = yes
+	}
 	transfer_all_unit_leaders_to_FROM = yes
 	every_subject_country = {
 		get_current_government_type = yes
@@ -789,6 +793,10 @@ china_integrate_TARGET_effect = {
 	set_temp_variable = { integrator = THIS }
 	event_target:target = {
 		clr_country_flag = FNG_promised_autonomy
+		if = {
+			limit = { var:integrator = { tag = CHI } }
+			CHI_recruit_all_generals_from_THIS = yes
+		}
 		every_unit_leader = {
 			limit = { has_character_flag = CHI_original_unit_leader }
 			hidden_effect = {
@@ -852,18 +860,34 @@ china_integrate_TARGET_effect = {
 
 china_kmt_set_cosmetic_effect = {
 	if = {
-		limit = { var:new_overlord = { china_is_aligned_with_kmt = yes } }
+		limit = {
+			var:new_overlord = { china_is_aligned_with_kmt = yes }
+			NOT = { var:new_overlord = { check_variable = { country_leader:china_alignment = token:chinese_republican } } }
+		}
 		#In Alphabetical Order for ease of search
 		if = {
 			limit = { original_tag = GXC }
 			set_cosmetic_tag = GXC_KMT
 		}
-		#No HNN cosmetic flag
+		else_if = {
+			limit = { original_tag = HNN }
+			set_cosmetic_tag = HNN_KMT
+		}
+		else_if = {
+			limit = {
+				original_tag = SHX
+				has_cosmetic_tag = SHX_NCPC
+			}
+			set_cosmetic_tag = SHX_NCPC_KMT
+		}
 		else_if = {
 			limit = { original_tag = SHX }
 			set_cosmetic_tag = SHX_KMT
 		}
-		#No SIK cosmetic flag
+		else_if = {
+			limit = { original_tag = SIK }
+			set_cosmetic_tag = SIK_KMT
+		}
 		else_if = {
 			limit = { original_tag = SZC }
 			set_cosmetic_tag = SZC_KMT
@@ -887,7 +911,7 @@ china_puppet_ROOT_effect = {
 			every_subject_country = {
 				get_current_government_type = yes
 				if = {
-					limit = { has_country_flag = is_chinese_tag }
+					limit = { is_chinese_tag = yes }
 					var:new_overlord = {
 						set_autonomy = {
 							target = PREV
@@ -944,7 +968,7 @@ china_puppet_PREV_effect = {
 			every_subject_country = {
 				get_current_government_type = yes
 				if = {
-					limit = { has_country_flag = is_chinese_tag }
+					limit = { is_chinese_tag = yes }
 					var:new_overlord = {
 						set_autonomy = {
 							target = PREV
@@ -1000,7 +1024,7 @@ china_puppet_FROM_effect = {
 			every_subject_country = {
 				get_current_government_type = yes
 				if = {
-					limit = { has_country_flag = is_chinese_tag }
+					limit = { is_chinese_tag = yes }
 					var:new_overlord = {
 						set_autonomy = {
 							target = PREV
@@ -1082,10 +1106,24 @@ china_break_puppet_effect = {
 			add_claim_by = var:former_overlord
 		}
 		if = {
+			limit = { has_cosmetic_tag = SHX_NCPC_KMT }
+			set_cosmetic_tag = SHX_NCPC
+		}
+		else_if = {
+			limit = {
+				original_tag = YUN
+				has_cosmetic_tag = YUN_KMT
+				check_variable = { country_leader:china_alignment = token:right_kuomintang }
+			}
+			set_cosmetic_tag = YUN_NRA
+		}
+		else_if = {
 			limit = {
 				OR = {
 					has_cosmetic_tag = GXC_KMT
+					has_cosmetic_tag = HNN_KMT
 					has_cosmetic_tag = SHX_KMT
+					has_cosmetic_tag = SIK_KMT
 					has_cosmetic_tag = SZC_KMT
 					has_cosmetic_tag = XSM_KMT
 					has_cosmetic_tag = YUN_KMT
@@ -1093,6 +1131,129 @@ china_break_puppet_effect = {
 			}
 			drop_cosmetic_tag = yes
 		}
+	}
+}
+
+china_generic_set_government_cosmetic_effect = {
+	if = {
+		limit = { original_tag = ANQ }
+		set_cosmetic_tag = ANQ_government
+	}
+	else_if = {
+		limit = { original_tag = CHI }
+		set_cosmetic_tag = CHI_government
+		complete_national_focus = CHI_second_national_congress
+		set_country_flag = CHI_phase_two_begins_flag
+	}
+	else_if = {
+		limit = { original_tag = GXC }
+		if = {
+			limit = { capital_scope = { state = 594 } } #Nanning
+			set_cosmetic_tag = GXC_government_nanning
+		}
+		else = {
+			set_cosmetic_tag = GXC_government_guangzhou
+		}
+	}
+	else_if = {
+		limit = { original_tag = HNN }
+		set_cosmetic_tag = HNN_government
+	}
+	else_if = {
+		limit = { original_tag = KUM }
+		if = {
+			limit = { has_cosmetic_tag = KUM_zhongying }
+			set_cosmetic_tag = KUM_government_zhongying
+		}
+		else = {
+			set_cosmetic_tag = KUM_government
+		}
+	}
+	else_if = {
+		limit = { original_tag = LEP }
+		set_cosmetic_tag = LEP_government
+	}
+	else_if = {
+		limit = { original_tag = SHX }
+		SHX_new_republic = yes
+	}
+	else_if = {
+		limit = { original_tag = SIK }
+		set_cosmetic_tag = SIK_government
+	}
+	else_if = {
+		limit = { original_tag = SQI }
+		if = {
+			limit = { has_government = national_populist }
+			if = {
+				limit = {
+					owns_state = 608
+					controls_state = 608
+				}
+				set_capital = { state = 608 remember_old_capital = no }
+			}
+			set_cosmetic_tag = SQI_government_yiguandao
+			QIE = {
+				QIE_aisin_gioro_puyi = {
+					hidden_effect = {
+						set_nationality = ROOT
+						remove_all_country_leader_roles = yes
+					}
+					set_portraits = {
+						character = QIE_aisin_gioro_puyi
+						civilian = { large = gfx/leaders/QIE/Portrait_QIE_Puyi_Uniform.png }
+					}
+					add_country_leader_role = {
+						country_leader = {
+							desc = QIE_aisin_gioro_puyi_yiguandao_leader_desc
+							ideology = national_populist_subtype
+							traits = { SQI_imprisoned_emperor }
+						}
+						promote_leader = yes
+					}
+				}
+			}
+		}
+		else = {
+			set_cosmetic_tag = SQI_government
+		}
+	}
+	else_if = {
+		limit = { original_tag = SZC }
+		if = {
+			limit = { has_country_leader = { character = GXC_chen_jiongming } }
+			set_cosmetic_tag = SZC_government_federalist
+		}
+		else_if = {
+			limit = {
+				OR = {
+					has_country_leader = { character = QIE_yan_huiqing }
+					has_country_leader = { character = QIE_jiang_baili }
+				}
+			}
+			set_cosmetic_tag = SZC_zhili_clique
+		}
+		else_if = {
+			limit = { capital_scope = { state = 605 } } #Chengdu
+			set_cosmetic_tag = SZC_government_chengdu
+		}
+		else = {
+			set_cosmetic_tag = SZC_government_chongqing
+		}
+	}
+	else_if = {
+		limit = { original_tag = YUN }
+		if = {
+			limit = { check_variable = { country_leader:china_alignment = token:right_kuomintang } }
+			set_cosmetic_tag = YUN_NRA
+		}
+		else = {
+			set_cosmetic_tag = YUN_government
+		}
+	}
+	else_if = {
+		limit = { original_tag = XSM }
+		set_cosmetic_tag = XSM_government
 	}
 }
 
@@ -1328,7 +1489,7 @@ china_enable_non_government_demand_submission_decisions = {
 	hidden_effect = {
 		every_other_country = {
 			limit = {
-				has_country_flag = is_chinese_tag
+				is_chinese_tag = yes
 				OR = {
 					china_is_potential_government = no
 					china_is_unaligned = yes
@@ -1392,7 +1553,7 @@ china_enable_all_demand_submission_decisions = {
 	hidden_effect = {
 		every_other_country = {
 			limit = {
-				has_country_flag = is_chinese_tag
+				is_chinese_tag = yes
 				NOT = { original_tag = XSM }
 				NOT = { original_tag = KUM }
 				NOT = { original_tag = SIK }
@@ -1448,7 +1609,7 @@ china_enable_all_attack_decisions = {
 	hidden_effect = {
 		every_other_country = {
 			limit = {
-				has_country_flag = is_chinese_tag
+				is_chinese_tag = yes
 				NOT = { original_tag = XSM }
 				NOT = { original_tag = KUM }
 				NOT = { original_tag = SIK }
@@ -1480,7 +1641,7 @@ china_enable_outskirts_decisions = {
 	if = {
 		limit = { can_declare_war_on = KUM }
 		if = {
-			limit = { KUM = { has_country_flag = is_chinese_tag } }
+			limit = { KUM = { has_country_flag = KUM_is_chinese_tag } }
 			add_to_array = { ROOT.china_possible_targets_array = KUM }
 			effect_tooltip = { activate_targeted_decision = { target = KUM decision = china_demand_submission } }
 		}
@@ -1533,6 +1694,7 @@ china_enable_concession_decisions = {
 }
 
 china_generic_land_reform_setup = {
+	set_variable = { China_land_reform_var = 100 }
 	every_state = {
 		limit = {
 			OR = {

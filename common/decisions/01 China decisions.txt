@@ -57,7 +57,7 @@ chinese_unification = {
 				is_major = yes
 				num_of_controlled_factories > 50
 				has_offensive_war_with = ROOT
-				hidden_trigger = { NOT = { has_country_flag = is_chinese_tag } }
+				hidden_trigger = { NOT = { is_chinese_tag = yes } }
 			}
 		}
 
@@ -84,16 +84,36 @@ chinese_unification = {
 			set_rule = { can_not_declare_war = yes }
 			every_other_country = {
 				limit = {
-					has_country_flag = is_chinese_tag
+					is_chinese_tag = yes
 					is_in_faction = no
 				}
 				set_country_flag = china_united_front_can_join_factions
 				set_rule = { can_join_factions = yes }
 			}
+			if = {
+				limit = {
+					has_dlc_lar = yes
+					NOT = { has_global_flag = CHN_zheng_pingru_recruited_flag }
+					has_war_with = JAP
+				}
+				create_operative_leader = {
+					name = "Zheng Pingru"
+					GFX = GFX_portrait_kr_zheng_pingru
+					traits = {
+						operative_seducer
+						operative_well_groomed
+						operative_political_connections
+					}
+					bypass_recruitment = no
+					available_to_spy_master = yes
+					nationalities = { JAP LEC QIE FNG CHI LEP ANQ HNN GXC YUN SZC SHX SQI XSM SIK KUM }
+				}
+				set_global_flag = CHN_zheng_pingru_recruited_flag
+			}
 			hidden_effect = {
 				every_other_country = {
 					limit = {
-						has_country_flag = is_chinese_tag
+						is_chinese_tag = yes
 						is_ai = no
 					}
 					country_event = china_events.25
@@ -249,101 +269,7 @@ chinese_unification = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete china_declare_government"
-			if = {
-				limit = { original_tag = SZC }
-				if = {
-					limit = { capital_scope = { state = 605 } } #Chengdu
-					set_cosmetic_tag = SZC_government_chengdu
-				}
-				else = {
-					set_cosmetic_tag = SZC_government_chongqing
-				}
-			}
-			else_if = {
-				limit = { original_tag = GXC }
-				if = {
-					limit = { capital_scope = { state = 594 } } #Nanning
-					set_cosmetic_tag = GXC_government_nanning
-				}
-				else = {
-					set_cosmetic_tag = GXC_government_guangzhou
-				}
-			}
-			else_if = {
-				limit = { original_tag = SHX }
-				SHX_new_republic = yes
-			}
-			else_if = {
-				limit = { original_tag = SQI }
-				if = {
-					limit = { has_government = national_populist }
-					if = {
-						limit = {
-							owns_state = 608
-							controls_state = 608
-						}
-						set_capital = { state = 608 remember_old_capital = no }
-					}
-					set_cosmetic_tag = SQI_government_yiguandao
-					QIE = {
-						QIE_aisin_gioro_puyi = {
-							hidden_effect = {
-								set_nationality = ROOT
-								remove_all_country_leader_roles = yes
-							}
-							set_portraits = {
-								character = QIE_aisin_gioro_puyi
-								civilian = { large = gfx/leaders/QIE/Portrait_QIE_Puyi_Uniform.png }
-							}
-							add_country_leader_role = {
-								country_leader = {
-									desc = QIE_aisin_gioro_puyi_yiguandao_leader_desc
-									ideology = national_populist_subtype
-									traits = { SQI_imprisoned_emperor }
-								}
-								promote_leader = yes
-							}
-						}
-					}
-				}
-				else = {
-					set_cosmetic_tag = SQI_government
-				}
-			}
-			else_if = {
-				limit = { original_tag = LEP }
-				set_cosmetic_tag = LEP_government
-			}
-			else_if = {
-				limit = { original_tag = ANQ }
-				set_cosmetic_tag = ANQ_government
-			}
-			else_if = {
-				limit = { original_tag = HNN }
-				set_cosmetic_tag = HNN_government
-			}
-			else_if = {
-				limit = { original_tag = YUN }
-				set_cosmetic_tag = YUN_government
-			}
-			else_if = {
-				limit = { original_tag = XSM }
-				set_cosmetic_tag = XSM_government
-			}
-			else_if = {
-				limit = { original_tag = KUM }
-				if = {
-					limit = { has_cosmetic_tag = KUM_zhongying }
-					set_cosmetic_tag = KUM_government_zhongying
-				}
-				else = {
-					set_cosmetic_tag = KUM_government
-				}
-			}
-			else_if = {
-				limit = { original_tag = SIK }
-				set_cosmetic_tag = SIK_government
-			}
+			china_generic_set_government_cosmetic_effect = yes
 			set_potential_national_government = yes
 			if = {
 				limit = { NOT = { original_tag = SHX } } #has tag-side content
@@ -364,6 +290,7 @@ chinese_unification = {
 			608 = { is_owned_by_ROOT_or_subject = yes } #Beijing
 			613 = { is_owned_by_ROOT_or_subject = yes } #Nanjing
 			1048 = { is_owned_by_ROOT_or_subject = yes } #Wuhan
+			716 = { is_owned_by_ROOT_or_subject = yes } #Shenyang
 			surrender_progress < 0.05
 			if = {
 				limit = {
@@ -534,6 +461,13 @@ chinese_unification = {
 					custom_effect_tooltip = enables_new_focus_branches
 					activate_targeted_decision = { decision = china_move_capital target = ROOT }
 				}
+				else_if = {
+					limit = { tag = CHI }
+					country_event = CHI.lategame.200 #The White Sun Rises
+					effect_tooltip = {
+						add_ideas = CHI_calls_for_congress_idea
+					}
+				}
 			}
 			else_if = {
 				limit = { check_variable = { country_leader:china_alignment = token:federalists } }
@@ -574,17 +508,20 @@ chinese_unification = {
 				}
 			}
 			mark_focus_tree_layout_dirty = yes
-			add_timed_idea = {
-				idea = unite_china_justification_idea
-				days = 365
+			if = {
+				limit = { NOT = { tag = CHI } } #Has tagside content for this
+				add_timed_idea = {
+					idea = unite_china_justification_idea
+					days = 365
+				}
+				china_generic_land_reform_setup = yes
 			}
-			china_generic_land_reform_setup = yes
 			hidden_effect = {
 				if = {
 					limit = { is_subject = no }
 					every_other_country = {
 						limit = {
-							has_country_flag = is_chinese_tag
+							is_chinese_tag = yes
 							NOT = { is_subject_of = ROOT }
 						}
 						add_to_array = { ROOT.china_possible_targets_array = THIS }
@@ -671,7 +608,10 @@ chinese_unification = {
 
 		visible = {
 			can_declare_war_on = FROM
-			china_same_alignment_as_FROM = no
+			if = {
+				limit = { china_is_unaligned = no }
+				china_same_alignment_as_FROM = no
+			}
 			is_subject = no
 		}
 
@@ -4733,7 +4673,7 @@ china_land_reform_decisions = {
 		fire_only_once = yes
 		state_target = yes
 		cancel_if_not_visible = yes
-		cost = 100
+		cost = China_land_reform_var
 		days_remove = 200
 
 		ai_will_do = {
@@ -4771,7 +4711,95 @@ china_land_reform_decisions = {
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove china_generic_land_reform_decision target: [From.GetName]"
 			FROM = {
-				increase_state_category_by_one_level = yes
+				if = {
+					limit = { ROOT = { has_country_flag = CHI_moderate_land_reform_flag } }
+					increase_state_category_by_one_level = yes
+					ROOT = {
+						add_popularity = {
+							ideology = social_democrat
+							popularity = 0.010
+						}
+						set_temp_variable = { ideology_change_var = 0.015 }
+						change_ruling_party_popularity = yes
+					}
+				}
+				else_if = {
+					limit = { ROOT = { has_country_flag = CHI_radical_land_reform_flag } }
+					increase_state_category_by_one_level = yes
+					add_building_construction = {
+						type = infrastructure
+						level = 1
+						instant_build = yes
+					}
+					ROOT = {
+						if = {
+							limit = { NOT = { has_government = radical_socialist } }
+							add_popularity = {
+								ideology = radical_socialist
+								popularity = 0.010
+							}
+							set_temp_variable = { ideology_change_var = 0.015 }
+							change_ruling_party_popularity = yes
+						}
+						else = {
+							add_popularity = {
+								ideology = radical_socialist
+								popularity = 0.025
+							}
+						}
+					}
+				}
+				else_if = {
+					limit = { ROOT = { has_country_flag = CHI_total_land_reform_flag } }
+					increase_state_category_by_one_level = yes
+					add_extra_state_shared_building_slots = 1
+					add_building_construction = {
+						type = infrastructure
+						level = 1
+						instant_build = yes
+					}
+					ROOT = {
+						if = {
+							limit = { NOT = { has_government = totalist } }
+							add_popularity = {
+								ideology = totalist
+								popularity = 0.01
+							}
+							set_temp_variable = { ideology_change_var = 0.015 }
+							change_ruling_party_popularity = yes
+						}
+						else = {
+							add_popularity = {
+								ideology = totalist
+								popularity = 0.025
+							}
+						}
+						add_stability = -0.03
+					}
+				}
+				else_if = {
+					limit = { ROOT = { has_country_flag = CHI_chinese_devolution_flag } }
+					increase_state_category_by_one_level = yes
+					add_extra_state_shared_building_slots = 1
+					add_compliance = 20
+					ROOT = {
+						add_popularity = {
+							ideology = social_conservative
+							popularity = 0.005
+						}
+						add_popularity = {
+							ideology = syndicalist
+							popularity = 0.005
+						}
+						set_temp_variable = { ideology_change_var = 0.015 }
+						change_ruling_party_popularity = yes
+						add_stability = 0.01
+						CHI_social_conservative_update_effect = yes
+					}
+				}
+				else = {
+					increase_state_category_by_one_level = yes
+				}
 			}
 		}
 	}

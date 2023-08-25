@@ -2430,7 +2430,7 @@ country_event = { #Offering training to Chinese warlords
 
 	option = { #yes
 		log = "[GetLogInfo]: event japfor.3 option japfor.3.a"
-		ai_chance = { base = 99 }
+		ai_chance = { base = 100 }
 		name = japfor.3.a
 		add_timed_idea = {
 			idea = JAP_china_training
@@ -2452,7 +2452,7 @@ country_event = { #Offering training to Chinese warlords
 
 	option = { #no
 		log = "[GetLogInfo]: event japfor.3 option japfor.3.b"
-		ai_chance = { base = 1 }
+		ai_chance = { base = 0 }
 		name = japfor.3.b
 		add_political_power = 10
 		set_country_flag = JAP_no_training_help
@@ -2481,6 +2481,10 @@ country_event = { #giving offsite mils to warlords
 				ideology = market_liberal
 				popularity = 0.02
 			}
+		}
+		else_if = {
+			limit = { tag = CHI }
+			CHI_add_rad_medium_effect = yes
 		}
 		add_offsite_building = { type = arms_factory level = 3 }
 		set_country_flag = has_offsite_mils_from_JAP
@@ -2541,7 +2545,7 @@ country_event = { #supporting a Warlord's offensive
 	option = {
 		log = "[GetLogInfo]: event japfor.5 option japfor.5.a"
 		name = japfor.5.a
-		ai_chance = { base = 99 }
+		ai_chance = { base = 100 }
 		if = {
 			limit = {
 				OR = {
@@ -2563,7 +2567,7 @@ country_event = { #supporting a Warlord's offensive
 	option = {
 		log = "[GetLogInfo]: event japfor.5 option japfor.5.b"
 		name = japfor.5.b
-		ai_chance = { base = 1 }
+		ai_chance = { base = 0 }
 		add_political_power = 10
 		set_country_flag = JAP_refused_offensive_help
 	}
@@ -2696,6 +2700,10 @@ country_event = { #Offer arms factories to weaker tags
 	option = {
 		log = "[GetLogInfo]: event japfor.9 option japfor.9.a"
 		name = japfor.9.a
+		if = {
+			limit = { tag = CHI }
+			CHI_add_rad_medium_effect = yes
+		}
 		add_offsite_building = { type = arms_factory level = 2 }
 		set_country_flag = has_offsite_mils_from_JAP
 		hidden_effect = {
@@ -5751,7 +5759,7 @@ country_event = { #hidden event to fire the peace mission
 		OR = {
 			AND = {
 				any_enemy_country = {
-					has_country_flag = is_chinese_tag
+					is_chinese_tag = yes
 					OR = {
 						china_is_potential_government = yes
 						is_faction_leader = yes #United Front
@@ -8130,15 +8138,50 @@ country_event = { #Japan is ramping up pressure against the Indies
 		log = "[GetLogInfo]: event japfor.455 option japfor.455.a"
 		name = japfor.455.a
 		trigger = {
-			1020 = { is_owned_by = DEI }
+			1020 = {
+				OR = {
+					is_owned_by = DEI
+					is_owned_by = HOL
+				}
+			}
 			country_exists = GEA
 			is_in_faction = no
 			is_subject = no
 			GER = {
 				is_faction_leader = yes
 			}
+			var:1020.owner = {
+				OR = {
+					has_war = no
+					all_enemy_country = {
+						OR = {
+							tag = INS
+							has_war_with = GER
+						}
+					}
+				}
+			}
 		}
-		ai_chance = { base = 100 }
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					AND = {
+						tag = HOL
+						OR = {
+							has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_ENT }
+							has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_BEL }
+						}
+					}
+					AND = {
+						tag = INS
+						NOT = { has_game_rule = { rule = INS_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = INS_forpol option = INS_FORPOL_GER } }
+					}
+				}
+			}
+		}
 		GER = {
 			country_event = { id = japfor.456 days = 1 }
 		}
@@ -8147,7 +8190,17 @@ country_event = { #Japan is ramping up pressure against the Indies
 	option = { #Surely they won't attack?!
 		log = "[GetLogInfo]: event japfor.455 option japfor.455.b"
 		name = japfor.455.b
-		ai_chance = { base = 0 }
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 100
+				tag = HOL
+				OR = {
+					has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_ENT }
+					has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_BEL }
+				}
+			}
+		}
 		JAP = {
 			country_event = { id = japfor.459 days = 1 }
 		}
@@ -8172,6 +8225,11 @@ country_event = { #Japan is planning an attack against the Dutch East Indies, wh
 			modifier = {
 				add = -50
 				surrender_progress > 0.20
+			}
+			modifier = {
+				add = 100
+				tag = INS
+				has_game_rule = { rule = INS_forpol option = INS_FORPOL_GER }
 			}
 		}
 		add_to_faction = FROM
@@ -8254,12 +8312,34 @@ country_event = { #Indonesia is unprotected
 		name = japfor.459.a
 		if = {
 			limit = {
-				1020 = { is_owned_by = DEI }
+				country_exists = DEI
+				country_exists = INS
+				NOT = {
+					INS = { has_country_flag = JAP_economic_sphere_member }
+					INS = { is_in_faction_with = JAP }
+				}
+			}
+			create_wargoal = { type = annex_everything target = DEI }
+			create_wargoal = { type = annex_everything target = INS }
+		}
+		else_if = {
+			limit = {
+				OR = {
+					AND = {
+						country_exists = DEI
+						country_exists = INS
+						OR = {
+							INS = { has_country_flag = JAP_economic_sphere_member }
+							INS = { is_in_faction_with = JAP }
+						}
+					}
+					1020 = { is_owned_by = DEI }
+				}
 			}
 			create_wargoal = { type = annex_everything target = DEI }
 		}
 		else = {
-			create_wargoal = { type = annex_everything target = INS }
+			create_wargoal = { type = annex_everything target = 1020.owner }
 		}
 	}
 }
@@ -8293,14 +8373,37 @@ country_event = { #Indonesia resists with German backing
 		}
 		if = {
 			limit = {
-				1020 = { is_owned_by = DEI }
+				country_exists = DEI
+				country_exists = INS
+				NOT = {
+					INS = { is_in_faction_with = JAP }
+					INS = { has_country_flag = JAP_economic_sphere_member }
+				}
+			}
+			create_wargoal = { type = annex_everything target = DEI }
+			create_wargoal = { type = annex_everything target = INS }
+		}
+		else_if = {
+			limit = {
+				OR = {
+					AND = {
+						country_exists = DEI
+						country_exists = INS
+						OR = {
+							INS = { has_country_flag = JAP_economic_sphere_member }
+							INS = { is_in_faction_with = JAP }
+						}
+					}
+					1020 = { is_owned_by = DEI }
+				}
 			}
 			create_wargoal = { type = annex_everything target = DEI }
 		}
 		else = {
-			create_wargoal = { type = annex_everything target = INS }
+			create_wargoal = { type = annex_everything target = var:1020.owner }
 		}
 	}
+
 	option = { #Don't
 		log = "[GetLogInfo]: event japfor.460 option japfor.460.b"
 		name = japfor.460.b

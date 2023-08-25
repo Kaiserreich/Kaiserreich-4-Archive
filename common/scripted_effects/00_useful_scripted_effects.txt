@@ -1458,3 +1458,97 @@ calculate_days_since_game_start = {
 	add_to_temp_variable = { days_to_event = 706640 }
 	subtract_from_temp_variable = { days_to_event = global.num_days }
 }
+
+# Starts at Wednesday, since Jan 1, 1936 (Day 0) is a Wednesday
+day_of_week_flag = {
+	if = {
+		limit = { check_variable = { increment = 0 } }
+		set_country_flag = day_is_Wednesday
+	}
+	else_if = {
+		limit = { check_variable = { increment = 1 } }
+		set_country_flag = day_is_Thursday
+	}
+	else_if = {
+		limit = { check_variable = { increment = 2 } }
+		set_country_flag = day_is_Friday
+	}
+	else_if = {
+		limit = { check_variable = { increment = 3 } }
+		set_country_flag = day_is_Saturday
+	}
+	else_if = {
+		limit = { check_variable = { increment = 4 } }
+		set_country_flag = day_is_Sunday
+	}
+	else_if = {
+		limit = { check_variable = { increment = 5 } }
+		set_country_flag = day_is_Monday
+	}
+	else_if = {
+		limit = { check_variable = { increment = 6 } }
+		set_country_flag = day_is_Tuesday
+	}
+}
+
+leap_year_check = {
+	# Set a temporary variable to check how many leap years have passed
+	set_temp_variable = { days_passed_leap_check = days_passed }
+	subtract_from_temp_variable = { days_passed_leap_check = 58 } #subtract the 58 days of 1936 until the first leap year
+	if = {
+		limit = { check_variable = { days_passed_leap_check > 0 } } #if that turns the value negative, no leap years have occurred, so skip ahead
+		# But if the number of days is still positive, subtract 4 years of days (365x4), and increment the days_passed variable to account for the missing leap day that hoi4 doesn't add
+		# if the number of days is now negative, there are no more missing leap days, and the while loop breaks out, otherwise it keeps going until all the missing leap days are accounted for
+		while_loop_effect = {
+			limit = { check_variable = { days_passed_leap_check > 0 } }
+			subtract_from_temp_variable = { days_passed_leap_check = 1460 }
+			add_to_temp_variable = { days_passed = 1 }
+		}
+	}
+}
+
+clear_week_flags = {
+	clr_country_flag = day_is_Wednesday
+	clr_country_flag = day_is_Thursday
+	clr_country_flag = day_is_Friday
+	clr_country_flag = day_is_Saturday
+	clr_country_flag = day_is_Sunday
+	clr_country_flag = day_is_Monday
+	clr_country_flag = day_is_Tuesday
+}
+
+# modulo math divides the given variable by the value you choose and then converts that variable into the remainder.
+# so a value of 10 for date_check would become 3 after the modulo_temp_variable for example.
+modulo_date_check = {
+	modulo_temp_variable = { date_check = 7 } #divide the date by 7, and change the variable to the remainder
+	if = {
+		limit = { check_variable = { date_check = 0 } } #If the remainder is 0, then that is the current day of the week
+		day_of_week_flag = yes
+	}
+	else = {
+		set_temp_variable = { date_check = days_passed } #check the current date
+		add_to_temp_variable = { date_check = 7 } # add one week to avoid negative numbers when subtracting the increment
+		add_to_temp_variable = { increment = 1 } #increment the day of the week by 1
+		subtract_from_temp_variable = { date_check = increment } #increment the date by the date_increment
+	}
+}
+
+# Usage Guide #
+# Fire a hidden event that runs the 'get_day_of_week' scripted effect which sets one of the country_flags
+# then, fire event namespace.XXX for your tag and use the scripted localisation [GetDayOfWeek] to dynamically grab the day of the week
+# next, have the aforementioned event namespace.XXX run the "clear_week_flags" scripted effect, to clear out the country flag and reset the command to be used again.
+
+get_day_of_week = {
+	# Determine how many days have passed since Wednesday Jan 1, 1936
+	set_temp_variable = { days_passed = global.num_days }
+	subtract_from_temp_variable = { days_passed = 706640 } #number of days to get to Jan 1, 1936
+	leap_year_check = yes #check how many leap years have passed and adjust the date accordingly
+
+	set_temp_variable = { date_check = days_passed } #check the current date
+	set_temp_variable = { increment = 0 } #define the increment variable to be used when checking what day of the week it is
+
+	while_loop_effect = { #run the modulo_date_check scripted_effect until it returns true
+		limit = { NOT = { check_variable = { date_check = 0 } } } #if the remainder went to 0, the day of the week was found, so break the loop
+		modulo_date_check = yes
+	}
+}
