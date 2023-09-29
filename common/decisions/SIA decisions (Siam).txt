@@ -699,15 +699,61 @@ political_actions = {
 
 	SIA_reclaim_left_bank_mekong = {
 		icon = GFX_decision_hand_grab
-		allowed = { always = no } #activated by effect
+
+		allowed = { original_tag = SIA }
+
 		available = {
-			threat > 0.9
+			threat > 0.6
+		}
+
+		visible = {
+			can_declare_war_on = FROM
+			is_subject = no
+			FROM = {
+				OR = {
+					owns_state = 670
+					owns_state = 826
+				}
+			}
+		}
+
+		cancel_trigger = {
+			OR = {
+				is_subject = yes
+				NOT = { can_declare_war_on = FROM }
+				FROM = {
+					NOT = { owns_state = 670 }
+					NOT = { owns_state = 826 }
+				}
+			}
 		}
 
 		cost = 20
 		days_remove = 35
 		fire_only_once = yes
-		cancel_if_not_visible = yes
+
+		targets = { 670.OWNER 826.OWNER }
+		target_root_trigger = {
+			OR = {
+				has_completed_focus = SIA_buddhisttraditions
+				has_completed_focus = SIA_fathergovernschildren
+				has_completed_focus = SIA_arunothai
+				AND = {
+					has_completed_focus = SIA_modernsiamesenation
+					is_in_faction_with = JAP
+				}
+			}
+			is_subject = no
+		}
+		target_trigger = {
+			can_declare_war_on = FROM
+			FROM = {
+				OR = {
+					owns_state = 670
+					owns_state = 826
+				}
+			}
+		}
 
 		ai_will_do = {
 			factor = 1000
@@ -717,58 +763,52 @@ political_actions = {
 			}
 			modifier = {
 				factor = 0
-				var:670.owner = {
-					OR = {
-						is_stronger_than_ROOT_and_not_vulnerable = yes
-						overlord_is_stronger_than_ROOT_and_not_vulnerable = yes
-						faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				var:826.owner = {
-					OR = {
-						is_stronger_than_ROOT_and_not_vulnerable = yes
-						overlord_is_stronger_than_ROOT_and_not_vulnerable = yes
-						faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes
-					}
-				}
-			}
-		}
-
-		visible = {
-			is_subject = no
-			custom_trigger_tooltip = {
-				tooltip = SIA_can_declare_war_on_left_mekong_tt
-				OR = {
-					can_declare_war_on = 670.owner
-					can_declare_war_on = 826.owner
-				}
-			}
-			hidden_trigger = {
-				OR = {
-					has_completed_focus = SIA_buddhisttraditions
-					has_completed_focus = SIA_fathergovernschildren
-					has_completed_focus = SIA_arunothai
-					AND = {
-						has_completed_focus = SIA_modernsiamesenation
-						is_in_faction_with = JAP
-					}
-				}
+				FROM = { default_attack_AI_trigger_FROM = yes }
 			}
 		}
 
 		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel SIA_reclaim_left_bank_mekong"
+			log = "[GetDateText]: [Root.GetName]: Decision cancel SIA_reclaim_left_bank_mekong target: [From.GetName]"
+			add_political_power = 20
+			clear_decision_attack_AI = yes
 		}
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete SIA_reclaim_left_bank_mekong"
+			log = "[GetDateText]: [Root.GetName]: Decision complete SIA_reclaim_left_bank_mekong target: [From.GetName]"
+			FROM = { incoming_war_notification_effect = yes }
+			setup_decision_attack_AI = yes
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SIA_reclaim_left_bank_mekong"
-			add_state_claim = 670
-			add_state_claim = 826
+			log = "[GetDateText]: [Root.GetName]: Decision remove SIA_reclaim_left_bank_mekong target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			if = {
+				limit = {
+					670 = { is_owned_by = FROM }
+					826 = { is_owned_by = FROM }
+				}
+				declare_war_on = {
+					target = FROM
+					type = take_state_focus
+					generator = { 670 826 }
+				}
+			}
+			else_if = {
+				limit = { 670 = { is_owned_by = FROM } }
+				add_state_claim = 670
+				declare_war_on = {
+					target = FROM
+					type = take_state_focus
+					generator = { 670 }
+				}
+			}
+			else_if = {
+				limit = { 826 = { is_owned_by = FROM } }
+				add_state_claim = 826
+				declare_war_on = {
+					target = FROM
+					type = take_state_focus
+					generator = { 826 }
+				}
+			}
 		}
 	}
 }

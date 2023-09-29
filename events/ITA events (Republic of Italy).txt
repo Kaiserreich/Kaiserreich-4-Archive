@@ -1248,6 +1248,18 @@ country_event = { # Venice decides what to do after winning revolt
 						set_nationality = PREV
 					}
 				}
+				add_state_core = 159 #Lombardy
+				add_state_core = 160 #Venetia
+				add_state_core = 488 #Trieste
+				add_state_core = 759 #Friuli
+				add_state_core = 783 #Trentino
+				every_state = {
+					limit = {
+						is_european_italy = yes
+						NOT = { is_core_of = ITA }
+					}
+					add_claim_by = ITA
+				}
 			}
 		}
 	}
@@ -1261,14 +1273,10 @@ country_event = { # Venice decides what to do after winning revolt
 		ai_chance = { base = 30 }
 		clr_country_flag = VNC_republican_revolt
 		hidden_effect = {
-			160 = { remove_core_of = VNC }
-			759 = { remove_claim_by = VNC }
 			ITA = { transfer_state = 159 }
 			transfer_navy = { target = ITA }
 			every_navy_leader = {
-				limit = {
-					has_character_flag = ITA_venetian_admiral
-				}
+				limit = { has_character_flag = ITA_venetian_admiral }
 				set_nationality = ITA
 			}
 			VNC_mario_balotta = { set_nationality = ITA }
@@ -3547,12 +3555,10 @@ country_event = { # Italy receives peace proposal
 		ai_chance = { base = 0 }
 		add_stability = -0.10
 		add_war_support = -0.20
-		if = {
-			limit = { has_global_flag = KR_italy_balance }
-			custom_effect_tooltip = SRI_balance_will_be_broken
-			clr_global_flag = KR_italy_balance
+		FROM = {
+			italy_break_balance = yes
+			country_event = ita.37
 		}
-		FROM = { country_event = ita.37 }
 
 		if = {
 			limit = {
@@ -3968,11 +3974,7 @@ country_event = { # Germany intervened in peace talks
 		log = "[GetLogInfo]: event ita.135 option ita.135.b"
 		name = ita.135.b #Never!
 		ai_chance = { base = 0 }
-		if = {
-			limit = { has_global_flag = KR_italy_balance }
-			custom_effect_tooltip = SRI_balance_will_be_broken
-			clr_global_flag = KR_italy_balance
-		}
+		FROM = { italy_break_balance = yes }
 		add_war_support = 0.10
 		GER = {
 			add_to_war = {
@@ -5195,7 +5197,7 @@ country_event = {
 	mean_time_to_happen = {
 		days = 5
 		modifier = {
-			factor = 18
+			add = 85
 			is_government_in_exile = no
 		}
 	}
@@ -5218,6 +5220,7 @@ country_event = {
 					target = ROOT
 					autonomy_state = autonomy_free
 				}
+				save_event_target_as = peace_target
 			}
 		}
 		if = {
@@ -5225,30 +5228,16 @@ country_event = {
 				is_in_faction = yes
 				is_faction_leader = no
 			}
-			random_country = {
-				limit = {
-					is_in_faction_with = ROOT
-					is_faction_leader = yes
-				}
-				save_event_target_as = leader
-			}
+			faction_leader = { save_event_target_as = peace_target }
+		}
+		if = {
+			limit = { has_event_target = peace_target }
 			every_enemy_country = {
 				limit = {
-					OR = {
-						tag = ITA
-						tag = SRI
-						tag = SIC
-						tag = SRD
-					}
-					is_subject = no
-					OR = {
-						is_in_faction = no
-						is_faction_leader = yes
-					}
+					is_italian_unifier_tag = yes
+					is_valid_peace_target = yes
 				}
-				event_target:leader = {
-					set_country_flag = KR_will_peace_with_@PREV
-				}
+				event_target:peace_target = { set_country_flag = KR_will_peace_with_@PREV }
 			}
 		}
 		if = {
@@ -5269,30 +5258,35 @@ country_event = {
 	picture = GFX_report_event_GRE_army
 
 	trigger = {
-		OR = {
-			tag = ITA
-			tag = SRI
-			tag = SIC
-			tag = SRD
-		}
+		is_italian_unifier_tag = yes
 		has_war = yes
-		is_subject = no
-		OR = {
-			is_in_faction = no
-			is_faction_leader = yes
-		}
+		surrender_progress < 0.05
 		any_enemy_country = {
-			is_faction_leader = yes
+			is_valid_peace_target = yes
 			has_country_flag = KR_will_peace_with_@ROOT
 		}
+		is_valid_peace_target = yes
 		NOT = {
-			any_enemy_country = { is_italian_tag = yes }
-			surrender_progress > 0
+			has_war_with = ITA
+			has_war_with = SRI
+			has_war_with = SIC
+			has_war_with = SRD
+			has_war_with = PAP
+			has_war_with = VNC
+			has_war_with = EMI
+			has_war_with = TUS
+			has_war_with = LOM
+			any_enemy_country = {
+				any_owned_state = {
+					is_claim_or_core_of_ROOT = yes
+					NOT = { controller = { is_ally_with = ROOT } }
+				}
+			}
 		}
 	}
 
 	mean_time_to_happen = {
-		months = 2
+		days = 30
 		modifier = {
 			factor = 0.5
 			any_enemy_country = {
@@ -5313,9 +5307,8 @@ country_event = {
 
 	immediate = {
 		hidden_effect = {
-			random_country = {
+			random_enemy_country = {
 				limit = {
-					has_war_with = ROOT
 					is_faction_leader = yes
 					has_country_flag = KR_will_peace_with_@ROOT
 				}

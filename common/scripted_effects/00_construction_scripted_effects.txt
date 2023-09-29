@@ -9,434 +9,192 @@ prioritize_state = {
 	}
 }
 
-add_one_random_infrastructure = {
+construction_build_in_best_random_state_effect = {
 	if = {
-		limit = { has_variable = building_index }
-		meta_effect = {
-			text = {
+		limit = { NOT = { has_variable = building_token } }
+		set_temp_variable = { building_token = token:industrial_complex }
+		set_temp_variable = { building_token_for_trigger = token:industrial_complex }
+	}
+	else_if = {
+		limit = {
+			OR = {
+				check_variable = { building_token = token:synthetic_refinery }
+				check_variable = { building_token = token:fuel_silo }
+			}
+		}
+		#uses industrial_complex in the trigger due to synthetic_refinery and fuel_silo resulting in no visible tooltip if the tech isn't unlocked yet
+		set_temp_variable = { building_token_for_trigger = token:industrial_complex }
+	}
+	else = {
+		set_temp_variable = { building_token_for_trigger = building_token }
+	}
+	meta_effect = {
+		text = {
+			if = {
+				limit = {
+					any_core_state = {
+						free_building_slots = { building = [BUILDING_TOKEN_FOR_TRIGGER] size > 0 include_locked = yes }
+						is_owned_and_controlled_by = PREV
+						is_valid_state_for_development = yes
+					}
+				}
+				set_temp_variable = { core_available = 1 }
+			}
+			else_if = {
+				limit = {
+					any_of_scopes = {
+						array = owned_controlled_states
+						free_building_slots = { building = [BUILDING_TOKEN_FOR_TRIGGER] size > 0 include_locked = yes }
+						is_claimed_by = PREV
+						is_valid_state_for_development = yes
+					}
+				}
+				set_temp_variable = { claim_available = 1 }
+			}
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = owned_controlled_states
+						free_building_slots = { building = [BUILDING_TOKEN_FOR_TRIGGER] size > 0 include_locked = yes }
+						is_in_home_area = yes
+						is_valid_state_for_development = yes
+					}
+				}
+				set_temp_variable = { home_area_available = 1 }
+			}
+			if = {
+				limit = { has_variable = core_available }
+				if = {
+					limit = { has_variable = home_area_available }
+					random_owned_controlled_state = {
+						prioritize = { [STATES] }
+						limit = {
+							free_building_slots = { building = [BUILDING_TOKEN_FOR_TRIGGER] size > 0 include_locked = yes }
+							is_core_of = PREV
+							is_in_home_area = yes
+							is_valid_state_for_development = yes
+						}
+						if = {
+							limit = { NOT = { check_variable = { building_token = token:infrastructure } } }
+							add_extra_state_shared_building_slots = 1
+						}
+						add_building_construction = { type = [BUILDING] level = 1 instant_build = yes }
+					}
+				}
+				else = {
+					random_owned_controlled_state = {
+						prioritize = { [STATES] }
+						limit = {
+							free_building_slots = { building = [BUILDING_TOKEN_FOR_TRIGGER] size > 0 include_locked = yes }
+							is_core_of = PREV
+							is_valid_state_for_development = yes
+						}
+						if = {
+							limit = { NOT = { check_variable = { building_token = token:infrastructure } } }
+							add_extra_state_shared_building_slots = 1
+						}
+						add_building_construction = { type = [BUILDING] level = 1 instant_build = yes }
+					}
+				}
+			}
+			else_if = {
+				limit = { has_variable = claim_available }
+				if = {
+					limit = { has_variable = home_area_available }
+					random_owned_controlled_state = {
+						prioritize = { [STATES] }
+						limit = {
+							free_building_slots = { building = [BUILDING_TOKEN_FOR_TRIGGER] size > 0 include_locked = yes }
+							is_claimed_by = PREV
+							is_in_home_area = yes
+							is_valid_state_for_development = yes
+						}
+						if = {
+							limit = { NOT = { check_variable = { building_token = token:infrastructure } } }
+							add_extra_state_shared_building_slots = 1
+						}
+						add_building_construction = { type = [BUILDING] level = 1 instant_build = yes }
+					}
+				}
+				else = {
+					random_owned_controlled_state = {
+						prioritize = { [STATES] }
+						limit = {
+							free_building_slots = { building = [BUILDING_TOKEN_FOR_TRIGGER] size > 0 include_locked = yes }
+							is_claimed_by = PREV
+							is_valid_state_for_development = yes
+						}
+						if = {
+							limit = { NOT = { check_variable = { building_token = token:infrastructure } } }
+							add_extra_state_shared_building_slots = 1
+						}
+						add_building_construction = { type = [BUILDING] level = 1 instant_build = yes }
+					}
+				}
+			}
+			else_if = {
+				limit = { has_variable = home_area_available }
 				random_owned_controlled_state = {
 					prioritize = { [STATES] }
 					limit = {
-						OR = {
-							is_core_of = owner
-							is_claimed_by = owner
-						}
-						free_building_slots = { building = infrastructure size > 0 include_locked = yes }
+						free_building_slots = { building = [BUILDING_TOKEN_FOR_TRIGGER] size > 0 include_locked = yes }
+						is_in_home_area = yes
 						is_valid_state_for_development = yes
-						prefer_home_area_states_unless_filled_infrastructure = yes
 					}
-					add_building_construction = {
-						type = infrastructure
-						level = 1
-						instant_build = yes
+					if = {
+						limit = { NOT = { check_variable = { building_token = token:infrastructure } } }
+						add_extra_state_shared_building_slots = 1
 					}
+					add_building_construction = { type = [BUILDING] level = 1 instant_build = yes }
 				}
 			}
-			STATES = "[BC_Target_1] [BC_Target_2] [BC_Target_3] [BC_Target_4] [BC_Target_5] [BC_Target_6] [BC_Target_7] [BC_Target_8] [BC_Target_9] [BC_Target_10] [BC_Target_11] [BC_Target_12] [BC_Target_13] [BC_Target_14] [BC_Target_15]"
-		}
-	}
-	else = {
-		random_owned_controlled_state = {
-			limit = {
-				OR = {
-					is_core_of = owner
-					is_claimed_by = owner
+			else = {
+				random_owned_controlled_state = {
+					prioritize = { [STATES] }
+					limit = {
+						free_building_slots = { building = [BUILDING_TOKEN_FOR_TRIGGER] size > 0 include_locked = yes }
+						is_valid_state_for_development = yes
+					}
+					if = {
+						limit = { NOT = { check_variable = { building_token = token:infrastructure } } }
+						add_extra_state_shared_building_slots = 1
+					}
+					add_building_construction = { type = [BUILDING] level = 1 instant_build = yes }
 				}
-				free_building_slots = { building = infrastructure size > 0 include_locked = yes }
-				is_valid_state_for_development = yes
-				prefer_home_area_states_unless_filled_infrastructure = yes
-			}
-			add_building_construction = {
-				type = infrastructure
-				level = 1
-				instant_build = yes
 			}
 		}
+		STATES = "[BC_Target_1] [BC_Target_2] [BC_Target_3] [BC_Target_4] [BC_Target_5] [BC_Target_6] [BC_Target_7] [BC_Target_8] [BC_Target_9] [BC_Target_10] [BC_Target_11] [BC_Target_12] [BC_Target_13] [BC_Target_14] [BC_Target_15]"
+		BUILDING = "[?building_token.GetTokenKey]"
+		BUILDING_TOKEN_FOR_TRIGGER = "[?building_token_for_trigger.GetTokenKey]"
 	}
+}
+
+add_one_random_infrastructure = {
+	set_temp_variable = { building_token = token:infrastructure }
+	construction_build_in_best_random_state_effect = yes
 }
 
 add_one_random_civilian_factory = {
-	if = {
-		limit = { has_variable = building_index }
-		meta_effect = {
-			text = {
-				random_owned_controlled_state = {
-					prioritize = { [STATES] }
-					limit = {
-						OR = {
-							is_core_of = owner
-							is_claimed_by = owner
-						}
-						free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-						is_valid_state_for_development = yes
-						prefer_home_area_states_unless_filled = yes
-					}
-					add_extra_state_shared_building_slots = 1
-					add_building_construction = {
-						type = industrial_complex
-						level = 1
-						instant_build = yes
-					}
-				}
-			}
-			STATES = "[BC_Target_1] [BC_Target_2] [BC_Target_3] [BC_Target_4] [BC_Target_5] [BC_Target_6] [BC_Target_7] [BC_Target_8] [BC_Target_9] [BC_Target_10] [BC_Target_11] [BC_Target_12] [BC_Target_13] [BC_Target_14] [BC_Target_15]"
-		}
-	}
-	else = {
-		random_owned_controlled_state = {
-			limit = {
-				OR = {
-					is_core_of = owner
-					is_claimed_by = owner
-				}
-				free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-				is_valid_state_for_development = yes
-				prefer_home_area_states_unless_filled = yes
-			}
-			add_extra_state_shared_building_slots = 1
-			add_building_construction = {
-				type = industrial_complex
-				level = 1
-				instant_build = yes
-			}
-		}
-	}
-}
-
-add_two_random_civilian_factories = {
-	if = {
-		limit = { has_variable = building_index }
-		meta_effect = {
-			text = {
-				random_owned_controlled_state = {
-					prioritize = { [STATES] }
-					limit = {
-						OR = {
-							is_core_of = owner
-							is_claimed_by = owner
-						}
-						free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-						is_valid_state_for_development = yes
-						prefer_home_area_states_unless_filled = yes
-					}
-					add_extra_state_shared_building_slots = 2
-					add_building_construction = {
-						type = industrial_complex
-						level = 2
-						instant_build = yes
-					}
-				}
-			}
-			STATES = "[BC_Target_1] [BC_Target_2] [BC_Target_3] [BC_Target_4] [BC_Target_5] [BC_Target_6] [BC_Target_7] [BC_Target_8] [BC_Target_9] [BC_Target_10] [BC_Target_11] [BC_Target_12] [BC_Target_13] [BC_Target_14] [BC_Target_15]"
-		}
-	}
-	else = {
-		random_owned_controlled_state = {
-			limit = {
-				OR = {
-					is_core_of = owner
-					is_claimed_by = owner
-				}
-				free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-				is_valid_state_for_development = yes
-				prefer_home_area_states_unless_filled = yes
-			}
-			add_extra_state_shared_building_slots = 2
-			add_building_construction = {
-				type = industrial_complex
-				level = 2
-				instant_build = yes
-			}
-		}
-	}
+	set_temp_variable = { building_token = token:industrial_complex }
+	construction_build_in_best_random_state_effect = yes
 }
 
 add_one_random_military_factory = {
-	if = {
-		limit = { has_variable = building_index }
-		meta_effect = {
-			text = {
-				random_owned_controlled_state = {
-					prioritize = { [STATES] }
-					limit = {
-						OR = {
-							is_core_of = owner
-							is_claimed_by = owner
-						}
-						free_building_slots = { building = arms_factory size > 0 include_locked = yes }
-						is_valid_state_for_development = yes
-						prefer_home_area_states_unless_filled = yes
-					}
-					add_extra_state_shared_building_slots = 1
-					add_building_construction = {
-						type = arms_factory
-						level = 1
-						instant_build = yes
-					}
-				}
-			}
-			STATES = "[BC_Target_1] [BC_Target_2] [BC_Target_3] [BC_Target_4] [BC_Target_5] [BC_Target_6] [BC_Target_7] [BC_Target_8] [BC_Target_9] [BC_Target_10] [BC_Target_11] [BC_Target_12] [BC_Target_13] [BC_Target_14] [BC_Target_15]"
-		}
-	}
-	else = {
-		random_owned_controlled_state = {
-			limit = {
-				OR = {
-					is_core_of = owner
-					is_claimed_by = owner
-				}
-				free_building_slots = { building = arms_factory size > 0 include_locked = yes }
-				is_valid_state_for_development = yes
-				prefer_home_area_states_unless_filled = yes
-			}
-			add_extra_state_shared_building_slots = 1
-			add_building_construction = {
-				type = arms_factory
-				level = 1
-				instant_build = yes
-			}
-		}
-	}
-}
-
-add_two_random_military_factories = {
-	if = {
-		limit = { has_variable = building_index }
-		meta_effect = {
-			text = {
-				random_owned_controlled_state = {
-					prioritize = { [STATES] }
-					limit = {
-						OR = {
-							is_core_of = owner
-							is_claimed_by = owner
-						}
-						free_building_slots = { building = arms_factory size > 0 include_locked = yes }
-						is_valid_state_for_development = yes
-						prefer_home_area_states_unless_filled = yes
-					}
-					add_extra_state_shared_building_slots = 2
-					add_building_construction = {
-						type = arms_factory
-						level = 2
-						instant_build = yes
-					}
-				}
-			}
-			STATES = "[BC_Target_1] [BC_Target_2] [BC_Target_3] [BC_Target_4] [BC_Target_5] [BC_Target_6] [BC_Target_7] [BC_Target_8] [BC_Target_9] [BC_Target_10] [BC_Target_11] [BC_Target_12] [BC_Target_13] [BC_Target_14] [BC_Target_15]"
-		}
-	}
-	else = {
-		random_owned_controlled_state = {
-			limit = {
-				OR = {
-					is_core_of = owner
-					is_claimed_by = owner
-				}
-				free_building_slots = { building = arms_factory size > 0 include_locked = yes }
-				is_valid_state_for_development = yes
-				prefer_home_area_states_unless_filled = yes
-			}
-			add_extra_state_shared_building_slots = 2
-			add_building_construction = {
-				type = arms_factory
-				level = 2
-				instant_build = yes
-			}
-		}
-	}
+	set_temp_variable = { building_token = token:arms_factory }
+	construction_build_in_best_random_state_effect = yes
 }
 
 add_one_random_dockyard = {
-	if = {
-		limit = { has_variable = building_index }
-		meta_effect = {
-			text = {
-				random_owned_controlled_state = {
-					prioritize = { [STATES] }
-					limit = {
-						OR = {
-							is_core_of = owner
-							is_claimed_by = owner
-						}
-						free_building_slots = { building = dockyard size > 0 include_locked = yes }
-						is_valid_state_for_development = yes
-						prefer_home_area_states_unless_filled_dockyard = yes
-					}
-					add_extra_state_shared_building_slots = 1
-					add_building_construction = {
-						type = dockyard
-						level = 1
-						instant_build = yes
-					}
-				}
-			}
-			STATES = "[BC_Target_1] [BC_Target_2] [BC_Target_3] [BC_Target_4] [BC_Target_5] [BC_Target_6] [BC_Target_7] [BC_Target_8] [BC_Target_9] [BC_Target_10] [BC_Target_11] [BC_Target_12] [BC_Target_13] [BC_Target_14] [BC_Target_15]"
-		}
-	}
-	else = {
-		random_owned_controlled_state = {
-			limit = {
-				OR = {
-					is_core_of = owner
-					is_claimed_by = owner
-				}
-				free_building_slots = { building = dockyard size > 0 include_locked = yes }
-				is_valid_state_for_development = yes
-				prefer_home_area_states_unless_filled_dockyard = yes
-			}
-			add_extra_state_shared_building_slots = 1
-			add_building_construction = {
-				type = dockyard
-				level = 1
-				instant_build = yes
-			}
-		}
-	}
+	set_temp_variable = { building_token = token:dockyard }
+	construction_build_in_best_random_state_effect = yes
 }
 
-add_two_random_dockyards = {
-	if = {
-		limit = { has_variable = building_index }
-		meta_effect = {
-			text = {
-				random_owned_controlled_state = {
-					prioritize = { [STATES] }
-					limit = {
-						OR = {
-							is_core_of = owner
-							is_claimed_by = owner
-						}
-						free_building_slots = { building = dockyard size > 0 include_locked = yes }
-						is_valid_state_for_development = yes
-						prefer_home_area_states_unless_filled_dockyard = yes
-					}
-					add_extra_state_shared_building_slots = 2
-					add_building_construction = {
-						type = dockyard
-						level = 2
-						instant_build = yes
-					}
-				}
-			}
-			STATES = "[BC_Target_1] [BC_Target_2] [BC_Target_3] [BC_Target_4] [BC_Target_5] [BC_Target_6] [BC_Target_7] [BC_Target_8] [BC_Target_9] [BC_Target_10] [BC_Target_11] [BC_Target_12] [BC_Target_13] [BC_Target_14] [BC_Target_15]"
-		}
-	}
-	else = {
-		random_owned_controlled_state = {
-			limit = {
-				OR = {
-					is_core_of = owner
-					is_claimed_by = owner
-				}
-				free_building_slots = { building = dockyard size > 0 include_locked = yes }
-				is_valid_state_for_development = yes
-				prefer_home_area_states_unless_filled_dockyard = yes
-			}
-			add_extra_state_shared_building_slots = 2
-			add_building_construction = {
-				type = dockyard
-				level = 2
-				instant_build = yes
-			}
-		}
-	}
-}
-
-#uses industrial_complex in the trigger - synthetic_refinery results in no effect if the tech isn't unlocked yet
 add_one_random_synthetic_refinery = {
-	if = {
-		limit = { has_variable = building_index }
-		meta_effect = {
-			text = {
-				random_owned_controlled_state = {
-					prioritize = { [STATES] }
-					limit = {
-						OR = {
-							is_core_of = owner
-							is_claimed_by = owner
-						}
-						free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-						is_valid_state_for_development = yes
-						prefer_home_area_states_unless_filled = yes
-					}
-					add_extra_state_shared_building_slots = 1
-					add_building_construction = {
-						type = synthetic_refinery
-						level = 1
-						instant_build = yes
-					}
-				}
-			}
-			STATES = "[BC_Target_1] [BC_Target_2] [BC_Target_3] [BC_Target_4] [BC_Target_5] [BC_Target_6] [BC_Target_7] [BC_Target_8] [BC_Target_9] [BC_Target_10] [BC_Target_11] [BC_Target_12] [BC_Target_13] [BC_Target_14] [BC_Target_15]"
-		}
-	}
-	else = {
-		random_owned_controlled_state = {
-			limit = {
-				OR = {
-					is_core_of = owner
-					is_claimed_by = owner
-				}
-				free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-				is_valid_state_for_development = yes
-				prefer_home_area_states_unless_filled = yes
-			}
-			add_extra_state_shared_building_slots = 1
-			add_building_construction = {
-				type = synthetic_refinery
-				level = 1
-				instant_build = yes
-			}
-		}
-	}
+	set_temp_variable = { building_token = token:synthetic_refinery }
+	construction_build_in_best_random_state_effect = yes
 }
 
-#uses industrial_complex in the trigger - fuel_silo results in no effect if the tech isn't unlocked yet
 add_one_random_fuel_silo = {
-	if = {
-		limit = { check_variable = { building_target_states^num > 0 } }
-		meta_effect = {
-			text = {
-				random_owned_controlled_state = {
-					prioritize = { [STATES] }
-					limit = {
-						OR = {
-							is_core_of = owner
-							is_claimed_by = owner
-						}
-						free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-						is_valid_state_for_development = yes
-						prefer_home_area_states_unless_filled = yes
-					}
-					add_extra_state_shared_building_slots = 1
-					add_building_construction = {
-						type = fuel_silo
-						level = 1
-						instant_build = yes
-					}
-				}
-			}
-			STATES = "[BC_Target_1] [BC_Target_2] [BC_Target_3] [BC_Target_4] [BC_Target_5] [BC_Target_6] [BC_Target_7] [BC_Target_8] [BC_Target_9] [BC_Target_10] [BC_Target_11] [BC_Target_12] [BC_Target_13] [BC_Target_14] [BC_Target_15]"
-		}
-	}
-	else = {
-		random_owned_controlled_state = {
-			limit = {
-				OR = {
-					is_core_of = owner
-					is_claimed_by = owner
-				}
-				free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
-				is_valid_state_for_development = yes
-				prefer_home_area_states_unless_filled = yes
-			}
-			add_extra_state_shared_building_slots = 1
-			add_building_construction = {
-				type = fuel_silo
-				level = 1
-				instant_build = yes
-			}
-		}
-	}
+	set_temp_variable = { building_token = token:fuel_silo }
+	construction_build_in_best_random_state_effect = yes
 }

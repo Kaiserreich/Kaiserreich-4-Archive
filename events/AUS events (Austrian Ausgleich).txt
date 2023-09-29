@@ -6,6 +6,36 @@
 
 add_namespace = ausgleich.new
 
+# hidden event to determine AI path (doesn't use on_startup to prevent save determinism)
+country_event = {
+	id = ausgleich.new.99
+
+	trigger = {
+		NOT = { has_global_flag = AUS_AI_ausgleich_pluralism }
+		NOT = { has_global_flag = AUS_AI_ausgleich_status_quo }
+		NOT = { has_global_flag = AUS_AI_ausgleich_military_occupation }
+	}
+
+	hidden = yes
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event ausgleich.new.99 option 1"
+		ai_chance = { base = 65 }
+		set_global_flag = AUS_AI_ausgleich_pluralism
+	}
+	option = {
+		log = "[GetLogInfo]: event ausgleich.new.99 option 2"
+		ai_chance = { base = 10 }
+		set_global_flag = AUS_AI_ausgleich_status_quo
+	}
+	option = {
+		log = "[GetLogInfo]: event ausgleich.new.99 option 3"
+		ai_chance = { base = 25 }
+		set_global_flag = AUS_AI_ausgleich_military_occupation
+	}
+}
+
 ### Ausgleich Preparations
 country_event = {
 	id = ausgleich.new.100
@@ -29,22 +59,6 @@ country_event = {
 			country_event = { id = ausgleich.new.200 days = 2 }
 
 			if = {
-				limit = {
-					OR = {
-						has_game_rule = { rule = AUS_ausgleich option = DEFAULT }
-						NOT = {
-							has_game_rule = { rule = AUS_ausgleich option = AUS_AUSGLEICH_STATUS_QUO }
-							has_game_rule = { rule = AUS_ausgleich option = AUS_AUSGLEICH_PATAUT }
-						}
-					}
-				}
-				random_list = {
-					70 = { set_global_flag = AUS_AI_ausgleich_pluralism }
-					10 = { set_global_flag = AUS_AI_ausgleich_status_quo }
-					20 = { set_global_flag = AUS_AI_ausgleich_military_occupation }
-				}
-			}
-			else_if = {
 				limit = { has_game_rule = { rule = AUS_ausgleich option = AUS_AUSGLEICH_STATUS_QUO } }
 				set_global_flag = AUS_AI_ausgleich_status_quo
 			}
@@ -52,8 +66,17 @@ country_event = {
 				limit = { has_game_rule = { rule = AUS_ausgleich option = AUS_AUSGLEICH_PATAUT } }
 				set_global_flag = AUS_AI_ausgleich_military_occupation
 			}
-			else = {
+			else_if = {
+				limit = {
+					OR = {
+						has_game_rule = { rule = AUS_ausgleich option = AUS_AUSGLEICH_FEDERATE_CIVIL_WAR }
+						has_game_rule = { rule = AUS_ausgleich option = AUS_AUSGLEICH_FEDERATE_SUCCESS }
+					}
+				}
 				set_global_flag = AUS_AI_ausgleich_pluralism
+			}
+			else = {
+				country_event = { id = ausgleich.new.99 days = 1 }
 			}
 		}
 	}
@@ -1542,7 +1565,10 @@ country_event = {
 		}
 		set_temp_variable = { tag_to_release = BOS }
 		every_owned_state = {
-			limit = { is_core_of = var:tag_to_release }
+			limit = {
+				is_core_of = var:tag_to_release
+				NOT = { is_core_of = ROOT }
+			}
 			transfer_state_without_overriding_occupation = yes
 		}
 		puppet_released_tag = yes
@@ -1576,7 +1602,10 @@ country_event = {
 		}
 		set_temp_variable = { tag_to_release = CRO }
 		every_owned_state = {
-			limit = { is_core_of = CRO }
+			limit = {
+				is_core_of = var:tag_to_release
+				NOT = { is_core_of = ROOT }
+			}
 			transfer_state_without_overriding_occupation = yes
 		}
 		puppet_released_tag = yes
@@ -2443,6 +2472,7 @@ country_event = { #MilOcc revolts (for AUS)
 			GAL = { activate_targeted_decision = { target = BPL decision = GAL_join_belgrade_pact } }
 			GAL = { activate_targeted_decision = { target = BPL decision = CZE_leave_belgrade_pact } }
 			GAL = { activate_targeted_decision = { target = POL decision = GAL_unite_with_poland } }
+			CRO = { activate_targeted_decision = { target = GER decision = CZE_join_germany } }
 			AUS = { activate_targeted_decision = { target = GER decision = AUS_unite_with_germany } }
 			SER = { activate_targeted_decision = { target = CRO decision = SER_Ultimatum_To_Illyria } }
 		}
@@ -2514,18 +2544,7 @@ country_event = { #Czechia pleads for support
 				surrender_progress > 0
 			}
 		}
-		add_state_claim = 45 #Vojvodina
-		add_state_claim = 102 #Slovenia
-		add_state_claim = 103 #Rijeka
-		add_state_claim = 104 #Bosnia
-		add_state_claim = 105 #Montenegro
-		add_state_claim = 109 #Central Croatia
-		add_state_claim = 163 #Dalmatia
-		add_state_claim = 683 #Gorizia
-		add_state_claim = 736 #Istria
-		add_state_claim = 794 #Syrmia
-		add_state_claim = 841 #Kotor
-		add_state_claim = 875 #West Banat
+		SER_add_balkan_claims = yes
 		add_to_faction = FROM
 		FROM = { country_event = { id = ausgleich.new.902 days = 1 } }
 		if = {
@@ -2994,21 +3013,10 @@ country_event = { #Fall of the Habsburgs
 				limit = { is_claimed_by = ROOT }
 				remove_claim_by = ROOT
 			}
-			every_state = {
+			every_core_state = {
 				limit = {
-					is_core_of = ROOT
-					NOT = {
-						is_owned_by = ROOT
-						state = 4 #Lower Austria
-						state = 39 #Southern Tyrol
-						state = 152 #Upper Austria
-						state = 153 #Tyrol
-						state = 775 #Styria
-						state = 784 #Burgenland
-						state = 835 #Carinthia
-						state = 836 #Salzburg
-						state = 942 #Vorarlberg
-					}
+					NOT = { is_owned_by = ROOT }
+					is_core_austria = no
 				}
 				remove_core_of = ROOT
 			}

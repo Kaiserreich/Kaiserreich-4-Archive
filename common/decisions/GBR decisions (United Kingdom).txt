@@ -90,33 +90,23 @@ GBR_rebuilding_empire = {
 		icon = generic_nationalism
 
 		available = {
-			ROOT = {
-				has_army_manpower = { size > 49999 }
-				can_declare_war_on = FROM
-			}
+			has_army_manpower = { size > 49999 }
+			can_declare_war_on = FROM
 		}
 
 		visible = {
 			FROM = {
-				NOT = {
-					tag = NIR
-					tag = SCO
-					tag = WLS
-				}
+				NOT = { tag = GBR }
+				NOT = { original_tag = NIR }
+				NOT = { original_tag = SCO }
+				NOT = { original_tag = WLS }
+				NOT = { has_war_with = ROOT }
+				NOT = { is_ally_with = ROOT }
 				any_owned_state = {
 					is_core_of = GBR
 					is_great_britain = yes
 					is_claim_or_core_of_PREV = no
 				}
-				NOT = {
-					has_war_with = ROOT
-					is_ally_with = ROOT
-				}
-			}
-			any_of_scopes = {
-				array = GBR.core_states
-				is_great_britain = yes
-				NOT = { is_owned_by = GBR }
 			}
 		}
 
@@ -128,26 +118,28 @@ GBR_rebuilding_empire = {
 
 		target_root_trigger = {
 			any_of_scopes = {
-				array = GBR.core_states
+				array = core_states
 				is_great_britain = yes
-				NOT = { is_owned_by = GBR }
+				owner = {
+					NOT = { tag = GBR }
+					NOT = { original_tag = NIR }
+					NOT = { original_tag = SCO }
+					NOT = { original_tag = WLS }
+				}
 			}
 		}
 		target_trigger = {
 			FROM = {
-				NOT = {
-					tag = NIR
-					tag = SCO
-					tag = WLS
-				}
+				NOT = { tag = GBR }
+				NOT = { original_tag = NIR }
+				NOT = { original_tag = SCO }
+				NOT = { original_tag = WLS }
+				NOT = { has_war_with = ROOT }
+				NOT = { is_ally_with = ROOT }
 				any_owned_state = {
 					is_core_of = GBR
 					is_great_britain = yes
 					is_claim_or_core_of_PREV = no
-				}
-				NOT = {
-					has_war_with = ROOT
-					is_ally_with = ROOT
 				}
 			}
 		}
@@ -184,29 +176,28 @@ GBR_rebuilding_empire = {
 		icon = generic_nationalism
 
 		available = {
-			ROOT = {
-				has_army_manpower = { size > 49999 }
-			}
+			has_army_manpower = { size > 49999 }
 			FROM = {
-				if = {
-					limit = { has_war = yes }
-					surrender_progress < 0.25
-				}
-				if = {
-					limit = {
-						is_subject = yes
-						NOT = { is_subject_of = ROOT }
-					}
-					custom_trigger_tooltip = {
-						tooltip = GBR_overlord_not_capt
-						overlord = { has_capitulated = no }
-					}
+				surrender_progress < 0.01
+				NOT = { any_claim = yes }
+				OR = {
+					is_subject = no
+					overlord = { has_capitulated = no }
 				}
 			}
 		}
 
 		visible = {
-			#owns all of England
+			country_exists = FROM
+			NOT = { has_war_with = FROM }
+			NOT = { has_war_with = FROM.overlord }
+		}
+
+		cost = 0
+		fire_only_once = yes
+
+		targets = { SCO WLS NIR }
+		target_root_trigger = {
 			owns_state = 123 #Cornwall
 			owns_state = 125 #East Anglia
 			owns_state = 126 #Greater London
@@ -217,65 +208,35 @@ GBR_rebuilding_empire = {
 			owns_state = 131 #Northern England
 			owns_state = 132 #Lacanshire
 			owns_state = 338 #Gloucestershire
-			FROM = {
-				exists = yes
-				NOT = { has_war_with = ROOT }
-				if = {
-					limit = { is_subject = yes }
-					overlord = {
-						NOT = { has_war_with = ROOT }
-					}
-				}
-			}
 		}
-
-		cost = 0
-		fire_only_once = yes
-
-		targets = { SCO WLS NIR }
 		target_trigger = {
-			FROM = {
-				NOT = { has_war_with = ROOT }
-			}
+			NOT = { has_war_with = FROM }
+			NOT = { has_war_with = FROM.overlord }
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete GBR_demand_uk_state target: [From.GetName]"
 			if = {
-				limit = {
-					FROM = { is_subject_of = ROOT }
-				}
+				limit = { has_subject = FROM }
 				annex_country = { target = FROM }
 			}
 			else_if = {
-				limit = {
+				limit = { FROM = { is_subject = yes } }
+				if = {
+					limit = { is_in_faction_with = FROM.overlord }
 					FROM = {
-						is_subject = yes
-						overlord = { is_in_faction_with = ROOT }
+						save_event_target_as = colony_country
+						overlord = { country_event = { id = uk.118 days = 3 } }
 					}
 				}
-				FROM = {
-					save_event_target_as = colony_country
-					overlord = {
-						country_event = { id = uk.118 days = 3 }
-					}
-				}
-			}
-			else_if = {
-				limit = {
-					FROM = { is_subject = yes }
-				}
-				FROM = {
-					save_event_target_as = return_country
-					overlord = {
-						country_event = { id = uk.132 days = 3 }
+				else = {
+					FROM = {
+						save_event_target_as = return_country
+						overlord = { country_event = { id = uk.132 days = 3 } }
 					}
 				}
 			}
-			else_if = {
-				limit = {
-					FROM = { is_subject = no }
-				}
+			else = {
 				FROM = {
 					save_event_target_as = return_country
 					country_event = { id = uk.132 days = 3 }
@@ -447,13 +408,8 @@ GBR_rebuilding_empire = {
 		}
 
 		available = {
-			FROM = {
-				controls_state = 119
-				if = {
-					limit = { has_war = yes }
-					has_capitulated = no
-				}
-			}
+			119 = { is_fully_controlled_by = FROM }
+			FROM = { has_capitulated = no }
 		}
 
 		visible = {

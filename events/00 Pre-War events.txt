@@ -869,6 +869,10 @@ country_event = { #Socialists are trying to take control over Romandy !
 					has_game_rule = { rule = SWI_path option = SWI_PATH_AUS_WAR }
 				}
 			}
+			modifier = {
+				factor = 100
+				has_game_rule = { rule = SWI_path option = SWI_PATH_WAR }
+			}
 		}
 		add_stability = -0.2
 		add_opinion_modifier = { target = FRA modifier = KR_hates_govt }
@@ -987,8 +991,8 @@ country_event = { #Commune of France have occupied the Romandy!
 		ai_chance = {
 			base = 0
 			modifier = {
-				factor = 0
-				has_game_rule = { rule = SWI_path option = SWI_PATH_NATPOP }
+				add = 100
+				has_game_rule = { rule = SWI_path option = SWI_PATH_WAR }
 			}
 		}
 
@@ -1840,14 +1844,68 @@ country_event = { #Appeal Against Escalation #for GER
 		original_tag = GER
 		threat > 0.70
 		date < 1939.5.1
-		INT = { is_faction_leader = yes }
 		NOT = { has_global_flag = second_weltkrieg_has_started }
-		country_exists = AUS #needed as a negotiator
-		DEN = { has_socialist_government = no }
+		is_faction_leader = yes
+		INT = { is_faction_leader = yes }
+		OR = {
+			DEN = {
+				has_elected_government = yes
+				exists = yes
+				is_subject = no
+			}
+			AUS = {
+				has_elected_government = yes
+				exists = yes
+				is_subject = no
+			}
+			SWI = {
+				has_completed_focus = SWI_peace_at_last
+				exists = yes
+				is_subject = no
+				has_socialist_government = no
+				NOT = { has_government = national_populist }
+			}
+		}
 	}
 
 	mean_time_to_happen = {
-		days = 90
+		days = 45
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				DEN = {
+					has_elected_government = yes
+					exists = yes
+					is_subject = no
+				}
+			}
+			DEN = { save_global_event_target_as = escalation_treaty_location }
+		}
+		else_if = {
+			limit = {
+				SWI = {
+					has_completed_focus = SWI_peace_at_last
+					exists = yes
+					is_subject = no
+					has_socialist_government = no
+					NOT = { has_government = national_populist }
+				}
+			}
+			SWI = { save_global_event_target_as = escalation_treaty_location }
+		}
+		else_if = {
+			limit = {
+				AUS = {
+					has_elected_government = yes
+					exists = yes
+					is_subject = no
+					is_major = yes
+				}
+			}
+			AUS = { save_global_event_target_as = escalation_treaty_location }
+		}
 	}
 
 	option = { #ask France
@@ -1902,11 +1960,12 @@ country_event = { #Germany offers olive branch #for FRA
 					OR = {
 						tag = FRA
 						tag = ENG
-						tag = DEN
+						tag = event_target:escalation_treaty_location
 						AND = {
 							tag = AUS
-							exists = yes
-							has_authoritarian_government = no
+							has_elected_government = yes
+							is_subject = no
+							is_major = yes
 						}
 					}
 				}
@@ -1925,7 +1984,9 @@ country_event = { #Germany offers olive branch #for FRA
 			}
 		}
 		add_war_support = -0.03
-		hidden_effect = { GER = { country_event = prewar.58 } }
+		hidden_effect = {
+			GER = { country_event = prewar.58 }
+		}
 	}
 }
 
@@ -1934,6 +1995,7 @@ country_event = { #Copenhagen Conference
 	title = prewar.57.t
 	desc = prewar.57.d
 	picture = GFX_report_event_generic_conference4
+
 	is_triggered_only = yes
 
 	option = { #agree
@@ -1952,8 +2014,7 @@ country_event = { #Copenhagen Conference
 				limit = { tag = FRA } #Internationale agrees, does Germany?
 				GER = { country_event = prewar.57 }
 			}
-			if = {
-				limit = { tag = GER }
+			else = {
 				if = {
 					limit = { FRA = { has_country_flag = FRA_denied_negotiations } } #Failure
 					country_event = prewar.58
@@ -1965,7 +2026,13 @@ country_event = { #Copenhagen Conference
 								tag = GER
 								tag = FRA
 								tag = ENG
-								tag = DEN
+								tag = event_target:escalation_treaty_location
+								AND = {
+									tag = AUS
+									has_elected_government = yes
+									is_subject = no
+									is_major = yes
+								}
 							}
 						}
 						country_event = prewar.59
@@ -1974,6 +2041,7 @@ country_event = { #Copenhagen Conference
 			}
 		}
 	}
+
 	option = { #bruh
 		log = "[GetLogInfo]: event prewar.57 option prewar.57.b"
 		name = prewar.57.b
@@ -2007,15 +2075,13 @@ country_event = { #Copenhagen Conference
 			}
 		}
 	}
-	option = { #try to fix this (for AUS and DEN)
+
+	option = { #try to fix this (for the others)
 		log = "[GetLogInfo]: event prewar.57 option prewar.57.c"
 		name = prewar.57.c
 		trigger = {
-			OR = {
-				tag = AUS
-				tag = DEN
-				tag = ENG
-			}
+			NOT = { tag = GER }
+			NOT = { tag = FRA }
 		}
 		add_political_power = 25
 	}
@@ -2032,12 +2098,7 @@ country_event = { #Talks collapse
 		log = "[GetLogInfo]: event prewar.58 option prewar.58.a"
 		name = prewar.58.a
 		add_war_support = 0.01
-		FRA = {
-			if = {
-				limit = { has_country_flag = FRA_denied_negotiations }
-				clr_country_flag = FRA_denied_negotiations
-			}
-		}
+		FRA = { clr_country_flag = FRA_denied_negotiations }
 	}
 }
 

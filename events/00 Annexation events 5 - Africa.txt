@@ -865,6 +865,28 @@ country_event = { #Fate of Liberia
 		recheck_annexations = yes
 	}
 
+	option = { #give to MAF
+		log = "[GetLogInfo]: event annex.5011 option annex.africa.give_to_maf"
+		name = annex.africa.give_to_maf
+		trigger = {
+			has_subject = MAF
+		}
+		set_temp_variable = { tag_to_release = MAF }
+		LIB = { set_transfer_target_cores = yes }
+		transfer_targeted_territory_and_add_claims = yes
+		MAF = { occupy_small_country = yes }
+	}
+
+	option = { #annex
+		log = "[GetLogInfo]: event annex.5011 option annex.integration"
+		name = annex.integration
+		trigger = {
+			original_tag = MAF
+		}
+		LIB = { every_core_state = { add_claim_of_ROOT = yes } }
+		occupy_small_country = yes
+	}
+
 	option = { #occupy
 		log = "[GetLogInfo]: event annex.5011 option annex.occupation"
 		name = annex.occupation
@@ -1532,6 +1554,7 @@ country_event = { #Fate of Algeria
 				var:21.owner = {
 					is_french_tag = yes
 					is_ally_with = ROOT
+					has_socialist_government = no
 				}
 			}
 		}
@@ -1547,15 +1570,15 @@ country_event = { #Fate of Algeria
 			var:21.owner = {
 				is_french_tag = yes
 				is_ally_of_ROOT = yes
-				OR = {
-					has_socialist_government = no
-					is_subject = no
-				}
+				has_socialist_government = no
 			}
 		}
 		ai_chance = { base = 60 }
 		set_temp_variable = { tag_to_release = 21.owner }
-		ALG = { set_transfer_target_cores = yes }
+		ALG = {
+			every_core_state = { add_claim_by = 21.owner }
+			set_transfer_target_cores = yes
+		}
 		transfer_targeted_territory = yes
 	}
 
@@ -2445,20 +2468,15 @@ country_event = { #Fate of Malawi
 		log = "[GetLogInfo]: event annex.5036 option annex.5036.b"
 		name = annex.5036.b
 		trigger = {
-			ZAM = { ROOT_can_grant_land = yes }
+			var:955.owner = {
+				ROOT_can_grant_land = yes
+				OR = {
+					original_tag = ZAM
+					original_tag = ZIM
+				}
+			}
 		}
-		set_temp_variable = { tag_to_release = ZAM }
-		MLW = { set_transfer_target_cores = yes }
-		transfer_targeted_territory_and_add_claims = yes
-	}
-
-	option = { #Give to ZIM
-		log = "[GetLogInfo]: event annex.5036 option annex.5036.c"
-		name = annex.5036.c
-		trigger = {
-			ZIM = { is_ally_of_ROOT = yes }
-		}
-		set_temp_variable = { tag_to_release = ZIM }
+		set_temp_variable = { tag_to_release = 955.owner }
 		MLW = { set_transfer_target_cores = yes }
 		transfer_targeted_territory_and_add_claims = yes
 	}
@@ -2572,18 +2590,13 @@ country_event = { #Fate of South Africa
 	immediate = {
 		hidden_effect = {
 			every_state = {
-				limit = {
-					OR = {
-						is_core_of = SAF
-						is_claimed_by = SAF
-					}
-					NOT = {
-						region = 139 #South Africa
-						state = 542 #Bechuanaland
-						state = 545 #Rhodesia
-					}
+				if = {
+					limit = { region = 139 } #South Africa
+					add_core_of = SAF
 				}
-				remove_core_of = SAF
+				else = {
+					remove_core_of = SAF
+				}
 				remove_claim_by = SAF
 			}
 			SAF = {
@@ -3055,23 +3068,63 @@ country_event = { #Fate of Zimbabwe
 					set_variable = { ZIM_segregation_idea = token:ZIM_segregation_5 }
 				}
 			}
+			if = {
+				limit = {
+					country_exists = GBR
+					is_ally_with = GBR
+				}
+				GBR = { save_event_target_as = british_target }
+			}
+			else_if = {
+				limit = {
+					country_exists = ENT
+					is_ally_with = ENT
+					ENT = { is_commonwealth_tag = yes }
+				}
+				ENT = { save_event_target_as = british_target }
+			}
+			else_if = {
+				limit = {
+					country_exists = CAN
+					is_ally_with = CAN
+					CAN = { CAN_is_dominion = yes }
+				}
+				CAN = { save_event_target_as = british_target }
+			}
+			if = {
+				limit = {
+					OR = {
+						has_socialist_government = yes
+						is_in_africa = yes
+						is_in_asia = yes
+						is_in_india = yes
+						is_in_middle_east = yes
+						original_tag = HAI
+					}
+					NOT = { is_ally_with = event_target:british_target }
+				}
+				ZIM = { drop_cosmetic_tag = yes }
+			}
+			else = {
+				ZIM = { set_cosmetic_tag = ZIM_rhodesia }
+			}
 		}
 	}
 
 	option = { #liberate
 		log = "[GetLogInfo]: event annex.5041 option annex.5041.a"
 		name = annex.5041.a
+		trigger = {
+			NOT = { has_event_target = british_target }
+		}
 		ai_chance = {
 			base = 100
-			modifier = {
-				factor = 0
-				ENT = { is_ally_of_ROOT = yes }
-			}
 			modifier = {
 				factor = 0
 				OR = {
 					original_tag = MAF
 					has_subject = MAF
+					is_ally_with = SAF
 				}
 			}
 		}
@@ -3086,7 +3139,6 @@ country_event = { #Fate of Zimbabwe
 		if = {
 			limit = { tag = ENT }
 			ZIM = {
-				set_cosmetic_tag = ZIM_rhodesia
 				promote_character = {
 					character = ZIM_herbert_james_stanley
 					ideology = social_democrat_subtype
@@ -3110,7 +3162,7 @@ country_event = { #Fate of Zimbabwe
 				ZIM = {
 					promote_character = ZIM_harry_davies
 					promote_character = ZIM_thomas_nangle
-					promote_character = ZIM_percy_finn
+					promote_character = ZIM_percy_fynn
 					promote_character = ZIM_godfrey_martin_huggins
 					if = {
 						limit = { has_socialist_government = yes }
@@ -3130,32 +3182,25 @@ country_event = { #Fate of Zimbabwe
 		log = "[GetLogInfo]: event annex.5041 option annex.africa.give_to_saf"
 		name = annex.africa.give_to_saf
 		trigger = {
-			SAF = { is_ally_of_ROOT = yes }
+			SAF = { ROOT_can_grant_land = yes }
 		}
-		every_owned_state = {
-			limit = {
-				is_core_of = ZIM
-				is_claim_or_core_of_ROOT = no
-			}
-			transfer_state_to = SAF
-		}
-		recheck_annexations = yes
+		ai_chance = { base = 100 }
+		set_temp_variable = { tag_to_release = SAF }
+		ZIM = { set_transfer_target_cores = yes }
+		transfer_targeted_territory = yes
 	}
 
 	option = { #return it to ENT
 		log = "[GetLogInfo]: event annex.5041 option annex.5038.e"
 		name = annex.5038.e
 		trigger = {
-			ENT = { is_ally_of_ROOT = yes }
+			has_event_target = british_target
+			NOT = { is_ally_with = SAF }
 		}
-		every_owned_state = {
-			limit = {
-				is_core_of = ZIM
-				is_claim_or_core_of_ROOT = no
-			}
-			transfer_state_to = ENT
-		}
-		recheck_annexations = yes
+		ai_chance = { base = 100 }
+		set_temp_variable = { tag_to_release = event_target:british_target }
+		ZIM = { set_transfer_target_cores = yes }
+		transfer_targeted_territory = yes
 	}
 
 	option = { #give to MAF
@@ -3164,6 +3209,7 @@ country_event = { #Fate of Zimbabwe
 		trigger = {
 			has_subject = MAF
 		}
+		ai_chance = { base = 100 }
 		set_temp_variable = { tag_to_release = MAF }
 		ZIM = { set_transfer_target_cores = yes }
 		transfer_targeted_territory_and_add_claims = yes
@@ -3187,6 +3233,7 @@ country_event = { #Fate of Zimbabwe
 		trigger = {
 			original_tag = MAF
 		}
+		ai_chance = { base = 100 }
 		ZIM = { every_core_state = { add_claim_of_ROOT = yes } }
 		occupy_small_country = yes
 	}
@@ -3195,6 +3242,7 @@ country_event = { #Fate of Zimbabwe
 		log = "[GetLogInfo]: event annex.5041 option annex.occupation"
 		name = annex.occupation
 		trigger = {
+			NOT = { original_tag = SAF }
 			NOT = { original_tag = MAF }
 		}
 		ai_chance = { base = 0 }

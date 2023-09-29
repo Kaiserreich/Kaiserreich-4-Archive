@@ -245,7 +245,7 @@ focus_tree = {
 			add_stability = 0.05
 			add_popularity = { ideology = social_democrat popularity = 0.08 }
 			add_popularity = { ideology = social_liberal popularity = 0.06 }
-			XXA = {
+			effect_tooltip = {
 				SPA_augusto_barcia_trelles_advisor = { set_nationality = ROOT }
 				SPA_manuel_azana_diaz_advisor = { set_nationality = ROOT }
 				SPA_niceto_alcala_zamora_advisor = { set_nationality = ROOT }
@@ -631,10 +631,10 @@ focus_tree = {
 			}
 			random_owned_controlled_state = {
 				limit = { is_core_of = ROOT is_in_home_area = yes }
-				add_extra_state_shared_building_slots = 2
+				add_extra_state_shared_building_slots = 1
 				add_building_construction = {
 					type = arms_factory
-					level = 2
+					level = 1
 					instant_build = yes
 				}
 			}
@@ -672,10 +672,10 @@ focus_tree = {
 			}
 			random_owned_controlled_state = {
 				limit = { is_core_of = ROOT is_in_home_area = yes }
-				add_extra_state_shared_building_slots = 2
+				add_extra_state_shared_building_slots = 1
 				add_building_construction = {
 					type = industrial_complex
-					level = 2
+					level = 1
 					instant_build = yes
 				}
 			}
@@ -803,10 +803,10 @@ focus_tree = {
 			}
 			random_owned_controlled_state = {
 				limit = { is_core_of = ROOT is_in_home_area = yes }
-				add_extra_state_shared_building_slots = 2
+				add_extra_state_shared_building_slots = 1
 				add_building_construction = {
 					type = industrial_complex
-					level = 2
+					level = 1
 					instant_build = yes
 				}
 			}
@@ -844,10 +844,10 @@ focus_tree = {
 			}
 			random_owned_controlled_state = {
 				limit = { is_core_of = ROOT is_in_home_area = yes }
-				add_extra_state_shared_building_slots = 2
+				add_extra_state_shared_building_slots = 1
 				add_building_construction = {
 					type = arms_factory
-					level = 2
+					level = 1
 					instant_build = yes
 				}
 			}
@@ -1084,69 +1084,72 @@ focus_tree = {
 		available = {
 			is_subject = no
 			controls_all_owned_states = yes
-			has_global_flag = second_weltkrieg_has_started
-			country_exists = POR
-			POR = {
-				is_subject = no
-				has_socialist_government = no
+			OR = {
+				NOT = { is_in_faction_with = INT }
+				has_global_flag = second_weltkrieg_has_started
+				POR = {
+					is_subject = no
+					is_in_faction = no
+				}
 			}
+		}
+		bypass = {
+			POR = { has_socialist_government = yes }
 		}
 		prerequisite = { focus = SWF_join_france }
 
 		will_lead_to_war_with = POR
 
-		bypass = {
-			NOT = { country_exists = POR }
-		}
-
 		ai_will_do = {
-			factor = 1
+			factor = 10
 			modifier = {
 				factor = 0
-				has_war = yes
-				any_enemy_country = {
-					strength_ratio = { tag = SWF ratio > 0.75 }
+				can_declare_war_on = POR
+				OR = {
+					ROOT_is_threatened = yes
+					POR = { default_attack_AI_trigger_FROM = yes }
 				}
 			}
 			modifier = {
 				factor = 0
-				strength_ratio = { tag = POR ratio < 2.0 }
-			}
-			modifier = {
-				factor = 0
-				is_in_faction = no
-				POR = { is_in_faction = yes }
-			}
-			modifier = {
-				factor = 10
+				can_declare_war_on = POR
+				NOT = { has_global_flag = second_weltkrieg_has_started }
 				POR = {
-					is_in_faction = no
-					OR = {
-						NOT = { is_guaranteed_by = CAN }
-						CAN = { has_war_with = GER }
-						CAN = { has_war_with = ENG }
-						CAN = { has_war_with = FRA }
+					NOT = {
+						focus_progress = { focus = POR_the_king_and_country progress > 0 }
+						focus_progress = { focus = POR_the_organic_kingdom progress > 0 }
 					}
 				}
 			}
 			modifier = {
-				add = 100
+				factor = 100
+				can_declare_war_on = POR
+				#if POR is still factionless upon reaching these foci, ENT is dead - attack away
+				POR = {
+					is_subject = no
+					is_in_faction = no
+					OR = {
+						focus_progress = { focus = POR_the_king_and_country progress > 0 }
+						focus_progress = { focus = POR_the_organic_kingdom progress > 0 }
+					}
+				}
+			}
+			modifier = {
+				factor = 100
 				has_war_with = POR
-				POR = { has_capitulated = yes }
 			}
 		}
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SWF_portugal"
 			add_political_power = 50
-			create_wargoal = {
-				type = annex_everything
-				target = POR
-			}
-			POR = {
-				every_core_state = {
-					add_claim_by = ROOT
+			if = {
+				limit = { can_declare_war_on = POR }
+				create_wargoal = {
+					type = annex_everything
+					target = POR
 				}
 			}
+			POR = { every_core_state = { add_claim_by = ROOT } }
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION FOCUS_FILTER_POLITICAL }
 	}
@@ -1172,13 +1175,11 @@ focus_tree = {
 				NOT = { country_exists = POR }
 				POR = { has_capitulated = yes }
 			}
-			SWF = { #Controls mainland states
-				112 = { is_controlled_by = ROOT } #Lisbon
-				180 = { is_controlled_by = ROOT } #Porto
-				181 = { is_controlled_by = ROOT } #Guarda
-				179 = { is_controlled_by = ROOT } #Beja
-				939 = { is_controlled_by = ROOT } #Évora
-			}
+			controls_state = 112 #Lisbon
+			controls_state = 180 #Porto
+			controls_state = 181 #Guarda
+			controls_state = 179 #Beja
+			controls_state = 939 #Évora
 		}
 		ai_will_do = { factor = 200 }
 
@@ -1461,7 +1462,7 @@ focus_tree = {
 			focus = SWF_modern_terrico
 		}
 
-		ai_will_do = { factor = 1 }
+		ai_will_do = { factor = 0 }
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus SWF_army_of_maneuver"
 			add_doctrine_cost_reduction = {
