@@ -101,8 +101,12 @@ country_event = { #The reverse boer states want to join the entente
 		ai_chance = {
 			base = 95
 			modifier = {
-				factor = 0
+				factor = 0.75
 				surrender_progress > 0
+			}
+			modifier = {
+				factor = 0.75
+				country_exists = CSA
 			}
 			modifier = {
 				factor = 0.75
@@ -111,10 +115,6 @@ country_event = { #The reverse boer states want to join the entente
 			modifier = {
 				factor = 0.5
 				has_war_with = INT
-			}
-			modifier = {
-				factor = 0.75
-				country_exists = CSA
 			}
 		}
 		add_to_faction = FROM
@@ -132,7 +132,17 @@ country_event = { #The reverse boer states want to join the entente
 	option = { #Good luck, but we won't be helping
 		log = "[GetLogInfo]: event natal.5 option natal.5.b"
 		name = natal.5.b
-		ai_chance = { base = 5 }
+		ai_chance = {
+			base = 5
+			modifier = {
+				factor = 0
+				tag = GBR
+			}
+			modifier = {
+				factor = 0
+				is_commonwealth_tag = yes
+			}
+		}
 		FROM = { country_event = natal.7 }
 		if = {
 			limit = { country_exists = ZIM }
@@ -381,8 +391,8 @@ country_event = { #Newcastle Convention (South African perspective)
 				}
 				else = {
 					every_owned_state = {
-						remove_core_of = ROOT
-						remove_claim_by = ROOT
+						remove_core_of = ZAR
+						remove_claim_by = ZAR
 					}
 				}
 			}
@@ -396,6 +406,7 @@ country_event = { #Newcastle Convention (South African perspective)
 					is_valid_peace_target = yes
 				}
 				white_peace_with_ROOT = yes
+				mark_focus_tree_layout_dirty = yes
 			}
 		}
 	}
@@ -407,8 +418,8 @@ country_event = { #Newcastle Convention (South African perspective)
 			every_enemy_country = {
 				limit = {
 					OR = {
-						original_tag = ROOT
-						tag = ZIM
+						original_tag = SAF
+						original_tag = ZIM
 						tag = ENT
 					}
 				}
@@ -451,7 +462,7 @@ country_event = { #Newcastle Convention (British perspective)
 		hidden_effect = {
 			if = {
 				limit = { tag = NAT }
-				load_focus_tree = natal_focus
+				load_focus_tree = { tree = natal_focus keep_completed = yes }
 			}
 		}
 	}
@@ -514,8 +525,8 @@ country_event = { #2nd Pretoria Convention (South African perspective)
 				limit = {
 					is_in_faction_with = FROM
 					OR = {
-						original_tag = ROOT
-						tag = ZIM
+						original_tag = SAF
+						original_tag = ZIM
 					}
 				}
 				leave_faction = yes
@@ -870,23 +881,14 @@ country_event = { #Victory in the third Boer war
 		tag = NAT
 		NOT = { country_exists = ZAR }
 		any_owned_state = {
-			is_core_of = SAF
+			any_country_with_core = { original_tag = SAF }
 			NOT = { state = 719 } #Natal
 		}
 	}
 
 	immediate = {
 		log = "KR_Event_Logging;3RD BOER WAR NAT WINS;[GetDateText]"
-		clr_country_flag = SAF_is_natal
-		hidden_effect = {
-			every_state = {
-				limit = {
-					is_claimed_by = SAF
-					NOT = { is_core_of = ROOT }
-				}
-				add_claim_by = ROOT
-			}
-		}
+		hidden_effect = { ZAR = { SAF_transfer_cores_claims_to_PREV = yes } }
 	}
 
 	option = { #We are the true South Africa
@@ -896,7 +898,13 @@ country_event = { #Victory in the third Boer war
 		set_capital = { state = 681 remember_old_capital = no }
 		set_victory_points = { province = 13800 value = 2 } #Pietermaritzburg
 		add_ideas = SAF_idea_bittereinder_resistance
+		ZAR = {
+			effect_tooltip = { SAF_transfer_cores_claims_to_PREV = yes }
+			hidden_effect = { SAF_clear_dynamic_tag = yes }
+		}
 		hidden_effect = {
+			clr_country_flag = SAF_is_natal #needs to come AFTER any effects targeting ZAR
+			mark_focus_tree_layout_dirty = yes
 			set_popularities = {
 				totalist = 2
 				radical_socialist = 3
@@ -1057,8 +1065,12 @@ country_event = {
 	picture = GFX_report_event_SAF_parliament_1
 
 	is_triggered_only = yes
+
 	trigger = {
-		has_focus_tree = SAF_federation_focus
+		OR = {
+			has_focus_tree = natal_focus
+			has_focus_tree = SAF_federation_focus
+		}
 		has_country_flag = SAF_fed_elections_held
 	}
 
@@ -1109,8 +1121,9 @@ country_event = {
 	picture = GFX_report_event_SAF_parliament_1
 
 	is_triggered_only = yes
+
 	trigger = {
-		has_focus_tree = natal_focus
+		tag = NAT
 		has_country_flag = saf_flag_elections_held
 	}
 
@@ -1241,7 +1254,10 @@ country_event = { #Canada wants to quit the Boer War and focus on the Homecoming
 		tag = ENT
 		has_war_with = ZAR
 		has_war_with = ENG
-		ZAR = { has_socialist_government = no }
+		ZAR = {
+			has_civil_war = yes
+			has_socialist_government = no
+		}
 	}
 
 	mean_time_to_happen = {
@@ -1255,26 +1271,18 @@ country_event = { #Canada wants to quit the Boer War and focus on the Homecoming
 			base = 95
 			modifier = {
 				factor = 0.5
-				ZAR = {
-					surrender_progress > 0.2
-				}
+				ZAR = { surrender_progress > 0.2 }
 			}
 			modifier = {
 				factor = 0.2
-				ZAR = {
-					surrender_progress > 0.5
-				}
+				ZAR = { surrender_progress > 0.5 }
 			}
 			modifier = {
 				factor = 0
-				ZAR = {
-					surrender_progress > 0.8
-				}
+				ZAR = { surrender_progress > 0.8 }
 			}
 		}
-		ZAR = {
-			country_event = { id = natal.56 days = 2 }
-		}
+		ZAR = { country_event = { id = natal.56 days = 2 } }
 	}
 
 	option = { # We're about to defeat them
@@ -1327,12 +1335,14 @@ country_event = { #Peace with the Canadians?
 				ZIM = {
 					every_owned_state = {
 						limit = { is_claimed_by = ZAR }
+						remove_core_of = ZAR
 						remove_claim_by = ZAR
 					}
 				}
 				NAT = {
 					every_owned_state = {
 						limit = { is_claimed_by = ZAR }
+						remove_core_of = ZAR
 						remove_claim_by = ZAR
 					}
 				}
@@ -1404,8 +1414,12 @@ country_event = { #SAF says yes
 				NAT = { has_capitulated = no }
 			}
 			hidden_effect = { SAF_end_civil_war = yes }
+			FROM = { white_peace_with_ROOT = yes }
 			ZIM = { country_event = natal.59 }
-			NAT = { country_event = natal.59 }
+			NAT = {
+				mark_focus_tree_layout_dirty = yes
+				country_event = natal.59
+			}
 		}
 		else = {
 			if = {
@@ -1423,7 +1437,6 @@ country_event = { #SAF says yes
 				}
 			}
 		}
-		FROM = { white_peace_with_ROOT = yes }
 	}
 }
 
@@ -1453,7 +1466,7 @@ country_event = { #Informing Natal and Rhodesia about the peace
 		hidden_effect = {
 			if = {
 				limit = { tag = NAT }
-				load_focus_tree = natal_focus
+				load_focus_tree = { tree = natal_focus keep_completed = yes }
 			}
 		}
 	}
@@ -1461,6 +1474,19 @@ country_event = { #Informing Natal and Rhodesia about the peace
 	option = { # hmm
 		log = "[GetLogInfo]: event natal.59 option natal.59.a"
 		name = natal.59.a
+		if = {
+			limit = { NOT = { has_war_with = ZAR } }
+			every_owned_state = {
+				remove_claim_by = ZAR
+				remove_core_of = ZAR
+			}
+			ZAR = {
+				every_owned_state = {
+					remove_claim_by = ROOT
+					remove_core_of = ROOT
+				}
+			}
+		}
 		if = {
 			limit = { tag = NAT }
 			SAF_load_natal_content = yes
@@ -1557,6 +1583,115 @@ country_event = {
 		add_opinion_modifier = {
 			target = ENT
 			modifier = KR_disapproves_of_govt
+		}
+	}
+}
+
+country_event = { #Natal reforms South Africa post-Boer War
+	id = natal.63
+	title = natal.63.t
+	desc = natal.63.d
+	picture = GFX_report_event_SAF_cape_town
+
+	is_triggered_only = yes
+
+	trigger = {
+		tag = NAT
+		NOT = { country_exists = ZAR }
+		any_owned_state = {
+			any_country_with_core = { original_tag = SAF }
+			NOT = { state = 719 } #Natal
+		}
+	}
+
+	immediate = {
+		hidden_effect = { ZAR = { SAF_transfer_cores_claims_to_PREV = yes } }
+	}
+
+	option = { #We are the true South Africa
+		log = "[GetLogInfo]: event natal.63 option natal.63.a"
+		name = natal.63.a
+		set_cosmetic_tag = SAF_federation
+		set_capital = { state = 681 remember_old_capital = no }
+		set_victory_points = { province = 13800 value = 2 } #Pietermaritzburg
+		ZAR = {
+			effect_tooltip = { SAF_transfer_cores_claims_to_PREV = yes }
+			hidden_effect = { SAF_clear_dynamic_tag = yes }
+		}
+		hidden_effect = {
+			clr_country_flag = SAF_is_natal #needs to come AFTER any effects targeting ZAR
+			mark_focus_tree_layout_dirty = yes
+			for_each_loop = {
+				array = SAF_previous_ideas
+				add_ideas = var:v
+			}
+			clear_array = SAF_previous_ideas
+			remove_ideas = {
+				NAT_his_majestys_most_loyal_servants_1
+				NAT_his_majestys_most_loyal_servants_2
+				NAT_his_majestys_most_loyal_servants_3
+				NAT_his_majestys_most_loyal_servants_4
+				NAT_idea_zulu_communalism
+				NAT_idea_native_labour_regulation
+				NAT_idea_land_settlement
+				NAT_idea_native_education
+				NAT_idea_indian_students
+				NAT_idea_syndicalism_zulu
+				NAT_idea_syndicalism_zulu_crushed
+				NAT_idea_indian_diaspora
+				NAT_idea_indian_diaspora_no_migration
+				NAT_idea_repressed_indian_diaspora
+				NAT_idea_indian_diaspora_no_pass_laws
+				NAT_idea_represented_indian_diaspora
+				NAT_idea_judicial_system
+				NAT_idea_judicial_system_2
+				NAT_idea_national_reconstruction
+				NAT_idea_monetary_system
+				NAT_idea_monetary_system_2
+				NAT_idea_imperial_trade
+				NAT_doctrine_1
+				NAT_doctrine_2
+				NAT_doctrine_3
+				NAT_army_base
+				NAT_army_tank_1
+				NAT_army_tank_2
+				NAT_army_tank_3
+				NAT_army_tank_4
+				NAT_cas_1
+				NAT_cas_2
+				NAT_cas_3
+				NAT_army_elite_1
+				NAT_army_elite_2
+				NAT_army_elite_3
+				NAT_army_elite_4
+				NAT_army_elite_5
+				NAT_army_elite_6
+				NAT_army_elite_7
+				NAT_army_elite_8
+				NAT_army_elite_9
+				NAT_army_elite_10
+				NAT_army_elite_11
+				NAT_army_elite_12
+				NAT_army_elite_13
+				NAT_army_elite_14
+				NAT_army_elite_15
+				NAT_army_elite_16
+				NAT_army_elite_17
+				NAT_army_elite_18
+				NAT_army_elite_19
+				NAT_army_elite_21
+				NAT_army_elite_22
+				NAT_army_elite_23
+				NAT_army_elite_24
+				NAT_army_elite_25
+				NAT_tactical_bombers_1
+				NAT_tactical_bombers_2
+				NAT_navy_1
+				NAT_navy_2
+				NAT_navy_3
+				NAT_navy_4
+				NAT_navy_5
+			}
 		}
 	}
 }

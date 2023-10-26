@@ -3,7 +3,7 @@
 
 # -----------------------------------------
 
-### List of available strategy tokens (updated 2021-09) ###
+### List of available strategy tokens (updated 2023-09) ###
 
 ## related to diplomacy
 # alliance
@@ -49,6 +49,7 @@
 # naval_avoid_region
 # naval_convoy_raid_region
 # naval_invasion_focus
+# naval_invasion_supremacy_weight
 # naval_mission_threshold
 # strike_force_home_base
 
@@ -74,9 +75,18 @@
 # convoy_efficiency_to_cancel_trades
 # dockyard_to_military_factory_ratio
 # equipment_production_factor
+# equipment_variant_production_factor
+# equipment_production_surplus_management
 # equipment_production_min_factories
 # equipment_stockpile_surplus_ratio
-# equipment_variant_production_factor
+# equipment_market_spend_factories
+# equipment_market_for_sale_threshold
+# equipment_market_for_sale_factor
+# equipment_market_max_for_sale
+# equipment_market_min_for_sale
+# equipment_market_buying_threshold
+# equipment_market_buy
+# equipment_market_trade_desire
 # factory_build_score_factor
 # force_build_armies
 # fuel_buffer
@@ -97,6 +107,7 @@
 # wanted_supply_trucks
 # min_wanted_supply_trains
 # wanted_supply_trains
+# ai_wanted_divisions_factor
 
 ## Related to airforce
 # strategic_air_importance
@@ -106,29 +117,29 @@
 ### UNIT RATIOS
 # AIR
 # For air types unit_ratio strategy values behave like weights. If no value is set it defaults to 0. If a plane type is DLC locked its set ratio is ignored and 0 is used instead.
-#
+# 
 # Land-based and carrier plane types are handled completely separate.
-#
+# 
 # First we calculate the total number of planes that the AI want to produce:
-#
+# 
 # For land-based planes:
 # - Sum up the total air base capacity (excluding carriers), and multiply it by WANTED_LAND_PLANES_PER_BASE_CAPACITY_FACTOR.
 # - Add the number of divisions the AI wants multiplied by WANTED_LAND_PLANES_PER_DIVISION.
 # - Subtract the number of planes in airwings.
 # - Clamp the value between 0 and the number of wanted divisions multiplied by WANTED_LAND_PLANES_TOTAL_MAX_PER_DIVISION.
 # - The result is then multiplied by hardcoded value AI_FOCUS_AVIATION, which beforehand has been multiplied by modifier ai_focus_aviation_factor.
-#
+# 
 # For carrier planes:
 # - Sum up the total carrier deck capacity, and multiply it by WANTED_CARRIER_PLANES_PER_CARRIER_CAPACITY_FACTOR.
 # - Sum up the total deck capacity of carriers in production, where the carrier will be done in no more than CARRIER_CAPACITY_IN_PRODUCTION_MAX_DAYS_LEFT_TO_INCLUDE_FACTOR days, and multiply it by WANTED_CARRIER_PLANES_PER_CARRIER_CAPACITY_IN_PRODUCTION_FACTOR.
 # - Subtract the number of carrier planes in airwings.
 # - Clamp the value to minimum 0.
 # - The result is then multiplied by hardcoded value AI_FOCUS_NAVAL_AIR, which beforehand has been multiplied by modifier ai_focus_naval_air_factor.
-#
+# 
 # Finally we calculate and set the build_airplane strategy values:
 # - For each land-based type we take the unit_ratio, divide it by the sum of all land-based unit_ratio values, and multiply it by the above calculated number of wanted land-based planes.
 # - We do the same for carrier planes.
-#
+# 
 # ALL BUT AIR
 # Unit ratios are calculated as a base of 100 plus the value indicated in the strategy.
 # A unit type ratio of -40 would result in only 60% of the wanted number being set as a goal
@@ -306,15 +317,113 @@
 #	value = 10 # Increase desired unit demand by 10
 # }
 
+# Used to make the AI focus more of their navy on increasing naval supremacy in regions where one of their naval invasions passes through
+# ai_strategy = {
+#	type = naval_invasion_supremacy_weight
+#	value = 30
+# }
+
 # Negative value makes AI not guarantee independence on target country.
 # ai_strategy = {
 #	type = protect
 #	id = "CZE"
 #	value = 200
-#}
+# }
 
-#ai_strategy = {
+# Affects the AI priority regarding air superiority/combat
+# ai_strategy = {
 #	type = strategic_air_importance
 #	id = 1 #Strategic Region ID - Southern England
 #	value = 10000 #value of stocked main front in active combat is usually around 35,000
-#}	
+# }
+
+# Modifies max nr of civilian factories the AI wants to spend on purchasing equipment
+# ai_strategy = {
+#	type = equipment_market_spend_factories
+#	value = 20  # Factor for the EQUIPMENT_MARKET_MAX_CIVS_FOR_PURCHASES_RATIO define (value = 20 results in a factor of 1.2)
+# }
+
+# The AI needs a surplus of this many units of the equipment type before considering it a surplus to sell on the equipment market
+# ai_strategy = {
+#	type = equipment_market_for_sale_threshold
+#	id = train
+#	value = 200  # Absolute number of units
+# }
+
+# Modifies the ratio of equipment surplus to put up for sale on the market
+# ai_strategy = {
+#	type = equipment_market_for_sale_factor
+#	id = train
+#	value = 50  # Factor for the EQUIPMENT_MARKET_BASE_MARKET_RATIO define (value = 50 results in a factor of 1.5)
+# }
+
+# Limits how many units of the equipment type will be put up on the market
+# ai_strategy = {
+#	type = equipment_market_max_for_sale
+#	id = train
+#	value = 30  # The AI will put up max 30 units for sale (a value of 0 is ignored, use the other strategies to prevent the AI from selling instead)
+# }
+
+# The AI will use this as a lower limit of how many units to put up for sale, and it will keep the equipment on the market as multiples of this value. Overrides the EQUIPMENT_MARKET_DEFAULT_CIC_CHUNK_FOR_SALE define.
+# ai_strategy = {
+#	type = equipment_market_min_for_sale
+#	id = train
+#	value = 20  # The AI will put minimum this nr of the equipment on the market
+# }
+
+# Affects the AI's perceived archetype needs regarding equipment purchases on the market. A value of 50 means it will try to buy 50 more of the equipment than what is actually needed, while a value of -20 means it will only try to buy if it has a deficit larger than 20.
+# ai_strategy = {
+#	type = equipment_market_buying_threshold
+#	id = small_plane_cas_airframe  # equipment archetype
+#	value = 100  # Absolute number of units
+# }
+
+# This affects how the AI scores the available equipment to buy. Must specify either equipment_type or seller or both.
+# ai_strategy = {
+# 	type = equipment_market_buy
+# 	equipment_type = light_tank_chassis  # optional: equipment type or archetype to buy
+# 	seller = GER  # optional: which country to buy from. Can be scoped variable.
+# 	value = 200  # Part of the score calculation for things to buy. Related define: EQUIPMENT_MARKET_SCORE_FACTOR_AI_STRAT_WEIGHT
+# }
+
+# Increases (or decreases if negative) the desire to trade with a certain country. Affects acceptance for purchase requests and acceptance+desire for market access.
+# ai_strategy = {
+# 	type = equipment_market_trade_desire
+# 	id = ENG  # desired trade partner
+# 	value = 30  # Increases the acceptance and desire values by this
+# }
+
+# Modifies the number of factories the AI wants to allocate to production of a certain equipment category (see script_enum_equipment_category in "common\script_enums.txt" for available options)
+# ai_strategy = {
+#	type = equipment_production_factor
+#	id = tactical_bomber  # equipment categories
+#	value = 50  # Increase the perceived needed factories by 50 % (10 needed factories would become 15)
+# }
+
+# Controls what the AI produces when all their needs are already met (and it therefore doesn't need/want anymore)
+# ai_strategy = {
+#	type = equipment_production_surplus_management
+#	id = infantry_equipment  # equipment types (doesn't have to be archetypes, can also specify e.g. infantry_equipment_2)
+#	value = 10  # Weighed against the values of other equipment types to determine ratio of factories IF all "normal" equipment needs are already fulfilled. Be aware that very high values may interfere with the normal calculations for equipment needs.
+# }
+
+# Forces the AI to allocate this many factories to production of this type of equipment. Use with caution since it doesn't take into account how many factories are actually available.
+# ai_strategy = {
+#	type = equipment_production_min_factories
+#	id = fighter
+#	value = 6  # The AI will put at least 6 factories on producing fighter planes
+# }
+
+# When AI produces equipment, the unit ratio determines how much it wants of that equipment type compared to other equipment types
+# ai_strategy = {
+#	type = unit_ratio
+#	id = naval_bomber
+#	value = 15  # Increase the ratio of naval bombers with 15 % (compared to other plane types)
+# }
+
+# Makes the AI try to reach at least this number of the specified building type
+# ai_strategy = {
+# 	type = building_target
+# 	id = industrial_complex
+# 	value = 85  # Prioritize civilian factories until we have at least 85
+# }
