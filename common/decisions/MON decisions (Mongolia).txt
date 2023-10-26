@@ -1,6 +1,5 @@
 MON_foreign_policy_decisions = {
 	MON_ask_tibet_for_faction_decision = {
-
 		icon = hol_exchange_intelligence_data
 
 		allowed = {
@@ -50,22 +49,44 @@ MON_foreign_policy_decisions = {
 		}
 
 		available = {
-			has_war = no
-			is_subject = no
-			can_declare_war_on = XSM
+			FROM = { has_war_with = TIB }
+			has_capitulated = no
 		}
 
 		visible = {
-			TIB = { has_war_with = XSM }
+			can_declare_war_on = FROM
+		}
+
+		cancel_trigger = {
+			OR = {
+				is_subject = yes
+				has_capitulated = yes
+				NOT = { can_declare_war_on = FROM }
+				NOT = { FROM = { has_war_with = TIB } }
+			}
 		}
 
 		cost = 0
 		days_remove = 25
 		fire_only_once = yes
-		war_with_on_remove = XSM
-		cancel_if_not_visible = yes
+		war_with_target_on_remove = yes
 
-		ai_will_do = { factor = 100 }
+		targets = { XSM }
+		target_trigger = {
+			can_declare_war_on = FROM
+		}
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				ROOT_is_threatened = yes
+			}
+			modifier = {
+				factor = 0
+				FROM = { has_war = no }
+			}
+		}
 
 		cancel_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision cancel MON_attack_the_mas_decision target: [From.GetName]"
@@ -82,16 +103,15 @@ MON_foreign_policy_decisions = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove MON_attack_the_mas_decision target: [From.GetName]"
 			clear_decision_attack_AI = yes
 			declare_war_on = {
-				target = XSM
+				target = FROM
 				type = annex_everything
 			}
 			hidden_effect = { #Give northwest war idea to MON
-				MON = { add_ideas = TIB_MON_northwest_idea }
+				FROM = { add_ideas = TIB_MON_northwest_idea }
 			}
 		}
 	}
 	MON_pan_mongol_claims_decision = {
-
 		icon = generic_nationalism
 
 		allowed = {
@@ -112,23 +132,199 @@ MON_foreign_policy_decisions = {
 			owns_state = 621
 		}
 
+		cost = 200
 		fire_only_once = yes
-
-		cost = 0
-
 		ai_will_do = { factor = 100 }
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete MON_pan_mongol_claims_decision"
-			add_state_claim = 1083
-			add_state_claim = 618
-			add_state_claim = 611
-			add_state_claim = 884
+			set_country_flag = MON_enacted_pan_mongol_claims
 			if = {
-				limit = { NOT = { has_country_flag = MON_russia_friends_flag } }
+				limit = {
+					NOT = { has_country_flag = MON_russia_friends_flag }
+					NOT = { has_government = paternal_autocrat } #has focus
+				}
+				set_country_flag = MON_enacted_transsiberian_claims
 				add_state_claim = 563
 				add_state_claim = 564
+				add_state_claim = 611
+				add_state_claim = 618
 				add_state_claim = 654
+				add_state_claim = 884
+				add_state_claim = 1083
+				effect_tooltip = {
+					if = {
+						limit = { can_declare_war_on = 563.owner }
+						activate_targeted_decision = { decision = MON_attack_for_pan_mongol_claim_decision target = var:563.owner }
+					}
+					if = {
+						limit = { can_declare_war_on = 611.owner }
+						activate_targeted_decision = { decision = MON_attack_for_pan_mongol_claim_decision target = var:611.owner }
+					}
+					if = {
+						limit = { can_declare_war_on = 618.owner }
+						activate_targeted_decision = { decision = MON_attack_for_pan_mongol_claim_decision target = var:618.owner }
+					}
+					if = {
+						limit = { can_declare_war_on = 884.owner }
+						activate_targeted_decision = { decision = MON_attack_for_pan_mongol_claim_decision target = var:884.owner }
+					}
+					if = {
+						limit = { can_declare_war_on = 1083.owner }
+						activate_targeted_decision = { decision = MON_attack_for_pan_mongol_claim_decision target = var:1083.owner }
+					}
+				}
+			}
+			else = {
+				add_state_claim = 611
+				add_state_claim = 618
+				add_state_claim = 884
+				add_state_claim = 1083
+				effect_tooltip = {
+					if = {
+						limit = { can_declare_war_on = 611.owner }
+						activate_targeted_decision = { decision = MON_attack_for_pan_mongol_claim_decision target = var:611.owner }
+					}
+					if = {
+						limit = { can_declare_war_on = 618.owner }
+						activate_targeted_decision = { decision = MON_attack_for_pan_mongol_claim_decision target = var:618.owner }
+					}
+					if = {
+						limit = { can_declare_war_on = 884.owner }
+						activate_targeted_decision = { decision = MON_attack_for_pan_mongol_claim_decision target = var:884.owner }
+					}
+					if = {
+						limit = { can_declare_war_on = 1083.owner }
+						activate_targeted_decision = { decision = MON_attack_for_pan_mongol_claim_decision target = var:1083.owner }
+					}
+				}
+			}
+		}
+	}
+	MON_attack_for_pan_mongol_claim_decision = {
+		icon = generic_prepare_civil_war
+
+		allowed = {
+			original_tag = MON
+		}
+
+		available = {
+			has_capitulated = no
+		}
+
+		cancel_trigger = {
+			OR = {
+				is_subject = yes
+				has_capitulated = yes
+				NOT = { can_declare_war_on = FROM }
+			}
+		}
+
+		cost = 0
+		days_remove = 40
+		fire_only_once = yes
+		war_with_target_on_remove = yes
+
+		targets = { 611.OWNER 618.OWNER 884.OWNER 1083.OWNER }
+		target_root_trigger = { has_country_flag = MON_enacted_pan_mongol_claims }
+		target_trigger = {
+			can_declare_war_on = FROM
+		}
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				OR = {
+					ROOT_is_threatened_cautious = yes
+					FROM = { dont_start_major_faction_wars = yes }
+					FROM = { default_attack_AI_trigger_FROM = yes }
+				}
+			}
+		}
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel MON_attack_for_pan_mongol_claim_decision target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete MON_attack_for_pan_mongol_claim_decision target: [From.GetName]"
+			FROM = { incoming_war_notification_effect = yes }
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove MON_attack_for_pan_mongol_claim_decision target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			declare_war_on = {
+				target = FROM
+				type = take_state_focus
+				generator = { 611 618 884 1083 }
+			}
+		}
+	}
+	MON_attack_for_transsiberian_claim_decision = {
+		name = MON_attack_for_pan_mongol_claim_decision
+		icon = generic_prepare_civil_war
+
+		allowed = {
+			original_tag = MON
+		}
+
+		available = {
+			has_capitulated = no
+		}
+
+		cancel_trigger = {
+			OR = {
+				is_subject = yes
+				has_capitulated = yes
+				NOT = { can_declare_war_on = FROM }
+			}
+		}
+
+		cost = 0
+		days_remove = 40
+		fire_only_once = yes
+		war_with_target_on_remove = yes
+
+		targets = { 563.OWNER 564.OWNER 654.OWNER 811.OWNER }
+		target_root_trigger = { has_country_flag = MON_enacted_transsiberian_claims }
+		target_trigger = {
+			can_declare_war_on = FROM
+		}
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				OR = {
+					ROOT_is_threatened_cautious = yes
+					FROM = { dont_start_major_faction_wars = yes }
+					FROM = { default_attack_AI_trigger_FROM = yes }
+				}
+			}
+		}
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel MON_attack_for_transsiberian_claim_decision target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete MON_attack_for_transsiberian_claim_decision target: [From.GetName]"
+			FROM = { incoming_war_notification_effect = yes }
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove MON_attack_for_transsiberian_claim_decision target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			declare_war_on = {
+				target = FROM
+				type = take_state_focus
+				generator = { 563 564 654 811 }
 			}
 		}
 	}
@@ -269,10 +465,10 @@ MON_western_rebellion_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete MON_reinforce_troops_in_west_decision"
+			add_stability = 0.05
+			add_war_support = 0.05
 			set_temp_variable = { ideology_change_var = 0.05 }
 			change_ruling_party_popularity = yes
-			add_stability = 0.02
-			add_war_support = 0.05
 		}
 	}
 	MON_the_offer_decision = {
@@ -338,7 +534,7 @@ MON_western_rebellion_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete MON_bring_tuvan_garrison_decision"
-			add_stability = -0.02
+			add_stability = 0.02
 			add_war_support = 0.08
 		}
 	}
@@ -428,10 +624,6 @@ MON_chaos_in_capital_decisions = {
 			original_tag = MON
 		}
 
-		available = {
-			has_stability > 0
-		}
-
 		visible = {
 			has_government = paternal_autocrat
 		}
@@ -444,7 +636,6 @@ MON_chaos_in_capital_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete MON_force_control_in_urga_decision"
-			add_stability = -0.05
 			add_popularity = {
 				ideology = paternal_autocrat
 				popularity = 0.05
@@ -456,10 +647,6 @@ MON_chaos_in_capital_decisions = {
 
 		allowed = {
 			original_tag = MON
-		}
-
-		available = {
-			has_stability > 0
 		}
 
 		visible = {
@@ -497,7 +684,6 @@ MON_chaos_in_capital_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete MON_crack_on_MAN_decision"
-			add_stability = -0.05
 			add_popularity = {
 				ideology = social_democrat
 				popularity = -0.05
@@ -559,10 +745,6 @@ MON_chaos_in_capital_decisions = {
 			original_tag = MON
 		}
 
-		available = {
-			has_stability > 0
-		}
-
 		visible = {
 			MON_has_regular_govt = yes
 			NOT = { has_government = social_democrat }
@@ -594,7 +776,6 @@ MON_chaos_in_capital_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete MON_discourse_in_MAN_decision"
-			add_stability = -0.05
 			add_popularity = {
 				ideology = social_democrat
 				popularity = -0.05
@@ -857,75 +1038,42 @@ MON_mongolian_highway_decisions = {
 
 MON_dealing_with_the_leftover_bandits_decisions = {
 	MON_pacify_western_bandits_decision = {
-
 		icon = oppression
 
-		available = {
-			divisions_in_state = {
-				state = 1084
-				size > 2
-			}
+		visible = {
+			has_idea = MON_western_banditry_idea
+		}
+
+		remove_trigger = {
+			NOT = { has_idea = MON_western_banditry_idea }
 		}
 
 		highlight_states = {
 			highlight_state_targets = { state = 1084 }
+		}
+
+		modifier = {
+			army_org_factor = -0.05
+			army_morale_factor = -0.05
+			supply_consumption_factor = 0.05
 		}
 
 		cost = 0
+		days_remove = 180
+		fire_only_once = no
 
-		ai_will_do = {
-			base = 0
-			modifier = {
-				add = 200
-				divisions_in_state = {
-					state = 1084
-					size > 2
-				}
-			}
-		}
-
-		visible = {
-			NOT = { has_active_mission = MON_maintain_western_control_mission }
-		}
+		ai_will_do = { base = 1000 }
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete MON_pacify_western_bandits_decision"
-			activate_mission = MON_maintain_western_control_mission
-			custom_effect_tooltip = MON_pacify_bandits_mission_explanation
-		}
-	}
-
-	MON_maintain_western_control_mission = {
-		icon = generic_civil_support
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			hidden_trigger = { always = no }
 		}
 
-		days_mission_timeout = MAN_maintain_control_timer?180
-
-		cancel_trigger = {
-			divisions_in_state = {
-				state = 1084
-				size < 3
-			}
-		}
-
-		highlight_states = {
-			highlight_state_targets = { state = 1084 }
-		}
-
-		is_good = yes
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout MON_maintain_western_control_mission"
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove MON_pacify_western_bandits_decision"
+			remove_ideas = MON_western_banditry_idea
 			army_experience = 10
 			add_stability = 0.05
 			add_war_support = 0.05
-			remove_ideas = MON_western_banditry_idea
 		}
 	}
 }
-

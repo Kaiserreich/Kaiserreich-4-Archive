@@ -1993,9 +1993,9 @@ foreign_politics = {
 				factor = 0
 				NOT = {
 					country_exists = GBR
-					var:126.controller = { is_in_faction_with = FROM } #London
-					var:16.controller = { is_in_faction_with = FROM } #Paris
-					var:21.controller = { is_in_faction_with = FROM } #Marseille
+					var:126.owner = { is_in_faction_with = FROM } #London
+					var:16.owner = { is_in_faction_with = FROM } #Paris
+					var:21.owner = { is_in_faction_with = FROM } #Marseille
 				}
 			}
 			modifier = {
@@ -2438,8 +2438,8 @@ foreign_politics = {
 			is_subject = no
 			FROM = {
 				OR = {
-					owns_state = 731 #Western Macedonia
-					owns_state = 769 #Eastern Macedonia
+					owns_state = 731 #Florina
+					owns_state = 769 #Serres
 				}
 			}
 		}
@@ -2449,8 +2449,8 @@ foreign_politics = {
 				NOT = { can_declare_war_on = FROM }
 				FROM = {
 					NOT = {
-						owns_state = 731 #Western Macedonia
-						owns_state = 769 #Eastern Macedonia
+						owns_state = 731 #Florina
+						owns_state = 769 #Serres
 					}
 				}
 			}
@@ -2464,8 +2464,8 @@ foreign_politics = {
 			can_declare_war_on = FROM
 			FROM = {
 				OR = {
-					owns_state = 731 #Western Macedonia
-					owns_state = 769 #Eastern Macedonia
+					owns_state = 731 #Florina
+					owns_state = 769 #Serres
 				}
 			}
 		}
@@ -2810,59 +2810,65 @@ SER_Balkan_Research_Initiative_decisions = {
 	SER_economic_council_decision = {
 		icon = generic_agreement
 		allowed = { tag = SER }
+
 		available = {
 			has_war = no
 			is_in_faction_with = ROM
-			NOT = { has_global_flag = BP_working_on_eco_union }
 		}
+
 		visible = {
 			has_completed_focus = SER_Pact_of_Organisation
-			NOT = {
-				has_idea = BP_economic_council_1
-				has_idea = BP_economic_council_2
-				has_idea = BP_economic_council_3
-				has_idea = BP_economic_council_upgraded_1
-				has_idea = BP_economic_council_upgraded_2
-				has_idea = BP_economic_council_upgraded_3
+			NOT = { has_dynamic_modifier = { modifier = BPL_pact_of_organisation } }
+			NOT = { has_global_flag = BP_working_on_eco_union }
+		}
+
+		cancel_trigger = {
+			OR = {
+				has_war = yes
+				NOT = { is_in_faction_with = ROM }
+				is_subject = yes
+				has_dynamic_modifier = { modifier = BPL_pact_of_organisation }
+				has_global_flag = BP_working_on_eco_union
 			}
 		}
 
 		cost = 50
-
-		days_remove = 14
+		days_remove = 20
 		fire_only_once = yes
 
 		ai_will_do = { factor = 100 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel SER_economic_council_decision"
+			clr_global_flag = BP_working_on_eco_union
+			add_political_power = 50
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete SER_economic_council_decision"
 			set_global_flag = BP_working_on_eco_union
 			if = {
-				limit = {
-					NOT = {
-						is_in_array = { global.balkan_economic_union = ROOT }
-					}
-				}
+				limit = { NOT = { is_in_array = { global.balkan_economic_union = ROOT } } }
 				add_to_array = { global.balkan_economic_union = ROOT }
 			}
-			if = {
-				limit = { ROM = { has_war = no } }
-				ROM = { country_event = { id = pact.300 days = 7 } }
-			}
-			if = {
-				limit = { GRE = { has_war = no } }
-				GRE = { country_event = { id = pact.300 days = 7 } }
-			}
-			if = {
-				limit = { ALB = { has_war = no } }
-				ALB = { country_event = { id = pact.300 days = 7 } }
+			every_other_country = {
+				limit = {
+					OR = {
+						original_tag = SER
+						original_tag = GRE
+						original_tag = ALB
+					}
+					is_subject = no
+					has_socialist_government = no
+				}
+				country_event = { id = pact.300 days = 7 }
 			}
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove SER_economic_council_decision"
-			country_event = pact.302
 			clr_global_flag = BP_working_on_eco_union
+			country_event = pact.302
 		}
 	}
 	SER_economic_council_expansion = {
@@ -2871,28 +2877,36 @@ SER_Balkan_Research_Initiative_decisions = {
 		available = {
 			has_war = no
 			is_in_faction_with = ROM
+		}
+
+		visible = {
+			has_dynamic_modifier = { modifier = BPL_pact_of_organisation }
+			check_variable = { global.BPL_pact_of_organisation_building_slots = 0 }
 			NOT = { has_global_flag = BP_working_on_eco_union }
 		}
-		visible = {
-			has_completed_focus = SER_Pact_of_Organisation
+
+		cancel_trigger = {
 			OR = {
-				has_idea = BP_economic_council_1
-				has_idea = BP_economic_council_2
-				has_idea = BP_economic_council_3
-			}
-			NOT = {
-				has_idea = BP_economic_council_upgraded_1
-				has_idea = BP_economic_council_upgraded_2
-				has_idea = BP_economic_council_upgraded_3
+				has_war = yes
+				NOT = { is_in_faction_with = ROM }
+				is_subject = yes
+				NOT = { has_dynamic_modifier = { modifier = BPL_pact_of_organisation } }
+				NOT = { check_variable = { global.BPL_pact_of_organisation_building_slots = 0 } }
+				has_global_flag = BP_working_on_eco_union
 			}
 		}
 
 		cost = 50
-
 		days_remove = 30
 		fire_only_once = yes
 
 		ai_will_do = { factor = 100 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel SER_economic_council_expansion"
+			clr_global_flag = BP_working_on_eco_union
+			add_political_power = 50
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete SER_economic_council_expansion"
@@ -2901,18 +2915,12 @@ SER_Balkan_Research_Initiative_decisions = {
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove SER_economic_council_expansion"
+			clr_global_flag = BP_working_on_eco_union
 			country_event = pact.304
 			every_other_country = {
-				limit = {
-					OR = {
-						has_idea = BP_economic_council_1
-						has_idea = BP_economic_council_2
-						has_idea = BP_economic_council_3
-					}
-				}
+				limit = { has_dynamic_modifier = { modifier = BPL_pact_of_organisation } }
 				country_event = pact.304
 			}
-			clr_global_flag = BP_working_on_eco_union
 		}
 	}
 	SER_economic_council_application = {
@@ -2920,6 +2928,7 @@ SER_Balkan_Research_Initiative_decisions = {
 
 		allowed = {
 			OR = {
+				tag = SER
 				tag = ROM
 				tag = GRE
 			}
@@ -2927,108 +2936,58 @@ SER_Balkan_Research_Initiative_decisions = {
 
 		available = {
 			has_war = no
-			is_in_faction_with = SER
-			NOT = { has_global_flag = BP_working_on_eco_union }
+			is_in_faction_with = global.balkan_economic_union^0
 		}
+
 		visible = {
-			SER = {
-				has_completed_focus = SER_Pact_of_Organisation
-				OR = {
-					has_idea = BP_economic_council_1
-					has_idea = BP_economic_council_2
-					has_idea = BP_economic_council_3
-				}
-			}
-			NOT = {
-				has_country_flag = BP_accepted_economic_union
-			}
+			has_variable = global.balkan_economic_union^num
+			var:global.balkan_economic_union^0 = { has_dynamic_modifier = { modifier = BPL_pact_of_organisation } }
+			NOT = { has_dynamic_modifier = { modifier = BPL_pact_of_organisation } }
 		}
 
-		cost = 10
-
-		days_remove = 14
+		cost = 25
 		fire_only_once = yes
 
 		ai_will_do = { factor = 100 }
 
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SER_economic_council_application"
-			custom_effect_tooltip = BP_economic_integration_tt
-			set_country_flag = BP_accepted_economic_union
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete SER_economic_council_application"
+			set_temp_variable = { BPL_new_modifier = global.balkan_economic_union^num }
 			if = {
-				limit = {
-					NOT = {
-						is_in_array = { global.balkan_economic_union = ROOT }
-					}
-				}
+				limit = { NOT = { is_in_array = { global.balkan_economic_union = ROOT } } }
 				add_to_array = { global.balkan_economic_union = ROOT }
+				add_to_temp_variable = { BPL_new_modifier = 1 }
 			}
-			hidden_effect = {
-				if = {
-					limit = {
-						check_variable = { global.balkan_economic_union^num = 1 }
-					}
-					add_ideas = BP_economic_council_1
+			add_dynamic_modifier = { modifier = BPL_pact_of_organisation }
+
+			multiply_temp_variable = { BPL_new_modifier = 0.05 }
+			clamp_temp_variable = { var = BPL_new_modifier max = 0.15 }
+			if = {
+				limit = { NOT = { check_variable = { BPL_new_modifier = global.BPL_pact_of_organisation_construction_speed } } }
+				save_event_target_as = BPL_modifier_changed
+			}
+			set_variable = {
+				global.BPL_pact_of_organisation_construction_speed = BPL_new_modifier
+				tooltip = construction_speed_tooltip
+			}
+			if = {
+				limit = { NOT = { check_variable = { global.BPL_pact_of_organisation_building_slots = 0 } } }
+				set_variable = {
+					global.BPL_pact_of_organisation_building_slots = BPL_new_modifier
+					tooltip = global_building_slots_tooltip
 				}
-				else_if = {
-					limit = {
-						check_variable = { global.balkan_economic_union^num = 2 }
-					}
-					add_ideas = BP_economic_council_2
+			}
+			if = {
+				limit = { NOT = { check_variable = { global.BPL_pact_of_organisation_research_speed = 0 } } }
+				divide_temp_variable = { BPL_new_modifier = 2 }
+				set_variable = {
+					global.BPL_pact_of_organisation_research_speed = BPL_new_modifier
+					tooltip = research_speed_factor_tooltip
 				}
-				else_if = {
-					limit = {
-						check_variable = { global.balkan_economic_union^num = 3 }
-					}
-					add_ideas = BP_economic_council_3
-				}
-				if = {
-					limit = {
-						SER = {
-							OR = {
-								has_idea = BP_economic_council_upgraded_1
-								has_idea = BP_economic_council_upgraded_2
-								has_idea = BP_economic_council_upgraded_3
-							}
-						}
-					}
-					if = {
-						limit = { has_idea = BP_economic_council_1 }
-						swap_ideas = {
-							remove_idea = BP_economic_council_1
-							add_idea = BP_economic_council_upgraded_1
-						}
-					}
-					else_if = {
-						limit = { has_idea = BP_economic_council_2 }
-						swap_ideas = {
-							remove_idea = BP_economic_council_2
-							add_idea = BP_economic_council_upgraded_2
-						}
-					}
-					else_if = {
-						limit = { has_idea = BP_economic_council_3 }
-						swap_ideas = {
-							remove_idea = BP_economic_council_3
-							add_idea = BP_economic_council_upgraded_3
-						}
-					}
-				}
-				SER = { country_event = pact.306 }
-				if = {
-					limit = {
-						NOT = { tag = GRE }
-						GRE = { has_country_flag = BP_accepted_economic_union }
-					}
-					GRE = { country_event = pact.306 }
-				}
-				if = {
-					limit = {
-						NOT = { tag = ROM }
-						ROM = { has_country_flag = BP_accepted_economic_union }
-					}
-					ROM = { country_event = pact.306 }
-				}
+			}
+			every_other_country = {
+				limit = { has_dynamic_modifier = { modifier = BPL_pact_of_organisation } }
+				country_event = pact.306
 			}
 		}
 	}
@@ -3083,433 +3042,6 @@ SER_War_Plan_Drina_March_decisions = {
 }
 
 SER_The_Road_To_Unification_decisions = {
-	SER_Integrate_Macedonia = {
-		name = integrate_state
-		icon = eng_trade_unions_support
-
-		available = {
-			FROM = {
-				is_fully_controlled_by = ROOT
-				any_neighbor_state = {
-					is_core_of = ROOT
-					is_owned_and_controlled_by = ROOT
-				}
-			}
-		}
-
-		cancel_trigger = {
-			NOT = { controls_state = FROM }
-		}
-
-		cost = 80
-		days_remove = 100
-		fire_only_once = no
-		on_map_mode = map_only
-
-		state_target = yes
-		targets = { 106 }
-		target_root_trigger = { has_completed_focus = SER_The_Congress_Of_Belgrade }
-		target_trigger = {
-			FROM = {
-				is_owned_and_controlled_by = ROOT
-				NOT = { is_core_of = ROOT }
-			}
-		}
-
-		ai_will_do = { factor = 50 }
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel SER_Integrate_Macedonia target: [From.GetName]"
-			add_political_power = 80
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SER_Integrate_Macedonia target: [From.GetName]"
-			set_country_flag = SER_has_integrated_macedonia
-			FROM = {
-				if = {
-					limit = { is_claimed_by = ROOT }
-					remove_claim_by = ROOT
-				}
-				add_core_of = ROOT
-			}
-		}
-	}
-	SER_YUG_Integrate_State_Large = {
-		name = integrate_state
-		icon = eng_trade_unions_support
-
-		available = {
-			FROM = {
-				is_fully_controlled_by = ROOT
-				any_neighbor_state = {
-					is_core_of = ROOT
-					is_owned_and_controlled_by = ROOT
-				}
-			}
-		}
-
-		cancel_trigger = {
-			NOT = { controls_state = FROM }
-		}
-
-		cost = SER_coring_decision_large?80
-		days_remove = 100
-		fire_only_once = no
-		on_map_mode = map_only
-
-		state_target = yes
-		targets = { 104 109 }
-		target_root_trigger = { SER_has_founded_yugoslavia = yes }
-		target_trigger = {
-			FROM = {
-				is_owned_and_controlled_by = ROOT
-				NOT = { is_core_of = ROOT }
-			}
-		}
-
-		ai_will_do = { factor = 50 }
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel SER_YUG_Integrate_State_Large target: [From.GetName]"
-			add_political_power = SER_coring_decision_large?80
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SER_YUG_Integrate_State_Large target: [From.GetName]"
-			FROM = {
-				if = {
-					limit = { is_claimed_by = ROOT }
-					remove_claim_by = ROOT
-				}
-				add_core_of = ROOT
-			}
-		}
-	}
-	SER_Integrate_State_Medium = {
-		name = integrate_state
-		icon = eng_trade_unions_support
-
-		available = {
-			FROM = {
-				is_fully_controlled_by = ROOT
-				any_neighbor_state = {
-					is_core_of = ROOT
-					is_owned_and_controlled_by = ROOT
-				}
-			}
-		}
-
-		cancel_trigger = {
-			NOT = { controls_state = FROM }
-		}
-
-		cost = SER_coring_decision_medium?60
-		days_remove = 100
-		fire_only_once = no
-		on_map_mode = map_only
-
-		state_target = yes
-		targets = { 45 875 }
-		target_trigger = {
-			FROM = {
-				is_owned_and_controlled_by = ROOT
-				NOT = { is_core_of = ROOT }
-			}
-		}
-
-		ai_will_do = { factor = 50 }
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel SER_Integrate_State_Medium target: [From.GetName]"
-			add_political_power = SER_coring_decision_medium?60
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SER_Integrate_State_Medium target: [From.GetName]"
-			FROM = {
-				if = {
-					limit = { is_claimed_by = ROOT }
-					remove_claim_by = ROOT
-				}
-				add_core_of = ROOT
-			}
-		}
-	}
-	SER_YUG_Integrate_State_Medium = {
-		name = integrate_state
-		icon = eng_trade_unions_support
-
-		available = {
-			FROM = {
-				is_fully_controlled_by = ROOT
-				any_neighbor_state = {
-					is_core_of = ROOT
-					is_owned_and_controlled_by = ROOT
-				}
-			}
-		}
-
-		cancel_trigger = {
-			NOT = { controls_state = FROM }
-		}
-
-		cost = SER_coring_decision_medium?60
-		days_remove = 100
-		fire_only_once = no
-		on_map_mode = map_only
-
-		state_target = yes
-		targets = { 102 103 736 683 }
-		target_root_trigger = { SER_has_founded_yugoslavia = yes }
-		target_trigger = {
-			FROM = {
-				is_owned_and_controlled_by = ROOT
-				NOT = { is_core_of = ROOT }
-			}
-		}
-
-		ai_will_do = { factor = 50 }
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel SER_YUG_Integrate_State_Medium target: [From.GetName]"
-			add_political_power = SER_coring_decision_medium?60
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SER_YUG_Integrate_State_Medium target: [From.GetName]"
-			FROM = {
-				if = {
-					limit = { is_claimed_by = ROOT }
-					remove_claim_by = ROOT
-				}
-				add_core_of = ROOT
-			}
-		}
-	}
-	SER_YUG_Integrate_State_Trieste = {
-		name = integrate_state
-		icon = eng_trade_unions_support
-
-		available = {
-			FROM = {
-				is_fully_controlled_by = ROOT
-				any_neighbor_state = {
-					is_core_of = ROOT
-					is_owned_and_controlled_by = ROOT
-				}
-			}
-		}
-
-		cancel_trigger = {
-			OR = {
-				NOT = { controls_state = FROM }
-				has_left_democratic_government = no
-			}
-		}
-
-		cost = SER_coring_decision_medium?60
-		days_remove = 100
-		fire_only_once = no
-		on_map_mode = map_only
-
-		state_target = yes
-		targets = { 488 }
-		target_root_trigger = { owns_state = 488 }
-		target_trigger = {
-			FROM = {
-				is_controlled_by = ROOT
-				NOT = { is_core_of = ROOT }
-			}
-			has_left_democratic_government = yes
-		}
-
-		ai_will_do = { factor = 50 }
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel SER_YUG_Integrate_State_Trieste target: [From.GetName]"
-			add_political_power = SER_coring_decision_medium?60
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SER_YUG_Integrate_State_Trieste target: [From.GetName]"
-			FROM = {
-				if = {
-					limit = { is_claimed_by = ROOT }
-					remove_claim_by = ROOT
-				}
-				add_core_of = ROOT
-			}
-		}
-	}
-	SER_Integrate_State_Small = {
-		name = integrate_state
-		icon = eng_trade_unions_support
-
-		available = {
-			FROM = {
-				is_fully_controlled_by = ROOT
-				any_neighbor_state = {
-					is_owned_and_controlled_by = ROOT
-					is_core_of = ROOT
-				}
-			}
-		}
-
-		cancel_trigger = {
-			NOT = { controls_state = FROM }
-		}
-
-		cost = SER_coring_decision_small?40
-		days_remove = 100
-		fire_only_once = no
-		on_map_mode = map_only
-
-		state_target = yes
-		targets = { 794 841 }
-		target_trigger = {
-			FROM = {
-				is_owned_and_controlled_by = ROOT
-				NOT = { is_core_of = ROOT }
-			}
-		}
-
-		ai_will_do = { factor = 50 }
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel SER_Integrate_State_Small target: [From.GetName]"
-			add_political_power = SER_coring_decision_small?40
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SER_Integrate_State_Small target: [From.GetName]"
-			FROM = {
-				if = {
-					limit = { is_claimed_by = ROOT }
-					remove_claim_by = ROOT
-				}
-				add_core_of = ROOT
-			}
-		}
-	}
-	SER_YUG_Integrate_State_Small = {
-		name = integrate_state
-		icon = eng_trade_unions_support
-
-		available = {
-			FROM = {
-				is_fully_controlled_by = ROOT
-				any_neighbor_state = {
-					is_owned_and_controlled_by = ROOT
-					is_core_of = ROOT
-				}
-			}
-		}
-
-		cancel_trigger = {
-			NOT = { controls_state = FROM }
-		}
-
-		cost = SER_coring_decision_small?40
-		days_remove = 100
-		fire_only_once = no
-		on_map_mode = map_only
-
-		state_target = yes
-		targets = { 163 }
-		target_root_trigger = { SER_has_founded_yugoslavia = yes }
-		target_trigger = {
-			FROM = {
-				is_owned_and_controlled_by = ROOT
-				NOT = { is_core_of = ROOT }
-			}
-		}
-
-		ai_will_do = { factor = 50 }
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel SER_YUG_Integrate_State_Small target: [From.GetName]"
-			add_political_power = SER_coring_decision_small?40
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SER_YUG_Integrate_State_Small target: [From.GetName]"
-			FROM = {
-				if = {
-					limit = { is_claimed_by = ROOT }
-					remove_claim_by = ROOT
-				}
-				add_core_of = ROOT
-			}
-		}
-	}
-	SER_YUG_Integrate_Bulgarian_State = {
-		name = integrate_state
-		icon = generic_flags
-
-		available = {
-			has_stability > 0
-			FROM = {
-				is_fully_controlled_by = ROOT
-				any_neighbor_state = {
-					is_core_of = ROOT
-					is_owned_and_controlled_by = ROOT
-				}
-			}
-		}
-
-		cancel_trigger = {
-			NOT = { controls_state = FROM }
-		}
-
-		cost = 100
-		days_remove = 150
-		fire_only_once = no
-		on_map_mode = map_only
-
-		state_target = yes
-		targets = { 48 77 211 212 770 771 990 1089 }
-		target_root_trigger = {
-			OR = {
-				has_completed_focus = SER_YUG_soc_integrate_bulgaria
-				has_completed_focus = SER_YUG_greater_yugoslavia
-			}
-		}
-		target_trigger = {
-			FROM = {
-				is_owned_and_controlled_by = ROOT
-				NOT = { is_core_of = ROOT }
-			}
-		}
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel SER_YUG_Integrate_Bulgarian_State target: [From.GetName]"
-			add_political_power = 100
-			add_stability = 0.06
-			FROM = { add_resistance = -40 }
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete SER_YUG_Integrate_Bulgarian_State target: [From.GetName]"
-			FROM = { add_resistance = 40 }
-			add_stability = -0.06
-		}
-
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove SER_YUG_Integrate_Bulgarian_State target: [From.GetName]"
-			add_stability = 0.03
-			FROM = {
-				add_resistance = -40
-				if = {
-					limit = { is_claimed_by = ROOT }
-					remove_claim_by = ROOT
-				}
-				add_core_of = ROOT
-			}
-		}
-
-		ai_will_do = { factor = 100 }
-	}
 	SER_Attack_Austria = {
 		icon = eng_puppet_usa
 		priority = 1000
@@ -3764,19 +3296,19 @@ SER_The_Road_To_Unification_decisions = {
 			factor = 50
 			modifier = {
 				factor = 0
-				AND = {
-					OR = {
-						has_game_rule = { rule = SER_path option = SER_PATH_MONARCHY_SOCLIB }
-						has_game_rule = { rule = SER_path option = SER_PATH_SOCCON }
-					}
-					has_government = paternal_autocrat
+				OR = {
+					has_game_rule = { rule = SER_path option = SER_PATH_MONARCHY_SOCLIB }
+					has_game_rule = { rule = SER_path option = SER_PATH_SOCCON }
 				}
+				has_government = paternal_autocrat
 			}
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete SER_Form_Yugoslavia"
 			log = "KR_Event_Logging;YUGOSLAVIA FORMED;[GetDateText]"
+			SER_enable_yugoslavia_integration = yes
+			custom_effect_tooltip = tooltip_white_line
 			if = {
 				limit = {
 					OR = {
@@ -3795,6 +3327,7 @@ SER_The_Road_To_Unification_decisions = {
 				else = {
 					set_cosmetic_tag = YUG_mon
 				}
+				custom_effect_tooltip = tooltip_white_line
 				set_country_flag = YUG_integral_yugoslavia_formed
 				complete_national_focus = SER_YUG_integral_yugoslavia
 				set_party_name = {
@@ -3824,6 +3357,7 @@ SER_The_Road_To_Unification_decisions = {
 					has_dictatorship_government = no
 				}
 				set_cosmetic_tag = YUG_mon
+				custom_effect_tooltip = tooltip_white_line
 				set_country_flag = YUG_royal_federal_yugoslavia_formed
 				complete_national_focus = SER_YUG_royal_federation
 			}
@@ -3845,8 +3379,10 @@ SER_The_Road_To_Unification_decisions = {
 					}
 				}
 				set_cosmetic_tag = YUG_fed
+				custom_effect_tooltip = tooltip_white_line
 				set_country_flag = YUG_usy_formed
 				complete_national_focus = SER_YUG_united_states
+				custom_effect_tooltip = tooltip_white_line
 				meta_effect = {
 					text = {
 						add_country_leader_role = {
@@ -3865,6 +3401,7 @@ SER_The_Road_To_Unification_decisions = {
 					has_socialist_government = yes
 				}
 				set_cosmetic_tag = YUG_fed
+				custom_effect_tooltip = tooltip_white_line
 				set_country_flag = YUG_balkan_socialist_federation_formed
 				complete_national_focus = SER_YUG_balkan_federalism
 			}
@@ -3879,8 +3416,10 @@ SER_The_Road_To_Unification_decisions = {
 					custom_effect_tooltip = SER_YUG_republican_gets_three_named_nation
 				}
 				set_cosmetic_tag = YUG_rep
+				custom_effect_tooltip = tooltip_white_line
 				set_country_flag = YUG_three_named_nation_formed
 				complete_national_focus = SER_YUG_three_named_nation
+				custom_effect_tooltip = tooltip_white_line
 				meta_effect = {
 					text = {
 						add_country_leader_role = {
@@ -3910,20 +3449,41 @@ SER_The_Road_To_Unification_decisions = {
 					}
 				}
 			}
-			remove_ideas = SER_open_rearmament
-			remove_ideas = SER_scarred_nation_1
-			hidden_effect = {
-				remove_ideas = {
-					SER_scarred_nation_01
-					SER_scarred_nation_2
-					SER_scarred_nation_3
-					SER_scarred_nation_4
-				}
+			if = {
+				limit = { has_idea = SER_open_rearmament }
+				custom_effect_tooltip = tooltip_white_line
+				remove_ideas = SER_open_rearmament
 			}
-			news_event = worldnews.119
+			else_if = {
+				limit = { has_idea = SER_scarred_nation_1 }
+				custom_effect_tooltip = tooltip_white_line
+				remove_ideas = SER_scarred_nation_1
+			}
+			else_if = {
+				limit = { has_idea = SER_scarred_nation_01 }
+				custom_effect_tooltip = tooltip_white_line
+				remove_ideas = SER_scarred_nation_01
+			}
+			else_if = {
+				limit = { has_idea = SER_scarred_nation_2 }
+				custom_effect_tooltip = tooltip_white_line
+				remove_ideas = SER_scarred_nation_2
+			}
+			else_if = {
+				limit = { has_idea = SER_scarred_nation_3 }
+				custom_effect_tooltip = tooltip_white_line
+				remove_ideas = SER_scarred_nation_3
+			}
+			else_if = {
+				limit = { has_idea = SER_scarred_nation_4 }
+				custom_effect_tooltip = tooltip_white_line
+				remove_ideas = SER_scarred_nation_4
+			}
+			custom_effect_tooltip = tooltip_white_line
 			mark_focus_tree_layout_dirty = yes
 			YUG_set_up_yugoslavia_minigame = yes
 			hidden_effect = {
+				news_event = worldnews.119
 				if = {
 					limit = {
 						NOT = {
@@ -4040,9 +3600,9 @@ SER_contain_konspiracija_decisions = {
 			base = 1000
 			modifier = {
 				factor = 0
-				set_temp_variable = { SER_temp_comparison_var = ROOT.party_popularity@national_populist }
+				set_temp_variable = { SER_temp_comparison_var = party_popularity@national_populist }
 				multiply_temp_variable = { SER_temp_comparison_var = -1 }
-				check_variable = { SER.SER_prodanovic_natpop_loss > SER_temp_comparison_var }
+				check_variable = { SER_prodanovic_natpop_loss > SER_temp_comparison_var }
 			}
 		}
 
@@ -4059,14 +3619,16 @@ SER_contain_konspiracija_decisions = {
 			hidden_effect = {
 				if = {
 					limit = {
+						is_ai = yes
 						NOT = { has_game_rule = { rule = SER_path option = DEFAULT } }
 					}
-					set_temp_variable = { SER_temp_comparison_var = ROOT.party_popularity@national_populist }
+					country_event = serbia.19
+				}
+				else = {
+					set_temp_variable = { SER_temp_comparison_var = party_popularity@national_populist }
 					multiply_temp_variable = { SER_temp_comparison_var = -1 }
 					if = {
-						limit = {
-							check_variable = { SER.SER_prodanovic_natpop_loss > SER_temp_comparison_var }
-						}
+						limit = { check_variable = { SER_prodanovic_natpop_loss > SER_temp_comparison_var } }
 						set_country_flag = SER_you_fucked_up_response_flag
 						country_event = serbia.20
 					}
@@ -4074,7 +3636,6 @@ SER_contain_konspiracija_decisions = {
 						country_event = serbia.19
 					}
 				}
-				else = { country_event = serbia.19 }
 			}
 		}
 	}
@@ -4142,6 +3703,7 @@ SER_contain_konspiracija_decisions = {
 				10 = {
 					modifier = {
 						factor = 0
+						is_ai = yes
 						NOT = { has_game_rule = { rule = SER_path option = DEFAULT } }
 					}
 					custom_effect_tooltip = SER_prodanovic_assassination_no_effect_tt
@@ -4177,6 +3739,7 @@ SER_contain_konspiracija_decisions = {
 				25 = {
 					modifier = {
 						factor = 0
+						is_ai = yes
 						NOT = { has_game_rule = { rule = SER_path option = DEFAULT } }
 					}
 					custom_effect_tooltip = SER_prodanovic_assassination_no_effect_tt
@@ -4212,6 +3775,7 @@ SER_contain_konspiracija_decisions = {
 				35 = {
 					modifier = {
 						factor = 0
+						is_ai = yes
 						NOT = { has_game_rule = { rule = SER_path option = DEFAULT } }
 					}
 					custom_effect_tooltip = SER_prodanovic_assassination_no_effect_tt
@@ -4246,6 +3810,7 @@ SER_contain_konspiracija_decisions = {
 				50 = {
 					modifier = {
 						factor = 0
+						is_ai = yes
 						NOT = { has_game_rule = { rule = SER_path option = DEFAULT } }
 					}
 					custom_effect_tooltip = SER_prodanovic_assassination_no_effect_tt

@@ -104,10 +104,7 @@ clear_retain_state = {
 # country scope
 clear_retained_states = {
 	hidden_effect = {
-		every_state = {
-			limit = { has_state_flag = retain_state_@PREV }
-			clr_state_flag = retain_state_@PREV
-		}
+		every_state = { clr_state_flag = retain_state_@PREV }
 	}
 }
 
@@ -138,7 +135,7 @@ temporarily_disable_country_annexation = {
 temporarily_disable_annexation = {
 	hidden_effect = {
 		set_state_flag = { flag = temporarily_disabled_annexation_@ROOT value = 1 days = 32 }
-		PREV = { country_event = { id = annex.1 days = 32 }}
+		PREV = { country_event = { id = annex.1 days = 32 } }
 	}
 }
 
@@ -146,6 +143,13 @@ temporarily_disable_annexation = {
 save_as_offered_state = {
 	temporarily_disable_annexation = yes
 	add_to_array = { PREV.offered_states_array = THIS }
+}
+
+# state scope
+transfer_state_and_notify = {
+	transfer_state_without_overriding_occupation = yes
+	state_given_notification_effect = yes
+	ROOT = { recheck_annexations = yes }
 }
 
 # state scope
@@ -378,7 +382,6 @@ transfer_targeted_territory = {
 			transfer_state_to = var:tag_to_release
 		}
 	}
-	clear_retained_states = yes
 	recheck_annexations = yes
 }
 
@@ -428,7 +431,6 @@ transfer_targeted_territory_and_add_claims = {
 			transfer_state_to = var:tag_to_release
 		}
 	}
-	clear_retained_states = yes
 	recheck_annexations = yes
 }
 
@@ -478,7 +480,6 @@ transfer_targeted_territory_and_add_cores = {
 			transfer_state_to = var:tag_to_release
 		}
 	}
-	clear_retained_states = yes
 	recheck_annexations = yes
 }
 
@@ -529,7 +530,6 @@ release_targeted_tag_with_claims = {
 			transfer_state_to = var:tag_to_release
 		}
 	}
-	clear_retained_states = yes
 	puppet_released_tag = yes
 }
 
@@ -562,7 +562,6 @@ release_targeted_tag = {
 			transfer_state_to = var:tag_to_release
 		}
 	}
-	clear_retained_states = yes
 	puppet_released_tag = yes
 }
 
@@ -595,7 +594,6 @@ release_targeted_tag_nocosmetic = {
 			transfer_state_to = var:tag_to_release
 		}
 	}
-	clear_retained_states = yes
 	puppet_released_tag_nocosmetic = yes
 }
 
@@ -720,19 +718,34 @@ release_spain = {
 
 release_chinese_government = {
 	if = {
-		limit = {
-			tag = JAP
-			has_variable = japan_keeps_coast
+		limit = { has_variable = japan_keeps_coast }
+		every_owned_state = {
+			limit = {
+				is_possible_legation_cities_state = yes
+				is_valid_annexation_state = yes
+			}
+			add_claim_by = ROOT
 		}
 		every_owned_state = {
 			limit = {
 				is_china_proper = yes
-				if = {
-					limit = { ROOT = { owns_state = 743 } }
-					is_possible_legation_cities_state = no
-				}
-				is_claim_or_core_of_ROOT = no
-				NOT = { has_variable = ambition_area_@ROOT }
+				is_possible_legation_cities_state = no
+				is_valid_annexation_state = yes
+			}
+			if = {
+				limit = { NOT = { is_core_of = var:tag_to_release } }
+				add_claim_by = var:tag_to_release
+			}
+			transfer_state_without_overriding_occupation = yes
+		}
+	}
+	else_if = {
+		limit = { 743 = { is_valid_annexation_state = yes } } #Shanghai
+		every_owned_state = {
+			limit = {
+				is_china_proper = yes
+				is_possible_legation_cities_state = no
+				is_valid_annexation_state = yes
 			}
 			if = {
 				limit = { NOT = { is_core_of = var:tag_to_release } }
@@ -745,17 +758,13 @@ release_chinese_government = {
 		every_owned_state = {
 			limit = {
 				is_china_proper = yes
-				if = {
-					limit = { ROOT = { owns_state = 743 } }
-					is_possible_legation_cities_state = no
-				}
-				is_claim_or_core_of_ROOT = no
+				is_valid_annexation_state = yes
 			}
 			if = {
 				limit = { NOT = { is_core_of = var:tag_to_release } }
 				add_claim_by = var:tag_to_release
 			}
-			transfer_state_to = var:tag_to_release
+			transfer_state_without_overriding_occupation = yes
 		}
 	}
 	hidden_effect = {
@@ -781,9 +790,7 @@ release_chinese_government = {
 	if = {
 		limit = { original_tag = JAP }
 		clr_global_flag = JAP_defeated_by_china
-		var:tag_to_release = {
-			add_ideas = unequal_treaties_japan
-		}
+		var:tag_to_release = { add_ideas = unequal_treaties_japan }
 	}
 }
 
@@ -1091,7 +1098,6 @@ release_canada = {
 			CAN = { transfer_state = PREV }
 		}
 	}
-	clear_retained_states = yes
 	puppet = CAN
 	CAN = {
 		mark_focus_tree_layout_dirty = yes

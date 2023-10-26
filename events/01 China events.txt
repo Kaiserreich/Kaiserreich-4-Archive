@@ -217,6 +217,12 @@ country_event = { #FROM demands ROOT submit
 				china_compatible_alignment_to_FROM = no
 			}
 			modifier = {
+				factor = 0.5
+				#Manchu QIE has a disadvantage in convincing warlords to submit.
+				FROM = { check_variable = { country_leader:china_alignment = token:manchu_qing } }
+				china_compatible_alignment_to_FROM = no
+			}
+			modifier = {
 				factor = 2
 				has_opinion = { target = FROM value > 99 }
 			}
@@ -1275,8 +1281,7 @@ country_event = { #United Front ends
 			any_enemy_country = {
 				is_major = yes
 				num_of_controlled_factories > 50
-				has_offensive_war_with = ROOT
-				NOT = { is_chinese_tag = yes }
+				is_chinese_tag = no
 			}
 		}
 	}
@@ -4018,6 +4023,11 @@ country_event = { #POR/AST/CAN/GEA/JAP: China wants return of concessions
 			base = 10
 			modifier = {
 				factor = 0
+				original_tag = JAP
+				is_major = yes
+			}
+			modifier = {
+				factor = 0
 				event_target:china = {
 					is_in_faction = yes
 					is_faction_leader = no
@@ -4028,12 +4038,6 @@ country_event = { #POR/AST/CAN/GEA/JAP: China wants return of concessions
 			modifier = {
 				factor = 0
 				event_target:china = { both_socialist_or_both_not_socialist = no }
-			}
-			modifier = {
-				factor = 0
-				original_tag = JAP
-				is_faction_leader = yes
-				both_socialist_or_both_not_socialist = no
 			}
 			modifier = {
 				factor = 5
@@ -4073,6 +4077,11 @@ country_event = { #POR/AST/CAN/GEA/JAP: China wants return of concessions
 			base = 50
 			modifier = {
 				factor = 0
+				original_tag = JAP
+				is_major = yes
+			}
+			modifier = {
+				factor = 0
 				has_socialist_government = yes
 			}
 			modifier = {
@@ -4087,15 +4096,6 @@ country_event = { #POR/AST/CAN/GEA/JAP: China wants return of concessions
 			modifier = {
 				factor = 0
 				event_target:china = { both_socialist_or_both_not_socialist = no }
-			}
-			modifier = {
-				factor = 0
-				original_tag = JAP
-				is_faction_leader = yes
-				OR = {
-					has_socialist_government = yes
-					both_socialist_or_both_not_socialist = no
-				}
 			}
 		}
 		event_target:china = { country_event = { id = china_events.202 days = 1 } }
@@ -4449,10 +4449,40 @@ country_event = { #POR/AST/CAN/GEA/JAP: China has occupied concessions
 
 	option = {
 		log = "[GetLogInfo]: event china_events.210 option china_events.210.a"
-		name = china_events.210.a #Back down
+		name = china_events.210.a #Threaten war
+		trigger = { is_subject = no }
+		ai_chance = {
+			base = 20
+			modifier = {
+				factor = 0
+				ROOT_is_threatened = yes
+			}
+			modifier = {
+				factor = 0
+				event_target:china = { default_attack_AI_trigger_FROM = yes }
+			}
+		}
+		event_target:china = { country_event = { id = china_events.212 days = 1 } }
+		custom_effect_tooltip = if_they_refuse_tt
+		effect_tooltip = {
+			create_wargoal = {
+				target = event_target:china
+				type = topple_government
+			}
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.210 option china_events.210.b"
+		name = china_events.210.b #Back down
 		trigger = { is_subject = no }
 		ai_chance = {
 			base = 80
+			modifier = {
+				factor = 0
+				original_tag = JAP
+				is_major = yes
+			}
 			modifier = {
 				factor = 0.125
 				ROOT_is_threatened = no
@@ -4481,31 +4511,6 @@ country_event = { #POR/AST/CAN/GEA/JAP: China has occupied concessions
 			}
 		}
 		event_target:china = { country_event = { id = china_events.211 days = 1 } }
-	}
-
-	option = {
-		log = "[GetLogInfo]: event china_events.210 option china_events.210.b"
-		name = china_events.210.b #Threaten war
-		trigger = { is_subject = no }
-		ai_chance = {
-			base = 20
-			modifier = {
-				factor = 0
-				ROOT_is_threatened = yes
-			}
-			modifier = {
-				factor = 0
-				event_target:china = { default_attack_AI_trigger_FROM = yes }
-			}
-		}
-		event_target:china = { country_event = { id = china_events.212 days = 1 } }
-		custom_effect_tooltip = if_they_refuse_tt
-		effect_tooltip = {
-			create_wargoal = {
-				target = event_target:china
-				type = topple_government
-			}
-		}
 	}
 
 	option = {
@@ -4580,7 +4585,13 @@ country_event = { #China: FROM threatens war
 	option = {
 		log = "[GetLogInfo]: event china_events.212 option china_events.212.a"
 		name = china_events.212.a
-		ai_chance = { base = 20 }
+		ai_chance = {
+			base = 20
+			modifier = {
+				factor = 0
+				FROM = { ROOT_is_threatened = yes }
+			}
+		}
 		add_war_support = -0.05
 		FROM = { country_event = { id = china_events.213 days = 1 } }
 	}
@@ -6319,7 +6330,14 @@ news_event = { #Left KMT unites China
 	id = china_events.308
 	immediate = { log = "[GetLogInfo]: event china_events.308" }
 	title = china_events.308.t
-	desc = china_events.308.d
+	desc = {
+		text = china_events.308.d.LCS
+		trigger = { FROM = { has_government = syndicalist } }
+	}
+	desc = {
+		text = china_events.308.d.KMT
+		trigger = { FROM = { NOT = { has_government = syndicalist } } }
+	}
 	picture = GFX_news_event_CHI_kmt_victor
 
 	trigger = {
@@ -6336,7 +6354,9 @@ news_event = { #Left KMT unites China
 
 	option = {
 		name = china_events.308.a
-		trigger = { has_socialist_government = yes }
+		trigger = {
+			has_socialist_government = yes
+		}
 	}
 
 	option = {
@@ -6344,6 +6364,8 @@ news_event = { #Left KMT unites China
 		trigger = {
 			has_elected_government = yes
 			NOT = { original_tag = JAP }
+			NOT = { original_tag = TIB }
+			NOT = { original_tag = INC }
 		}
 	}
 
@@ -6354,6 +6376,8 @@ news_event = { #Left KMT unites China
 			OR = {
 				has_elected_government = no
 				original_tag = JAP
+				original_tag = TIB
+				original_tag = INC
 			}
 		}
 	}

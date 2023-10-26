@@ -5216,19 +5216,21 @@ country_event = {
 		if = {
 			limit = { is_subject = yes }
 			overlord = {
+				save_event_target_as = peace_target
 				set_autonomy = {
 					target = ROOT
 					autonomy_state = autonomy_free
 				}
-				save_event_target_as = peace_target
 			}
 		}
 		if = {
-			limit = {
-				is_in_faction = yes
-				is_faction_leader = no
-			}
+			limit = { is_faction_leader = yes }
+			dismantle_faction = yes
+		}
+		else_if = {
+			limit = { is_in_faction = yes }
 			faction_leader = { save_event_target_as = peace_target }
+			leave_faction = yes
 		}
 		if = {
 			limit = { has_event_target = peace_target }
@@ -5236,16 +5238,10 @@ country_event = {
 				limit = {
 					is_italian_unifier_tag = yes
 					is_valid_peace_target = yes
+					NOT = { is_in_array = { ITA_should_peace_with = event_target:peace_target } }
 				}
-				event_target:peace_target = { set_country_flag = KR_will_peace_with_@PREV }
+				add_to_array = { ITA_should_peace_with = event_target:peace_target }
 			}
-		}
-		if = {
-			limit = { is_faction_leader = yes }
-			dismantle_faction = yes
-		}
-		else = {
-			leave_faction = yes
 		}
 	}
 }
@@ -5259,27 +5255,42 @@ country_event = {
 
 	trigger = {
 		is_italian_unifier_tag = yes
-		has_war = yes
-		surrender_progress < 0.05
-		any_enemy_country = {
-			is_valid_peace_target = yes
-			has_country_flag = KR_will_peace_with_@ROOT
-		}
+		has_variable = var:ITA_should_peace_with^num
 		is_valid_peace_target = yes
-		NOT = {
-			has_war_with = ITA
-			has_war_with = SRI
-			has_war_with = SIC
-			has_war_with = SRD
-			has_war_with = PAP
-			has_war_with = VNC
-			has_war_with = EMI
-			has_war_with = TUS
-			has_war_with = LOM
-			any_enemy_country = {
+		surrender_progress < 0.1
+		any_of_scopes = {
+			array = ITA_should_peace_with
+			has_war_with = ROOT
+			NOT = { is_ally_with = ITA }
+			NOT = { is_ally_with = SRI }
+			NOT = { is_ally_with = SIC }
+			NOT = { is_ally_with = SRD }
+			NOT = { is_ally_with = PAP }
+			NOT = { is_ally_with = VNC }
+			NOT = { is_ally_with = EMI }
+			NOT = { is_ally_with = TUS }
+			NOT = { is_ally_with = LOM }
+			NOT = {
 				any_owned_state = {
 					is_claim_or_core_of_ROOT = yes
 					NOT = { controller = { is_ally_with = ROOT } }
+				}
+				if = {
+					limit = { is_faction_leader = yes }
+					any_allied_country = {
+						any_owned_state = {
+							is_claim_or_core_of_ROOT = yes
+							NOT = { controller = { is_ally_with = ROOT } }
+						}
+					}
+				}
+				else = {
+					any_subject_country = {
+						any_owned_state = {
+							is_claim_or_core_of_ROOT = yes
+							NOT = { controller = { is_ally_with = ROOT } }
+						}
+					}
 				}
 			}
 		}
@@ -5289,47 +5300,102 @@ country_event = {
 		days = 30
 		modifier = {
 			factor = 0.5
-			any_enemy_country = {
-				is_faction_leader = yes
-				has_country_flag = KR_will_peace_with_@ROOT
+			any_of_scopes = {
+				array = ITA_should_peace_with
 				surrender_progress > 0.20
+				has_war_with = ROOT
 			}
 		}
 		modifier = {
 			factor = 0.5
-			any_enemy_country = {
-				is_faction_leader = yes
-				has_country_flag = KR_will_peace_with_@ROOT
+			any_of_scopes = {
+				array = ITA_should_peace_with
 				surrender_progress > 0.40
+				has_war_with = ROOT
 			}
 		}
 	}
 
 	immediate = {
-		hidden_effect = {
-			random_enemy_country = {
+		###clean up the array, in case entries are no longer valid
+		for_each_scope_loop = {
+			array = ITA_should_peace_with
+			if = {
 				limit = {
-					is_faction_leader = yes
-					has_country_flag = KR_will_peace_with_@ROOT
+					OR = {
+						NOT = { has_war_with = ROOT }
+						is_ally_with = ITA
+						is_ally_with = SRI
+						is_ally_with = SIC
+						is_ally_with = SRD
+						is_ally_with = PAP
+						is_ally_with = VNC
+						is_ally_with = EMI
+						is_ally_with = TUS
+						is_ally_with = LOM
+					}
 				}
-				save_event_target_as = peace_country
-				clr_country_flag = KR_will_peace_with_@ROOT
+				add_to_temp_array = { to_remove = THIS }
 			}
+		}
+		for_each_loop = {
+			array = to_remove
+			remove_from_array = { ITA_should_peace_with = v }
+		}
+
+		###then choose a random enemy in the array
+		random_scope_in_array = {
+			array = ITA_should_peace_with
+			limit = {
+				NOT = {
+					any_owned_state = {
+						is_claim_or_core_of_ROOT = yes
+						NOT = { controller = { is_ally_with = ROOT } }
+					}
+					if = {
+						limit = { is_faction_leader = yes }
+						any_allied_country = {
+							any_owned_state = {
+								is_claim_or_core_of_ROOT = yes
+								NOT = { controller = { is_ally_with = ROOT } }
+							}
+						}
+					}
+					else = {
+						any_subject_country = {
+							any_owned_state = {
+								is_claim_or_core_of_ROOT = yes
+								NOT = { controller = { is_ally_with = ROOT } }
+							}
+						}
+					}
+				}
+			}
+			save_event_target_as = primary_peace_target
 		}
 	}
 
 	option = {
 		log = "[GetLogInfo]: event ita.185 option ita.185.a"
 		name = ita.185.a
-		event_target:peace_country = { country_event = ita.186 }
-		if = {
+		every_enemy_country = {
 			limit = {
-				event_target:peace_country = {
-					is_guaranteed_by = SOV
-					SOV = { is_faction_leader = yes }
+				OR = {
+					AND = {
+						is_ally_with = event_target:primary_peace_target
+						is_valid_peace_target = yes
+					}
+					AND = {
+						has_guaranteed = event_target:primary_peace_target
+						is_valid_peace_target = yes
+					}
+					AND = {
+						is_faction_leader = yes
+						any_allied_country = { has_guaranteed = event_target:primary_peace_target }
+					}
 				}
 			}
-			SOV = { country_event = ita.186 }
+			country_event = ita.186
 		}
 	}
 	option = {
@@ -5337,6 +5403,13 @@ country_event = {
 		name = ita.185.b
 		ai_chance = { base = 0 }
 		add_war_support = -0.20
+		if = {
+			limit = { check_variable = { ITA_should_peace_with^num = 1 } }
+			clear_array = ITA_should_peace_with
+		}
+		else = {
+			remove_from_array = { ITA_should_peace_with = event_target:primary_peace_target }
+		}
 	}
 }
 
@@ -5362,12 +5435,27 @@ country_event = {
 			transfer_state_to = FROM
 		}
 		FROM = { white_peace_with_ROOT = yes }
+		if = {
+			limit = { check_variable = { FROM.ITA_should_peace_with^num = 1 } }
+			clear_array = FROM.ITA_should_peace_with
+		}
+		else_if = {
+			limit = { is_in_array = { FROM.ITA_should_peace_with = ROOT } }
+			remove_from_array = { FROM.ITA_should_peace_with = ROOT }
+		}
 	}
 	option = {
 		log = "[GetLogInfo]: event ita.186 option ita.186.b"
 		name = ita.186.b
 		ai_chance = { base = 0 }
 		add_war_support = -0.20
+		if = {
+			limit = { check_variable = { FROM.ITA_should_peace_with^num = 1 } }
+			clear_array = FROM.ITA_should_peace_with
+		}
+		else_if = {
+			limit = { is_in_array = { FROM.ITA_should_peace_with = ROOT } }
+			remove_from_array = { FROM.ITA_should_peace_with = ROOT }
+		}
 	}
 }
-

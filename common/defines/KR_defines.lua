@@ -16,7 +16,6 @@ NDefines.NGame.DECISION_ALERT_TIMEOUT_DAYS = 60								-- Vanilla is 30
 NDefines.NCountry.MIN_STABILITY = -1.0										-- Vanilla is 0.0
 NDefines.NCountry.EVENT_PROCESS_OFFSET = 5									-- Vanilla is 20
 NDefines.NPolitics.BASE_POLITICAL_POWER_INCREASE = 1.5						-- Vanilla is 2
-NDefines.NBuildings.INFRASTRUCTURE_RESOURCE_BONUS = 0.1						-- Vanilla is 0.2
 NDefines.NBuildings.OWNER_CHANGE_EXTRA_SHARED_SLOTS_FACTOR = 1              -- Vanilla is 0.5
 NDefines.NCountry.SPECIAL_FORCES_CAP_BASE = 0.1								-- Vanilla is 0.05
 NDefines.NCountry.SPECIAL_FORCES_CAP_MIN = 32								-- Vanilla is 24
@@ -47,7 +46,6 @@ NDefines.NDiplomacy.MIN_OPINION_VALUE = -200								-- Vanilla is -100
 NDefines.NDiplomacy.VERY_GOOD_OPINION = 100									-- Vanilla is 50
 NDefines.NDiplomacy.VERY_BAD_OPINION = -100									-- Vanilla is -50
 NDefines.NDiplomacy.FRONT_IS_DANGEROUS = 0									-- Vanilla is -100
-NDefines.NDiplomacy.PEACE_SCORE_SCALE_FACTOR = 2.15							-- Vanilla is 1.35
 
 -- World Tension
 NDefines.NCountry.CIVIL_WAR_INVOLVEMENT_MIN_TENSION = 0						-- Vanilla is 0.5
@@ -76,6 +74,8 @@ NDefines.NDiplomacy.OPINION_FOR_DEMO_FROM_WT_GENERATION = 0					-- Vanilla is -2
 NDefines.NAI.MAX_THREAT_FOR_FIRST_YEAR_CIVILIAN_MODE = 30					-- Vanilla is 60
 
 -- Peace Conferences
+NDefines.NDiplomacy.PEACE_SCORE_SCALE_FACTOR = 2.15							-- Vanilla is 1.35
+NDefines.NDiplomacy.PEACE_SCORE_DISTRIBUTION = { 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2 } -- Vanilla is 0.2 in the first five turns
 NDefines.NAI.PEACE_AI_EVALUATE_OTHER_ALWAYS = true							-- Vanilla is false
 
 -- Volunteers

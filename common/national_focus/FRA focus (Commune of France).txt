@@ -87,19 +87,93 @@ focus_tree = {
 	focus = {
 		id = FRA_hydroelectricity
 		icon = GFX_goal_dam
-		cost = 4
+		cost = 6
+
+		available = {
+			controls_state = 26 #Auvergne
+			controls_state = 763 #Alpes
+		}
 
 		relative_position_id = FRA_plan_prost
 		x = -2
 		y = 1
 
-		ai_will_do = { factor = 1 }
+		ai_will_do = {
+			factor = 1
+			modifier = {
+				factor = 0
+				NOT = { controls_state = 735 } #Savoy
+			}
+			modifier = {
+				factor = 0
+				NOT = { controls_state = 943 } #Upper Savoy
+				OR = {
+					has_global_flag = can_demand_romandy
+					NOT = { SWI = { has_completed_focus = SWI_peace_at_last } }
+				}
+			}
+		}
 		prerequisite = {
 			focus = FRA_plan_prost
 		}
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus FRA_hydroelectricity"
-			unlock_decision_category_tooltip = FRA_hydroelectricity_decisions
+			random_owned_controlled_state = {
+				prioritize = { 26 }
+				limit = {
+					is_core_of = ROOT
+					is_valid_state_for_development = yes
+					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
+				}
+				add_extra_state_shared_building_slots = 1
+				add_building_construction = { type = industrial_complex level = 1 }
+			}
+			random_owned_controlled_state = {
+				prioritize = { 763 }
+				limit = {
+					is_core_of = ROOT
+					is_valid_state_for_development = yes
+					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
+				}
+				add_extra_state_shared_building_slots = 1
+				add_building_construction = { type = industrial_complex level = 1 }
+			}
+			if = {
+				limit = { NOT = { controls_state = 735 } }
+				custom_effect_tooltip = tooltip_white_line
+				custom_effect_tooltip = FRA_will_build_in_savoy_if_owned
+			}
+			else = {
+				random_owned_controlled_state = {
+					prioritize = { 735 }
+					limit = {
+						is_core_of = ROOT
+						is_valid_state_for_development = yes
+						free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
+					}
+					add_extra_state_shared_building_slots = 1
+					add_building_construction = { type = industrial_complex level = 1 }
+				}
+			}
+			if = {
+				limit = { NOT = { controls_state = 943 } }
+				custom_effect_tooltip = tooltip_white_line
+				custom_effect_tooltip = FRA_will_build_in_upper_savoy_if_owned
+			}
+			else = {
+				random_controlled_state = {
+					prioritize = { 943 }
+					limit = {
+						is_core_of = ROOT
+						is_valid_state_for_development = yes
+						free_building_slots = { building = infrastructure size > 0 include_locked = yes }
+						free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
+					}
+					add_extra_state_shared_building_slots = 1
+					add_building_construction = { type = industrial_complex level = 1 }
+					add_building_construction = { type = infrastructure level = 1 }
+				}
+			}
 		}
 	}
 
@@ -873,7 +947,7 @@ focus_tree = {
 		}
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus FRA_Our_time_has_come"
-			add_ideas = French_Revanchism_idea
+			add_ideas = FRA_revanchism_idea
 		}
 		search_filters = { FOCUS_FILTER_ARMY_BONUS FOCUS_FILTER_MANPOWER }
 	}
@@ -1549,10 +1623,19 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 0
-				has_war_with = GER
+				surrender_progress > 0.1
+			}
+			modifier = {
+				factor = 0
+				NOT = { has_government = totalist }
+				GER = {
+					exists = yes
+					is_subject = no
+					has_socialist_government = no
+				}
 				OR = {
-					BEL = { is_faction_leader = yes }
-					HOL = { has_idea = HOL_idea_neutrality }
+					BEL = { has_idea = generic_neutral_foreign_policy }
+					HOL = { has_idea = generic_neutral_foreign_policy }
 				}
 			}
 			modifier = {
@@ -1562,14 +1645,6 @@ focus_tree = {
 					is_ally_with = 42.controller #Palatinate
 					is_ally_with = 780.controller #Baden
 					is_ally_with = 781.controller #Western Rhineland
-				}
-			}
-			modifier = {
-				factor = 0
-				OR = {
-					has_war_with = SPA
-					has_war_with = SPR
-					surrender_progress > 0.3
 				}
 			}
 		}
@@ -1799,8 +1874,7 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus FRA_World_revolution"
-			remove_ideas = French_Revanchism_idea
-			add_ideas = Revolutionary_spirit
+			add_ideas = FRA_revolutionary_spirit
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION }
 	}
@@ -1840,7 +1914,7 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus FRA_european_revolution"
-			remove_ideas = French_Revanchism_idea
+			remove_ideas = FRA_revanchism_idea
 			unlock_decision_category_tooltip = FRA_liberate_europe_category
 		}
 	}
@@ -1883,7 +1957,7 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus FRA_peaceful_revolution"
-			remove_ideas = French_Revanchism_idea
+			remove_ideas = FRA_revanchism_idea
 			add_ideas = FRA_peaceful_revolution_idea
 		}
 		search_filters = { FOCUS_FILTER_WAR_SUPPORT FOCUS_FILTER_STABILITY }
