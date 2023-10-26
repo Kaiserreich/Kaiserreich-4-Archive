@@ -5574,18 +5574,34 @@ UKR_republic_decisions = {
 	UKR_small_pact = {
 		icon = GFX_decision_shield
 		available = {
-			is_in_faction = no
 			surrender_progress < 0.05
 			OR = {
 				POL = { has_idea = UKR_EE_cooperation }
 				WHR = { has_idea = UKR_EE_cooperation }
 			}
+			OR = {
+				is_in_faction = no
+				all_allied_country = {
+					OR = {
+						is_major = no
+						is_subject = yes
+						has_capitulated = yes
+					}
+				}
+			}
 		}
 		visible = {
-			has_socialist_government = no
-			GER = { exists = no }
 			has_idea = UKR_EE_cooperation
+			OR = {
+				NOT = { country_exists = GER }
+				GER = { has_capitulated = yes }
+				is_in_faction = no
+				is_faction_leader = yes
+			}
+			has_socialist_government = no
+			is_subject = no
 		}
+
 		fire_only_once = yes
 
 		ai_will_do = { factor = 100 }
@@ -5593,36 +5609,60 @@ UKR_republic_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete UKR_small_pact"
 			add_political_power = 75
-			create_faction = small_pact
 			set_country_flag = UKR_small_pact_tree
 			swap_ideas = {
 				remove_idea = UKR_EE_cooperation
 				add_idea = UKR_EE_cooperation2
 			}
-			every_country = {
+			if = {
+				limit = { is_faction_leader = yes } #== took over the Reichspakt
+				custom_effect_tooltip = UKR_reichspakt_collapse_warning
+				effect_tooltip = { create_faction = small_pact }
+				hidden_effect = {
+					every_other_country = {
+						limit = {
+							is_in_faction_with = ROOT
+							is_subject = no
+							OR = {
+								has_idea = UKR_EE_cooperation
+								UKR_is_potential_small_pact_member = yes
+							}
+						}
+						add_to_temp_array = { small_pact_members_from_reichspakt = THIS }
+					}
+					leave_faction = yes
+					create_faction = small_pact
+					for_each_loop = {
+						array = small_pact_members_from_reichspakt
+						set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
+						add_to_faction = var:v
+					}
+
+					### trigger German capitulation and flight to Africa ###
+					GER = { country_event = capt.1 }
+				}
+			}
+			else = {
+				create_faction = small_pact
+			}
+			every_other_country = {
 				limit = {
 					OR = {
-						is_in_faction = no
 						has_idea = UKR_EE_cooperation
+						UKR_is_potential_small_pact_member = yes
 					}
 					has_war_with = INT
 					OR = {
-						tag = EST
-						tag = BAT
-						tag = POL
-						tag = WHR
-						tag = GEO
-						tag = AZR
-						tag = GAL
-						tag = CZE
-						tag = SLO
-						tag = HUN
-						tag = ROM
-						tag = BUL
-						tag = FIN
-						tag = LIT
+						is_in_faction = no
+						is_in_faction_with = ROOT
+					}
+					OR = {
+						is_in_faction = no
+						is_subject_of = GER
+						is_subject_of = ROOT
 					}
 				}
+				display_individual_scopes = yes
 				country_event = ukraine_republican.65
 			}
 		}
