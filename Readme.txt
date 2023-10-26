@@ -1,5 +1,5 @@
 ###############################
-### Kaiserreich Beta 0.27.1 ###
+### Kaiserreich Beta 0.27.2 ###
 ###############################
 
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
