@@ -19,6 +19,54 @@ on_actions = {
 					BAY = { PREV = { enable_state_integration_80_compliance = yes } }
 				}
 			}
+			GER = {
+				if = {
+					limit = { is_ai = no }
+					country_event = { id = germany_mitteleuropa_events.1000 days = 365 } #Mitteleuropa mechanics
+				}
+				else = {
+					country_event = germany_mitteleuropa_events.1000 #Mitteleuropa mechanics
+					every_country = {
+						limit = {
+							GER_is_in_mitteleuropa = yes
+							is_ai = no
+						}
+						country_event = { id = germany_mitteleuropa_events.1001 months = 3 random_days = 60 }
+					}
+				}
+				if = { #If NSB is active, replace starting heavy tanks with mediums
+					limit = { has_dlc_nsb = yes }
+					delete_unit_template_and_units = { division_template = "Panzer-Division" disband = no }
+					division_template = {
+						name = "Panzer-Division"
+						division_names_group = GER_TNK_01
+						regiments = {
+							medium_armor = { x = 0 y = 0 }
+							medium_armor = { x = 0 y = 1 }
+							medium_armor = { x = 0 y = 2 }
+							light_armor = { x = 1 y = 0 }
+							light_armor = { x = 1 y = 1 }
+							light_armor = { x = 1 y = 2 }
+							motorized = { x = 2 y = 0 }
+							motorized = { x = 2 y = 1 }
+							motorized = { x = 2 y = 2 }
+						}
+						support = {
+							mot_recon = { x = 0 y = 0 }
+						}
+					}
+					64 = {
+						create_unit = {
+							division = "name = \"1. Panzer-Division\" division_template = \"Panzer-Division\" start_experience_factor = 0.3"
+							owner = GER prioritize_location = 3499
+						}
+						create_unit = {
+							division = "name = \"2. Panzer-Division\" division_template = \"Panzer-Division\" start_experience_factor = 0.3"
+							owner = GER prioritize_location = 3499
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -37,7 +85,23 @@ on_actions = {
 					FROM = { tag = FRA }
 					has_global_flag = GER_stay_out_france_uk
 				}
-				GER = { country_event = entente.322 }
+				GER = {
+					country_event = entente.322
+				}
+			}
+			if = {
+				limit = {
+					FROM = { tag = FRA }
+				}
+				GER = {
+					country_event = { id = germany.56 days = 3 }
+				}
+				every_country = {
+					limit = {
+						has_idea = GER_eastern_workers_idea_negative
+					}
+					country_event = { id = germany.57 days = 3 }
+				}
 			}
 			if = {
 				limit = { is_germany_or_splinter_tag = yes }
@@ -46,35 +110,24 @@ on_actions = {
 			}
 			FROM = {
 				if = {
-					limit = { tag = GER }
-					every_other_country = { country_event = germit.4 }
+					limit = { original_tag = GER }
+					if = {
+						limit = { GER_is_in_mitteleuropa = yes }
+						every_country = { GER_remove_from_mitteleuropa = yes }
+					}
+					if = {
+						limit = { is_in_tech_sharing_group = german_research }
+						every_country = {
+							limit = { is_in_tech_sharing_group = german_research }
+							remove_from_tech_sharing_group = german_research
+						}
+					}
 				}
 				else = {
 					GER_remove_from_mitteleuropa = yes
-					remove_from_tech_sharing_group = german_research
-				}
-				if = {
-					limit = {
-						OR = {
-							tag = GER
-							tag = GEA
-							tag = MAF
-						}
-					}
-					random_country = { country_event = Ostasien.80 }
-				}
-				if = {
-					limit = {
-						tag = SWA
-						NOT = {
-							ROOT = {
-								tag = GER
-							}
-						}
-					}
-					every_state = {
-						limit = { is_claimed_by = SWA }
-						remove_claim_by = SWA
+					if = {
+						limit = { is_in_tech_sharing_group = german_research }
+						remove_from_tech_sharing_group = german_research
 					}
 				}
 				if = {
@@ -107,25 +160,6 @@ on_actions = {
 		}
 	}
 
-	# ROOT is capitulated country, FROM is winner
-	on_capitulation_immediate = {
-		effect = {
-			### Volunteers return to Germany
-			if = {
-				limit = {
-					OR = {
-						tag = SOV
-						tag = SWF
-						tag = CSA
-					}
-				}
-				GER = {
-					country_event = { id = gerdom.206 days = 15 random_days = 45 }
-				}
-			}
-		}
-	}
-
 	# ROOT is the new faction leader FROM is the old faction leader
 	on_assume_faction_leadership = {
 		effect = {
@@ -143,23 +177,15 @@ on_actions = {
 		effect = {
 			if = {
 				limit = { has_socialist_government = yes }
-				country_event = germit.4
+				GER_leave_mitteleuropa = yes
 			}
-			if = {
+			else_if = {
 				limit = {
-					is_subject = yes
-					GER = {
-						is_in_faction_with = var:PREV.overlord
-						GER_is_in_mitteleuropa = yes
-					}
-					GER_is_in_mitteleuropa = no
-					is_in_europe = yes
-					NOT = {
-						has_country_flag = AUS_intervened_in_weltkrieg
-						has_country_flag = AUS_former_faction_member
-					}
+					has_country_flag = MIT_was_in_mitteleuropa
+					is_ally_with = GER
+					GER = { GER_is_in_mitteleuropa = yes }
 				}
-				country_event = germit.6
+				GER_add_to_mitteleuropa = yes
 			}
 			if = {
 				limit = { is_germany_or_splinter_tag = yes }
@@ -174,10 +200,29 @@ on_actions = {
 			### Germany ###
 			if = {
 				limit = { tag = GER }
-				country_event = gerdom.27 #1937
-				country_event = gerdom.32 #1937 (Election Cancelled)
-				country_event = gerdom.33 #1942
-				country_event = gerdom.37 #1942 (Election Cancelled)
+				if = {
+					limit = {
+						NOT = {
+							has_completed_focus = GER_von_schleicher_cabinet
+						}
+					}
+					GER_kurt_von_schleicher = {
+						add_temp_unit_leader_role = yes
+						unit_leader_event = gerschl.1
+					}
+				}
+				else_if = {
+					limit = {
+						OR = {
+							has_war_with = INT
+							has_war_with = RUS
+						}
+					}
+					country_event = gerflavour.28 #Election delayed by one year
+				}
+				else = {
+					country_event = gerflavour.25 #Generic
+				}
 			}
 		}
 	}
@@ -185,32 +230,24 @@ on_actions = {
 	#FROM is country getting invited.
 	on_offer_join_faction = {
 		effect = {
-			#Country joins Mitteleuropa
+			#Readd country that was previously in Mitteleuropa if they left and rejoined
 			if = {
-				limit = { tag = GER }
-				if = {
-					limit = {
-						FROM = {
-							GER_is_in_mitteleuropa = no
-							is_in_europe = yes
-							NOT = {
-								has_country_flag = AUS_intervened_in_weltkrieg
-								has_country_flag = AUS_former_faction_member
-							}
-						}
-					}
-					FROM = { country_event = { id = germit.6 days = 2 } }
+				limit = {
+					is_ally_with = GER
+					GER_is_in_mitteleuropa = yes
+					FROM = { has_country_flag = MIT_was_in_mitteleuropa }
 				}
+				FROM = { GER_add_to_mitteleuropa = yes }
 			}
 			#Country kicked out of Mitteleuropa if allied to a hostile faction
-			else_if = {
+			if = {
 				limit = {
 					FROM = {
 						NOT = { is_ally_with = GER } #just in case
 						is_country_in_faction_hostile_to_germany = yes
 					}
 				}
-				FROM = { country_event = germit.4 }
+				FROM = { GER_leave_mitteleuropa = yes }
 			}
 
 			### Remove Trade-War from SWE if rejoins Mitteleuropa
@@ -235,16 +272,6 @@ on_actions = {
 		}
 	}
 
-	on_war = {
-		effect = {
-			### German BM-related events
-			if = {
-				limit = { tag = GER }
-				country_event = { id = gerdom.9 days = 20 }
-			}
-		}
-	}
-
 	#ROOT = attacking side
 	#FROM = defending side
 	#fired when two countries end up at war with each other (on_war is fired when a country goes to war against anyone and is not fired again when it enters war against another country unless it went to peace first)
@@ -252,46 +279,21 @@ on_actions = {
 		effect = {
 			if = {
 				limit = {
-					original_tag = GER
-					GER_is_in_mitteleuropa = yes
-					FROM = { GER_is_in_mitteleuropa = yes }
-				}
-				FROM = {
-					set_country_flag = GER_kicked_from_mitteleuropa
-					country_event = { id = germit.4 hours = 8 }
-				}
-			}
-			else_if = {
-				limit = {
-					GER_is_in_mitteleuropa = yes
-					FROM = {
-						original_tag = GER
-						GER_is_in_mitteleuropa = yes
+					OR = {
+						is_ally_with = GER #== attacked by the Reichspakt
+						is_ally_with = MIT
 					}
 				}
-				set_country_flag = GER_kicked_from_mitteleuropa
-				country_event = { id = germit.4 hours = 8 }
+				FROM = { GER_kick_from_mitteleuropa = yes }
 			}
 			else_if = {
 				limit = {
-					GER_is_in_mitteleuropa = yes
 					OR = {
 						FROM = { is_ally_with = GER } #== attacked the Reichspakt
-						FROM = { GER_is_in_mitteleuropa = yes }
+						FROM = { is_ally_with = MIT }
 					}
 				}
-				set_country_flag = GER_kicked_from_mitteleuropa
-				country_event = { id = germit.4 hours = 8 }
-			}
-			else_if = {
-				limit = {
-					is_ally_with = GER #== attacked by the Reichspakt
-					FROM = { GER_is_in_mitteleuropa = yes }
-				}
-				FROM = {
-					set_country_flag = GER_kicked_from_mitteleuropa
-					country_event = { id = germit.4 hours = 8 }
-				}
+				GER_kick_from_mitteleuropa = yes
 			}
 		}
 	}
@@ -319,6 +321,70 @@ on_actions = {
 					multiply_temp_variable = { GER_dockyards = -1 }
 					GEA = { add_offsite_building = { type = dockyard level = GER_dockyards } }
 				}
+			}
+			# second weltkrieg stuff
+			if = {
+				limit = {
+					has_global_flag = second_weltkrieg_has_started
+					GER = { is_faction_leader = yes }
+					FRA = {
+						OR = {
+							exists = no
+							has_capitulated = yes
+							AND = {
+								is_in_faction = no
+								NOT = { has_war_with = ROOT }
+							}
+						}
+					}
+					RUS = {
+						OR = {
+							exists = no
+							has_capitulated = yes
+							AND = {
+								is_in_faction = no
+								NOT = { has_war_with = ROOT }
+							}
+						}
+					}
+				}
+				GER = { country_event = germany.60 }
+			}
+			# secret
+			if = {
+				limit = {
+					tag = RUS
+					FROM.FROM = { state = 63 }
+					GER = { owns_state = 63 }
+				}
+				GER = { country_event = gerflavour.69 }
+			}
+			# Deploy Operation Jacobus units
+			if = {
+				limit = {
+					OR = {
+						tag = GER
+						tag = ENT
+					}
+					has_war_with = ENG
+					FROM.FROM = { state = 121 }
+					GER = {
+						has_completed_focus = GER_operation_jacobus
+					}
+					NOT = {
+						has_global_flag = GER_jacobus_units_deployed
+					}
+				}
+				country_event = newgerfor.71
+				set_global_flag = GER_jacobus_units_deployed
+			}
+			if = {
+				limit = {
+					tag = GER
+					has_war_with = FRA
+					surrender_progress > 0.4
+				}
+				country_event = gerflavour.80
 			}
 		}
 	}
@@ -350,12 +416,30 @@ on_actions = {
 					GEA_harassed_by_vc_idea
 				}
 			}
-			### German female suffrage
+		}
+	}
+
+	on_daily_GER = {
+		effect = {
+			#Update Mitteleuropa GUI
 			if = {
-				limit = { tag = GER }
-				country_event = { id = gerdom.13 days = 5 random_days = 10 }
+				limit = { has_country_flag = MIT_election }
+				MIT_recalculate_all_agenda_scores = yes
+				MIT_resort_agendas_based_on_score = yes
+				MIT_update_gui = yes
+			}
+		}
+	}
+
+	# called when a country activates its active cipher bonuses against a target
+	# scope is the target country
+	# from scope is the country that activates its bonuses
+	on_activated_active_decryption_bonuses = {
+		effect = {
+			if = {
+				limit = { has_idea = GER_enigma_rotors }
+				remove_ideas = GER_enigma_rotors # might add an event
 			}
 		}
 	}
 }
-

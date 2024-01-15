@@ -1,6 +1,10 @@
 # AI triggers
 # By Rylock and Alpinia
 
+#############################
+### VOLUNTEER AI TRIGGERS ###
+#############################
+
 ### To have tags send volunteers whenever a war starts, add a new rule below
 ### ROOT is the tag sending the volunteers, PREV is the tag that receives them
 ### If the conditions are fulfilled, ROOT will automatically send volunteers to PREV whenever the latter is at war
@@ -17,7 +21,6 @@ willing_to_send_volunteers_to_PREV = {
 	OR = {
 		spanish_civil_war_volunteers = yes
 		american_civil_war_volunteers = yes
-		russian_civil_war_volunteers = yes
 		fourth_balkan_war_volunteers = yes
 		second_weltkrieg_volunteers = yes
 		chilean_argentinian_war_volunteers = yes
@@ -94,32 +97,6 @@ american_civil_war_volunteers = {
 	log = "willing_to_send_volunteers_to_PREV -- american_civil_war_volunteers --- THIS = [THIS.GetName] PREV = [PREV.GetName]"
 }
 
-russian_civil_war_volunteers = {
-	RUS = { has_war_with = SOV }
-	OR = {
-		is_major = yes
-		num_of_military_factories > 8
-	}
-	OR = {
-		AND = {
-			PREV = { tag = SOV }
-			has_socialist_government = yes
-		}
-		AND = {
-			PREV = { tag = RUS }
-			OR = {
-				original_tag = FIN
-				is_ally_with = GER
-				is_ally_with = AUS
-				is_ally_with = ENT
-				is_ally_with = JAP
-			}
-			has_socialist_government = no
-		}
-	}
-	log = "willing_to_send_volunteers_to_PREV -- russian_civil_war_volunteers --- THIS = [THIS.GetName] PREV = [PREV.GetName]"
-}
-
 fourth_balkan_war_volunteers = {
 	country_exists = BPL
 	SER = {
@@ -145,7 +122,6 @@ fourth_balkan_war_volunteers = {
 				has_war_with = BUL
 			}
 			OR = {
-				original_tag = RUS
 				original_tag = ROM
 				original_tag = GRE
 				AND = {
@@ -153,9 +129,8 @@ fourth_balkan_war_volunteers = {
 					PREV = { has_socialist_government = yes }
 				}
 				AND = {
-					SOV = { exists = yes }
-					is_ally_with = SOV
-					PREV = { has_socialist_government = yes }
+					is_ally_with = RUS
+					PREV = { both_socialist_or_both_not_socialist = yes }
 				}
 			}
 		}
@@ -321,10 +296,13 @@ italian_civil_war_volunteers = {
 		}
 	}
 	OR = {
+		is_major = yes
+		num_of_controlled_factories > 20
+	}
+	OR = {
 		AND = {
 			PREV = { tag = SRI }
 			has_socialist_government = yes
-			num_of_military_factories > 8
 		}
 		AND = {
 			PREV = {
@@ -333,23 +311,15 @@ italian_civil_war_volunteers = {
 						tag = ITA
 						NOT = { has_government = national_populist }
 					}
+					tag = SIC
 					tag = LOM
 					tag = VNC
 				}
-			}
-			is_ally_with = AUS
-			is_in_europe = yes
-		}
-		AND = {
-			PREV = {
-				tag = SIC
-				NOT = { has_government = national_populist }
 			}
 			OR = {
 				is_ally_with = AUS
 				is_ally_with = GER
 			}
-			num_of_military_factories > 8
 			is_in_europe = yes
 		}
 		AND = {
@@ -373,10 +343,6 @@ italian_civil_war_volunteers = {
 				has_government = national_populist
 			}
 			is_in_faction_with = ENT
-			OR = {
-				num_of_military_factories > 8
-				is_in_europe = yes
-			}
 		}
 	}
 	log = "willing_to_send_volunteers_to_PREV -- italian_civil_war_volunteers --- THIS = [THIS.GetName] PREV = [PREV.GetName]"
@@ -406,11 +372,8 @@ german_austrian_volunteers = {
 		is_subject = no
 		has_socialist_government = no
 		OR = {
-			has_war_with = FRA
-			has_war_with = HUN
-			has_war_with = SRI
-			has_war_with = RUS
-			has_war_with = SOV
+			has_civil_war = yes
+			has_war_with_major = yes
 		}
 	}
 	log = "willing_to_send_volunteers_to_PREV -- german_austrian_volunteers --- THIS = [THIS.GetName] PREV = [PREV.GetName]"
@@ -768,135 +731,9 @@ levantine_war_volunteers = {
 	log = "willing_to_send_volunteers_to_PREV -- levantine_war_volunteers --- THIS = [THIS.GetName] PREV = [PREV.GetName]"
 }
 
-#### OTHER AI TRIGGERS ####
-
-has_unattained_important_goals = {
-	OR = {
-		# Canada needs to reclaim the home isles
-		AND = {
-			is_in_faction_with = IMP
-			NOT = { country_exists = GBR }
-		}
-		# the French Republic needs to reclaim France
-		AND = {
-			original_tag = NFA
-			country_exists = FRA
-		}
-		# Germany needs to destroy CoF
-		AND = {
-			is_in_faction_with = GER
-			country_exists = FRA
-		}
-		# the Internationale needs to destroy Germany
-		AND = {
-			is_in_faction_with = INT
-			country_exists = GER
-		}
-		# UoB needs to destroy the Entente
-		AND = {
-			original_tag = ENG
-			ENT = { is_faction_leader = yes }
-		}
-		# Balkans need to reclaim their core states
-		AND = {
-			OR = {
-				original_tag = SER
-				original_tag = ROM
-				original_tag = GRE
-				original_tag = BUL
-			}
-			is_subject = no
-			any_core_state = {
-				NOT = { is_owned_by = ROOT }
-			}
-		}
-		# America only demobilizes once the war is done
-		AND = {
-			is_american_tag = yes
-			NOT = { has_global_flag = USA_civil_war_over_flag }
-		}
-		# India won't demobilize until after the civil war is complete
-		AND = {
-			OR = {
-				original_tag = RAJ
-				original_tag = PRF
-				original_tag = HND
-			}
-			count_triggers = {
-				amount = 2
-				country_exists = RAJ
-				country_exists = PRF
-				country_exists = HND
-			}
-		}
-		# China won't demobilize so long as Japan holds Korea
-		AND = {
-			is_chinese_tag = yes
-			is_subject = no
-			JAP = {
-				is_faction_leader = yes
-				OR = {
-					owns_state = 525
-					owns_state = 527
-				}
-			}
-		}
-		# Italy won't demobilize so long as SRI exists
-		AND = {
-			is_italian_tag = yes
-			NOT = { original_tag = SRI }
-			country_exists = SRI
-		}
-		AND = {
-			original_tag = SRI
-			NOT = { has_country_flag = SRI_italy_unified_flag }
-		}
-		# Cairo Pact won't demobilize so long as Ottomans exist
-		AND = {
-			OR = {
-				original_tag = EGY
-				original_tag = SAU
-				original_tag = JBS
-				original_tag = PER
-			}
-			is_subject = no
-			country_exists = OTT
-		}
-		# The Ottomans won't demobilize until the Cairo Pact is defeated
-		AND = {
-			tag = OTT
-			OTT_cairo_pact_defeated = no
-		}
-		# These countries never fully demobilize
-		original_tag = RUS
-		original_tag = SOV
-		has_government = national_populist
-	}
-}
-
-has_reached_maximum_divisions = {
-	has_variable = max_divisions #make sure the values have been initialised first
-	if = {
-		limit = { has_variable = num_actual_divisions }
-		check_variable = { var = num_actual_divisions value = max_divisions compare = greater_than_or_equals }
-	}
-	else = {
-		check_variable = { var = num_divisions value = max_divisions compare = greater_than_or_equals }
-	}
-}
-
-has_exceeded_maximum_divisions = {
-	has_variable = max_divisions #make sure the values have been initialised first
-	if = {
-		limit = { has_variable = num_actual_divisions }
-		check_variable = { num_actual_divisions > max_divisions }
-	}
-	else = {
-		check_variable = { num_divisions > max_divisions }
-	}
-}
-
-### Technology AI checks
+##############################
+### TECHNOLOGY AI TRIGGERS ###
+##############################
 anti_submarine_strategy_required_trigger = {
 	OR = {
 		convoy_threat > 0.3
@@ -923,7 +760,9 @@ ai_is_naval_invader_trigger = {
 	}
 }
 
-### Common AI checks, for use in attack decisions
+###############################
+### WAR-RELATED AI TRIGGERS ###
+###############################
 ROOT_is_threatened_cautious = {
 	OR = {
 		has_war = yes
@@ -947,24 +786,25 @@ dont_start_major_faction_wars = {
 	ROOT = {
 		is_in_faction = yes
 		is_faction_leader = no
-		is_actual_major = no
-		faction_leader = { is_actual_major = yes }
+		is_major = no
 	}
 	OR = {
-		AND = {
-			is_in_faction = yes
-			faction_leader = { is_actual_major = yes }
-		}
+		is_in_faction = yes
 		AND = {
 			is_subject = yes
-			overlord = { is_actual_major = yes }
+			overlord = {
+				OR = {
+					is_major = yes
+					is_in_faction = yes
+				}
+			}
 		}
 		AND = {
 			has_guarantor = yes
 			any_of_scopes = {
 				array = guarantor_array
 				has_guaranteed = PREV
-				is_actual_major = yes
+				is_major = yes
 			}
 		}
 	}
@@ -1173,7 +1013,10 @@ default_attack_AI_trigger_FROM_consider_naval_strength = {
 	}
 }
 
-### AI AREA TRIGGERS ###
+#################################
+### AI AREA PRIORITY TRIGGERS ###
+#################################
+
 is_standard_european_focused_tag = {
 	OR = {
 		#Spain
@@ -1422,4 +1265,13 @@ AI_trigger_country_wants_to_dismantle_germany = {
 		is_french_tag = yes
 		is_russian_tag = yes
 	}
+}
+
+#############################
+### CHARACTER AI TRIGGERS ###
+#############################
+
+AI_trigger_dont_hire_high_command_too_early = {
+	has_war = no
+	has_political_power < 200
 }

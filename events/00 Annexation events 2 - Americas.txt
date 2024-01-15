@@ -84,6 +84,10 @@ country_event = { #Fate of America
 			add_to_temp_array = { core_removal_array = CSA }
 			add_to_temp_array = { core_removal_array = PSA }
 			add_to_temp_array = { core_removal_array = TEX }
+			if = {
+				limit = { NOT = { country_exists = NEE } }
+				add_to_temp_array = { core_removal_array = NEE }
+			}
 			remove_all_cores_and_claims_of_tags = yes
 			if = {
 				limit = { is_russian_tag = yes }
@@ -122,16 +126,18 @@ country_event = { #Fate of America
 		log = "[GetLogInfo]: event annex.2000 option annex.2000.a"
 		name = annex.2000.a
 		trigger = {
-			OR = {
-				tag = ENT
-				is_in_faction_with = ENT
-			}
-			has_socialist_government = no
+			is_ally_with = ENT
+			NOT = { country_exists = NEE }
+			has_elected_government = yes
 		}
 		ai_chance = { base = 60 }
+		effect_tooltip = {
+			set_temp_variable = { tag_to_release = USA }
+			release_targeted_tag_nocosmetic = yes
+		}
 		set_temp_variable = { tag_to_release = NEE }
 		hidden_effect = {
-			NEE = {
+			var:tag_to_release = {
 				set_cosmetic_tag = america
 				# Set flags
 				set_country_flag = NEE_claimed_america
@@ -139,7 +145,7 @@ country_event = { #Fate of America
 				NEE_united_states_congress = { set_character_name = USA_united_states_congress }
 				every_state = {
 					limit = {
-						NOT = { is_claim_or_core_of_ROOT = yes }
+						is_claim_or_core_of_ROOT = no
 						OR = {
 							is_mainland_america = yes
 							state = 463 #Alaska
@@ -149,34 +155,52 @@ country_event = { #Fate of America
 				}
 			}
 			release_targeted_tag_nocosmetic = yes
-			NEE = {
-				meta_effect = {
-					text = {
-						set_politics = {
-							ruling_party = market_liberal
-							last_election = "[CURRENT_DATE]"
-							election_frequency = 1
-							elections_allowed = yes
-						}
+			var:tag_to_release = {
+				if = {
+					limit = { has_government = social_democrat }
+					set_popularities = {
+						totalist = 0
+						radical_socialist = 4
+						syndicalist = 9
+						social_democrat = 25
+						social_liberal = 18
+						market_liberal = 23
+						social_conservative = 7
+						authoritarian_democrat = 9
+						paternal_autocrat = 2
+						national_populist = 3
 					}
-					CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 				}
-				set_popularities = {
-					totalist = 0
-					radical_socialist = 4
-					syndicalist = 9
-					social_democrat = 5
-					social_liberal = 28
-					market_liberal = 33
-					social_conservative = 7
-					authoritarian_democrat = 9
-					paternal_autocrat = 2
-					national_populist = 3
+				else_if = {
+					limit = { has_government = social_conservative }
+					set_popularities = {
+						totalist = 0
+						radical_socialist = 4
+						syndicalist = 9
+						social_democrat = 5
+						social_liberal = 18
+						market_liberal = 23
+						social_conservative = 27
+						authoritarian_democrat = 9
+						paternal_autocrat = 2
+						national_populist = 3
+					}
+				}
+				else = {
+					set_popularities = {
+						totalist = 0
+						radical_socialist = 4
+						syndicalist = 9
+						social_democrat = 5
+						social_liberal = 28
+						market_liberal = 33
+						social_conservative = 7
+						authoritarian_democrat = 9
+						paternal_autocrat = 2
+						national_populist = 3
+					}
 				}
 			}
-		}
-		effect_tooltip = {
-			puppet = USA
 		}
 		recheck_annexations = yes
 	}
@@ -185,17 +209,18 @@ country_event = { #Fate of America
 		log = "[GetLogInfo]: event annex.2000 option annex.2000.a"
 		name = annex.2000.a
 		trigger = {
-			NOT = {
-				tag = ENT
-				is_in_faction_with = ENT
-			}
 			has_socialist_government = no
+			OR = {
+				NOT = { is_ally_with = ENT }
+				country_exists = NEE
+				has_elected_government = no
+			}
 		}
 		ai_chance = { base = 60 }
 		set_temp_variable = { tag_to_release = USA }
 		release_targeted_tag_nocosmetic = yes
 		hidden_effect = {
-			USA = {
+			var:tag_to_release = {
 				if = {
 					limit = {
 						has_government = market_liberal
@@ -1546,6 +1571,25 @@ country_event = { #Fate of Haiti
 
 	is_triggered_only = yes
 
+	immediate = {
+		hidden_effect = {
+			HAI = {
+				if = {
+					limit = { has_completed_focus = HAI_mission_to_berlin }
+					uncomplete_national_focus = { focus = HAI_mission_to_berlin uncomplete_children = yes }
+				}
+				if = {
+					limit = { has_completed_focus = HAI_mission_to_ottawa }
+					uncomplete_national_focus = { focus = HAI_mission_to_ottawa uncomplete_children = yes }
+				}
+				if = {
+					limit = { has_completed_focus = HAI_mission_to_france }
+					uncomplete_national_focus = { focus = HAI_mission_to_france uncomplete_children = yes }
+				}
+			}
+		}
+	}
+
 	option = {
 		log = "[GetLogInfo]: event annex.2013 option annex.2013.a"
 		name = annex.2013.a #Liberate Haiti
@@ -2418,10 +2462,22 @@ country_event = { #Fate of Bolivia
 				}
 			}
 			BOL = {
-				promote_character = BOL_enrique_penaranda_castillo
-				promote_character = BOL_carlos_quintanilla_quiroga
-				promote_character = BOL_german_busch_becerra
-				promote_character = BOL_bernardino_bilbao_rioja
+				BOL_enrique_penaranda_castillo = {
+					set_nationality = PREV
+					promote_character = social_liberal_subtype
+				}
+				BOL_carlos_quintanilla_quiroga = {
+					set_nationality = PREV
+					promote_character = authoritarian_democrat_subtype
+				}
+				BOL_german_busch_becerra = {
+					set_nationality = PREV
+					promote_character = paternal_autocrat_subtype
+				}
+				BOL_bernardino_bilbao_rioja = {
+					set_nationality = PREV
+					promote_character = national_populist_subtype
+				}
 
 				remove_targeted_decision = { target = INT decision = BOL_Join_Internationale }
 				remove_targeted_decision = { target = CHL decision = BOL_kill_CHL }

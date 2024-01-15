@@ -113,14 +113,10 @@ POL_Stability_of_Nation = {
 			factor = 100
 			modifier = {
 				factor = 0
-				OR = {
-					has_game_rule = { rule = POL_election option = POL_ELECTION_SOCDEM_AUS }
-					has_game_rule = { rule = POL_election option = POL_ELECTION_SOCDEM_AUS }
-					has_game_rule = { rule = POL_election option = POL_ELECTION_REPUBLIC_SOCCON_AUS }
-					has_game_rule = { rule = POL_election option = POL_ELECTION_SOCLIB_GER }
-					has_game_rule = { rule = POL_election option = POL_ELECTION_SOCLIB_GER }
-					has_game_rule = { rule = POL_election option = POL_ELECTION_REPUBLIC_SOCCON_GER }
-				}
+				NOT = { has_game_rule = { rule = POL_election option = DEFAULT } }
+				NOT = { has_game_rule = { rule = POL_election option = POL_ELECTION_MARLIB } }
+				NOT = { has_game_rule = { rule = POL_election option = POL_ELECTION_SOCCON } }
+				NOT = { has_game_rule = { rule = POL_election option = POL_ELECTION_AUTDEM } }
 			}
 		}
 
@@ -202,6 +198,7 @@ POL_Stability_of_Nation = {
 				OR = {
 					has_democratic_government = no
 					has_capitulated = yes
+					has_country_flag = POL_nationalist_uprising
 					AND = {
 						is_subject = yes
 						NOT = { is_subject_of = GER }
@@ -244,11 +241,17 @@ POL_Stability_of_Nation = {
 			else = {
 				if = {
 					limit = {
-						SOV = { is_faction_leader = yes }
+						RUS = {
+							has_socialist_government = yes
+							is_faction_leader = yes
+							NOT = { has_war_with = ROOT }
+						}
 					}
-					custom_effect_tooltip = POL_revolution_preparation_SOV
+					custom_effect_tooltip = POL_revolution_preparation_EFTI
 				}
-				else = { custom_effect_tooltip = POL_revolution_preparation }
+				else = {
+					custom_effect_tooltip = POL_revolution_preparation
+				}
 				activate_mission_tooltip = POL_syndicalist_threat
 				random_list = {
 					10 = {
@@ -342,6 +345,7 @@ POL_Stability_of_Nation = {
 			hidden_trigger = {
 				OR = {
 					has_country_flag = POL_endecja_collaborates
+					has_country_flag = POL_socialist_uprising
 					NOT = {
 						has_liberal_government = yes
 						has_government = authoritarian_democrat
@@ -610,6 +614,11 @@ POL_Stability_of_Nation = {
 				AUS = { has_capitulated = no }
 			}
 			modifier = {
+				factor = 0
+				is_in_faction_with = UKR
+				UKR = { is_faction_leader = yes has_capitulated = no }
+			}
+			modifier = {
 				factor = 10
 				any_owned_state = { any_neighbor_state = { is_controlled_by = FRA } }
 			}
@@ -654,6 +663,11 @@ POL_Stability_of_Nation = {
 				factor = 0
 				is_in_faction_with = AUS
 				AUS = { has_capitulated = no }
+			}
+			modifier = {
+				factor = 0
+				is_in_faction_with = UKR
+				UKR = { is_faction_leader = yes has_capitulated = no }
 			}
 			modifier = {
 				factor = 10
@@ -1517,68 +1531,47 @@ POL_Economy_of_the_Kingdom = {
 		icon = GFX_decision_gre_investment_decisions
 		fire_only_once = yes
 		available = {
-			set_temp_variable = { POL_influence_check = 5 } POL_polish_influence_check = yes
-			has_completed_focus = POL_Loans_From_Foreign_Banks
+			set_temp_variable = { POL_influence_check = 5 }
+			POL_polish_influence_check = yes
 			FROM = {
 				OR = {
-					has_completed_focus = GER_investitionsprogramm
-					has_completed_focus = GER_reichsarbeitsdienst
+					has_completed_focus = GER_mitteleuropa_trade
+					has_completed_focus = GER_war_economic_offices
+					has_completed_focus = GER_bank_controls
 					has_completed_focus = AUS_sdap_5
 					has_completed_focus = AUS_cs_2
 				}
 			}
 		}
 		visible = {
-			has_idea = POL_black_monday
 			has_completed_focus = POL_Loans_From_Foreign_Banks
+			has_idea = POL_black_monday
 			has_socialist_government = no
 			FROM = {
 				exists = yes
 				is_subject = no
 				NOT = { has_war_with = ROOT }
-				OR = {
-					has_completed_focus = GER_investitionsprogramm
-					has_completed_focus = GER_reichsarbeitsdienst
-					has_completed_focus = AUS_sdap_5
-					has_completed_focus = AUS_cs_2
-				}
 			}
 		}
-		days_remove = 90
 
 		custom_cost_text = pol_eco_texticon
 		custom_cost_trigger = {
 			set_temp_variable = { POL_influence_check = 5 }
 			POL_polish_influence_check = yes
 		}
+		days_remove = 90
 
-		ai_will_do = { factor = 100 }
 		targets = { AUS GER }
-
+		target_root_trigger = { has_completed_focus = POL_Loans_From_Foreign_Banks }
 		target_trigger = {
 			FROM = {
-				OR = {
-					AND = {
-						tag = GER
-						OR = {
-							has_completed_focus = GER_bail_out_junker_estates
-							has_completed_focus = GER_black_monday_finish
-						}
-						exists = yes
-					}
-					AND = {
-						tag = AUS
-						OR = {
-							has_completed_focus = AUS_sdap_industrial_workers_council
-							has_completed_focus = AUS_sdap_7
-							has_completed_focus = AUS_cs_7
-						}
-						is_subject = no
-						exists = yes
-					}
-				}
+				exists = yes
+				is_subject = no
+				NOT = { has_war_with = ROOT }
 			}
 		}
+
+		ai_will_do = { factor = 100 }
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete POL_Secure_Loans target: [From.GetName]"
@@ -1639,7 +1632,7 @@ POL_Economy_of_the_Kingdom = {
 			custom_effect_tooltip = POL_modifies_black_monday
 			add_to_variable = {
 				POL_black_monday_consumer_goods = -0.15
-				tooltip = POL_black_monday_consumer_goods_tooltip
+				tooltip = consumer_goods_factor_tooltip
 			}
 			add_to_variable = {
 				POL_black_monday_construction_speed = 0.05
@@ -1647,7 +1640,7 @@ POL_Economy_of_the_Kingdom = {
 			}
 			add_to_variable = {
 				POL_black_monday_factory_output = 0.1
-				tooltip = POL_black_monday_factory_output_tooltip
+				tooltip = industrial_capacity_factory_tooltip
 			}
 			force_update_dynamic_modifier = yes
 		}
@@ -2008,7 +2001,7 @@ POL_Second_Four_Year_Plan_decisions = {
 				custom_effect_tooltip = POL_modifies_issues_at_hand
 				add_to_variable = {
 					POL_issues_at_hand_consumer_goods = -0.075
-					tooltip = POL_issues_at_hand_consumer_goods_tooltip
+					tooltip = consumer_goods_factor_tooltip
 				}
 			}
 		}
@@ -2118,7 +2111,7 @@ POL_Second_Four_Year_Plan_decisions = {
 				custom_effect_tooltip = POL_modifies_issues_at_hand
 				add_to_variable = {
 					POL_issues_at_hand_consumer_goods = -0.075
-					tooltip = POL_issues_at_hand_consumer_goods_tooltip
+					tooltip = consumer_goods_factor_tooltip
 				}
 			}
 		}
@@ -2782,7 +2775,7 @@ POL_land_reform = {
 				custom_effect_tooltip = POL_modifies_issues_at_hand
 				add_to_variable = {
 					POL_issues_at_hand_max_efficiency = 0.1
-					tooltip = POL_issues_at_hand_max_efficiency_tooltip
+					tooltip = production_factory_max_efficiency_factor_tooltip
 				}
 			}
 		}
@@ -3063,7 +3056,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_lodz_to_kalisz_completed
 			if = {
 				limit = { NOT = { owns_state = 86 } } #Posen
-				NOT = { has_war_with = 86.owner }
+				86 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				86 = { is_owned_and_controlled_by = ROOT }
@@ -3182,7 +3180,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_northern_railroad_completed
 			if = {
 				limit = { NOT = { owns_state = 776 } } #West Prussia
-				NOT = { has_war_with = 776.owner }
+				776 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				776 = { is_owned_and_controlled_by = ROOT }
@@ -3288,7 +3291,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_warszawa_to_kielce_completed
 			if = {
 				limit = { NOT = { owns_state = 67 } } #Upper Silesia
-				NOT = { has_war_with = 67.owner }
+				67 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				67 = { is_owned_and_controlled_by = ROOT }
@@ -3323,22 +3331,12 @@ POL_Crossroads_Of_Europe_decisions = {
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove POL_Connect_To_Silesia"
-			hidden_effect = {
-				build_railway = {
-					level = 1
-					fallback = yes
-					start_province = 11532
-					target_province = 3586
-				}
-			}
 			build_railway = {
 				level = 1
-				fallback = yes
-				start_province = 3586
-				target_province = 11467
+				path = { 11532 3586 506 11467 }
 			}
 			if = {
-				limit = { NOT = { owns_state = 767 } } #West Prussia
+				limit = { NOT = { owns_state = 67 } } #Upper Silesia
 				var:67.owner = { country_event = poland.447 }
 			}
 			custom_effect_tooltip = POL_modifies_crossroads_tt
@@ -3356,7 +3354,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_warszawa_to_kielce_completed
 			if = {
 				limit = { NOT = { owns_state = 88 } } #Krakow
-				NOT = { has_war_with = 88.owner }
+				88 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				88 = { is_owned_and_controlled_by = ROOT }
@@ -3418,7 +3421,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_warszawa_to_kielce_completed
 			if = {
 				limit = { NOT = { owns_state = 924 } } #Tesin
-				NOT = { has_war_with = 924.owner }
+				924 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				924 = { is_owned_and_controlled_by = ROOT }
@@ -3480,7 +3488,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_cieszyn_railway_completed
 			if = {
 				limit = { NOT = { owns_state = 70 } } #Slovakia
-				NOT = { has_war_with = 70.owner }
+				70 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				70 = { is_owned_and_controlled_by = ROOT }
@@ -3596,7 +3609,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_cross_the_vistula_completed
 			if = {
 				limit = { NOT = { owns_state = 97 } } #Bialystok
-				NOT = { has_war_with = 97.owner }
+				97 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				97 = { is_owned_and_controlled_by = ROOT }
@@ -3657,7 +3675,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_connect_to_bialystok_completed
 			if = {
 				limit = { NOT = { owns_state = 96 } } #Vilnius
-				NOT = { has_war_with = 96.owner }
+				96 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				96 = { is_owned_and_controlled_by = ROOT }
@@ -3717,7 +3740,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_bialystok_to_wilno
 			if = {
 				limit = { NOT = { owns_state = 842 } } #Riga
-				NOT = { has_war_with = 842.owner }
+				842 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				842 = { is_owned_and_controlled_by = ROOT }
@@ -3819,7 +3847,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_lublin_to_chelm_completed
 			if = {
 				limit = { NOT = { owns_state = 91 } } #Lwow
-				NOT = { has_war_with = 91.owner }
+				91 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				91 = { is_owned_and_controlled_by = ROOT }
@@ -3879,7 +3912,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_lublin_to_chelm_completed
 			if = {
 				limit = { NOT = { owns_state = 93 } } #Brest
-				NOT = { has_war_with = 93.owner }
+				93 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				93 = { is_owned_and_controlled_by = ROOT }
@@ -3940,7 +3978,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_warzawa_to_brest_completed
 			if = {
 				limit = { NOT = { owns_state = 202 } } #Kiev
-				NOT = { has_war_with = 202.owner }
+				202 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				202 = { is_owned_and_controlled_by = ROOT }
@@ -4000,7 +4043,12 @@ POL_Crossroads_Of_Europe_decisions = {
 			has_country_flag = POL_warzawa_to_brest_completed
 			if = {
 				limit = { NOT = { owns_state = 206 } } #Minsk
-				NOT = { has_war_with = 206.owner }
+				206 = {
+					owner = {
+						controls_state = PREV
+						NOT = { has_war_with = ROOT }
+					}
+				}
 			}
 			else = {
 				206 = { is_owned_and_controlled_by = ROOT }
@@ -4113,6 +4161,7 @@ POL_National_Republic = {
 			at_peace_or_same_enemies_as_FROM = yes
 			is_faction_leader = yes
 		}
+
 		targets = { BPL ROM BUL SER HUN LAT CZE SLO WHR LIT UKR }
 		target_root_trigger = {
 			has_completed_focus = POL_Union_of_Western_Slavs
@@ -4120,6 +4169,8 @@ POL_National_Republic = {
 		target_trigger = {
 			FROM = {
 				has_dictatorship_government = yes
+				is_subject = no
+				has_capitulated = no
 				OR = {
 					is_in_faction = no
 					tag = BPL
@@ -4172,10 +4223,8 @@ POL_National_Republic = {
 			factor = 100
 			modifier = {
 				factor = 0
-				OR = {
-					has_game_rule = { rule = POL_revolts option = POL_REVOLTS_PATAUT }
-					has_game_rule = { rule = POL_revolts option = POL_REVOLTS_SOCCON }
-				}
+				NOT = { has_game_rule = { rule = POL_revolts option = DEFAULT } }
+				NOT = { has_game_rule = { rule = POL_revolts option = POL_REVOLTS_NATPOP } }
 			}
 		}
 		timeout_effect = {
@@ -4216,10 +4265,8 @@ POL_National_Republic = {
 			factor = 100
 			modifier = {
 				factor = 0
-				OR = {
-					has_game_rule = { rule = POL_revolts option = POL_REVOLTS_PATAUT }
-					has_game_rule = { rule = POL_revolts option = POL_REVOLTS_SOCCON }
-				}
+				NOT = { has_game_rule = { rule = POL_revolts option = DEFAULT } }
+				NOT = { has_game_rule = { rule = POL_revolts option = POL_REVOLTS_NATPOP } }
 			}
 		}
 		timeout_effect = {
@@ -4404,7 +4451,6 @@ POL_Marshals_Cult = {
 			add_ideas = POL_rydz_legion
 		}
 	}
-
 }
 POL_Syndicalist_Republic = {
 	POL_found_commonwealth = {
@@ -5188,10 +5234,7 @@ POL_Military_Cooperation = {
 			}
 		}
 		visible = {
-			OR = {
-				has_war_with = RUS
-				has_war_with = SOV
-			}
+			has_war_with = RUS
 		}
 		fire_only_once = yes
 		days_remove = 60
@@ -5438,7 +5481,6 @@ foreign_politics = {
 			OR = {
 				NOT = { country_exists = GER }
 				GER = { has_war_with = RUS }
-				GER = { has_war_with = SOV }
 				GER = { has_war_with = FROM }
 			}
 		}
@@ -5471,13 +5513,13 @@ foreign_politics = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete POL_join_internationale target: [From.GetName]"
 			if = {
 				limit = {
-					SOV = {
-						is_faction_leader = yes
+					RUS = {
 						has_socialist_government = yes
+						is_faction_leader = yes
 						NOT = { has_war_with = ROOT }
 					}
 				}
-				SOV = { country_event = poland.376 }
+				RUS = { country_event = poland.376 }
 			}
 			else = {
 				FROM = { country_event = poland.376 }
@@ -5495,7 +5537,6 @@ foreign_politics = {
 				NOT = { country_exists = GER }
 				GER = { has_war_with = FRA }
 				GER = { has_war_with = RUS }
-				GER = { has_war_with = SOV }
 			}
 			OR = {
 				NOT = { country_exists = AUS }

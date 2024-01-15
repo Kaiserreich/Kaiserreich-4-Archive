@@ -30,42 +30,30 @@ country_event = { #Future of the Privy Council
 	fire_only_once = yes
 	is_triggered_only = yes
 
-	immediate = {
-		hidden_effect = {
-			var:country_leader = {
-				clr_character_flag = POL_geheimrat
-				for_each_scope_loop = {
-					array = global.ideologies
-					meta_effect = {
-						text = {
-							if = {
-								limit = { has_ideology = [IDEOLOGY] }
-								remove_trait = { trait = POL_geheimrat ideology = [IDEOLOGY] }
-							}
-						}
-						IDEOLOGY = "[?v.GetTokenKey]"
-					}
-				}
-			}
-		}
-	}
-
 	option = {
 		log = "[GetLogInfo]: event poland.6 option poland.6.a"
 		name = poland.6.a
 		effect_tooltip = {
-			add_country_leader_trait = POL_geheimrat1
+			swap_ruler_traits = {
+				remove = POL_geheimrat
+				add = POL_geheimrat1
+			}
 		}
 		hidden_effect = {
 			var:country_leader = {
+				clr_character_flag = POL_geheimrat
 				set_character_flag = POL_geheimrat1
-				for_each_scope_loop = {
+				for_each_loop = {
 					array = global.ideologies
 					meta_effect = {
 						text = {
 							if = {
 								limit = { has_ideology = [IDEOLOGY] }
-								add_trait = { trait = POL_geheimrat1 ideology = [IDEOLOGY] }
+								swap_country_leader_traits = {
+									remove = POL_geheimrat
+									add = POL_geheimrat1
+									ideology = [IDEOLOGY]
+								}
 							}
 						}
 						IDEOLOGY = "[?v.GetTokenKey]"
@@ -78,18 +66,26 @@ country_event = { #Future of the Privy Council
 		log = "[GetLogInfo]: event poland.6 option poland.6.b"
 		name = poland.6.b
 		effect_tooltip = {
-			add_country_leader_trait = POL_geheimrat2
+			swap_ruler_traits = {
+				remove = POL_geheimrat
+				add = POL_geheimrat2
+			}
 		}
 		hidden_effect = {
 			var:country_leader = {
+				clr_character_flag = POL_geheimrat
 				set_character_flag = POL_geheimrat2
-				for_each_scope_loop = {
+				for_each_loop = {
 					array = global.ideologies
 					meta_effect = {
 						text = {
 							if = {
 								limit = { has_ideology = [IDEOLOGY] }
-								add_trait = { trait = POL_geheimrat2 ideology = [IDEOLOGY] }
+								swap_country_leader_traits = {
+									remove = POL_geheimrat
+									add = POL_geheimrat2
+									ideology = [IDEOLOGY]
+								}
 							}
 						}
 						IDEOLOGY = "[?v.GetTokenKey]"
@@ -102,18 +98,26 @@ country_event = { #Future of the Privy Council
 		log = "[GetLogInfo]: event poland.6 option poland.6.c"
 		name = poland.6.c
 		effect_tooltip = {
-			add_country_leader_trait = POL_geheimrat3
+			swap_ruler_traits = {
+				remove = POL_geheimrat
+				add = POL_geheimrat3
+			}
 		}
 		hidden_effect = {
 			var:country_leader = {
+				clr_character_flag = POL_geheimrat
 				set_character_flag = POL_geheimrat3
-				for_each_scope_loop = {
+				for_each_loop = {
 					array = global.ideologies
 					meta_effect = {
 						text = {
 							if = {
 								limit = { has_ideology = [IDEOLOGY] }
-								add_trait = { trait = POL_geheimrat3 ideology = [IDEOLOGY] }
+								swap_country_leader_traits = {
+									remove = POL_geheimrat
+									add = POL_geheimrat3
+									ideology = [IDEOLOGY]
+								}
 							}
 						}
 						IDEOLOGY = "[?v.GetTokenKey]"
@@ -2295,7 +2299,10 @@ country_event = {
 	fire_only_once = yes
 	trigger = {
 		POL_maurucy_zamoyski = { is_political_advisor = yes }
-		RUS = { exists = yes }
+		RUS = {
+			exists = yes
+			has_socialist_government = no
+			}
 		is_monarchy = yes
 	}
 
@@ -3616,6 +3623,11 @@ country_event = {
 		add_to_coalition = yes
 		complete_national_focus = POL_Election_of_1938
 		clr_country_flag = POL_supported_jews
+		hidden_effect = {
+			GER = {
+				country_event = { id = newgerfor.82 days = 10 }
+			}
+		}
 	}
 }
 
@@ -4117,10 +4129,7 @@ country_event = {
 	is_triggered_only = yes
 
 	trigger = {
-		OR = {
-			has_war_with = RUS
-			has_war_with = SOV
-		}
+		has_war_with = RUS
 		has_war_support < 0.9
 		OR = {
 			is_in_faction_with = GER
@@ -4693,13 +4702,22 @@ country_event = { #Special session of the sejm
 country_event = { #Guderian returns from Poland
 	id = poland.205
 	title = poland.205.t
-	desc = poland.205.d
-
+	desc = {
+		trigger = { POL = { has_democratic_government = no } }
+		text = poland.205.d.revolt
+	}
+	desc = {
+		trigger = {
+			POL = { has_democratic_government = yes }
+		}
+		text = poland.205.d.chill
+	}
 	is_triggered_only = yes
 
 	option = {
 		log = "[GetLogInfo]: event poland.205 option poland.205.a"
 		name = poland.205.a
+		army_experience = 25
 		GER_heinz_guderian = { set_nationality = GER }
 	}
 }
@@ -4849,8 +4867,7 @@ country_event = {
 				}
 			}
 		}
-		set_temp_variable = { ideology_change_var = 5 }
-		change_ruling_party_popularity = yes
+		add_political_power = 10
 		POL = { country_event = poland.220 } #Demand monarchy
 	}
 	option = {
@@ -4863,15 +4880,22 @@ country_event = {
 				has_government = social_democrat
 			}
 		}
-		add_stability = 0.02
+		if = {
+			limit = {
+				AND = {
+					check_variable = { POL.POL_GER_influence > 30 }
+					check_variable = { POL.POL_GER_influence > POL_AUS_influence }
+				}
+			}
+			custom_effect_tooltip = POL_loyalty_secure_tt
+		}
+		add_political_power = -40
 		POL = { country_event = poland.221 } #Offer compromise
 	}
 	option = {
 		log = "[GetLogInfo]: event poland.219 option poland.219.c"
 		name = poland.219.c
 		ai_chance = { base = 0 }
-		set_temp_variable = { ideology_change_var = -3 }
-		change_ruling_party_popularity = yes
 		hidden_effect = { AUS = { country_event = poland.222 } } #POL asks to join AUS
 	}
 }
@@ -5290,6 +5314,14 @@ country_event = { #Germans swoop in
 				add_ideas = POL_german_hegemony
 			}
 		}
+		if = {
+			limit = {
+				RUS = { has_socialist_government = no }
+			}
+			hidden_effect = {
+				country_event = { id = newgerfor.81 days = 3 }
+			}
+		}
 	}
 	option = {
 		log = "[GetLogInfo]: event poland.227 option poland.227.a"
@@ -5473,7 +5505,7 @@ country_event = {
 			modifier = {
 				factor = 0
 				POL = { is_in_faction_with = GER }
-				NOT = { GER = { has_completed_focus = GER_reform_mitteleuropa } }
+				NOT = { GER = { has_completed_focus = GER_european_brotherhood } }
 				GER = { has_government = paternal_autocrat }
 			}
 		}
@@ -6292,6 +6324,10 @@ country_event = { #The Issue of Lemberg
 					is_in_faction_with = GER
 				}
 			}
+			modifier = {
+				factor = 0
+				UKR = { has_authoritarian_government = yes }
+			}
 		}
 		UKR = {
 			set_country_flag = POL_UKR_everything
@@ -6788,8 +6824,8 @@ country_event = {
 		set_temp_variable = { coalition_partner_var = token:social_democrat }
 		add_to_coalition = yes
 		swap_ideas = {
-			remove_idea = POL_polish_shogunate_2
-			add_idea = POL_polish_shogunate_3
+			remove_idea = POL_polish_shogunate_3
+			add_idea = POL_polish_shogunate_4
 		}
 		country_event = { id = poland.257 days = 45 }
 	}
@@ -6798,8 +6834,8 @@ country_event = {
 		name = poland.256.b
 		activate_advisor = POL_adam_koc_sic
 		swap_ideas = {
-			remove_idea = POL_polish_shogunate_2
-			add_idea = POL_polish_shogunate_4
+			remove_idea = POL_polish_shogunate_3
+			add_idea = POL_polish_shogunate_5
 		}
 		country_event = { id = poland.257 days = 45 }
 	}
@@ -8316,14 +8352,16 @@ country_event = {
 			clr_country_flag = POL_independence
 		}
 		restore_previous_government_type = yes
-		if = { #Fix accidental removal of the cosmetic tag
-			limit = { NOT = { has_cosmetic_tag = POL_kingdom } }
-			set_cosmetic_tag = POL_kingdom
-		}
 		set_temp_variable = { POL_influence_change = 10 }
 		if = {
 			limit = { is_monarchy = yes }
 			POL_add_royal_influence = yes
+			hidden_effect = {
+				if = {
+					limit = { NOT = { has_cosmetic_tag = POL_kingdom } }
+					set_cosmetic_tag = POL_kingdom
+				}
+			}
 		}
 		else_if = {
 			limit = { has_left_democratic_government = yes }
@@ -9925,7 +9963,7 @@ country_event = { # Kielce-Silesia Line
 			build_railway = {
 				level = 1
 				fallback = yes
-				start_province = 3586
+				start_province = 11532
 				target_province = 11467
 			}
 		}
@@ -10969,7 +11007,9 @@ country_event = {
 	is_triggered_only = yes
 	fire_only_once = yes
 
-	trigger = { SOV = { exists = no } }
+	trigger = {
+		has_character = POL_roman_dmowski
+	}
 
 	immediate = {
 		hidden_effect = {
@@ -11121,8 +11161,8 @@ country_event = {
 		}
 	}
 	option = {
-		log = "[GetLogInfo]: event poland.563 option poland.563.a"
-		name = poland.563.a
+		log = "[GetLogInfo]: event poland.563 option poland.563.b"
+		name = poland.563.b
 		trigger = { tag = GER }
 		add_war_support = 0.01
 		effect_tooltip = {
@@ -12376,7 +12416,7 @@ country_event = {
 	}
 }
 
-#SOV forms
+#Socialist RUS forms
 country_event = {
 	id = poland.730
 	title = poland.730.t
@@ -12409,7 +12449,15 @@ country_event = {
 		POL_add_nationalist_influence = yes
 		set_temp_variable = { POL_influence_change = 8 }
 		POL_add_royal_influence = yes
+		hidden_effect = {
+			POL_roman_dmowski = { kill_character = yes }
+			promote_character = {
+				character = POL_adam_doboszynski
+				ideology = national_populist_subtype
+			}
+		}
 	}
+
 	#removed until something is figured out for this scenario
 	#option = {
 	#	name = poland.730.b
@@ -12465,7 +12513,7 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event poland.800 option poland.800.a"
 		name = poland.800.a
-		POL_create_august = yes
+		POL_create_alexander = yes
 	}
 }
 
@@ -13864,7 +13912,10 @@ news_event = { #Centrolew Revolution Crushed
 
 	option = {
 		name = polandnews.9.a #For liberals/left liberals
-		trigger = { has_left_democratic_government = yes }
+		trigger = {
+			has_left_democratic_government = yes
+			NOT = { tag = GER }
+		}
 	}
 
 	option = {

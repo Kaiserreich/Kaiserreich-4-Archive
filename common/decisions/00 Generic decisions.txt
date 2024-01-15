@@ -45,7 +45,7 @@ political_actions = {
 			industrial_capacity_factory = -0.1
 		}
 
-		cost = 100
+		cost = generic_raise_stability_decision_cost?100
 		days_remove = 180
 		days_re_enable = 540
 
@@ -93,7 +93,7 @@ political_actions = {
 			}
 		}
 
-		cost = 150
+		cost = generic_raise_support_decision_cost?150
 		days_remove = 180
 		days_re_enable = 540
 
@@ -300,12 +300,131 @@ political_actions = {
 						state = 165 #Catalonia
 						state = 925 #Brabant
 						state = 948 #Liège
-						state = 741 #Ardennes
+						state = 741 #Verviers
 						state = 760 #Romandy
 					}
 					NOT = { has_variable = ambition_area_@ROOT }
 				}
 				set_variable = { ambition_area_@ROOT = 1 }
+			}
+		}
+	}
+
+	AI_expand_air_bases = {
+		icon = generic_political_discourse
+
+		visible = {
+			has_global_flag = second_weltkrieg_has_started
+			is_ai = yes
+			has_war = yes
+			has_manpower > 1000 #make sure they're not deploying due to lack of manpower
+
+			#the AI never stockpiles planes if it can avoid it, so a positive stockpile ratio means they've run out of airbase space
+			OR = {
+				stockpile_ratio = { archetype = small_plane_airframe ratio > 0.02 }
+				stockpile_ratio = { archetype = small_plane_cas_airframe ratio > 0.02 }
+				stockpile_ratio = { archetype = small_plane_naval_bomber_airframe ratio > 0.02 }
+				stockpile_ratio = { archetype = medium_plane_airframe ratio > 0.02 }
+				stockpile_ratio = { archetype = medium_plane_fighter_airframe ratio > 0.02 }
+				stockpile_ratio = { archetype = medium_plane_scout_plane_airframe ratio > 0.02 }
+				stockpile_ratio = { archetype = large_plane_airframe ratio > 0.02 }
+				stockpile_ratio = { archetype = large_plane_maritime_patrol_plane_airframe ratio > 0.02 }
+			}
+		}
+
+		cost = 0
+		days_re_enable = 20
+		fire_only_once = no
+		fixed_random_seed = no
+
+		ai_will_do = { factor = 100 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision AI_expand_air_bases"
+			every_controlled_state = {
+				if = {
+					limit = {
+						is_fully_controlled_by = ROOT
+						air_base < 10
+					}
+					add_to_temp_array = { air_base_potential_states = THIS }
+				}
+				if = {
+					limit = {
+						any_neighbor_state = { controller = { has_war_with = ROOT } }
+					}
+					if = {
+						limit = {
+							is_fully_controlled_by = ROOT
+							air_base < 10
+						}
+						add_to_temp_array = { air_base_potential_states_neighbouring_enemy = THIS }
+					}
+					every_neighbor_state = {
+						limit = {
+							is_fully_controlled_by = ROOT
+							air_base < 10
+						}
+						add_to_temp_array = { air_base_potential_states_close_to_enemy = THIS }
+					}
+				}
+				if = {
+					limit = {
+						any_of_scopes = {
+							array = air_base_potential_states_neighbouring_enemy
+							is_in_home_area = yes
+						}
+					}
+					set_temp_variable = { home_area_neighbouring_enemy = 1 }
+				}
+				if = {
+					limit = {
+						any_of_scopes = {
+							array = air_base_potential_states_close_to_enemy
+							is_in_home_area = yes
+						}
+					}
+					set_temp_variable = { home_area_close_to_enemy = 1 }
+				}
+				if = {
+					limit = {
+						any_of_scopes = {
+							array = air_base_potential_states
+							is_in_home_area = yes
+						}
+					}
+					set_temp_variable = { home_area_potential = 1 }
+				}
+			}
+			random_controlled_state = {
+				limit = {
+					is_in_array = { air_base_potential_states = THIS }
+					if = {
+						limit = { has_variable = air_base_potential_states_neighbouring_enemy^num }
+						is_in_array = { air_base_potential_states_neighbouring_enemy = THIS }
+						if = {
+							limit = { has_variable = home_area_neighbouring_enemy }
+							is_in_home_area = yes
+						}
+					}
+					else_if = {
+						limit = { has_variable = air_base_potential_states_close_to_enemy^num }
+						is_in_array = { air_base_potential_states_close_to_enemy = THIS }
+						if = {
+							limit = { has_variable = home_area_close_to_enemy }
+							is_in_home_area = yes
+						}
+					}
+					else_if = {
+						limit = { has_variable = home_area_potential }
+						is_in_home_area = yes
+					}
+				}
+				add_building_construction = {
+					type = air_base
+					level = 1
+					instant_build = no
+				}
 			}
 		}
 	}
@@ -412,12 +531,7 @@ crisis = {
 				}
 			}
 			if = {
-				limit = {
-					OR = {
-						original_tag = RUS
-						original_tag = SOV
-					}
-				}
+				limit = { original_tag = RUS }
 				OR = {
 					FRA = { NOT = { has_war_with = GER } }
 					FRA = { has_capitulated = yes }
@@ -463,7 +577,7 @@ propaganda_efforts = {
 			has_war_with_non_exiled_country = yes
 		}
 
-		cost = 150
+		cost = war_propaganda_decision_cost?150
 		days_remove = 90
 		days_re_enable = 180
 
@@ -505,7 +619,7 @@ propaganda_efforts = {
 			has_war = no
 		}
 
-		cost = 100
+		cost = war_propaganda_casualties_decision_cost?100
 
 		modifier = {
 			weekly_casualties_war_support = 0.006
@@ -566,7 +680,7 @@ propaganda_efforts = {
 			has_war = no
 		}
 
-		cost = 100
+		cost = war_propaganda_convoys_decision_cost?100
 
 		modifier = {
 			weekly_convoys_war_support = 0.006
@@ -612,7 +726,7 @@ propaganda_efforts = {
 			has_war = no
 		}
 
-		cost = 100
+		cost = war_propaganda_bombing_decision_cost?100
 
 		modifier = {
 			weekly_bombing_war_support = 0.006

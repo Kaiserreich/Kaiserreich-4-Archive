@@ -1,0 +1,1323 @@
+﻿###########################
+# German Mitteleuropa Events
+# By Alpinia
+###########################
+
+add_namespace = germany_mitteleuropa_events
+
+country_event = { #new election boot event
+	id = germany_mitteleuropa_events.0
+	hidden = yes
+
+	trigger = {
+		MIT_is_current_president = yes
+		GER = { has_country_flag = { flag = MIT_election days > 178 } }
+	}
+
+	mean_time_to_happen = {
+		days = 3
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.0 option 1"
+
+		#lock the GUI during the events
+		set_global_flag = MIT_event_chain_ongoing
+		every_country = { MIT_close_mitteleuropa_panel = yes }
+
+		#recalculate all the agendas
+		MIT_recalculate_all_agenda_scores = yes
+		MIT_resort_agendas_based_on_score = yes
+
+		#handle leadership agenda if present
+		if = {
+			limit = {
+				GER = { MIT_challenge_leadership = { is_in_array = { global.MIT_sorted_voted_agendas = THIS } } }
+			}
+			if = {
+				limit = { var:global.MIT_sorted_voted_agendas^0 = { has_character_flag = MIT_challenge_leadership } }
+				var:global.MIT_sorted_voted_agendas^0 = { var:agenda_supporters^0 = { save_event_target_as = MIT_next_chairman } }
+			}
+			GER = {
+				MIT_challenge_leadership = {
+					var:agenda_supporters^0 = { set_country_flag = { flag = MIT_leadership_challenge_cooldown days = 365 value = 1 } }
+					remove_from_array = { global.MIT_sorted_voted_agendas = THIS }
+				}
+			}
+		}
+
+		#save the three most voted as event targets
+		set_variable = { MIT_agenda_count = 0 }
+		if = {
+			limit = { check_variable = { global.MIT_sorted_voted_agendas^num > 0 } }
+			var:global.MIT_sorted_voted_agendas^0 = { save_event_target_as = MIT_first_place_agenda }
+			add_to_variable = { MIT_agenda_count = 1 }
+		}
+		if = {
+			limit = { check_variable = { global.MIT_sorted_voted_agendas^num > 1 } }
+			var:global.MIT_sorted_voted_agendas^1 = { save_event_target_as = MIT_second_place_agenda }
+			add_to_variable = { MIT_agenda_count = 1 }
+		}
+		if = {
+			limit = { check_variable = { global.MIT_sorted_voted_agendas^num > 2 } }
+			var:global.MIT_sorted_voted_agendas^2 = { save_event_target_as = MIT_third_place_agenda }
+			add_to_variable = { MIT_agenda_count = 1 }
+		}
+
+		#add the chairman's choice as the fourth option if not one of the three
+		if = {
+			limit = {
+				NOT = { has_global_flag = MIT_qualified_majority_in_effect }
+				has_variable = MIT_supported_agenda
+				NOT = { check_variable = { MIT_supported_agenda = event_target:MIT_first_place_agenda } }
+				NOT = { check_variable = { MIT_supported_agenda = event_target:MIT_second_place_agenda } }
+				NOT = { check_variable = { MIT_supported_agenda = event_target:MIT_third_place_agenda } }
+			}
+			var:MIT_supported_agenda = { save_event_target_as = MIT_chairman_agenda }
+			add_to_variable = { MIT_agenda_count = 1 }
+		}
+
+		#if the only agenda voted on was the leadership challenge, skip directly to it
+		if = {
+			limit = {
+				has_event_target = MIT_next_chairman
+				check_variable = { MIT_agenda_count = 0 }
+			}
+			country_event = germany_mitteleuropa_events.6
+		}
+		#else fire the agenda choice event
+		else = {
+			country_event = germany_mitteleuropa_events.1
+		}
+	}
+}
+
+country_event = { #Agenda election results
+	id = germany_mitteleuropa_events.1
+	title = germany_mitteleuropa_events.1.t
+
+	desc = {
+		text = germany_mitteleuropa_events.1.d.no_voting
+		trigger = {
+			check_variable = { MIT_agenda_count = 0 }
+		}
+	}
+	desc = {
+		text = germany_mitteleuropa_events.1.d.unanimous
+		trigger = {
+			check_variable = { MIT_agenda_count = 1 }
+		}
+	}
+	desc = {
+		text = germany_mitteleuropa_events.1.d.two_agendas
+		trigger = {
+			check_variable = { MIT_agenda_count = 2 }
+			NOT = { has_event_target = MIT_chairman_agenda }
+		}
+	}
+	desc = {
+		text = germany_mitteleuropa_events.1.d.two_agendas_chairman
+		trigger = {
+			check_variable = { MIT_agenda_count = 2 }
+			has_event_target = MIT_chairman_agenda
+		}
+	}
+	desc = {
+		text = germany_mitteleuropa_events.1.d.three_agendas
+		trigger = {
+			check_variable = { MIT_agenda_count = 3 }
+			NOT = { has_event_target = MIT_chairman_agenda }
+		}
+	}
+	desc = {
+		text = germany_mitteleuropa_events.1.d.three_agendas_chairman
+		trigger = {
+			check_variable = { MIT_agenda_count = 3 }
+			has_event_target = MIT_chairman_agenda
+		}
+	}
+	desc = {
+		text = germany_mitteleuropa_events.1.d.four_agendas
+		trigger = {
+			check_variable = { MIT_agenda_count > 3 }
+		}
+	}
+	#picture =
+
+	is_triggered_only = yes
+
+	immediate = {
+		set_country_flag = MIT_received_agenda_event
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1 option germany_mitteleuropa_events.1.a"
+		name = germany_mitteleuropa_events.1.a
+		trigger = { has_event_target = MIT_first_place_agenda }
+		ai_chance = {
+			base = event_target:MIT_first_place_agenda.agenda_score
+			modifier = {
+				factor = 0
+				original_tag = GER
+				OR = {
+					has_event_target = MIT_chairman_agenda
+					event_target:MIT_first_place_agenda = { var:agenda_supporters^0 = { tag = ROOT } }
+				}
+			}
+			modifier = {
+				add = 100
+				check_variable = { MIT_supported_agenda = event_target:MIT_first_place_agenda }
+			}
+		}
+		event_target:MIT_first_place_agenda = { save_event_target_as = MIT_enacted_agenda }
+		set_temp_variable = { agenda = event_target:MIT_first_place_agenda }
+		MIT_add_agenda_reward = yes
+		custom_effect_tooltip = tooltip_white_line
+		effect_tooltip = {
+			every_other_country = {
+				limit = { GER_is_in_mitteleuropa = yes }
+				country_event = germany_mitteleuropa_events.2
+			}
+		}
+		hidden_effect = {
+			random_scope_in_array = {
+				array = MIT.economic_sphere:members
+				limit = { NOT = { has_country_flag = MIT_received_agenda_event } }
+				country_event = germany_mitteleuropa_events.2
+			}
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1 option germany_mitteleuropa_events.1.b"
+		name = germany_mitteleuropa_events.1.b
+		trigger = { has_event_target = MIT_second_place_agenda }
+		ai_chance = {
+			base = event_target:MIT_second_place_agenda.agenda_score
+			modifier = {
+				factor = 0
+				original_tag = GER
+				OR = {
+					has_event_target = MIT_chairman_agenda
+					event_target:MIT_second_place_agenda = { var:agenda_supporters^0 = { tag = ROOT } }
+				}
+			}
+			modifier = {
+				factor = 0
+				set_temp_variable = { support_comparison = event_target:MIT_second_place_agenda.agenda_score }
+				divide_temp_variable = { support_comparison = event_target:MIT_first_place_agenda.agenda_score }
+				check_variable = { support_comparison < 0.3 }
+			}
+			modifier = {
+				factor = 0.25
+				set_temp_variable = { support_comparison = event_target:MIT_second_place_agenda.agenda_score }
+				divide_temp_variable = { support_comparison = event_target:MIT_first_place_agenda.agenda_score }
+				check_variable = { support_comparison < 0.5 }
+			}
+			modifier = {
+				factor = 0.5
+				set_temp_variable = { support_comparison = event_target:MIT_second_place_agenda.agenda_score }
+				divide_temp_variable = { support_comparison = event_target:MIT_first_place_agenda.agenda_score }
+				check_variable = { support_comparison < 0.75 }
+			}
+			modifier = {
+				add = 100
+				check_variable = { MIT_supported_agenda = event_target:MIT_second_place_agenda }
+			}
+		}
+		event_target:MIT_second_place_agenda = { save_event_target_as = MIT_enacted_agenda }
+		set_temp_variable = { agenda = event_target:MIT_second_place_agenda }
+		MIT_add_agenda_reward = yes
+		custom_effect_tooltip = tooltip_white_line
+		effect_tooltip = {
+			every_other_country = {
+				limit = { GER_is_in_mitteleuropa = yes }
+				country_event = germany_mitteleuropa_events.3
+			}
+		}
+		hidden_effect = {
+			random_scope_in_array = {
+				array = MIT.economic_sphere:members
+				limit = { NOT = { has_country_flag = MIT_received_agenda_event } }
+				country_event = germany_mitteleuropa_events.3
+			}
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1 option germany_mitteleuropa_events.1.c"
+		name = germany_mitteleuropa_events.1.c
+		trigger = { has_event_target = MIT_third_place_agenda }
+		ai_chance = {
+			base = event_target:MIT_third_place_agenda.agenda_score
+			modifier = {
+				factor = 0
+				original_tag = GER
+				OR = {
+					has_event_target = MIT_chairman_agenda
+					event_target:MIT_third_place_agenda = { var:agenda_supporters^0 = { tag = ROOT } }
+				}
+			}
+			modifier = {
+				factor = 0
+				set_temp_variable = { support_comparison = event_target:MIT_third_place_agenda.agenda_score }
+				divide_temp_variable = { support_comparison = event_target:MIT_first_place_agenda.agenda_score }
+				check_variable = { support_comparison < 0.3 }
+			}
+			modifier = {
+				factor = 0
+				set_temp_variable = { support_comparison = event_target:MIT_third_place_agenda.agenda_score }
+				divide_temp_variable = { support_comparison = event_target:MIT_second_place_agenda.agenda_score }
+				check_variable = { support_comparison < 0.6 }
+			}
+			modifier = {
+				factor = 0.25
+				set_temp_variable = { support_comparison = event_target:MIT_third_place_agenda.agenda_score }
+				divide_temp_variable = { support_comparison = event_target:MIT_first_place_agenda.agenda_score }
+				check_variable = { support_comparison < 0.5 }
+			}
+			modifier = {
+				factor = 0.25
+				set_temp_variable = { support_comparison = event_target:MIT_third_place_agenda.agenda_score }
+				divide_temp_variable = { support_comparison = event_target:MIT_second_place_agenda.agenda_score }
+				check_variable = { support_comparison < 0.75 }
+			}
+			modifier = {
+				factor = 0.5
+				set_temp_variable = { support_comparison = event_target:MIT_third_place_agenda.agenda_score }
+				divide_temp_variable = { support_comparison = event_target:MIT_first_place_agenda.agenda_score }
+				check_variable = { support_comparison < 0.75 }
+			}
+			modifier = {
+				factor = 0.5
+				set_temp_variable = { support_comparison = event_target:MIT_third_place_agenda.agenda_score }
+				divide_temp_variable = { support_comparison = event_target:MIT_second_place_agenda.agenda_score }
+				check_variable = { support_comparison < 1 }
+			}
+			modifier = {
+				add = 100
+				check_variable = { MIT_supported_agenda = event_target:MIT_third_place_agenda }
+			}
+		}
+		event_target:MIT_third_place_agenda = { save_event_target_as = MIT_enacted_agenda }
+		set_temp_variable = { agenda = event_target:MIT_third_place_agenda }
+		MIT_add_agenda_reward = yes
+		custom_effect_tooltip = tooltip_white_line
+		effect_tooltip = {
+			every_other_country = {
+				limit = { GER_is_in_mitteleuropa = yes }
+				country_event = germany_mitteleuropa_events.4
+			}
+		}
+		hidden_effect = {
+			random_scope_in_array = {
+				array = MIT.economic_sphere:members
+				limit = { NOT = { has_country_flag = MIT_received_agenda_event } }
+				country_event = germany_mitteleuropa_events.4
+			}
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1 option germany_mitteleuropa_events.1.d"
+		name = germany_mitteleuropa_events.1.d
+		trigger = { has_event_target = MIT_chairman_agenda }
+		ai_chance = {
+			base = event_target:MIT_chairman_agenda.agenda_score
+			modifier = {
+				factor = 0
+				NOT = { original_tag = GER }
+			}
+			modifier = {
+				add = 100
+			}
+		}
+		event_target:MIT_chairman_agenda = { save_event_target_as = MIT_enacted_agenda }
+		set_temp_variable = { agenda = event_target:MIT_chairman_agenda }
+		MIT_add_agenda_reward = yes
+		custom_effect_tooltip = tooltip_white_line
+		effect_tooltip = {
+			every_other_country = {
+				limit = { GER_is_in_mitteleuropa = yes }
+				country_event = germany_mitteleuropa_events.5
+			}
+		}
+		hidden_effect = {
+			random_scope_in_array = {
+				array = MIT.economic_sphere:members
+				limit = { NOT = { has_country_flag = MIT_received_agenda_event } }
+				country_event = germany_mitteleuropa_events.5
+			}
+		}
+	}
+
+	#failsafe option
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1 option germany_mitteleuropa_events.1.e"
+		name = germany_mitteleuropa_events.1.e
+		trigger = {
+			NOT = { has_event_target = MIT_first_place_agenda }
+			NOT = { has_event_target = MIT_second_place_agenda }
+			NOT = { has_event_target = MIT_third_place_agenda }
+			NOT = { has_event_target = MIT_chairman_agenda }
+		}
+		hidden_effect = {
+			if = {
+				limit = { has_event_target = MIT_next_chairman }
+				country_event = germany_mitteleuropa_events.6
+			}
+			else = {
+				country_event = germany_mitteleuropa_events.10
+			}
+		}
+	}
+}
+
+country_event = { #Agenda #1 chosen
+	id = germany_mitteleuropa_events.2
+	title = germany_mitteleuropa_events.2.t
+
+	desc = {
+		text = germany_mitteleuropa_events.2.d.supported
+		trigger = {
+			check_variable = { MIT_supported_agenda = event_target:MIT_first_place_agenda }
+		}
+	}
+	desc = {
+		text = germany_mitteleuropa_events.2.d.not_supported
+		trigger = {
+			NOT = { check_variable = { MIT_supported_agenda = event_target:MIT_first_place_agenda } }
+		}
+	}
+
+	#picture =
+
+	is_triggered_only = yes
+
+	immediate = {
+		set_country_flag = MIT_received_agenda_event
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.2 option germany_mitteleuropa_events.2.a"
+		name = germany_mitteleuropa_events.2.a
+		trigger = {
+			check_variable = { MIT_supported_agenda = event_target:MIT_first_place_agenda }
+		}
+		set_temp_variable = { agenda = event_target:MIT_first_place_agenda }
+		MIT_add_agenda_reward = yes
+		hidden_effect = {
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = MIT.economic_sphere:members
+						NOT = { has_country_flag = MIT_received_agenda_event }
+					}
+				}
+				random_scope_in_array = {
+					array = MIT.economic_sphere:members
+					limit = { NOT = { has_country_flag = MIT_received_agenda_event } }
+					country_event = germany_mitteleuropa_events.2
+				}
+			}
+			else_if = {
+				limit = { has_event_target = MIT_next_chairman }
+				MIT = { country_event = germany_mitteleuropa_events.6 }
+			}
+			else = {
+				country_event = germany_mitteleuropa_events.10
+			}
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.2 option germany_mitteleuropa_events.2.b"
+		name = germany_mitteleuropa_events.2.b
+		trigger = {
+			NOT = { check_variable = { MIT_supported_agenda = event_target:MIT_first_place_agenda } }
+		}
+		hidden_effect = {
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = MIT.economic_sphere:members
+						NOT = { has_country_flag = MIT_received_agenda_event }
+					}
+				}
+				random_scope_in_array = {
+					array = MIT.economic_sphere:members
+					limit = { NOT = { has_country_flag = MIT_received_agenda_event } }
+					country_event = germany_mitteleuropa_events.2
+				}
+			}
+			else_if = {
+				limit = { has_event_target = MIT_next_chairman }
+				MIT = { country_event = germany_mitteleuropa_events.6 }
+			}
+			else = {
+				country_event = germany_mitteleuropa_events.10
+			}
+		}
+	}
+}
+
+country_event = { #Agenda #2 chosen
+	id = germany_mitteleuropa_events.3
+	title = germany_mitteleuropa_events.3.t
+
+	desc = {
+		text = germany_mitteleuropa_events.3.d.supported
+		trigger = {
+			check_variable = { MIT_supported_agenda = event_target:MIT_first_place_agenda }
+		}
+	}
+	desc = {
+		text = germany_mitteleuropa_events.3.d.not_supported
+		trigger = {
+			NOT = { check_variable = { MIT_supported_agenda = event_target:MIT_first_place_agenda } }
+		}
+	}
+
+	#picture =
+
+	is_triggered_only = yes
+
+	immediate = {
+		set_country_flag = MIT_received_agenda_event
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.3 option germany_mitteleuropa_events.3.a"
+		name = germany_mitteleuropa_events.3.a
+		trigger = {
+			check_variable = { MIT_supported_agenda = event_target:MIT_second_place_agenda }
+		}
+		set_temp_variable = { agenda = event_target:MIT_second_place_agenda }
+		MIT_add_agenda_reward = yes
+		hidden_effect = {
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = MIT.economic_sphere:members
+						NOT = { has_country_flag = MIT_received_agenda_event }
+					}
+				}
+				random_scope_in_array = {
+					array = MIT.economic_sphere:members
+					limit = { NOT = { has_country_flag = MIT_received_agenda_event } }
+					country_event = germany_mitteleuropa_events.3
+				}
+			}
+			else_if = {
+				limit = { has_event_target = MIT_next_chairman }
+				MIT = { country_event = germany_mitteleuropa_events.6 }
+			}
+			else = {
+				country_event = germany_mitteleuropa_events.10
+			}
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.3 option germany_mitteleuropa_events.3.b"
+		name = germany_mitteleuropa_events.3.b
+		trigger = {
+			NOT = { check_variable = { MIT_supported_agenda = event_target:MIT_second_place_agenda } }
+		}
+		hidden_effect = {
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = MIT.economic_sphere:members
+						NOT = { has_country_flag = MIT_received_agenda_event }
+					}
+				}
+				random_scope_in_array = {
+					array = MIT.economic_sphere:members
+					limit = { NOT = { has_country_flag = MIT_received_agenda_event } }
+					country_event = germany_mitteleuropa_events.3
+				}
+			}
+			else_if = {
+				limit = { has_event_target = MIT_next_chairman }
+				MIT = { country_event = germany_mitteleuropa_events.6 }
+			}
+			else = {
+				country_event = germany_mitteleuropa_events.10
+			}
+		}
+	}
+}
+
+country_event = { #Agenda #3 chosen
+	id = germany_mitteleuropa_events.4
+	title = germany_mitteleuropa_events.4.t
+
+	desc = {
+		text = germany_mitteleuropa_events.4.d.supported
+		trigger = {
+			check_variable = { MIT_supported_agenda = event_target:MIT_first_place_agenda }
+		}
+	}
+	desc = {
+		text = germany_mitteleuropa_events.4.d.not_supported
+		trigger = {
+			NOT = { check_variable = { MIT_supported_agenda = event_target:MIT_first_place_agenda } }
+		}
+	}
+
+	#picture =
+
+	is_triggered_only = yes
+
+	immediate = {
+		set_country_flag = MIT_received_agenda_event
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.4 option germany_mitteleuropa_events.4.a"
+		name = germany_mitteleuropa_events.4.a
+		trigger = {
+			check_variable = { MIT_supported_agenda = event_target:MIT_third_place_agenda }
+		}
+		set_temp_variable = { agenda = event_target:MIT_third_place_agenda }
+		MIT_add_agenda_reward = yes
+		hidden_effect = {
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = MIT.economic_sphere:members
+						NOT = { has_country_flag = MIT_received_agenda_event }
+					}
+				}
+				random_scope_in_array = {
+					array = MIT.economic_sphere:members
+					limit = { NOT = { has_country_flag = MIT_received_agenda_event } }
+					country_event = germany_mitteleuropa_events.4
+				}
+			}
+			else_if = {
+				limit = { has_event_target = MIT_next_chairman }
+				MIT = { country_event = germany_mitteleuropa_events.6 }
+			}
+			else = {
+				country_event = germany_mitteleuropa_events.10
+			}
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.4 option germany_mitteleuropa_events.4.b"
+		name = germany_mitteleuropa_events.4.b
+		trigger = {
+			NOT = { check_variable = { MIT_supported_agenda = event_target:MIT_third_place_agenda } }
+		}
+		hidden_effect = {
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = MIT.economic_sphere:members
+						NOT = { has_country_flag = MIT_received_agenda_event }
+					}
+				}
+				random_scope_in_array = {
+					array = MIT.economic_sphere:members
+					limit = { NOT = { has_country_flag = MIT_received_agenda_event } }
+					country_event = germany_mitteleuropa_events.4
+				}
+			}
+			else_if = {
+				limit = { has_event_target = MIT_next_chairman }
+				MIT = { country_event = germany_mitteleuropa_events.6 }
+			}
+			else = {
+				country_event = germany_mitteleuropa_events.10
+			}
+		}
+	}
+}
+
+country_event = { #Chairman's agenda chosen
+	id = germany_mitteleuropa_events.5
+	title = germany_mitteleuropa_events.5.t
+
+	desc = {
+		text = germany_mitteleuropa_events.5.d.supported
+		trigger = {
+			check_variable = { MIT_supported_agenda = event_target:MIT_first_place_agenda }
+		}
+	}
+	desc = {
+		text = germany_mitteleuropa_events.5.d.not_supported
+		trigger = {
+			NOT = { check_variable = { MIT_supported_agenda = event_target:MIT_first_place_agenda } }
+		}
+	}
+
+	#picture =
+
+	is_triggered_only = yes
+
+	immediate = {
+		set_country_flag = MIT_received_agenda_event
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.5 option germany_mitteleuropa_events.5.a"
+		name = germany_mitteleuropa_events.5.a
+		trigger = {
+			check_variable = { MIT_supported_agenda = event_target:MIT_chairman_agenda }
+		}
+		set_temp_variable = { agenda = event_target:MIT_chairman_agenda }
+		MIT_add_agenda_reward = yes
+		hidden_effect = {
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = MIT.economic_sphere:members
+						NOT = { has_country_flag = MIT_received_agenda_event }
+					}
+				}
+				random_scope_in_array = {
+					array = MIT.economic_sphere:members
+					limit = { NOT = { has_country_flag = MIT_received_agenda_event } }
+					country_event = germany_mitteleuropa_events.5
+				}
+			}
+			else_if = {
+				limit = { has_event_target = MIT_next_chairman }
+				MIT = { country_event = germany_mitteleuropa_events.6 }
+			}
+			else = {
+				country_event = germany_mitteleuropa_events.10
+			}
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.5 option germany_mitteleuropa_events.5.b"
+		name = germany_mitteleuropa_events.5.b
+		trigger = {
+			NOT = { check_variable = { MIT_supported_agenda = event_target:MIT_chairman_agenda } }
+		}
+		set_country_flag = { flag = MIT_angry_with_leadership days = 365 value = 1 }
+		hidden_effect = {
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = MIT.economic_sphere:members
+						NOT = { has_country_flag = MIT_received_agenda_event }
+					}
+				}
+				random_scope_in_array = {
+					array = MIT.economic_sphere:members
+					limit = { NOT = { has_country_flag = MIT_received_agenda_event } }
+					country_event = germany_mitteleuropa_events.5
+				}
+			}
+			else_if = {
+				limit = { has_event_target = MIT_next_chairman }
+				MIT = { country_event = germany_mitteleuropa_events.6 }
+			}
+			else = {
+				country_event = germany_mitteleuropa_events.10
+			}
+		}
+	}
+}
+
+country_event = { #Presiding country receives leadership challenge
+	id = germany_mitteleuropa_events.6
+	title = germany_mitteleuropa_events.6.t
+	desc = germany_mitteleuropa_events.6.d
+	#picture =
+
+	is_triggered_only = yes
+
+	immediate = {
+		set_country_flag = MIT_received_leadership_event
+		save_event_target_as = MIT_previous_chairman
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.6 option germany_mitteleuropa_events.6.a"
+		name = germany_mitteleuropa_events.6.a
+		ai_chance = { base = 70 }
+		event_target:MIT_next_chairman = { country_event = germany_mitteleuropa_events.7 }
+	}
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.6 option germany_mitteleuropa_events.6.b"
+		name = germany_mitteleuropa_events.6.b
+		trigger = {
+			NOT = { has_global_flag = MIT_qualified_majority_in_effect }
+		}
+		ai_chance = {
+			base = 30
+			modifier = {
+				factor = 0
+				has_elected_government = yes
+			}
+			modifier = {
+				factor = 0
+				is_major = no
+			}
+		}
+		add_timed_idea = {
+			idea = MIT_defied_leadership_challenge
+			years = 1
+		}
+		event_target:MIT_next_chairman = { country_event = germany_mitteleuropa_events.8 }
+	}
+}
+
+country_event = { #Country becomes new president of Mitteleuropa
+	id = germany_mitteleuropa_events.7
+	title = germany_mitteleuropa_events.7.t
+
+	desc = {
+		text = germany_mitteleuropa_events.7.d.new_leader
+		trigger = { tag = event_target:MIT_next_chairman }
+	}
+	desc = {
+		text = germany_mitteleuropa_events.7.d.others
+		trigger = { NOT = { tag = event_target:MIT_next_chairman } }
+	}
+
+	#picture =
+
+	is_triggered_only = yes
+
+	immediate = {
+		set_country_flag = MIT_received_leadership_event
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.7 option germany_mitteleuropa_events.7.a"
+		name = germany_mitteleuropa_events.7.a
+		hidden_effect = {
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = MIT.economic_sphere:members
+						NOT = { has_country_flag = MIT_received_leadership_event }
+					}
+				}
+				random_scope_in_array = {
+					array = MIT.economic_sphere:members
+					limit = { NOT = { has_country_flag = MIT_received_leadership_event } }
+					country_event = germany_mitteleuropa_events.7
+				}
+			}
+			else = {
+				country_event = germany_mitteleuropa_events.10
+			}
+		}
+	}
+}
+
+country_event = { #President defies leadership challenge
+	id = germany_mitteleuropa_events.8
+	title = germany_mitteleuropa_events.8.t
+
+	desc = {
+		text = germany_mitteleuropa_events.8.d.new_leader
+		trigger = { tag = event_target:MIT_next_chairman }
+	}
+	desc = {
+		text = germany_mitteleuropa_events.8.d.others
+		trigger = { NOT = { tag = event_target:MIT_next_chairman } }
+	}
+
+	#picture =
+
+	is_triggered_only = yes
+
+	immediate = {
+		set_country_flag = MIT_received_leadership_event
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.8 option germany_mitteleuropa_events.8.a"
+		name = germany_mitteleuropa_events.8.a
+		hidden_effect = {
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = MIT.economic_sphere:members
+						NOT = { has_country_flag = MIT_received_leadership_event }
+					}
+				}
+				random_scope_in_array = {
+					array = MIT.economic_sphere:members
+					limit = { NOT = { has_country_flag = MIT_received_leadership_event } }
+					country_event = germany_mitteleuropa_events.8
+				}
+			}
+			else = {
+				country_event = germany_mitteleuropa_events.10
+			}
+		}
+	}
+}
+
+country_event = { #post-election clean-up event
+	id = germany_mitteleuropa_events.10
+
+	is_triggered_only = yes
+	hidden = yes
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.10 option 1"
+		#unlock the GUI
+		clr_global_flag = MIT_event_chain_ongoing
+		if = {
+			limit = { is_ai = yes }
+			MIT_open_mitteleuropa_panel = yes
+		}
+
+		#clear member variables and flags
+		for_each_scope_loop = {
+			array = MIT.economic_sphere:members
+			clr_country_flag = MIT_received_agenda_event
+			clr_country_flag = MIT_received_leadership_event
+
+			clear_variable = MIT_agenda_count
+			clear_variable = MIT_agenda_investment
+			if = {
+				limit = { has_variable = MIT_supported_agenda }
+				var:MIT_supported_agenda = { clear_variable = frame@PREV }
+				clear_variable = MIT_supported_agenda
+			}
+		}
+
+		#clear agenda variables and arrays
+		MIT_reset_agendas = yes
+
+		#re-enable agendas previously on cooldown
+		for_each_scope_loop = {
+			array = global.MIT_on_cooldown_agendas
+			set_temp_variable = { target_agenda = THIS }
+			MIT_unlock_agenda = yes
+		}
+		clear_array = global.MIT_on_cooldown_agendas
+
+		#put the enacted agenda on cooldown if applicable
+		if = {
+			limit = { event_target:MIT_enacted_agenda = { NOT = { has_character_flag = MIT_has_unique_agenda_effect } } }
+			add_to_array = { global.MIT_on_cooldown_agendas = event_target:MIT_enacted_agenda }
+			set_temp_variable = { target_agenda = event_target:MIT_enacted_agenda }
+			MIT_lock_agenda = yes
+		}
+
+		#set new chairman if applicable
+		if = {
+			limit = {
+				has_event_target = MIT_next_chairman
+				NOT = { event_target:MIT_previous_chairman = { has_idea = MIT_defied_leadership_challenge } }
+			}
+			event_target:MIT_next_chairman = { MIT_set_new_chairman = yes }
+			GER = {
+				MIT_challenge_leadership = {
+					add_to_array = { global.MIT_on_cooldown_agendas = THIS }
+					set_temp_variable = { target_agenda = THIS }
+				}
+			}
+			MIT_lock_agenda = yes
+		}
+
+		#reset election cycle
+		GER = { set_country_flag = MIT_election }
+	}
+}
+
+country_event = { #Leaving Mitteleuropa
+	id = germany_mitteleuropa_events.20
+	title = germany_mitteleuropa_events.20.t
+	desc = "[GetMitteleuropaExitReason]"
+	picture = GFX_report_event_generic_read_write
+
+	is_triggered_only = yes
+
+	trigger = {
+		GER_is_in_mitteleuropa = yes
+	}
+
+	immediate = {
+		hidden_effect = { GER_remove_from_mitteleuropa_effect = yes }
+	}
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.20 option germany_mitteleuropa_events.20.a"
+		name = germany_mitteleuropa_events.20.a
+		effect_tooltip = { GER_remove_from_mitteleuropa_effect = yes }
+		if = {
+			limit = {
+				GER = {
+					exists = yes
+					is_subject = no
+					GER_is_in_mitteleuropa = yes
+				}
+				OR = {
+					is_subject = no
+					is_subject_of = GER
+				}
+				NOT = { has_event_target = GER_kicked_from_mitteleuropa }
+				NOT = { any_enemy_country = { is_ally_with = GER } }
+			}
+			GER = { country_event = germany_mitteleuropa_events.21 }
+		}
+	}
+}
+
+country_event = { #FROM Leaves Mitteleuropa!
+	id = germany_mitteleuropa_events.21
+	title = germany_mitteleuropa_events.21.t
+
+	desc = {
+		text = germany_mitteleuropa_events.21.d.socialist
+		trigger = {
+			FROM = { has_socialist_government = yes }
+		}
+	}
+	desc = {
+		text = germany_mitteleuropa_events.21.d.allied_with_rival
+		trigger = {
+			FROM = {
+				has_socialist_government = no
+				AND = {
+					is_in_faction = yes
+					NOT = { is_in_faction_with = GER }
+				}
+			}
+		}
+	}
+	desc = {
+		text = germany_mitteleuropa_events.21.d.left_mitteleuropa
+		trigger = {
+			FROM = {
+				has_socialist_government = no
+				NOT = {
+					AND = {
+						is_in_faction = yes
+						NOT = { is_in_faction_with = GER }
+					}
+				}
+			}
+		}
+	}
+
+	picture = GFX_report_event_generic_read_write
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.21 option germany_mitteleuropa_events.21.a"
+		name = germany_mitteleuropa_events.21.a
+		effect_tooltip = { FROM = { GER_remove_from_mitteleuropa_effect = yes } }
+		if = {
+			limit = { FROM = { has_socialist_government = yes } }
+			add_opinion_modifier = {
+				target = FROM
+				modifier = KR_outraged
+			}
+		}
+		else = {
+			add_opinion_modifier = {
+				target = FROM
+				modifier = KR_hates_govt
+			}
+		}
+	}
+}
+
+### Intro + flavor + everything else that a player can actually see.
+
+country_event = { # ME activated
+	id = germany_mitteleuropa_events.1000
+	title = germany_mitteleuropa_events.1000.t
+	desc = germany_mitteleuropa_events.1000.d
+	picture = GFX_report_event_generic_read_write
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	option = { # Yes
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1000 option germany_mitteleuropa_events.1000.a"
+		name = germany_mitteleuropa_events.1000.a
+		custom_effect_tooltip = MIT_mechanics_unlocked
+		custom_effect_tooltip = MIT_focus_unlocked
+		if = {
+			limit = { NOT = { has_country_flag = MIT_election } }
+			GER_enable_mitteleuropa = yes
+		}
+		hidden_effect = {
+			set_country_flag = MIT_opened_panel_once
+			MIT_open_mitteleuropa_panel = yes
+			if = {
+				limit = { date > 1936.6.1 }
+				every_other_country = {
+					limit = {
+						is_ai = no
+						GER_is_in_mitteleuropa = yes
+					}
+					country_event = germany_mitteleuropa_events.1001
+				}
+			}
+		}
+	}
+}
+country_event = { # ME activated
+	id = germany_mitteleuropa_events.1001
+	title = germany_mitteleuropa_events.1000.t
+	desc = germany_mitteleuropa_events.1001.d
+	picture = GFX_report_event_generic_read_write
+
+	trigger = {
+		NOT = { has_country_flag = MIT_opened_panel_once }
+	}
+
+	is_triggered_only = yes
+
+	immediate = {
+		set_country_flag = MIT_opened_panel_once
+	}
+
+	option = { # Yes
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1001 option germany_mitteleuropa_events.1000.a"
+		name = germany_mitteleuropa_events.1000.a
+		custom_effect_tooltip = MIT_mechanics_unlocked
+		hidden_effect = { MIT_open_mitteleuropa_panel = yes }
+	}
+}
+
+### Events for the implementation of ME reforms.
+country_event = { # The Directive System
+	id = germany_mitteleuropa_events.1002
+	title = germany_mitteleuropa_events.1002.t
+	desc = germany_mitteleuropa_events.1002.d
+
+	picture = GFX_report_event_generic_read_write
+
+	trigger = {
+		GER_is_in_mitteleuropa = yes
+	}
+
+	is_triggered_only = yes
+
+	option = { # Yes
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1002 option germany_mitteleuropa_events.1002.a"
+		name = germany_mitteleuropa_events.1002.a
+		MIT_add_directive_system_modifiers = yes
+		hidden_effect = {
+			every_subject_country = {
+				limit = { GER_is_in_mitteleuropa = yes }
+				country_event = germany_mitteleuropa_events.1002
+			}
+		}
+	}
+}
+country_event = { # Mitteleuropa Court
+	id = germany_mitteleuropa_events.1003
+	title = germany_mitteleuropa_events.1003.t
+	desc = germany_mitteleuropa_events.1003.d
+
+	picture = GFX_report_event_generic_read_write
+
+	trigger = {
+		GER_is_in_mitteleuropa = yes
+	}
+
+	is_triggered_only = yes
+
+	option = { # Yes
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1003 option germany_mitteleuropa_events.1003.a"
+		name = germany_mitteleuropa_events.1003.a
+		MIT_add_court_system_modifiers = yes
+		hidden_effect = {
+			every_subject_country = {
+				limit = { GER_is_in_mitteleuropa = yes }
+				country_event = germany_mitteleuropa_events.1003
+			}
+		}
+	}
+}
+country_event = { # Regulation System
+	id = germany_mitteleuropa_events.1004
+	title = germany_mitteleuropa_events.1004.t
+	desc = germany_mitteleuropa_events.1004.d
+
+	picture = GFX_report_event_generic_read_write
+
+	trigger = {
+		GER_is_in_mitteleuropa = yes
+	}
+
+	is_triggered_only = yes
+
+	option = { # Yes
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1004 option germany_mitteleuropa_events.1004.a"
+		name = germany_mitteleuropa_events.1004.a
+		MIT_add_regulation_system_modifiers = yes
+		hidden_effect = {
+			every_subject_country = {
+				limit = { GER_is_in_mitteleuropa = yes }
+				country_event = germany_mitteleuropa_events.1004
+			}
+		}
+	}
+}
+country_event = { # Berlin Bureaucracy
+	id = germany_mitteleuropa_events.1005
+	title = germany_mitteleuropa_events.1005.t
+	desc = germany_mitteleuropa_events.1005.d
+
+	picture = GFX_report_event_generic_read_write
+
+	trigger = {
+		GER_is_in_mitteleuropa = yes
+	}
+
+	is_triggered_only = yes
+
+	option = { # Yes
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1005 option germany_mitteleuropa_events.1005.a"
+		name = germany_mitteleuropa_events.1005.a
+		MIT_add_berlin_bureaucracy_modifiers = yes
+		hidden_effect = {
+			every_subject_country = {
+				limit = { GER_is_in_mitteleuropa = yes }
+				country_event = germany_mitteleuropa_events.1005
+			}
+		}
+	}
+}
+country_event = { # Enforcement Directorate
+	id = germany_mitteleuropa_events.1006
+	title = germany_mitteleuropa_events.1006.t
+	desc = germany_mitteleuropa_events.1006.d
+
+	picture = GFX_report_event_generic_read_write
+
+	trigger = {
+		GER_is_in_mitteleuropa = yes
+	}
+
+	is_triggered_only = yes
+
+	option = { # Yes
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1006 option germany_mitteleuropa_events.1006.a"
+		name = germany_mitteleuropa_events.1006.a
+		MIT_add_enforcement_directorate_modifiers = yes
+		hidden_effect = {
+			every_subject_country = {
+				limit = { GER_is_in_mitteleuropa = yes }
+				country_event = germany_mitteleuropa_events.1006
+			}
+		}
+	}
+}
+country_event = { # Conference Control
+	id = germany_mitteleuropa_events.1007
+	title = germany_mitteleuropa_events.1007.t
+	desc = germany_mitteleuropa_events.1007.d
+
+	picture = GFX_report_event_generic_read_write
+
+	trigger = {
+		GER_is_in_mitteleuropa = yes
+	}
+
+	is_triggered_only = yes
+
+	option = { # Yes
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1007 option germany_mitteleuropa_events.1007.a"
+		name = germany_mitteleuropa_events.1007.a
+		MIT_add_conference_control_modifiers = yes
+		hidden_effect = {
+			every_subject_country = {
+				limit = { GER_is_in_mitteleuropa = yes }
+				country_event = germany_mitteleuropa_events.1007
+			}
+		}
+	}
+}
+country_event = { # Free Travel Area
+	id = germany_mitteleuropa_events.1008
+	title = germany_mitteleuropa_events.1008.t
+	desc = germany_mitteleuropa_events.1008.d
+
+	picture = GFX_report_event_generic_read_write
+
+	trigger = {
+		GER_is_in_mitteleuropa = yes
+	}
+
+	is_triggered_only = yes
+
+	option = { # Yes
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1008 option germany_mitteleuropa_events.1008.a"
+		name = germany_mitteleuropa_events.1008.a
+		MIT_add_common_travel_area_modifiers = yes
+	}
+	option = { # No
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1008 option germany_mitteleuropa_events.1008.b"
+		name = germany_mitteleuropa_events.1008.b
+		trigger = {
+			NOT = { is_subject_of = GER }
+		}
+		ai_chance = { base = 0 }
+	}
+}
+country_event = { # Europamark
+	id = germany_mitteleuropa_events.1009
+	title = germany_mitteleuropa_events.1009.t
+	desc = germany_mitteleuropa_events.1009.d
+
+	picture = GFX_report_event_generic_read_write
+
+	trigger = {
+		GER_is_in_mitteleuropa = yes
+	}
+
+	is_triggered_only = yes
+
+	option = { # Yes
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1009 option germany_mitteleuropa_events.1009.a"
+		name = germany_mitteleuropa_events.1009.a
+		MIT_add_europamark_modifiers = yes
+	}
+	option = { # No
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1009 option germany_mitteleuropa_events.1009.b"
+		name = germany_mitteleuropa_events.1009.b
+		trigger = {
+			NOT = { is_subject_of = GER }
+		}
+		ai_chance = { base = 0 }
+	}
+}
+country_event = { # Bank of Central Europe
+	id = germany_mitteleuropa_events.1010
+	title = germany_mitteleuropa_events.1010.t
+	desc = germany_mitteleuropa_events.1010.d
+
+	picture = GFX_report_event_generic_read_write
+
+	trigger = {
+		GER_is_in_mitteleuropa = yes
+	}
+
+	is_triggered_only = yes
+
+	option = { # Yes
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1010 option germany_mitteleuropa_events.1010.a"
+		name = germany_mitteleuropa_events.1010.a
+		MIT_add_central_europe_bank_modifiers = yes
+	}
+	option = { # No
+		log = "[GetLogInfo]: event germany_mitteleuropa_events.1010 option germany_mitteleuropa_events.1010.b"
+		name = germany_mitteleuropa_events.1010.b
+		trigger = {
+			NOT = { is_subject_of = GER }
+		}
+		ai_chance = { base = 0 }
+	}
+}
