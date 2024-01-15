@@ -3736,7 +3736,7 @@ country_event = { #Fate of Indochina
 			clr_global_flag = GEA_Indochina_Uprising_Fired
 			INC = {
 				if = {				# Removing socialist ideas from non-socialist puppet
-					limit = { ROOT = { NOT = { has_socialist_government = yes } } }
+					limit = { ROOT = { has_socialist_government = no } }
 					remove_ideas = {
 						INC_vietminh
 						INC_internationale_support
@@ -3767,37 +3767,55 @@ country_event = { #Fate of Indochina
 				}
 			}
 		}
+		if = {
+			limit = {
+				OR = {
+					original_tag = SIA
+					original_tag = GEA
+				}
+			}
+			save_event_target_as = can_annex_indochina
+		}
 	}
 
 	option = { #Puppet Indochina
 		log = "[GetLogInfo]: event annex.3022 option annex.3022.a"
 		name = annex.3022.a
-		trigger = {
-			NOT = {
-				tag = GEA
-				tag = SIA
-				tag = CHI
+		ai_chance = {
+			base = 40
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_indochina
+			}
+			modifier = {
+				factor = 0
 				has_subject = GEA
 			}
 		}
-		ai_chance = { base = 40 }
 		every_state = {
 			limit = { region = 196 } #Indochina
 			add_core_of = INC
 		}
 		set_temp_variable = { tag_to_release = INC }
 		release_targeted_tag = yes
+		if = {
+			limit = { original_tag = CHI }
+			INC_released_by_chi = yes
+		}
 		recheck_annexations = yes
 	}
 
 	option = { #Partition Indochina
 		log = "[GetLogInfo]: event annex.3022 option annex.3022.b"
 		name = annex.3022.b
-		ai_chance = { base = 60 }
-		trigger = {
-			NOT = {
-				tag = GEA
-				tag = SIA
+		ai_chance = {
+			base = 60
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_indochina
+			}
+			modifier = {
+				factor = 0
 				has_subject = GEA
 			}
 		}
@@ -3831,36 +3849,41 @@ country_event = { #Fate of Indochina
 			original_tag = SIA
 		}
 		ai_chance = { base = 100 }
-		every_state = {
-			limit = {
-				OR = {
-					is_core_of = CAM
-					is_core_of = LAO
-				}
-				is_claim_or_core_of_ROOT = no
+		CAM = {
+			every_core_state = {
+				limit = { NOT = { is_core_of = ROOT } }
+				add_claim_by = ROOT
 			}
-			add_claim_by = ROOT
+			every_core_state = {
+				limit = {
+					is_controlled_by = ROOT
+					has_resistance = yes
+				}
+				add_resistance = 20
+			}
 		}
-		every_owned_state = {
-			limit = {
-				OR = {
-					is_core_of = CAM
-					is_core_of = LAO
-				}
-				is_controlled_by = ROOT
-				has_resistance = yes
+		LAO = {
+			every_core_state = {
+				limit = { NOT = { is_core_of = ROOT } }
+				add_claim_by = ROOT
 			}
-			add_resistance = 20
+			every_core_state = {
+				limit = {
+					is_controlled_by = ROOT
+					has_resistance = yes
+				}
+				add_resistance = 20
+			}
 		}
 		recheck_annexations_immediate = yes
 	}
 
 	option = { #reintegrate
-		log = "[GetLogInfo]: event annex.3022 option annex.3024.b"
-		name = annex.3024.b
+		log = "[GetLogInfo]: event annex.3022 option annex.integration"
+		name = annex.integration
 		ai_chance = { base = 1000 }
 		trigger = {
-			tag = GEA
+			original_tag = GEA
 		}
 		every_state = {
 			limit = {
@@ -3871,29 +3894,12 @@ country_event = { #Fate of Indochina
 		}
 		recheck_annexations = yes
 	}
-	option = { #Release VNQQD
-		log = "[GetLogInfo]: event annex.3022 option annex.3022.kmt"
-		name = annex.3022.kmt
-		trigger = { tag = CHI }
-		ai_chance = { base = 100 }
-		every_state = {
-			limit = { region = 196 } #Indochina
-			add_core_of = INC
-		}
-		set_temp_variable = { tag_to_release = INC }
-		release_targeted_tag = yes
-		INC_released_by_chi = yes
-		recheck_annexations = yes
-	}
 
 	option = { #occupy
 		log = "[GetLogInfo]: event annex.3022 option annex.occupation"
 		name = annex.occupation
 		trigger = {
-			NOT = {
-				tag = SIA
-				tag = GEA
-			}
+			NOT = { has_event_target = can_annex_indochina }
 		}
 		ai_chance = { base = 0 }
 		occupy_medium_country = yes
@@ -3928,15 +3934,17 @@ country_event = { #Fate of Vietnam
 	option = { #Puppet Vietnam
 		log = "[GetLogInfo]: event annex.3023 option annex.3023.a"
 		name = annex.3023.a
-		trigger = {
-			NOT = { has_subject = GEA }
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_subject = GEA
+			}
 		}
-		ai_chance = { base = 100 }
 		set_temp_variable = { tag_to_release = VIN }
 		release_targeted_tag = yes
 		if = {
 			limit = {
-				tag = var:VIN.overlord
 				country_exists = INC
 				INC = {
 					has_socialist_government = yes
@@ -3962,17 +3970,16 @@ country_event = { #Fate of Vietnam
 	option = { #give to GEA
 		log = "[GetLogInfo]: event annex.3023 option annex.asia.give_to_gea"
 		name = annex.asia.give_to_gea
-		ai_chance = { base = 100 }
 		trigger = {
 			has_subject = GEA
 		}
+		ai_chance = { base = 100 }
 		set_temp_variable = { tag_to_release = GEA }
-		every_state = {
-			limit = {
-				is_core_of = VIN
-				is_claim_or_core_of_ROOT = no
+		VIN = {
+			every_core_state = {
+				limit = { is_claim_or_core_of_ROOT = no }
+				add_claim_of_target_and_transfer_if_owned = yes
 			}
-			add_claim_of_target_and_transfer_if_owned = yes
 		}
 		recheck_annexations = yes
 	}
@@ -3986,6 +3993,10 @@ country_event = { #Fate of Vietnam
 				original_tag = SIA
 			}
 			owns_state = 826 #Stung Treng
+			OR = {
+				286 = { is_valid_annexation_state = yes } #Cochinchina
+				856 = { is_valid_annexation_state = yes } #Mekong Delta
+			}
 		}
 		ai_chance = { base = 100 }
 		286 = { #Cochinchina
@@ -4010,18 +4021,17 @@ country_event = { #Fate of Vietnam
 	}
 
 	option = { #Reintegrate
-		log = "[GetLogInfo]: event annex.3023 option annex.3024.b"
-		name = annex.3024.b
-		ai_chance = { base = 100 }
+		log = "[GetLogInfo]: event annex.3023 option annex.integration"
+		name = annex.integration
 		trigger = {
-			tag = GEA
+			original_tag = GEA
 		}
-		every_state = {
-			limit = {
-				is_core_of = VIN
-				is_claim_or_core_of_ROOT = no
+		ai_chance = { base = 100 }
+		VIN = {
+			every_core_state = {
+				limit = { NOT = { is_core_of = ROOT } }
+				add_claim_by = ROOT
 			}
-			remove_claim_and_add_core_of_ROOT = yes
 		}
 		recheck_annexations = yes
 	}
@@ -4030,7 +4040,7 @@ country_event = { #Fate of Vietnam
 		log = "[GetLogInfo]: event annex.3023 option annex.occupation"
 		name = annex.occupation
 		trigger = {
-			NOT = { tag = GEA }
+			NOT = { original_tag = GEA }
 		}
 		ai_chance = { base = 0 }
 		occupy_medium_country = yes
@@ -4047,45 +4057,68 @@ country_event = { #Fate of Laos
 
 	is_triggered_only = yes
 
-	option = { #Puppet Laos
-		log = "[GetLogInfo]: event annex.3024 option annex.3024.a"
-		name = annex.3024.a
-		trigger = {
-			NOT = {
-				original_tag = SIA
-				original_tag = INC
-				AND = {
-					original_tag = GEA
-					owns_state = 671 #Tonkin
-				}
-				AND = {
-					has_subject = GEA
-					OR = {
-						GEA = { owns_state = 671 } #Tonkin
-						671 = { owner = { is_subject_of = GEA } }
+	immediate = {
+		hidden_effect = { LAO = { drop_cosmetic_tag = yes } }
+		if = {
+			limit = {
+				OR = {
+					original_tag = INC
+					original_tag = SIA
+					AND = {
+						original_tag = GEA
+						INC = { any_core_state = { is_owned_by = ROOT } }
 					}
 				}
 			}
+			save_event_target_as = can_annex_laos
 		}
-		ai_chance = { base = 100 }
+		if = {
+			limit = {
+				has_subject = GEA
+				INC = { any_core_state = { is_owned_by = GEA } }
+			}
+			GEA = { save_event_target_as = german_east_asia }
+		}
+	}
+
+	option = { #Puppet Laos
+		log = "[GetLogInfo]: event annex.3024 option annex.3024.a"
+		name = annex.3024.a
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_laos
+			}
+			modifier = {
+				factor = 0
+				has_event_target = german_east_asia
+			}
+		}
 		set_temp_variable = { tag_to_release = LAO }
 		670 = { transfer_state_and_add_core = yes } #Laos
 		puppet_released_tag = yes
 		recheck_annexations = yes
 	}
 
-	option = { #give to GEA
-		log = "[GetLogInfo]: event annex.3024 option annex.asia.give_to_gea"
-		name = annex.asia.give_to_gea
+	option = { #give to INC
+		log = "[GetLogInfo]: event annex.3024 option annex.asia.give_to_inc"
+		name = annex.asia.give_to_inc
 		trigger = {
-			has_subject = GEA
-			OR = {
-				GEA = { owns_state = 671 } #Tonkin
-				671 = { owner = { is_subject_of = GEA } }
+			INC = { ROOT_can_grant_land = yes }
+		}
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_laos
+			}
+			modifier = {
+				factor = 0
+				has_event_target = german_east_asia
 			}
 		}
-		ai_chance = { base = 100 }
-		set_temp_variable = { tag_to_release = GEA }
+		set_temp_variable = { tag_to_release = INC }
 		LAO = {
 			every_core_state = {
 				limit = { is_claim_or_core_of_ROOT = no }
@@ -4095,36 +4128,68 @@ country_event = { #Fate of Laos
 		recheck_annexations = yes
 	}
 
+	option = { #give to GEA
+		log = "[GetLogInfo]: event annex.3024 option annex.asia.give_to_gea"
+		name = annex.asia.give_to_gea
+		trigger = {
+			has_event_target = german_east_asia
+		}
+		ai_chance = { base = 100 }
+		set_temp_variable = { tag_to_release = event_target:german_east_asia }
+		LAO = {
+			every_core_state = {
+				limit = { is_claim_or_core_of_ROOT = no }
+				add_claim_of_target_and_transfer_if_owned = yes
+			}
+		}
+		recheck_annexations = yes
+	}
+
+	option = { #Integrate as INC
+		log = "[GetLogInfo]: event annex.3024 option annex.integration"
+		name = annex.integration
+		trigger = {
+			original_tag = INC
+		}
+		ai_chance = { base = 100 }
+		LAO = {
+			every_core_state = {
+				limit = { NOT = { is_core_of = ROOT } }
+				add_claim_by = ROOT
+			}
+		}
+		recheck_annexations = yes
+	}
+
 	option = { #Integrate as SIA
-		log = "[GetLogInfo]: event annex.3024 option annex.3024.b"
-		name = annex.3024.b
+		log = "[GetLogInfo]: event annex.3024 option annex.integration"
+		name = annex.integration
 		trigger = {
 			original_tag = SIA
 		}
 		ai_chance = { base = 100 }
 		LAO = {
 			every_core_state = {
-				limit = { is_claim_or_core_of_ROOT = no }
+				limit = { NOT = { is_core_of = ROOT } }
 				add_claim_by = ROOT
 			}
-		}
-		every_owned_state = {
-			limit = {
-				is_core_of = LAO
-				is_controlled_by = ROOT
-				has_resistance = yes
+			every_core_state = {
+				limit = {
+					is_controlled_by = ROOT
+					has_resistance = yes
+				}
+				add_resistance = 20
 			}
-			add_resistance = 20
 		}
 		recheck_annexations = yes
 	}
 
-	option = { #Reintegrate
-		log = "[GetLogInfo]: event annex.3024 option annex.3024.b"
-		name = annex.3024.b
+	option = { #Integrate as GEA
+		log = "[GetLogInfo]: event annex.3024 option annex.integration"
+		name = annex.integration
 		trigger = {
 			original_tag = GEA
-			671 = { is_owned_by_ROOT_or_subject = yes } #Tonkin
+			INC = { any_core_state = { is_owned_by = ROOT } }
 		}
 		ai_chance = { base = 100 }
 		LAO = {
@@ -4136,58 +4201,11 @@ country_event = { #Fate of Laos
 		recheck_annexations = yes
 	}
 
-	option = { #Integrate as INC
-		log = "[GetLogInfo]: event annex.3024 option annex.3024.b"
-		name = annex.3024.b
-		trigger = {
-			original_tag = INC
-		}
-		ai_chance = { base = 100 }
-		LAO = {
-			every_core_state = {
-				limit = { is_claim_or_core_of_ROOT = no }
-				add_claim_by = ROOT
-			}
-		}
-		recheck_annexations = yes
-	}
-
-	option = { #give to INC
-		log = "[GetLogInfo]: event annex.3024 option annex.3024.c"
-		name = annex.3024.c
-		trigger = {
-			INC = { is_ally_of_ROOT = yes }
-		}
-		ai_chance = { base = 100 }
-		set_temp_variable = { tag_to_release = INC }
-		LAO = {
-			every_core_state = {
-				limit = { is_claim_or_core_of_ROOT = no }
-				add_claim_of_target_and_transfer_if_owned = yes
-			}
-		}
-		recheck_annexations = yes
-	}
-
 	option = { #Occupy it
 		log = "[GetLogInfo]: event annex.3024 option annex.occupation"
 		name = annex.occupation
 		trigger = {
-			NOT = {
-				original_tag = SIA
-				original_tag = INC
-				AND = {
-					original_tag = GEA
-					owns_state = 671 #Tonkin
-				}
-				AND = {
-					has_subject = GEA
-					OR = {
-						GEA = { owns_state = 671 } #Tonkin
-						671 = { owner = { is_subject_of = GEA } }
-					}
-				}
-			}
+			NOT = { has_event_target = can_annex_laos }
 		}
 		ai_chance = { base = 0 }
 		occupy_medium_country = yes
@@ -4213,28 +4231,35 @@ country_event = { #Fate of Cambodia
 					original_tag = INC
 					AND = {
 						original_tag = GEA
-						owns_state = 286 #Cochinchina
-					}
-					AND = {
-						has_subject = GEA
-						OR = {
-							GEA = { owns_state = 286 } #Cochinchina
-							286 = { owner = { is_subject_of = GEA } }
-						}
+						INC = { any_core_state = { is_owned_by = ROOT } }
 					}
 				}
 			}
-			save_event_target_as = can_integrate_cambodia_or_give_to_colony
+			save_event_target_as = can_annex_cambodia
+		}
+		if = {
+			limit = {
+				has_subject = GEA
+				INC = { any_core_state = { is_owned_by = GEA } }
+			}
+			GEA = { save_event_target_as = german_east_asia }
 		}
 	}
 
 	option = { #liberate, republic
 		log = "[GetLogInfo]: event annex.3025 option annex.3025.a"
 		name = annex.3025.a
-		trigger = {
-			NOT = { has_event_target = can_integrate_cambodia_or_give_to_colony }
+		ai_chance = {
+			base = 20
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_cambodia
+			}
+			modifier = {
+				factor = 0
+				has_event_target = german_east_asia
+			}
 		}
-		ai_chance = { base = 20 }
 		set_temp_variable = { tag_to_release = CAM }
 		750 = { transfer_state_and_add_core = yes } #Phnom Penh
 		puppet_released_tag = yes
@@ -4246,9 +4271,18 @@ country_event = { #Fate of Cambodia
 		name = annex.3025.b
 		trigger = {
 			has_socialist_government = no
-			NOT = { has_event_target = can_integrate_cambodia_or_give_to_colony }
 		}
-		ai_chance = { base = 40 }
+		ai_chance = {
+			base = 40
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_cambodia
+			}
+			modifier = {
+				factor = 0
+				has_event_target = german_east_asia
+			}
+		}
 		set_temp_variable = { tag_to_release = CAM }
 		750 = { transfer_state_and_add_core = yes } #Phnom Penh
 		puppet_released_tag = yes
@@ -4264,9 +4298,18 @@ country_event = { #Fate of Cambodia
 		name = annex.3025.c
 		trigger = {
 			has_socialist_government = no
-			NOT = { has_event_target = can_integrate_cambodia_or_give_to_colony }
 		}
-		ai_chance = { base = 40 }
+		ai_chance = {
+			base = 40
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_cambodia
+			}
+			modifier = {
+				factor = 0
+				has_event_target = german_east_asia
+			}
+		}
 		set_temp_variable = { tag_to_release = CAM }
 		750 = { transfer_state_and_add_core = yes } #Phnom Penh
 		puppet_released_tag = yes
@@ -4277,90 +4320,22 @@ country_event = { #Fate of Cambodia
 		recheck_annexations = yes
 	}
 
-	option = { #give to GEA
-		log = "[GetLogInfo]: event annex.3025 option annex.asia.give_to_gea"
-		name = annex.asia.give_to_gea
-		ai_chance = { base = 100 }
-		trigger = {
-			has_subject = GEA
-			OR = {
-				GEA = { owns_state = 286 } #Cochinchina
-				286 = { owner = { is_subject_of = GEA } }
-			}
-		}
-		set_temp_variable = { tag_to_release = GEA }
-		CAM = {
-			every_core_state = {
-				limit = { is_claim_or_core_of_ROOT = no }
-				add_claim_of_target_and_transfer_if_owned = yes
-			}
-		}
-		recheck_annexations = yes
-	}
-
-	option = { #Integrate as SIA
-		log = "[GetLogInfo]: event annex.3025 option annex.3024.b"
-		name = annex.3024.b
-		trigger = {
-			original_tag = SIA
-		}
-		ai_chance = { base = 100 }
-		CAM = {
-			every_core_state = {
-				limit = { is_claim_or_core_of_ROOT = no }
-				add_claim_by = ROOT
-			}
-		}
-		every_owned_state = {
-			limit = {
-				is_core_of = CAM
-				is_controlled_by = ROOT
-				has_resistance = yes
-			}
-			add_resistance = 20
-		}
-		recheck_annexations = yes
-	}
-
-	option = { #Reintegrate
-		log = "[GetLogInfo]: event annex.3025 option annex.3024.b"
-		name = annex.3024.b
-		ai_chance = { base = 100 }
-		trigger = {
-			original_tag = GEA
-			286 = { is_owned_by_ROOT_or_subject = yes } #Cochinchina
-		}
-		CAM = {
-			every_core_state = {
-				limit = { NOT = { is_core_of = ROOT } }
-				add_claim_of_ROOT = yes
-			}
-		}
-		recheck_annexations = yes
-	}
-
-	option = { #Integrate as INC
-		log = "[GetLogInfo]: event annex.3025 option annex.3024.b"
-		name = annex.3024.b
-		ai_chance = { base = 100 }
-		trigger = {
-			original_tag = INC
-		}
-		CAM = {
-			every_core_state = {
-				limit = { is_claim_or_core_of_ROOT = no }
-				add_claim_by = ROOT
-			}
-		}
-		recheck_annexations = yes
-	}
-
 	option = { #give to INC
-		log = "[GetLogInfo]: event annex.3025 option annex.3025.e"
-		name = annex.3025.e
-		ai_chance = { base = 100 }
+		log = "[GetLogInfo]: event annex.3025 option annex.asia.give_to_inc"
+		name = annex.asia.give_to_inc
 		trigger = {
-			INC = { is_ally_of_ROOT = yes }
+			INC = { ROOT_can_grant_land = yes }
+		}
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_cambodia
+			}
+			modifier = {
+				factor = 0
+				has_event_target = german_east_asia
+			}
 		}
 		set_temp_variable = { tag_to_release = INC }
 		CAM = {
@@ -4372,11 +4347,84 @@ country_event = { #Fate of Cambodia
 		recheck_annexations = yes
 	}
 
+	option = { #give to GEA
+		log = "[GetLogInfo]: event annex.3025 option annex.asia.give_to_gea"
+		name = annex.asia.give_to_gea
+		trigger = {
+			has_event_target = german_east_asia
+		}
+		ai_chance = { base = 100 }
+		set_temp_variable = { tag_to_release = event_target:german_east_asia }
+		CAM = {
+			every_core_state = {
+				limit = { is_claim_or_core_of_ROOT = no }
+				add_claim_of_target_and_transfer_if_owned = yes
+			}
+		}
+		recheck_annexations = yes
+	}
+
+	option = { #Integrate as INC
+		log = "[GetLogInfo]: event annex.3025 option annex.integration"
+		name = annex.integration
+		trigger = {
+			original_tag = INC
+		}
+		ai_chance = { base = 100 }
+		CAM = {
+			every_core_state = {
+				limit = { NOT = { is_core_of = ROOT } }
+				add_claim_by = ROOT
+			}
+		}
+		recheck_annexations = yes
+	}
+
+	option = { #Integrate as SIA
+		log = "[GetLogInfo]: event annex.3025 option annex.integration"
+		name = annex.integration
+		trigger = {
+			original_tag = SIA
+		}
+		ai_chance = { base = 100 }
+		CAM = {
+			every_core_state = {
+				limit = { NOT = { is_core_of = ROOT } }
+				add_claim_by = ROOT
+			}
+			every_core_state = {
+				limit = {
+					is_controlled_by = ROOT
+					has_resistance = yes
+				}
+				add_resistance = 20
+			}
+		}
+		recheck_annexations = yes
+	}
+
+	option = { #Integrate as GEA
+		log = "[GetLogInfo]: event annex.3025 option annex.integration"
+		name = annex.integration
+		trigger = {
+			original_tag = GEA
+			INC = { any_core_state = { is_owned_by = ROOT } }
+		}
+		ai_chance = { base = 100 }
+		CAM = {
+			every_core_state = {
+				limit = { NOT = { is_core_of = ROOT } }
+				add_claim_by = ROOT
+			}
+		}
+		recheck_annexations = yes
+	}
+
 	option = { #Occupy it
 		log = "[GetLogInfo]: event annex.3025 option annex.occupation"
 		name = annex.occupation
 		trigger = {
-			NOT = { has_event_target = can_integrate_cambodia_or_give_to_colony }
+			NOT = { has_event_target = can_annex_cambodia }
 		}
 		ai_chance = { base = 0 }
 		occupy_medium_country = yes
@@ -11172,6 +11220,10 @@ country_event = { #Fate of Hawaii
 			}
 		}
 		set_temp_variable = { tag_to_release = 797.owner }
+		every_state = {
+			limit = { is_american_pacific_islands = yes }
+			add_claim_of_target = yes
+		}
 		every_owned_state = {
 			limit = {
 				is_american_pacific_islands = yes
@@ -11190,6 +11242,13 @@ country_event = { #Fate of Hawaii
 		}
 		ai_chance = { base = 0 }
 		set_temp_variable = { tag_to_release = JAP }
+		if = {
+			limit = { var:tag_to_release = { is_subject = yes } }
+			every_state = {
+				limit = { is_american_pacific_islands = yes }
+				add_claim_of_target = yes
+			}
+		}
 		every_owned_state = {
 			limit = {
 				is_american_pacific_islands = yes
@@ -11744,86 +11803,90 @@ country_event = { #Fate of Samaburi
 
 	is_triggered_only = yes
 
+	immediate = {
+		if = {
+			limit = {
+				var:670.owner = { #Laos
+					OR = {
+						AND = {
+							OR = {
+								original_tag = LAO
+								original_tag = INC
+							}
+							ROOT_can_grant_land = yes
+						}
+						AND = {
+							original_tag = GEA
+							is_subject_of = ROOT
+						}
+					}
+				}
+			}
+			var:670.owner = { save_event_target_as = laos }
+		}
+		if = {
+			limit = {
+				var:822.owner = { #Lan Na
+					original_tag = SIA
+					ROOT_can_grant_land = yes
+				}
+			}
+			var:822.owner = { save_event_target_as = siam }
+		}
+		else_if = {
+			limit = {
+				var:823.owner = { #Isan
+					original_tag = SIA
+					ROOT_can_grant_land = yes
+				}
+			}
+			var:823.owner = { save_event_target_as = siam }
+		}
+		if = {
+			limit = {
+				OR = {
+					original_tag = LAO
+					original_tag = SIA
+					AND = {
+						original_tag = INC
+						owns_state = 670 #Laos
+					}
+					AND = {
+						original_tag = GEA
+						owns_state = 670 #Laos
+					}
+				}
+			}
+			save_event_target_as = can_annex_samaburi
+		}
+	}
+
 	option = {
 		log = "[GetLogInfo]: event annex.3065 option annex.3065.a"
 		name = annex.3065.a #Give to LAO
 		trigger = {
-			NOT = { tag = SIA }
-			LAO = { ROOT_can_grant_land = yes }
+			has_event_target = laos
 		}
 		ai_chance = {
 			base = 100
 			modifier = {
 				factor = 0
-				SIA = { is_ally_of_ROOT = yes }
-				NOT = { is_ally_with = LAO }
+				has_event_target = can_annex_samaburi
 			}
-		}
-		set_temp_variable = { tag_to_release = LAO }
-		882 = { transfer_state_and_add_core = yes }
-		recheck_annexations = yes
-	}
-
-	option = {
-		log = "[GetLogInfo]: event annex.3065 option annex.3065.b"
-		name = annex.3065.b #Give to SIA
-		trigger = {
-			NOT = {
-				AND = {
-					OR = {
-						tag = INC
-						tag = GEA
-					}
-					owns_state = 670 #Laos
-				}
-				GEA = {
-					is_subject_of = ROOT
-					owns_state = 670 #Laos
-				}
-			}
-			SIA = { ROOT_can_grant_land = yes }
-		}
-		ai_chance = {
-			base = 100
 			modifier = {
 				factor = 0
-				var:670.owner = {
-					OR = {
-						tag = INC
-						tag = LAO
-					}
-					is_ally_with = ROOT
-				}
-				NOT = { is_ally_with = SIA }
+				NOT = { is_ally_with = event_target:laos }
+				is_ally_with = event_target:siam
 			}
-		}
-		set_temp_variable = { tag_to_release = SIA }
-		882 = { transfer_state_and_add_claim = yes }
-		recheck_annexations = yes
-	}
-
-	option = {
-		log = "[GetLogInfo]: event annex.3065 option annex.3065.c"
-		name = annex.3065.c #Give to INC
-		trigger = {
-			INC = {
-				owns_state = 670 #Laos
-				ROOT_can_grant_land = yes
-			}
-		}
-		ai_chance = {
-			base = 100
 			modifier = {
 				factor = 0
-				SIA = { is_ally_of_ROOT = yes }
-				NOT = { is_ally_with = INC }
+				NOT = { has_subject = event_target:laos }
+				has_subject = event_target:siam
 			}
 		}
-		set_temp_variable = { tag_to_release = INC }
+		set_temp_variable = { tag_to_release = event_target:laos }
 		if = {
-			limit = {
-				670 = { is_core_of = var:tag_to_release } #Laos
-			}
+			limit = { 670 = { is_core_of = event_target:laos } }
 			882 = { transfer_state_and_add_core = yes }
 		}
 		else = {
@@ -11833,16 +11896,29 @@ country_event = { #Fate of Samaburi
 	}
 
 	option = {
-		log = "[GetLogInfo]: event annex.3065 option annex.asia.give_to_gea"
-		name = annex.asia.give_to_gea #Give to GEA
+		log = "[GetLogInfo]: event annex.3065 option annex.3065.b"
+		name = annex.3065.b #Give to SIA
 		trigger = {
-			GEA = {
-				is_subject_of = ROOT
-				owns_state = 670 #Laos
+			has_event_target = siam
+		}
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_samaburi
+			}
+			modifier = {
+				factor = 0
+				NOT = { is_ally_with = event_target:siam }
+				is_ally_with = event_target:laos
+			}
+			modifier = {
+				factor = 0
+				NOT = { has_subject = event_target:laos }
+				has_subject = event_target:siam
 			}
 		}
-		ai_chance = { base = 1000 }
-		set_temp_variable = { tag_to_release = GEA }
+		set_temp_variable = { tag_to_release = event_target:siam }
 		882 = { transfer_state_and_add_claim = yes }
 		recheck_annexations = yes
 	}
@@ -11851,26 +11927,15 @@ country_event = { #Fate of Samaburi
 		log = "[GetLogInfo]: event annex.3065 option annex.integration"
 		name = annex.integration
 		trigger = {
-			OR = {
-				tag = SIA
-				AND = {
-					OR = {
-						tag = INC
-						tag = GEA
-					}
-					owns_state = 670 #Laos
-				}
-			}
+			has_event_target = can_annex_samaburi
 		}
-		ai_chance = { base = 1000 }
+		ai_chance = { base = 100 }
 		if = {
-			limit = {
-				670 = { is_core_of = ROOT } #Laos
-			}
-			add_state_core = 882
+			limit = { 670 = { is_core_of = ROOT } } #Laos
+			882 = { remove_claim_and_add_core_of_ROOT = yes }
 		}
 		else = {
-			add_state_claim = 882
+			882 = { add_claim_of_ROOT = yes }
 		}
 		recheck_annexations = yes
 	}
@@ -11879,16 +11944,7 @@ country_event = { #Fate of Samaburi
 		log = "[GetLogInfo]: event annex.3065 option annex.occupation"
 		name = annex.occupation
 		trigger = {
-			NOT = {
-				tag = SIA
-				AND = {
-					OR = {
-						tag = INC
-						tag = GEA
-					}
-					owns_state = 670 #Laos
-				}
-			}
+			NOT = { has_event_target = can_annex_samaburi }
 		}
 		ai_chance = { base = 0 }
 		occupy_small_country = yes
