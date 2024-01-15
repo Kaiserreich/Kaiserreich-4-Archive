@@ -812,11 +812,11 @@ country_event = {
 ##################################
 
 # There are five main puppet levels:
-#  1. Integrated Puppet (kr_integrated_puppet) - the lowest, and countries normally can't raise above this if set here
-#  2. Occupied Puppet (kr_occupied_puppet) - the default state, countries will be able to raise to the next level once they get some military, based on their size
-#  3. Puppet (kr_default_puppet) - the equivalent to the old colony level, only majors can generally raise higher than this on their own
-#	4. Autonomous Puppet (kr_autonomous_puppet) - the equivalent to the old dominion level, only more majors can raise higher than this on their own
-#	5. Nominal Puppet (kr_nominal_puppet) - a puppet in name only, barely restricted, majors can eventually move to freedom from this level
+#  1. Integrated Puppet (integrated_puppet) - the lowest, and countries normally can't raise above this if set here
+#  2. Occupied Puppet (occupied_puppet) - the default state, countries will be able to raise to the next level once they get some military, based on their size
+#  3. Puppet (default_puppet) - the equivalent to the old colony level, only majors can generally raise higher than this on their own
+#	4. Autonomous Puppet (autonomous_puppet) - the equivalent to the old dominion level, only more majors can raise higher than this on their own
+#	5. Nominal Puppet (nominal_puppet) - a puppet in name only, barely restricted, majors can eventually move to freedom from this level
 #
 # NOTE: Currently there is no system in place for moving autonomy back downwards
 #
@@ -829,7 +829,7 @@ country_event = {
 	picture = GFX_report_event_generic_diplomacy4
 
 	trigger = {
-		has_autonomy_state = kr_occupied_puppet
+		has_autonomy_state = occupied_puppet
 		OR = {
 			overlord = { has_war = no }
 			overlord = { NOT = { any_enemy_country = { NOT = { has_war_with = ROOT } } } } #TODO: revert to all_enemy_country if the latter is fixed
@@ -864,7 +864,7 @@ country_event = {
 		overlord = {
 			set_autonomy = {
 				target = ROOT
-				autonomy_state = kr_default_puppet
+				autonomy_state = default_puppet
 				end_wars = no
 			}
 			hidden_effect = { country_event = generic_events.101 }
@@ -905,7 +905,7 @@ country_event = {
 	}
 
 	trigger = {
-		has_autonomy_state = kr_default_puppet
+		has_autonomy_state = default_puppet
 		OR = {
 			overlord = { has_war = no }
 			overlord = { NOT = { any_enemy_country = { NOT = { has_war_with = ROOT } } } } #TODO: revert to all_enemy_country if the latter is fixed
@@ -987,7 +987,7 @@ country_event = {
 			overlord = {
 				set_autonomy = {
 					target = ROOT
-					autonomy_state = kr_autonomous_puppet
+					autonomy_state = autonomous_puppet
 					end_wars = no
 				}
 				hidden_effect = {
@@ -1031,7 +1031,7 @@ country_event = {
 	}
 
 	trigger = {
-		has_autonomy_state = kr_autonomous_puppet
+		has_autonomy_state = autonomous_puppet
 		OR = {
 			overlord = { has_war = no }
 			overlord = { NOT = { any_enemy_country = { NOT = { has_war_with = ROOT } } } } #TODO: revert to all_enemy_country if the latter is fixed
@@ -1135,7 +1135,7 @@ country_event = {
 			overlord = {
 				set_autonomy = {
 					target = ROOT
-					autonomy_state = kr_nominal_puppet
+					autonomy_state = nominal_puppet
 					end_wars = no
 				}
 				hidden_effect = {
@@ -1179,7 +1179,7 @@ country_event = {
 	}
 
 	trigger = {
-		has_autonomy_state = kr_nominal_puppet
+		has_autonomy_state = nominal_puppet
 		is_actual_major = yes
 		OR = {
 			overlord = { has_war = no }
@@ -1427,23 +1427,24 @@ country_event = {
 	is_triggered_only = yes
 
 	trigger = {
+		is_ai = yes
+		NOT = { has_game_rule = { rule = demobilization_options option = NONE } }
+		ROOT_is_threatened_cautious = no
 		OR = {
 			has_unsupported_economic_law_ai = yes
 			has_unsupported_manpower_law_ai = yes
 		}
-		is_ai = yes
-		NOT = { has_game_rule = { rule = demobilization_options option = NONE } }
-		ROOT_is_threatened_cautious = no
 	}
 
-	immediate = {
+	option = {
+		log = "[GetLogInfo]: event generic_events.120 option 1"
 		clr_country_flag = has_demobilization_check
 		if = {
 			limit = { has_unattained_important_goals = no }
 			if = {
 				limit = { has_unsupported_economic_law_ai = yes }
 				if = {
-					limit = { has_war_support < 0.15 }
+					limit = { low_economic_mobilisation_available = no }
 					if = {
 						limit = { has_idea = tot_economic_mobilisation }
 						add_political_power = 300
@@ -1462,7 +1463,7 @@ country_event = {
 					add_ideas = civilian_economy
 				}
 				else_if = {
-					limit = { has_war_support < 0.25 }
+					limit = { partial_economic_mobilisation_available = no }
 					if = {
 						limit = { has_idea = tot_economic_mobilisation }
 						add_political_power = 225
@@ -1491,7 +1492,7 @@ country_event = {
 			if = {
 				limit = { has_unsupported_manpower_law_ai = yes }
 				if = {
-					limit = { has_war_support < 0.1 }
+					limit = { limited_conscription_available = no }
 					if = {
 						limit = { has_idea = scraping_the_barrel }
 						add_political_power = 375
@@ -1513,7 +1514,8 @@ country_event = {
 					}
 					add_ideas = volunteer_only
 				}
-				else = {
+				else_if = {
+					limit = { extensive_conscription_available = no }
 					if = {
 						limit = { has_idea = scraping_the_barrel }
 						add_political_power = 300
@@ -1530,6 +1532,20 @@ country_event = {
 						add_political_power = 75
 					}
 					add_ideas = limited_conscription
+				}
+				else = {
+					if = {
+						limit = { has_idea = scraping_the_barrel }
+						add_political_power = 225
+					}
+					else_if = {
+						limit = { has_idea = all_adults_serve }
+						add_political_power = 150
+					}
+					else = {
+						add_political_power = 75
+					}
+					add_ideas = extensive_conscription
 				}
 			}
 		}

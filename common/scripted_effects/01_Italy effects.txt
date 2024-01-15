@@ -333,7 +333,7 @@ ITA_notitaly_join_with_confed = {
 	ROOT = {
 		set_autonomy = {
 			target = PREV
-			autonomy_state = kr_federated_state
+			autonomy_state = federated_state
 			end_wars = no
 		}
 	}
@@ -563,22 +563,46 @@ italy_claim_irredentist_state_effect = {
 
 	#add claim
 	if = {
-		limit = { is_claim_or_core_of_ROOT = no }
-		add_claim_by = ROOT
+		limit = {
+			var:SIC_confed_target = {
+				is_subject_of = ROOT
+				has_autonomy_state = federated_state
+			}
+		}
+		set_temp_variable = { italy_transfer_target = SIC_confed_target }
+		if = {
+			limit = {
+				NOT = { is_core_of = var:SIC_confed_target }
+				NOT = { is_claimed_by = var:SIC_confed_target }
+			}
+			add_claim_by = var:SIC_confed_target
+		}
+	}
+	else = {
+		set_temp_variable = { italy_transfer_target = ROOT }
+		if = {
+			limit = { is_claim_or_core_of_ROOT = no }
+			add_claim_by = ROOT
+		}
 	}
 
 	#if owned by puppet, transfer
 	if = {
-		limit = { owner = { is_subject_of = ROOT } }
+		limit = {
+			owner = {
+				is_subject_of = ROOT
+				NOT = { has_autonomy_state = federated_state }
+			}
+		}
 		hidden_effect = { owner = { country_event = ita.170 } }
 		if = {
 			limit = { is_fully_controlled_by = owner }
-			transfer_state_to = ROOT
+			transfer_state_to = var:italy_transfer_target
 		}
 		else = {
-			set_state_owner_to = ROOT
+			set_state_owner_to = var:italy_transfer_target
 			set_state_province_controller = {
-				controller = ROOT
+				controller = var:italy_transfer_target
 				limit = { NOT = { has_war_with = PREV.owner } }
 			}
 		}

@@ -67,44 +67,60 @@ clear_all_relations = {
 			}
 		}
 	}
+	else_if = {
+		limit = { num_subjects > 0 }
+		every_subject_country = {
+			overlord = {
+				set_autonomy = {
+					target = PREV
+					autonomy_state = autonomy_free
+				}
+			}
+		}
+	}
 	if = {
+		limit = { is_faction_leader = yes }
+		dismantle_faction = yes
+	}
+	else_if = {
 		limit = { is_in_faction = yes }
 		leave_faction = yes
 	}
 	separate_peace_all_wars = yes
 	every_other_country = {
-		limit = { has_guaranteed = PREV }
 		diplomatic_relation = {
 			country = PREV
 			relation = guarantee
 			active = no
 		}
-	}
-	every_other_country = {
-		limit = { has_non_aggression_pact_with = PREV }
+		diplomatic_relation = {
+			country = PREV
+			relation = non_aggression_pact
+			active = no
+		}
 		diplomatic_relation = {
 			country = PREV
 			relation = military_access
 			active = no
 		}
-	}
-	every_other_country = {
-		limit = { has_military_access_to = PREV }
 		diplomatic_relation = {
 			country = PREV
-			relation = military_access
+			relation = market_access_rights
 			active = no
 		}
-	}
-	every_other_country = {
-		limit = { gives_military_access_to = PREV }
 		PREV = {
+			diplomatic_relation = {
+				country = PREV
+				relation = guarantee
+				active = no
+			}
 			diplomatic_relation = {
 				country = PREV
 				relation = military_access
 				active = no
 			}
 		}
+		clear_embargo_PREV = yes
 	}
 	CAN_remove_from_iedc = yes
 	if = {
@@ -164,9 +180,10 @@ clear_all_relations_with_TARGET = {
 	if = {
 		limit = { has_subject = var:target }
 		set_autonomy = {
-			target = PREV
+			target = var:target
 			autonomy_state = autonomy_free
 		}
+		var:target = { leave_faction = yes }
 	}
 	else_if = {
 		limit = { is_subject_of = var:target }
@@ -176,56 +193,47 @@ clear_all_relations_with_TARGET = {
 				autonomy_state = autonomy_free
 			}
 		}
+		leave_faction = yes
 	}
-	if = {
+	else_if = {
 		limit = { is_in_faction_with = var:target }
 		leave_faction = yes
 	}
 	every_other_country = {
-		limit = {
-			has_guaranteed = PREV
-			is_ally_with = var:target
-		}
+		limit = { is_ally_with = var:target }
 		diplomatic_relation = {
 			country = PREV
 			relation = guarantee
 			active = no
 		}
-	}
-	every_other_country = {
-		limit = {
-			has_non_aggression_pact_with = PREV
-			is_ally_with = var:target
+		diplomatic_relation = {
+			country = PREV
+			relation = non_aggression_pact
+			active = no
 		}
 		diplomatic_relation = {
 			country = PREV
 			relation = military_access
 			active = no
 		}
-	}
-	every_other_country = {
-		limit = {
-			has_military_access_to = PREV
-			is_ally_with = var:target
-		}
 		diplomatic_relation = {
 			country = PREV
-			relation = military_access
+			relation = market_access_rights
 			active = no
-		}
-	}
-	every_other_country = {
-		limit = {
-			gives_military_access_to = PREV
-			is_ally_with = var:target
 		}
 		PREV = {
+			diplomatic_relation = {
+				country = PREV
+				relation = guarantee
+				active = no
+			}
 			diplomatic_relation = {
 				country = PREV
 				relation = military_access
 				active = no
 			}
 		}
+		clear_embargo_PREV = yes
 	}
 }
 
@@ -675,7 +683,11 @@ clear_embargo_ROOT = {
 		clr_country_flag = embargoed_@ROOT
 		if = {
 			limit = { is_embargoing = ROOT }
-			break_embargo = ROOT
+			diplomatic_relation = {
+				country = ROOT
+				relation = embargo
+				active = no
+			}
 		}
 		remove_opinion_modifier = {
 			modifier = embargo
@@ -685,7 +697,11 @@ clear_embargo_ROOT = {
 			clr_country_flag = embargoed_@PREV
 			if = {
 				limit = { is_embargoing = PREV }
-				break_embargo = PREV
+				diplomatic_relation = {
+					country = PREV
+					relation = embargo
+					active = no
+				}
 			}
 			remove_opinion_modifier = {
 				modifier = embargo
@@ -704,11 +720,19 @@ embargo_PREV = {
 			limit = { has_dlc_bba = yes }
 			if = {
 				limit = { NOT = { is_embargoing = PREV } }
-				send_embargo = PREV
+				diplomatic_relation = {
+					country = PREV
+					relation = embargo
+				}
 			}
 			if = {
 				limit = { NOT = { is_embargoed_by = PREV } }
-				PREV = { send_embargo = PREV }
+				PREV = {
+					diplomatic_relation = {
+						country = PREV
+						relation = embargo
+					}
+				}
 			}
 		}
 		else = {
@@ -730,7 +754,11 @@ clear_embargo_PREV = {
 		clr_country_flag = embargoed_@PREV
 		if = {
 			limit = { is_embargoing = PREV }
-			break_embargo = PREV
+			diplomatic_relation = {
+				country = PREV
+				relation = embargo
+				active = no
+			}
 		}
 		remove_opinion_modifier = {
 			modifier = embargo
@@ -740,7 +768,11 @@ clear_embargo_PREV = {
 			clr_country_flag = embargoed_@PREV
 			if = {
 				limit = { is_embargoing = PREV }
-				break_embargo = PREV
+				diplomatic_relation = {
+					country = PREV
+					relation = embargo
+					active = no
+				}
 			}
 			remove_opinion_modifier = {
 				modifier = embargo
@@ -761,11 +793,19 @@ embargo_FROM = {
 			limit = { has_dlc_bba = yes }
 			if = {
 				limit = { NOT = { is_embargoing = FROM } }
-				send_embargo = FROM
+				diplomatic_relation = {
+					country = FROM
+					relation = embargo
+				}
 			}
 			if = {
 				limit = { NOT = { is_embargoed_by = FROM } }
-				FROM = { send_embargo = PREV }
+				FROM = {
+					diplomatic_relation = {
+						country = PREV
+						relation = embargo
+					}
+				}
 			}
 		}
 		else = {
@@ -787,7 +827,11 @@ clear_embargo_FROM = {
 		clr_country_flag = embargoed_@FROM
 		if = {
 			limit = { is_embargoing = FROM }
-			break_embargo = FROM
+			diplomatic_relation = {
+				country = FROM
+				relation = embargo
+				active = no
+			}
 		}
 		remove_opinion_modifier = {
 			modifier = embargo
@@ -797,7 +841,11 @@ clear_embargo_FROM = {
 			clr_country_flag = embargoed_@PREV
 			if = {
 				limit = { is_embargoing = PREV }
-				break_embargo = PREV
+				diplomatic_relation = {
+					country = PREV
+					relation = embargo
+					active = no
+				}
 			}
 			remove_opinion_modifier = {
 				modifier = embargo
