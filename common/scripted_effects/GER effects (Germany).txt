@@ -1194,73 +1194,67 @@ GER_bm_cardgame_turn_end = {
 
 }
 
-GER_bm_cardgame_draw = { # draws cards from the deck without replacement with temp var argument GER_cards_to_draw
+# draws cards from the deck without replacement with temp var argument GER_cards_to_draw
+GER_bm_cardgame_draw = {
+	custom_effect_tooltip = GER_bm_card_draw_tt
 
-		for_each_scope_loop = {
-			array = GER_bm_cardgame_cards_array
+	#build temp array of applicable cards
+	for_each_scope_loop = {
+		array = GER_bm_cardgame_cards_array
+		add_to_temp_array = { GER_bm_cardgame_cards_array_to_draw_from = THIS }
+	}
 
-			add_to_temp_array = { GER_bm_cardgame_cards_array_shuffle = THIS }
+	#remove cards that have already been fully drawn
+	for_each_scope_loop = {
+		array = GER_bm_cardgame_cards_drawn_array
+		if = {
+			limit = { check_variable = { cards_drawn = total_copies } }
+			remove_from_temp_array = { GER_bm_cardgame_cards_array_to_draw_from = THIS }
+		}
+	}
 
-			clear_variable = cards_drawn
+	#if a card was played to fire this effect, prevent infinite draw loop exploits
+	if = {
+		limit = { is_in_array = { GER_bm_cardgame_cards_drawn_array = GER_card_played } }
+		remove_from_temp_array = { GER_bm_cardgame_cards_array_to_draw_from = GER_card_played }
+	}
+
+	for_loop_effect = {
+		end = GER_cards_to_draw
+
+		#output uses max - 1, so the interval is [0, GER_bm_cardgame_cards_array_to_draw_from^num]
+		set_temp_variable_to_random = {
+			var = GER_card_drawn_index
+			min = 0
+			max = GER_bm_cardgame_cards_array_to_draw_from^num
+			integer = yes
 		}
 
-		if = { limit = { check_variable = { GER_bm_cardgame_discard_array^num > 0 } }
-
-			for_each_scope_loop = {
-				array = GER_bm_cardgame_discard_array
-
-				remove_from_temp_array = { GER_bm_cardgame_cards_array_shuffle = THIS }
-			}
-		}
-
-		if = { limit = { check_variable = { GER_bm_cardgame_cards_drawn_array^num > 0 } }
-
-			for_each_scope_loop = {
-				array = GER_bm_cardgame_cards_drawn_array
-
-				remove_from_temp_array = { GER_bm_cardgame_cards_array_shuffle = THIS }
-			}
-		}
-
-		set_temp_variable = { GER_cards_to_draw_total = GER_cards_to_draw }
-		add_to_temp_variable = { GER_cards_to_draw_total = GER_bm_cardgame_cards_drawn_array^num }
-
-		while_loop_effect = {
-
-			limit = { check_variable = { GER_bm_cardgame_cards_drawn_array^num < GER_cards_to_draw_total } }
-
-			#output uses max - 1, so the interval is [0, GER_card_shuffle_num_max]
-			set_temp_variable_to_random = {
-				var = GER_card_drawn_index
-				min = 0
-				max = GER_bm_cardgame_cards_array_shuffle^num
-				integer = yes
-			}
-
-			set_temp_variable = { GER_card_drawn = GER_bm_cardgame_cards_array_shuffle^GER_card_drawn_index }
-			var:GER_card_drawn = {
-				log = "[THIS.GetName] set as card to be drawn"
+		var:GER_bm_cardgame_cards_array_to_draw_from^GER_card_drawn_index = {
+			log = "[THIS.GetName] set as card to be drawn"
+			add_to_variable = { cards_drawn = 1 }
+			if = {
+				limit = { NOT = { is_in_array = { PREV.GER_bm_cardgame_cards_drawn_array = THIS } } }
 				add_to_array = { PREV.GER_bm_cardgame_cards_drawn_array = THIS }
 			}
-			remove_from_temp_array = { array = GER_bm_cardgame_cards_array_shuffle index = GER_card_drawn_index }
 
-			add_to_temp_variable = { temp_cards_drawn = 1 }
+			#remove from discard pile if applicable
+			if = {
+				limit = { is_in_array = { PREV.GER_bm_cardgame_discard_array = THIS } }
+				add_to_variable = { copies_in_discard = -1 }
+				if = {
+					limit = { check_variable = { copies_in_discard < 1 } }
+					remove_from_array = { PREV.GER_bm_cardgame_cards_drawn_array = THIS }
+				}
+			}
+
+			#if all copies were drawn, ignore this one from in subsequent loops
+			if = {
+				limit = { check_variable = { cards_drawn = total_copies } }
+				remove_from_temp_array = { GER_bm_cardgame_cards_array_to_draw_from = THIS }
+			}
 		}
-
-		for_each_scope_loop = {
-			array = GER_bm_cardgame_cards_drawn_array
-
-			add_to_variable = { cards_drawn = 1 }
-		}
-
-		for_each_scope_loop = {
-			array = GER_bm_cardgame_cards_drawn_array
-
-			log = "[THIS.GetName] has had [?cards_drawn] cards available."
-		}
-
-		custom_effect_tooltip = GER_bm_card_draw_tt
-
+	}
 }
 
 GER_bm_card_draw_from_discard = {
@@ -1341,46 +1335,16 @@ GER_bm_card_add = {
 }
 
 GER_start_bm_turntimer = {
-	if = {
-		limit = {
-			check_variable = { GER_bm_game_rounds = 1 } #first one should be 14 days
-		}
-		set_variable = { GER_bm_game_turn_timer_days = 14 }
-	}
-	else_if = {
-		limit = {
-			check_variable = { GER_bm_game_rounds < 4 } #next two are 21 days
-		}
-		set_variable = { GER_bm_game_turn_timer_days = 21 }
-		country_event = gerblack.12
-	}
-	else_if = {
-		limit = {
-			check_variable = { GER_bm_game_rounds < 8 } #next three are 30 days
-		}
-		set_variable = { GER_bm_game_turn_timer_days = 30 }
-		country_event = gerblack.12
-	}
-	else_if = {
-		limit = {
-			check_variable = { GER_bm_game_rounds < 15 } # next seven are 60 days
-		}
-		set_variable = { GER_bm_game_turn_timer_days = 60 }
-		country_event = gerblack.12
-	}
-	else_if = {
-		limit = {
-			check_variable = { GER_bm_game_rounds < 25 } # next ten are 90 days
-		}
-		set_variable = { GER_bm_game_turn_timer_days = 90 }
-		country_event = gerblack.12
-	}
-	else = {
-		set_variable = { GER_bm_game_turn_timer_days = 120 } #remainder are 120 days
-		country_event = gerblack.12
-	}
+	#turns are 15 days, plus 15 for each economic health level above -10
+	set_variable = { GER_bm_game_turn_timer_days = 10 }
+	add_to_variable = { GER_bm_game_turn_timer_days = GER_economic_health }
+	multiply_variable = { GER_bm_game_turn_timer_days = 15 }
+	add_to_variable = { GER_bm_game_turn_timer_days = 15 }
+
+	country_event = gerblack.12
 	activate_mission = GER_bm_cardgame_turn_timer
 }
+
 GER_bm_game_end = {
 
 	#variable and array cleanup
@@ -4197,6 +4161,21 @@ GER_second_weltkrieg_legacy_effect = {
 	}
 }
 
+GER_end_demand_for_action = {
+	if = {
+		limit = {
+			has_active_mission = GER_SPD_demand_action
+			has_completed_focus = GER_equality_of_sexes
+			has_completed_focus = GER_nationalise_coal
+			has_completed_focus = GER_municipal_socialism
+			has_completed_focus = GER_social_housing
+			has_completed_focus = GER_restrict_protective_custody
+			has_completed_focus = GER_labour_court
+		}
+		remove_mission = GER_SPD_demand_action
+	}
+}
+
 GER_setup_lilleland = {
 	GER_roland_koster = {
 		set_nationality = LIL
@@ -4279,10 +4258,17 @@ GER_setup_puppet_france = {
 				paternal_autocrat = 0
 				national_populist = 0
 			}
-			every_owned_state = {
-				limit = { is_capital = no }
-				remove_core_of = PREV
+			every_core_state = {
+				force_enable_resistance = { occupier = FRP occupied = FRA }
 				add_claim_by = PREV
+				if = {
+					limit = { is_controlled_by = PREV }
+					if = {
+						limit = { has_resistance = yes }
+						cancel_resistance = yes
+					}
+					start_resistance = FRA
+				}
 			}
 			ROOT = { GER_fire_occupation_events_if_not_fired_yet = yes }
 		}
@@ -4357,10 +4343,17 @@ GER_setup_puppet_england = {
 			paternal_autocrat = 0
 			national_populist = 0
 		}
-		every_owned_state = {
-			limit = { is_capital = no }
-			remove_core_of = PREV
+		every_core_state = {
+			force_enable_resistance = { occupier = GBP occupied = ENG }
 			add_claim_by = PREV
+			if = {
+				limit = { is_controlled_by = PREV }
+				if = {
+					limit = { has_resistance = yes }
+					cancel_resistance = yes
+				}
+				start_resistance = ENG
+			}
 		}
 		ROOT = { GER_fire_occupation_events_if_not_fired_yet = yes }
 	}
@@ -4954,3 +4947,20 @@ GER_USA_militias_spawn_effect = {
 		}
 	}
 }
+
+GER_military_occupation_disable_division_lock = {
+	if = {
+		limit = {
+			NOT = { has_idea = GER_military_occupation }
+			NOT = { has_idea = GER_military_occupation_2 }
+			NOT = { has_idea = GER_military_occupation_21 }
+			NOT = { has_idea = GER_military_occupation_211 }
+			NOT = { has_idea = GER_military_occupation_212 }
+			NOT = { has_idea = GER_military_occupation_3 }
+			NOT = { has_idea = GER_military_occupation_31 }
+			NOT = { has_idea = GER_military_occupation_4 }
+		}
+		country_lock_all_division_template = no
+	}
+}
+
