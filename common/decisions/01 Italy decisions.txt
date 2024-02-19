@@ -240,8 +240,13 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 				is_subject = no
 				is_in_faction = no
 				if = {
-					limit = { tag = ITA }
-					NOT = { has_government = national_populist }
+					limit = {
+						tag = ITA
+						has_government = national_populist
+					}
+					ROOT = {
+						has_dictatorship_government = yes
+					}
 				}
 				else = {
 					OR = {
@@ -624,6 +629,29 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 			}
 			custom_effect_tooltip = VNC_intervention
 		}
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel VNC_war_with_ita1"
+			hidden_effect = {
+				if = {
+					limit = { NOT = { owns_state = 159 } }
+					ITA = { remove_ideas = VNC_defeatist_sentiment }
+					remove_ideas = {
+						VNC_military_confusion
+						VNC_military_confusion2
+						VNC_defender_democracy
+						VNC_defender_democracy2
+						VNC_desperate_defence_idea
+						VNC_austrian_aid
+					}
+					159 = { remove_core_of = VNC }
+					mark_focus_tree_layout_dirty = yes
+					clr_country_flag = VNC_republican_revolt
+				}
+			}
+			delete_unit_template_and_units = { division_template = "Volontari della Libertà" disband = yes }
+			add_war_support = -0.1
+			decrease_conscription = yes
+		}
 	}
 
 	VNC_war_with_ita2 = {
@@ -716,7 +744,8 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 			}
 			modifier = {
 				factor = 0
-				has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_GER }
+				NOT = { has_game_rule = { rule = ITA_forpol option = DEFAULT } }
+				NOT = { has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_AUS } }
 			}
 		}
 
@@ -1203,10 +1232,17 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 				factor = 0
 				OR = {
 					is_in_faction_with = AUS
-					has_government = social_conservative
+					AND = {
+						NOT = { has_idea = LOM_prussian_drill }
+						has_government = social_conservative
+					}
 					has_idea = ITA_black_monday
 					has_idea = ITA_recovering_economy
 				}
+			}
+			modifier = {
+				factor = 5
+				has_idea = LOM_prussian_drill
 			}
 		}
 	}
@@ -1572,6 +1608,35 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 					has_capitulated = no
 				}
 			}
+			if = {
+				limit = {
+					FROM = {
+						OR = {
+							tag = AUS
+							tag = GER
+						}
+					}
+				}
+				NOT = { has_completed_focus = LOM_golden_ambrosia }
+			}
+			if = {
+				limit = { FROM = { tag = BPL } }
+				has_completed_focus = LOM_republican_cause
+				has_global_flag = balkan_war_ended
+				OR = {
+					var:783.owner = { #Trentino
+						OR = {
+							is_ally_with = AUS
+							is_ally_with = GER
+						}
+					}
+					RUS = { has_socialist_government = yes }
+				}
+			}
+			if = {
+				limit = { FROM = { tag = RUS } }
+				has_completed_focus = LOM_republican_cause
+			}
 		}
 
 		visible = {
@@ -1595,25 +1660,21 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 				NOT = { has_completed_focus = LOM_golden_ambrosia }
 			}
 			if = {
-				limit = { FROM = { tag = BPL } }
-				has_completed_focus = LOM_republican_cause
-				has_global_flag = balkan_war_ended
-				AUS = { owns_state = 783 }
-			}
-			if = {
-				limit = { FROM = { tag = RUS } }
-				has_completed_focus = LOM_republican_cause
+				limit = {
+					FROM = {
+						OR = {
+							tag = BPL
+							tag = RUS
+						}
+					}
+				}
+				NOT = {
+					has_completed_focus = LOM_work_with_nobility
+					has_completed_focus = LOM_building_duchy
+				}
 			}
 			NOT = {
 				has_country_flag = { flag = LOM_considering_faction value > 0 }
-			}
-		}
-
-		target_root_trigger = {
-			is_in_faction = no
-			OR = {
-				has_completed_focus = LOM_place_in_the_world
-				has_completed_focus = LOM_lombard_constitution
 			}
 		}
 
@@ -1653,6 +1714,7 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 				factor = 0
 				FROM = { tag = AUS }
 				NOT = { has_country_flag = LOM_monarchy }
+				country_exists = GER
 			}
 			modifier = {
 				factor = 0
@@ -1716,6 +1778,12 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 				factor = 2
 				FROM = { tag = AUS }
 				has_country_flag = LOM_monarchy
+				NOT = { has_idea = LOM_prussian_drill }
+			}
+			modifier = {
+				factor = 2
+				FROM = { tag = GER }
+				has_idea = LOM_prussian_drill
 			}
 			modifier = {
 				factor = 2
@@ -2182,11 +2250,131 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 			}
 			modifier = {
 				factor = 0
-				has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_AUS }
+				NOT = { has_game_rule = { rule = ITA_forpol option = DEFAULT } }
+				NOT = { has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_GER } }
 			}
 			modifier = {
 				factor = 2
 				FROM = { has_war_with = SRI }
+			}
+		}
+	}
+
+	ITA_join_entente = {
+		icon = generic_nationalism
+
+		allowed = { tag = ITA }
+
+		available = {
+			OR = {
+				has_global_flag = second_weltkrieg_has_started
+				italy_balance_has_broken = yes
+			}
+			has_war_with = INT
+			ENT = {
+				has_war_with = INT
+			}
+			if = {
+				limit = {
+					country_exists = SRD
+				}
+				SRD = {
+					has_dictatorship_government = yes
+				}
+			}
+		}
+
+		visible = {
+			is_in_faction = no
+			is_subject = no
+			has_government = national_populist
+			FROM = {
+				is_faction_leader = yes
+				has_socialist_government = no
+				NOT = { has_war_with = ROOT }
+			}
+			NOT = { has_country_flag = ITA_venice_will_rebel }
+		}
+
+		targets = { ENT }
+		target_root_trigger = {
+			has_government = national_populist
+		}
+		target_trigger = {
+			FROM = {
+				is_faction_leader = yes
+				has_socialist_government = no
+				NOT = { has_war_with = ROOT }
+			}
+		}
+
+		cost = 0
+		fire_only_once = yes
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete ITA_join_entente target: [From.GetName]"
+			if = {
+				limit = {
+					country_exists = SRD
+					SRD = {
+						is_ally_with = ENT
+					}
+				}
+				if = {
+					limit = {
+						is_monarchy = no
+					}
+					custom_effect_tooltip = ITA_will_offer_restoration_of_monarchy
+				}
+				SRD = { ask_to_join_faction = yes }
+			}
+			else = {
+				if = {
+					limit = {
+						is_monarchy = no
+					}
+					custom_effect_tooltip = ITA_will_offer_restoration_of_monarchy_under_umberto
+				}
+				FROM = { ask_to_join_faction = yes }
+			}
+		}
+
+		ai_will_do = {
+			factor = 5
+			modifier = {
+				factor = 0
+				SRI = {
+					exists = yes
+					NOT = { has_war_with = FROM }
+				}
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = { flag = ITA_recent_peace days < 30 }
+			}
+			modifier = {
+				factor = 0
+				has_global_flag = { flag = second_weltkrieg_has_started days < 30 }
+			}
+			modifier = {
+				factor = 0
+				FROM = { surrender_progress > 0.30 }
+			}
+			modifier = {
+				factor = 20
+				FROM = { has_war_with = SRI }
+			}
+			modifier = {
+				factor = 0
+				NOT = { has_game_rule = { rule = ITA_forpol option = DEFAULT } }
+				NOT = { has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_ENT } }
+			}
+			modifier = {
+				factor = 0
+				NOT = {
+					date > 1938.1.1
+					has_war_with = SRI
+				}
 			}
 		}
 	}
@@ -2257,6 +2445,11 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 			modifier = {
 				factor = 0
 				FROM = { surrender_progress > 0.30 }
+			}
+			modifier = {
+				factor = 0
+				NOT = { has_game_rule = { rule = ITA_forpol option = DEFAULT } }
+				NOT = { has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_RUS } }
 			}
 			modifier = {
 				factor = 20
@@ -2953,7 +3146,7 @@ ITA_resorgimento_decisions = {
 			}
 			if = {
 				limit = { has_government = national_populist }
-				FROM = { has_government = national_populist }
+				FROM = { has_dictatorship_government = yes }
 			}
 			FROM = {
 				exists = yes
@@ -3005,6 +3198,17 @@ ITA_resorgimento_decisions = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete ITA_invite_into_federation target: [From.GetName]"
 			set_country_flag = { flag = ITA_currently_inviting days = 30 value = 1 }
 			country_event = sic.109
+			if = {
+				limit = {
+					tag = ITA
+					has_government = national_populist
+					is_monarchy = no
+					FROM = {
+						tag = SRD
+					}
+				}
+				custom_effect_tooltip = ITA_will_offer_restoration_of_monarchy
+			}
 			FROM = {
 				set_country_flag = { flag = ITA_considering_invite_@FROM days = 30 value = 1 }
 				hidden_effect = {
@@ -3281,6 +3485,7 @@ ITA_resorgimento_decisions = {
 		icon = italy_flag
 		allowed = { tag = ITA }
 		available = {
+			is_puppet = no
 			controls_state = 158 #Piedmont
 			controls_state = 159 #Lombardy
 			controls_state = 160 #Venice
@@ -3450,8 +3655,13 @@ ITA_resorgimento_decisions = {
 					is_faction_leader = no
 				}
 				if = {
-					limit = { tag = ITA }
-					NOT = { has_government = national_populist }
+					limit = {
+						tag = ITA
+						has_government = national_populist
+					}
+					ROOT = {
+						has_dictatorship_government = yes
+					}
 				}
 				NOT = {
 					has_country_flag = ITA_refuse_join_@ROOT
@@ -3495,8 +3705,13 @@ ITA_resorgimento_decisions = {
 					is_faction_leader = no
 				}
 				if = {
-					limit = { tag = ITA }
-					NOT = { has_government = national_populist }
+					limit = {
+						tag = ITA
+						has_government = national_populist
+					}
+					ROOT = {
+						has_dictatorship_government = yes
+					}
 				}
 				NOT = {
 					has_country_flag = ITA_refuse_join_@ROOT
@@ -3567,7 +3782,6 @@ ITA_resorgimento_decisions = {
 				limit = { country_exists = SRD }
 				NOT = { has_war_with = SRD }
 			}
-			has_returned_all_expeditionary_forces_of_puppets = yes
 		}
 
 		fire_only_once = yes
@@ -3711,8 +3925,13 @@ ITA_resorgimento_decisions = {
 				is_subject = no
 				has_socialist_government = no
 				if = {
-					limit = { tag = ITA }
-					NOT = { has_government = national_populist }
+					limit = {
+						tag = ITA
+						has_government = national_populist
+					}
+					ROOT = {
+						has_dictatorship_government = yes
+					}
 				}
 				NOT = {
 					has_country_flag = ITA_refuse_join_@ROOT
@@ -3955,8 +4174,13 @@ ITA_resorgimento_decisions = {
 				is_subject = no
 				has_socialist_government = no
 				if = {
-					limit = { tag = ITA }
-					NOT = { has_government = national_populist }
+					limit = {
+						tag = ITA
+						has_government = national_populist
+					}
+					ROOT = {
+						has_dictatorship_government = yes
+					}
 				}
 				NOT = {
 					has_country_flag = ITA_refuse_join_@ROOT
@@ -4124,6 +4348,51 @@ ITA_resorgimento_decisions = {
 						is_faction_leader = no
 					}
 					NOT = { has_country_flag = ITA_refuse_join_@ROOT }
+				}
+			}
+			modifier = {
+				factor = 0
+				# don't attack if another italian tag can negotiate
+				any_other_country = {
+					count_triggers = {
+						amount = 2
+						158 = { #Piedmont
+							owner = {
+								controls_state = PREV
+								OR = {
+									tag = PREV.PREV
+									is_subject_of = PREV.PREV
+								}
+							}
+						}
+						1004 = { #Emilia
+							owner = {
+								controls_state = PREV
+								OR = {
+									tag = PREV.PREV
+									is_subject_of = PREV.PREV
+								}
+							}
+						}
+						162 = { #Tuscany
+							owner = {
+								controls_state = PREV
+								OR = {
+									tag = PREV.PREV
+									is_subject_of = PREV.PREV
+								}
+							}
+						}
+					}
+					is_italian_tag = yes
+					is_subject = no
+					has_socialist_government = no
+					OR = {
+						is_in_faction = no
+						is_in_faction_with = ROOT
+						is_faction_leader = no
+					}
+					ROOT = { NOT = { has_country_flag = ITA_refuse_join_@PREV } }
 				}
 			}
 			modifier = {
@@ -5625,13 +5894,11 @@ ITA_resorgimento_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete VNC_claim_albania"
+			ALB = { every_core_state = { add_claim_by = ROOT } }
 			if = {
 				limit = { has_subject = ALB }
 				annex_country = { target = ALB transfer_troops = yes }
 			}
-			44 = { add_claim_by = ROOT }
-			765 = { add_claim_by = ROOT }
-			766 = { add_claim_by = ROOT }
 		}
 	}
 }
@@ -6268,31 +6535,35 @@ SRI_balance_of_power_category = {
 crisis = {
 	SRI_massive_protests_mission = {
 		icon = generic_political_rally
+
+		allowed = { always = no }
+
+		available = {
+			focus_progress = { focus = SRI_leggi_fascistissime progress > 0 }
+		}
+
+		cancel_trigger = {
+			if = {
+				limit = { is_ai = yes }
+				OR = {
+					NOT = { has_government = totalist }
+					has_game_rule = { rule = SRI_path option = SRI_PATH_DE_AMBRIS_TOTALIST }
+					has_game_rule = { rule = SRI_path option = SRI_PATH_MUSSOLINI_TOTALIST }
+					has_game_rule = { rule = SRI_path option = SRI_PATH_TOGLIATTI_TOTALIST }
+				}
+			}
+			else = {
+				NOT = { has_government = totalist }
+			}
+		}
+
+		is_good = no
+		fire_only_once = yes
 		days_mission_timeout = 70
+
 		timeout_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision timeout SRI_massive_protests_mission"
 			country_event = socitaly.45
-		}
-		available = {
-			has_country_flag = doing_fascist_focus
-		}
-		activation = { always = no }
-		is_good = no
-		fire_only_once = yes
-		cancel_trigger = {
-			hidden_trigger = {
-				NOT = {
-					has_government = totalist
-				}
-				if = {
-					limit = { is_ai = yes }
-					OR = {
-						has_game_rule = { rule = SRI_path option = SRI_PATH_DE_AMBRIS_TOTALIST }
-						has_game_rule = { rule = SRI_path option = SRI_PATH_MUSSOLINI_TOTALIST }
-						has_game_rule = { rule = SRI_path option = SRI_PATH_TOGLIATTI_TOTALIST }
-					}
-				}
-			}
 		}
 	}
 	SRI_chetnik_operations = {

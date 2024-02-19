@@ -703,9 +703,12 @@ foreign_politics = {
 
 		allowed = { always = no } #activated by effect
 
-		available = {
-			has_manpower > 10000
+		custom_cost_trigger = {
+			has_manpower > 20000
+			has_equipment = { infantry_equipment > 5000 }
 		}
+		custom_cost_text = GER_deploy_troops_cost
+
 		visible = {
 			is_faction_leader = yes
 			country_exists = FROM
@@ -714,8 +717,8 @@ foreign_politics = {
 				GER_is_military_governorate = yes
 			}
 		}
+		modifier = { political_power_gain = -0.1 }
 
-		cost = 10
 		days_remove = 50
 		fire_only_once = yes
 		cancel_if_not_visible = yes
@@ -724,9 +727,20 @@ foreign_politics = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete GER_deploy_troops_to_occupation_zones target: [From.GetName]"
-			add_manpower = -10000
+			hidden_effect = {
+				add_manpower = -20000
+				add_equipment_to_stockpile = {
+					type = infantry_equipment
+					amount = -5000
+				}
+			}
 			FROM = {
-				add_manpower = 10000
+				add_manpower = 20000
+				add_equipment_to_stockpile = {
+					type = infantry_equipment
+					amount = 5000
+					producer = GER
+				}
 			}
 		}
 	}
@@ -2146,6 +2160,40 @@ foreign_politics = {
 		}
 	}
 
+	GER_annex_RIG = {
+		icon = GFX_decision_generic_independence
+
+		allowed = { always = no } #activated by effect
+
+		available = {
+			is_faction_leader = yes
+			country_exists = FROM
+			FROM = {
+				is_subject_of = ROOT
+				is_in_faction_with = ROOT
+			}
+		}
+
+		cost = 10
+		fire_only_once = yes
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete GER_annex_RIG target: [From.GetName]"
+			FROM = {
+				country_event = newgerfor.85
+			}
+			custom_effect_tooltip = if_they_accept_tt
+			effect_tooltip = {
+				annex_country = {
+					target = BAT
+					transfer_troops = yes
+				}
+			}
+		}
+	}
+
 	GER_topple_EST_govt = {
 		icon = GFX_decision_generic_police_action
 		allowed = { always = no }
@@ -3558,6 +3606,7 @@ foreign_politics = {
 
 		available = {
 			is_faction_leader = yes
+			second_weltkrieg_can_start = yes
 			if = {
 				limit = { has_elected_government = yes }
 				var:118.owner = {
@@ -3575,16 +3624,6 @@ foreign_politics = {
 					has_civil_war = no
 					has_socialist_government = yes
 				}
-			}
-			if = {
-				limit = {
-					OR = {
-						INT = { is_in_faction_with = var:118.owner }
-						RUS = { is_in_faction_with = var:118.owner }
-						ENT = { is_in_faction_with = var:118.owner }
-					}
-				}
-				second_weltkrieg_can_start = yes
 			}
 		}
 
@@ -7213,11 +7252,7 @@ GER_schleicher_mechanics_category = {
 							is_ai = no
 							AND = {
 								is_ai = yes
-								OR = {
-									has_game_rule = { rule = GER_path option = DEFAULT }
-									has_game_rule = { rule = GER_path option = GER_PATH_DU_SOCDEM }
-									has_game_rule = { rule = GER_path option = GER_PATH_DU_SOCCON }
-								}
+								has_country_flag = GER_du_ai
 							}
 						}
 					}
@@ -7232,10 +7267,7 @@ GER_schleicher_mechanics_category = {
 				else_if = {
 					limit = {
 						is_ai = yes
-						OR = {
-							has_game_rule = { rule = GER_path option = GER_PATH_SWR_PATAUT }
-							has_game_rule = { rule = GER_path option = GER_PATH_SWR_AUTDEM }
-						}
+						has_country_flag = GER_swr_ai
 					}
 					custom_effect_tooltip = GER_swr_about_to_win_tt
 					hidden_effect = {
@@ -7265,11 +7297,7 @@ GER_schleicher_mechanics_category = {
 							is_ai = no
 							AND = {
 								is_ai = yes
-								OR = {
-									has_game_rule = { rule = GER_path option = DEFAULT }
-									has_game_rule = { rule = GER_path option = GER_PATH_SWR_PATAUT }
-									has_game_rule = { rule = GER_path option = GER_PATH_SWR_AUTDEM }
-								}
+								has_country_flag = GER_swr_ai
 							}
 						}
 					}
@@ -7283,10 +7311,7 @@ GER_schleicher_mechanics_category = {
 				else_if = {
 					limit = {
 						is_ai = yes
-						OR = {
-							has_game_rule = { rule = GER_path option = GER_PATH_DU_SOCDEM }
-							has_game_rule = { rule = GER_path option = GER_PATH_DU_SOCCON }
-						}
+						has_country_flag = GER_du_ai
 					}
 					hidden_effect = {
 						GER_hermann_muller = {
@@ -7793,8 +7818,9 @@ GER_conservative_revolution_mechanics_category = {
 			hidden_trigger = { always = no }
 		}
 
-		selectable_mission = no
 		is_good = no
+		fixed_random_seed = no
+		selectable_mission = no
 		days_mission_timeout = 20
 
 		timeout_effect = {
@@ -8875,8 +8901,9 @@ GER_democratic_union_mechanics_category = {
 			hidden_trigger = { always = no }
 		}
 
-		selectable_mission = no
 		is_good = no
+		fixed_random_seed = no
+		selectable_mission = no
 		days_mission_timeout = 100
 
 		timeout_effect = {

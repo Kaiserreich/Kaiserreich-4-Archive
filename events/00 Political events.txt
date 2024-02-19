@@ -13,6 +13,17 @@ add_namespace = generic_events
 country_event = { #Country requests to join faction
 	id = generic_events.10
 	title = generic_events.10.t
+	desc = {
+		trigger = {
+			FROM = {
+				tag = ITA
+				has_government = national_populist
+				is_monarchy = no
+			}
+			tag = SRD
+		}
+		text = generic_events.10.srd
+	}
 	desc = generic_events.10.d
 	picture = GFX_report_event_generic_diplomacy1
 
@@ -30,7 +41,18 @@ country_event = { #Country requests to join faction
 		log = "[GetLogInfo]: event generic_events.10 option generic_events.10.b"
 		name = generic_events.10.b
 		trigger = { is_faction_leader = no }
+		save_event_target_as = negotiator
+		FROM = { save_event_target_as = potential_ally }
 		faction_leader = { country_event = generic_events.12 }
+		if = {
+			limit = {
+				tag = SRD
+				FROM = {
+					tag = ITA
+				}
+			}
+			custom_effect_tooltip = ITA_warning_switch1
+		}
 	}
 
 	option = {
@@ -62,6 +84,52 @@ country_event = { #FROM accepts
 			}
 			set_country_flag = AUS_former_faction_member
 		}
+		if = {
+			limit = {
+				FROM = { tag = ENT }
+				tag = ITA
+				has_government = national_populist
+				is_monarchy = no
+			}
+			custom_effect_tooltip = ITA_restore_monarchy_umberto_tt
+			hidden_effect = {
+				set_cosmetic_tag = ITA_kingdom
+				SRD = {
+					SRD_umberto_carignano = {
+						set_nationality = ITA
+						set_character_name = SRD_umberto_carignano_king
+						add_country_leader_role = {
+							country_leader = {
+								ideology = national_populist_subtype
+								desc = ITA_umberto_natpop_king_desc
+								traits = { GBR_popular_figurehead }
+							}
+							promote_leader = yes
+						}
+					}
+					SRD_amedeo_aosta = {
+						set_nationality = ITA
+						set_character_name = SRD_amedeo_aosta_not_king
+					}
+					SRD_adalberto_genova = {
+						set_nationality = ITA
+					}
+					SRD_aimone_aosta = {
+						set_nationality = ITA
+					}
+				}
+				if = {
+					limit = {
+						has_character = ITA_costanzo_ciano
+					}
+					activate_advisor = ITA_costanzo_ciano_sic
+				}
+				else = {
+					activate_advisor = ITA_gian_galeazzo_ciano_sic
+				}
+				mark_focus_tree_layout_dirty = yes
+			}
+		}
 		FROM = { add_to_faction = ROOT }
 	}
 }
@@ -77,17 +145,17 @@ country_event = { #FROM negotiates alliance with FROM.FROM
 	option = {
 		log = "[GetLogInfo]: event generic_events.12 option generic_events.12.a"
 		name = generic_events.12.a
-		effect_tooltip = { add_to_faction = FROM.FROM }
-		FROM.FROM = { country_event = generic_events.13 }
-		effect_tooltip = { FROM = { country_event = generic_events.14 } }
+		effect_tooltip = { add_to_faction = event_target:potential_ally }
+		event_target:potential_ally = { country_event = generic_events.13 }
+		event_target:negotiator = { country_event = generic_events.14 }
 	}
 
 	option = {
 		log = "[GetLogInfo]: event generic_events.12 option generic_events.12.b"
 		name = generic_events.12.b
 		ai_chance = { base = 0 }
-		FROM.FROM = { country_event = generic_events.15 }
-		effect_tooltip = { FROM = { country_event = generic_events.16 } }
+		event_target:potential_ally = { country_event = generic_events.15 }
+		event_target:negotiator = { country_event = generic_events.16 }
 	}
 }
 
@@ -99,16 +167,12 @@ country_event = { #Faction leader accepts (for new member)
 
 	is_triggered_only = yes
 
-	immediate = {
-		hidden_effect = { FROM.FROM = { country_event = generic_events.14 } }
-	}
-
 	option = {
 		log = "[GetLogInfo]: event generic_events.13 option generic_events.13.a"
 		name = generic_events.13.a
 		if = {
 			limit = {
-				FROM.FROM = {
+				event_target:negotiator = {
 					OR = {
 						has_country_flag = AUS_intervened_in_weltkrieg
 						has_country_flag = AUS_former_faction_member
@@ -116,6 +180,48 @@ country_event = { #Faction leader accepts (for new member)
 				}
 			}
 			set_country_flag = AUS_former_faction_member
+		}
+		if = {
+			limit = {
+				event_target:negotiator = {
+					tag = SRD
+				}
+				tag = ITA
+				has_government = national_populist
+				is_monarchy = no
+			}
+			custom_effect_tooltip = ITA_restore_monarchy_amedeo_tt
+			hidden_effect = {
+				set_cosmetic_tag = ITA_kingdom
+				SRD = {
+					SRD_umberto_carignano = {
+						set_nationality = ITA
+					}
+					SRD_amedeo_aosta = {
+						set_nationality = ITA
+						promote_character = national_populist_subtype
+					}
+					SRD_adalberto_genova = {
+						set_nationality = ITA
+					}
+					SRD_aimone_aosta = {
+						set_nationality = ITA
+					}
+				}
+				if = {
+					limit = {
+						has_character = ITA_costanzo_ciano
+					}
+					activate_advisor = ITA_costanzo_ciano_sic
+				}
+				else = {
+					activate_advisor = ITA_gian_galeazzo_ciano_sic
+				}
+				mark_focus_tree_layout_dirty = yes
+			}
+			event_target:negotiator = {
+				ITA_join_with_empire = yes
+			}
 		}
 		FROM = { add_to_faction = ROOT }
 	}
@@ -132,21 +238,17 @@ country_event = { #Faction leader accepts (for negotiator)
 	option = {
 		log = "[GetLogInfo]: event generic_events.14 option generic_events.14.a"
 		name = generic_events.14.a
-		effect_tooltip = { faction_leader = { add_to_faction = FROM } }
+		effect_tooltip = { FROM = { add_to_faction = event_target:potential_ally } }
 	}
 }
 
-country_event = { #Faction leader refuses
+country_event = { #Faction leader refuses (for new member)
 	id = generic_events.15
 	title = generic_events.15.t
 	desc = generic_events.15.d
 	picture = GFX_report_event_generic_diplomacy1
 
 	is_triggered_only = yes
-
-	immediate = {
-		hidden_effect = { FROM.FROM = { country_event = generic_events.16 } }
-	}
 
 	option = {
 		log = "[GetLogInfo]: event generic_events.15 option generic_events.15.a"
@@ -158,7 +260,7 @@ country_event = { #Faction leader refuses
 	}
 }
 
-country_event = { #Faction leader accepts (for new member FROM.FROM)
+country_event = { #Faction leader refuses (for new member FROM.FROM)
 	id = generic_events.16
 	title = generic_events.16.t
 	desc = generic_events.16.d
@@ -169,11 +271,9 @@ country_event = { #Faction leader accepts (for new member FROM.FROM)
 	option = {
 		log = "[GetLogInfo]: event generic_events.16 option generic_events.16.a"
 		name = generic_events.16.a
-		FROM.FROM = {
-			reverse_add_opinion_modifier = {
-				target = ROOT
-				modifier = KR_displeased
-			}
+		add_opinion_modifier = {
+			target = FROM
+			modifier = KR_displeased
 		}
 	}
 }
