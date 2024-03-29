@@ -57,6 +57,7 @@ replace_path = "events"
 
 replace_path = "gfx/loadingscreens"
 replace_path = "gfx/flags"
+replace_path = "gfx/leaders"
 
 replace_path = "history/countries"
 replace_path = "history/general"
@@ -77,6 +78,6 @@ tags = {
 	"Gameplay"
 }
 picture = "KR.jpg"
-version = "1.0.3"
-supported_version = "1.13.6"
+version = "1.0.4"
+supported_version = "1.14.3"
 remote_file_id = "1521695605"
