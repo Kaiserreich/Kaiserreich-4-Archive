@@ -20,6 +20,8 @@ NFA_seize_morocco_decisions = {
 
 		visible = {
 			can_declare_war_on = FROM
+			is_subject = no
+			has_capitulated = no
 			FROM = {
 				OR = {
 					is_subject = no
@@ -28,10 +30,22 @@ NFA_seize_morocco_decisions = {
 			}
 		}
 
+		cancel_trigger = {
+			OR = {
+				NOT = { can_declare_war_on = FROM }
+				is_subject = yes
+				has_capitulated = yes
+				FROM = { has_capitulated = yes }
+				FROM = {
+					is_subject = yes
+					NOT = { is_subject_of = GEX }
+				}
+			}
+		}
+
 		cost = 25
 		days_remove = 10
 		fire_only_once = yes
-		cancel_if_not_visible = yes
 		war_with_target_on_remove = yes
 
 		targets = { MOR }
@@ -52,42 +66,26 @@ NFA_seize_morocco_decisions = {
 			factor = 1000
 			modifier = {
 				factor = 0
-				OR = {
-					enemies_strength_ratio > 0.6
-					surrender_progress > 0
-				}
+				country_is_in_dangerous_war = yes
 			}
 			modifier = {
 				factor = 0
-				strength_ratio = { tag = FROM ratio < 0.8 }
+				FROM = { default_attack_AI_trigger = yes }
 			}
 			modifier = {
 				factor = 0
-				FROM = {
-					is_in_faction = yes
-					any_allied_country = {
-						strength_ratio = { tag = ROOT ratio > 0.7 }
-					}
-				}
+				FROM = { dont_start_major_faction_wars = yes }
 			}
-			modifier = {
-				factor = 0
-				FROM = {
-					is_subject = yes
-					overlord = {
-						strength_ratio = { tag = ROOT ratio > 0.7 }
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				has_country_flag = imminent_war
-			}
+		}
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_seize_real_morocco target: [From.GetName]"
+			clear_decision_attack_AI = yes
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_seize_real_morocco target: [From.GetName]"
-			set_country_flag = { flag = imminent_war days = 20 value = 1 }
+			FROM = { incoming_war_notification_effect = yes }
 			setup_decision_attack_AI = yes
 		}
 
@@ -1100,11 +1098,11 @@ NFA_reclaim_metropole_cat = {
 			factor = 100
 			modifier = {
 				factor = 0
-				ROOT_is_threatened = yes
+				country_is_in_dangerous_war = yes
 			}
 			modifier = {
 				factor = 0
-				FROM = { default_attack_AI_trigger_FROM = yes }
+				FROM = { default_attack_AI_trigger = yes }
 			}
 			modifier = {
 				factor = 0 #finish the Indian war first
@@ -1122,28 +1120,28 @@ NFA_reclaim_metropole_cat = {
 					NEE = { has_country_flag = NEE_claimed_america }
 				}
 				NOT = { CAN = { has_country_flag = CAN_white_peaced_ACW } }
-				NOT = { has_country_flag = USA_civil_war_over_flag }
+				NOT = { has_global_flag = USA_civil_war_over_flag }
 			}
 			modifier = {
 				factor = 0 #help USA unite America first
 				CAN = { has_country_flag = CAN_supports_USA }
 				country_exists = USA
 				NOT = { CAN = { has_country_flag = CAN_white_peaced_ACW } }
-				NOT = { has_country_flag = USA_civil_war_over_flag }
+				NOT = { has_global_flag = USA_civil_war_over_flag }
 			}
 			modifier = {
 				factor = 0 #help PSA unite America first
 				CAN = { has_country_flag = CAN_supports_PSA }
 				country_exists = PSA
 				NOT = { CAN = { has_country_flag = CAN_white_peaced_ACW } }
-				NOT = { has_country_flag = USA_civil_war_over_flag }
+				NOT = { has_global_flag = USA_civil_war_over_flag }
 			}
 			modifier = {
 				factor = 0 #help TEX unite America first
 				CAN = { has_country_flag = CAN_supports_TEX }
 				country_exists = TEX
 				NOT = { CAN = { has_country_flag = CAN_white_peaced_ACW } }
-				NOT = { has_country_flag = USA_civil_war_over_flag }
+				NOT = { has_global_flag = USA_civil_war_over_flag }
 			}
 		}
 
@@ -2447,7 +2445,7 @@ NFA_rebuild_legitimacy_cat = {
 
 		available = {
 			political_power_daily > 0.2
-			NOT = { has_country_flag = nfa_global_comply }
+			NOT = { has_decision = NFA_Large_Scale_Effort }
 		}
 
 		modifier = {
@@ -2463,37 +2461,30 @@ NFA_rebuild_legitimacy_cat = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Small_Propaganda"
-			custom_effect_tooltip = NFA_Small_Propaganda_tt
-			set_country_flag = nfa_global_comply
-			hidden_effect = {
-				every_owned_state = { #Check all states of NFA
-					limit = {
-						is_mainland_france_state = yes #Only grab the states in Mainland France
-						has_resistance = yes
-					}
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = 0.10 #Small boost to compliance to help core faster
-						}
-					}
+			every_owned_state = { #Check all states of NFA
+				limit = {
+					is_mainland_france_state = yes #Only grab the states in Mainland France
+					has_resistance = yes
 				}
+				add_dynamic_modifier = { modifier = NFA_small_propaganda_effort days = 60 }
 			}
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Small_Propaganda"
-			clr_country_flag = nfa_global_comply
-			hidden_effect = {
+			effect_tooltip = {
 				every_owned_state = { #Check all states of NFA
 					limit = {
 						is_mainland_france_state = yes #Only grab the states in Mainland France
 						has_resistance = yes
 					}
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.10 #Turn off the compliance boost
-						}
-					}
+					remove_dynamic_modifier = { modifier = NFA_small_propaganda_effort }
+				}
+			}
+			hidden_effect = {
+				every_owned_state = {
+					limit = { has_dynamic_modifier = { modifier = NFA_small_propaganda_effort } }
+					remove_dynamic_modifier = { modifier = NFA_small_propaganda_effort }
 				}
 			}
 		}
@@ -2504,7 +2495,7 @@ NFA_rebuild_legitimacy_cat = {
 
 		available = {
 			political_power_daily > 0.5
-			NOT = { has_country_flag = nfa_global_comply }
+			NOT = { has_decision = NFA_Small_Propaganda }
 		}
 
 		modifier = {
@@ -2524,37 +2515,30 @@ NFA_rebuild_legitimacy_cat = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Large_Scale_Effort"
-			custom_effect_tooltip = NFA_Large_Scale_Effort_tt
-			set_country_flag = nfa_global_comply
-			hidden_effect = {
-				every_owned_state = { #Check all states of NFA
-					limit = {
-						is_mainland_france_state = yes #Only grab the states in Mainland France
-						has_resistance = yes
-					}
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = 0.20 #Large boost to compliance to help core faster
-						}
-					}
+			every_owned_state = { #Check all states of NFA
+				limit = {
+					is_mainland_france_state = yes #Only grab the states in Mainland France
+					has_resistance = yes
 				}
+				add_dynamic_modifier = { modifier = NFA_large_propaganda_effort days = 60 }
 			}
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Large_Scale_Effort"
-			clr_country_flag = nfa_global_comply
-			hidden_effect = {
+			effect_tooltip = {
 				every_owned_state = { #Check all states of NFA
 					limit = {
 						is_mainland_france_state = yes #Only grab the states in Mainland France
 						has_resistance = yes
 					}
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Large boost to compliance to help core faster
-						}
-					}
+					remove_dynamic_modifier = { modifier = NFA_large_propaganda_effort }
+				}
+			}
+			hidden_effect = {
+				every_owned_state = {
+					limit = { has_dynamic_modifier = { modifier = NFA_large_propaganda_effort } }
+					remove_dynamic_modifier = { modifier = NFA_large_propaganda_effort }
 				}
 			}
 		}
@@ -2565,14 +2549,14 @@ NFA_rebuild_legitimacy_cat = {
 
 		available = {
 			controls_state = 16 #NFA controls Paris
-			NOT = { has_country_flag = NFA_Focus_Paris_cf }
+			16 = { NOT = { has_state_flag = NFA_Focus_cf } }
 			16 = { NOT = { has_state_flag = currently_being_cored } }
 		}
 
 		visible = {
 			16 = {
-				is_owned_by = NFA
-				NOT = { is_core_of = NFA }
+				is_owned_by = ROOT
+				NOT = { is_core_of = ROOT }
 			}
 		}
 
@@ -2587,80 +2571,8 @@ NFA_rebuild_legitimacy_cat = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_Paris"
-			set_country_flag = NFA_Focus_Paris_cf
 			country_event = nfa.161 #Work on reducing resistance or increasing compliance in Paris
-		}
-	}
-
-	NFA_Paris_Focus_Resist_Mission = {
-		icon = generic_nationalism
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			NOT = { controls_state = 16 } #NFA controls Paris
-		}
-
-		highlight_states = {
-			highlight_state_targets = { state = 16 }
-		}
-
-		is_good = yes
-		days_mission_timeout = 45
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Paris_Focus_Resist_Mission"
-			clr_country_flag = NFA_Focus_Paris_cf
-		}
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout NFA_Paris_Focus_Resist_Mission"
-			clr_country_flag = NFA_Focus_Paris_cf
-			hidden_effect = {
-				16 = {
-					add_state_modifier = {
-						modifier = {
-							resistance_decay = -0.15
-						}
-					}
-				}
-			}
-		}
-	}
-
-	NFA_Paris_Focus_Comply_Mission = {
-		icon = generic_nationalism
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			NOT = { controls_state = 16 } #NFA controls Paris
-		}
-
-		highlight_states = {
-			highlight_state_targets = { state = 16 }
-		}
-
-		is_good = yes
-		days_mission_timeout = 45
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Paris_Focus_Comply_Mission"
-			clr_country_flag = NFA_Focus_Paris_cf
-		}
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout NFA_Paris_Focus_Comply_Mission"
-			clr_country_flag = NFA_Focus_Paris_cf
-			hidden_effect = {
-				16 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.15
-						}
-					}
-				}
-			}
+			NFA_compliance_or_resistance_choice_tooltip = yes
 		}
 	}
 
@@ -2671,14 +2583,14 @@ NFA_rebuild_legitimacy_cat = {
 
 		available = {
 			controls_state = 21 #NFA controls Provence
-			NOT = { has_country_flag = NFA_Focus_Provence_cf }
+			21 = { NOT = { has_state_flag = NFA_Focus_cf } }
 			21 = { NOT = { has_state_flag = currently_being_cored } }
 		}
 
 		visible = {
 			21 = {
-				is_owned_by = NFA
-				NOT = { is_core_of = NFA }
+				is_owned_by = ROOT
+				NOT = { is_core_of = ROOT }
 			}
 		}
 
@@ -2693,80 +2605,8 @@ NFA_rebuild_legitimacy_cat = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_Provence"
-			set_country_flag = NFA_Focus_Provence_cf
 			country_event = nfa.162 #Work on reducing resistance or increasing compliance in Provence
-		}
-	}
-
-	NFA_Provence_Focus_Resist_Mission = {
-		icon = generic_nationalism
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			NOT = { controls_state = 21 } #NFA controls Provence
-		}
-
-		highlight_states = {
-			highlight_state_targets = { state = 21 }
-		}
-
-		is_good = yes
-		days_mission_timeout = 45
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Provence_Focus_Resist_Mission"
-			clr_country_flag = NFA_Focus_Provence_cf
-		}
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout NFA_Provence_Focus_Resist_Mission"
-			clr_country_flag = NFA_Focus_Provence_cf
-			hidden_effect = {
-				21 = {
-					add_state_modifier = {
-						modifier = {
-							resistance_decay = -0.15
-						}
-					}
-				}
-			}
-		}
-	}
-
-	NFA_Provence_Focus_Comply_Mission = {
-		icon = generic_nationalism
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			NOT = { controls_state = 21 } #NFA controls Provence
-		}
-
-		highlight_states = {
-			highlight_state_targets = { state = 21 }
-		}
-
-		is_good = yes
-		days_mission_timeout = 45
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Provence_Focus_Comply_Mission"
-			clr_country_flag = NFA_Focus_Provence_cf
-		}
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout NFA_Provence_Focus_Comply_Mission"
-			clr_country_flag = NFA_Focus_Provence_cf
-			hidden_effect = {
-				21 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.15
-						}
-					}
-				}
-			}
+			NFA_compliance_or_resistance_choice_tooltip = yes
 		}
 	}
 
@@ -2777,14 +2617,14 @@ NFA_rebuild_legitimacy_cat = {
 
 		available = {
 			controls_state = 20 #NFA controls Lyonnais
-			NOT = { has_country_flag = NFA_Focus_Lyonnais_cf }
+			20 = { NOT = { has_state_flag = NFA_Focus_cf } }
 			20 = { NOT = { has_state_flag = currently_being_cored } }
 		}
 
 		visible = {
 			20 = {
-				NOT = { is_core_of = ROOT }
 				is_owned_by = ROOT
+				NOT = { is_core_of = ROOT }
 			}
 		}
 
@@ -2800,79 +2640,7 @@ NFA_rebuild_legitimacy_cat = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_Lyonnais"
 			country_event = nfa.163 #Work on reducing resistance or increasing compliance in Lyonnais
-			set_country_flag = NFA_Focus_Lyonnais_cf
-		}
-	}
-
-	NFA_Lyonnais_Focus_Resist_Mission = {
-		icon = generic_nationalism
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			NOT = { controls_state = 20 } #NFA controls Lyonnais
-		}
-
-		highlight_states = {
-			highlight_state_targets = { state = 20 }
-		}
-
-		is_good = yes
-		days_mission_timeout = 45
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Lyonnais_Focus_Resist_Mission"
-			clr_country_flag = NFA_Focus_Lyonnais_cf
-		}
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout NFA_Lyonnais_Focus_Resist_Mission"
-			clr_country_flag = NFA_Focus_Lyonnais_cf
-			hidden_effect = {
-				20 = {
-					add_state_modifier = {
-						modifier = {
-							resistance_decay = -0.15
-						}
-					}
-				}
-			}
-		}
-	}
-
-	NFA_Lyonnais_Focus_Comply_Mission = {
-		icon = generic_nationalism
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			NOT = { controls_state = 20 } #NFA controls Lyonnais
-		}
-
-		highlight_states = {
-			highlight_state_targets = { state = 20 }
-		}
-
-		is_good = yes
-		days_mission_timeout = 45
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Lyonnais_Focus_Comply_Mission"
-			clr_country_flag = NFA_Focus_Lyonnais_cf
-		}
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout NFA_Lyonnais_Focus_Comply_Mission"
-			clr_country_flag = NFA_Focus_Lyonnais_cf
-			hidden_effect = {
-				20 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.15
-						}
-					}
-				}
-			}
+			NFA_compliance_or_resistance_choice_tooltip = yes
 		}
 	}
 
@@ -2883,14 +2651,14 @@ NFA_rebuild_legitimacy_cat = {
 
 		available = {
 			controls_state = 19 #NFA controls Bordeaux
-			NOT = { has_country_flag = NFA_Focus_Bordeaux_cf }
+			19 = { NOT = { has_state_flag = NFA_Focus_cf } }
 			19 = { NOT = { has_state_flag = currently_being_cored } }
 		}
 
 		visible = {
 			19 = {
-				NOT = { is_core_of = ROOT }
 				is_owned_by = ROOT
+				NOT = { is_core_of = ROOT }
 			}
 		}
 
@@ -2905,80 +2673,8 @@ NFA_rebuild_legitimacy_cat = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_Bordeaux"
-			set_country_flag = NFA_Focus_Bordeaux_cf
 			country_event = nfa.164 #Work on reducing resistance or increasing compliance in Bordeaux
-		}
-	}
-
-	NFA_Bordeaux_Focus_Resist_Mission = {
-		icon = generic_nationalism
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			NOT = { controls_state = 19 } #NFA controls Bordeaux
-		}
-
-		highlight_states = {
-			highlight_state_targets = { state = 19 }
-		}
-
-		is_good = yes
-		days_mission_timeout = 45
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Bordeaux_Focus_Resist_Mission"
-			clr_country_flag = NFA_Focus_Bordeaux_cf
-		}
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout NFA_Bordeaux_Focus_Resist_Mission"
-			clr_country_flag = NFA_Focus_Bordeaux_cf
-			hidden_effect = {
-				19 = {
-					add_state_modifier = {
-						modifier = {
-							resistance_decay = -0.15
-						}
-					}
-				}
-			}
-		}
-	}
-
-	NFA_Bordeaux_Focus_Comply_Mission = {
-		icon = generic_nationalism
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			NOT = { controls_state = 19 } #NFA controls Bordeaux
-		}
-
-		highlight_states = {
-			highlight_state_targets = { state = 19 }
-		}
-
-		is_good = yes
-		days_mission_timeout = 45
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Bordeaux_Focus_Comply_Mission"
-			clr_country_flag = NFA_Focus_Bordeaux_cf
-		}
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout NFA_Bordeaux_Focus_Comply_Mission"
-			clr_country_flag = NFA_Focus_Bordeaux_cf
-			hidden_effect = {
-				19 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.15
-						}
-					}
-				}
-			}
+			NFA_compliance_or_resistance_choice_tooltip = yes
 		}
 	}
 
@@ -2989,14 +2685,14 @@ NFA_rebuild_legitimacy_cat = {
 
 		available = {
 			controls_state = 980 #NFA controls Lille
-			NOT = { has_country_flag = NFA_Focus_Lille_cf }
+			980 = { NOT = { has_state_flag = NFA_Focus_cf } }
 			980 = { NOT = { has_state_flag = currently_being_cored } }
 		}
 
 		visible = {
 			980 = {
-				NOT = { is_core_of = ROOT }
 				is_owned_by = ROOT
+				NOT = { is_core_of = ROOT }
 			}
 		}
 
@@ -3011,80 +2707,8 @@ NFA_rebuild_legitimacy_cat = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_Lille"
-			set_country_flag = NFA_Focus_Lille_cf
 			country_event = nfa.165 #Work on reducing resistance or increasing compliance in Lille
-		}
-	}
-
-	NFA_Lille_Focus_Resist_Mission = {
-		icon = generic_nationalism
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			NOT = { controls_state = 980 } #NFA controls Lille
-		}
-
-		highlight_states = {
-			highlight_state_targets = { state = 980 }
-		}
-
-		is_good = yes
-		days_mission_timeout = 45
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Lille_Focus_Resist_Mission"
-			clr_country_flag = NFA_Focus_Lille_cf
-		}
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout NFA_Lille_Focus_Resist_Mission"
-			clr_country_flag = NFA_Focus_Lille_cf
-			hidden_effect = {
-				980 = {
-					add_state_modifier = {
-						modifier = {
-							resistance_decay = -0.15
-						}
-					}
-				}
-			}
-		}
-	}
-
-	NFA_Lille_Focus_Comply_Mission = {
-		icon = generic_nationalism
-
-		allowed = { always = no } #manually activated
-
-		available = {
-			NOT = { controls_state = 980 } #NFA controls Lille
-		}
-
-		highlight_states = {
-			highlight_state_targets = { state = 980 }
-		}
-
-		is_good = yes
-		days_mission_timeout = 45
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Lille_Focus_Comply_Mission"
-			clr_country_flag = NFA_Focus_Lille_cf
-		}
-
-		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout NFA_Lille_Focus_Comply_Mission"
-			clr_country_flag = NFA_Focus_Lille_cf
-			hidden_effect = {
-				980 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.15
-						}
-					}
-				}
-			}
+			NFA_compliance_or_resistance_choice_tooltip = yes
 		}
 	}
 
@@ -4105,30 +3729,26 @@ NFA_fate_of_french_africa_cat = {
 
 	NFA_Focus_On_Algeria = {
 		icon = generic_form_nation
+
 		allowed = { always = no }
-		cost = 30
-		ai_will_do = { factor = 200 }
+
+		available = {
+			controls_state = 513
+			political_power_daily > 0.25
+			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
+		}
+
 		visible = {
 			513 = {
 				is_owned_by = ROOT
 				NOT = { is_core_of = ROOT }
 			}
 		}
-		available = {
-			political_power_daily > 0.25
-			controls_state = 513
-			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Algeria"
-			set_country_flag = nfa_africa_civ_mission_in_progress
-			513 = {
-				add_state_modifier = {
-					modifier = {
-						compliance_gain = 0.20 #Boost to compliance to help core faster
-						resistance_decay = -0.3
-					}
-				}
+
+		cancel_trigger = {
+			OR = {
+				NOT = { controls_state = 513 }
+				513 = { is_core_of = ROOT }
 			}
 		}
 
@@ -4136,21 +3756,31 @@ NFA_fate_of_french_africa_cat = {
 			political_power_gain = -0.25
 		}
 
+		cost = 30
 		days_remove = 60
 		days_re_enable = 150
 
+		ai_will_do = { factor = 200 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Focus_On_Algeria"
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			513 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+		}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Algeria"
+			set_country_flag = nfa_africa_civ_mission_in_progress
+			513 = {
+				NFA_add_african_integration_focus_modifier = yes
+			}
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Focus_On_Algeria"
-			hidden_effect = {
-				clr_country_flag = nfa_africa_civ_mission_in_progress
-				513 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Turn off the compliance boost
-							resistance_decay = 0.3
-						}
-					}
-				}
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			513 = {
+				NFA_remove_african_integration_focus_modifier = yes
 			}
 		}
 	}
@@ -4187,9 +3817,16 @@ NFA_fate_of_french_africa_cat = {
 
 	NFA_Focus_On_Tunisia = {
 		icon = generic_form_nation
+
 		allowed = { always = no }
-		cost = 30
-		ai_will_do = { factor = 200 }
+
+		available = {
+			controls_state = 458
+			controls_state = 665
+			political_power_daily > 0.25
+			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
+		}
+
 		visible = {
 			458 = {
 				is_owned_by = ROOT
@@ -4200,29 +3837,16 @@ NFA_fate_of_french_africa_cat = {
 				NOT = { is_core_of = ROOT }
 			}
 		}
-		available = {
-			political_power_daily > 0.25
-			controls_state = 458
-			controls_state = 665
-			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Tunisia"
-			set_country_flag = nfa_africa_civ_mission_in_progress
-			458 = {
-				add_state_modifier = {
-					modifier = {
-						compliance_gain = 0.20 #Boost to compliance to help core faster
-						resistance_decay = -0.3
-					}
+
+		cancel_trigger = {
+			OR = {
+				AND = {
+					NOT = { controls_state = 458 }
+					NOT = { controls_state = 665 }
 				}
-			}
-			665 = {
-				add_state_modifier = {
-					modifier = {
-						compliance_gain = 0.20 #Boost to compliance to help core faster
-						resistance_decay = -0.3
-					}
+				AND = {
+					458 = { is_core_of = ROOT }
+					665 = { is_core_of = ROOT }
 				}
 			}
 		}
@@ -4231,29 +3855,40 @@ NFA_fate_of_french_africa_cat = {
 			political_power_gain = -0.25
 		}
 
+		cost = 30
 		days_remove = 60
 		days_re_enable = 150
 
+		ai_will_do = { factor = 200 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Focus_On_Tunisia"
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			458 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+			665 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+		}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Tunisia"
+			set_country_flag = nfa_africa_civ_mission_in_progress
+			458 = {
+				NFA_add_african_integration_focus_modifier = yes
+			}
+			665 = {
+				NFA_add_african_integration_focus_modifier = yes
+			}
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Focus_On_Tunisia"
-			hidden_effect = {
-				clr_country_flag = nfa_africa_civ_mission_in_progress
-				458 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Turn off the compliance boost
-							resistance_decay = 0.3
-						}
-					}
-				}
-				665 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Turn off the compliance boost
-							resistance_decay = 0.3
-						}
-					}
-				}
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			458 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+			665 = {
+				NFA_remove_african_integration_focus_modifier = yes
 			}
 		}
 	}
@@ -4302,30 +3937,26 @@ NFA_fate_of_french_africa_cat = {
 
 	NFA_Focus_On_Guinea = {
 		icon = generic_form_nation
+
 		allowed = { always = no }
-		cost = 30
-		ai_will_do = { factor = 200 }
+
+		available = {
+			controls_state = 806
+			political_power_daily > 0.25
+			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
+		}
+
 		visible = {
 			806 = {
 				is_owned_by = ROOT
 				NOT = { is_core_of = ROOT }
 			}
 		}
-		available = {
-			political_power_daily > 0.25
-			controls_state = 806
-			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Guinea"
-			set_country_flag = nfa_africa_civ_mission_in_progress
-			806 = {
-				add_state_modifier = {
-					modifier = {
-						compliance_gain = 0.20 #Boost to compliance to help core faster
-						resistance_decay = -0.3
-					}
-				}
+
+		cancel_trigger = {
+			OR = {
+				NOT = { controls_state = 806 }
+				806 = { is_core_of = ROOT }
 			}
 		}
 
@@ -4333,21 +3964,31 @@ NFA_fate_of_french_africa_cat = {
 			political_power_gain = -0.25
 		}
 
+		cost = 30
 		days_remove = 60
 		days_re_enable = 150
 
+		ai_will_do = { factor = 200 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Focus_On_Guinea"
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			806 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+		}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Guinea"
+			set_country_flag = nfa_africa_civ_mission_in_progress
+			806 = {
+				NFA_add_african_integration_focus_modifier = yes
+			}
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Focus_On_Guinea"
-			hidden_effect = {
-				clr_country_flag = nfa_africa_civ_mission_in_progress
-				806 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Turn off the compliance boost
-							resistance_decay = 0.3
-						}
-					}
-				}
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			806 = {
+				NFA_remove_african_integration_focus_modifier = yes
 			}
 		}
 	}
@@ -4387,30 +4028,26 @@ NFA_fate_of_french_africa_cat = {
 
 	NFA_Focus_On_Mauritania = {
 		icon = generic_form_nation
+
 		allowed = { always = no }
-		cost = 30
-		ai_will_do = { factor = 200 }
+
+		available = {
+			controls_state = 557
+			political_power_daily > 0.25
+			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
+		}
+
 		visible = {
 			557 = {
 				is_owned_by = ROOT
 				NOT = { is_core_of = ROOT }
 			}
 		}
-		available = {
-			political_power_daily > 0.25
-			controls_state = 557
-			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Mauritania"
-			set_country_flag = nfa_africa_civ_mission_in_progress
-			557 = {
-				add_state_modifier = {
-					modifier = {
-						compliance_gain = 0.20 #Boost to compliance to help core faster
-						resistance_decay = -0.3
-					}
-				}
+
+		cancel_trigger = {
+			OR = {
+				NOT = { controls_state = 557 }
+				557 = { is_core_of = ROOT }
 			}
 		}
 
@@ -4418,21 +4055,31 @@ NFA_fate_of_french_africa_cat = {
 			political_power_gain = -0.25
 		}
 
+		cost = 30
 		days_remove = 60
 		days_re_enable = 150
 
+		ai_will_do = { factor = 200 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Focus_On_Mauritania"
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			557 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+		}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Mauritania"
+			set_country_flag = nfa_africa_civ_mission_in_progress
+			557 = {
+				NFA_add_african_integration_focus_modifier = yes
+			}
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Focus_On_Mauritania"
-			hidden_effect = {
-				clr_country_flag = nfa_africa_civ_mission_in_progress
-				557 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Turn off the compliance boost
-							resistance_decay = 0.3
-						}
-					}
-				}
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			557 = {
+				NFA_remove_african_integration_focus_modifier = yes
 			}
 		}
 	}
@@ -4473,9 +4120,16 @@ NFA_fate_of_french_africa_cat = {
 
 	NFA_Focus_On_French_Sudan = {
 		icon = generic_form_nation
+
 		allowed = { always = no }
-		cost = 30
-		ai_will_do = { factor = 200 }
+
+		available = {
+			controls_state = 556
+			controls_state = 1095
+			political_power_daily > 0.25
+			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
+		}
+
 		visible = {
 			556 = {
 				is_owned_by = ROOT
@@ -4486,31 +4140,16 @@ NFA_fate_of_french_africa_cat = {
 				NOT = { is_core_of = ROOT }
 			}
 		}
-		available = {
-			controls_state = 556
-			controls_state = 1095
-			political_power_daily > 0.25
-			NOT = {
-				has_country_flag = nfa_africa_civ_mission_in_progress
-			}
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_French_Sudan"
-			set_country_flag = nfa_africa_civ_mission_in_progress
-			556 = {
-				add_state_modifier = {
-					modifier = {
-						compliance_gain = 0.20 #Boost to compliance to help core faster
-						resistance_decay = -0.3
-					}
+
+		cancel_trigger = {
+			OR = {
+				AND = {
+					NOT = { controls_state = 556 }
+					NOT = { controls_state = 1095 }
 				}
-			}
-			1095 = {
-				add_state_modifier = {
-					modifier = {
-						compliance_gain = 0.20 #Boost to compliance to help core faster
-						resistance_decay = -0.3
-					}
+				AND = {
+					556 = { is_core_of = ROOT }
+					1095 = { is_core_of = ROOT }
 				}
 			}
 		}
@@ -4519,29 +4158,40 @@ NFA_fate_of_french_africa_cat = {
 			political_power_gain = -0.25
 		}
 
+		cost = 30
 		days_remove = 60
 		days_re_enable = 150
 
+		ai_will_do = { factor = 200 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Focus_On_French_Sudan"
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			556 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+			1095 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+		}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_French_Sudan"
+			set_country_flag = nfa_africa_civ_mission_in_progress
+			556 = {
+				NFA_add_african_integration_focus_modifier = yes
+			}
+			1095 = {
+				NFA_add_african_integration_focus_modifier = yes
+			}
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Focus_On_French_Sudan"
-			hidden_effect = {
-				clr_country_flag = nfa_africa_civ_mission_in_progress
-				556 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Turn off the compliance boost
-							resistance_decay = 0.3
-						}
-					}
-				}
-				1095 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Turn off the compliance boost
-							resistance_decay = 0.3
-						}
-					}
-				}
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			556 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+			1095 = {
+				NFA_remove_african_integration_focus_modifier = yes
 			}
 		}
 	}
@@ -4597,30 +4247,26 @@ NFA_fate_of_french_africa_cat = {
 
 	NFA_Focus_On_Ivory_Coast = {
 		icon = generic_form_nation
+
 		allowed = { always = no }
-		cost = 30
-		ai_will_do = { factor = 200 }
+
+		available = {
+			controls_state = 807
+			political_power_daily > 0.25
+			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
+		}
+
 		visible = {
 			807 = {
 				is_owned_by = ROOT
 				NOT = { is_core_of = ROOT }
 			}
 		}
-		available = {
-			political_power_daily > 0.25
-			controls_state = 807
-			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Ivory_Coast"
-			set_country_flag = nfa_africa_civ_mission_in_progress
-			807 = {
-				add_state_modifier = {
-					modifier = {
-						compliance_gain = 0.20 #Boost to compliance to help core faster
-						resistance_decay = -0.3
-					}
-				}
+
+		cancel_trigger = {
+			OR = {
+				NOT = { controls_state = 807 }
+				807 = { is_core_of = ROOT }
 			}
 		}
 
@@ -4628,21 +4274,31 @@ NFA_fate_of_french_africa_cat = {
 			political_power_gain = -0.25
 		}
 
+		cost = 30
 		days_remove = 60
 		days_re_enable = 150
 
+		ai_will_do = { factor = 200 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Focus_On_Ivory_Coast"
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			807 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+		}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Ivory_Coast"
+			set_country_flag = nfa_africa_civ_mission_in_progress
+			807 = {
+				NFA_add_african_integration_focus_modifier = yes
+			}
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Focus_On_Ivory_Coast"
-			hidden_effect = {
-				clr_country_flag = nfa_africa_civ_mission_in_progress
-				807 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Turn off the compliance boost
-							resistance_decay = 0.3
-						}
-					}
-				}
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			807 = {
+				NFA_remove_african_integration_focus_modifier = yes
 			}
 		}
 	}
@@ -4682,32 +4338,26 @@ NFA_fate_of_french_africa_cat = {
 
 	NFA_Focus_On_Upper_Volta = {
 		icon = generic_form_nation
+
 		allowed = { always = no }
-		cost = 30
-		ai_will_do = { factor = 200 }
+
+		available = {
+			controls_state = 808
+			political_power_daily > 0.25
+			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
+		}
+
 		visible = {
 			808 = {
 				is_owned_by = ROOT
 				NOT = { is_core_of = ROOT }
 			}
 		}
-		available = {
-			controls_state = 808
-			political_power_daily > 0.25
-			NOT = {
-				has_country_flag = nfa_africa_civ_mission_in_progress
-			}
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Upper_Volta"
-			set_country_flag = nfa_africa_civ_mission_in_progress
-			808 = {
-				add_state_modifier = {
-					modifier = {
-						compliance_gain = 0.20 #Boost to compliance to help core faster
-						resistance_decay = -0.3
-					}
-				}
+
+		cancel_trigger = {
+			OR = {
+				NOT = { controls_state = 808 }
+				808 = { is_core_of = ROOT }
 			}
 		}
 
@@ -4715,21 +4365,31 @@ NFA_fate_of_french_africa_cat = {
 			political_power_gain = -0.25
 		}
 
+		cost = 30
 		days_remove = 60
 		days_re_enable = 150
 
+		ai_will_do = { factor = 200 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Focus_On_Upper_Volta"
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			808 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+		}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Upper_Volta"
+			set_country_flag = nfa_africa_civ_mission_in_progress
+			808 = {
+				NFA_add_african_integration_focus_modifier = yes
+			}
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Focus_On_Upper_Volta"
-			hidden_effect = {
-				clr_country_flag = nfa_africa_civ_mission_in_progress
-				808 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Turn off the compliance boost
-							resistance_decay = 0.3
-						}
-					}
-				}
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			808 = {
+				NFA_remove_african_integration_focus_modifier = yes
 			}
 		}
 	}
@@ -4769,32 +4429,26 @@ NFA_fate_of_french_africa_cat = {
 
 	NFA_Focus_On_Niger = {
 		icon = generic_form_nation
+
 		allowed = { always = no }
-		cost = 30
-		ai_will_do = { factor = 200 }
+
+		available = {
+			controls_state = 809
+			political_power_daily > 0.25
+			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
+		}
+
 		visible = {
 			809 = {
 				is_owned_by = ROOT
 				NOT = { is_core_of = ROOT }
 			}
 		}
-		available = {
-			political_power_daily > 0.25
-			controls_state = 809
-			NOT = {
-				has_country_flag = nfa_africa_civ_mission_in_progress
-			}
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Niger"
-			set_country_flag = nfa_africa_civ_mission_in_progress
-			809 = {
-				add_state_modifier = {
-					modifier = {
-						compliance_gain = 0.20 #Boost to compliance to help core faster
-						resistance_decay = -0.3
-					}
-				}
+
+		cancel_trigger = {
+			OR = {
+				NOT = { controls_state = 809 }
+				809 = { is_core_of = ROOT }
 			}
 		}
 
@@ -4802,21 +4456,31 @@ NFA_fate_of_french_africa_cat = {
 			political_power_gain = -0.25
 		}
 
+		cost = 30
 		days_remove = 60
 		days_re_enable = 150
 
+		ai_will_do = { factor = 200 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Focus_On_Niger"
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			809 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+		}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Niger"
+			set_country_flag = nfa_africa_civ_mission_in_progress
+			809 = {
+				NFA_add_african_integration_focus_modifier = yes
+			}
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Focus_On_Niger"
-			hidden_effect = {
-				clr_country_flag = nfa_africa_civ_mission_in_progress
-				809 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Turn off the compliance boost
-							resistance_decay = 0.3
-						}
-					}
-				}
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			809 = {
+				NFA_remove_african_integration_focus_modifier = yes
 			}
 		}
 	}
@@ -4857,31 +4521,24 @@ NFA_fate_of_french_africa_cat = {
 	NFA_Focus_On_Chad = {
 		icon = generic_form_nation
 		allowed = { always = no }
-		cost = 30
-		ai_will_do = { factor = 200 }
+
+		available = {
+			controls_state = 515
+			political_power_daily > 0.25
+			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
+		}
+
 		visible = {
 			515 = {
 				is_owned_by = ROOT
 				NOT = { is_core_of = ROOT }
 			}
 		}
-		available = {
-			political_power_daily > 0.25
-			controls_state = 515
-			NOT = {
-				has_country_flag = nfa_africa_civ_mission_in_progress
-			}
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Chad"
-			set_country_flag = nfa_africa_civ_mission_in_progress
-			515 = {
-				add_state_modifier = {
-					modifier = {
-						compliance_gain = 0.20 #Boost to compliance to help core faster
-						resistance_decay = -0.3
-					}
-				}
+
+		cancel_trigger = {
+			OR = {
+				NOT = { controls_state = 515 }
+				515 = { is_core_of = ROOT }
 			}
 		}
 
@@ -4889,21 +4546,31 @@ NFA_fate_of_french_africa_cat = {
 			political_power_gain = -0.25
 		}
 
+		cost = 30
 		days_remove = 60
 		days_re_enable = 150
 
+		ai_will_do = { factor = 200 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Focus_On_Chad"
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			515 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+		}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Chad"
+			set_country_flag = nfa_africa_civ_mission_in_progress
+			515 = {
+				NFA_add_african_integration_focus_modifier = yes
+			}
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Focus_On_Chad"
-			hidden_effect = {
-				clr_country_flag = nfa_africa_civ_mission_in_progress
-				515 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Turn off the compliance boost
-							resistance_decay = 0.3
-						}
-					}
-				}
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			515 = {
+				NFA_remove_african_integration_focus_modifier = yes
 			}
 		}
 	}
@@ -4943,32 +4610,26 @@ NFA_fate_of_french_africa_cat = {
 
 	NFA_Focus_On_Dahomey = {
 		icon = generic_form_nation
+
 		allowed = { always = no }
-		cost = 30
-		ai_will_do = { factor = 200 }
+
+		available = {
+			political_power_daily > 0.25
+			controls_state = 876
+			NOT = { has_country_flag = nfa_africa_civ_mission_in_progress }
+		}
+
 		visible = {
 			876 = {
 				is_owned_by = ROOT
 				NOT = { is_core_of = ROOT }
 			}
 		}
-		available = {
-			political_power_daily > 0.25
-			controls_state = 876
-			NOT = {
-				has_country_flag = nfa_africa_civ_mission_in_progress
-			}
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Dahomey"
-			set_country_flag = nfa_africa_civ_mission_in_progress
-			876 = {
-				add_state_modifier = {
-					modifier = {
-						compliance_gain = 0.20 #Boost to compliance to help core faster
-						resistance_decay = -0.3
-					}
-				}
+
+		cancel_trigger = {
+			OR = {
+				NOT = { controls_state = 876 }
+				876 = { is_core_of = ROOT }
 			}
 		}
 
@@ -4976,21 +4637,31 @@ NFA_fate_of_french_africa_cat = {
 			political_power_gain = -0.25
 		}
 
+		cost = 30
 		days_remove = 60
 		days_re_enable = 150
 
+		ai_will_do = { factor = 200 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel NFA_Focus_On_Dahomey"
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			876 = {
+				NFA_remove_african_integration_focus_modifier = yes
+			}
+		}
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete NFA_Focus_On_Dahomey"
+			set_country_flag = nfa_africa_civ_mission_in_progress
+			876 = {
+				NFA_add_african_integration_focus_modifier = yes
+			}
+		}
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove NFA_Focus_On_Dahomey"
-			hidden_effect = {
-				clr_country_flag = nfa_africa_civ_mission_in_progress
-				876 = {
-					add_state_modifier = {
-						modifier = {
-							compliance_gain = -0.20 #Turn off the compliance boost
-							resistance_decay = 0.3
-						}
-					}
-				}
+			clr_country_flag = nfa_africa_civ_mission_in_progress
+			876 = {
+				NFA_remove_african_integration_focus_modifier = yes
 			}
 		}
 	}

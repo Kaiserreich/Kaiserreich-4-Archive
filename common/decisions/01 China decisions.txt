@@ -52,7 +52,12 @@ foreign_politics = {
 			factor = 50 #PLACEHOLDER - Ai will take this decision if all conditions are met
 			modifier = {
 				factor = 0
-				FROM = { any_allied_country = { is_tag_in_china_area = yes } }
+				FROM = {
+					OR = {
+						any_owned_state = { china_is_chinese_core_or_claim_trigger = yes }
+						any_allied_country = { any_owned_state = { china_is_chinese_core_or_claim_trigger = yes } }
+					}
+				}
 			}
 		}
 
@@ -70,7 +75,12 @@ foreign_politics = {
 		icon = GFX_decision_trumpet
 		priority = 150
 
-		allowed = { tag = LEP }
+		allowed = {
+			OR = {
+				tag = LEP
+				tag = SZC
+			}
+		}
 
 		available = {
 			has_war = yes
@@ -92,6 +102,13 @@ foreign_politics = {
 			FROM = {
 				is_faction_leader = yes
 				NOT = { has_war_with = ROOT }
+			}
+			OR = {
+				AND = {
+					tag = SZC
+					china_is_aligned_with_zhili = yes
+				}
+				tag = LEP
 			}
 		}
 
@@ -344,7 +361,13 @@ chinese_unification = {
 			if = {
 				limit = {
 					original_tag = SQI
-					has_government = national_populist
+					OR = {
+						has_government = national_populist
+						AND = {
+							has_government = authoritarian_democrat
+							china_is_aligned_with_manchu = yes
+						}
+					}
 				}
 				NOT = {
 					QIE = {
@@ -572,6 +595,16 @@ chinese_unification = {
 			}
 			else_if = {
 				limit = {
+					original_tag = SQI
+					has_government = authoritarian_democrat
+					check_variable = { country_leader:china_alignment = token:manchu_qing }
+				}
+				set_cosmetic_tag = united_china_manchu
+				add_research_slot_until_five = yes
+				hidden_effect = { news_event = china_events.300 }
+			}
+			else_if = {
+				limit = {
 					check_variable = { country_leader:china_alignment = token:chinese_republican }
 				}
 				china_generic_unification_effect = yes
@@ -737,6 +770,219 @@ chinese_unification = {
 			}
 		}
 	}
+
+	### National Unification Decisions ###
+	CHN_conquer_beijing_fallback_decision = { #Allow a players to fight for Beijing if missed out chance
+		allowed = { tag = CHI }
+		visible = {
+			if = {
+				limit = { tag = CHI }
+				has_completed_focus = CHI_second_northern_expedition
+			}
+			else = {
+				#Nothing for now
+			}
+			NOT = { has_wargoal_against = var:608.owner }
+			ROOT = { NOT = { owns_state = 608 } } #Beijing
+		}
+		available = {
+			can_declare_war_on = var:608.owner
+			has_war = no
+			is_subject = no
+		}
+		fire_only_once = no
+		icon = GFX_decision_generic_flags
+		priority = 100
+		cost = 20
+
+		cancel_if_not_visible = yes
+		ai_will_do = {
+			factor = 1000
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+		}
+		days_remove = 30
+
+		war_with_target_on_remove = yes
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel CHN_conquer_beijing_fallback_decision"
+			clear_decision_attack_AI = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete CHN_conquer_beijing_fallback_decision"
+			setup_decision_attack_ai = yes
+			if = {
+				limit = {
+					OR = {
+						var:608.owner = { decryption_progress = { target = ROOT value > 0.5 } }
+						var:608.owner = { intel_level_over = { target = ROOT army_intel > 0.5 } }
+						AND = {
+							NOT = { has_tech = basic_encryption }
+							var:608.owner = { has_tech = basic_decryption }
+						}
+						AND = {
+							NOT = { has_tech = improved_encryption }
+							var:608.owner = { has_tech = improved_decryption }
+						}
+						AND = {
+							NOT = { has_tech = advanced_encryption }
+							var:608.owner = { has_tech = advanced_decryption }
+						}
+					}
+				}
+				var:608.owner = { country_event = { id = china_events.0 days = 7 } }    #warning event
+			}
+			else = {
+				var:608.owner = { country_event = { id = china_events.0 days = 13 } }   #warning event
+			}
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove CHN_conquer_beijing_fallback_decision"
+			clear_decision_attack_AI = yes
+			var:608.owner = {
+				ROOT = {
+					create_wargoal = {
+						target = PREV
+						type = annex_everything
+					}
+				}
+			}
+		}
+	}
+	CHN_demand_control_of_beijing = { #In case a puppet decides to be cute a snag Beijing from them, blocking further progress
+		allowed = { tag = CHI }
+		visible = {
+			if = {
+				limit = { tag = CHI }
+				has_completed_focus = CHI_second_northern_expedition
+			}
+			else = {
+				#Nothing for now
+			}
+			var:608.owner = { is_subject_of = ROOT }
+		}
+		fire_only_once = no
+		icon = GFX_decision_hand_grab
+		priority = 100
+		cost = 20
+
+		cancel_if_not_visible = yes
+		ai_will_do = {
+			factor = 1000
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+		}
+		days_remove = 7
+
+		war_with_target_on_remove = yes
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel CHN_demand_control_of_beijing"
+			clear_decision_attack_AI = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete CHN_demand_control_of_beijing"
+			setup_decision_attack_ai = yes
+
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove CHN_demand_control_of_beijing"
+			clear_decision_attack_AI = yes
+			var:608.owner = { country_event = china_events.60 } #The Central Government Demands Beijing
+			custom_effect_tooltip = if_they_accept_tt
+			event_option_tooltip = china_events.61.a
+			custom_effect_tooltip = if_they_refuse_tt
+			var:608.owner = { event_option_tooltip = china_events.60.b }
+		}
+	}
+	CHN_march_to_manchuria = { #Allow a players to invade FNG
+		allowed = { tag = CHI }
+		visible = {
+			if = {
+				limit = { tag = CHI }
+				has_completed_focus = CHI_entrench_dangguo
+			}
+			else = {
+				#None for now
+			}
+			ROOT = { NOT = { owns_state = 716 } } #Shenyang
+		}
+		available = {
+			can_declare_war_on = var:716.owner
+			has_war = no
+			is_subject = no
+		}
+		fire_only_once = no
+		icon = GFX_decision_generic_nationalism
+		priority = 100
+		cost = 20
+
+		cancel_if_not_visible = yes
+		ai_will_do = {
+			factor = 1000
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+		}
+		days_remove = 30
+
+		war_with_target_on_remove = yes
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel CHN_march_to_manchuria"
+			clear_decision_attack_AI = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete CHN_march_to_manchuria"
+			setup_decision_attack_AI = yes
+			if = {
+				limit = {
+					OR = {
+						var:716.owner = { decryption_progress = { target = ROOT value > 0.5 } }
+						var:716.owner = { intel_level_over = { target = ROOT army_intel > 0.5 } }
+						AND = {
+							NOT = { has_tech = basic_encryption }
+							var:716.owner = { has_tech = basic_decryption }
+						}
+						AND = {
+							NOT = { has_tech = improved_encryption }
+							var:716.owner = { has_tech = improved_decryption }
+						}
+						AND = {
+							NOT = { has_tech = advanced_encryption }
+							var:716.owner = { has_tech = advanced_decryption }
+						}
+					}
+				}
+				var:716.owner = { country_event = { id = china_events.0 days = 7 } }    #warning event
+			}
+			else = {
+				var:716.owner = { country_event = { id = china_events.0 days = 13 } }   #warning event
+			}
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove CHN_march_to_manchuria"
+			clear_decision_attack_AI = yes
+			var:716.owner = {
+				ROOT = {
+					create_wargoal = {
+						target = PREV
+						type = annex_everything
+					}
+				}
+			}
+		}
+	}
+
 	china_move_capital = {
 		icon = generic_political_rally
 
@@ -804,11 +1050,11 @@ chinese_unification = {
 			factor = 100
 			modifier = {
 				factor = 0
-				ROOT_is_threatened = yes
+				country_is_in_dangerous_war = yes
 			}
 			modifier = {
 				factor = 0
-				FROM = { default_attack_AI_trigger_FROM = yes }
+				FROM = { default_attack_AI_trigger = yes }
 			}
 			modifier = {
 				factor = 0
@@ -891,6 +1137,7 @@ chinese_unification = {
 				FROM = { any_subject_country = { is_neighbor_of = ROOT } }
 			}
 			FROM = { has_civil_war = no }
+			NOT = { FROM = { has_idea = YUN_chaos_army } }
 		}
 
 		visible = {
@@ -1022,7 +1269,7 @@ chinese_unification = {
 			factor = 100
 			modifier = {
 				factor = 0
-				ROOT_is_threatened = yes
+				country_is_in_dangerous_war = yes
 			}
 			modifier = {
 				factor = 0
@@ -1304,6 +1551,7 @@ chinese_unification = {
 				any_subject_country = { is_neighbor_of = FROM }
 			}
 			FROM = { surrender_progress < 0.05 }
+			has_global_flag = northwest_conflict_ended
 		}
 
 		visible = {
@@ -1332,8 +1580,8 @@ chinese_unification = {
 				factor = 0
 				NOT = { is_in_faction_with = FROM }
 				OR = {
-					ROOT_is_threatened = yes
-					FROM = { default_attack_AI_trigger_FROM = yes }
+					country_is_in_dangerous_war = yes
+					FROM = { default_attack_AI_trigger = yes }
 				}
 			}
 		}
@@ -1422,8 +1670,8 @@ chinese_unification = {
 				factor = 0
 				NOT = { is_in_faction_with = FROM }
 				OR = {
-					ROOT_is_threatened = yes
-					FROM = { default_attack_AI_trigger_FROM = yes }
+					country_is_in_dangerous_war = yes
+					FROM = { default_attack_AI_trigger = yes }
 				}
 			}
 		}
@@ -1862,11 +2110,11 @@ chinese_unification = {
 			factor = 10
 			modifier = {
 				factor = 0
-				ROOT_is_threatened_cautious = yes
+				country_has_any_active_threat = yes
 			}
 			modifier = {
 				factor = 0
-				FROM = { default_attack_AI_trigger_FROM = yes }
+				FROM = { default_attack_AI_trigger = yes }
 			}
 		}
 
@@ -2237,7 +2485,6 @@ china_league_collapse_decisions = {
 		available = {
 			controls_state = 596
 			controls_state = 1067
-			controls_state = 1068
 			controls_state = 1069
 			stockpile_ratio = {
 				archetype = infantry_equipment
@@ -2735,7 +2982,6 @@ china_league_collapse_decisions = {
 		available = {
 			controls_state = 596
 			controls_state = 1067
-			controls_state = 1068
 			controls_state = 1069
 		}
 		custom_cost_trigger = {
@@ -2763,7 +3009,6 @@ china_league_collapse_decisions = {
 				NOT = {
 					controls_state = 596
 					controls_state = 1067
-					controls_state = 1068
 					controls_state = 1069
 				}
 				has_global_flag = LEP_league_war_over
@@ -2790,7 +3035,7 @@ china_league_collapse_decisions = {
 			hidden_effect = {
 				LEP_create_militia_template = yes
 				random_controlled_state = {
-					prioritize = { 596 1067 1068 1069 }
+					prioritize = { 596 1067 1069 }
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.4"
 						owner = ROOT

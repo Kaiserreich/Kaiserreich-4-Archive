@@ -5,18 +5,23 @@ set_potential_national_government = {
 		every_state = {
 			limit = {
 				is_core_china = yes
-				is_claim_or_core_of_PREV = no
 				NOT = {
-					has_variable = ambition_area_@PREV
 					owner = {
 						is_subject_of = PREV.PREV
 						china_is_governorate = yes
 					}
 				}
 			}
-			add_claim_by = PREV
-			add_to_array = { PREV.china_government_ambitions = THIS }
-			set_variable = { ambition_area_@PREV = 1 }
+			if = {
+				limit = { is_claim_or_core_of_PREV = no }
+				add_to_array = { PREV.china_government_claims = THIS }
+				add_claim_by = PREV
+			}
+			if = {
+				limit = { NOT = { has_variable = ambition_area_@PREV } }
+				add_to_array = { PREV.china_government_ambitions = THIS }
+				set_variable = { ambition_area_@PREV = 1 }
+			}
 		}
 		hidden_effect = {
 			every_state = {
@@ -48,10 +53,15 @@ clear_potential_national_government = {
 			}
 
 			for_each_scope_loop = {
+				array = china_government_claims
+				remove_claim_by = PREV
+			}
+			for_each_scope_loop = {
 				array = china_government_ambitions
 				remove_claim_by = PREV
 				clear_variable = ambition_area_@PREV
 			}
+			clear_array = china_government_claims
 			clear_array = china_government_ambitions
 
 			for_each_loop = {
@@ -519,15 +529,30 @@ china_puppet_setup = {
 	else_if = {
 		limit = { tag = QIE }
 		if = {
-			limit = { ROOT = { tag = RUS } }
-			set_cosmetic_tag = QIE_united_china
+			limit = {
+				ROOT = {
+					OR = {
+						has_cosmetic_tag = RUS_empire
+						has_country_leader = { character = RUS_pyotr_wrangel }
+					}
+				}
+			}
+			set_cosmetic_tag = united_china_qing
 			set_politics = {
-				ruling_party = authoritarian_democrat
+				ruling_party = social_conservative
 				elections_allowed = no
 			}
 			set_political_party = {
-				ideology = authoritarian_democrat
+				ideology = social_conservative
 				popularity = 60
+			}
+			QIE_aisin_gioro_puyi = {
+				set_nationality = PREV
+				set_variable = { china_alignment = token:manchu_qing }
+				promote_character = social_conservative_subtype
+				set_portraits = {
+					civilian = { large = GFX_portrait_QIE_aisin_gioro_puyi_civilian_large_uniform }
+				}
 			}
 		}
 		else = {
@@ -541,6 +566,7 @@ china_puppet_setup = {
 				popularity = 60
 			}
 			hidden_effect = {
+				QIE_aisin_gioro_puyi = { retire = yes }
 				if = {
 					limit = { has_character = QIE_yan_huiqing }
 					QIE_yan_huiqing = { promote_character = authoritarian_democrat_subtype }
@@ -646,7 +672,7 @@ china_puppet_setup = {
 				# china_army_decisions
 				remove_targeted_decision = { target = THIS decision = FNG_Revise_our_Position_on_Looting }
 				remove_targeted_decision = { target = THIS decision = FNG_Rebuild_the_Second_Army }
-				remove_targeted_decision = { target = THIS decision = FNG_Raise_Independent_Brigades_in_Cangzhou }
+				remove_targeted_decision = { target = THIS decision = FNG_Raise_Independent_Brigades_in_Dezhou }
 				remove_targeted_decision = { target = THIS decision = FNG_Raise_Independent_Brigades_in_Kaifeng }
 				remove_targeted_decision = { target = THIS decision = FNG_Raise_Independent_Brigades_in_Ruyang }
 				remove_targeted_decision = { target = THIS decision = FNG_Raise_Independent_Brigades_in_Guanzhong }
@@ -827,6 +853,7 @@ china_integrate_TARGET_effect = {
 					NOT = { is_core_of = var:integrator }
 					core_of_PREV_can_be_integrated_by_ROOT = yes
 				}
+				hidden_effect = { remove_claim_by = var:integrator }
 				add_core_of = var:integrator
 			}
 			every_core_state = {
@@ -1143,6 +1170,16 @@ china_break_puppet_effect = {
 
 china_generic_set_government_cosmetic_effect = {
 	if = {
+		limit = {
+			original_tag = ANQ
+			613 = {
+				is_owned_and_controlled_by = PREV
+				is_capital = yes
+			}
+		}
+		set_cosmetic_tag = ANQ_government_nanjing
+	}
+	else_if = {
 		limit = { original_tag = ANQ }
 		set_cosmetic_tag = ANQ_government
 	}
@@ -1197,6 +1234,7 @@ china_generic_set_government_cosmetic_effect = {
 					owns_state = 608
 					controls_state = 608
 				}
+				add_state_core = 608
 				set_capital = { state = 608 remember_old_capital = no }
 			}
 			set_cosmetic_tag = SQI_government_yiguandao
@@ -1208,7 +1246,7 @@ china_generic_set_government_cosmetic_effect = {
 					}
 					set_portraits = {
 						character = QIE_aisin_gioro_puyi
-						civilian = { large = gfx/leaders/QIE/Portrait_QIE_Puyi_Uniform.png }
+						civilian = { large = GFX_portrait_QIE_aisin_gioro_puyi_civilian_large_uniform }
 					}
 					add_country_leader_role = {
 						country_leader = {
@@ -1231,6 +1269,73 @@ china_generic_set_government_cosmetic_effect = {
 						can_be_fired = no
 					}
 					activate = yes
+				}
+			}
+		}
+		else_if = {
+			limit = { original_tag = SQI }
+			if = {
+				limit = {
+					has_government = authoritarian_democrat
+					china_is_aligned_with_manchu = yes
+				}
+				if = {
+					limit = {
+						owns_state = 608
+						controls_state = 608
+					}
+					add_state_core = 608
+					set_capital = { state = 608 remember_old_capital = no }
+				}
+				set_cosmetic_tag = QIE_government_manchu
+				QIE = {
+					QIE_aisin_gioro_puyi = {
+						hidden_effect = {
+							set_nationality = ROOT
+							remove_all_country_leader_roles = yes
+						}
+						set_portraits = {
+							character = QIE_aisin_gioro_puyi
+							civilian = { large = GFX_portrait_QIE_aisin_gioro_puyi_civilian_large_uniform }
+						}
+						add_country_leader_role = {
+							country_leader = {
+								desc = QIE_aisin_gioro_puyi_manchu_leader_desc
+								ideology = authoritarian_democrat_subtype
+								traits = { SQI_restored_benevolence }
+							}
+							promote_leader = yes
+						}
+					}
+					QIE_aisin_gioro_pujie = {
+						hidden_effect = { remove_second_in_command_role = yes }
+						hidden_effect = {
+							set_nationality = ROOT
+							remove_all_country_leader_roles = yes
+						}
+						add_advisor_role = {
+							advisor = {
+								slot = second_in_command
+								idea_token = QIE_aisin_gioro_pujie_sic
+								traits = { KR_flamboyant_brute_sic }
+								cost = 0
+								can_be_fired = no
+							}
+							activate = yes
+						}
+					}
+				}
+				SQI_qu_yingguang = {
+					add_advisor_role = {
+						advisor = {
+							slot = political_advisor
+							idea_token = SQI_qu_yingguang
+							traits = { QIE_secretary_general }
+							cost = 0
+							can_be_fired = no
+						}
+						activate = yes
+					}
 				}
 			}
 		}
@@ -1881,17 +1986,17 @@ china_army_reform_remove_officer_penalty = {
 
 china_merges_wuhan = {
 	1048 = { set_state_flag = wuhan_formed }
-	set_victory_points = { province = 7167 value = 0 } #Wuchang
-	set_victory_points = { province = 12467 value = 0 } #Hankou
-	set_victory_points = { province = 4619 value = 20 } #Wuchang/Wuhan
+	set_victory_points = { province = 4619 value = 40 } #Wuchang/Wuhan
+	set_victory_points = { province = 12467 value = 0 } #Hanyang
+	set_victory_points = { province = 7167 value = 0 } #Hankou
 	set_province_name = { id = 4619 name = VICTORY_POINTS_4619_WUHAN }
 }
 
 china_splits_wuhan = {
 	1048 = { clr_state_flag = wuhan_formed }
-	set_victory_points = { province = 4619 value = 12 } #Wuchang
-	set_victory_points = { province = 12467 value = 5 } #Hanyang
-	set_victory_points = { province = 7167 value = 5 } #Hankou
+	set_victory_points = { province = 4619 value = 20 } #Wuchang
+	set_victory_points = { province = 12467 value = 10 } #Hanyang
+	set_victory_points = { province = 7167 value = 10 } #Hankou
 	set_province_name = { id = 4619 name = VICTORY_POINTS_4619 }
 }
 

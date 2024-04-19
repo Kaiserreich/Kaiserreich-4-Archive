@@ -1430,14 +1430,14 @@ CAN_returning_home_decisions = {
 				delete_unit_template_and_units = { division_template = "Loyalist Mountaineers" }
 			}
 			if = {
-				limit = { has_template = "Irish Loyalist Rebels" }
-				delete_unit_template_and_units = { division_template = "Irish Loyalist Rebels" }
+				limit = { has_template = "Ulster Volunteers" }
+				delete_unit_template_and_units = { division_template = "Ulster Volunteers" }
 			}
 			hidden_effect = {
 				IRE = {
 					if = {
-						limit = { has_template = "Irish Loyalist Rebels" }
-						delete_unit_template_and_units = { division_template = "Irish Loyalist Rebels" disband = yes }
+						limit = { has_template = "Ulster Volunteers" }
+						delete_unit_template_and_units = { division_template = "Ulster Volunteers" disband = yes }
 					}
 				}
 			}
@@ -1538,11 +1538,11 @@ CAN_returning_home_decisions = {
 			factor = 10
 			modifier = {
 				factor = 0
-				ROOT_is_threatened = yes
+				country_is_in_dangerous_war = yes
 			}
 			modifier = {
 				factor = 0
-				FROM = { default_attack_AI_trigger_FROM = yes }
+				FROM = { default_attack_AI_trigger = yes }
 			}
 			modifier = {
 				factor = 0
@@ -1711,12 +1711,10 @@ CAN_returning_home_decisions = {
 			}
 		}
 
-		target_root_trigger = { has_completed_focus = CAN_contact_loyalists }
 		targets = { ENG }
+		target_root_trigger = { has_completed_focus = CAN_contact_loyalists }
 		target_trigger = {
-			FROM = {
-				has_socialist_government = yes
-			}
+			FROM = { has_socialist_government = yes }
 		}
 
 		fire_only_once = yes
@@ -1732,7 +1730,7 @@ CAN_returning_home_decisions = {
 		ai_will_do = { factor = 100 }
 	}
 
-	CAN_contact_irish_loyalists = {
+	CAN_contact_northern_irish_loyalists = {
 		icon = eng_support_imperialist_coup
 
 		available = {
@@ -1741,7 +1739,7 @@ CAN_returning_home_decisions = {
 			FROM = { controls_state = 119 }
 		}
 
-		targets = { 119.OWNER }
+		targets = { ENG IRE }
 		target_root_trigger = { has_completed_focus = CAN_contact_loyalists }
 		target_trigger = {
 			FROM = {
@@ -1751,18 +1749,37 @@ CAN_returning_home_decisions = {
 			is_monarchy = yes
 			is_subject = no
 			NOT = { country_exists = GBR }
+			has_country_flag = CAN_contacting_northern_loyalists
 		}
 
-		cost = 50
+		custom_cost_trigger = {
+			has_equipment = { infantry_equipment > 1999 }
+		}
+		custom_cost_text = 2000_infantry_equipment_1
 		priority = 8
 		fire_only_once = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete CAN_contact_irish_loyalists target: [From.GetName]"
-			country_event = canada.177
+			log = "[GetDateText]: [Root.GetName]: Decision complete CAN_contact_northern_irish_loyalists target: [From.GetName]"
+			effect_tooltip = {
+				NIR = {
+					declare_war_on = {
+						target = IRE
+						type = annex_everything
+					}
+				}
+			}
+			add_equipment_to_stockpile = {
+				type = infantry_equipment
+				amount = -2000
+			}
+			hidden_effect = {
+				country_event = { id = canada.177 days = 1 }
+				clr_country_flag = CAN_contacting_northern_loyalists
+			}
 		}
 
-		ai_will_do = { factor = 100 }
+		ai_will_do = { factor = 0 }
 	}
 
 	CAN_approach_ireland = {
@@ -1770,7 +1787,6 @@ CAN_returning_home_decisions = {
 
 		available = {
 			surrender_progress < 0.20
-			FROM = { has_war = no }
 		}
 
 		visible = {
@@ -1779,50 +1795,95 @@ CAN_returning_home_decisions = {
 			is_subject = no
 			is_in_faction = yes
 			NOT = { country_exists = GBR }
-			OR = {
-				has_global_flag = ENG_CANIRE_protection
-				has_global_flag = ENG_CANIRE_support
-			}
-			if = {
-				limit = { has_global_flag = ENG_CANIRE_support }
-				FROM = {
-					NOT = { gives_military_access_to = ROOT }
-				}
-			}
 			FROM = {
+				is_in_faction_with = GER
 				exists = yes
 				is_subject = no
-				is_in_faction = no
 				has_socialist_government = no
-				NOT = { is_guaranteed_by = GER }
+				NOT = { has_war_with = ROOT }
+				NOT = { gives_military_access_to = ROOT }
 			}
 		}
 
 		priority = 5
-		cost = 0
+		cost = 50
 		fire_only_once = yes
 
-		target_root_trigger = { has_completed_focus = CAN_within_arms_reach }
 		targets = { IRE }
+		target_root_trigger = { has_completed_focus = CAN_within_arms_reach }
 		target_trigger = {
 			FROM = {
+				is_in_faction_with = GER
 				is_subject = no
-				is_in_faction = no
 				has_socialist_government = no
-				NOT = { is_guaranteed_by = GER }
+				NOT = { has_war_with = ROOT }
+				NOT = { gives_military_access_to = ROOT }
 			}
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete CAN_approach_ireland target: [From.GetName]"
-			country_event = canada.150
+			FROM = { country_event = { id = canada.155 days = 3 } }
 		}
 
-		ai_will_do = {
-			factor = 25
-			modifier = {
-				factor = 10
-				has_global_flag = ENG_CANIRE_protection
+		ai_will_do = { factor = 25 }
+	}
+
+	CAN_reconcile_with_ireland = {
+		icon = generic_agreement
+
+		available = {
+			surrender_progress < 0.20
+			threat > 0.65
+		}
+
+		visible = {
+			has_completed_focus = CAN_within_arms_reach
+			has_country_flag = CAN_considering_alliance_ireland
+			is_monarchy = yes
+			is_subject = no
+			is_in_faction = yes
+			NOT = { country_exists = GBR }
+			FROM = {
+				exists = yes
+				IRE_has_parliamentary_govt = yes
+				is_subject = no
+				is_in_faction = no
+				has_socialist_government = no
+				at_peace_or_same_enemies_as_ROOT = yes
+				NOT = { has_war_with = ROOT }
+			}
+		}
+
+		### Only for human-led CAN, since IRE can join ENT through its own content anyway
+		ai_will_do = { factor = 0 }
+
+		priority = 5
+		cost = 0
+		fire_only_once = yes
+
+		targets = { IRE }
+		target_root_trigger = { has_completed_focus = CAN_within_arms_reach }
+		target_trigger = {
+			FROM = {
+				IRE_has_parliamentary_govt = yes
+				is_subject = no
+				is_in_faction = no
+				has_socialist_government = no
+				NOT = { has_war_with = ROOT }
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete CAN_reconcile_with_ireland target: [From.GetName]"
+			FROM = { country_event = { id = canada.151 days = 3 } }
+			custom_effect_tooltip = if_they_accept_tt
+			custom_effect_tooltip = IRE_join_ENT_tt
+			effect_tooltip = {
+				ROOT = { add_to_faction = FROM }
+			}
+			hidden_effect = {
+				IRE = { set_country_flag = IRE_joining_faction }
 			}
 		}
 	}
@@ -2361,9 +2422,9 @@ CAN_kings_influence_decisions = {
 					has_country_flag = { flag = CAN_supported_government days > 364 }
 				}
 			}
-			custom_trigger_tooltip = {
+			check_variable = {
 				tooltip = CAN_has_high_popularity
-				check_variable = { king_popularity > 3 }
+				king_popularity > 3
 			}
 			if = {
 				limit = { has_war = yes }
@@ -3096,13 +3157,7 @@ CAN_entente_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete CAN_create_naval_research_group target: [From.GetName]"
-			if = {
-				limit = { has_tech_sharing_feature = yes }
-				add_to_tech_sharing_group = joint_north_american_naval_programme
-			}
-			else = {
-				add_ideas = CAN_joint_naval_research_nontfv
-			}
+			add_to_tech_sharing_group = joint_north_american_naval_programme
 			FROM = {
 				country_event = entente.284
 				hidden_effect = { remove_targeted_decision = { target = ROOT decision = CAN_create_naval_research_group } }
@@ -4518,7 +4573,7 @@ CAN_american_civil_war_decisions = {
 			modifier = {
 				factor = 0
 				has_global_flag = USA_civil_war_over_flag
-				FROM = { default_attack_AI_trigger_FROM = yes }
+				FROM = { default_attack_AI_trigger = yes }
 			}
 			modifier = {
 				factor = 0

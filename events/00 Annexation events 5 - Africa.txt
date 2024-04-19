@@ -136,7 +136,8 @@ country_event = { #Fate of Gabon
 				}
 			}
 		}
-		GAB = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		GAB = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -255,7 +256,8 @@ country_event = { #Fate of Kamerun
 				}
 			}
 		}
-		CMR = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		CMR = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -315,16 +317,15 @@ country_event = { #Fate of Ubangi-Shari
 	immediate = {
 		hidden_effect = {
 			CAR = {
+				drop_cosmetic_tag = yes
 				if = {
-					limit = {
-						has_character = CAR_Ben_Aissa
-						CAR_Ben_Aissa = { has_character_flag = is_monarch }
-					}
+					limit = { has_character = CAR_Ben_Aissa }
 					CAR_Ben_Aissa = {
+						set_character_name = CAR_Ben_Aissa
 						clr_character_flag = is_monarch
+						remove_all_country_leader_roles = yes
 						retire = yes
 					}
-					drop_cosmetic_tag = yes
 				}
 			}
 			660 = { #Ubangi-shari
@@ -429,7 +430,8 @@ country_event = { #Fate of Ubangi-Shari
 				}
 			}
 		}
-		CAR = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		CAR = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -478,13 +480,45 @@ country_event = { #Fate of Ubangi-Shari
 	}
 }
 
-country_event = { #Fate of Kongo
+country_event = { #Fate of Congo
 	id = annex.5003
 	title = annexation_COG_CONQ
 	desc = annexation_COG_CONQ_desc
 	picture = GFX_report_event_generic_conference2
 
 	is_triggered_only = yes
+
+	immediate = {
+		annexations_africa_create_french_event_target = yes
+		if = {
+			limit = {
+				BLG = {
+					is_ally_of_ROOT = yes
+					OR = {
+						has_socialist_government = no
+						is_subject = no
+					}
+				}
+			}
+			BLG = { save_event_target_as = belgium }
+		}
+		if = {
+			limit = {
+				OR = {
+					original_tag = MAF
+					AND = {
+						tag = BLG
+						has_socialist_government = no
+					}
+					AND = {
+						is_french_tag = yes
+						has_socialist_government = no
+					}
+				}
+			}
+			save_event_target_as = can_annex_congo
+		}
+	}
 
 	option = { #liberate
 		log = "[GetLogInfo]: event annex.5003 option annex.5003.a"
@@ -493,15 +527,214 @@ country_event = { #Fate of Kongo
 			base = 100
 			modifier = {
 				factor = 0
+				has_event_target = can_annex_congo
+			}
+			modifier = {
+				factor = 0
+				is_in_africa = no
+				is_major = no
 				OR = {
-					original_tag = MAF
-					has_subject = MAF
+					has_event_target = belgium
+					has_event_target = france
 				}
+			}
+			modifier = {
+				factor = 0
+				has_subject = MAF
 			}
 		}
 		set_temp_variable = { tag_to_release = COG }
 		release_targeted_tag = yes
 		recheck_annexations = yes
+	}
+
+	option = { #give it to France
+		log = "[GetLogInfo]: event annex.5003 option annex.africa.give_to_france"
+		name = annex.africa.give_to_france
+		trigger = {
+			has_event_target = france
+		}
+		ai_chance = {
+			base = 30
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_congo
+			}
+			modifier = {
+				factor = 0
+				has_subject = MAF
+			}
+			modifier = {
+				factor = 0
+				is_in_africa = yes
+				NOT = { original_tag = SAF }
+			}
+			modifier = {
+				factor = 0
+				is_major = yes
+				event_target:france = {
+					is_subject = yes
+					NOT = { is_subject_of = ROOT }
+				}
+			}
+			modifier = {
+				factor = 0
+				is_ally_with = ENT
+				has_event_target = belgium
+			}
+		}
+		set_temp_variable = { tag_to_release = event_target:france }
+		COG = { transfer_african_territory_to_european_country = yes }
+	}
+
+	option = { #give it to Belgium
+		log = "[GetLogInfo]: event annex.5003 option annex.africa.give_to_belgium"
+		name = annex.africa.give_to_belgium
+		trigger = {
+			has_event_target = belgium
+		}
+		ai_chance = {
+			base = 60
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_congo
+			}
+			modifier = {
+				factor = 0
+				has_subject = MAF
+			}
+			modifier = {
+				factor = 0
+				is_in_africa = yes
+				NOT = { original_tag = SAF }
+			}
+			modifier = {
+				factor = 0
+				is_major = yes
+				event_target:belgium = {
+					is_subject = yes
+					NOT = { is_subject_of = ROOT }
+				}
+			}
+			modifier = {
+				factor = 0
+				is_ally_with = ENT
+				has_event_target = france
+			}
+		}
+		set_temp_variable = { tag_to_release = event_target:belgium }
+		COG = { transfer_african_territory_to_european_country = yes }
+	}
+
+	option = { #split between France and Belgium
+		log = "[GetLogInfo]: event annex.5003 option annex.5003.b"
+		name = annex.5003.b
+		trigger = {
+			has_event_target = france
+			has_event_target = belgium
+			event_target:france = { has_socialist_government = no }
+		}
+		ai_chance = {
+			base = 10
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_congo
+			}
+			modifier = {
+				factor = 0
+				NOT = { is_ally_with = ENT }
+			}
+			modifier = {
+				factor = 0
+				is_in_africa = yes
+				NOT = { original_tag = SAF }
+			}
+			modifier = {
+				factor = 0
+				has_subject = MAF
+			}
+			modifier = {
+				factor = 0
+				is_major = yes
+				OR = {
+					event_target:france = {
+						is_subject = yes
+						NOT = { is_subject_of = ROOT }
+					}
+					event_target:belgium = {
+						is_subject = yes
+						NOT = { is_subject_of = ROOT }
+					}
+				}
+			}
+		}
+		set_temp_variable = { tag_to_release = event_target:france }
+		if = {
+			limit = { var:tag_to_release = { is_subject = yes } }
+			928 = { transfer_state_and_add_claim = yes } #Middle Congo
+			953 = { transfer_state_and_add_claim = yes } #Tekeland
+			974 = { transfer_state_and_add_claim = yes } #Lower Sangha
+		}
+		else = {
+			928 = { transfer_state_and_notify = yes } #Middle Congo
+			953 = { transfer_state_and_notify = yes } #Tekeland
+			974 = { transfer_state_and_notify = yes } #Lower Sangha
+		}
+		custom_effect_tooltip = tooltip_white_line
+		set_temp_variable = { tag_to_release = event_target:belgium }
+		COG = { transfer_african_territory_to_european_country = yes }
+	}
+
+	option = { #split with France
+		log = "[GetLogInfo]: event annex.5003 option annex.5003.c"
+		name = annex.5003.c
+		trigger = {
+			tag = BLG
+			has_event_target = france
+			has_socialist_government = no
+			event_target:france = { has_socialist_government = no }
+		}
+		ai_chance = { base = 100 }
+		every_state = {
+			limit = {
+				is_core_of = COG
+				NOT = { state = 928 } #Middle Congo
+				NOT = { state = 953 } #Tekeland
+				NOT = { state = 974 } #Lower Sangha
+			}
+			add_claim_of_ROOT = yes
+			retain_state = yes
+		}
+		custom_effect_tooltip = tooltip_white_line
+		set_temp_variable = { tag_to_release = event_target:france }
+		COG = { transfer_african_territory_to_european_country = yes }
+	}
+
+	option = { #split with Belgium
+		log = "[GetLogInfo]: event annex.5003 option annex.5003.d"
+		name = annex.5003.d
+		trigger = {
+			is_french_tag = yes
+			has_event_target = belgium
+			has_socialist_government = no
+			event_target:belgium = { has_socialist_government = no }
+		}
+		ai_chance = { base = 100 }
+		928 = {
+			add_claim_of_ROOT = yes #Middle Congo
+			retain_state = yes
+		}
+		953 = {
+			add_claim_of_ROOT = yes #Tekeland
+			retain_state = yes
+		}
+		974 = {
+			add_claim_of_ROOT = yes #Lower Sangha
+			retain_state = yes
+		}
+		custom_effect_tooltip = tooltip_white_line
+		set_temp_variable = { tag_to_release = event_target:belgium }
+		COG = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -521,10 +754,39 @@ country_event = { #Fate of Kongo
 		log = "[GetLogInfo]: event annex.5003 option annex.integration"
 		name = annex.integration
 		trigger = {
-			original_tag = MAF
+			has_event_target = can_annex_congo
 		}
-		COG = { every_core_state = { add_claim_of_ROOT = yes } }
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				is_french_tag = yes
+				has_event_target = belgium
+			}
+			modifier = {
+				factor = 0
+				tag = BLG
+				has_event_target = france
+			}
+		}
+		COG = {
+			every_core_state = {
+				limit = {
+					NOT = {
+						AND = {
+							is_claim_or_core_of_owner = yes
+							owner = { is_ally_with = ROOT }
+						}
+					}
+				}
+				add_claim_of_ROOT = yes
+			}
+		}
 		occupy_medium_country = yes
+		if = {
+			limit = { original_tag = NFA }
+			NFA_Resistance_Policy_on_colony_states = yes
+		}
 		recheck_annexations = yes
 	}
 
@@ -532,7 +794,7 @@ country_event = { #Fate of Kongo
 		log = "[GetLogInfo]: event annex.5003 option annex.occupation"
 		name = annex.occupation
 		trigger = {
-			NOT = { original_tag = MAF }
+			NOT = { has_event_target = can_annex_congo }
 		}
 		ai_chance = { base = 0 }
 		set_country_flag = COG_CONQ
@@ -845,7 +1107,8 @@ country_event = { #Fate of Dahomey
 				}
 			}
 		}
-		DAH = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		DAH = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -1086,7 +1349,8 @@ country_event = { #Fate of Ivory Coast
 				}
 			}
 		}
-		IVO = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		IVO = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -1343,7 +1607,8 @@ country_event = { #Fate of Guinea
 				}
 			}
 		}
-		GNA = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		GNA = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -1461,7 +1726,8 @@ country_event = { #Fate of Senegambia
 				}
 			}
 		}
-		SEN = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		SEN = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -1579,7 +1845,8 @@ country_event = { #Fate of Mauritania
 				}
 			}
 		}
-		MRT = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		MRT = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -1711,7 +1978,8 @@ country_event = { #Fate of Mali
 				}
 			}
 		}
-		MLI = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		MLI = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -1843,7 +2111,8 @@ country_event = { #Fate of Burkina Faso
 				}
 			}
 		}
-		VOL = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		VOL = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -1975,7 +2244,8 @@ country_event = { #Fate of Niger
 				}
 			}
 		}
-		NGR = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		NGR = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -2107,7 +2377,8 @@ country_event = { #Fate of Chad
 				}
 			}
 		}
-		CHA = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		CHA = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF
@@ -2224,7 +2495,8 @@ country_event = { #Fate of Morocco
 			}
 		}
 		699 = { retain_state = yes } #Rio de Oro
-		MOR = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		MOR = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #Annex
@@ -2552,7 +2824,8 @@ country_event = { #Fate of Algeria
 				}
 			}
 		}
-		ALG = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		ALG = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #annex
@@ -2632,7 +2905,8 @@ country_event = { #Fate of Tunisia
 				}
 			}
 		}
-		TUN = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		TUN = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #annex
@@ -3577,17 +3851,7 @@ country_event = { #Fate of Malawi
 	option = { #liberate
 		log = "[GetLogInfo]: event annex.5036 option annex.5036.a"
 		name = annex.5036.a
-		ai_chance = {
-			base = 100
-			modifier = {
-				factor = 0
-				OR = {
-					is_in_faction_with = ENT
-					ZAM = { is_ally_of_ROOT = yes }
-					ZIM = { is_ally_of_ROOT = yes }
-				}
-			}
-		}
+		ai_chance = { base = 0 }
 		set_temp_variable = { tag_to_release = MLW }
 		release_targeted_tag = yes
 		recheck_annexations = yes
@@ -3605,6 +3869,16 @@ country_event = { #Fate of Malawi
 				}
 			}
 		}
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					original_tag = MAF
+					has_subject = MAF
+				}
+			}
+		}
 		set_temp_variable = { tag_to_release = 955.owner }
 		MLW = { set_transfer_target_cores = yes }
 		transfer_targeted_territory_and_add_claims = yes
@@ -3617,6 +3891,7 @@ country_event = { #Fate of Malawi
 		trigger = {
 			has_subject = MAF
 		}
+		ai_chance = { base = 100 }
 		set_temp_variable = { tag_to_release = MAF }
 		MLW = { set_transfer_target_cores = yes }
 		transfer_targeted_territory_and_add_claims = yes
@@ -3630,6 +3905,7 @@ country_event = { #Fate of Malawi
 		trigger = {
 			original_tag = MAF
 		}
+		ai_chance = { base = 100 }
 		MLW = { every_core_state = { add_claim_of_ROOT = yes } }
 		occupy_small_country = yes
 		recheck_annexations = yes
@@ -3640,6 +3916,7 @@ country_event = { #Fate of Malawi
 		name = annex.occupation
 		trigger = {
 			NOT = { original_tag = MAF }
+			NOT = { has_subject = MAF }
 		}
 		ai_chance = { base = 0 }
 		set_country_flag = MLW_CONQ
@@ -3763,7 +4040,8 @@ country_event = { #Fate of Madagascar
 				}
 			}
 		}
-		MAD = { transfer_african_territory_to_france = yes }
+		set_temp_variable = { tag_to_release = event_target:france }
+		MAD = { transfer_african_territory_to_european_country = yes }
 	}
 
 	option = { #give to MAF

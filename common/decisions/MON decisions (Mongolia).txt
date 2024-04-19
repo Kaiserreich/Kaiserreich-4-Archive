@@ -57,6 +57,7 @@ MON_foreign_policy_decisions = {
 		visible = {
 			can_declare_war_on = FROM
 			is_in_faction = no #Prevent MON from declaring war if they have since joined Russia
+			NOT = { has_country_flag = MON_defeated_in_northwest_war_flag }
 		}
 
 		cancel_trigger = {
@@ -83,7 +84,7 @@ MON_foreign_policy_decisions = {
 			factor = 100
 			modifier = {
 				factor = 0
-				ROOT_is_threatened = yes
+				country_is_in_dangerous_war = yes
 			}
 			modifier = {
 				factor = 0
@@ -233,20 +234,46 @@ MON_foreign_policy_decisions = {
 		fire_only_once = yes
 		war_with_target_on_remove = yes
 
-		targets = { 611.OWNER 618.OWNER 884.OWNER 1083.OWNER }
+		targets = { 611.OWNER 618.OWNER 884.OWNER 1083.OWNER } #611 = South Chahar, 618 = Dzungaria, 884 = Xing'an, 1083 = Kumul
 		target_root_trigger = { has_country_flag = MON_enacted_pan_mongol_claims }
 		target_trigger = {
 			can_declare_war_on = FROM
 		}
 
 		ai_will_do = {
-			factor = 100
+			base = 0
+			modifier = {
+				add = 100
+				#Mongolia will attack if they outnumber their opponent by more than 2x
+				FROM = {
+					strength_ratio = {
+						tag = MON
+						ratio < 0.5
+					}
+				}
+			}
+			modifier = {
+				add = 100
+				#Mongolia strike if they have a slight advantage and their opponent is already being ganked
+				FROM = {
+					strength_ratio = {
+						tag = MON
+						ratio < 0.75
+					}
+					surrender_progress > 0.15
+				}
+			}
+			modifier = {
+				add = 100
+				#Mongolia will always strike if they meet the below checks and their opponent is down bad.
+				FROM = { surrender_progress > 0.65 }
+			}
 			modifier = {
 				factor = 0
 				OR = {
-					ROOT_is_threatened_cautious = yes
+					country_has_any_active_threat = yes
 					FROM = { dont_start_major_faction_wars = yes }
-					FROM = { default_attack_AI_trigger_FROM = yes }
+					FROM = { default_attack_AI_trigger = yes } #Ai will avoid striking opponent that is way stronger.
 				}
 			}
 		}
@@ -313,9 +340,9 @@ MON_foreign_policy_decisions = {
 			modifier = {
 				factor = 0
 				OR = {
-					ROOT_is_threatened_cautious = yes
+					country_has_any_active_threat = yes
 					FROM = { dont_start_major_faction_wars = yes }
-					FROM = { default_attack_AI_trigger_FROM = yes }
+					FROM = { default_attack_AI_trigger = yes }
 				}
 			}
 		}
@@ -353,11 +380,7 @@ MON_foreign_policy_decisions = {
 		}
 
 		visible = {
-			is_subject = no
-			OR = {
-				is_in_faction = no
-				is_faction_leader = yes
-			}
+			is_valid_peace_target = yes
 			JAP = {
 				is_faction_leader = yes
 				NOT = { has_war_with = ROOT }
@@ -373,9 +396,7 @@ MON_foreign_policy_decisions = {
 		cancel_trigger = {
 			OR = {
 				NOT = { can_declare_war_on = FROM }
-				FROM = {
-					NOT = { has_war_with = JAP }
-				}
+				NOT = { FROM = { has_war_with = JAP } }
 			}
 		}
 
@@ -402,41 +423,23 @@ MON_foreign_policy_decisions = {
 			factor = 50
 			modifier = {
 				factor = 0
-				has_country_flag = imminent_war
+				country_has_any_active_threat = yes
 			}
 			modifier = {
 				factor = 0
-				has_war = yes
-				NOT = {
-					any_enemy_country = {
-						is_neighbor_of = ROOT
-						has_capitulated = no
-					}
-				}
+				FROM = { default_attack_AI_trigger = yes }
 			}
 			modifier = {
 				factor = 0
-				FROM = {
-					NOT = {
-						any_owned_state = { is_claim_or_core_of_ROOT = yes }
-					}
-				}
+				FROM = { dont_start_major_faction_wars = yes }
+			}
+			modifier = {
+				factor = 0
+				NOT = { FROM = { any_owned_state = { is_claim_or_core_of_ROOT = yes } } }
 			}
 			modifier = {
 				factor = 0
 				JAP = { surrender_progress > 0.20 }
-			}
-			modifier = {
-				factor = 0
-				NOT = {
-					strength_ratio = { tag = FROM ratio > 1.0 }
-					FROM = { surrender_progress > 0.20 }
-					FROM = {
-						is_in_faction = yes
-						strength_ratio = { tag = ROOT ratio < 2.50 }
-						faction_leader = { surrender_progress > 0.20 }
-					}
-				}
 			}
 		}
 

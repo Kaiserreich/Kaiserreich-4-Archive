@@ -6,17 +6,16 @@
 #############################
 
 ### To have tags send volunteers whenever a war starts, add a new rule below
-### ROOT is the tag sending the volunteers, PREV is the tag that receives them
-### If the conditions are fulfilled, ROOT will automatically send volunteers to PREV whenever the latter is at war
-### When adding new rules, please follow the order of triggers - first global (when the rule should apply), then PREV triggers (who should receive the volunteers), then ROOT triggers (who should send them)
+### THIS is the tag sending the volunteers, PREV is the tag that receives them
+### If the conditions are fulfilled, THIS will automatically send volunteers to PREV whenever the latter is at war
+### When adding new rules, please try to follow the following order of triggers if performance allows - first global (when the rule should apply), then PREV triggers (who should receive the volunteers), then THIS triggers (who should send them)
 
 willing_to_send_volunteers_to_PREV = {
-	has_rule = can_send_volunteers
 	NOT = { check_variable = { PREV.modifier@cannot_receive_volunteers > 0 } }
 	NOT = { has_war_with = PREV }
 	OR = {
 		is_neighbor_of = PREV
-		any_owned_state = { is_coastal = yes }
+		naval_base > 0
 	}
 	OR = {
 		spanish_civil_war_volunteers = yes
@@ -51,12 +50,22 @@ willing_to_send_volunteers_to_PREV = {
 spanish_civil_war_volunteers = {
 	SPA = { has_civil_war = yes }
 	OR = {
+		is_major = yes
+		num_divisions > 19
+		any_home_area_neighbor_country = { original_tag = SPA }
+		tag = IRE
+	}
+	OR = {
 		AND = {
 			PREV = { tag = SPR }
 			OR = {
 				original_tag = SIC
 				original_tag = POR
 				is_ally_with = ENT
+				AND = {
+					original_tag = IRE
+					has_country_flag = IRE_forpolpath_ent
+				}
 				AND = {
 					original_tag = BRA
 					is_monarchy = yes
@@ -75,7 +84,7 @@ spanish_civil_war_volunteers = {
 				is_ally_with = AUS
 				AND = {
 					original_tag = IRE
-					NOT = { is_ally_with = ENT }
+					NOT = { has_country_flag = IRE_forpolpath_ent }
 				}
 				AND = {
 					original_tag = UKR
@@ -88,7 +97,6 @@ spanish_civil_war_volunteers = {
 		AND = {
 			PREV = { tag = SWF }
 			has_socialist_government = yes
-			num_divisions > 24
 		}
 	}
 	log = "willing_to_send_volunteers_to_PREV -- spanish_civil_war_volunteers --- THIS = [THIS.GetName] PREV = [PREV.GetName]"
@@ -307,7 +315,9 @@ italian_civil_war_volunteers = {
 	}
 	OR = {
 		is_major = yes
-		num_of_controlled_factories > 20
+		num_divisions > 19
+		is_neighbor_of = SRI
+		is_neighbor_of = ITA
 	}
 	OR = {
 		AND = {
@@ -331,6 +341,7 @@ italian_civil_war_volunteers = {
 				is_ally_with = AUS
 				is_ally_with = GER
 			}
+			is_in_europe = yes
 		}
 		AND = {
 			PREV = {
@@ -347,6 +358,7 @@ italian_civil_war_volunteers = {
 				is_ally_with = ROM
 				has_government = national_populist
 			}
+			is_in_europe = yes
 		}
 		AND = {
 			PREV = {
@@ -704,57 +716,41 @@ levantine_war_volunteers = {
 	}
 	OTT = { is_subject = no }
 	OR = {
+		is_major = yes
+		num_divisions > 24
+		is_neighbor_of = EGY
+		is_neighbor_of = PER
+		is_neighbor_of = OTT
+	}
+	OR = {
 		AND = {
 			PREV = { tag = OTT }
+			has_socialist_government = no
 			OR = {
 				is_ally_with = GER
 				is_ally_with = AUS
 			}
-			OR = {
-				is_major = yes
-				num_divisions > 24
-			}
-			has_socialist_government = no
 		}
 		AND = {
 			PREV = { tag = OTT }
 			original_tag = BUL
+			has_relation_modifier = { target = PREV modifier = volunteer_limit_plus_three }
 			is_subject = no
 			has_socialist_government = no
-			has_relation_modifier = { target = PREV modifier = volunteer_limit_plus_three }
 		}
 		AND = {
 			PREV = {
 				OR = {
 					original_tag = EGY
-					is_ally_with = EGY
+					original_tag = PER
 				}
+				has_socialist_government = yes
 				has_war_with = OTT
-				num_of_military_factories > 8
 			}
 			OR = {
 				has_socialist_government = yes
 				original_tag = RUS
 			}
-			num_of_military_factories > 4
-		}
-		AND = {
-			PREV = {
-				original_tag = PER
-				has_war_with = OTT
-				has_socialist_government = yes
-			}
-			has_socialist_government = yes
-			num_of_military_factories > 4
-		}
-		AND = {
-			PREV = {
-				original_tag = PER
-				has_war_with = OTT
-				has_socialist_government = no
-			}
-			original_tag = RUS
-			has_socialist_government = no
 		}
 	}
 	log = "willing_to_send_volunteers_to_PREV -- levantine_war_volunteers --- THIS = [THIS.GetName] PREV = [PREV.GetName]"
@@ -792,7 +788,15 @@ ai_is_naval_invader_trigger = {
 ###############################
 ### WAR-RELATED AI TRIGGERS ###
 ###############################
-ROOT_is_threatened_cautious = {
+
+#combine with check_variable = { fielded_manpower_compare > x } afterwards
+compare_fielded_manpower = {
+	check_variable = { ROOT.deployed_total_manpower_k > 0 }
+	set_temp_variable = { fielded_manpower_compare = deployed_total_manpower_k }
+	divide_temp_variable = { fielded_manpower_compare = ROOT.deployed_total_manpower_k }
+}
+
+country_has_any_active_threat = {
 	OR = {
 		has_war = yes
 		any_claim = yes
@@ -800,7 +804,7 @@ ROOT_is_threatened_cautious = {
 	}
 }
 
-ROOT_is_threatened = {
+country_is_in_dangerous_war = {
 	OR = {
 		has_civil_war = yes
 		any_claim = yes
@@ -841,7 +845,18 @@ dont_start_major_faction_wars = {
 
 #on the target's scope
 is_stronger_than_ROOT_and_not_vulnerable = {
-	strength_ratio = { tag = ROOT ratio > 1 }
+	#compare fielded manpower
+	compare_fielded_manpower = yes
+	if = {
+		limit = {
+			is_in_faction = yes
+			num_faction_members > 1
+		}
+		check_variable = { fielded_manpower_compare > 1.15 }
+	}
+	else = {
+		check_variable = { fielded_manpower_compare > 1 }
+	}
 	enemies_strength_ratio < 1
 	surrender_progress < 0.1
 }
@@ -849,7 +864,20 @@ is_stronger_than_ROOT_and_not_vulnerable = {
 #on the target's scope
 is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = {
 	OR = {
-		strength_ratio = { tag = ROOT ratio > 1 }
+		#compare fielded manpower
+		AND = {
+			compare_fielded_manpower = yes
+			if = {
+				limit = {
+					is_in_faction = yes
+					num_faction_members > 1
+				}
+				check_variable = { fielded_manpower_compare > 1.15 }
+			}
+			else = {
+				check_variable = { fielded_manpower_compare > 1 }
+			}
+		}
 		AND = {
 			naval_strength_comparison = {
 				other = ROOT
@@ -879,7 +907,11 @@ faction_leader_is_stronger_than_ROOT_and_not_vulnerable = {
 		is_faction_leader = no
 		faction_leader = {
 			OR = {
-				strength_ratio = { tag = ROOT ratio > 0.7 }
+				#compare fielded manpower
+				AND = {
+					compare_fielded_manpower = yes
+					check_variable = { fielded_manpower_compare > 0.7 }
+				}
 				is_actual_major = yes
 			}
 			enemies_strength_ratio < 1.5
@@ -890,7 +922,11 @@ faction_leader_is_stronger_than_ROOT_and_not_vulnerable = {
 		is_in_faction = yes
 		is_faction_leader = no
 		faction_leader = {
-			strength_ratio = { tag = ROOT ratio > 0.7 }
+			#compare fielded manpower
+			AND = {
+				compare_fielded_manpower = yes
+				check_variable = { fielded_manpower_compare > 0.7 }
+			}
 			enemies_strength_ratio < 1
 			surrender_progress < 0.2
 		}
@@ -905,7 +941,11 @@ faction_leader_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength 
 		is_faction_leader = no
 		faction_leader = {
 			OR = {
-				strength_ratio = { tag = ROOT ratio > 0.7 }
+				#compare fielded manpower
+				AND = {
+					compare_fielded_manpower = yes
+					check_variable = { fielded_manpower_compare > 0.7 }
+				}
 				naval_strength_comparison = {
 					other = ROOT
 					ratio > 0.8
@@ -930,7 +970,11 @@ faction_leader_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength 
 		is_faction_leader = no
 		faction_leader = {
 			OR = {
-				strength_ratio = { tag = ROOT ratio > 0.8 }
+				#compare fielded manpower
+				AND = {
+					compare_fielded_manpower = yes
+					check_variable = { fielded_manpower_compare > 0.8 }
+				}
 				AND = {
 					naval_strength_comparison = {
 						other = ROOT
@@ -958,7 +1002,11 @@ faction_leader_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength 
 overlord_is_stronger_than_ROOT_and_not_vulnerable = {
 	is_subject = yes
 	overlord = {
-		strength_ratio = { tag = ROOT ratio > 0.8 }
+		#compare fielded manpower
+		AND = {
+			compare_fielded_manpower = yes
+			check_variable = { fielded_manpower_compare > 0.8 }
+		}
 		enemies_strength_ratio < 1
 		surrender_progress < 0.1
 	}
@@ -969,7 +1017,11 @@ overlord_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = {
 	is_subject = yes
 	overlord = {
 		OR = {
-			strength_ratio = { tag = ROOT ratio > 0.8 }
+			#compare fielded manpower
+			AND = {
+				compare_fielded_manpower = yes
+				check_variable = { fielded_manpower_compare > 0.8 }
+			}
 			AND = {
 				naval_strength_comparison = {
 					other = ROOT
@@ -1001,7 +1053,10 @@ guarantor_is_stronger_than_ROOT_and_not_vulnerable = {
 		NOT = { tag = ROOT }
 		OR = {
 			AND = {
-				strength_ratio = { tag = ROOT ratio > 0.8 }
+				#compare fielded manpower
+				compare_fielded_manpower = yes
+				check_variable = { fielded_manpower_compare > 0.7 }
+
 				enemies_strength_ratio < 1
 			}
 			AND = {
@@ -1016,7 +1071,6 @@ guarantor_is_stronger_than_ROOT_and_not_vulnerable = {
 
 default_attack_AI_trigger = {
 	OR = {
-		PREV = { ROOT_is_threatened = yes }
 		is_stronger_than_ROOT_and_not_vulnerable = yes
 		overlord_is_stronger_than_ROOT_and_not_vulnerable = yes
 		faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes
@@ -1024,16 +1078,7 @@ default_attack_AI_trigger = {
 	}
 }
 
-default_attack_AI_trigger_FROM = {
-	OR = {
-		is_stronger_than_ROOT_and_not_vulnerable = yes
-		overlord_is_stronger_than_ROOT_and_not_vulnerable = yes
-		faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes
-		guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes
-	}
-}
-
-default_attack_AI_trigger_FROM_consider_naval_strength = {
+default_attack_AI_trigger_consider_naval_strength = {
 	OR = {
 		is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = yes
 		overlord_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = yes

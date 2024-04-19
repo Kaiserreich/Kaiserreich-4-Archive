@@ -79,6 +79,9 @@ NDefines.NDiplomacy.PEACE_SCORE_DISTRIBUTION = { 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0
 NDefines.NDiplomacy.PEACE_CONTEST_REFUND_FACTOR = { 1.0, 0.9, 0.7, 0.5 } -- Vanilla is 1.0, 0.92, 0.84, 0.76
 NDefines.NAI.PEACE_AI_EVALUATE_OTHER_ALWAYS = true							-- Vanilla is false
 
+NDefines.NDiplomacy.PEACE_COST_FACTOR_CAPITAL_SHIP_IC = 0.02				-- Vanilla is 0.005
+NDefines.NDiplomacy.PEACE_COST_FACTOR_SCREENING_SHIP_IC = 0.02				-- Vanilla is 0.005
+
 -- Volunteers
 NDefines.NAI.SEND_VOLUNTEER_EVAL_BASE_DISTANCE = 1000.0  					-- Vanilla is 175.0
 NDefines.NAI.SEND_VOLUNTEER_EVAL_CONTAINMENT_FACTOR = 0						-- Vanilla is 0.1

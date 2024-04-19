@@ -3753,60 +3753,41 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event beng.110 option beng.110.a"
 		name = beng.110.a #We shall be the Internationale's Sword in Asia!
+		trigger = {
+			INT = {
+				is_faction_leader = yes
+				has_socialist_government = yes
+				at_war_with_or_justifying_wargoal_against_ROOT = no
+			}
+		}
 		ai_chance = {
-			base = 75
+			base = 100
 			modifier = {
 				factor = 0
 				has_government = radical_socialist
 			}
 			modifier = {
-				factor = 0.5
-				has_government = totalist
-			}
-			modifier = {
 				factor = 0
-				OR = {
-					has_game_rule = { rule = HND_forpol option = HND_FORPOL_HND }
-					has_game_rule = { rule = HND_forpol option = HND_FORPOL_NEUT }
-				}
+				has_game_rule = { rule = HND_forpol option = HND_FORPOL_HND }
 			}
 		}
-		trigger = {
-			INT = {
-				has_socialist_government = yes
-				is_faction_leader = yes
-			}
-		}
-		add_political_power = 40
-		INT = {
-			country_event = beng.111
-		}
+		INT = { country_event = beng.111 }
 	}
 	option = {
 		log = "[GetLogInfo]: event beng.110 option beng.110.b"
 		name = beng.110.b #On our own, Asia shall be painted RED!
 		ai_chance = {
-			base = 25
+			base = 0
 			modifier = {
-				factor = 0
-				has_government = radical_socialist
-			}
-			modifier = {
-				factor = 0.5
-				has_government = syndicalist
-			}
-			modifier = {
-				factor = 0
-				OR = {
-					has_game_rule = { rule = HND_forpol option = HND_FORPOL_INT }
-					has_game_rule = { rule = HND_forpol option = HND_FORPOL_NEUT }
-				}
+				add = 100
+				has_game_rule = { rule = HND_forpol option = HND_FORPOL_HND }
+				NOT = { has_government = radical_socialist }
 			}
 		}
-		add_political_power = -100
 		if = {
 			limit = { is_faction_leader = yes }
-			set_faction_name = eastern_syndicalist_union
+			add_stability = 0.05
+			add_political_power = 100
 		}
 		else = {
 			leave_faction = yes
@@ -3831,11 +3812,21 @@ country_event = {
 				NOT = { has_government = radical_socialist }
 			}
 		}
-		add_political_power = 200
+		every_country = {
+			limit = {
+				NOT = { is_subject_of = HND }
+				is_in_faction_with = HND
+				NOT = { tag = HND }
+			}
+			country_event = beng.136
+		}
 		if = {
 			limit = { is_faction_leader = yes }
 			dismantle_faction = yes
 		}
+		add_stability = 0.10
+		add_war_support = -0.05
+		add_ideas = HND_bulwark_of_the_asian_revolution
 	}
 }
 
@@ -3851,45 +3842,32 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event beng.111 option beng.111.a"
 		name = beng.111.a #Accept them
-		ai_chance = { base = 100 }
-		hidden_effect = {
-			if = {
+		effect_tooltip = { add_to_faction = FROM }
+		if = {
+			limit = { FROM = { is_in_faction = yes } }
+			every_country = {
+				display_individual_scopes = yes
 				limit = {
-					HND = {
-						is_faction_leader = yes
-					}
+					is_in_faction_with = FROM
+					NOT = { tag = FROM }
+					is_subject = no
 				}
-				every_country = {
-					limit = {
-						is_in_faction_with = HND
-						is_subject = no
-					}
-					HND = {
-						remove_from_faction = PREV
-					}
-					ROOT = {
-						add_to_faction = PREV
-					}
-				}
-				HND = {
-					dismantle_faction = yes
-				}
+				ROOT = { add_to_faction = PREV }
 			}
 		}
-		add_to_faction = HND
+		hidden_effect = { add_to_faction = FROM }
 	}
+
 	option = {
 		log = "[GetLogInfo]: event beng.111 option beng.111.b"
 		name = beng.111.b #Shoo them away!
 		ai_chance = { base = 0 }
 		add_political_power = -100
 		reverse_add_opinion_modifier = {
-			target = HND
+			target = FROM
 			modifier = KR_outraged
 		}
-		HND = {
-			country_event = { id = beng.112 days = 1 }
-		}
+		FROM = { country_event = { id = beng.112 days = 1 } }
 	}
 }
 
@@ -3905,7 +3883,7 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event beng.112 option beng.112.a"
 		name = beng.112.a
-		add_political_power = -20
+		add_political_power = -40
 	}
 }
 
@@ -3972,6 +3950,90 @@ country_event = {
 		log = "[GetLogInfo]: event beng.118 option beng.118.b"
 		name = beng.118.b #We cannot trust these reactionary maggots!
 		add_political_power = 100
+	}
+}
+
+# Event for potential members / members of the ESU to join INT if rejected by HND or HND goes isolationist
+country_event = {
+	id = beng.136
+	title = beng.136.t
+	desc = beng.136.d
+	picture = GFX_report_event_HND_calcutta
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event beng.136 option beng.136.a"
+		name = beng.136.a #Join the Internationale
+		INT = { country_event = { id = beng.137 } }
+		if = {
+			limit = {
+				tag = PER
+				PER = { is_faction_leader = yes }
+				ARM = { is_in_faction_with = PER }
+				ARM = { has_socialist_government = yes }
+			}
+			ARM = { country_event = beng.136 }
+			ARM = { clr_country_flag = ARM_join_HND }
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event beng.136 option beng.136.b"
+		name = beng.136.b #Go into Isolation too
+		ai_chance = { base = 0 }
+		if = {
+			limit = {
+				is_faction_leader = yes
+			}
+			dismantle_faction = yes
+		}
+		else = {
+			leave_faction = yes
+		}
+	}
+}
+
+# Event for potential members / members of the ESU asking to join INT after being rejected by HND or if HND goes isolationist
+country_event = {
+	id = beng.137
+	title = beng.137.t
+	desc = beng.137.d
+	picture = GFX_report_event_HND_calcutta
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event beng.137 option beng.137.a"
+		name = beng.137.a #Accept them
+		effect_tooltip = { add_to_faction = FROM }
+		hidden_effect = { add_to_faction = FROM }
+	}
+	option = {
+		log = "[GetLogInfo]: event beng.137 option beng.137.b"
+		name = beng.137.b #Shoo them away!
+		ai_chance = { base = 0 }
+		add_political_power = -50
+		reverse_add_opinion_modifier = {
+			target = FROM
+			modifier = KR_outraged
+		}
+		FROM = { country_event = { id = beng.138 days = 1 } }
+	}
+}
+
+#  Event for potential members / members of the ESU getting rejected by INT after being rejected by HND or if HND goes isolationist
+country_event = {
+	id = beng.138
+	title = beng.138.t
+	desc = beng.138.d
+	picture = GFX_report_event_worried_french
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event beng.138 option beng.138.a"
+		name = beng.138.a
+		add_political_power = -25
 	}
 }
 

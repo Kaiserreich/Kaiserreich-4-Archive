@@ -409,15 +409,11 @@ country_event = { #Fate of Canada
 	immediate = {
 		hidden_effect = {
 			every_state = {
-				limit = {
-					is_canada = no
-					OR = {
-						CAN = { PREV = { is_claimed_by = PREV } }
-						has_variable = ambition_area_@CAN
-					}
+				limit = { is_canada = no }
+				CAN = {
+					remove_state_claim = PREV
+					clear_variable = PREV.ambition_area_@THIS
 				}
-				CAN = { remove_state_claim = PREV }
-				clear_variable = ambition_area_CAN
 			}
 			CAN = {
 				remove_ideas = CAN_bastion_of_the_old_order
@@ -1546,8 +1542,8 @@ country_event = { #Fate of Panama
 		}
 		ai_chance = { base = 0 }
 		set_country_flag = PAN_CONQ
+		685 = { occupy_state_annexation = yes }
 		occupy_small_country = yes
-		PAN = { every_core_state = { occupy_state_annexation = yes } }
 		recheck_annexations = yes
 	}
 }
@@ -2566,7 +2562,7 @@ country_event = { #Fate of Bolivia
 				}
 				else_if = {
 					limit = { has_government = social_democrat }
-					unlock_national_focus = BOL_MNR_Victory
+					unlock_national_focus = BOL_PSU_Victory
 				}
 				else_if = {
 					limit = {
@@ -2575,10 +2571,10 @@ country_event = { #Fate of Bolivia
 							has_government = market_liberal
 						}
 					}
-					unlock_national_focus = BOL_PLP_Victory
+					unlock_national_focus = BOL_PL_Victory
 				}
 				else = {
-					unlock_national_focus = BOL_PUR_Victory
+					unlock_national_focus = BOL_PRG_Victory
 				}
 			}
 		}
@@ -3286,6 +3282,39 @@ country_event = { #The Annexation of Suriname
 
 	is_triggered_only = yes
 
+	immediate = {
+		if = {
+			limit = {
+				OR = {
+					original_tag = GYA
+					original_tag = WIF
+					AND = {
+						original_tag = HOL
+						has_socialist_government = no
+					}
+				}
+			}
+			save_event_target_as = can_annex_suriname
+		}
+		if = {
+			limit = { GYA = { ROOT_can_grant_land = yes } }
+			GYA = { save_event_target_as = guyana }
+		}
+		if = {
+			limit = { WIF = { ROOT_can_grant_land = yes } }
+			WIF = { save_event_target_as = west_indies }
+		}
+		if = {
+			limit = {
+				HOL = {
+					ROOT_can_grant_land = yes
+					has_socialist_government = no
+				}
+			}
+			HOL = { save_event_target_as = netherlands }
+		}
+	}
+
 	option = { #puppet
 		log = "[GetLogInfo]: event annex.2028 option annex.2028.a"
 		name = annex.2028.a
@@ -3298,34 +3327,97 @@ country_event = { #The Annexation of Suriname
 	option = { #transfer to WIF
 		log = "[GetLogInfo]: event annex.2028 option annex.2028.b"
 		name = annex.2028.b
+		trigger = {
+			has_event_target = west_indies
+		}
 		ai_chance = {
 			base = 100
 			modifier = {
 				factor = 0
-				GYA = { ROOT_can_grant_land = yes }
+				has_event_target = can_annex_suriname
+			}
+			modifier = {
+				factor = 0
+				has_event_target = guyana
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					is_ally_with = event_target:guyana
+					is_ally_with = event_target:netherlands
+				}
+				NOT = { is_ally_with = event_target:west_indies }
+			}
+			modifier = {
+				factor = 0.5
+				event_target:west_indies = { is_subject = yes }
 			}
 		}
-		trigger = {
-			NOT = { original_tag = GYA }
-			WIF = { ROOT_can_grant_land = yes }
-		}
-		set_temp_variable = { tag_to_release = WIF }
-		309 = { add_core_of_target_and_transfer_if_owned = yes } #Suriname
-		1038 = { add_core_of_target_and_transfer_if_owned = yes } #Surinamese Interior
+		set_temp_variable = { tag_to_release = event_target:west_indies }
+		SUR = { set_transfer_target_cores = yes }
+		transfer_targeted_territory_and_add_cores = yes
 		recheck_annexations = yes
 	}
 
 	option = { #transfer to GYA
 		log = "[GetLogInfo]: event annex.2028 option annex.2028.c"
 		name = annex.2028.c
-		ai_chance = { base = 100 }
 		trigger = {
-			NOT = { original_tag = WIF }
-			GYA = { ROOT_can_grant_land = yes }
+			has_event_target = guyana
 		}
-		set_temp_variable = { tag_to_release = GYA }
-		309 = { add_core_of_target_and_transfer_if_owned = yes } #Suriname
-		1038 = { add_core_of_target_and_transfer_if_owned = yes } #Surinamese Interior
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_suriname
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					is_ally_with = event_target:west_indies
+					is_ally_with = event_target:netherlands
+				}
+				NOT = { is_ally_with = event_target:guyana }
+			}
+			modifier = {
+				factor = 0.5
+				event_target:guyana = { is_subject = yes }
+			}
+		}
+		set_temp_variable = { tag_to_release = event_target:guyana }
+		SUR = { set_transfer_target_cores = yes }
+		transfer_targeted_territory_and_add_cores = yes
+		recheck_annexations = yes
+	}
+
+	option = { #transfer to HOL
+		log = "[GetLogInfo]: event annex.2028 option annex.2028.d"
+		name = annex.2028.d
+		trigger = {
+			has_event_target = netherlands
+		}
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_event_target = can_annex_suriname
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					is_ally_with = event_target:west_indies
+					is_ally_with = event_target:guyana
+				}
+				NOT = { is_ally_with = event_target:netherlands }
+			}
+			modifier = {
+				factor = 0.5
+				event_target:netherlands = { is_subject = yes }
+			}
+		}
+		set_temp_variable = { tag_to_release = event_target:netherlands }
+		SUR = { set_transfer_target_cores = yes }
+		transfer_targeted_territory_and_add_claims = yes
 		recheck_annexations = yes
 	}
 
@@ -3333,15 +3425,17 @@ country_event = { #The Annexation of Suriname
 		log = "[GetLogInfo]: event annex.2028 option annex.integration"
 		name = annex.integration
 		trigger = {
-			OR = {
-				original_tag = WIF
-				original_tag = GYA
-			}
+			has_event_target = can_annex_suriname
 		}
-		ai_chance = { base = 1000 }
+		ai_chance = { base = 100 }
 		occupy_small_country = yes
-		309 = { remove_claim_and_add_core_of_ROOT = yes } #Suriname
-		1038 = { remove_claim_and_add_core_of_ROOT = yes } #Surinamese Interior
+		if = {
+			limit = { original_tag = HOL }
+			SUR = { every_core_state = { add_claim_of_ROOT = yes } }
+		}
+		else = {
+			SUR = { every_core_state = { remove_claim_and_add_core_of_ROOT = yes } }
+		}
 		recheck_annexations = yes
 	}
 
@@ -3349,10 +3443,7 @@ country_event = { #The Annexation of Suriname
 		log = "[GetLogInfo]: event annex.2028 option annex.occupation"
 		name = annex.occupation
 		trigger = {
-			NOT = {
-				original_tag = WIF
-				original_tag = GYA
-			}
+			NOT = { has_event_target = can_annex_suriname }
 		}
 		ai_chance = { base = 0 }
 		occupy_small_country = yes
@@ -3548,7 +3639,17 @@ country_event = { #Fate of Brazil
 					limit = { NOT = { country_exists = AMA } }
 					AMA_move_leaders_back = yes
 				}
+				if = {
+					limit = { has_character = BRA_gustavo_dodt_barroso }
+					BRA_gustavo_dodt_barroso = { promote_character = syndicalist_subtype }
+				}
 				mark_focus_tree_layout_dirty = yes
+				if = {
+					limit = { has_completed_focus = BRA_the_empire_strikes_back }
+					set_cosmetic_tag = BRA_empire
+					BRA_pedro_henrique_de_orleans_braganca = { set_character_name = BRA_pedro_henrique_de_orleans_braganca_regnal }
+					promote_character = BRA_pedro_henrique_de_orleans_braganca
+				}
 			}
 			if = {
 				limit = { has_government = national_populist }

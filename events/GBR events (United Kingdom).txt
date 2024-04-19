@@ -33,6 +33,7 @@ country_event = { # Liberation of the UK
 
 		hidden_effect = {
 			random_other_country = { news_event = worldnews.185 }
+			IRE = { country_event = { id = irelandflavour.6 days = 1 } }
 			GBR = { transfer_technology = yes }
 			CAN_create_uk_cores = yes
 			CAN_release_uk = yes
@@ -116,6 +117,7 @@ country_event = { # Liberation of the UK
 
 		hidden_effect = {
 			random_other_country = { news_event = worldnews.185 }
+			IRE = { country_event = { id = irelandflavour.6 days = 1 } }
 			GBR = { transfer_technology = yes }
 			CAN_create_uk_cores = yes
 			CAN_release_uk = yes
@@ -739,7 +741,7 @@ country_event = {
 	id = uk.17
 	title = uk.17.t
 	desc = uk.17.d
-	picture = GFX_report_event_IRE_factory_construction
+	picture = GFX_report_event_generic_factory_construction
 
 	is_triggered_only = yes
 
@@ -2720,7 +2722,7 @@ news_event = {
 country_event = {
 	id = uk.99
 	title = uk.99.t
-	picture = GFX_report_event_IRE_loyalist_rally
+	picture = GFX_report_event_generic_rally
 
 	desc = {
 		text = uk.99.d.promise
@@ -2810,6 +2812,12 @@ country_event = {
 		log = "[GetLogInfo]: event uk.99 option uk.99.a"
 		name = uk.99.a #Abandon promise
 		trigger = {
+			NOT = {
+				AND = {
+					is_in_faction_with = IRE
+					IRE = { is_subject = no }
+				}
+			}
 			OR = {
 				has_country_flag = CAN_promised_ireland_ind
 				has_global_flag = ENT_britain_agree_northire
@@ -2955,7 +2963,7 @@ country_event = {
 	id = uk.100
 	title = uk.100.t
 	desc = uk.100.d
-	picture = GFX_report_event_IRE_loyalist_rally
+	picture = GFX_report_event_generic_rally
 
 	is_triggered_only = yes
 
@@ -3055,6 +3063,14 @@ country_event = {
 		log = "[GetLogInfo]: event uk.101 option uk.101.a"
 		name = uk.101.a
 		transfer_state = 119
+		hidden_effect = {
+			119 = {
+				if = {
+					limit = { has_dynamic_modifier = { modifier = IRE_reluctant_countrymen_modifier } }
+					remove_dynamic_modifier = { modifier = IRE_reluctant_countrymen_modifier }
+				}
+			}
+		}
 	}
 }
 
@@ -3569,27 +3585,6 @@ country_event = {
 	}
 }
 
-# Ulster wishes to rejoin the UK (fired by decision)
-country_event = {
-	id = uk.111
-	title = uk.111.t
-	desc = uk.111.d
-	picture = GFX_report_event_IRE_loyalist_rally
-
-	is_triggered_only = yes
-
-	option = {
-		log = "[GetLogInfo]: event uk.111 option uk.111.a"
-		name = uk.111.a
-		add_political_power = 50
-		if = {
-			limit = { NOT = { 119 = { is_core_of = ROOT } } }
-			add_state_claim = 119
-		}
-		annex_country = { target = FROM transfer_troops = yes }
-	}
-}
-
 # Do we claim Gibraltar?
 country_event = {
 	id = uk.112
@@ -3971,11 +3966,27 @@ country_event = {
 			}
 		}
 		clr_country_flag = GBR_requested_control
-		FROM = {
-			add_opinion_modifier = { target = ROOT modifier = KR_pleased }
-			effect_tooltip = { puppet = event_target:colony_country }
-			country_event = uk.119
+		reverse_add_opinion_modifier = { target = ROOT modifier = KR_pleased }
+		if = {
+			limit = {
+				event_target:colony_country = {
+					OR = {
+						original_tag = NIR
+						original_tag = WLS
+						original_tag = SCO
+					}
+				}
+			}
+			effect_tooltip = {
+				event_target:colony_country = {
+					FROM = { annex_country = { target = PREV } }
+				}
+			}
 		}
+		else = {
+			effect_tooltip = { FROM = { puppet = event_target:colony_country } }
+		}
+		FROM = { country_event = uk.119 }
 	}
 	option = {
 		log = "[GetLogInfo]: event uk.118 option uk.118.b"
@@ -3993,9 +4004,9 @@ country_event = {
 				factor = 0
 				event_target:colony_country = {
 					OR = {
-						tag = NIR
-						tag = WLS
-						tag = SCO
+						original_tag = NIR
+						original_tag = WLS
+						original_tag = SCO
 					}
 				}
 			}
@@ -4004,9 +4015,30 @@ country_event = {
 				tag = SAF
 			}
 		}
-		FROM = {
-			add_opinion_modifier = { target = ROOT modifier = KR_disapproves_of_govt }
-			country_event = uk.120
+		if = {
+			limit = {
+				is_in_faction_with = FROM
+				event_target:colony_country = {
+					OR = {
+						original_tag = NIR
+						original_tag = WLS
+						original_tag = SCO
+					}
+				}
+			}
+			save_event_target_as = GBR_left_faction
+			leave_faction = yes
+			peace_out_non_neighbours_after_leaving_faction = yes
+			FROM = {
+				add_opinion_modifier = { target = ROOT modifier = KR_outraged }
+				country_event = uk.120
+			}
+		}
+		else = {
+			FROM = {
+				add_opinion_modifier = { target = ROOT modifier = KR_disapproves_of_govt }
+				country_event = uk.120
+			}
 		}
 	}
 }
@@ -4024,8 +4056,24 @@ country_event = {
 		log = "[GetLogInfo]: event uk.119 option uk.119.a"
 		name = uk.119.a
 		add_political_power = 25
-		set_temp_variable = { target = event_target:colony_country }
-		puppet_country_without_changing_government = yes
+		if = {
+			limit = {
+				event_target:colony_country = {
+					OR = {
+						original_tag = NIR
+						original_tag = WLS
+						original_tag = SCO
+					}
+				}
+			}
+			event_target:colony_country = {
+				ROOT = { annex_country = { target = PREV } }
+			}
+		}
+		else = {
+			set_temp_variable = { target = event_target:colony_country }
+			puppet_country_without_changing_government = yes
+		}
 	}
 }
 
@@ -4043,15 +4091,19 @@ country_event = {
 		name = uk.120.a
 		add_political_power = -25
 		if = {
-			limit = {
-				event_target:colony_country = {
-					is_on_continent = central_america
-				}
+			limit = { has_event_target = GBR_left_faction }
+			effect_tooltip = { faction_leader = { remove_from_faction = FROM } }
+			every_other_country = {
+				limit = { is_in_faction_with = ROOT }
+				add_opinion_modifier = { target = FROM modifier = KR_outraged }
 			}
+		}
+		if = {
+			limit = { event_target:colony_country = { is_on_continent = central_america } }
 			every_state = {
 				limit = {
 					is_core_of = event_target:colony_country
-					is_claim_or_core_of_ROOT = no
+					NOT = { is_core_of = ROOT }
 				}
 				add_claim_by = ROOT
 			}
@@ -5058,13 +5110,20 @@ country_event = {
 	id = uk.143
 	title = uk.143.t
 	desc = uk.143.d
-	picture = GFX_report_event_IRE_loyalist_rally
+	picture = GFX_report_event_generic_rally
 
 	is_triggered_only = yes
 
 	option = {
 		log = "[GetLogInfo]: event uk.143 option uk.143.a"
 		name = uk.143.a #Of course!
-		add_to_faction = FROM
+		NIR = { get_current_government_type = yes }
+		set_autonomy = {
+			target = NIR
+			autonomy_state = default_puppet
+			freedom_level = 0.3
+			end_wars = no
+		}
+		NIR = { restore_previous_government_type = yes }
 	}
 }
