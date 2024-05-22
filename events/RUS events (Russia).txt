@@ -4991,13 +4991,13 @@ country_event = { #Mongolia refused politely
 	desc = {
 		text = rusfor.1116.d.baron
 		trigger = {
-			FROM = { has_country_leader = { character = MON_roman_von_ungernsternberg } }
+			FROM = { has_country_leader = { character = MON_roman_von_ungern_sternberg } }
 		}
 	}
 	desc = {
 		text = rusfor.1116.d.other
 		trigger = {
-			NOT = { FROM = { has_country_leader = { character = MON_roman_von_ungernsternberg } } }
+			NOT = { FROM = { has_country_leader = { character = MON_roman_von_ungern_sternberg } } }
 		}
 	}
 
@@ -6410,6 +6410,7 @@ country_event = { #Pacification of Central Asia
 	}
 }
 
+### Treaty of Moscow ###
 country_event = { #For GER - hidden event to fire peace
 	id = rusfor.1299
 	hidden = yes
@@ -6417,11 +6418,9 @@ country_event = { #For GER - hidden event to fire peace
 	trigger = {
 		original_tag = GER
 		has_war_with = RUS
-		219 = { #Moscow
-			NOT = { is_controlled_by = RUS }
-		}
 		RUS = {
 			surrender_progress > 0.75
+			NOT = { controls_state = 219 } #Moscow
 			is_faction_leader = yes
 			has_socialist_government = no #handled by INT peace events
 		}
@@ -6482,6 +6481,13 @@ country_event = { #For GER - ask for peace with RUS
 				factor = 0
 				any_allied_country = { is_ai = no }
 			}
+			modifier = {
+				factor = 0
+				RUS = {
+					has_war_with = TRM
+					TRM = { is_ai = no }
+				}
+			}
 		}
 		RUS = { country_event = { id = rusfor.1301 days = 2 } }
 	}
@@ -6495,14 +6501,22 @@ country_event = { #For GER - ask for peace with RUS
 			modifier = {
 				add = 1
 				NOT = {
-					RUS = {
-						any_enemy_country = {
-							is_ai = no
-							NOT = { is_ally_with = ROOT }
-							any_controlled_state = {
-								is_owned_by = PREV.PREV
-								state_strategic_value > 50
+					AND = {
+						RUS = {
+							any_enemy_country = {
+								is_ai = no
+								NOT = { is_ally_with = ROOT }
+								any_controlled_state = {
+									is_owned_by = PREV.PREV
+									state_strategic_value > 50
+								}
 							}
+						}
+					}
+					AND = {
+						RUS = {
+							has_war_with = TRM
+							TRM = { is_ai = no }
 						}
 					}
 				}
@@ -6613,6 +6627,28 @@ country_event = { #GER gets event
 					is_valid_peace_target = yes
 				}
 				white_peace_with_PREV = yes
+				effect_tooltip = {
+					set_truce = { target = PREV days = 1095 }
+					diplomatic_relation = {
+						country = PREV
+						relation = non_aggression_pact
+					}
+				}
+			}
+			hidden_effect = {
+				every_country = {
+					limit = {
+						OR = {
+							is_ally_with = ROOT
+							is_guaranteed_by = ROOT
+						}
+					}
+					set_truce = { target = PREV days = 1095 }
+					diplomatic_relation = {
+						country = PREV
+						relation = non_aggression_pact
+					}
+				}
 			}
 			if = {
 				limit = { is_faction_leader = yes }
@@ -6641,6 +6677,13 @@ country_event = { #GER gets event
 					OR = {
 						is_core_of = GER
 						is_claimed_by = GER
+					}
+					any_neighbor_state = {
+						OR = {
+							is_owned_by = GER
+							is_controlled_by = GER
+							is_core_of = GER
+						}
 					}
 				}
 				transfer_state_during_war = yes
@@ -6881,15 +6924,15 @@ country_event = { #GER gets event
 				}
 			}
 
-			### MON claims
+			### PER claims
 			if = {
-				limit = { MON = { has_war_with = RUS } }
-				set_temp_variable = { target = MON }
+				limit = { PER = { is_in_faction_with = ROOT } }
+				set_temp_variable = { target = PER }
 				every_owned_state = {
 					limit = {
 						OR = {
-							is_core_of = MON
-							is_claimed_by = MON
+							is_core_of = PER
+							is_claimed_by = PER
 						}
 					}
 					transfer_state_during_war = yes
@@ -6987,6 +7030,7 @@ country_event = { #GER gets event
 				news_event = { id = russianews.13 days = 2 }
 			}
 		}
+		log = "KR_Event_Logging;RUS FALLS;[GetDateText]"
 		hidden_effect = { RUS_fire_next_moscow_treaty_event_no_rp = yes }
 	}
 }
@@ -7245,33 +7289,63 @@ country_event = { #Treaty of Moscow for non-RP states
 	id = rusfor.1308
 	title = rusfor.1308.t
 	desc = rusfor.1308.d
+
 	is_triggered_only = yes
 
 	option = { #Yes
 		log = "[GetLogInfo]: event rusfor.1308 option rusfor.1308.a"
 		name = rusfor.1308.a
-		ai_chance = {
-			base = 1
-			modifier = {
-				factor = 0
-				original_tag = TRM
+		trigger = {
+			NOT = { original_tag = TRM }
+		}
+		ai_chance = { base = 1 }
+		set_country_flag = GER_accepts_peace_no_rp
+		set_temp_variable = { target = ROOT }
+		RUS = {
+			every_owned_state = {
+				limit = { is_claim_or_core_of_ROOT = yes }
+				transfer_state_during_war = yes
+			}
+			every_enemy_country = {
+				limit = {
+					OR = {
+						is_ally_with = ROOT
+						is_guaranteed_by = ROOT
+					}
+					is_valid_peace_target = yes
+				}
+				white_peace_with_PREV = yes
+				effect_tooltip = {
+					set_truce = { target = PREV days = 1095 }
+					diplomatic_relation = {
+						country = PREV
+						relation = non_aggression_pact
+					}
+				}
+			}
+			hidden_effect = {
+				every_country = {
+					limit = {
+						OR = {
+							is_ally_with = ROOT
+							is_guaranteed_by = ROOT
+						}
+					}
+					set_truce = { target = PREV days = 1095 }
+					diplomatic_relation = {
+						country = PREV
+						relation = non_aggression_pact
+					}
+				}
 			}
 		}
-		set_country_flag = GER_accepts_peace_no_rp
-		RUS = { white_peace_with_ROOT = yes }
 		RUS_fire_next_moscow_treaty_event_no_rp = yes
 	}
 
 	option = { #No
 		log = "[GetLogInfo]: event rusfor.1308 option rusfor.1303.b"
 		name = rusfor.1303.b
-		ai_chance = {
-			base = 0
-			modifier = {
-				add = 1
-				original_tag = TRM
-			}
-		}
+		ai_chance = { base = 0 }
 		set_country_flag = GER_refuses_peace_no_rp
 		RUS_fire_next_moscow_treaty_event_no_rp = yes
 	}

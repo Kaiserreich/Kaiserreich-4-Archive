@@ -81,13 +81,21 @@ POL_Stability_of_Nation = {
 
 		available = {
 			has_stability > 0.5
-			check_variable = {
-				tooltip = POL_king_over_republicans
-				POL_royal_influence > POL_rep_influence
-			}
-			check_variable = {
-				tooltip = POL_king_over_socialists
-				POL_royal_influence > POL_soc_influence
+			OR = {
+				AND = {
+					check_variable = {
+						tooltip = POL_king_over_republicans
+						POL_royal_influence > POL_rep_influence
+					}
+					check_variable = {
+						tooltip = POL_king_over_socialists
+						POL_royal_influence > POL_soc_influence
+					}
+				}
+				check_variable = {
+					tooltip = POL_nationalists_are_majority
+					POL_nat_influence > 49
+				}
 			}
 		}
 
@@ -235,7 +243,10 @@ POL_Stability_of_Nation = {
 		timeout_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision timeout POL_syndicalist_threat"
 			if = {
-				limit = { POL_syndicalist_revolution_trigger = yes }
+				limit = {
+					POL_syndicalist_revolution_trigger = yes
+					faction_leader = { has_war = yes }
+				}
 				custom_effect_tooltip = POL_revolution_ready
 				country_event = poland.412
 			}
@@ -2754,26 +2765,20 @@ POL_land_reform = {
 	}
 	POL_Construct_Agricultural_Infrastructure = {
 		icon = GFX_decision_road
-
 		available = {
 			num_of_civilian_factories_available_for_projects > 1
 		}
-
 		cost = POL_CIP_cost
 		days_remove = 120
 		fire_only_once = yes
-
 		ai_will_do = { factor = 100 }
-
 		modifier = {
 			civilian_factory_use = 2
 		}
-
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete POL_Construct_Agricultural_Infrastructure"
 
 		}
-
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove POL_Construct_Agricultural_Infrastructure"
 			set_country_flag = POL_agricultural_infra
@@ -2789,24 +2794,20 @@ POL_land_reform = {
 	}
 	POL_Rural_Credit_Programme = {
 		icon = GFX_decision_give_cash
-
 		visible = {
 			OR = {
 				has_completed_focus = POL_Peoples_Banks
 				has_socialist_government = yes
 			}
 		}
-
 		cost = 50
 		days_remove = 120
 		fire_only_once = yes
 		ai_will_do = { factor = 100 }
-
 		modifier = {
 			political_power_gain = -0.25
 			stability_weekly = 0.015
 		}
-
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove POL_Rural_Credit_Programme"
 			if = {
@@ -2819,95 +2820,79 @@ POL_land_reform = {
 			}
 		}
 	}
-
 	POL_redistribute_land = {
 		icon = eng_trade_unions_demand
 
-		ai_will_do = { factor = 1000 }
-
-		on_map_mode = map_only
-
 		available = {
-			FROM = { is_fully_controlled_by = ROOT }
-			NOT = { has_decision = POL_redistribute_land }
-			hidden_trigger = {
-				OR = {
-					has_country_flag = POL_small_land_reform
-					has_country_flag = POL_moderate_land_reform
-					has_country_flag = POL_radical_land_reform
-				}
-			}
-		}
-
-		visible = {
-			FROM = {
-				is_core_of = ROOT
-				is_controlled_by = ROOT
-				NOT = { has_state_flag = POL_land_issue_solved }
-			}
+			has_full_control_of_state = FROM
+			NOT = { has_country_flag = POL_redistribute_land_ongoing }
 		}
 
 		cancel_trigger = {
-			hidden_trigger = {
-				NOT = { FROM = { is_fully_controlled_by = ROOT } }
+			OR = {
+				NOT = { has_full_control_of_state = FROM }
+				NOT = { FROM = { is_core_of = ROOT } }
 			}
 		}
 
-		cost = POL_land_reform_cost
+		cost = POL_land_reform_cost?30
 		days_remove = 60
-		cancel_if_not_visible = no
-		fire_only_once = yes
+		fire_only_once = no
 
+		on_map_mode = map_only
 		state_target = yes
 		target_array = POL.POL_polish_lands
+		target_root_trigger = {
+			OR = {
+				has_country_flag = POL_small_land_reform
+				has_country_flag = POL_moderate_land_reform
+				has_country_flag = POL_radical_land_reform
+			}
+		}
 		target_trigger = {
 			FROM = {
 				is_core_of = ROOT
-				is_controlled_by = ROOT
+				is_owned_and_controlled_by = ROOT
 				NOT = { has_state_flag = POL_land_issue_solved }
 			}
+		}
+
+		ai_will_do = { factor = 1000 }
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel POL_redistribute_land target: [From.GetName]"
+			clr_country_flag = POL_redistribute_land_ongoing
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete POL_redistribute_land target: [From.GetName]"
-			add_to_variable = { POL_reform_progress = 1 }
+			set_country_flag = { flag = POL_redistribute_land_ongoing days = 60 value = 1 }
 		}
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove POL_redistribute_land target: [From.GetName]"
-			ROOT = {
+			clr_country_flag = POL_redistribute_land_ongoing
+			add_to_variable = { POL_reform_progress = 1 }
+			if = {
+				limit = { has_country_flag = POL_moderate_land_reform }
+				add_stability = 0.01
+			}
+			else_if = {
+				limit = { has_country_flag = POL_radical_land_reform }
 				if = {
-					limit = {
-						has_country_flag = POL_small_land_reform
-					}
-					set_temp_variable = { ideology_change_var = 0.01 }
-					change_ruling_party_popularity = yes
-				}
-				else_if = {
-					limit = {
-						has_country_flag = POL_moderate_land_reform
-					}
-					set_temp_variable = { ideology_change_var = 0.01 }
-					change_ruling_party_popularity = yes
-					add_stability = 0.01
+					limit = { FROM = { state_population_k > 1000 } }
+					add_stability = 0.03
 				}
 				else = {
-					if = {
-						limit = { FROM = { state_population > 1000000 } }
-						add_stability = 0.03
-					}
-					else = {
-						add_stability = 0.02
-					}
-					set_temp_variable = { ideology_change_var = 0.01 }
-					change_ruling_party_popularity = yes
+					add_stability = 0.02
 				}
 			}
+			set_temp_variable = { ideology_change_var = 0.01 }
+			change_ruling_party_popularity = yes
 			FROM = {
+				set_state_flag = POL_land_issue_solved
 				if = {
 					limit = {
-						is_controlled_by = POL
-						is_core_of = POL
 						OR = {
 							has_state_category = three
 							has_state_category = two
@@ -2915,40 +2900,31 @@ POL_land_reform = {
 						}
 					}
 					if = {
-						limit = {
-							ROOT = { has_country_flag = POL_small_land_reform }
-						}
-						if = {
-							limit = {
-								has_resources_amount = {
-									resource = steel
-									amount > 1
-								}
-							}
-							add_state_modifier = {
-								modifier = {
-									local_resources = 0.1
-								}
-							}
-						}
+						limit = { ROOT = { has_country_flag = POL_small_land_reform } }
 						add_extra_state_shared_building_slots = 1
+						set_temp_variable = { POL_added_steel = resource@steel }
+						multiply_temp_variable = { POL_added_steel = 1.1 }
+						subtract_from_temp_variable = { POL_added_steel = resource@steel }
+						round_temp_variable = POL_added_steel
+						if = {
+							limit = { check_variable = { POL_added_steel > 0 } }
+							add_resource = {
+								type = steel
+								amount = var:POL_added_steel
+							}
+						}
 					}
 					else_if = {
-						limit = {
-							ROOT = { has_country_flag = POL_moderate_land_reform }
-						}
+						limit = { ROOT = { has_country_flag = POL_moderate_land_reform } }
 						increase_state_category_by_one_level = yes
 					}
 					else = {
 						increase_state_category_by_one_level = yes
 						add_state_modifier = {
-							modifier = {
-								state_production_speed_buildings_factor = 0.05
-							}
+							modifier = { state_production_speed_buildings_factor = 0.05 }
 						}
 					}
 				}
-				set_state_flag = POL_land_issue_solved
 			}
 		}
 	}
@@ -5472,8 +5448,17 @@ foreign_politics = {
 		}
 
 		fire_only_once = yes
-
-		ai_will_do = { factor = 100 }
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				has_idea = UKR_EE_cooperation
+				UKR = {
+					is_ai = no
+					has_capitulated = no
+				}
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete POL_join_moscow target: [From.GetName]"
@@ -5515,8 +5500,17 @@ foreign_politics = {
 		}
 
 		fire_only_once = yes
-
-		ai_will_do = { factor = 100 }
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				has_idea = UKR_EE_cooperation
+				UKR = {
+					is_ai = no
+					has_capitulated = no
+				}
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete POL_join_internationale target: [From.GetName]"

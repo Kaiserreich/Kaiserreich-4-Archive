@@ -3374,7 +3374,7 @@ country_event = { # Peace with Honour
 		OR = {
 			SWI = { has_capitulated = yes }
 			NOT = { country_exists = SWI }
-			SWI = { is_subject_of = FRA }
+			SWI = { is_ally_with = FRA }
 			AND = {
 				surrender_progress > 0.40
 				owns_state = 152 #Upper Austria
@@ -3390,9 +3390,9 @@ country_event = { # Peace with Honour
 	}
 
 	mean_time_to_happen = {
-		days = 1
+		days = 20
 		modifier = {
-			factor = 20
+			factor = 0.05
 			SWI = { has_capitulated = yes }
 			NOT = {
 				AND = {
@@ -3413,9 +3413,7 @@ country_event = { # Peace with Honour
 	option = {
 		log = "[GetLogInfo]: event swiss.122 option swiss.122.a"
 		name = swiss.122.a # Lets peace out
-		FRA = {
-			country_event = swiss.123
-		}
+		FRA = { country_event = swiss.123 }
 	}
 
 	option = {
@@ -3432,18 +3430,29 @@ country_event = { # Peace with Honour - FRA Demands?
 	desc = swiss.123.d
 	picture = GFX_report_event_SWI_peace
 
-	fire_only_once = yes
-
 	is_triggered_only = yes
 
 	option = { # Just give me the chocolate
 		log = "[GetLogInfo]: event swiss.123 option swiss.123.a"
 		name = swiss.123.a
-		ai_chance = { base = 75 }
-		add_political_power = 5
-		AUS = {
-			country_event = swiss.124
+		ai_chance = {
+			base = 75
+			modifier = {
+				factor = 0
+				OR = {
+					FROM = { owns_state = 942 }
+					any_of_scopes = {
+						array = global.italian_tags_array
+						OR = {
+							is_ally_with = FROM
+							is_guaranteed_by = FROM
+						}
+					}
+				}
+			}
 		}
+		add_political_power = 5
+		FROM = { country_event = swiss.124 }
 	}
 
 	option = { # Give me your everything
@@ -3451,18 +3460,19 @@ country_event = { # Peace with Honour - FRA Demands?
 		name = swiss.123.b
 		trigger = {
 			OR = {
-				AUS = { owns_state = 942 }
-				ITA = { is_in_faction_with = AUS }
-				ITA = { is_guaranteed_by = AUS }
-				VNC = { is_in_faction_with = AUS }
-				VNC = { is_guaranteed_by = AUS }
+				FROM = { owns_state = 942 }
+				any_of_scopes = {
+					array = global.italian_tags_array
+					OR = {
+						is_ally_with = FROM
+						is_guaranteed_by = FROM
+					}
+				}
 			}
 		}
 		ai_chance = { base = 25 }
 		add_political_power = -5
-		AUS = {
-			country_event = swiss.125
-		}
+		FROM = { country_event = swiss.125 }
 	}
 
 	option = { # No peace!
@@ -3470,9 +3480,7 @@ country_event = { # Peace with Honour - FRA Demands?
 		name = swiss.123.c
 		ai_chance = { base = 0 }
 		add_political_power = -30
-		AUS = {
-			country_event = swiss.126
-		}
+		FROM = { country_event = swiss.126 }
 	}
 }
 
@@ -3482,33 +3490,37 @@ country_event = { # Peace with Honour - Betray those Swiss boys
 	desc = swiss.124.d
 	picture = GFX_report_event_SWI_peace
 
-	fire_only_once = yes
-
 	is_triggered_only = yes
 
 	option = { # Yep
 		log = "[GetLogInfo]: event swiss.124 option swiss.124.a"
 		name = swiss.124.a
-		FRA = {
-			country_event = swiss.127
-		}
-		if = {
-			limit = {
-				SWI = { is_subject = no }
+		effect_tooltip = {
+			if = {
+				limit = { is_ally_with = SWI }
+				SWI = {
+					leave_faction = yes
+					country_event = swiss.128
+				}
 			}
-			SWI = {
-				country_event = swiss.128
+			else_if = {
+				limit = { has_guaranteed = SWI }
+				diplomatic_relation = {
+					country = SWI
+					relation = guarantee
+					active = no
+				}
+				SWI = { country_event = swiss.128 }
 			}
 		}
+		FROM = { country_event = swiss.127 }
 	}
 
 	option = { # Nope
 		log = "[GetLogInfo]: event swiss.124 option swiss.124.b"
 		name = swiss.124.b
 		ai_chance = { base = 0 }
-		FRA = {
-			country_event = swiss.129
-		}
+		FROM = { country_event = swiss.129 }
 	}
 }
 
@@ -3518,91 +3530,87 @@ country_event = { # Peace with Honour - Lose a lotta land
 	desc = swiss.125.d
 	picture = GFX_report_event_SWI_peace
 
-	fire_only_once = yes
-
 	is_triggered_only = yes
 
 	option = { # Yep
 		log = "[GetLogInfo]: event swiss.125 option swiss.125.a"
 		name = swiss.125.a
-		if = {
-			limit = { owns_state = 942 }
-			effect_tooltip = {
-				FRA = { transfer_state = 942 }
+		effect_tooltip = {
+			if = {
+				limit = { owns_state = 942 }
+				if = {
+					limit = { SWI = { is_ally_with = FROM } }
+					SWI = { transfer_state = 942 }
+				}
+				else = {
+					FROM = { transfer_state = 942 }
+				}
 			}
-		}
-		if = {
-			limit = { is_in_faction_with = ITA }
-			effect_tooltip = {
-				ITA = { leave_faction = yes }
+			if = {
+				limit = { is_ally_with = SWI }
+				SWI = {
+					leave_faction = yes
+					country_event = swiss.128
+				}
 			}
-		}
-		if = {
-			limit = { has_guaranteed = ITA }
-			effect_tooltip = {
+			else_if = {
+				limit = { has_guaranteed = SWI }
 				diplomatic_relation = {
-					country = ITA
+					country = SWI
 					relation = guarantee
 					active = no
 				}
+				SWI = { country_event = swiss.128 }
 			}
-		}
-		if = {
-			limit = { has_non_aggression_pact_with = ITA }
-			effect_tooltip = {
+			every_subject_country = {
+				limit = { is_italian_tag = yes }
+				overlord = {
+					set_autonomy = {
+						target = PREV
+						autonomy_state = autonomy_free
+					}
+				}
+			}
+			every_other_country = {
+				limit = {
+					is_italian_tag = yes
+					is_ally_with = FROM
+				}
+				leave_faction = yes
+			}
+			every_other_country = {
+				limit = {
+					is_italian_tag = yes
+					has_non_aggression_pact_with = FROM
+				}
 				diplomatic_relation = {
-					country = ITA
+					country = ROOT
 					relation = non_aggression_pact
 					active = no
 				}
 			}
-		}
-		if = {
-			limit = { is_in_faction_with = VNC }
-			effect_tooltip = {
-				VNC = { leave_faction = yes }
-			}
-		}
-		if = {
-			limit = { has_guaranteed = VNC }
-			effect_tooltip = {
-				diplomatic_relation = {
-					country = VNC
-					relation = guarantee
-					active = no
+			every_other_country = {
+				limit = {
+					is_italian_tag = yes
+					is_guaranteed_by = FROM
+				}
+				ROOT = {
+					diplomatic_relation = {
+						country = PREV
+						relation = guarantee
+						active = no
+					}
 				}
 			}
 		}
-		if = {
-			limit = { has_non_aggression_pact_with = VNC }
-			effect_tooltip = {
-				diplomatic_relation = {
-					country = VNC
-					relation = non_aggression_pact
-					active = no
-				}
-			}
-		}
-		FRA = {
-			country_event = swiss.130
-		}
-		if = {
-			limit = {
-				SWI = { is_subject = no }
-			}
-			SWI = {
-				country_event = swiss.128
-			}
-		}
+		FROM = { country_event = swiss.130 }
 	}
 
 	option = { # Nope
 		log = "[GetLogInfo]: event swiss.125 option swiss.125.b"
 		name = swiss.125.b
 		ai_chance = { base = 0 }
-		FRA = {
-			country_event = swiss.129
-		}
+		FROM = { country_event = swiss.129 }
 	}
 }
 
@@ -3611,8 +3619,6 @@ country_event = { # Peace with Honour - No Peace!
 	title = swiss.126.t
 	desc = swiss.126.d
 	picture = GFX_report_event_SWI_peace
-
-	fire_only_once = yes
 
 	is_triggered_only = yes
 
@@ -3629,17 +3635,38 @@ country_event = { # Peace with Honour - AUS Accepts White Peace
 	desc = swiss.127.d
 	picture = GFX_report_event_SWI_peace
 
-	fire_only_once = yes
-
 	is_triggered_only = yes
 
 	option = { # Neato
 		log = "[GetLogInfo]: event swiss.127 option swiss.127.a"
 		name = swiss.127.a
-		AUS = {
-			white_peace_with_ROOT = yes
-		}
 		add_political_power = 10
+		if = {
+			limit = { FROM = { is_ally_with = SWI } }
+			SWI = {
+				leave_faction = yes
+				country_event = swiss.128
+			}
+		}
+		else_if = {
+			limit = { FROM = { has_guaranteed = SWI } }
+			FROM = {
+				diplomatic_relation = {
+					country = SWI
+					relation = guarantee
+					active = no
+				}
+			}
+			SWI = { country_event = swiss.128 }
+		}
+		FROM = {
+			white_peace_with_ROOT = yes
+			set_truce = { target = ROOT days = 730 }
+			diplomatic_relation = {
+				country = ROOT
+				relation = non_aggression_pact
+			}
+		}
 	}
 }
 
@@ -3695,49 +3722,94 @@ country_event = { # Peace with Honour - AUS accepts hurtful terms
 		name = swiss.130.a
 		add_political_power = 10
 		if = {
-			limit = {
-				AUS = { owns_state = 942 }
-				SWI = { is_subject_of = FRA }
+			limit = { FROM = { owns_state = 942 } }
+			if = {
+				limit = { is_ally_with = SWI }
+				SWI = { transfer_state = 942 }
 			}
-			SWI = {
+			else = {
 				transfer_state = 942
 			}
 		}
-		else_if = {
-			limit = {
-				AUS = { owns_state = 942 }
+		if = {
+			limit = { FROM = { is_ally_with = SWI } }
+			SWI = {
+				leave_faction = yes
+				country_event = swiss.128
 			}
-			transfer_state = 942
 		}
-		AUS = {
-			white_peace_with_ROOT = yes
+		else_if = {
+			limit = { FROM = { has_guaranteed = SWI } }
+			FROM = {
+				diplomatic_relation = {
+					country = SWI
+					relation = guarantee
+					active = no
+				}
+			}
+			SWI = { country_event = swiss.128 }
 		}
 		if = {
 			limit = {
-				OR = {
-					ITA = { is_in_faction_with = AUS }
-					ITA = { is_guaranteed_by = AUS }
+				country_exists = SRI
+				any_of_scopes = {
+					array = global.italian_tags_array
+					OR = {
+						is_ally_with = FROM
+						is_guaranteed_by = FROM
+					}
 				}
 			}
-			SRI = {
-				country_event = swiss.131
-			}
-			ITA = {
-				country_event = swiss.132
-			}
+			SRI = { country_event = swiss.131 }
 		}
-		else_if = {
-			limit = {
-				OR = {
-					VNC = { is_in_faction_with = AUS }
-					VNC = { is_guaranteed_by = AUS }
+		FROM = {
+			every_subject_country = {
+				limit = { is_italian_tag = yes }
+				overlord = {
+					set_autonomy = {
+						target = PREV
+						autonomy_state = autonomy_free
+					}
 				}
 			}
-			SRI = {
-				country_event = swiss.131
-			}
-			VNC = {
+			every_other_country = {
+				limit = {
+					is_italian_tag = yes
+					is_ally_with = PREV
+				}
+				leave_faction = yes
 				country_event = swiss.132
+			}
+			every_other_country = {
+				limit = {
+					is_italian_tag = yes
+					is_guaranteed_by = PREV
+				}
+				PREV = {
+					diplomatic_relation = {
+						country = PREV
+						relation = guarantee
+						active = no
+					}
+				}
+				country_event = swiss.132
+			}
+			every_other_country = {
+				limit = {
+					is_italian_tag = yes
+					has_non_aggression_pact_with = PREV
+				}
+				diplomatic_relation = {
+					country = PREV
+					relation = non_aggression_pact
+					active = no
+				}
+			}
+			white_peace_with_ROOT = yes
+			set_truce = { target = ROOT days = 730 }
+			diplomatic_relation = {
+				country = ROOT
+				relation = non_aggression_pact
 			}
 		}
 	}
@@ -3749,14 +3821,12 @@ country_event = { # Peace with Honour - to SRI
 	desc = swiss.131.d
 	picture = GFX_report_event_SWI_peace
 
-	fire_only_once = yes
-
 	is_triggered_only = yes
 
 	option = { # Noice
 		log = "[GetLogInfo]: event swiss.131 option swiss.131.a"
 		name = swiss.131.a
-		add_stability = 0.02
+		add_political_power = 5
 	}
 }
 
@@ -3766,8 +3836,6 @@ country_event = { # Peace with Honour - ITA - We got screwed
 	desc = swiss.132.d
 	picture = GFX_report_event_SWI_peace
 
-	fire_only_once = yes
-
 	is_triggered_only = yes
 
 	option = { # Whoops
@@ -3775,21 +3843,14 @@ country_event = { # Peace with Honour - ITA - We got screwed
 		name = swiss.132.a
 		set_country_flag = ITA_no_join_aus
 		add_political_power = -20
-		if = {
-			limit = { is_in_faction_with = AUS }
-			leave_faction = yes
-		}
-		AUS = {
-			if = {
-				limit = { has_guaranteed = ROOT }
+		effect_tooltip = {
+			AUS = {
+				remove_from_faction = ROOT
 				diplomatic_relation = {
 					country = ROOT
 					relation = guarantee
 					active = no
 				}
-			}
-			if = {
-				limit = { has_non_aggression_pact_with = ROOT }
 				diplomatic_relation = {
 					country = ROOT
 					relation = non_aggression_pact
@@ -3863,15 +3924,26 @@ country_event = { # We've lost to the *Swiss*
 	desc = swiss.136.d
 	picture = GFX_report_event_SWI_diplomacy2
 
-	fire_only_once = yes
-
 	trigger = {
 		tag = FRA
 		has_war_with = SWI
 		is_valid_peace_target = yes
 		SWI = { is_valid_peace_target = yes }
-		surrender_progress > 0.10
+		OR = {
+			surrender_progress > 0.15
+			735 = { #Savoy
+				is_owned_by = ROOT
+				controller = {
+					OR = {
+						is_ally_with = SWI
+						has_guaranteed = SWI
+					}
+				}
+			}
+		}
 	}
+
+	fire_only_once = yes
 
 	mean_time_to_happen = {
 		days = 2
@@ -3882,9 +3954,7 @@ country_event = { # We've lost to the *Swiss*
 		name = swiss.136.a
 		ai_chance = { base = 100 }
 		add_political_power = -10
-		SWI = {
-			country_event = { id = swiss.137 days = 2 }
-		}
+		SWI = { country_event = { id = swiss.137 days = 2 } }
 	}
 
 	option = {
@@ -3901,7 +3971,11 @@ country_event = { # We've lost to the *Swiss* - Demand?
 	desc = swiss.137.d
 	picture = GFX_report_event_SWI_diplomacy2
 
-	fire_only_once = yes
+	trigger = {
+		has_war_with = FROM
+		is_valid_peace_target = yes
+		FROM = { is_valid_peace_target = yes }
+	}
 
 	is_triggered_only = yes
 
@@ -3910,30 +3984,58 @@ country_event = { # We've lost to the *Swiss* - Demand?
 		name = swiss.137.a # White Peace
 		ai_chance = { base = 70 }
 		add_political_power = 10
-		FRA = {
-			country_event = { id = swiss.138 days = 2 }
-		}
+		FROM = { country_event = { id = swiss.138 days = 2 } }
 	}
 
 	option = {
 		log = "[GetLogInfo]: event swiss.137 option swiss.137.b"
 		name = swiss.137.b # Demand Savoie
+		trigger = {
+			OR = {
+				735 = { #Savoy
+					is_owned_by = FROM
+					controller = {
+						OR = {
+							is_ally_with = FROM
+							is_ally_with = ROOT
+							has_guaranteed = ROOT
+						}
+					}
+				}
+				760 = { #Romandy
+					is_owned_by = FROM
+					controller = {
+						OR = {
+							is_ally_with = FROM
+							is_ally_with = ROOT
+							has_guaranteed = ROOT
+						}
+					}
+				}
+				943 = { #Upper Savoy
+					is_owned_by = FROM
+					controller = {
+						OR = {
+							is_ally_with = FROM
+							is_ally_with = ROOT
+							has_guaranteed = ROOT
+						}
+					}
+				}
+			}
+		}
 		ai_chance = { base = 30 }
 		add_political_power = -10
-		FRA = {
-			country_event = { id = swiss.139 days = 2 }
-		}
+		FROM = { country_event = { id = swiss.139 days = 2 } }
 	}
 
 	option = {
 		log = "[GetLogInfo]: event swiss.137 option swiss.137.c"
 		name = swiss.137.c # No Peace!
 		ai_chance = { base = 0 }
-		add_stability = -0.12
-		add_war_support = 0.03
-		FRA = {
-			country_event = { id = swiss.140 days = 2 }
-		}
+		add_stability = -0.15
+		add_war_support = 0.05
+		FROM = { country_event = { id = swiss.140 days = 2 } }
 	}
 }
 
@@ -3943,31 +4045,56 @@ country_event = { # We've lost to the *Swiss* - White Peace
 	desc = swiss.138.d
 	picture = GFX_report_event_SWI_diplomacy2
 
-	fire_only_once = yes
+	trigger = {
+		has_war_with = FROM
+		is_valid_peace_target = yes
+		FROM = { is_valid_peace_target = yes }
+	}
 
 	is_triggered_only = yes
+
+	immediate = {
+		hidden_effect = {
+			FROM = {
+				every_enemy_country = {
+					limit = { is_ally_with = ROOT }
+					add_to_array = { FROM.SWI_savoy_war_participants = THIS }
+				}
+			}
+		}
+	}
 
 	option = {
 		log = "[GetLogInfo]: event swiss.138 option swiss.138.a"
 		name = swiss.138.a # Thank God
 		add_political_power = 10
-		if = {
+		every_enemy_country = {
 			limit = {
-				has_war_with = AUS
-				NOT = { has_war_with = GER }
-				AUS = {
-					is_valid_peace_target = yes
-					has_war_together_with = SWI
+				OR = {
+					is_ally_with = FROM
+					has_guaranteed = FROM
+				}
+				is_valid_peace_target = yes
+			}
+			country_event = { id = swiss.141 hours = 8 }
+			white_peace_with_ROOT = yes
+			effect_tooltip = {
+				set_truce = { target = ROOT days = 730 }
+				diplomatic_relation = {
+					country = ROOT
+					relation = non_aggression_pact
 				}
 			}
-			AUS = {
-				country_event = { id = swiss.141 days = 2 }
-				white_peace_with_ROOT = yes
+			hidden_effect = {
+				for_each_scope_loop = {
+					array = FROM.SWI_savoy_war_participants
+					set_truce = { target = PREV days = 730 }
+					diplomatic_relation = {
+						country = PREV
+						relation = non_aggression_pact
+					}
+				}
 			}
-		}
-		SWI = {
-			country_event = { id = swiss.142 days = 2 }
-			white_peace_with_ROOT = yes
 		}
 	}
 }
@@ -3978,28 +4105,29 @@ country_event = { # We've lost to the *Swiss* - Lost Savoie
 	desc = swiss.139.d
 	picture = GFX_report_event_SWI_diplomacy2
 
-	fire_only_once = yes
+	trigger = {
+		has_war_with = FROM
+		is_valid_peace_target = yes
+		FROM = { is_valid_peace_target = yes }
+	}
 
 	is_triggered_only = yes
+
+	immediate = {
+		hidden_effect = {
+			FROM = {
+				every_enemy_country = {
+					limit = { is_ally_with = ROOT }
+					add_to_array = { FROM.SWI_savoy_war_participants = THIS }
+				}
+			}
+		}
+	}
 
 	option = {
 		log = "[GetLogInfo]: event swiss.139 option swiss.138.a"
 		name = swiss.138.a # Better than nothin'
 		add_political_power = -10
-		if = {
-			limit = {
-				has_war_with = AUS
-				NOT = { has_war_with = GER }
-				AUS = {
-					is_valid_peace_target = yes
-					has_war_together_with = SWI
-				}
-			}
-			AUS = {
-				country_event = { id = swiss.141 days = 2 }
-				white_peace_with_ROOT = yes
-			}
-		}
 		every_owned_state = {
 			limit = {
 				OR = {
@@ -4007,13 +4135,48 @@ country_event = { # We've lost to the *Swiss* - Lost Savoie
 					state = 760 #Romandy
 					state = 943 #Upper Savoy
 				}
+				controller = {
+					OR = {
+						is_ally_with = ROOT
+						is_ally_with = FROM
+						has_guaranteed = FROM
+					}
+				}
 			}
-			transfer_state_to = SWI
+			transfer_state_to = FROM
 		}
-		SWI = {
-			country_event = { id = swiss.142 days = 2 }
-			white_peace_with_ROOT = yes
+		every_enemy_country = {
+			limit = {
+				OR = {
+					is_ally_with = FROM
+					has_guaranteed = FROM
+				}
+			}
+			country_event = { id = swiss.141 hours = 8 }
+			effect_tooltip = {
+				white_peace = ROOT
+				set_truce = { target = ROOT days = 730 }
+				diplomatic_relation = {
+					country = ROOT
+					relation = non_aggression_pact
+				}
+			}
+			hidden_effect = {
+				if = {
+					limit = { is_valid_peace_target = yes }
+					white_peace_with_ROOT = yes
+				}
+				for_each_scope_loop = {
+					array = FROM.SWI_savoy_war_participants
+					set_truce = { target = PREV days = 730 }
+					diplomatic_relation = {
+						country = PREV
+						relation = non_aggression_pact
+					}
+				}
+			}
 		}
+		clear_array = FROM.SWI_savoy_war_participants
 	}
 }
 
@@ -4022,8 +4185,6 @@ country_event = { # We've lost to the *Swiss* - No Peace
 	title = swiss.140.t
 	desc = swiss.140.d
 	picture = GFX_report_event_SWI_diplomacy2
-
-	fire_only_once = yes
 
 	is_triggered_only = yes
 
@@ -4035,13 +4196,20 @@ country_event = { # We've lost to the *Swiss* - No Peace
 	}
 }
 
-country_event = { # We've lost to the *Swiss* - Austria Informed
+country_event = { # We've lost to the *Swiss* - Switzerland/Austria Informed
 	id = swiss.141
 	title = swiss.141.t
-	desc = swiss.141.d
-	picture = GFX_report_event_SWI_military
 
-	fire_only_once = yes
+	desc = {
+		text = swiss.141.d.switzerland
+		trigger = { original_tag = SWI }
+	}
+	desc = {
+		text = swiss.141.d.other
+		trigger = { NOT = { original_tag = SWI } }
+	}
+
+	picture = GFX_report_event_SWI_military
 
 	is_triggered_only = yes
 
@@ -4049,25 +4217,10 @@ country_event = { # We've lost to the *Swiss* - Austria Informed
 		log = "[GetLogInfo]: event swiss.141 option swiss.141.a"
 		name = swiss.141.a # We won!
 		add_political_power = 10
-		add_stability = 0.1
-	}
-}
-
-country_event = { # We've lost to the *Swiss* - Swiss Informed
-	id = swiss.142
-	title = swiss.142.t
-	desc = swiss.142.d
-	picture = GFX_report_event_SWI_military
-
-	fire_only_once = yes
-
-	is_triggered_only = yes
-
-	option = {
-		log = "[GetLogInfo]: event swiss.142 option swiss.142.a"
-		name = swiss.142.a # We won!
-		add_political_power = 20
-		add_stability = 0.2
+		if = {
+			limit = { original_tag = SWI }
+			add_stability = 0.1
+		}
 	}
 }
 
@@ -5446,11 +5599,11 @@ country_event = { #Campione, what to do
 	id = swiss.211
 	title = swiss.211.t
 	desc = swiss.211.d
-
 	picture = GFX_report_event_SWI_flag
 
 	trigger = {
-		owns_state = 761
+		owns_state = 761 #Ticino
+		var:159.owner = { is_italian_tag = yes } #Lombardy
 	}
 
 	fire_only_once = yes
@@ -5460,14 +5613,10 @@ country_event = { #Campione, what to do
 		log = "[GetLogInfo]: event swiss.211 option swiss.211.a"
 		name = swiss.211.a # Return
 		trigger = {
-			NOT = { has_war_with = 159.owner }
+			NOT = { has_war_with = var:159.owner }
 		}
 		ai_chance = {
 			base = 1
-			modifier = {
-				add = 98
-				has_completed_focus = SWI_peace_at_last
-			}
 			modifier = {
 				factor = 0
 				has_completed_focus = SWI_enemies_on_all_sides
@@ -5480,11 +5629,9 @@ country_event = { #Campione, what to do
 		add_manpower = -500
 
 		var:159.owner = {
-			SWI = {
-				reverse_add_opinion_modifier = { # 100 for 5 years
-					target = PREV
-					modifier = KR_returned_land
-				}
+			add_opinion_modifier = { # 100 for 5 years
+				target = PREV
+				modifier = KR_returned_land
 			}
 			country_event = { id = swiss.212 days = 1 } # ITA - Return
 		}
@@ -5494,24 +5641,41 @@ country_event = { #Campione, what to do
 		log = "[GetLogInfo]: event swiss.211 option swiss.211.b"
 		name = swiss.211.b # Reject
 		trigger = {
-			NOT = { is_ally_with = 159.owner }
+			NOT = { is_ally_with = var:159.owner }
 		}
 		ai_chance = {
 			base = 1
 			modifier = {
-				factor = 100
-				has_completed_focus = SWI_enemies_on_all_sides
+				factor = 0
+				has_completed_focus = SWI_peace_at_last
+			}
+			modifier = {
+				factor = 0
+				has_war_with = var:159.owner
+				NOT = { has_completed_focus = SWI_enemies_on_all_sides }
+			}
+			modifier = {
+				factor = 0 #prevents early WK2
+				NOT = { has_global_flag = second_weltkrieg_has_started }
+				OR = {
+					is_in_faction = yes
+					has_guarantor = yes
+				}
+				var:159.owner = {
+					OR = {
+						is_ai = no
+						is_in_faction = yes
+					}
+				}
 			}
 		}
 		custom_effect_tooltip = SWI_Campione_Reject_tt
 		add_stability = -0.05
 
 		var:159.owner = {
-			SWI = {
-				reverse_add_opinion_modifier = { # -100 for 3 years
-					target = PREV
-					modifier = KR_outraged
-				}
+			add_opinion_modifier = { # -100 for 3 years
+				target = PREV
+				modifier = KR_outraged
 			}
 			country_event = { id = swiss.213 days = 1 } # ITA - Reject
 		}
@@ -5521,20 +5685,39 @@ country_event = { #Campione, what to do
 		log = "[GetLogInfo]: event swiss.211 option swiss.211.c"
 		name = swiss.211.c # Referendum
 		trigger = {
-			NOT = { is_ally_with = 159.owner }
-			NOT = { has_war_with = 159.owner }
+			NOT = { is_ally_with = var:159.owner }
+			NOT = { has_war_with = var:159.owner }
 		}
 		ai_chance = {
 			base = 1
 			modifier = {
 				factor = 0
+				has_completed_focus = SWI_peace_at_last
+			}
+			modifier = {
+				factor = 0
 				has_completed_focus = SWI_enemies_on_all_sides
+			}
+			modifier = {
+				factor = 0 #prevents early WK2
+				NOT = { has_global_flag = second_weltkrieg_has_started }
+				OR = {
+					is_in_faction = yes
+					has_guarantor = yes
+				}
+				var:159.owner = {
+					OR = {
+						is_ai = no
+						is_in_faction = yes
+					}
+				}
 			}
 		}
 		custom_effect_tooltip = SWI_Campione_Referendum_tt
 
 		hidden_effect = {
 			random_list = {
+				seed = global.date
 				60 = {
 					set_global_flag = SWI_Campione_REF_Stays
 				}
@@ -5553,13 +5736,16 @@ country_event = { #Campione, what to do
 		log = "[GetLogInfo]: event swiss.211 option swiss.211.e"
 		name = swiss.211.e # Postpone for 2 Year
 		trigger = {
-			NOT = { is_ally_with = 159.owner }
+			NOT = { is_ally_with = var:159.owner }
 		}
 		ai_chance = {
 			base = 1
 			modifier = {
-				factor = 0.5 # AI is discouraged from picking this
-				is_ai = yes
+				factor = 0
+				OR = {
+					has_global_flag = second_weltkrieg_has_ended
+					is_ally_with = var:159.owner
+				}
 			}
 			modifier = {
 				factor = 0
@@ -5581,40 +5767,31 @@ country_event = { # Campione - ITA Return
 	title = swiss.212.t
 	desc = {
 		text = swiss.212.d
-		trigger = {
-			NOT = { has_global_flag = SWI_Campione_REF_Return }
-		}
+		trigger = { NOT = { has_global_flag = SWI_Campione_REF_Return } }
 	}
 	desc = {
 		text = swiss.212.d_ref
-		trigger = {
-			has_global_flag = SWI_Campione_REF_Return
-		}
+		trigger = { has_global_flag = SWI_Campione_REF_Return }
 	}
 
 	picture = GFX_report_event_SWI_flag
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	option = {
 		log = "[GetLogInfo]: event swiss.212 option swiss.212.a"
 		name = swiss.212.a
-
 		add_stability = 0.02
 		add_political_power = 10
 		add_manpower = 500
-
 		if = {
-			limit = {
-				NOT = { has_global_flag = SWI_Campione_REF_Return }
-			}
+			limit = { NOT = { has_global_flag = SWI_Campione_REF_Return } }
 			reverse_add_opinion_modifier = { # 50 for 3 years
-				target = SWI
+				target = FROM
 				modifier = KR_approves_of_govt
 			}
 			hidden_effect = {
-				SWI = { country_event = { id = swiss.214 days = 7 } }
+				FROM = { country_event = { id = swiss.214 days = 7 } }
 			}
 		}
 	}
@@ -5625,37 +5802,27 @@ country_event = { # Campione - ITA Reject
 	title = swiss.213.t
 	desc = {
 		text = swiss.213.d
-		trigger = {
-			NOT = { has_global_flag = SWI_Campione_REF_Stays }
-		}
+		trigger = { NOT = { has_global_flag = SWI_Campione_REF_Stays } }
 	}
 	desc = {
 		text = swiss.213.d_ref
-		trigger = {
-			has_global_flag = SWI_Campione_REF_Stays
-		}
+		trigger = { has_global_flag = SWI_Campione_REF_Stays }
 	}
 
 	picture = GFX_report_event_SWI_flag
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	option = {
 		log = "[GetLogInfo]: event swiss.213 option swiss.213.a"
 		name = swiss.213.a # Oh drat
-
-		ai_chance = { base = 0.9 }
-
+		ai_chance = { base = 60 }
 		add_stability = -0.02
 		add_political_power = -10
-
 		if = {
-			limit = {
-				NOT = { has_global_flag = SWI_Campione_REF_Stays }
-			}
+			limit = { NOT = { has_global_flag = SWI_Campione_REF_Stays } }
 			reverse_add_opinion_modifier = { # -50 for 3 years
-				target = SWI
+				target = FROM
 				modifier = KR_hates_govt
 			}
 		}
@@ -5666,40 +5833,73 @@ country_event = { # Campione - ITA Reject
 		name = swiss.213.b # This means war!
 		trigger = {
 			is_subject = no
+			can_declare_war_on = FROM
 			NOT = {
 				has_global_flag = SWI_Campione_REF_Stays
 				AND = {
-					SWI = {
-						has_socialist_government = yes
-					}
-					var:159.owner = {
-						has_socialist_government = yes
-					}
+					has_socialist_government = yes
+					FROM = { has_socialist_government = yes }
 				}
 			}
 		}
-
-		ai_chance = { base = 0.1 }
-
+		ai_chance = {
+			base = 40
+			modifier = {
+				factor = 0
+				country_is_in_dangerous_war = yes
+			}
+			modifier = {
+				factor = 0
+				FROM = { default_attack_AI_trigger = yes }
+			}
+			modifier = {
+				factor = 0
+				FROM = { dont_start_major_faction_wars = yes }
+			}
+			modifier = {
+				factor = 0
+				has_game_rule = { rule = wk2_begin_options option = RESTRICTED }
+				date < 1939.9.1
+				FROM = {
+					OR = {
+						is_in_faction = yes
+						has_guarantor = yes
+					}
+				}
+			}
+			modifier = {
+				factor = 0.1
+				has_game_rule = { rule = wk2_begin_options option = RARE }
+				date < 1939.9.1
+				FROM = {
+					OR = {
+						is_in_faction = yes
+						has_guarantor = yes
+					}
+				}
+			}
+			modifier = {
+				factor = 2
+				FROM = { both_socialist_or_both_not_socialist = no }
+			}
+		}
 		custom_effect_tooltip = SWI_Campione_WAR_WARNING_tt
-
 		add_stability = -0.04
 		add_war_support = 0.10
 		add_political_power = -50
-
 		add_state_claim = 761
 		reverse_add_opinion_modifier = { # -50 for 3 years
-			target = SWI
+			target = FROM
 			modifier = KR_hates_govt
 		}
 
 		create_wargoal = {
 			type = take_claimed_state
-			target = SWI
+			target = FROM
+			generator = { 761 }
 		}
-
 		hidden_effect = {
-			SWI = { country_event = { id = swiss.215 days = 7 } }
+			FROM = { country_event = { id = swiss.215 days = 7 } }
 		}
 	}
 }
@@ -5708,10 +5908,8 @@ country_event = { # SWI - Campione Gambit Succeeds
 	id = swiss.214
 	title = swiss.214.t
 	desc = swiss.214.d
-
 	picture = GFX_report_event_SWI_peace
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	option = {
@@ -5726,17 +5924,14 @@ country_event = { # SWI - Campione Gambit Failed, we're fcked
 	id = swiss.215
 	title = swiss.215.t
 	desc = swiss.215.d
-
 	picture = GFX_report_event_SWI_military
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	option = {
 		log = "[GetLogInfo]: event swiss.215 option swiss.215.a"
 		name = swiss.215.a
 		custom_effect_tooltip = SWI_Campione_WAR_WARNING_tt
-
 		add_stability = -0.03
 		add_war_support = -0.20
 	}
@@ -5746,14 +5941,12 @@ country_event = { # SWI - Referendum Results
 	id = swiss.216
 	title = swiss.216.t
 	desc = swiss.213.d
-
 	picture = GFX_report_event_election_vote
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	trigger = {
-		country_exists = SWI
+		owns_state = 761 #Ticino
 	}
 
 	option = {
@@ -5788,14 +5981,13 @@ country_event = { # SWI - Referendum Results
 	}
 }
 
-country_event = { # SWI - Notified about Campione Referendum
+country_event = { # ITA - Notified about Campione Referendum
 	id = swiss.217
 	title = swiss.217.t
 	desc = swiss.217.d
 
 	picture = GFX_report_event_SWI_flag
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	option = {

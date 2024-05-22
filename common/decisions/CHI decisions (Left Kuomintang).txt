@@ -13,16 +13,26 @@ foreign_politics = {
 
 		allowed = {
 			OR = {
-				tag = BRM
+				tag = ARM
+				tag = BRM #Since they don't have a focus tree they unlock this decision via event burma.6 option c
+				tag = HAW #Since they don't decide foreign policy via focus they unlock this decision via event hawaii.9 option a
+				tag = HND
 				tag = INC
 				tag = INS
-				tag = PHI
+				tag = PHI #Since they don't have a focus tree they unlock this decision via event phil.2 option a
 				tag = SIA
 			}
 		}
 
 		available = {
 			if = {
+				limit = { tag = ARM }
+				AND = {
+					has_completed_focus = ARM_first_popular_assembly
+					PER = { is_in_faction_with = CHI } #ARM should be able to join if PER is in the faction
+				}
+			}
+			else_if = {
 				limit = { tag = INC }
 				OR = {
 					has_completed_focus = INC_Comrade_Plus_Brother
@@ -32,6 +42,11 @@ foreign_politics = {
 						has_war_with_major = yes
 					}
 				}
+			}
+			else_if = {
+				limit = { tag = HND }
+				has_completed_focus = HND_red_raj
+				NOT = { has_government = radical_socialist } #The Radsocs in HND are isolationists
 			}
 			else_if = {
 				limit = { tag = INS }
@@ -61,8 +76,16 @@ foreign_politics = {
 		}
 
 		visible = {
-			is_in_faction = no
+			CHI = { has_completed_focus = CHI_lead_the_liberation_of_asia }
 			is_subject = no
+			OR = {
+				is_in_faction = no
+				AND = {
+					original_tag = HND
+					is_faction_leader = yes
+					NOT = { is_in_faction_with = INT }
+				}
+			}
 		}
 
 		targets = { CHI }
@@ -242,8 +265,25 @@ foreign_politics = {
 
 			#Game Rules
 			modifier = {
-				factor = 1000
+				add = 1000 #Add a bunch of bonus reasons to join if a CHI forpol gamerule is set
 				OR = {
+					AND = {
+						tag = ARM
+						has_game_rule = { rule = ARM_forpol option = ARM_FORPOL_PER }
+						PER = { is_in_faction_with = CHI }
+					}
+					AND = {
+						tag = BRM
+						has_game_rule = { rule = BRM_forpol option = BRM_FORPOL_CHI }
+					}
+					AND = {
+						tag = HAW
+						has_game_rule = { rule = HAW_forpol option = HAW_FORPOL_CHI }
+					}
+					AND = {
+						tag = HND
+						has_game_rule = { rule = HND_forpol option = HND_FORPOL_CHI }
+					}
 					AND = {
 						tag = INC
 						has_game_rule = { rule = INC_forpol option = INC_FORPOL_CHI }
@@ -253,23 +293,65 @@ foreign_politics = {
 						has_game_rule = { rule = INS_forpol option = INS_FORPOL_CHI }
 					}
 					AND = {
-						tag = SIA
-						has_game_rule = { rule = SIA_forpol option = SIA_FORPOL_CHI }
-					}
-					AND = {
-						tag = BRM
-						has_game_rule = { rule = BRM_forpol option = BRM_FORPOL_CHI }
-					}
-					AND = {
 						tag = PHI
 						has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_CHI }
+					}
+					AND = {
+						tag = SIA
+						has_game_rule = { rule = SIA_forpol option = SIA_FORPOL_CHI }
 					}
 				}
 			}
 			modifier = {
-				factor = 0
-				tag = BRM
-				has_game_rule = { rule = BRM_forpol option = BRM_FORPOL_NEUT }
+				factor = 0 #Give 0 reason to join if a tag has a non CHI forpol gamerule set
+				OR = {
+					AND = {
+						tag = ARM
+						NOT = {
+							AND = {
+								has_game_rule = { rule = ARM_forpol option = ARM_FORPOL_PER }
+								PER = { is_in_faction_with = CHI }
+							}
+						}
+					}
+					AND = {
+						tag = BRM
+						NOT = { has_game_rule = { rule = BRM_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = BRM_forpol option = BRM_FORPOL_CHI } }
+					}
+					AND = {
+						tag = HAW
+						NOT = { has_game_rule = { rule = HAW_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = HAW_forpol option = HAW_FORPOL_CHI } }
+					}
+					AND = {
+						tag = HND
+						OR = {
+							NOT = { has_game_rule = { rule = HND_forpol option = HND_FORPOL_CHI } }
+							HND = { has_government = radical_socialist } #The Radsocs in HND are isolationists
+						}
+					}
+					AND = {
+						tag = INC
+						NOT = { has_game_rule = { rule = INC_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = INC_forpol option = INC_FORPOL_CHI } }
+					}
+					AND = {
+						tag = INS
+						NOT = { has_game_rule = { rule = INS_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = INS_forpol option = INS_FORPOL_CHI } }
+					}
+					AND = {
+						tag = PHI
+						NOT = { has_game_rule = { rule = PHI_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_CHI } }
+					}
+					AND = {
+						tag = SIA
+						NOT = { has_game_rule = { rule = SIA_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = SIA_forpol option = SIA_FORPOL_CHI } }
+					}
+				}
 			}
 		}
 
@@ -3746,12 +3828,15 @@ CHI_liberation_of_asia_category = {
 							}
 						}
 					}
+					activate_targeted_decision = { target = HAW decision = CHI_invite_countries_to_faction } #Hawaii should be able to join too
 					#Kemalist Turkey apparently should be able to join
 					activate_targeted_decision = { target = TUR decision = CHI_invite_countries_to_faction }
 					activate_targeted_decision = { target = PER decision = CHI_invite_countries_to_faction }
+					activate_targeted_decision = { target = ARM decision = CHI_invite_countries_to_faction } #ARM can follow PERs foreign policy
 				}
 				else = {
 					#CRS can only invite countries extremely near-by
+					activate_targeted_decision = { target = BRM decision = CHI_invite_countries_to_faction }
 					activate_targeted_decision = { target = KOR decision = CHI_invite_countries_to_faction }
 					activate_targeted_decision = { target = INC decision = CHI_invite_countries_to_faction }
 					activate_targeted_decision = { target = VIN decision = CHI_invite_countries_to_faction }
@@ -3774,8 +3859,16 @@ CHI_liberation_of_asia_category = {
 		allowed = { always = no }
 
 		available = {
-			at_peace_or_same_enemies_as_FROM = yes
-			FROM = { at_peace_or_same_enemies_as_ROOT = yes }
+			custom_trigger_tooltip = {
+				tooltip = CHI_invite_countries_to_faction_peace_requirement_tt
+				OR = {
+					AND = {
+						at_peace_or_same_enemies_as_FROM = yes
+						FROM = { at_peace_or_same_enemies_as_ROOT = yes }
+					}
+					FROM = { tag = HAW }
+				}
+			}
 		}
 
 		target_non_existing = yes
@@ -3784,8 +3877,24 @@ CHI_liberation_of_asia_category = {
 			FROM = {
 				exists = yes
 				is_subject = no
-				is_in_faction = no
 				has_capitulated = no
+				OR = {
+					is_in_faction = no
+					AND = {
+						original_tag = HAW
+						is_in_faction_with = INT
+					}
+					AND = {
+						original_tag = HND
+						is_faction_leader = yes
+						NOT = { is_in_faction_with = INT }
+					}
+					AND = {
+						original_tag = PER
+						is_faction_leader = yes
+						NOT = { is_in_faction_with = INT }
+					}
+				}
 				OR = {
 					has_socialist_government = yes
 					AND = {
@@ -3804,6 +3913,12 @@ CHI_liberation_of_asia_category = {
 						}
 					}
 				}
+				if = {
+					limit = {
+						FROM = { original_tag = HND }
+					}
+					NOT = { has_country_flag = HND_went_isolationist }
+				}
 			}
 		}
 		cost = 10
@@ -3818,6 +3933,12 @@ CHI_liberation_of_asia_category = {
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove CHI_invite_countries_to_faction target: [From.GetName]"
 			custom_effect_tooltip = CHI_invite_countries_to_faction_tt
+			if = {
+				limit = {
+					FROM = { original_tag = HAW }
+				}
+				custom_effect_tooltip = CHI_invite_HAW_warning_tt
+			}
 			FROM = { country_event = { id = CHI.endgame.002 days = 1 random_days = 3 } }
 		}
 	}

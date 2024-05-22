@@ -7579,6 +7579,7 @@ country_event = { #Fate of Slovenia
 		set_temp_variable = { tag_to_release = SLV }
 		102 = { transfer_state_and_add_core = yes }
 		puppet_released_tag = yes
+		var:tag_to_release = { SLV_move_back_generals = yes }
 		recheck_annexations = yes
 	}
 
@@ -10076,6 +10077,24 @@ country_event = { #Fate of the Netherlands
 			modifier = {
 				factor = 0
 				has_event_target = can_offer_netherlands_to_exiles
+				NOT = {
+					AND = {
+						NOT = { is_ally_with = GER }
+						has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_GER }
+					}
+				}
+				NOT = {
+					AND = {
+						NOT = { is_ally_with = ENT }
+						has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_ENT }
+					}
+				}
+				NOT = {
+					AND = {
+						NOT = { original_tag = BEL }
+						has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_BEL }
+					}
+				}
 			}
 		}
 		set_temp_variable = { tag_to_release = HOL }
@@ -10107,7 +10126,26 @@ country_event = { #Fate of the Netherlands
 		trigger = {
 			has_event_target = can_offer_netherlands_to_exiles
 		}
-		ai_chance = { base = 100 }
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					AND = {
+						NOT = { is_ally_with = GER }
+						has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_GER }
+					}
+					AND = {
+						NOT = { is_ally_with = ENT }
+						has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_ENT }
+					}
+					AND = {
+						NOT = { original_tag = BEL }
+						has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_BEL }
+					}
+				}
+			}
+		}
 		set_temp_variable = { tag_to_release = DEI }
 		HOL = {
 			every_core_state = {
@@ -10665,10 +10703,9 @@ country_event = { #Fate of Denmark
 	option = { #liberate as monarchy
 		log = "[GetLogInfo]: event annex.1052 option annex.1052.a"
 		name = annex.1052.a
-		ai_chance = { base = 100 }
+		ai_chance = { base = 60 }
 		trigger = {
 			has_socialist_government = no
-			NOT = { has_government = national_populist }
 		}
 		set_temp_variable = { tag_to_release = DEN }
 		release_targeted_tag = yes
@@ -10676,11 +10713,11 @@ country_event = { #Fate of Denmark
 			clr_country_flag = den_hybrid
 			clr_country_flag = den_danish_republic
 			DEN_create_christian = yes
-		}
-		hidden_effect = {
-			DEN = {
+			DEN_puppet_setup = yes
+			hidden_effect = {
 				remove_ideas = {
 					DEN_idea_opposition_controlled_landsting
+
 					# Republican/socialist ideas
 					DEN_idea_rigsfagforbund
 					DEN_idea_danish_republic
@@ -10696,19 +10733,11 @@ country_event = { #Fate of Denmark
 	option = { #liberate as republic
 		log = "[GetLogInfo]: event annex.1052 option annex.1052.b"
 		name = annex.1052.b
-		ai_chance = { base = 100 }
-		trigger = {
-			if = {
-				limit = {
-					OR = {
-						tag = GER
-						tag = AUS
-					}
-				}
-				OR = {
-					has_socialist_government = yes
-					has_government = national_populist
-				}
+		ai_chance = {
+			base = 40
+			modifier = {
+				factor = 0
+				is_monarchy = yes
 			}
 		}
 		set_temp_variable = { tag_to_release = DEN }
@@ -10723,11 +10752,11 @@ country_event = { #Fate of Denmark
 				clr_country_flag = den_hybrid
 				set_country_flag = den_danish_republic
 			}
-		}
-		hidden_effect = {
-			DEN = {
+			DEN_puppet_setup = yes
+			hidden_effect = {
 				remove_ideas = {
 					DEN_idea_opposition_controlled_landsting
+
 					# Monarchist ideas
 					DEN_idea_danish_monarchy
 					DEN_idea_danish_monarchy2
@@ -11530,7 +11559,7 @@ country_event = { #Fate of Finland
 		set_temp_variable = { tag_to_release = FIN }
 		release_targeted_tag = yes
 		var:tag_to_release = {
-			set_cosmetic_tag = FIN_kingdom
+			set_cosmetic_tag = FIN_monarchy
 			if = {
 				limit = { has_character = FIN_friedrich_karl_von_hessen_kassel }
 				FIN_friedrich_karl_von_hessen_kassel = { promote_character = authoritarian_democrat_subtype }
@@ -12924,54 +12953,51 @@ country_event = { #Fate of Russia
 
 	immediate = {
 		hidden_effect = {
+			if = {
+				limit = {
+					NOT = { country_exists = SIB }
+					NOT = { country_exists = TRM }
+				}
+				every_state = {
+					remove_core_of = RUS
+					remove_core_of = TRM
+					remove_core_of = SIB
+					remove_claim_by = RUS
+					remove_claim_by = TRM
+					remove_claim_by = SIB
+				}
+			}
+			else_if = {
+				limit = { NOT = { country_exists = SIB } }
+				every_state = {
+					remove_core_of = RUS
+					remove_core_of = SIB
+					remove_claim_by = RUS
+					remove_claim_by = SIB
+				}
+			}
+			else_if = {
+				limit = { NOT = { country_exists = TRM } }
+				every_state = {
+					remove_core_of = RUS
+					remove_core_of = TRM
+					remove_claim_by = RUS
+					remove_claim_by = TRM
+				}
+			}
+			else = {
+				every_state = {
+					remove_core_of = RUS
+					remove_claim_by = RUS
+				}
+			}
+			for_each_scope_loop = {
+				array = RUS.RUS_starting_states_array
+				add_core_of = RUS
+			}
 			RUS = {
-				drop_cosmetic_tag = yes
 				RUS_remove_monarchy = yes
-				RUS_pavel_bermondt_avalov = { remove_all_country_leader_roles = yes }
-				set_party_name = {
-					ideology = social_democrat
-					name = RUS_social_democrat_party
-					long_name = RUS_social_democrat_party_long
-				}
-				if = {
-					limit = { has_character = RUS_dmitry_romanov }
-					retire_character = RUS_dmitry_romanov
-				}
-				if = {
-					limit = { has_character = RUS_pyotr_wrangel }
-					retire_character = RUS_pyotr_wrangel
-				}
-				if = {
-					limit = { has_character = RUS_anton_denikin }
-					retire_character = RUS_anton_denikin
-				}
-				if = {
-					limit = { has_character = RUS_boris_savinkov }
-					retire_character = RUS_boris_savinkov
-				}
-				remove_ideas = {
-					RUS_constitutional_monarchy_1
-					RUS_constitutional_monarchy_2
-					RUS_constitutional_monarchy_3
-					RUS_constitutional_monarchy_5
-					RUS_constitutional_monarchy_6
-					RUS_imperial_glory_1
-					RUS_imperial_glory_2
-					RUS_imperial_glory_3
-					RUS_imperial_glory_5
-					RUS_imperial_glory_6
-					RUS_imperial_glory_7
-					RUS_imperial_glory_8
-					RUS_imperial_glory_9
-					RUS_a_new_russia_1
-					RUS_a_new_russia_2
-					RUS_a_new_russia_3
-					RUS_a_new_russia_4
-					RUS_legacy_of_the_whites_1
-					RUS_legacy_of_the_whites_2
-					RUS_legacy_of_the_whites_3
-					RUS_legacy_of_the_whites_4
-				}
+				drop_cosmetic_tag = yes
 			}
 			213 = { retain_state = yes } #Murmansk
 			215 = { retain_state = yes } #White Karelia
@@ -12984,14 +13010,29 @@ country_event = { #Fate of Russia
 			755 = { retain_state = yes } #Vitebsk
 			880 = { retain_state = yes } #Latgale
 			1006 = { retain_state = yes } #Novorossiysk
+			MNR = { every_core_state = { retain_state = yes } }
 			every_owned_state = {
-				limit = {
-					OR = {
-						is_alash = yes #Kazakh Territories
-						is_core_of = MNR
-					}
-				}
+				limit = { is_alash = yes }
 				retain_state = yes
+			}
+			if = {
+				limit = { has_country_flag = SIB_CONQ }
+				every_owned_state = {
+					limit = {
+						OR = {
+							is_siberia = yes
+							is_russian_far_east = yes
+						}
+					}
+					retain_state = yes
+				}
+			}
+			else_if = {
+				limit = { has_country_flag = TRM_CONQ }
+				every_owned_state = {
+					limit = { is_russian_far_east = yes }
+					retain_state = yes
+				}
 			}
 		}
 	}
@@ -12999,9 +13040,6 @@ country_event = { #Fate of Russia
 	option = { #Liberate core Russia
 		log = "[GetLogInfo]: event annex.1065 option annex.1065.a"
 		name = annex.1065.a
-		trigger = {
-			NOT = { has_country_flag = SIB_CONQ }
-		}
 		ai_chance = {
 			base = 85
 			modifier = {
@@ -13013,7 +13051,6 @@ country_event = { #Fate of Russia
 			}
 		}
 		set_temp_variable = { tag_to_release = RUS }
-		hidden_effect = { remove_all_russian_cores = yes }
 		release_targeted_tag = yes
 		hidden_effect = { RUS_puppet_setup = yes }
 		recheck_annexations = yes
@@ -13023,7 +13060,8 @@ country_event = { #Fate of Russia
 		log = "[GetLogInfo]: event annex.1065 option annex.1065.b"
 		name = annex.1065.b
 		trigger = {
-			owns_state = 570 #Novo-Nikolayevsk
+			570 = { is_valid_annexation_state = yes } #Novo-Nikolayevsk
+			NOT = { has_country_flag = SIB_CONQ }
 		}
 		ai_chance = {
 			base = 10
@@ -13084,7 +13122,6 @@ country_event = { #Fate of Russia
 		puppet_released_tag = yes
 		custom_effect_tooltip = tooltip_white_line
 		set_temp_variable = { tag_to_release = RUS }
-		hidden_effect = { remove_all_russian_cores = yes }
 		release_targeted_tag = yes
 		hidden_effect = { RUS_puppet_setup = yes }
 		recheck_annexations = yes
@@ -14811,22 +14848,38 @@ country_event = { #Fate of Bulgaria
 	immediate = {
 		hidden_effect = {
 			every_state = {
-				limit = {
-					NOT = {
-						state = 48 #Sofia
-						state = 77 #Silistria
-						state = 211 #Burgas
-						state = 212 #Plovdiv
-						state = 770 #Pleven
-						state = 771 #Varna
-						state = 990 #Vidin
-						state = 1089 #Kardzhali
+				if = {
+					limit = {
+						NOT = { state = 48 } #Sofia
+						NOT = { state = 77 } #Silistria
+						NOT = { state = 211 } #Burgas
+						NOT = { state = 212 } #Plovdiv
+						NOT = { state = 770 } #Pleven
+						NOT = { state = 771 } #Varna
+						NOT = { state = 990 } #Vidin
+						NOT = { state = 1089 } #Kardzhali
+						if = {
+							limit = { check_variable = { core_countries^num = 1 } }
+							NOT = { state = 106 } #Macedonia
+							NOT = { state = 184 } #Komotini
+							NOT = { state = 731 } #Florina
+							NOT = { state = 767 } #Nis
+							NOT = { state = 769 } #Serres
+						}
 					}
+					remove_core_of = BUL
+				}
+				else = {
+					add_core_of = BUL
 				}
 				remove_claim_by = BUL
-				remove_core_of = BUL
 			}
 			77 = { retain_state = yes } #Silistria
+			106 = { retain_state = yes } #Macedonia
+			184 = { retain_state = yes } #Komotini
+			731 = { retain_state = yes } #Florina
+			767 = { retain_state = yes } #Nis
+			769 = { retain_state = yes } #Serres
 			1089 = { retain_state = yes } #Kardzhali
 			BUL = {
 				remove_ideas = GER_mil_support_idea
@@ -15350,6 +15403,7 @@ country_event = { #Fate of Greece
 			}
 			hidden_effect = {
 				set_capital = { state = 47 remember_old_capital = no }
+				GRE_puppet_setup = yes
 			}
 		}
 		recheck_annexations = yes
@@ -15420,6 +15474,7 @@ country_event = { #Fate of Greece
 			GRE_uncomplete_expansion_focuses = yes
 			hidden_effect = {
 				set_capital = { state = 47 remember_old_capital = no }
+				GRE_puppet_setup = yes
 			}
 		}
 		recheck_annexations = yes
@@ -17115,9 +17170,7 @@ country_event = { #Fate of Italy
 	immediate = {
 		hidden_effect = {
 			if = {
-				limit = {
-					has_idea = PAP_exiled_holy_see
-				}
+				limit = { has_idea = PAP_exiled_holy_see }
 				remove_ideas = PAP_exiled_holy_see
 			}
 			if = {
@@ -17135,7 +17188,10 @@ country_event = { #Fate of Italy
 					add_claim_by = ROOT
 				}
 			}
-			retain_italian_irredentist_claims = yes
+			every_owned_state = {
+				limit = { is_italy_or_potential_claim = yes }
+				retain_state = yes
+			}
 		}
 	}
 
@@ -17164,9 +17220,18 @@ country_event = { #Fate of Italy
 		}
 		set_temp_variable = { tag_to_release = ITA }
 		hidden_effect = {
-			159 = { remove_claim_and_add_core_of_target = yes } #Lombardy
-			160 = { remove_claim_and_add_core_of_target = yes } #Venice
-			759 = { remove_claim_and_add_core_of_target = yes } #Friuli
+			159 = { #Lombardy
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			160 = { #Venice
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			759 = { #Friuli
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
 			every_state = {
 				limit = { is_european_italy = yes }
 				add_claim_of_target = yes
@@ -17263,9 +17328,18 @@ country_event = { #Fate of Italy
 		}
 		set_temp_variable = { tag_to_release = ITA }
 		hidden_effect = {
-			159 = { remove_claim_and_add_core_of_target = yes } #Lombardy
-			160 = { remove_claim_and_add_core_of_target = yes } #Venice
-			759 = { remove_claim_and_add_core_of_target = yes } #Friuli
+			159 = { #Lombardy
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			160 = { #Venice
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			759 = { #Friuli
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
 			every_state = {
 				limit = { is_european_italy = yes }
 				add_claim_of_target = yes
@@ -17341,15 +17415,42 @@ country_event = { #Fate of Italy
 		}
 		set_temp_variable = { tag_to_release = SRI }
 		hidden_effect = {
-			157 = { remove_claim_and_add_core_of_target = yes } #Marches
-			158 = { remove_claim_and_add_core_of_target = yes } #Piedmont
-			161 = { remove_claim_and_add_core_of_target = yes } #Romagna
-			162 = { remove_claim_and_add_core_of_target = yes } #Tuscany
-			764 = { remove_claim_and_add_core_of_target = yes } #Viterbo
-			838 = { remove_claim_and_add_core_of_target = yes } #Liguria
-			1003 = { remove_claim_and_add_core_of_target = yes } #Aosta Valley
-			1004 = { remove_claim_and_add_core_of_target = yes } #Emilia
-			1005 = { remove_claim_and_add_core_of_target = yes } #Umbria
+			157 = { #Marches
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			158 = { #Piedmont
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			161 = { #Romagna
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			162 = { #Tuscany
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			764 = { #Viterbo
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			838 = { #Liguria
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			1003 = { #Aosta Valley
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			1004 = { #Emilia
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			1005 = { #Umbria
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
 			every_state = {
 				limit = { is_european_italy = yes }
 				add_claim_of_target = yes
@@ -17382,14 +17483,13 @@ country_event = { #Fate of Italy
 			NOT = { tag = ITA }
 		}
 		ai_chance = { base = 95 }
-		reverse_add_opinion_modifier = { target = ITA modifier = KR_returned_land }
-
+		set_temp_variable = { tag_to_release = ITA }
 		every_owned_state = {
 			limit = {
 				is_european_italy = yes
-				is_valid_annexation_state = no
+				is_valid_annexation_state = yes
 			}
-			transfer_state_to = ITA
+			transfer_state_and_add_claim = yes
 		}
 		recheck_annexations = yes
 	}
@@ -17401,14 +17501,13 @@ country_event = { #Fate of Italy
 			NOT = { tag = SRI }
 		}
 		ai_chance = { base = 95 }
-		reverse_add_opinion_modifier = { target = SRI modifier = KR_returned_land }
-
+		set_temp_variable = { tag_to_release = SRI }
 		every_owned_state = {
 			limit = {
 				is_european_italy = yes
-				is_valid_annexation_state = no
+				is_valid_annexation_state = yes
 			}
-			transfer_state_to = SRI
+			transfer_state_and_add_claim = yes
 		}
 		recheck_annexations = yes
 	}
@@ -17433,14 +17532,13 @@ country_event = { #Fate of Italy
 				}
 			}
 		}
-		reverse_add_opinion_modifier = { target = SIC modifier = KR_returned_land }
-
+		set_temp_variable = { tag_to_release = SIC }
 		every_owned_state = {
 			limit = {
 				is_european_italy = yes
-				is_valid_annexation_state = no
+				is_valid_annexation_state = yes
 			}
-			transfer_state_to = SIC
+			transfer_state_and_add_claim = yes
 		}
 		recheck_annexations = yes
 	}
@@ -17461,14 +17559,13 @@ country_event = { #Fate of Italy
 				}
 			}
 		}
-		reverse_add_opinion_modifier = { target = SRD modifier = KR_returned_land }
-
+		set_temp_variable = { tag_to_release = SRD }
 		every_owned_state = {
 			limit = {
 				is_european_italy = yes
 				is_valid_annexation_state = yes
 			}
-			transfer_state_to = SRD
+			transfer_state_and_add_claim = yes
 		}
 		recheck_annexations = yes
 	}
@@ -17640,7 +17737,12 @@ country_event = { #Fate of Piedmont
 	is_triggered_only = yes
 
 	immediate = {
-		retain_italian_irredentist_claims = yes
+		hidden_effect = {
+			every_owned_state = {
+				limit = { is_italy_or_potential_claim = yes }
+				retain_state = yes
+			}
+		}
 	}
 
 	option = {
@@ -17662,10 +17764,22 @@ country_event = { #Fate of Piedmont
 		}
 		set_temp_variable = { tag_to_release = SRI }
 		hidden_effect = {
-			114 = { remove_claim_and_add_core_of_target = yes } #Sardinia
-			158 = { remove_claim_and_add_core_of_target = yes } #Piedmont
-			838 = { remove_claim_and_add_core_of_target = yes } #Liguria
-			1003 = { remove_claim_and_add_core_of_target = yes } #Aosta Valley
+			114 = { #Sardinia
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			158 = { #Piedmont
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			838 = { #Liguria
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			1003 = { #Aosta Valley
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
 			every_state = {
 				limit = { is_european_italy = yes }
 				add_claim_of_target = yes
@@ -17694,10 +17808,22 @@ country_event = { #Fate of Piedmont
 		# restore initial cores if they were removed
 		set_temp_variable = { tag_to_release = SRD }
 		hidden_effect = {
-			114 = { remove_claim_and_add_core_of_target = yes } #Sardinia
-			158 = { remove_claim_and_add_core_of_target = yes } #Piedmont
-			838 = { remove_claim_and_add_core_of_target = yes } #Liguria
-			1003 = { remove_claim_and_add_core_of_target = yes } #Aosta Valley
+			114 = { #Sardinia
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			158 = { #Piedmont
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			838 = { #Liguria
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			1003 = { #Aosta Valley
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
 		}
 		release_targeted_tag = yes
 		var:tag_to_release = {
@@ -17948,6 +18074,10 @@ country_event = { #Fate of Lombardy
 					}
 				}
 			}
+			every_owned_state = {
+				limit = { is_italy_or_potential_claim = yes }
+				retain_state = yes
+			}
 		}
 	}
 
@@ -17972,9 +18102,18 @@ country_event = { #Fate of Lombardy
 		ai_chance = { base = 50 }
 		set_temp_variable = { tag_to_release = ITA }
 		hidden_effect = {
-			159 = { remove_claim_and_add_core_of_target = yes } #Lombardy
-			160 = { remove_claim_and_add_core_of_target = yes } #Venice
-			759 = { remove_claim_and_add_core_of_target = yes } #Friuli
+			159 = { #Lombardy
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			160 = { #Venice
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			759 = { #Friuli
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
 			every_state = {
 				limit = { is_european_italy = yes }
 				add_claim_of_target = yes
@@ -18073,9 +18212,18 @@ country_event = { #Fate of Lombardy
 		}
 		set_temp_variable = { tag_to_release = ITA }
 		hidden_effect = {
-			159 = { remove_claim_and_add_core_of_target = yes } #Lombardy
-			160 = { remove_claim_and_add_core_of_target = yes } #Venice
-			759 = { remove_claim_and_add_core_of_target = yes } #Friuli
+			159 = { #Lombardy
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			160 = { #Venice
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			759 = { #Friuli
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
 			every_state = {
 				limit = { is_european_italy = yes }
 				add_claim_of_target = yes
@@ -18166,9 +18314,18 @@ country_event = { #Fate of Lombardy
 		}
 		set_temp_variable = { tag_to_release = SRI }
 		hidden_effect = {
-			159 = { remove_claim_and_add_core_of_target = yes } #Lombardy
-			160 = { remove_claim_and_add_core_of_target = yes } #Venice
-			759 = { remove_claim_and_add_core_of_target = yes } #Friuli
+			159 = { #Lombardy
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			160 = { #Venice
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			759 = { #Friuli
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
 			every_state = {
 				limit = { is_european_italy = yes }
 				add_claim_of_target = yes
@@ -19468,6 +19625,19 @@ country_event = { #Fate of Rome
 
 	is_triggered_only = yes
 
+	immediate = {
+		hidden_effect = {
+			if = {
+				limit = { has_idea = PAP_exiled_holy_see }
+				remove_ideas = PAP_exiled_holy_see
+			}
+			if = {
+				limit = { NOT = { country_exists = PAP } }
+				PAP = { drop_cosmetic_tag = yes }
+			}
+		}
+	}
+
 	option = {
 		log = "[GetLogInfo]: event annex.1100 option annex.1100.a"
 		name = annex.1100.a #Release as PAP
@@ -19677,6 +19847,15 @@ country_event = { #Fate of Southern Italy
 
 	is_triggered_only = yes
 
+	immediate = {
+		hidden_effect = {
+			every_owned_state = {
+				limit = { is_italy_or_potential_claim = yes }
+				retain_state = yes
+			}
+		}
+	}
+
 	option = {
 		log = "[GetLogInfo]: event annex.1101 option annex.1092.b"
 		name = annex.1092.b #Release as SRI
@@ -19697,11 +19876,26 @@ country_event = { #Fate of Southern Italy
 		}
 		set_temp_variable = { tag_to_release = SRI }
 		hidden_effect = {
-			115 = { remove_claim_and_add_core_of_target = yes } #Sicily
-			117 = { remove_claim_and_add_core_of_target = yes } #Campania
-			156 = { remove_claim_and_add_core_of_target = yes } #Calabria
-			742 = { remove_claim_and_add_core_of_target = yes } #Abruzzo
-			837 = { remove_claim_and_add_core_of_target = yes } #Apulia
+			115 = {
+				remove_claim_and_add_core_of_target = yes #Sicily
+				clear_retain_state = yes
+			}
+			117 = {
+				remove_claim_and_add_core_of_target = yes #Campania
+				clear_retain_state = yes
+			}
+			156 = {
+				remove_claim_and_add_core_of_target = yes #Calabria
+				clear_retain_state = yes
+			}
+			742 = {
+				remove_claim_and_add_core_of_target = yes #Abruzzo
+				clear_retain_state = yes
+			}
+			837 = {
+				remove_claim_and_add_core_of_target = yes #Apulia
+				clear_retain_state = yes
+			}
 			every_state = {
 				limit = { is_european_italy = yes }
 				add_claim_of_target = yes
@@ -19730,11 +19924,26 @@ country_event = { #Fate of Southern Italy
 		}
 		set_temp_variable = { tag_to_release = SIC }
 		hidden_effect = {
-			115 = { remove_claim_and_add_core_of_target = yes } #Sicily
-			117 = { remove_claim_and_add_core_of_target = yes } #Campania
-			156 = { remove_claim_and_add_core_of_target = yes } #Calabria
-			742 = { remove_claim_and_add_core_of_target = yes } #Abruzzo
-			837 = { remove_claim_and_add_core_of_target = yes } #Apulia
+			115 = {
+				remove_claim_and_add_core_of_target = yes #Sicily
+				clear_retain_state = yes
+			}
+			117 = {
+				remove_claim_and_add_core_of_target = yes #Campania
+				clear_retain_state = yes
+			}
+			156 = {
+				remove_claim_and_add_core_of_target = yes #Calabria
+				clear_retain_state = yes
+			}
+			742 = {
+				remove_claim_and_add_core_of_target = yes #Abruzzo
+				clear_retain_state = yes
+			}
+			837 = {
+				remove_claim_and_add_core_of_target = yes #Apulia
+				clear_retain_state = yes
+			}
 		}
 		release_targeted_tag = yes
 		recheck_annexations = yes
@@ -19754,8 +19963,7 @@ country_event = { #Fate of Southern Italy
 				tag = SRD
 			}
 		}
-		reverse_add_opinion_modifier = { target = ITA modifier = KR_returned_land }
-
+		set_temp_variable = { tag_to_release = ITA }
 		every_owned_state = {
 			limit = {
 				OR = {
@@ -19765,8 +19973,9 @@ country_event = { #Fate of Southern Italy
 					state = 156 #Calabria
 					state = 115 #Sicily
 				}
+				is_valid_annexation_state = yes
 			}
-			transfer_state_to = ITA
+			transfer_state_and_add_claim = yes
 		}
 		recheck_annexations = yes
 	}
@@ -19785,8 +19994,7 @@ country_event = { #Fate of Southern Italy
 				tag = SRD
 			}
 		}
-		reverse_add_opinion_modifier = { target = SRI modifier = KR_returned_land }
-
+		set_temp_variable = { tag_to_release = SRI }
 		every_owned_state = {
 			limit = {
 				OR = {
@@ -19796,8 +20004,9 @@ country_event = { #Fate of Southern Italy
 					state = 156 #Calabria
 					state = 115 #Sicily
 				}
+				is_valid_annexation_state = yes
 			}
-			transfer_state_to = SRI
+			transfer_state_and_add_claim = yes
 		}
 		recheck_annexations = yes
 	}
@@ -19810,8 +20019,7 @@ country_event = { #Fate of Southern Italy
 			SIC = { is_ally_of_ROOT = yes }
 		}
 		ai_chance = { base = 200 }
-		reverse_add_opinion_modifier = { target = SIC modifier = KR_returned_land }
-
+		set_temp_variable = { tag_to_release = SIC }
 		every_owned_state = {
 			limit = {
 				OR = {
@@ -19821,8 +20029,9 @@ country_event = { #Fate of Southern Italy
 					state = 156 #Calabria
 					state = 115 #Sicily
 				}
+				is_valid_annexation_state = yes
 			}
-			transfer_state_to = SIC
+			transfer_state_and_add_core = yes
 		}
 		recheck_annexations = yes
 	}
@@ -19840,6 +20049,20 @@ country_event = { #Fate of Southern Italy
 				factor = 2
 				SRD = { has_cosmetic_tag = SRD_ITA }
 			}
+		}
+		set_temp_variable = { tag_to_release = SRD }
+		every_owned_state = {
+			limit = {
+				OR = {
+					state = 117 #Campania
+					state = 742 #Abruzzo
+					state = 837 #Apulia
+					state = 156 #Calabria
+					state = 115 #Sicily
+				}
+				is_valid_annexation_state = yes
+			}
+			transfer_state_and_add_claim = yes
 		}
 		reverse_add_opinion_modifier = { target = SRD modifier = KR_returned_land }
 
@@ -19878,6 +20101,15 @@ country_event = { #Fate of Sardinia
 
 	is_triggered_only = yes
 
+	immediate = {
+		hidden_effect = {
+			every_owned_state = {
+				limit = { is_italy_or_potential_claim = yes }
+				retain_state = yes
+			}
+		}
+	}
+
 	option = {
 		log = "[GetLogInfo]: event annex.1102 option annex.1102.a"
 		name = annex.1102.a #Release as SRD
@@ -19899,10 +20131,22 @@ country_event = { #Fate of Sardinia
 		# restore initial cores if they were removed
 		set_temp_variable = { tag_to_release = SRD }
 		hidden_effect = {
-			114 = { remove_claim_and_add_core_of_target = yes } #Sardinia
-			158 = { remove_claim_and_add_core_of_target = yes } #Piedmont
-			838 = { remove_claim_and_add_core_of_target = yes } #Liguria
-			1003 = { remove_claim_and_add_core_of_target = yes } #Aosta Valley
+			114 = { #Sardinia
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			158 = { #Piedmont
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			838 = { #Liguria
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
+			1003 = { #Aosta Valley
+				remove_claim_and_add_core_of_target = yes
+				clear_retain_state = yes
+			}
 		}
 		114 = { transfer_state_to = var:tag_to_release }
 		puppet_released_tag = yes
@@ -25259,10 +25503,12 @@ country_event = { #Fate of Northern England
 			}
 			puppet_released_tag_nocosmetic = yes
 			var:tag_to_release = {
-				set_autonomy = {
-					target = THIS
-					autonomy_state = integrated_puppet
-					end_wars = no
+				ROOT = {
+					set_autonomy = {
+						target = PREV
+						autonomy_state = integrated_puppet
+						end_wars = no
+					}
 				}
 			}
 			var:tag_to_release = { GBP_set_northumbria_politics = yes }

@@ -308,16 +308,16 @@ calculate_maximum_divisions = {
 	multiply_variable = { max_divisions = industry_factor }
 
 	# apply multipliers
-	set_temp_variable = { limit_multiplier = 1 }
-	add_to_temp_variable = { limit_multiplier = modifier@unit_limit_factory_bonus } # +10% per economy law level above civilian economy
 	if = {
 		limit = { is_faction_leader = yes }
 		add_to_temp_variable = { limit_multiplier = 0.15 } # +15% for faction leaders
 	}
-	multiply_variable = { max_divisions = limit_multiplier }
 
 	# all countries get five free divisions
 	add_to_variable = { max_divisions = global.base_unit_limit_bonus }
+
+	# add the law bonus to the limit
+	add_to_variable = { max_divisions = modifier@unit_limit_law_bonus } # +4 per economy law level above civilian economy
 
 	# add any specific bonuses to the limit
 	add_to_variable = { max_divisions = modifier@unit_limit_bonus }
@@ -326,6 +326,7 @@ calculate_maximum_divisions = {
 	set_variable = { uncapped_max_divisions = max_divisions }
 	clamp_variable = { var = max_divisions max = 300 }
 
+	round_variable = uncapped_max_divisions
 	round_variable = max_divisions
 }
 
@@ -350,6 +351,8 @@ calculate_mobilisation_penalty = {
 unit_limit_calculation_effect = {
 	calculate_maximum_divisions = yes
 
+	set_variable = { unit_limit_progressbar_frame = 1 }
+	set_variable = { unit_limit_progressbar_value = 0 }
 	if = {
 		limit = {
 			NOT = { has_game_rule = { rule = unit_limit_options option = NONE } }
@@ -409,7 +412,48 @@ unit_limit_calculation_effect = {
 			}
 			calculate_mobilisation_penalty = yes
 			add_dynamic_modifier = { modifier = mobilisation_penalty_modifier }
+
+			#alert
+			add_to_array = { unit_limit_alerts = THIS }
+			scoped_sound_effect = alert_hostile_troops_sound
+			set_variable_to_random = global.kaiserreich_alerts_dirty
 		}
+
+		# calculate GUI values
+		if = {
+			limit = { has_variable = num_actual_divisions }
+			if = {
+				limit = { check_variable = { num_actual_divisions > max_divisions } }
+				set_variable = { unit_limit_progressbar_frame = 3 }
+			}
+			else_if = {
+				limit = { check_variable = { num_actual_divisions = max_divisions } }
+				set_variable = { unit_limit_progressbar_frame = 2 }
+			}
+			else = {
+				set_variable = { unit_limit_progressbar_frame = 1 }
+			}
+			set_variable = { unit_limit_progressbar_value = num_actual_divisions }
+		}
+		else = {
+			if = {
+				limit = { check_variable = { num_divisions > max_divisions } }
+				set_variable = { unit_limit_progressbar_frame = 3 }
+			}
+			else_if = {
+				limit = { check_variable = { num_divisions = max_divisions } }
+				set_variable = { unit_limit_progressbar_frame = 2 }
+			}
+			else = {
+				set_variable = { unit_limit_progressbar_frame = 1 }
+			}
+			set_variable = { unit_limit_progressbar_value = num_divisions }
+		}
+		divide_variable = { unit_limit_progressbar_value = max_divisions }
+		multiply_variable = { unit_limit_progressbar_value = 158 }
+		subtract_from_variable = { unit_limit_progressbar_value = 158 }
+		round_variable = unit_limit_progressbar_value
+		clamp_variable = { var = unit_limit_progressbar_value min = -158 max = 0 }
 	}
 
 	# check if demobilisation missions should apply

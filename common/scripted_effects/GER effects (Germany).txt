@@ -410,7 +410,17 @@ GER_wilhelm_ii_dies = {
 				remove_all_country_leader_roles = yes #no need for these anymore, will only bloat the save
 				kill_character = yes
 			}
-			GER_wilhelm_iii = { set_character_name = GER_wilhelm_iii_regnal }
+			GER_wilhelm_iii = {
+				if = {
+					limit = { character_has_no_nationality = yes }
+					set_nationality = PREV
+					set_character_name = GER_wilhelm_iii_regnal
+					retire = yes
+				}
+				else = {
+					set_character_name = GER_wilhelm_iii_regnal
+				}
+			}
 		}
 	}
 }
@@ -658,7 +668,8 @@ GER_create_wilhelm_iv = {
 
 ### CARD EFFECTS ###
 
-GER_bm_cardgame_effects_apply = { #applies values generated in scripted trigger GER_bm_cardgame_basic_stats_calculate with pretty tooltips and formatting!
+GER_bm_cardgame_effects_apply = {
+	GER_bm_cardgame_effects_calculate = yes
 	GER_bm_cardgame_lines_calculate = yes
 
 	GER_bm_cardgame_reform = yes
@@ -680,6 +691,194 @@ GER_bm_cardgame_effects_apply = { #applies values generated in scripted trigger 
 	}
 }
 
+GER_bm_cardgame_effects_calculate = {
+
+	GER_bm_cardgame_basic_stats_calculate = yes
+
+	if = { #This is for complex cards that might do more funny things... Will overwrite "basic effects". Put line calculation math here if you like, too!
+		limit = {
+			var:GER_card_played = {
+				has_character_flag = custom_card_calculations
+			}
+		}
+		meta_effect = {
+			text = {
+				[CARD]_calculate = yes
+			}
+			CARD = "[?GER_card_played:card_id.GetTokenKey]"
+		}
+	}
+}
+
+GER_bm_cardgame_basic_stats_calculate = {
+	var:GER_card_played = {
+		if = {
+			limit = {
+				has_variable = card_investment_value
+			}
+
+			set_temp_variable = { GER_investment_effect = card_investment_value }
+			set_temp_variable = { investment_multiplier = GER.GER_investment_bonus_factor }
+			add_to_temp_variable = { stability_multiplier = GER.GER_investment_perm_bonus_factor }
+			multiply_temp_variable = { GER_investment_effect = investment_multiplier }
+		}
+		if = {
+			limit = {
+				has_variable = card_stability_value
+			}
+
+			set_temp_variable = { GER_stability_effect = card_stability_value }
+			set_temp_variable = { stability_multiplier = GER.GER_stability_bonus_factor }
+			add_to_temp_variable = { stability_multiplier = GER.GER_stability_perm_bonus_factor }
+			multiply_temp_variable = { GER_stability_effect = stability_multiplier }
+		}
+		if = {
+			limit = {
+				has_variable = card_draw_value
+			}
+			set_temp_variable = { GER_cards_to_draw = card_draw_value }
+		}
+		if = {
+			limit = {
+				has_variable = card_draw_from_discard
+			}
+			set_temp_variable = { GER_cards_to_draw_from_discard = card_draw_from_discard }
+		}
+		if = {
+			limit = {
+				has_variable = card_debt_value
+			}
+			set_temp_variable = { GER_debt_effect = card_debt_value }
+		}
+	}
+
+	if = {
+		limit = {
+			check_variable = { GER_crisis_id = GER_card_played:GER_card_type }
+		}
+
+		multiply_temp_variable = { GER_investment_effect = 1.5 }
+		multiply_temp_variable = { GER_stability_effect = 1.5 }
+		set_temp_variable = { GER_bm_cardgame_line_number_extra = GER_card_played:card_lines_for_tt_extra }
+	}
+}
+
+GER_bm_cardgame_fireside_chat_calculate = {
+
+	if = {
+		limit = {
+			has_country_flag = GER_played_reform_card_this_turn
+		}
+		set_temp_variable = { extra_lines_for_tt = 1 }
+	}
+}
+
+GER_bm_cardgame_eastern_assistance_calculate = {
+
+	set_temp_variable = { GER_number_of_mee_countries = 0 }
+	if = {
+		limit = {
+			BAT = {
+				GER_is_in_mitteleuropa = yes
+			}
+		}
+		add_to_temp_variable = { GER_number_of_mee_countries = 1 }
+	}
+	if = {
+		limit = {
+			LIT = {
+				GER_is_in_mitteleuropa = yes
+			}
+		}
+		add_to_temp_variable = { GER_number_of_mee_countries = 1 }
+	}
+	if = {
+		limit = {
+			POL = {
+				GER_is_in_mitteleuropa = yes
+			}
+		}
+		add_to_temp_variable = { GER_number_of_mee_countries = 1 }
+	}
+	if = {
+		limit = {
+			WHR = {
+				GER_is_in_mitteleuropa = yes
+			}
+		}
+		add_to_temp_variable = { GER_number_of_mee_countries = 1 }
+	}
+	if = {
+		limit = {
+			UKR = {
+				GER_is_in_mitteleuropa = yes
+			}
+		}
+		add_to_temp_variable = { GER_number_of_mee_countries = 1 }
+	}
+	if = {
+		limit = {
+			EST = {
+				GER_is_in_mitteleuropa = yes
+			}
+		}
+		add_to_temp_variable = { GER_number_of_mee_countries = 1 }
+	}
+	if = {
+		limit = {
+			FIN = {
+				GER_is_in_mitteleuropa = yes
+			}
+		}
+		add_to_temp_variable = { GER_number_of_mee_countries = 1 }
+	}
+	if = {
+		limit = {
+			GEO = {
+				GER_is_in_mitteleuropa = yes
+			}
+		}
+		add_to_temp_variable = { GER_number_of_mee_countries = 1 }
+	}
+
+	set_temp_variable = { GER_investment_effect = GER_card_played:card_investment_value }
+	multiply_temp_variable = { GER_investment_effect = GER_number_of_mee_countries }
+	multiply_temp_variable = { GER_investment_effect = GER_investment_bonus_factor?1 }
+	multiply_temp_variable = { GER_investment_effect = GER_investment_perm_bonus_factor?1 }
+
+	set_temp_variable = { GER_stability_effect = GER_card_played:card_stability_value }
+	multiply_temp_variable = { GER_stability_effect = GER_number_of_mee_countries }
+	multiply_temp_variable = { GER_stability_effect = GER_stability_bonus_factor?1 }
+	multiply_temp_variable = { GER_stability_effect = GER_stability_perm_bonus_factor?1 }
+}
+
+GER_bm_cardgame_rathenauplan_calculate = {
+
+	set_temp_variable = { GER_cards_to_draw = GER_rathenauplan_draw }
+}
+
+GER_bm_cardgame_tbplan_calculate = {
+
+	set_temp_variable = { GER_cards_to_draw = GER_tbplan_draw }
+}
+
+GER_bm_cardgame_corporate_assistance_calculate = {
+	if = {
+		limit = {
+			check_variable = { GER_bm_cardgame_discard_array^num < GER_cards_to_draw_from_discard }
+		}
+
+		add_to_temp_variable = { extra_lines_for_tt = 2 }
+	}
+}
+
+GER_bm_trade_union_collaboration_calculate = {
+	set_temp_variable = { GER_trade_union_dealt = GER_investment }
+	multiply_temp_variable = { GER_trade_union_dealt = 0.5 }
+
+	set_temp_variable = { GER_stability_effect = GER_trade_union_dealt }
+}
+
 GER_bm_cardgame_lines_calculate = {
 
 	if = {
@@ -691,7 +890,7 @@ GER_bm_cardgame_lines_calculate = {
 
 		set_temp_variable = { GER_bm_cardgame_line_number = GER_card_played:card_lines_for_tt }
 		add_to_temp_variable = { GER_bm_cardgame_line_number = GER_card_played:GER_bm_cardgame_line_number_extra }
-		add_to_temp_variable = { GER_bm_cardgame_line_number = extra_lines_for_tt } # can be setup in scripted trigger
+		add_to_temp_variable = { GER_bm_cardgame_line_number = extra_lines_for_tt } # can be setup in _calculate scripted effect
 
 		meta_effect = {
 			text = {
@@ -1701,11 +1900,7 @@ GER_democratic_union_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 3.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 3.id } } }
 					add_to_array = { GER.democratic_union_members_array = 3.id }
 					add_to_variable = { GER_democratic_union_seats = GER_LVP_seats_l }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1722,11 +1917,7 @@ GER_democratic_union_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 4.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 4.id } } }
 					add_to_array = { GER.democratic_union_members_array = 4.id }
 					add_to_variable = { GER_democratic_union_seats = GER_LVP_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1743,11 +1934,7 @@ GER_democratic_union_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 5.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 5.id } } }
 					add_to_array = { GER.democratic_union_members_array = 5.id }
 					add_to_variable = { GER_democratic_union_seats = GER_liberal_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1761,11 +1948,7 @@ GER_democratic_union_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 7.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 7.id } } }
 					add_to_array = { GER.democratic_union_members_array = 7.id }
 					add_to_variable = { GER_democratic_union_seats = GER_polish_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1779,11 +1962,7 @@ GER_democratic_union_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 8.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 8.id } } }
 					add_to_array = { GER.democratic_union_members_array = 8.id }
 					add_to_variable = { GER_democratic_union_seats = GER_Zentrum_seats_l }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1800,11 +1979,7 @@ GER_democratic_union_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 9.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 9.id } } }
 					add_to_array = { GER.democratic_union_members_array = 9.id }
 					add_to_variable = { GER_democratic_union_seats = GER_Zentrum_seats_c }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1821,11 +1996,7 @@ GER_democratic_union_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 10.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 10.id } } }
 					add_to_array = { GER.democratic_union_members_array = 10.id }
 					add_to_variable = { GER_democratic_union_seats = GER_Zentrum_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1842,11 +2013,7 @@ GER_democratic_union_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 5.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 5.id } } }
 					add_to_array = { GER.democratic_union_members_array = 5.id }
 					add_to_variable = { GER_democratic_union_seats = GER_Guelph_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1863,11 +2030,7 @@ GER_democratic_union_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 11.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 11.id } } }
 					add_to_array = { GER.democratic_union_members_array = 11.id }
 					add_to_variable = { GER_democratic_union_seats = GER_agrarian_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1888,11 +2051,7 @@ GER_swr_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 12.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 12.id } } }
 					add_to_array = { GER.swr_coalition_members_array = 12.id }
 					add_to_variable = { GER_swr_coalition_seats = GER_DkP_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1909,11 +2068,7 @@ GER_swr_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 11.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 11.id } } }
 					add_to_array = { GER.swr_coalition_members_array = 11.id }
 					add_to_variable = { GER_swr_coalition_seats = GER_agrarian_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1927,11 +2082,7 @@ GER_swr_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 10.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 10.id } } }
 					add_to_array = { GER.swr_coalition_members_array = 10.id }
 					add_to_variable = { GER_swr_coalition_seats = GER_Zentrum_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1948,11 +2099,7 @@ GER_swr_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 5.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 5.id } } }
 					add_to_array = { GER.swr_coalition_members_array = 5.id }
 					add_to_variable = { GER_swr_coalition_seats = GER_Guelph_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1969,11 +2116,7 @@ GER_swr_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 9.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 9.id } } }
 					add_to_array = { GER.swr_coalition_members_array = 9.id }
 					add_to_variable = { GER_swr_coalition_seats = GER_Zentrum_seats_c }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -1995,11 +2138,7 @@ GER_swr_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 6.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 6.id } } }
 					add_to_array = { GER.swr_coalition_members_array = 6.id }
 					add_to_variable = { GER_swr_coalition_seats = GER_liberal_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -2016,11 +2155,7 @@ GER_swr_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 8.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 8.id } } }
 					add_to_array = { GER.swr_coalition_members_array = 8.id }
 					add_to_variable = { GER_swr_coalition_seats = GER_Zentrum_seats_l }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -2037,11 +2172,7 @@ GER_swr_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 7.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 7.id } } }
 					add_to_array = { GER.swr_coalition_members_array = 7.id }
 					add_to_variable = { GER_swr_coalition_seats = GER_polish_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -2058,11 +2189,7 @@ GER_swr_alignment_effect = {
 					}
 				}
 				if = {
-					limit = {
-						is_in_array = { GER.protected_factions_array = 4.id }
-					}
-				}
-				else = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 4.id } } }
 					add_to_array = { GER.swr_coalition_members_array = 4.id }
 					add_to_variable = { GER_swr_coalition_seats = GER_LVP_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
@@ -3663,17 +3790,13 @@ GER_democratic_resistance_event = {
 		10 = {
 			modifier = {
 				factor = 0
-				AND = {
-					GER_is_swr_path = yes
-					has_country_flag = GER_zentrum_right_chairman
-				}
+				GER_is_swr_path = yes
+				has_country_flag = GER_zentrum_right_chairman
 			}
 			modifier = {
 				factor = 0
-				AND = {
-					GER_is_schleicher_path = yes
-					has_country_flag = GER_zentrum_centre_chairman
-				}
+				GER_is_schleicher_path = yes
+				has_country_flag = GER_zentrum_centre_chairman
 			}
 			if = {
 				limit = {
@@ -3730,17 +3853,13 @@ GER_democratic_resistance_event = {
 		10 = {
 			modifier = {
 				factor = 0
-				AND = {
-					GER_is_swr_path = yes
-					has_country_flag = GER_zentrum_right_chairman
-				}
+				GER_is_swr_path = yes
+				has_country_flag = GER_zentrum_right_chairman
 			}
 			modifier = {
 				factor = 0
-				AND = {
-					GER_is_schleicher_path = yes
-					has_country_flag = GER_zentrum_centre_chairman
-				}
+				GER_is_schleicher_path = yes
+				has_country_flag = GER_zentrum_centre_chairman
 			}
 			if = {
 				limit = {
@@ -3797,17 +3916,13 @@ GER_democratic_resistance_event = {
 		10 = {
 			modifier = {
 				factor = 0
-				AND = {
-					GER_is_swr_path = yes
-					has_country_flag = GER_zentrum_right_chairman
-				}
+				GER_is_swr_path = yes
+				has_country_flag = GER_zentrum_right_chairman
 			}
 			modifier = {
 				factor = 0
-				AND = {
-					GER_is_schleicher_path = yes
-					has_country_flag = GER_zentrum_centre_chairman
-				}
+				GER_is_schleicher_path = yes
+				has_country_flag = GER_zentrum_centre_chairman
 			}
 			if = {
 				limit = {
@@ -4834,9 +4949,7 @@ GER_spawn_five_ships = {
 	if = {
 		limit = { has_dlc_mtg = yes }
 		if = {
-			limit = { has_tech = improved_ship_hull_light }
-		}
-		else = {
+			limit = { NOT = { has_tech = improved_ship_hull_light } }
 			custom_effect_tooltip = Fletcher_tech_unlock_tt
 			hidden_effect = {
 				set_technology = { improved_ship_hull_light = 1 }
@@ -4956,13 +5069,9 @@ GER_spawn_five_ships = {
 	}
 	else = {
 		if = {
-			limit = { has_tech = improved_destroyer }
-		}
-		else = {
+			limit = { NOT = { has_tech = improved_destroyer } }
 			custom_effect_tooltip = Fletcher_tech_unlock_tt
-			hidden_effect = {
-				set_technology = { improved_destroyer = 1 }
-			}
+			hidden_effect = { set_technology = { improved_destroyer = 1 } }
 		}
 
 		create_ship = { type = destroyer_3 equipment_variant = "Advanced Destroyer" creator = GER name = "Frankfurt" }
@@ -5005,20 +5114,17 @@ GER_USA_militias_spawn_effect = {
 		}
 	}
 	random_owned_controlled_state = {
+		limit = { valid_state_for_spawning_friendly_unit = yes }
 		create_unit = {
 			division = "name = \"1. German-American Self-Defense Division\" division_template = \"German Militia Division\" start_experience_factor = 0.3"
 			allow_spawning_on_enemy_provs = no
 			owner = PREV
 		}
-	}
-	random_owned_controlled_state = {
 		create_unit = {
 			division = "name = \"2. German-American Self-Defense Division\" division_template = \"German Militia Division\" start_experience_factor = 0.3"
 			allow_spawning_on_enemy_provs = no
 			owner = PREV
 		}
-	}
-	random_owned_controlled_state = {
 		create_unit = {
 			division = "name = \"3. German-American Self-Defense Division\" division_template = \"German Militia Division\" start_experience_factor = 0.3"
 			allow_spawning_on_enemy_provs = no
@@ -5085,3 +5191,118 @@ GER_remove_grip_decisions = {
 	}
 }
 
+GER_nullification_zentrum_right_tooltip = {
+	if = {
+		limit = { GER_nullification_zentrum_right_aligned = yes }
+		custom_effect_tooltip = GER_null_zentrum_right_tt
+	}
+}
+GER_nullification_zentrum_opposed_tooltip = {
+	if = {
+		limit = { GER_nullification_zentrum_right_not_aligned = yes }
+		custom_effect_tooltip = GER_null_zentrum_opposed_tt
+	}
+}
+GER_nullification_cooperative_tooltip = {
+	if = {
+		limit = { GER_nullification_schleicher_centralisation_once = no }
+		custom_effect_tooltip = GER_null_cooperative_tt
+	}
+}
+GER_nullification_aggressive_tooltip = {
+	if = {
+		limit = { GER_nullification_schleicher_centralisation_twice = yes }
+		custom_effect_tooltip = GER_null_aggressive_tt
+	}
+}
+GER_nullification_aggressive_front_tooltip = {
+	if = {
+		limit = { GER_nullification_schleicher_centralisation_twice = yes }
+		custom_effect_tooltip = GER_null_aggressive_tt
+		if = {
+			limit = { GER_nullification_national_unity_front = yes }
+			custom_effect_tooltip = GER_null_aggressive_front_tt
+		}
+	}
+}
+GER_nullification_passive_front_tooltip = {
+	if = {
+		limit = { GER_nullification_national_unity_front = yes }
+		custom_effect_tooltip = GER_null_passive_front_tt
+	}
+}
+GER_nullification_passive_front_not_agressive_tooltip = {
+	if = {
+		limit = {
+			GER_nullification_national_unity_front = yes
+			GER_nullification_schleicher_centralisation_once = no
+		}
+		custom_effect_tooltip = GER_null_passive_front_tt
+	}
+}
+GER_nullification_front_hated_tooltip = {
+	if = {
+		limit = { GER_nullification_national_unity_front = yes }
+		custom_effect_tooltip = GER_null_front_hated_tt
+	}
+}
+GER_nullification_spd_friendship_tooltip = {
+	if = {
+		limit = { GER_nullification_spd_friendship = yes }
+		custom_effect_tooltip = GER_null_spd_friendship_tt
+	}
+}
+GER_nullification_spd_hated_tooltip = {
+	if = {
+		limit = { GER_nullification_spd_friendship = yes }
+		custom_effect_tooltip = GER_null_spd_hated_tt
+	}
+}
+GER_nullification_dvlp_friendship_tooltip = {
+	if = {
+		limit = { GER_nullification_dvlp_friendship = yes }
+		custom_effect_tooltip = GER_null_dvlp_friendship_tt
+	}
+}
+GER_nullification_military_oversight_tooltip = {
+	if = {
+		limit = { GER_nullification_military_oversight = yes }
+		custom_effect_tooltip = GER_null_military_oversight_tt
+	}
+}
+GER_nullification_secret_police_tooltip = {
+	if = {
+		limit = { has_completed_focus = GER_nationalise_prussian_secret_police }
+		custom_effect_tooltip = GER_null_secret_police_tt
+	}
+}
+GER_nullification_authoritarian_luxembourg_tooltip = {
+	if = {
+		limit = { GER_nullification_authoritarian_luxembourg = yes }
+		custom_effect_tooltip = GER_null_authoritarian_luxembourg_tt
+	}
+}
+GER_nullification_thyssen_pact_tooltip = {
+	if = {
+		limit = { GER_nullification_thyssen_pact = yes }
+		custom_effect_tooltip = GER_null_thyssen_pact_tt
+	}
+}
+GER_nullification_thyssen_pact_hated_tooltip = {
+	if = {
+		limit = { GER_nullification_thyssen_pact = yes }
+		custom_effect_tooltip = GER_null_thyssen_pact_hated_tt
+	}
+}
+GER_nullification_reichsexecution_successful_tooltip = {
+	if = {
+		limit = { GER_nullification_reichsexecution_successful = yes }
+		custom_effect_tooltip = GER_null_reichexec_successful_tt
+	}
+}
+GER_nullification_reichsexecution_unsuccessful_tooltip = {
+	if = {
+		limit = { GER_nullification_reichsexecution_unsuccessful = yes }
+		custom_effect_tooltip = GER_null_reichexec_unsuccessful_tt
+	}
+}
