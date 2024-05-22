@@ -240,21 +240,6 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 				is_subject = no
 				is_in_faction = no
 				if = {
-					limit = {
-						tag = ITA
-						has_government = national_populist
-					}
-					ROOT = {
-						has_dictatorship_government = yes
-					}
-				}
-				else = {
-					OR = {
-						NOT = { has_government = national_populist }
-						ROOT = { has_government = national_populist }
-					}
-				}
-				if = {
 					limit = { tag = LOM }
 					NOT = { country_exists = VNC }
 				}
@@ -3200,10 +3185,6 @@ ITA_resorgimento_decisions = {
 		}
 
 		visible = {
-			OR = {
-				has_democratic_government = yes
-				has_government = national_populist
-			}
 			NOT = {
 				country_exists = SRI
 				SIC = {
@@ -3226,9 +3207,7 @@ ITA_resorgimento_decisions = {
 					has_country_flag = ITA_refuse_join_@ROOT
 					has_country_flag = { flag = ITA_considering_invite_@FROM value > 0 }	# ROOT cannot invite FROM if it is doing so already
 					is_justifying_wargoal_against = ROOT
-					any_enemy_country = {
-						is_italian_tag = yes
-					}
+					any_enemy_country = { is_italian_tag = yes }
 				}
 			}
 		}
@@ -3238,17 +3217,18 @@ ITA_resorgimento_decisions = {
 		}
 
 		targets = { SRD SIC PAP VNC EMI TUS LOM }
-
 		target_trigger = {
+			if = {
+				limit = { has_government = national_populist }
+				FROM = { has_dictatorship_government = yes }
+			}
 			FROM = {
 				is_subject = no
 				has_socialist_government = no
 				NOT = {
 					has_country_flag = ITA_refuse_join_@ROOT
 					is_justifying_wargoal_against = ROOT
-					any_enemy_country = {
-						is_italian_tag = yes
-					}
+					any_enemy_country = { is_italian_tag = yes }
 				}
 			}
 		}
@@ -3290,48 +3270,73 @@ ITA_resorgimento_decisions = {
 
 	SRD_attack_italy = {
 		icon = generic_prepare_civil_war
+
 		allowed = { always = no }
 
 		available = {
-			controls_all_owned_states = yes
+			NOT = { country_exists = SRI }
 			FROM = { has_capitulated = no }
 		}
 
 		visible = {
 			can_declare_war_on = FROM
-			NOT = {
-				FROM = { has_country_flag = ITA_considering_invite_@FROM }	# ROOT will not attack anyone if it is currently inviting someone
-			}
+			NOT = { FROM = { has_country_flag = ITA_considering_invite_@FROM } } # ROOT will not attack anyone if it is currently inviting someone
 			is_subject = no
-			SRI = {
-				exists = no
-			}
-			OR = {
-				FROM = {
-					is_in_faction = no
-				}
-				has_cosmetic_tag = SRD_ITA
-				has_country_flag = SIC_confed
-				has_country_flag = SIC_empire
-				is_ai = no
-			}
 		}
 
-		fire_only_once = no
+		target_trigger = {
+			can_declare_war_on = FROM
+			is_subject = no
+		}
+
 		cost = 0
+		fire_only_once = no
 
 		ai_will_do = {
 			factor = 1
+			modifier = {
+				factor = 0
+				country_is_in_dangerous_war = yes
+			}
+			modifier = {
+				factor = 0
+				FROM = { default_attack_AI_trigger = yes }
+			}
+			modifier = {
+				factor = 0
+				NOT = { has_global_flag = second_weltkrieg_has_started }
+				FROM = {
+					OR = {
+						is_in_faction = yes
+						AND = {
+							is_subject = yes
+							overlord = { is_italian_tag = no }
+						}
+						AND = {
+							has_guarantor = yes
+							any_of_scopes = {
+								array = guarantor_array
+								has_guaranteed = PREV
+								is_italian_tag = no
+							}
+						}
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				FROM = { original_tag = SRD }
+				any_neighbor_country = {
+					is_italian_tag = yes
+					has_capitulated = no
+				}
+			}
 			modifier = {
 				factor = 0
 				OR = {
 					has_country_flag = { flag = ITA_currently_inviting value > 0 }	# ROOT will not attack anyone if it is currently inviting someone
 					has_country_flag = ITA_considering_invite_@ROOT					# ROOT will not attack anyone if it is currently being invited
 				}
-			}
-			modifier = {
-				factor = 0
-				is_in_faction_with = FROM
 			}
 			modifier = {
 				factor = 0
@@ -3379,71 +3384,6 @@ ITA_resorgimento_decisions = {
 					NOT = { has_country_flag = ITA_refuse_join_@ROOT }
 				}
 			}
-			modifier = {
-				factor = 0
-				FROM = {
-					tag = PAP
-					OR = {
-						is_subject_of = SIC
-						is_guaranteed_by = SIC
-						AND = {
-							is_subject = no
-							has_war = no
-						}
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				FROM = {
-					OR = {
-						is_in_faction_with = ENT
-						is_in_faction_with = GER
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				OR = {
-					has_war = yes
-					strength_ratio = { tag = FROM ratio < 0.75 }
-					# neither of us is in a faction and FROM is stronger
-					AND = {
-						FROM = {
-							is_in_faction = no
-							is_subject = no
-						}
-						is_in_faction = no
-						strength_ratio = { tag = FROM ratio < 1.0 }
-					}
-					# they're in a faction which is not at war
-					FROM = {
-						OR = {
-							is_in_faction = yes
-							is_subject = yes
-						}
-						has_war = no
-					}
-					# they're in a faction which is at war but not with a major and not losing
-					FROM = {
-						is_in_faction = yes
-						has_war = yes
-						NOT = {
-							any_enemy_country = {
-								OR = {
-									tag = GER
-									tag = AUS
-									tag = FRA
-								}
-							}
-							surrender_progress > 0.10
-							faction_leader = {
-								surrender_progress > 0.20
-							}
-						}
-					}
-				}
-			}
 		}
 
 		complete_effect = {
@@ -3467,24 +3407,18 @@ ITA_resorgimento_decisions = {
 
 		available = {
 			has_completed_focus = PAP_renewed_impetus
-			if = {
-				limit = { has_global_flag = KR_italy_balance }
-				has_war = no
-			}
-			else = {
-				controls_all_owned_states = yes
-			}
+			is_neighbor_of = FROM
 		}
 
 		visible = {
 			has_government = national_populist
 			can_declare_war_on = FROM
 			is_subject = no
-			is_neighbor_of = FROM
 		}
 
-		fire_only_once = yes
 		cost = 0
+		fire_only_once = yes
+
 		ai_will_do = {
 			factor = 50
 			modifier = {
@@ -3494,45 +3428,11 @@ ITA_resorgimento_decisions = {
 			}
 			modifier = {
 				factor = 0
-				OR = {
-					has_war = yes
-					strength_ratio = { tag = FROM ratio < 0.75 }
-					# neither of us is in a faction and FROM is stronger
-					AND = {
-						FROM = {
-							is_in_faction = no
-							is_subject = no
-						}
-						is_in_faction = no
-						strength_ratio = { tag = FROM ratio < 1.0 }
-					}
-					# they're in a faction which is not at war
-					FROM = {
-						OR = {
-							is_in_faction = yes
-							is_subject = yes
-						}
-						has_war = no
-					}
-					# they're in a faction which is at war but not with a major and not losing
-					FROM = {
-						is_in_faction = yes
-						has_war = yes
-						NOT = {
-							any_enemy_country = {
-								OR = {
-									tag = GER
-									tag = AUS
-									tag = FRA
-								}
-							}
-							surrender_progress > 0.10
-							faction_leader = {
-								surrender_progress > 0.20
-							}
-						}
-					}
-				}
+				country_is_in_dangerous_war = yes
+			}
+			modifier = {
+				factor = 0
+				FROM = { default_attack_AI_trigger = yes }
 			}
 		}
 

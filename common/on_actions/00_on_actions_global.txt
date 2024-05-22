@@ -639,10 +639,22 @@ on_actions = {
 				if = {
 					limit = {
 						impassable = yes
-						NOT = { is_controlled_by = owner }
-						NOT = { controller = { has_war_with = PREV.owner } }
+						NOT = { is_owned_by = XXA } #== system tag
 					}
-					set_state_controller_to = owner
+					if = {
+						limit = { has_variable = paired_impassable }
+						if = {
+							limit = { NOT = { is_controlled_by = paired_impassable:controller } }
+							set_state_controller_to = paired_impassable:controller
+						}
+					}
+					else_if = {
+						limit = {
+							NOT = { is_controlled_by = owner }
+							NOT = { controller = { has_war_with = PREV.owner } }
+						}
+						set_state_controller_to = owner
+					}
 				}
 			}
 
@@ -938,8 +950,14 @@ on_actions = {
 					every_state = { remove_claim_by = FROM }
 				}
 
-				#clear embargo flags
-				every_possible_country = { clear_embargo_PREV = yes }
+				every_possible_country = {
+					#clear embargo flags
+					clear_embargo_PREV = yes
+
+					#clear volunteers
+					clear_volunteers_to_PREV = yes
+					PREV = { clear_volunteers_to_PREV = yes }
+				}
 			}
 			recheck_annexations = yes
 
@@ -1031,6 +1049,7 @@ on_actions = {
 						}
 
 						#exceptions
+						has_cosmetic_tag = CAN_entente
 						has_cosmetic_tag = IRE_monarchist
 						has_cosmetic_tag = IRE_monarchist_gael
 						has_cosmetic_tag = POL_AUS_kingdom
@@ -1579,6 +1598,7 @@ on_actions = {
 				clr_global_flag = pc_has_non_subject_winner
 				clear_array = global.pc_winners_array
 				clear_array = global.pc_losers_array
+
 				every_country = { recheck_annexations = yes }
 			}
 
@@ -1963,6 +1983,15 @@ on_actions = {
 				clr_country_flag = KR_independence_war
 				clr_country_flag = KR_independence_refused
 			}
+		}
+	}
+
+	#used when forcing government change in a peace conference
+	#ROOT = nation having the government changed, FROM = overlord
+	on_force_government = {
+		effect = {
+			log = "[GetDateText] [Root.GetName] on_force_government FROM = [From.GetName]"
+			set_country_flag = pc_forced_government
 		}
 	}
 
