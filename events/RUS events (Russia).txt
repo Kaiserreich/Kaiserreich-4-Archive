@@ -6579,26 +6579,17 @@ country_event = { #GER gets event
 	option = { #Yes
 		log = "[GetLogInfo]: event rusfor.1302 option rusfor.1302.a"
 		name = rusfor.1302.a
+		log = "KR_Event_Logging;RUS FALLS;[GetDateText]"
 		RUS = {
-			### dismantle the Moscow Accord
-			if = {
-				limit = { is_faction_leader = yes }
+			### notify every ally of the peace
+			hidden_effect = {
 				every_other_country = {
-					limit = {
-						is_in_faction_with = PREV
-						is_subject = no
-						OR = {
-							is_in_europe = yes
-							has_capitulated = yes
-						}
-					}
-					leave_faction = yes
+					limit = { is_ally_with = PREV }
 					country_event = russia.1901
 				}
 			}
-			else = {
-				leave_faction = yes
-			}
+
+			### remove all capitulated or European allies
 			every_subject_country = {
 				limit = {
 					OR = {
@@ -6613,6 +6604,18 @@ country_event = { #GER gets event
 					}
 				}
 			}
+			every_other_country = {
+				limit = {
+					is_in_faction_with = PREV
+					OR = {
+						is_in_europe = yes
+						has_capitulated = yes
+					}
+				}
+				leave_faction = yes
+			}
+
+			### peace them out and add truces/NAPs
 			custom_effect_tooltip = tooltip_white_line
 			every_enemy_country = {
 				limit = {
@@ -6646,9 +6649,14 @@ country_event = { #GER gets event
 					}
 				}
 			}
+
+			### dismantle the Moscow Accord
 			if = {
 				limit = { is_faction_leader = yes }
 				dismantle_faction = yes
+			}
+			else = {
+				leave_faction = yes
 			}
 
 			### ideas and laws
@@ -6986,7 +6994,7 @@ country_event = { #GER gets event
 				resources = { oil }
 			}
 
-			### remove all puppets
+			### remove all puppets and guarantees
 			every_subject_country = {
 				limit = {
 					is_in_europe = no
@@ -6994,13 +7002,9 @@ country_event = { #GER gets event
 				}
 				remove_puppet_and_leave_faction = yes
 			}
-			hidden_effect = { country_event = { id = rusfor.1307 days = 30 random_days = 30 } }
-			RUS = {
-				activate_targeted_decision = { target = GER decision = RUS_restart_war_against_germany }
-			}
-			every_country = {
-				limit = { is_guaranteed_by = RUS }
-				RUS = {
+			every_other_country = {
+				limit = { is_guaranteed_by = PREV }
+				PREV = {
 					diplomatic_relation = {
 						country = PREV
 						relation = guarantee
@@ -7008,26 +7012,38 @@ country_event = { #GER gets event
 					}
 				}
 			}
-		}
-		give_guarantee = RUS
-		if = {
-			limit = {
-				has_war_with = INT
-				INT = {
-					surrender_progress < 0.1
-					is_faction_leader = yes
-					OR = {
-						original_tag = ENG
-						is_in_europe = no
-					}
+			every_other_country = {
+				limit = { has_guaranteed = PREV }
+				diplomatic_relation = {
+					country = PREV
+					relation = guarantee
+					active = no
 				}
 			}
+
+			### post-war government change
 			hidden_effect = {
-				news_event = { id = russianews.13 days = 2 }
+				country_event = { id = rusfor.1307 days = 30 random_days = 30 }
+				activate_targeted_decision = { target = GER decision = RUS_restart_war_against_germany }
 			}
 		}
-		log = "KR_Event_Logging;RUS FALLS;[GetDateText]"
-		hidden_effect = { RUS_fire_next_moscow_treaty_event_no_rp = yes }
+		hidden_effect = {
+			if = {
+				limit = {
+					has_war_with = INT
+					INT = {
+						surrender_progress < 0.1
+						is_faction_leader = yes
+						OR = {
+							original_tag = ENG
+							is_in_europe = no
+						}
+					}
+				}
+				news_event = { id = russianews.13 days = 2 }
+			}
+			RUS_fire_next_moscow_treaty_event_no_rp = yes
+		}
 	}
 }
 
