@@ -5639,21 +5639,21 @@ country_event = { #Russian claims FIN
 	desc = {
 		text = rusfor.1229.d.FIN_default
 		trigger = {
-			tag = FIN
+			tag = event_target:karelia
 			NOT = { FROM = { has_country_flag = RUS_alliance_refused_@ROOT } }
 		}
 	}
 	desc = {
 		text = rusfor.1229.d.FIN_refused_alliance
 		trigger = {
-			tag = FIN
+			tag = event_target:karelia
 			FROM = { has_country_flag = RUS_alliance_refused_@ROOT }
 		}
 	}
 	desc = {
 		text = rusfor.1229.d.FIN_overlord
 		trigger = {
-			NOT = { tag = FIN }
+			NOT = { tag = event_target:karelia }
 		}
 	}
 
@@ -5689,7 +5689,7 @@ country_event = { #Russian claims FIN
 		}
 		add_political_power = -150
 		effect_tooltip = {
-			FIN = {
+			event_target:karelia = {
 				every_owned_state = {
 					limit = {
 						OR = {
@@ -5703,7 +5703,7 @@ country_event = { #Russian claims FIN
 			}
 		}
 		if = {
-			limit = { tag = FIN }
+			limit = { tag = event_target:karelia }
 			custom_effect_tooltip = received_equipment_5000
 			add_one_random_civilian_factory = yes
 		}
@@ -5745,7 +5745,7 @@ country_event = { #Transfer of the territory
 		log = "[GetLogInfo]: event rusfor.1231 option rusfor.1231.a"
 		name = rusfor.1231.a #Another victory for Russian diplomacy!
 		remove_decision = RUS_Demand_Karelia
-		FIN = {
+		event_target:karelia = {
 			every_owned_state = {
 				limit = {
 					OR = {
@@ -5762,7 +5762,7 @@ country_event = { #Transfer of the territory
 			}
 		}
 		if = {
-			limit = { FROM = { tag = FIN } }
+			limit = { FROM = { tag = event_target:karelia } }
 			send_equipment = {
 				target = FROM
 				type = infantry_equipment
@@ -5807,21 +5807,21 @@ country_event = { #We've been defeated! FIN
 	is_triggered_only = yes
 
 	trigger = {
-		has_war_with = 219.owner
+		has_war_with = var:global.russia
+		146 = { is_claim_or_core_of_ROOT = yes } #Karelia
 		is_valid_peace_target = yes
-		var:219.owner = {
-			is_russian_tag = yes
+		var:global.russia = {
 			is_valid_peace_target = yes
-			NOT = { any_enemy_country = { is_actual_major = yes } }
+			has_war_with_major = no
 		}
 		OR = {
 			#Finland loses
 			surrender_progress > 0.2
 			#Finland wins
-			var:219.owner = { surrender_progress > 0.1 }
+			var:global.russia = { surrender_progress > 0.1 }
 			AND = {
 				controls_state = 195 #Petrograd
-				var:219.owner = { surrender_progress > 0.2 }
+				var:global.russia = { surrender_progress > 0.2 }
 			}
 			AND = {
 				controls_state = 213 #Murmansk
@@ -5849,7 +5849,7 @@ country_event = { #We've been defeated! FIN
 		trigger = {
 			NOT = { has_global_flag = RUS_defeated_by_FIN }
 		}
-		var:219.owner = {
+		var:global.russia = {
 			country_event = { id = rusfor.1233 random_hours = 24 days = 1 }
 		}
 	}
@@ -5858,7 +5858,7 @@ country_event = { #We've been defeated! FIN
 		log = "[GetLogInfo]: event rusfor.1232 option rusfor.1232.b"
 		name = rusfor.1232.b #Let us end this war.
 		trigger = { has_global_flag = RUS_defeated_by_FIN }
-		var:219.owner = {
+		var:global.russia = {
 			country_event = { id = rusfor.1233 random_hours = 24 days = 1 }
 		}
 	}
@@ -6067,23 +6067,22 @@ country_event = { #ROM-RUS peace deal
 	}
 
 	is_triggered_only = yes
-	fire_only_once = yes
 
 	trigger = {
-		tag = ROM
-		has_war_with = RUS
+		has_war_with = var:global.russia
+		has_global_flag = RUS_war_for_bessarabia
 		owns_state = 78 #Bessarabia
 		is_valid_peace_target = yes
-		RUS = { is_valid_peace_target = yes }
+		var:global.russia = { is_valid_peace_target = yes }
 		OR = {
 			#Romania loses
 			surrender_progress > 0.25
-			RUS = {
+			var:global.russia = {
 				controls_state = 78 #Bessarabia
 				controls_state = 79 #Moldavia
 			}
 			#Romania wins
-			RUS = { surrender_progress > 0.15 }
+			var:global.russia = { surrender_progress > 0.15 }
 			controls_state = 202 #Kiev
 			controls_state = 226 #Ekaterinoslav
 			AND = {
@@ -6100,12 +6099,13 @@ country_event = { #ROM-RUS peace deal
 	}
 
 	immediate = {
+		clr_global_flag = RUS_war_for_bessarabia
 		set_global_flag = { flag = RUS_ROM_offered_peace days = 90 value = 1 }
 		if = {
 			limit = {
 				NOT = {
 					surrender_progress > 0.25
-					RUS = {
+					var:global.russia = {
 						controls_state = 78 #Bessarabia
 						controls_state = 79 #Moldavia
 					}
@@ -6121,7 +6121,7 @@ country_event = { #ROM-RUS peace deal
 		trigger = {
 			NOT = { has_global_flag = RUS_defeated_by_ROM }
 		}
-		RUS = {
+		var:global.russia = {
 			country_event = { id = rusfor.1237 days = 1 random_hours = 24 }
 		}
 	}
@@ -6142,7 +6142,7 @@ country_event = { #ROM-RUS peace deal
 		trigger = {
 			has_global_flag = RUS_defeated_by_ROM
 		}
-		RUS = {
+		var:global.russia = {
 			country_event = { id = rusfor.1237 days = 1 random_hours = 24 }
 		}
 	}
@@ -6186,14 +6186,9 @@ country_event = { #Peace with Romania?
 	is_triggered_only = yes
 
 	trigger = {
-		has_global_flag = RUS_war_for_bessarabia
 		is_valid_peace_target = yes
 		has_war_with = FROM
 		FROM = { is_valid_peace_target = yes }
-	}
-
-	immediate = {
-		clr_global_flag = RUS_war_for_bessarabia
 	}
 
 	option = {
@@ -8359,10 +8354,7 @@ country_event = { #RUS/INT offers to join the other side's wars
 		log = "[GetLogInfo]: event russoc.121 option russoc.121.a"
 		name = russoc.121.a
 		every_enemy_country = {
-			limit = {
-				has_offensive_war_with = ROOT
-				NOT = { has_war_with = FROM }
-			}
+			limit = { NOT = { has_war_with = FROM } }
 			FROM = {
 				add_to_war = {
 					targeted_alliance = ROOT
@@ -8391,10 +8383,7 @@ country_event = { #RUS/INT calls the other to its defense
 		name = russoc.122.a
 		FROM = {
 			every_enemy_country = {
-				limit = {
-					has_offensive_war_with = FROM
-					NOT = { has_war_with = ROOT }
-				}
+				limit = { NOT = { has_war_with = ROOT } }
 				ROOT = {
 					add_to_war = {
 						targeted_alliance = FROM
@@ -9200,6 +9189,7 @@ news_event = { #Savinkov Declares Russian State
 		name = russianews.12.g
 		trigger = {
 			original_tag = SER
+			has_socialist_government = no
 		}
 	}
 	option = {

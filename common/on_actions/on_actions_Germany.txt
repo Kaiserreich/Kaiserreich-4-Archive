@@ -20,6 +20,14 @@ on_actions = {
 				}
 			}
 			GER = {
+				### Coalition ###
+				set_temp_variable = { coalition_partner_var = token:authoritarian_democrat }
+				add_to_coalition = yes
+				set_temp_variable = { coalition_partner_var = token:paternal_autocrat }
+				add_to_coalition = yes
+				set_temp_variable = { coalition_partner_var = token:market_liberal }
+				add_to_coalition = yes
+
 				if = {
 					limit = { is_ai = no }
 					country_event = { id = germany_mitteleuropa_events.1000 days = 365 } #Mitteleuropa mechanics
@@ -65,6 +73,13 @@ on_actions = {
 							owner = GER prioritize_location = 3499
 						}
 					}
+				}
+			}
+			every_country = {
+				limit = { has_socialist_government = yes }
+				every_other_country = {
+					limit = { is_ally_with = GER }
+					embargo_PREV = yes
 				}
 			}
 		}
@@ -207,14 +222,24 @@ on_actions = {
 			if = {
 				limit = { has_socialist_government = yes }
 				GER_remove_from_mitteleuropa = yes
-			}
-			else_if = {
-				limit = {
-					has_country_flag = MIT_was_in_mitteleuropa
-					is_ally_with = GER
-					GER = { GER_is_in_mitteleuropa = yes }
+				every_other_country = {
+					limit = { is_ally_with = GER }
+					embargo_ROOT = yes
 				}
-				GER_add_to_mitteleuropa = yes
+			}
+			else = {
+				every_other_country = {
+					limit = { is_ally_with = GER }
+					clear_embargo_ROOT = yes
+				}
+				if = {
+					limit = {
+						has_country_flag = MIT_was_in_mitteleuropa
+						is_ally_with = GER
+						GER = { GER_is_in_mitteleuropa = yes }
+					}
+					GER_add_to_mitteleuropa = yes
+				}
 			}
 			if = {
 				limit = { is_germany_or_splinter_tag = yes }
@@ -259,6 +284,15 @@ on_actions = {
 	#FROM is country getting invited.
 	on_offer_join_faction = {
 		effect = {
+			#Add embargoes
+			if = {
+				limit = { is_ally_with = GER }
+				every_country = {
+					limit = { has_socialist_government = yes }
+					embargo_FROM = yes
+				}
+			}
+
 			#Readd country that was previously in Mitteleuropa if they left and rejoined
 			if = {
 				limit = {
@@ -296,6 +330,19 @@ on_actions = {
 						target = SWE
 						modifier = SWE_trade_war
 					}
+				}
+			}
+		}
+	}
+
+	# FROM = faction leader
+	on_leave_faction = {
+		effect = {
+			if = {
+				limit = { FROM = { is_ally_with = GER } }
+				every_other_country = {
+					limit = { has_socialist_government = yes }
+					clear_embargo_ROOT = yes
 				}
 			}
 		}
@@ -408,6 +455,17 @@ on_actions = {
 					surrender_progress > 0.4
 				}
 				country_event = gerflavour.80
+			}
+			# German capitulation check
+			if = {
+				limit = {
+					FROM = {
+						is_ally_with = GER
+						is_major = yes
+						has_war_with = ROOT
+					}
+				}
+				GER = { country_event = capt.1 }
 			}
 		}
 	}

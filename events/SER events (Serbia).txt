@@ -2611,7 +2611,45 @@ country_event = { #Serbia has disbanded the Pact
 	option = {
 		log = "[GetLogInfo]: event serbia.40 option serbia.40.a"
 		name = serbia.40.a
-		ai_chance = { base = 0 }
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 100
+				OR = {
+					tag = CZE
+					tag = GAL
+					AND = {
+						tag = ROM
+						RUS = { RUS_is_expansionist = yes }
+					}
+					AND = {
+						tag = TUR
+						RUS = { is_monarchy = yes }
+					}
+					RUS = {
+						any_owned_state = { is_claim_or_core_of_ROOT = yes }
+					}
+					AND = {
+						RUS = {
+							is_faction_leader = yes
+							any_allied_country = {
+								any_owned_state = { is_claim_or_core_of_ROOT = yes }
+							}
+						}
+						NOT = { has_completed_focus = BUL_path_to_peace } #Bypass for BUL so they can join SER if theyre already friendly
+					}
+				}
+			}
+			modifier = {
+				add = 100
+				tag = GRE
+				OR = {
+					has_game_rule = { rule = GRE_forpol option = GRE_FORPOL_ENT }
+					has_game_rule = { rule = GRE_forpol option = GRE_FORPOL_AUS }
+					has_game_rule = { rule = GRE_forpol option = GRE_FORPOL_GER }
+				}
+			}
+		}
 		if = {
 			limit = { is_in_tech_sharing_group = balkan_research }
 			remove_from_tech_sharing_group = balkan_research
@@ -4232,40 +4270,58 @@ country_event = { # King Peter reaches maturity
 		activate_advisor = SER_dimitrije_ljotic_sic
 		hidden_effect = {
 			if = {
-				limit = {
-					SER_has_founded_yugoslavia = yes
+				limit = { SER_has_founded_yugoslavia = yes }
+				if = {
+					limit = { has_completed_focus = SER_YUG_anti_partisanship }
+					set_party_name = {
+						ideology = authoritarian_democrat
+						name = SER_YUG_new_royal_paternal_autocrat_party
+						long_name = SER_YUG_new_royal_paternal_autocrat_party_long
+					}
+					set_party_name = {
+						ideology = paternal_autocrat
+						name = SER_YUG_new_royal_paternal_autocrat_party
+						long_name = SER_YUG_new_royal_paternal_autocrat_party_long
+					}
+					set_party_name = {
+						ideology = national_populist
+						name = SER_YUG_new_royal_paternal_autocrat_party
+						long_name = SER_YUG_new_royal_paternal_autocrat_party_long
+					}
 				}
-				set_party_name = {
-					ideology = authoritarian_democrat
-					long_name = SER_YUG_royal_paternal_autocrat_party_long
-					name = SER_YUG_royal_paternal_autocrat_party
-				}
-				set_party_name = {
-					ideology = paternal_autocrat
-					long_name = SER_YUG_royal_paternal_autocrat_party_long
-					name = SER_YUG_royal_paternal_autocrat_party
-				}
-				set_party_name = {
-					ideology = national_populist
-					long_name = SER_YUG_royal_paternal_autocrat_party_long
-					name = SER_YUG_royal_paternal_autocrat_party
+				else = {
+					set_party_name = {
+						ideology = authoritarian_democrat
+						name = SER_YUG_royal_paternal_autocrat_party
+						long_name = SER_YUG_royal_paternal_autocrat_party_long
+					}
+					set_party_name = {
+						ideology = paternal_autocrat
+						name = SER_YUG_royal_paternal_autocrat_party
+						long_name = SER_YUG_royal_paternal_autocrat_party_long
+					}
+					set_party_name = {
+						ideology = national_populist
+						name = SER_YUG_royal_paternal_autocrat_party
+						long_name = SER_YUG_royal_paternal_autocrat_party_long
+					}
 				}
 			}
 			else = {
 				set_party_name = {
 					ideology = national_populist
-					long_name = SER_royal_paternal_autocrat_party_long
 					name = SER_royal_paternal_autocrat_party
+					long_name = SER_royal_paternal_autocrat_party_long
 				}
 				set_party_name = {
 					ideology = paternal_autocrat
-					long_name = SER_royal_paternal_autocrat_party_long
 					name = SER_royal_paternal_autocrat_party
+					long_name = SER_royal_paternal_autocrat_party_long
 				}
 				set_party_name = {
 					ideology = authoritarian_democrat
-					long_name = SER_royal_paternal_autocrat_party_long
 					name = SER_royal_paternal_autocrat_party
+					long_name = SER_royal_paternal_autocrat_party_long
 				}
 			}
 			end_coalition = yes
@@ -4449,6 +4505,23 @@ country_event = { # Nedić Brothers Coup
 		remove_dynamic_modifier = { modifier = YUG_bosnia_dynamic_modifier }
 		remove_dynamic_modifier = { modifier = YUG_slovenia_dynamic_modifier }
 		remove_dynamic_modifier = { modifier = YUG_other_dynamic_modifier }
+		SER_disable_yugoslavia_integration = yes
+		every_core_state = {
+			limit = {
+				OR = {
+					is_core_of = SLV
+					is_core_of = CRO
+					is_core_of = BOS
+				}
+				NOT = { is_core_of = MNT }
+				NOT = { state = 45 } #Vojvodina
+				NOT = { state = 106 } #Macedonia
+				NOT = { state = 794 } #Syrmia
+				NOT = { state = 841 } #Kotor
+				NOT = { state = 875 } #West Banat
+			}
+			remove_core_of = ROOT
+		}
 		hidden_effect = {
 			remove_mission = YUG_rounds_system_mission
 			YUG_reset_yugoslavia_missions = yes
@@ -7801,37 +7874,32 @@ country_event = { # South Slavic Unification
 		name = yugoslavia.13.a
 		every_other_country = {
 			limit = {
-				has_war_with = BUL
+				has_war_with = FROM
 				NOT = { has_war_with = ROOT }
 			}
 			ROOT = {
 				add_to_war = {
-					targeted_alliance = BUL
+					targeted_alliance = FROM
 					enemy = PREV
 					hostility_reason = asked_to_join
 				}
 			}
 		}
 		annex_country = {
-			target = BUL
+			target = FROM
 			transfer_troops = yes
 		}
-		every_owned_state = {
-			limit = {
-				is_core_of = BUL
-				OR = {
-					state = 48
-					state = 211
-					state = 212
-					state = 770
-					state = 771
-					state = 990
-					state = 1089
+		FROM = {
+			every_core_state = {
+				limit = {
+					is_claim_or_core_of_ROOT = no
+					NOT = { is_core_of = GRE }
+					NOT = { is_claimed_by = GRE }
+					NOT = { is_core_of = ROM }
+					NOT = { is_claimed_by = GRE }
 				}
+				add_claim_by = ROOT
 			}
-			add_claim_by = SER
-		}
-		BUL = {
 			every_character = {
 				limit = {
 					is_unit_leader = yes
@@ -7846,56 +7914,11 @@ country_event = { # South Slavic Unification
 					}
 				}
 				set_character_flag = BUL_leader
-				set_nationality = SER
+				set_nationality = ROOT
 			}
 		}
 		add_stability = -0.1
-		if = {
-			limit = {
-				NOT = {
-					has_completed_focus = SER_YUG_brotherhood_and_unity
-				}
-			}
-			if = {
-				limit = {
-					check_variable = { YUG_other_relations_level > 4 }
-				}
-				set_temp_variable = { checked_state = 5 } # Other
-				set_temp_variable = { ethnic_situation = -4 }
-				custom_effect_tooltip = YUG_other_reduce_relations_tt
-				YUG_update_ethnic_situation = yes
-			}
-			else_if = {
-				limit = {
-					check_variable = { YUG_other_relations_level > 3 }
-				}
-				set_temp_variable = { checked_state = 5 } # Other
-				set_temp_variable = { ethnic_situation = -3 }
-				custom_effect_tooltip = YUG_other_reduce_relations_tt
-				YUG_update_ethnic_situation = yes
-			}
-			else_if = {
-				limit = {
-					check_variable = { YUG_other_relations_level > 2 }
-				}
-				set_temp_variable = { checked_state = 5 } # Other
-				set_temp_variable = { ethnic_situation = -2 }
-				custom_effect_tooltip = YUG_other_reduce_relations_tt
-				YUG_update_ethnic_situation = yes
-			}
-			else_if = {
-				limit = {
-					check_variable = { YUG_other_relations_level > 1 }
-				}
-				set_temp_variable = { checked_state = 5 } # Other
-				set_temp_variable = { ethnic_situation = -1 }
-				custom_effect_tooltip = YUG_other_reduce_relations_tt
-				YUG_update_ethnic_situation = yes
-			}
-			set_temp_variable = { gained_pp_per_turn = -3 }
-			custom_effect_tooltip = YUG_modify_pp_gain_decrease_tt
-			add_to_variable = { YUG_political_capital_gain = gained_pp_per_turn }
-		}
+		YUG_bulgarian_integration_relations_effect = yes
 	}
 }
 country_event = { # Bulgaria refuses

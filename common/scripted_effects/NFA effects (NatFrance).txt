@@ -92,7 +92,8 @@ NFA_add_resistance_modifiers = {
 			add_resistance_target = {
 				id = 1
 				amount = 15
-				tooltip = NFA_fra_partisans_15_tt
+				occupier = NFA
+				tooltip = NFA_fra_partisans_tt
 			}
 		}
 		if = {
@@ -687,6 +688,144 @@ NFA_disable_revolt_decision_category = {
 	}
 }
 
+NFA_spawn_revolt_armies = {
+	if = {
+		limit = { original_tag = CHA }
+		capital_scope = {
+			create_unit = {
+				division = "division_template = \"Chadian Militia\" start_experience_factor = 0.1"
+				owner = PREV
+			}
+			create_unit = {
+				division = "division_template = \"Tuareg Cavalry\" start_experience_factor = 0.1"
+				owner = PREV
+				count = 2
+			}
+		}
+	}
+	else_if = {
+		limit = { original_tag = GNA }
+		capital_scope = {
+			create_unit = {
+				division = "division_template = \"Guinean Militia\" start_experience_factor = 0.1"
+				owner = PREV
+				count = 3
+			}
+		}
+	}
+	else_if = {
+		limit = { original_tag = IVO }
+		capital_scope = {
+			create_unit = {
+				division = "division_template = \"Ivorian Militia\" start_experience_factor = 0.1"
+				owner = PREV
+				count = 3
+			}
+		}
+	}
+	else_if = {
+		limit = { original_tag = MLI }
+		capital_scope = {
+			create_unit = {
+				division = "division_template = \"Malian Militia\" start_experience_factor = 0.1"
+				owner = PREV
+				count = 3
+			}
+		}
+		random_owned_controlled_state = {
+			prioritize = { 1095 } #Timbuktu
+			create_unit = {
+				division = "division_template = \"Tuareg Cavalry\" start_experience_factor = 0.1"
+				owner = PREV
+			}
+		}
+	}
+	else_if = {
+		limit = { original_tag = MRT }
+		capital_scope = {
+			create_unit = {
+				division = "division_template = \"Mauritanian Militia\" start_experience_factor = 0.1"
+				owner = PREV
+			}
+			create_unit = {
+				division = "division_template = \"Mauritanian Cavalry\" start_experience_factor = 0.1"
+				owner = PREV
+				count = 2
+			}
+		}
+	}
+	else_if = {
+		limit = { original_tag = NGR }
+		capital_scope = {
+			create_unit = {
+				division = "division_template = \"Nigerien Militia\" start_experience_factor = 0.1"
+				owner = PREV
+			}
+			create_unit = {
+				division = "division_template = \"Tuareg Cavalry\" start_experience_factor = 0.1"
+				owner = PREV
+				count = 2
+			}
+		}
+	}
+	else_if = {
+		limit = { original_tag = SEN }
+		capital_scope = {
+			create_unit = {
+				division = "division_template = \"Senegalese Militia\" start_experience_factor = 0.1"
+				owner = PREV
+				count = 3
+			}
+			create_unit = {
+				division = "division_template = \"Senegalese Infantry\" start_experience_factor = 0.1"
+				owner = PREV
+			}
+		}
+	}
+	else_if = {
+		limit = { original_tag = SIE }
+		capital_scope = {
+			create_unit = {
+				division = "division_template = \"Sierra Leonian Militia\" start_experience_factor = 0.1"
+				owner = PREV
+				count = 2
+			}
+		}
+	}
+	else_if = {
+		limit = { original_tag = TUN }
+		capital_scope = {
+			create_unit = {
+				division = "name = \"Garde Beylicale\" division_template = \"Garde Beylicale\" start_experience_factor = 0.1"
+				owner = PREV
+			}
+			create_unit = {
+				division = "division_template = \"Tunisian Infantry\" start_experience_factor = 0.1"
+				owner = PREV
+				count = 2
+			}
+		}
+		random_owned_controlled_state = {
+			prioritize = { 665 } #Gabes
+			create_unit = {
+				division = "division_template = \"Tunisian Infantry\" start_experience_factor = 0.1"
+				owner = PREV
+				count = 3
+			}
+		}
+	}
+	else_if = {
+		limit = { original_tag = VOL }
+		capital_scope = {
+			create_unit = {
+				division = "division_template = \"Burkinabe Militia\" start_experience_factor = 0.1"
+				owner = PREV
+				count = 4
+			}
+		}
+	}
+}
+
 NFA_remove_petain_ideas = {
 	hidden_effect = {
 		remove_ideas = {
@@ -900,48 +1039,44 @@ NFA_colony_released_by_revolter = {
 	hidden_effect = {
 		if = {
 			limit = {
-				NFA_has_multiple_african_revolts = yes
 				has_idea = NFA_small_native_revolt
+				NFA_has_multiple_african_revolts = yes
 			}
 			remove_ideas = NFA_small_native_revolt
 		}
 		set_country_flag = NFA_active_rebellion
 		set_country_flag = NFA_rebelled_@var:revolter
 		activate_targeted_decision = { decision = NFA_crush_resistance target = var:revolter }
-		every_owned_state = {
-			limit = { is_core_of = var:revolter }
-			transfer_state_to = var:revolter
-		}
-		var:original_occupier = {
-			var:revolter = {
-				diplomatic_relation = {
-					country = PREV
-					relation = military_access
-				}
-			}
-		}
 		var:revolter = {
 			log = "KR_Event_Logging;[THIS.GetTag] REVOLTS AGAINST NFA;[GetDateText]"
+			every_core_state = {
+				limit = { is_owned_by = ROOT }
+				teleport_armies = { limit = { is_ally_with = ROOT } }
+				transfer_state_to = PREV
+			}
 			var:original_occupier = {
 				diplomatic_relation = {
 					country = PREV
 					relation = military_access
 				}
-			}
-			meta_effect = {
-				text = {
-					load_oob = [OOB_NAME]
+				PREV = {
+					diplomatic_relation = {
+						country = PREV
+						relation = military_access
+					}
 				}
-				OOB_NAME = "[?revolter.GetTag]_revolt"
 			}
-		}
-		every_owned_state = {
-			limit = {
-				has_resistance = yes
-				any_neighbor_state = { is_controlled_by = var:revolter }
+			NFA_spawn_revolt_armies = yes
+			every_controlled_state = {
+				every_neighbor_state = {
+					limit = {
+						is_owned_and_controlled_by = ROOT
+						has_resistance = yes
+					}
+					add_resistance = 7
+					add_compliance = -4
+				}
 			}
-			add_resistance = 7
-			add_compliance = -4
 		}
 	}
 	declare_war_on = {

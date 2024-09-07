@@ -1318,6 +1318,56 @@ JAP_influence_china = {
 			}
 		}
 	}
+	JAP_finish_off_stragglers = {
+		icon = GFX_decision_jap_conquer_china
+		allowed = { always = no }
+		available = {
+			can_declare_war_on = FROM
+			is_subject = no
+		}
+		visible = {
+			NOT = {
+				has_wargoal_against = FROM
+				has_war_with = FROM
+			}
+		}
+		cost = 35
+		days_remove = 30
+		fire_only_once = yes
+		war_with_target_on_remove = yes
+		cancel_if_not_visible = yes
+		ai_will_do = {
+			factor = 1
+			modifier = {
+				factor = 0
+				country_is_in_dangerous_war = yes
+			}
+			modifier = {
+				factor = 0
+				FROM = { default_attack_AI_trigger_consider_naval_strength = yes }
+			}
+		}
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel JAP_finish_off_stragglers target: [From.GetName]"
+			clear_decision_attack_AI = yes
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_finish_off_stragglers target: [From.GetName]"
+			FROM = { incoming_war_notification_effect = yes }
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove JAP_finish_off_stragglers target: [From.GetName]"
+			clear_decision_attack_AI = yes
+			create_wargoal = {
+				target = FROM
+				type = annex_everything
+			}
+		}
+	}
 }
 
 political_actions = {
@@ -2566,7 +2616,6 @@ JAP_co_prosperity_decisions = {
 				is_subject = no
 				has_socialist_government = no
 				NOT = { has_country_flag = JAP_invited_to_sphere }
-				NOT = { original_tag = FNG } # Only joins through other means
 			}
 		}
 
@@ -2661,178 +2710,32 @@ JAP_co_prosperity_decisions = {
 		}
 	}
 
-	JAP_invest_in_sphere_member1 = {
+	JAP_invest_in_sphere_member = {
 		icon = hol_attract_foreign_investors
 
 		allowed = { tag = JAP }
 
 		available = {
-			surrender_progress < 0.30
-			num_of_controlled_factories > FROM.num_of_controlled_factories
-			FROM = {
-				surrender_progress < 0.30
-				NOT = { has_country_flag = JAP_invest_timer }
+			set_temp_variable = { JAP_factory_comparison = FROM.num_of_owned_factories }
+			if = {
+				limit = { FROM = { has_idea = JAP_member_integration_2 } }
+				multiply_temp_variable = { JAP_factory_comparison = 3 }
 			}
+			else_if = {
+				limit = { FROM = { has_idea = JAP_member_integration_1 } }
+				multiply_temp_variable = { JAP_factory_comparison = 2 }
+			}
+			num_of_controlled_factories > JAP_factory_comparison
+			surrender_progress < 0.30
+			FROM = { surrender_progress < 0.30 }
+			NOT = { FROM = { has_country_flag = JAP_invest_timer } }
 		}
 
 		visible = {
 			FROM = {
+				NOT = { has_idea = JAP_member_integration_3 }
 				has_socialist_government = no
 				is_subject = no
-				NOT = {
-					has_idea = JAP_member_integration_1
-					has_idea = JAP_member_integration_2
-					has_idea = JAP_member_integration_3
-				}
-			}
-		}
-
-		cost = JAP_eco_cost_1
-		fire_only_once = no
-
-		priority = 1
-		target_array = global.asian_economic_sphere
-		target_root_trigger = { has_completed_focus = JAP_integrate_asian_economies }
-		target_trigger = {
-			FROM = {
-				has_socialist_government = no
-				is_subject = no
-				NOT = {
-					has_idea = JAP_member_integration_1
-					has_idea = JAP_member_integration_2
-					has_idea = JAP_member_integration_3
-				}
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_invest_in_sphere_member1 target: [From.GetName]"
-			custom_effect_tooltip = JAP_invest_in_sphere_member_decision_tt
-			custom_effect_tooltip = tooltip_white_line
-			FROM = {
-				set_country_flag = { flag = JAP_invest_timer days = 365 value = 1 }
-				effect_tooltip = { add_ideas = JAP_member_integration_1 }
-				country_event = japfor.405
-			}
-		}
-
-		ai_will_do = {
-			factor = 5
-			modifier = {
-				factor = 2
-				FROM = { tag = SIA }
-			}
-			modifier = {
-				factor = 2
-				FROM = { is_in_faction_with = ROOT }
-			}
-			modifier = {
-				factor = 0.5
-				FROM = { num_of_civilian_factories < 4 }
-			}
-			modifier = {
-				factor = 3
-				FROM = { num_of_civilian_factories > 6 }
-			}
-		}
-	}
-
-	JAP_invest_in_sphere_member2 = {
-		icon = hol_attract_foreign_investors
-
-		allowed = { tag = JAP }
-
-		available = {
-			surrender_progress < 0.30
-			set_temp_variable = { from_fact = FROM.num_of_controlled_factories }
-			multiply_temp_variable = { from_fact = 2 }
-			num_of_controlled_factories > from_fact
-			FROM = {
-				surrender_progress < 0.30
-				NOT = { has_country_flag = JAP_invest_timer }
-			}
-		}
-
-		visible = {
-			FROM = {
-				has_socialist_government = no
-				is_subject = no
-				has_idea = JAP_member_integration_1
-			}
-		}
-
-		cost = JAP_eco_cost_1
-		fire_only_once = no
-
-		priority = 2
-		target_array = global.asian_economic_sphere
-		target_root_trigger = { has_completed_focus = JAP_integrate_asian_economies }
-		target_trigger = {
-			FROM = {
-				has_socialist_government = no
-				is_subject = no
-				has_idea = JAP_member_integration_1
-			}
-		}
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_invest_in_sphere_member2 target: [From.GetName]"
-			custom_effect_tooltip = JAP_invest_in_sphere_member_decision_tt
-			custom_effect_tooltip = tooltip_white_line
-			FROM = {
-				set_country_flag = { flag = JAP_invest_timer days = 365 value = 1 }
-				effect_tooltip = {
-					swap_ideas = {
-						remove_idea = JAP_member_integration_1
-						add_idea = JAP_member_integration_2
-					}
-				}
-				country_event = japfor.405
-			}
-		}
-
-		ai_will_do = {
-			factor = 5
-			modifier = {
-				factor = 2
-				FROM = { tag = SIA }
-			}
-			modifier = {
-				factor = 2
-				FROM = { is_in_faction_with = ROOT }
-			}
-			modifier = {
-				factor = 0.5
-				FROM = { num_of_civilian_factories < 4 }
-			}
-			modifier = {
-				factor = 3
-				FROM = { num_of_civilian_factories > 6 }
-			}
-		}
-	}
-
-	JAP_invest_in_sphere_member3 = {
-		icon = hol_attract_foreign_investors
-
-		allowed = { tag = JAP }
-
-		available = {
-			surrender_progress < 0.30
-			set_temp_variable = { from_fact = FROM.num_of_controlled_factories }
-			multiply_temp_variable = { from_fact = 3 }
-			num_of_controlled_factories > from_fact
-			FROM = {
-				surrender_progress < 0.30
-				NOT = { has_country_flag = JAP_invest_timer }
-			}
-		}
-
-		visible = {
-			FROM = {
-				has_socialist_government = no
-				is_subject = no
-				has_idea = JAP_member_integration_2
 			}
 		}
 
@@ -2844,25 +2747,18 @@ JAP_co_prosperity_decisions = {
 		target_root_trigger = { has_completed_focus = JAP_integrate_asian_economies }
 		target_trigger = {
 			FROM = {
+				NOT = { has_idea = JAP_member_integration_3 }
 				has_socialist_government = no
 				is_subject = no
-				has_idea = JAP_member_integration_2
 			}
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_invest_in_sphere_member3 target: [From.GetName]"
-			custom_effect_tooltip = JAP_invest_in_sphere_member_decision_tt
-			custom_effect_tooltip = tooltip_white_line
+			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_invest_in_sphere_member target: [From.GetName]"
 			FROM = {
 				set_country_flag = { flag = JAP_invest_timer days = 365 value = 1 }
-				effect_tooltip = {
-					swap_ideas = {
-						remove_idea = JAP_member_integration_2
-						add_idea = JAP_member_integration_3
-					}
-				}
 				country_event = japfor.405
+				event_option_tooltip = japfor.405.a
 			}
 		}
 
@@ -2874,15 +2770,15 @@ JAP_co_prosperity_decisions = {
 			}
 			modifier = {
 				factor = 2
-				FROM = { is_in_faction_with = ROOT }
+				is_in_faction_with = FROM
 			}
 			modifier = {
 				factor = 0.5
-				FROM = { num_of_civilian_factories < 4 }
+				ic_ratio = { tag = FROM ratio > 3 }
 			}
 			modifier = {
 				factor = 3
-				FROM = { num_of_civilian_factories > 6 }
+				ic_ratio = { tag = FROM ratio < 2 }
 			}
 		}
 	}
@@ -2893,21 +2789,19 @@ JAP_co_prosperity_decisions = {
 		allowed = { tag = JAP }
 
 		available = {
+			set_temp_variable = { JAP_factory_comparison = FROM.num_of_owned_factories }
+			multiply_temp_variable = { JAP_factory_comparison = 3 }
+			num_of_controlled_factories > JAP_factory_comparison
 			surrender_progress < 0.30
-			set_temp_variable = { from_fact = FROM.num_of_controlled_factories }
-			multiply_temp_variable = { from_fact = 3 }
-			num_of_controlled_factories > from_fact
-			FROM = {
-				surrender_progress < 0.30
-				NOT = { has_country_flag = JAP_invest_timer }
-			}
+			FROM = { surrender_progress < 0.30 }
+			NOT = { FROM = { has_country_flag = JAP_invest_timer } }
 		}
 
 		visible = {
 			FROM = {
+				has_idea = JAP_member_integration_3
 				is_subject = no
 				has_socialist_government = no
-				has_idea = JAP_member_integration_3
 			}
 		}
 
@@ -2919,16 +2813,18 @@ JAP_co_prosperity_decisions = {
 		target_root_trigger = { has_completed_focus = JAP_integrate_asian_economies }
 		target_trigger = {
 			FROM = {
+				has_idea = JAP_member_integration_3
 				is_subject = no
 				has_socialist_government = no
-				has_idea = JAP_member_integration_3
 			}
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_economic_sphere_takeover target: [From.GetName]"
-			effect_tooltip = { puppet = FROM }
-			FROM = { country_event = japfor.407 }
+			FROM = {
+				country_event = japfor.407
+				event_option_tooltip = japfor.407.a
+			}
 		}
 
 		ai_will_do = {
@@ -2939,15 +2835,15 @@ JAP_co_prosperity_decisions = {
 			}
 			modifier = {
 				factor = 2
-				FROM = { is_in_faction_with = ROOT }
+				is_in_faction_with = FROM
 			}
 			modifier = {
 				factor = 0.5
-				FROM = { num_of_civilian_factories < 4 }
+				ic_ratio = { tag = FROM ratio > 3 }
 			}
 			modifier = {
 				factor = 3
-				FROM = { num_of_civilian_factories > 6 }
+				ic_ratio = { tag = FROM ratio < 2 }
 			}
 		}
 	}
@@ -2958,17 +2854,15 @@ JAP_co_prosperity_decisions = {
 		allowed = { tag = JAP }
 
 		available = {
-			surrender_progress < 0.30
 			num_of_naval_factories > FROM.num_of_naval_factories
-			FROM = {
-				surrender_progress < 0.30
-				num_of_naval_factories > 0
-				NOT = { has_country_flag = JAP_invest_timer }
-			}
+			surrender_progress < 0.30
+			FROM = { surrender_progress < 0.30 }
+			NOT = { FROM = { has_country_flag = JAP_invest_timer } }
 		}
 
 		visible = {
 			FROM = {
+				num_of_naval_factories > 0
 				has_socialist_government = no
 			}
 		}
@@ -2981,18 +2875,18 @@ JAP_co_prosperity_decisions = {
 		target_root_trigger = { has_completed_focus = JAP_copro_development_plan }
 		target_trigger = {
 			FROM = {
+				num_of_naval_factories > 0
 				has_socialist_government = no
 			}
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_invest_in_sphere_member_docks target: [From.GetName]"
-			custom_effect_tooltip = JAP_invest_in_sphere_member_docks_decision_tt
-			custom_effect_tooltip = tooltip_white_line
 			FROM = {
 				set_country_flag = { flag = JAP_invest_timer days = 365 value = 1 }
 				set_country_flag = JAP_invest_docks
 				country_event = japfor.420
+				event_option_tooltip = japfor.420.a
 			}
 		}
 
@@ -3004,15 +2898,15 @@ JAP_co_prosperity_decisions = {
 			}
 			modifier = {
 				factor = 2
-				FROM = { is_in_faction_with = ROOT }
+				is_in_faction_with = FROM
 			}
 			modifier = {
 				factor = 0.5
-				FROM = { num_of_civilian_factories < 4 }
+				ic_ratio = { tag = FROM ratio > 3 }
 			}
 			modifier = {
 				factor = 3
-				FROM = { num_of_civilian_factories > 6 }
+				ic_ratio = { tag = FROM ratio < 2 }
 			}
 		}
 	}
@@ -3024,14 +2918,12 @@ JAP_co_prosperity_decisions = {
 
 		available = {
 			surrender_progress < 0.30
-			FROM = {
-				surrender_progress < 0.30
-				num_of_naval_factories > 0
-			}
+			FROM = { surrender_progress < 0.30 }
 		}
 
 		visible = {
 			FROM = {
+				num_of_naval_factories > 0
 				has_socialist_government = no
 			}
 		}
@@ -3044,16 +2936,22 @@ JAP_co_prosperity_decisions = {
 		target_root_trigger = { has_completed_focus = JAP_naval_engineering_assistance }
 		target_trigger = {
 			FROM = {
+				num_of_naval_factories > 0
 				has_socialist_government = no
 			}
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_invest_in_sphere_naval_advisors target: [From.GetName]"
-			custom_effect_tooltip = JAP_invest_in_sphere_naval_advisors_decision_tt
-			custom_effect_tooltip = tooltip_white_line
 			FROM = {
 				country_event = japfor.421
+				custom_effect_tooltip = tooltip_event_allows_choice
+				custom_effect_tooltip = tooltip_event_choice_option_1
+				event_option_tooltip = japfor.421.a
+				custom_effect_tooltip = tooltip_event_choice_option_2
+				event_option_tooltip = japfor.421.b
+				custom_effect_tooltip = tooltip_event_choice_option_3
+				event_option_tooltip = japfor.421.c
 			}
 		}
 
@@ -3065,7 +2963,7 @@ JAP_co_prosperity_decisions = {
 			}
 			modifier = {
 				factor = 2
-				FROM = { is_in_faction_with = ROOT }
+				is_in_faction_with = FROM
 			}
 		}
 	}
@@ -3077,14 +2975,12 @@ JAP_co_prosperity_decisions = {
 
 		available = {
 			surrender_progress < 0.30
-			FROM = {
-				surrender_progress < 0.30
-				num_of_naval_factories > 0
-			}
+			FROM = { surrender_progress < 0.30 }
 		}
 
 		visible = {
 			FROM = {
+				num_of_naval_factories > 0
 				has_socialist_government = no
 			}
 		}
@@ -3097,6 +2993,7 @@ JAP_co_prosperity_decisions = {
 		target_root_trigger = { has_completed_focus = JAP_prosperity_ships }
 		target_trigger = {
 			FROM = {
+				num_of_naval_factories > 0
 				has_socialist_government = no
 			}
 		}
@@ -3104,13 +3001,8 @@ JAP_co_prosperity_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_invest_in_sphere_prosperity_ships target: [From.GetName]"
 			FROM = {
-				effect_tooltip = {
-					add_equipment_to_stockpile = {
-						type = convoy
-						amount = 50
-					}
-				}
 				country_event = japfor.422
+				event_option_tooltip = japfor.422.a
 			}
 		}
 
@@ -3122,7 +3014,7 @@ JAP_co_prosperity_decisions = {
 			}
 			modifier = {
 				factor = 2
-				FROM = { is_in_faction_with = ROOT }
+				is_in_faction_with = FROM
 			}
 		}
 	}
@@ -3134,19 +3026,17 @@ JAP_co_prosperity_decisions = {
 
 		available = {
 			surrender_progress < 0.30
-			FROM = {
-				OR = {
-					is_subject_of = ROOT
-					surrender_progress < 0.30
-				}
-				num_of_naval_factories > 2
-				NOT = { has_country_flag = JAP_refused_dockyards }
+			FROM = { num_of_naval_factories > 2 }
+			OR = {
+				has_subject = FROM
+				FROM = { surrender_progress < 0.30 }
 			}
 		}
 
 		visible = {
 			FROM = {
 				has_country_flag = JAP_invest_docks
+				NOT = { has_country_flag = JAP_refused_dockyards }
 				has_socialist_government = no
 			}
 		}
@@ -3160,6 +3050,7 @@ JAP_co_prosperity_decisions = {
 		target_trigger = {
 			FROM = {
 				has_country_flag = JAP_invest_docks
+				NOT = { has_country_flag = JAP_refused_dockyards }
 				has_socialist_government = no
 			}
 		}
@@ -3167,48 +3058,22 @@ JAP_co_prosperity_decisions = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_invest_in_sphere_take_dockyards target: [From.GetName]"
 			add_offsite_building = { type = dockyard level = 3 }
-			FROM = {
-				country_event = japfor.423
-				effect_tooltip = {
-					random_owned_controlled_state = {
-						limit = {
-							is_core_of = ROOT
-							dockyard > 0
-						}
-						add_to_variable = { JAP_dockyards_under_japanese_control = 1 }
-						remove_building = {
-							type = dockyard
-							level = 1
-						}
-					}
-					random_owned_controlled_state = {
-						limit = {
-							is_core_of = ROOT
-							dockyard > 0
-						}
-						add_to_variable = { JAP_dockyards_under_japanese_control = 1 }
-						remove_building = {
-							type = dockyard
-							level = 1
-						}
-					}
-					random_owned_controlled_state = {
-						limit = {
-							is_core_of = ROOT
-							dockyard > 0
-						}
-						add_to_variable = { JAP_dockyards_under_japanese_control = 1 }
-						remove_building = {
-							type = dockyard
-							level = 1
-						}
-					}
+			if = {
+				limit = { has_subject = FROM }
+				FROM = {
+					country_event = japfor.423
+					event_option_tooltip = japfor.423.a
 				}
+			}
+			else = {
+				FROM = { country_event = japfor.423 }
+				custom_effect_tooltip = if_they_accept_tt
+				FROM = { event_option_tooltip = japfor.423.a }
 			}
 		}
 
 		remove_trigger = {
-			NOT = { is_in_faction_with = FROM }
+			NOT = { FROM = { has_country_flag = JAP_economic_sphere_member } }
 		}
 
 		remove_effect = {
@@ -3216,17 +3081,7 @@ JAP_co_prosperity_decisions = {
 			add_offsite_building = { type = dockyard level = -3 }
 			FROM = {
 				country_event = japfor.424
-				effect_tooltip = {
-					every_owned_state = {
-						limit = { has_variable = JAP_dockyards_under_japanese_control }
-						add_building_construction = {
-							type = dockyard
-							level = var:JAP_dockyards_under_japanese_control
-							instant_build = yes
-						}
-						clear_variable = JAP_dockyards_under_japanese_control
-					}
-				}
+				event_option_tooltip = japfor.424.a
 			}
 		}
 
@@ -4465,14 +4320,6 @@ JAP_foreign_policy_decisions = {
 
 		ai_will_do = {
 			factor = 1000
-			modifier = {
-				factor = 0
-				608 = {
-					owner = {
-						has_war_with = FROM
-					}
-				}
-			}
 			modifier = {
 				factor = 0
 				strength_ratio = { tag = FROM ratio < 1.0 }

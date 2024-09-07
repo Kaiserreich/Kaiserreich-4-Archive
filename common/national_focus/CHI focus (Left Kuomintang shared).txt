@@ -507,11 +507,8 @@ focus_tree = {
 			}
 			custom_effect_tooltip = china_can_core_through_compliance
 			hidden_effect = {
-				set_cosmetic_tag = CHI_government
 				country_event = CHI.midgame.006
 				set_potential_national_government = yes
-				add_to_array = { china_possible_allies_array_northwest = XSM }
-				add_to_array = { china_possible_allies_array_northwest = SIK }
 			}
 		}
 		search_filters = { FOCUS_FILTER_POLITICAL FOCUS_FILTER_INTERNAL_AFFAIRS }
@@ -1837,7 +1834,7 @@ focus_tree = {
 			country_event = { id = CHI.midgame.035 days = 7 } #The Fate of the League Officers
 			custom_effect_tooltip = tooltip_white_line
 			china_enable_non_government_demand_submission_decisions = yes
-			CHI_left_kuomintang_enable_alliance_decisions = yes
+			kuomintang_china_enable_alliance_decisions = yes
 			hidden_effect = {
 				every_other_country = {
 					limit = { original_tag = GXC } #Need to add this special in case Fed become a rival gov. CHI has a special interest in Guangdong
@@ -1971,7 +1968,14 @@ focus_tree = {
 
 	focus = {
 		id = CHI_second_northern_expedition
-		icon = GFX_goal_generic_attack_zhili
+		icon = {
+			trigger = { QIE = { is_monarchy = yes } }
+			value = GFX_goal_generic_attack_qing
+		}
+		icon = {
+			value = GFX_goal_generic_attack_zhili
+		}
+		dynamic = yes
 		cost = 7
 
 		relative_position_id = CHI_deal_with_warlords
@@ -1988,6 +1992,11 @@ focus_tree = {
 		prerequisite = { focus = CHI_deal_with_warlords }
 		prerequisite = { focus = CHI_eyes_in_the_dark }
 
+		#select_effect = {
+		#	log = "[GetDateText]: [Root.GetName]: Select Focus CHI_second_northern_expedition"
+		#	var:608.owner = { incoming_war_notification_effect = yes }
+		#}
+
 		will_lead_to_war_with = QIE
 		will_lead_to_war_with = FNG
 		will_lead_to_war_with = JAP
@@ -2000,6 +2009,14 @@ focus_tree = {
 		}
 		ai_will_do = {
 			base = 250
+			modifier = {
+				factor = 0
+				OR = {
+					has_decision = china_demand_submission
+					has_decision = china_attack_decision
+					country_is_in_dangerous_war = yes
+				}
+			}
 			modifier = {
 				factor = 0.5
 				has_war = yes
@@ -2031,10 +2048,6 @@ focus_tree = {
 				has_army_size = {
 					size > 50
 				}
-			}
-			modifier = {
-				factor = 0
-				has_war = yes
 			}
 		}
 		completion_reward = {
@@ -3192,7 +3205,7 @@ focus_tree = {
 			log = "[GetDateText]: [Root.GetName]: Focus CHI_entrench_dangguo"
 			add_political_power = 50
 			add_war_support = 0.10
-			CHI_left_kuomintang_enable_alliance_decisions = yes #Fallback in case player somehow didn't do it earlier
+			kuomintang_china_enable_alliance_decisions = yes #Fallback in case player somehow didn't do it earlier
 			set_temp_variable = { coalition_partner_var = token:totalist }
 			add_to_coalition = yes
 			set_temp_variable = { coalition_partner_var = token:syndicalist }
@@ -3344,7 +3357,7 @@ focus_tree = {
 			is_subject = yes
 		}
 		available = {
-			has_global_flag = china_united
+			china_is_the_unifier_of_china_trigger = yes
 			OR = {
 				has_global_flag = JAP_defeated_by_china
 				JAP = { is_subject = yes }  #edge case if you paradrop japan
@@ -3366,10 +3379,10 @@ focus_tree = {
 			#Events need to be fired relatively precisely so set them here.
 			hidden_effect = {
 				scoped_play_song = "qi_zheng_piao_piao"
-				country_event = { id = CHI.lategame.201 days = 00 } #Calling of the Third Repatriated Congress
-				country_event = { id = CHI.lategame.202 days = 03 } #The Occupation of Hankou
-				country_event = { id = CHI.lategame.203 days = 05 } #Avenging the Humiliations
-				country_event = { id = CHI.lategame.204 days = 08 } #The Fallout of the Incident
+				country_event = CHI.lategame.201 #Calling of the Third Repatriated Congress
+				country_event = { id = CHI.lategame.202 days = 3 } #The Occupation of Hankou
+				country_event = { id = CHI.lategame.203 days = 5 } #Avenging the Humiliations
+				country_event = { id = CHI.lategame.204 days = 8 } #The Fallout of the Incident
 				country_event = { id = CHI.lategame.205 days = 10 } #The May Instructions
 				country_event = { id = CHI.lategame.206 days = 21 } #Wang's Opening Speech
 				country_event = { id = CHI.lategame.207 days = 24 } #A League Divided...
@@ -3974,7 +3987,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -4024,7 +4037,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -4062,53 +4075,56 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus CHI_purchase_foreign_blueprints"
 			if = {
-				limit = { has_dlc_bba = yes }
-				create_equipment_variant = {
-					name = "Hawker Fury"
-					type = small_plane_airframe_0
-					modules = {
-						fixed_main_weapon_slot = light_mg_2x
-						engine_type_slot = engine_1_1x
-						special_type_slot_1 = empty
+				limit = { country_exists = ENG }
+				ENG = {
+					if = {
+						limit = { has_tech = jet_fighter1 }
+						create_production_license = {
+							target = CHI
+							cost_factor = 0
+							equipment = { type = jet_fighter_equipment_1 }
+						}
+					}
+					else_if = {
+						limit = { has_tech = fighter3 }
+						create_production_license = {
+							target = CHI
+							cost_factor = 0
+							equipment = { type = fighter_equipment_3 }
+						}
+					}
+					else_if = {
+						limit = { has_tech = fighter2 }
+						create_production_license = {
+							target = CHI
+							cost_factor = 0
+							equipment = { type = fighter_equipment_2 }
+						}
+					}
+					else_if = {
+						limit = { has_tech = fighter1 }
+						create_production_license = {
+							target = CHI
+							cost_factor = 0
+							equipment = { type = fighter_equipment_1 }
+						}
+					}
+					else = {
+						create_production_license = {
+							target = CHI
+							cost_factor = 0
+							equipment = { type = 	fighter_equipment_0 }
+						}
 					}
 				}
 			}
-			if = {
-				limit = { has_dlc_bba = yes }
-				create_equipment_variant = {
-					name = "Br. 19"
-					type = small_plane_cas_airframe_0
-					modules = {
-						fixed_main_weapon_slot = bomb_locks
-						engine_type_slot = engine_1_1x
-						special_type_slot_1 = lmg_defense_turret
-					}
-					obsolete = yes
-				}
-			}
-			else_if = {
-				limit = { NOT = { has_dlc_bba = yes } }
-				add_equipment_to_stockpile = {
-					type = fighter_equipment_1
-					producer = FRA
-					amount = 100
-				}
-				add_tech_bonus = {
-					name = CHI_purchase_foreign_blueprints
-					bonus = 0.5
-					uses = 1
-					category = light_fighter
-					category = cat_heavy_fighter
-				}
-				air_experience = 30
-			}
-
+			air_experience = 40
 			CHI_LCS_small_effect = yes
 		}
 		search_filters = { FOCUS_FILTER_AIRFORCE_BONUS }
@@ -4137,7 +4153,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -4204,7 +4220,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -4258,7 +4274,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -4320,7 +4336,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -4367,7 +4383,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -4427,7 +4443,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -4485,7 +4501,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -4570,7 +4586,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -4620,7 +4636,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -4701,7 +4717,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -4779,7 +4795,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5236,7 +5252,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5269,7 +5285,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5323,7 +5339,7 @@ focus_tree = {
 						OR = {
 							is_character = QIE_sa_zhenbing
 							is_character = QIE_du_xigui
-							is_character = QIE_wu_renli
+							is_character = QIE_wu_yulin
 
 						}
 					}
@@ -5331,7 +5347,7 @@ focus_tree = {
 				hidden_effect = {
 					QIE_sa_zhenbing = { CHI_recruit_character_effect = yes }
 					QIE_du_xigui = { CHI_recruit_character_effect = yes }
-					QIE_wu_renli = { CHI_recruit_character_effect = yes }
+					QIE_wu_yulin = { CHI_recruit_character_effect = yes }
 				}
 			}
 			if = {
@@ -5384,7 +5400,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5455,7 +5471,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5504,7 +5520,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5558,7 +5574,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5595,7 +5611,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5633,7 +5649,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5672,7 +5688,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5709,7 +5725,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5778,7 +5794,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5822,7 +5838,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5865,7 +5881,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5912,7 +5928,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -5984,7 +6000,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -6032,7 +6048,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -6077,7 +6093,7 @@ focus_tree = {
 			}
 			modifier = {
 				factor = 2
-				has_global_flag = china_united
+				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -6613,7 +6629,7 @@ focus_tree = {
 		available = {
 			#Manchuria
 			717 = { is_owned_and_controlled_by = CHI } #Hejiang
-			714 = { is_owned_and_controlled_by = CHI } #Nenjiang
+			714 = { is_owned_and_controlled_by = CHI } #Qiqihar
 			#Mongolia and Tibet
 			330 = { is_owned_by_ROOT_or_ally = yes } #Urga
 			322 = { is_owned_by_ROOT_or_ally = yes } #Tibet
@@ -6729,7 +6745,6 @@ focus_tree = {
 		}
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus CHI_fanatical_militarism"
-			set_rule = { can_use_kamikaze_pilots = yes }
 			swap_ideas = {
 				remove_idea = CHI_lead_the_liberation_of_asia_idea
 				add_idea = CHI_chinese_revanchism_idea
@@ -6752,7 +6767,7 @@ focus_tree = {
 			has_war_support > 0.80
 			#Manchuria
 			717 = { is_owned_and_controlled_by = CHI } #Hejiang
-			714 = { is_owned_and_controlled_by = CHI } #Nenjiang
+			714 = { is_owned_and_controlled_by = CHI } #Qiqihar
 			#Mongolia and Tibet
 			330 = { is_owned_by_ROOT_or_ally = yes } #Urga
 			322 = { is_owned_by_ROOT_or_ally = yes } #Tibet
@@ -6836,7 +6851,6 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus CHI_entrenching_isolation"
 			add_stability = 0.15
-			set_rule = { can_use_kamikaze_pilots = yes }
 			swap_ideas = {
 				remove_idea = CHI_lead_the_liberation_of_asia_idea
 				add_idea = CHI_xenophobic_isolation_idea
@@ -7093,7 +7107,7 @@ focus_tree = {
 			has_war_support > 0.75
 			#Manchuria
 			717 = { is_owned_and_controlled_by = CHI } #Hejiang
-			714 = { is_owned_and_controlled_by = CHI } #Nenjiang
+			714 = { is_owned_and_controlled_by = CHI } #Qiqihar
 			#Mongolia and Tibet
 			330 = { is_owned_by_ROOT_or_ally = yes } #Urga
 			322 = { is_owned_by_ROOT_or_ally = yes } #Tibet
@@ -7676,10 +7690,75 @@ focus_tree = {
 				}
 			}
 			country_event = CHI.endgame.050
+			mark_focus_tree_layout_dirty = yes
 		}
 		search_filters = { FOCUS_FILTER_POLITICAL }
 	}
 
+	focus = {
+		id = CHI_a_world_set_free
+		icon = GFX_focus_spr_anarchism_knows_no_borders
+		cost = 7
+
+		relative_position_id = CHI_imperialism_crushed_forevermore
+		x = 0
+		y = 1
+		prerequisite = { focus = CHI_imperialism_crushed_forevermore }
+		allow_branch = {
+			CHI_four_elders = { is_second_in_command = yes }
+			has_completed_focus = CHI_imperialism_crushed_forevermore
+		}
+		available = {
+			#insanity
+			custom_trigger_tooltip = {
+				tooltip = CHI_freed_americas_tt
+				var:361.owner = { CHI_is_socialist_or_allied_trigger = yes } #Washington D.C.
+				var:739.owner = { CHI_is_socialist_or_allied_trigger = yes } #Ottawa
+				var:277.owner = { CHI_is_socialist_or_allied_trigger = yes } #Mexico City
+				var:315.owner = { CHI_is_socialist_or_allied_trigger = yes } #Havana
+				var:500.owner = { CHI_is_socialist_or_allied_trigger = yes } #Rio de Janario
+				var:278.owner = { CHI_is_socialist_or_allied_trigger = yes } #Buenos Aires
+				var:279.owner = { CHI_is_socialist_or_allied_trigger = yes } #Santiago
+				var:849.owner = { CHI_is_socialist_or_allied_trigger = yes } #Carcas
+			}
+			custom_trigger_tooltip = {
+				tooltip = CHI_freed_europe_tt
+				var:165.owner = { CHI_is_socialist_or_allied_trigger = yes } #Barcelona
+				var:41.owner = { CHI_is_socialist_or_allied_trigger = yes } #Madrid
+				var:16.owner = { CHI_is_socialist_or_allied_trigger = yes } #Paris
+				var:126.owner = { CHI_is_socialist_or_allied_trigger = yes } #London
+				var:64.owner = { CHI_is_socialist_or_allied_trigger = yes } #Berlin
+				var:2.owner = { CHI_is_socialist_or_allied_trigger = yes } #Rome
+				var:4.owner = { CHI_is_socialist_or_allied_trigger = yes } #Vienna
+				var:773.owner = { CHI_is_socialist_or_allied_trigger = yes } #Constantinople
+				var:219.owner = { CHI_is_socialist_or_allied_trigger = yes } #Moscow
+			}
+			custom_trigger_tooltip = {
+				tooltip = CHI_freed_africa_middle_east_tt
+				var:446.owner = { CHI_is_socialist_or_allied_trigger = yes } #Cairo
+				var:965.owner = { CHI_is_socialist_or_allied_trigger = yes } #Dar al Salaam
+				var:681.owner = { CHI_is_socialist_or_allied_trigger = yes } #Capetown
+				var:459.owner = { CHI_is_socialist_or_allied_trigger = yes } #Algiers
+				var:266.owner = { CHI_is_socialist_or_allied_trigger = yes } #Tehran
+				var:973.owner = { CHI_is_socialist_or_allied_trigger = yes } #Lagos
+			}
+		}
+
+		ai_will_do = { base = 500 }
+		completion_reward = {
+			log = "[GetDateText]: [Root.GetName]: Focus CHI_a_world_set_free"
+			add_popularity = { ideology = social_conservative popularity = 0.2 }
+			add_political_power = 100
+			if = {
+				limit = {
+					is_faction_leader = yes
+					num_faction_members > 1
+				}
+				set_faction_name = CHI_global_revolutionary_federation
+			}
+		}
+		search_filters = { FOCUS_FILTER_POLITICAL }
+	}
 	## Song Qingling Ending
 	focus = {
 		id = CHI_action_now
@@ -7712,7 +7791,7 @@ focus_tree = {
 			hidden_effect = {
 				if = {
 					limit = { is_subject = no }
-					news_event = { id = china_events.341 days = 0 }
+					news_event = china_events.341
 				}
 			}
 			CHI_deng_yanda = {
@@ -9159,7 +9238,7 @@ focus_tree = {
 			hidden_effect = {
 				if = {
 					limit = { is_subject = no }
-					news_event = { id = china_events.340 days = 0 }
+					news_event = china_events.340
 				}
 			}
 			country_event = { id = CHI.endgame.201 days = 3 } #The Three Faces of Wang Jingwei
@@ -10643,7 +10722,7 @@ focus_tree = {
 			hidden_effect = {
 				if = {
 					limit = { is_subject = no }
-					news_event = { id = china_events.342 days = 0 }
+					news_event = china_events.342
 				}
 			}
 			country_event = { id = CHI.endgame.801 days = 3 }
@@ -11181,9 +11260,6 @@ focus_tree = {
 		x = -1
 		y = 1
 
-		available = {
-			NOT = { has_war_with = PHI }
-		}
 		prerequisite = { focus = CHI_sideline_the_residence_faction }
 		ai_will_do = {
 			base = 100
@@ -11639,7 +11715,7 @@ focus_tree = {
 			hidden_effect = {
 				if = {
 					limit = { is_subject = no }
-					news_event = { id = china_events.343 days = 0 }
+					news_event = china_events.343
 				}
 			}
 			country_event = { id = CHI.endgame.601 days = 3 } #Smouldering Embers
