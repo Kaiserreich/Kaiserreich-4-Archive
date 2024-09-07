@@ -354,10 +354,6 @@ HOL_DEI_is_restored = {
 				limit = { NOT = { has_country_leader = { character = DEI_alidius_tjarda_van_starkenborgh_stachouwer } } }
 				DEI_alidius_tjarda_van_starkenborgh_stachouwer = { promote_character = yes }
 			}
-			set_country_flag = dei_long_name_appointed
-			clr_country_flag = dei_palar_appointed
-			clr_country_flag = holex_got_exiled
-			clr_country_flag = dei_furstner_appointed
 			mark_focus_tree_layout_dirty = yes
 			if = {
 				limit = { has_variable = DEI_original_army_idea }
@@ -785,12 +781,19 @@ HOL_revolution_effect = {
 				}
 			}
 			leave_faction = yes
-			BEL = { country_event = { id = belind.30 days = 2 } }
+			BEL = {
+				hidden_effect = { set_faction_leader = yes }
+				country_event = { id = belind.30 days = 2 }
+			}
 		}
 		else = {
 			every_other_country = {
 				limit = { is_in_faction_with = ROOT }
 				country_event = belind.31
+				hidden_effect = {
+					leave_faction = yes #needed for the below effect to work properly
+					peace_out_non_neighbours_after_leaving_faction = yes
+				}
 			}
 			faction_leader = { dismantle_faction = yes }
 		}
@@ -833,4 +836,50 @@ HOL_revolution_effect = {
 	}
 	peace_out_non_neighbours_after_leaving_faction = yes
 	mark_focus_tree_layout_dirty = yes
+}
+
+HOL_dismantle_dutch_east_indies = {
+	DEI = {
+		transfer_navy = { target = HOL }
+		every_unit_leader = {
+			limit = { has_character_flag = HOL_leader }
+			set_nationality = HOL
+		}
+	}
+	HOL = {
+		annex_country = {
+			target = DEI
+			transfer_troops = yes
+		}
+	}
+	if = {
+		limit = { NOT = { country_exists = INS } }
+		set_temp_variable = { HOL_indonesia_spawned = 1 }
+		effect_tooltip = { release = INS }
+	}
+	hidden_effect = {
+		every_state = {
+			limit = { is_indonesia = yes }
+			teleport_armies = {
+				limit = { is_ally_with = HOL }
+				to_state = capital
+			}
+			remove_core_of = HOL
+			remove_claim_by = HOL
+			if = {
+				limit = { is_owned_by = HOL }
+				transfer_state_to = INS
+			}
+		}
+		every_state = {
+			remove_core_of = DEI
+			remove_claim_by = DEI
+		}
+		if = {
+			limit = { has_variable = HOL_indonesia_spawned }
+			INS = { load_oob = INS }
+		}
+		GEA = { country_event = { id = dei.36 days = 2 } }
+		AST = { country_event = { id = dei.38 days = 3 } }
+	}
 }

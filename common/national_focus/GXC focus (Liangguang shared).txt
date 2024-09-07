@@ -1364,10 +1364,7 @@ shared_focus = {
 			name = GXC_modern_engineers
 			bonus = 1
 			uses = 2
-			technology = tech_engineers
-			technology = tech_engineers2
-			technology = tech_engineers3
-			technology = tech_engineers4
+			category = engineers_tech
 		}
 	}
 	search_filters = { FOCUS_FILTER_RESEARCH }
@@ -1713,6 +1710,7 @@ shared_focus = {
 		has_country_leader = { character = GXC_chen_jiongming }
 		has_country_flag = GXC_guangdong_victory
 		is_subject = no
+		CHN_no_aligned_unifier_exists_trigger = yes
 	}
 	ai_will_do = { factor = 100 }
 
@@ -1723,7 +1721,6 @@ shared_focus = {
 			remove_ideas = GXC_factionalism
 		}
 		setup_federalist_conference = yes
-		federalist_china_enable_alliance_decisions = yes
 	}
 	search_filters = { FOCUS_FILTER_POLITICAL }
 }
@@ -1850,7 +1847,7 @@ shared_focus = {
 shared_focus = {
 	id = GXC_Purge_the_Party_State
 	icon = GFX_goal_generic_attack_kmt
-	cost = 5
+	cost = 3
 
 	relative_position_id = GXC_Military_Nationalization
 	x = -2
@@ -1865,10 +1862,21 @@ shared_focus = {
 				CHI = { china_is_aligned_with_kmt = yes }
 			}
 			AND = {
+				can_declare_war_on = HNN
+				NOT = { has_non_aggression_pact_with = HNN }
+				HNN = { china_is_aligned_with_kmt = yes }
+			}
+			AND = {
 				can_declare_war_on = YUN
 				NOT = { has_non_aggression_pact_with = YUN }
 				YUN = { china_is_aligned_with_kmt = yes }
 			}
+		}
+		if = {
+			limit = {
+				country_exists = CHI
+			}
+			has_global_flag = LEP_league_war_over
 		}
 	}
 	bypass = {
@@ -1877,48 +1885,20 @@ shared_focus = {
 			CHI = { china_is_aligned_with_kmt = no }
 		}
 		OR = {
+			NOT = { country_exists = HNN }
+			HNN = { china_is_aligned_with_kmt = no }
+		}
+		OR = {
 			NOT = { country_exists = YUN }
 			YUN = { china_is_aligned_with_kmt = no }
 		}
 	}
 	prerequisite = { focus = GXC_Military_Nationalization }
 
-	ai_will_do = {
-		factor = 100
-		modifier = {
-			factor = 0
-			country_is_in_dangerous_war = yes
-		}
-		modifier = {
-			factor = 0
-			OR = {
-				CHI = {
-					can_declare_war_on = ROOT
-					china_is_aligned_with_kmt = yes
-					default_attack_AI_trigger = yes
-				}
-				YUN = {
-					can_declare_war_on = ROOT
-					china_is_aligned_with_kmt = yes
-					default_attack_AI_trigger = yes
-				}
-			}
-		}
-		modifier = {
-			factor = 0
-			NOT = {
-				is_neighbor_of = CHI
-				is_neighbor_of = YUN
-				any_subject_country = {
-					OR = {
-						is_neighbor_of = CHI
-						is_neighbor_of = YUN
-					}
-				}
-			}
-		}
-	}
+	ai_will_do = { factor = 100 }
+
 	will_lead_to_war_with = CHI
+	will_lead_to_war_with = HNN
 	will_lead_to_war_with = YUN
 	completion_reward = {
 		log = "[GetDateText]: [Root.GetName]: Focus GXC_Purge_the_Party_State"
@@ -1927,20 +1907,21 @@ shared_focus = {
 				can_declare_war_on = CHI
 				CHI = { china_is_aligned_with_kmt = yes }
 			}
-			create_wargoal = {
-				target = CHI
-				type = annex_everything
+			activate_targeted_decision = { target = CHI decision = china_attack_decision }
+		}
+		if = {
+			limit = {
+				can_declare_war_on = HNN
+				HNN = { china_is_aligned_with_kmt = yes }
 			}
+			activate_targeted_decision = { target = HNN decision = china_attack_decision }
 		}
 		if = {
 			limit = {
 				can_declare_war_on = YUN
 				YUN = { china_is_aligned_with_kmt = yes }
 			}
-			create_wargoal = {
-				target = YUN
-				type = annex_everything
-			}
+			activate_targeted_decision = { target = YUN decision = china_attack_decision }
 		}
 	}
 }
@@ -1955,7 +1936,7 @@ shared_focus = {
 		value = GFX_goal_generic_attack_zhili
 	}
 
-	cost = 5
+	cost = 3
 	dynamic = yes
 
 	relative_position_id = GXC_Military_Nationalization
@@ -1972,37 +1953,19 @@ shared_focus = {
 	}
 	prerequisite = { focus = GXC_Military_Nationalization }
 
-	ai_will_do = {
-		factor = 100
-		modifier = {
-			factor = 0
-			OR = {
-				country_is_in_dangerous_war = yes
-				QIE = { default_attack_AI_trigger = yes }
-			}
-		}
-		modifier = {
-			factor = 0
-			NOT = {
-				is_neighbor_of = QIE
-				any_subject_country = { is_neighbor_of = QIE }
-			}
-		}
-	}
+	ai_will_do = { factor = 100 }
+
 	will_lead_to_war_with = QIE
 	completion_reward = {
 		log = "[GetDateText]: [Root.GetName]: Focus GXC_Attack_Qing"
-		create_wargoal = {
-			target = QIE
-			type = annex_everything
-		}
+		activate_targeted_decision = { target = QIE decision = china_attack_decision }
 	}
 }
 
 shared_focus = {
 	id = GXC_Liberate_the_Northeast
 	icon = GFX_goal_generic_attack_fengtian
-	cost = 5
+	cost = 3
 
 	relative_position_id = GXC_Military_Nationalization
 	x = 2
@@ -2022,17 +1985,26 @@ shared_focus = {
 		factor = 100
 		modifier = {
 			factor = 0
-			OR = {
-				country_is_in_dangerous_war = yes
-				var:716.owner = { default_attack_AI_trigger = yes }
+			var:716.owner = {
+				can_declare_war_on = ROOT
+				OR = {
+					default_attack_AI_trigger = yes
+					NOT = {
+						is_neighbor_of = ROOT
+						any_neighbor_country = { is_ally_with = ROOT }
+						any_subject_country = { any_neighbor_country = { is_ally_with = ROOT } }
+					}
+				}
 			}
 		}
 		modifier = {
 			factor = 0
-			NOT = {
-				is_neighbor_of = 716.owner
-				any_subject_country = { is_neighbor_of = 716.owner }
-			}
+			FNG = { owns_state = 716 }
+			has_game_rule = { rule = FNG_conference option = FNG_CONFERENCE_FEDS }
+		}
+		modifier = {
+			factor = 0
+			china_proper_not_united = yes
 		}
 	}
 	will_lead_to_war_with = FNG
@@ -2040,9 +2012,17 @@ shared_focus = {
 	will_lead_to_war_with = JAP
 	completion_reward = {
 		log = "[GetDateText]: [Root.GetName]: Focus GXC_Liberate_the_Northeast"
-		create_wargoal = {
-			target = 716.owner
-			type = annex_everything
+		if = {
+			limit = {
+				can_declare_war_on = FNG
+			}
+			activate_targeted_decision = { target = FNG decision = china_attack_decision }
+		}
+		else = {
+			create_wargoal = {
+				target = 716.owner
+				type = annex_everything
+			}
 		}
 	}
 }
@@ -2800,7 +2780,7 @@ shared_focus = {
 		modifier = {
 			factor = 0
 			OR = {
-				has_game_rule = { rule = GXC_path option = GXC_PATH_PATAUT_QIE }
+				has_game_rule = { rule = GXC_path option = GXC_PATH_PATAUT }
 				has_game_rule = { rule = GXC_path option = GXC_PATH_NPA }
 			}
 		}
@@ -2834,23 +2814,12 @@ shared_focus = {
 		}
 	}
 	will_lead_to_war_with = YUN
-	ai_will_do = {
-		factor = 100
-		modifier = {
-			factor = 0
-			country_is_in_dangerous_war = yes
-		}
-		modifier = {
-			factor = 0
-			YUN = { default_attack_AI_trigger = yes }
-		}
-	}
+
+	ai_will_do = { factor = 100 }
+
 	completion_reward = {
 		log = "[GetDateText]: [Root.GetName]: Focus GXC_End_Yunnan_Threat"
-		declare_war_on = {
-			type = puppet_wargoal_focus
-			target = YUN
-		}
+		activate_targeted_decision = { target = YUN decision = china_attack_decision }
 	}
 	search_filters = { FOCUS_FILTER_ANNEXATION }
 }
@@ -2991,7 +2960,7 @@ shared_focus = {
 		modifier = {
 			factor = 0
 			OR = {
-				has_game_rule = { rule = GXC_path option = GXC_PATH_PATAUT_QIE }
+				has_game_rule = { rule = GXC_path option = GXC_PATH_PATAUT }
 				has_game_rule = { rule = GXC_path option = GXC_PATH_NPA }
 			}
 		}
@@ -3070,12 +3039,15 @@ shared_focus = {
 		is_subject = no
 		is_in_faction = no
 	}
+	bypass = {
+		china_is_potential_government = yes
+	}
 	ai_will_do = {
 		factor = 100
 		modifier = {
 			factor = 0
 			OR = {
-				has_game_rule = { rule = GXC_path option = GXC_PATH_PATAUT_QIE }
+				has_game_rule = { rule = GXC_path option = GXC_PATH_PATAUT }
 				has_game_rule = { rule = GXC_path option = GXC_PATH_EXPANSIONISM }
 			}
 		}
@@ -3091,13 +3063,16 @@ shared_focus = {
 		else_if = {
 			limit = {
 				NPA = { exists = yes }
+				NOT = { has_war_with = NPA }
 			}
 			NPA = { country_event = npa.2 }
 		}
 		else = {
-			china_generic_set_government_cosmetic_effect = yes
-			set_potential_national_government = yes
-			china_enable_alliances_decisions = yes #Fallback
+			var:country_leader = { clear_variable = china_alignment }
+			hidden_effect = {
+				set_potential_national_government = yes
+			}
+			china_enable_all_demand_submission_decisions = yes
 		}
 		custom_effect_tooltip = tooltip_white_line
 		custom_effect_tooltip = china_can_core_through_compliance
@@ -3309,14 +3284,6 @@ shared_focus = {
 			remove_ideas = GXC_philantropic_investments
 			add_ideas = GXC_chinese_washington_idea
 		}
-		if = {
-			limit = {
-				is_subject = no
-				china_is_potential_government = no
-				JAP = { is_faction_leader = yes }
-			}
-			activate_targeted_decision = { target = JAP decision = GXC_align_with_japan }
-		}
 	}
 	search_filters = { FOCUS_FILTER_ARMY_BONUS FOCUS_FILTER_POLITICAL FOCUS_FILTER_INDUSTRY }
 }
@@ -3431,14 +3398,16 @@ shared_focus = {
 		is_subject = no
 		is_in_faction = no
 	}
+	bypass = {
+		china_is_potential_government = yes
+	}
 	ai_will_do = {
 		factor = 100
 		modifier = {
 			factor = 0
 			OR = {
 				has_game_rule = { rule = GXC_path option = GXC_PATH_EXPANSIONISM }
-				has_game_rule = { rule = GXC_path option = GXC_PATH_MARLIB_JAP }
-				has_game_rule = { rule = GXC_path option = GXC_PATH_MARLIB_FNG }
+				has_game_rule = { rule = GXC_path option = GXC_PATH_MARLIB }
 			}
 		}
 	}
@@ -3453,13 +3422,16 @@ shared_focus = {
 		else_if = {
 			limit = {
 				NPA = { exists = yes }
+				NOT = { has_war_with = NPA }
 			}
 			NPA = { country_event = npa.2 }
 		}
 		else = {
-			china_generic_set_government_cosmetic_effect = yes
-			set_potential_national_government = yes
-			china_enable_alliances_decisions = yes #Fallback
+			var:country_leader = { clear_variable = china_alignment }
+			hidden_effect = {
+				set_potential_national_government = yes
+			}
+			china_enable_all_demand_submission_decisions = yes
 		}
 		custom_effect_tooltip = tooltip_white_line
 		custom_effect_tooltip = china_can_core_through_compliance
@@ -3483,16 +3455,15 @@ shared_focus = {
 			has_country_flag = GXC_guangdong_victory
 			has_country_flag = GXC_KMT_takeover
 		}
-		if = {
-			limit = { has_country_leader = { character = GXC_chen_mingshu } }
-			OR = {
-				NOT = { country_exists = CHI }
-				is_subject = yes
-			}
-		}
 	}
 
-	ai_will_do = { factor = 100 }
+	ai_will_do = {
+		factor = 100
+		modifier = {
+			factor = 10
+			CHN_no_aligned_unifier_exists_trigger = yes #Will beeline forming a KMT government is none exists.
+		}
+	}
 
 	completion_reward = {
 		log = "[GetDateText]: [Root.GetName]: Focus GXC_Li_Zongren_focus"
@@ -3891,7 +3862,7 @@ shared_focus = {
 	y = 1
 
 	available = {
-		has_global_flag = china_united
+		china_is_the_unifier_of_china_trigger = yes
 		has_completed_focus = GXC_liangguang_NRA
 		has_completed_focus = GXC_twin_model_provinces
 		has_completed_focus = GXC_kmt_land_reform
@@ -3973,37 +3944,32 @@ shared_focus = {
 		OR = {
 			NOT = { country_exists = CHI }
 			has_completed_focus = GXC_lec_ties
+			china_is_potential_government = yes
 		}
 		is_subject = no
+		CHN_no_aligned_unifier_exists_trigger = yes
+		owns_state = 592 #Guangzhou
 	}
-	ai_will_do = { factor = 25 }
+	ai_will_do = {
+		factor = 100
+		modifier = {
+			factor = 10
+			CHN_no_aligned_unifier_exists_trigger = yes #Will beeline forming a KMT government is none exists.
+		}
+	}
 
 	completion_reward = {
 		log = "[GetDateText]: [Root.GetName]: Focus GXC_whampoa"
-		if = {
-			limit = {
-				has_country_leader = { character = GXC_chen_mingshu }
-			}
-			set_cosmetic_tag = GXC_government_left_kmt
-		}
-		else = {
-			set_cosmetic_tag = GXC_government_nanning
-		}
 		add_popularity = {
 			ideology = paternal_autocrat
 			popularity = 0.10
 		}
-		hidden_effect = {
-			set_party_name = {
-				ideology = paternal_autocrat
-				long_name = GXC_kmt_whampoa_clique_long
-				name = GXC_kmt_whampoa_clique
+		if = {
+			limit = {
+				china_is_potential_government = no
 			}
 			set_potential_national_government = yes
-			add_to_array = { china_possible_allies_array = YUN }
-			add_to_array = { china_possible_allies_array = SZC }
-			add_to_array = { china_possible_allies_array = HNN }
-			add_to_array = { china_possible_allies_array = SHX }
+			country_event = { id = lngkmt.4 days = 1 }
 			add_to_array = { china_possible_allies_array_northwest = XSM }
 			add_to_array = { china_possible_allies_array_northwest = SIK }
 		}
@@ -4011,7 +3977,13 @@ shared_focus = {
 		custom_effect_tooltip = GXC_KMT_take_over_tt
 		army_experience = 50
 		country_event = lngkmt.61
-		country_event = { id = lngkmt.4 days = 1 }
+		hidden_effect = {
+			set_party_name = {
+				ideology = paternal_autocrat
+				long_name = GXC_kmt_whampoa_clique_long
+				name = GXC_kmt_whampoa_clique
+			}
+		}
 	}
 	search_filters = { FOCUS_FILTER_POLITICAL FOCUS_FILTER_RESEARCH }
 }
@@ -4019,7 +3991,7 @@ shared_focus = {
 shared_focus = {
 	id = GXC_launch_hunan_expedition
 	icon = GFX_goal_generic_attack_hunan
-	cost = 5
+	cost = 3
 
 	relative_position_id = GXC_whampoa
 	x = 0
@@ -4048,7 +4020,6 @@ shared_focus = {
 			limit = {
 				HNN = {
 					is_subject = no
-					has_civil_war = no
 					china_is_potential_government = no
 					china_compatible_alignment_to_PREV = yes
 				}
@@ -4060,23 +4031,27 @@ shared_focus = {
 				china_puppet_TARGET_effect = yes
 			}
 		}
-		else = {
-			create_wargoal = {
-				target = HNN
-				type = annex_everything
-			}
-			if = {
-				limit = { HNN = { has_civil_war = yes } }
-				every_other_country = {
-					limit = { civilwar_target = HNN }
-					ROOT = {
-						create_wargoal = {
-							target = PREV
-							type = annex_everything
-						}
-					}
+		else_if = {
+			limit = {
+				HNN = {
+					is_subject_of = YUN
+					china_is_potential_government = no
+					china_compatible_alignment_to_PREV = yes
+				}
+				YUN = {
+					china_compatible_alignment_to_PREV = yes
 				}
 			}
+			YUN = { country_event = china_events.7 }
+			custom_effect_tooltip = if_they_accept_tt
+			effect_tooltip = {
+				set_temp_variable = { target = YUN }
+				china_puppet_TARGET_effect = yes
+			}
+		}
+		else_if = {
+			limit = { can_declare_war_on = HNN }
+			activate_targeted_decision = { target = HNN decision = china_attack_decision }
 		}
 	}
 	search_filters = { FOCUS_FILTER_ANNEXATION }
@@ -4085,7 +4060,7 @@ shared_focus = {
 shared_focus = {
 	id = GXC_launch_western_expedition
 	icon = GFX_goal_CHI_plan_western
-	cost = 5
+	cost = 3
 
 	relative_position_id = GXC_whampoa
 	x = -1
@@ -4170,7 +4145,10 @@ shared_focus = {
 		}
 		else_if = {
 			limit = {
-				YUN = { china_is_unaligned = yes }
+				YUN = {
+					china_is_unaligned = yes
+					is_subject = no
+				}
 			}
 			YUN = { country_event = china_events.1 }
 			custom_effect_tooltip = if_they_accept_tt
@@ -4184,22 +4162,7 @@ shared_focus = {
 		}
 		else_if = {
 			limit = { can_declare_war_on = YUN }
-			create_wargoal = {
-				target = YUN
-				type = annex_everything
-			}
-			if = {
-				limit = { YUN = { has_civil_war = yes } }
-				every_other_country = {
-					limit = { civilwar_target = YUN }
-					ROOT = {
-						create_wargoal = {
-							target = PREV
-							type = annex_everything
-						}
-					}
-				}
-			}
+			activate_targeted_decision = { target = YUN decision = china_attack_decision }
 		}
 		custom_effect_tooltip = tooltip_white_line
 		if = {
@@ -4221,7 +4184,10 @@ shared_focus = {
 		}
 		else_if = {
 			limit = {
-				SZC = { china_is_unaligned = yes }
+				SZC = {
+					china_is_unaligned = yes
+					is_subject = no
+				}
 			}
 			SZC = { country_event = china_events.1 }
 			custom_effect_tooltip = if_they_accept_tt
@@ -4235,22 +4201,7 @@ shared_focus = {
 		}
 		else_if = {
 			limit = { can_declare_war_on = SZC }
-			create_wargoal = {
-				target = SZC
-				type = annex_everything
-			}
-			if = {
-				limit = { SZC = { has_civil_war = yes } }
-				every_other_country = {
-					limit = { civilwar_target = SZC }
-					ROOT = {
-						create_wargoal = {
-							target = PREV
-							type = annex_everything
-						}
-					}
-				}
-			}
+			activate_targeted_decision = { target = SZC decision = china_attack_decision }
 		}
 	}
 	search_filters = { FOCUS_FILTER_ANNEXATION }
@@ -4259,7 +4210,7 @@ shared_focus = {
 shared_focus = {
 	id = GXC_launch_eastern_expedition
 	icon = YUN_GFX_Goal_Secure_Coastal_China
-	cost = 5
+	cost = 3
 
 	relative_position_id = GXC_whampoa
 	x = 1
@@ -4275,6 +4226,7 @@ shared_focus = {
 			can_declare_war_on = ANQ
 			can_declare_war_on = SQI
 		}
+		has_global_flag = LEP_league_war_over
 	}
 	bypass = {
 		OR = {
@@ -4304,32 +4256,20 @@ shared_focus = {
 	completion_reward = {
 		log = "[GetDateText]: [Root.GetName]: Focus GXC_launch_eastern_expedition"
 		if = {
-			limit = { can_declare_war_on = LEP }
-			create_wargoal = {
-				target = LEP
-				type = annex_everything
-			}
+			limit = { can_declare_war_on = ANQ }
+			activate_targeted_decision = { target = ANQ decision = china_attack_decision }
 		}
 		if = {
 			limit = { can_declare_war_on = CHI }
-			create_wargoal = {
-				target = CHI
-				type = annex_everything
-			}
+			activate_targeted_decision = { target = CHI decision = china_attack_decision }
 		}
 		if = {
-			limit = { can_declare_war_on = ANQ }
-			create_wargoal = {
-				target = ANQ
-				type = annex_everything
-			}
+			limit = { can_declare_war_on = LEP }
+			activate_targeted_decision = { target = LEP decision = china_attack_decision }
 		}
 		if = {
 			limit = { can_declare_war_on = SQI }
-			create_wargoal = {
-				target = SQI
-				type = annex_everything
-			}
+			activate_targeted_decision = { target = SQI decision = china_attack_decision }
 		}
 	}
 	search_filters = { FOCUS_FILTER_ANNEXATION }
@@ -4337,8 +4277,15 @@ shared_focus = {
 
 shared_focus = {
 	id = GXC_second_northern_expedition
-	icon = GFX_goal_generic_attack_zhili
-	cost = 5
+	icon = {
+		trigger = { QIE = { is_monarchy = yes } }
+		value = GFX_goal_generic_attack_qing
+	}
+	icon = {
+		value = GFX_goal_generic_attack_zhili
+	}
+	dynamic = yes
+	cost = 3
 
 	relative_position_id = GXC_launch_hunan_expedition
 	x = 0
@@ -4374,14 +4321,25 @@ shared_focus = {
 			NOT = { country_exists = SHX }
 		}
 	}
+	ai_will_do = {
+		factor = 25
+		modifier = {
+			factor = 0
+			QIE = {
+				can_declare_war_on = ROOT
+				NOT = {
+					is_neighbor_of = ROOT
+					any_neighbor_country = { is_ally_with = ROOT }
+					any_subject_country = { any_neighbor_country = { is_ally_with = ROOT } }
+				}
+			}
+		}
+	}
 	completion_reward = {
 		log = "[GetDateText]: [Root.GetName]: Focus GXC_second_northern_expedition"
 		if = {
 			limit = { can_declare_war_on = QIE }
-			create_wargoal = {
-				type = annex_everything
-				target = QIE
-			}
+			activate_targeted_decision = { target = QIE decision = china_attack_decision }
 		}
 		if = {
 			limit = { can_declare_war_on = FNG }
@@ -4397,6 +4355,7 @@ shared_focus = {
 				}
 			}
 			add_to_array = { ROOT.china_possible_targets_array = SHX }
+			add_to_array = { china_possible_allies_array = SHX }
 			effect_tooltip = { activate_targeted_decision = { target = SHX decision = china_demand_submission } }
 		}
 		else_if = {
@@ -4421,7 +4380,7 @@ shared_focus = {
 
 	allow_branch = {
 		has_country_leader = { character = GXC_li_zongren }
-		has_global_flag = china_united
+		china_is_the_unifier_of_china_trigger = yes
 	}
 
 	ai_will_do = { factor = 25 }
@@ -4672,10 +4631,8 @@ shared_focus = {
 		country_event = lngkmt.64
 		add_war_support = 0.1
 		add_political_power = 50
-		hidden_effect = {
-			china_enable_concession_decisions = yes
-			china_enable_outskirts_decisions = yes
-		}
+		china_enable_concession_decisions = yes
+		china_enable_outskirts_decisions = yes
 	}
 	search_filters = { FOCUS_FILTER_POLITICAL }
 }
@@ -4857,7 +4814,7 @@ shared_focus = {
 	y = 0
 
 	allow_branch = {
-		has_global_flag = china_united
+		china_is_the_unifier_of_china_trigger = yes
 		has_country_leader = { character = GXC_li_zongren }
 	}
 
@@ -5285,7 +5242,7 @@ shared_focus = {
 	}
 
 	allow_branch = {
-		has_global_flag = china_united
+		china_is_the_unifier_of_china_trigger = yes
 		has_country_leader = { character = GXC_li_zongren }
 	}
 
@@ -5399,7 +5356,7 @@ shared_focus = {
 					OR = {
 						is_character = QIE_sa_zhenbing
 						is_character = QIE_du_xigui
-						is_character = QIE_wu_renli
+						is_character = QIE_wu_yulin
 
 					}
 				}
@@ -5407,7 +5364,7 @@ shared_focus = {
 			hidden_effect = {
 				QIE_sa_zhenbing = { set_nationality = ROOT }
 				QIE_du_xigui = { set_nationality = ROOT }
-				QIE_wu_renli = { set_nationality = ROOT }
+				QIE_wu_yulin = { set_nationality = ROOT }
 			}
 		}
 		if = {

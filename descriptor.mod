@@ -78,6 +78,6 @@ tags = {
 	"Gameplay"
 }
 picture = "KR.jpg"
-version = "1.1.3"
-supported_version = "1.14.6"
+version = "1.1.4"
+supported_version = "1.14.7"
 remote_file_id = "1521695605"

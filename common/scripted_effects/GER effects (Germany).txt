@@ -412,7 +412,7 @@ GER_wilhelm_ii_dies = {
 			}
 			GER_wilhelm_iii = {
 				if = {
-					limit = { character_has_no_nationality = yes }
+					limit = { is_retired = yes }
 					set_nationality = PREV
 					set_character_name = GER_wilhelm_iii_regnal
 					retire = yes
@@ -1224,7 +1224,7 @@ GER_bm_cardgame_turn_end = {
 		custom_effect_tooltip = GER_bm_turn_victory_tt
 		if = {
 			limit = {
-				check_variable = { GER_economic_health < 0 }
+				check_variable = { GER_economic_health < -1 }
 			}
 			add_to_variable = { GER_economic_health = 1 }
 			GER_reduce_black_monday = yes
@@ -1274,15 +1274,6 @@ GER_bm_cardgame_turn_end = {
 				25 = {
 					# nothing
 				}
-			}
-		}
-		# If you have removed BM - event to turn off the mechanic
-		if = {
-			limit = {
-				check_variable = { GER_economic_health = -1 }
-			}
-			hidden_effect = {
-				country_event = gerblack.10
 			}
 		}
 	}
@@ -1357,47 +1348,61 @@ GER_bm_cardgame_turn_end = {
 		}
 	}
 
-	#reset game variables
-	set_variable = { GER_investment = 0 }
-	set_variable = { GER_stability = 0 }
-	set_variable = { GER_stability_bonus_factor = 0 }
-	set_variable = { GER_investment_bonus_factor = 0 }
-
-	#increase num of rounds
-	add_to_variable = { GER_bm_game_rounds = 1 }
-
-	#generate new crisis type, this could be done in a more clever system but for now just RNG works
-	hidden_effect = {
-		random_list = {
-			33 = {
-				set_variable = { GER_crisis_id = 1 } # no money?
-			}
-			33 = {
-				set_variable = { GER_crisis_id = 2 } # no fiscal stability?
-			}
-			33 = {
-				set_variable = { GER_crisis_id = 3 } # no employment?
-			}
-		}
-	}
-
-	#THIS SHOULD BE MADE TO "DRAW ENOUGH CARDS UNTIL YOU GET 6"
+	# If you have removed BM - event to turn off the mechanic
 	if = {
 		limit = {
-			has_country_flag = GER_technocratic_thinking_card_effect
+			check_variable = { GER_economic_health > -2 }
 		}
-		set_temp_variable = { GER_cards_to_draw = 6 }
-		subtract_from_temp_variable = { GER_cards_to_draw = GER_bm_cardgame_cards_drawn_array^num }
-		clamp_temp_variable = { var = GER_cards_to_draw min = 0 max = 6 }
+		hidden_effect = {
+			country_event = gerblack.10
+		}
 	}
 	else = {
-		set_temp_variable = { GER_cards_to_draw = 5 }
-		subtract_from_temp_variable = { GER_cards_to_draw = GER_bm_cardgame_cards_drawn_array^num }
-		clamp_temp_variable = { var = GER_cards_to_draw min = 0 max = 5 }
-	}
-	custom_effect_tooltip = GER_bm_card_draw_tt
-	hidden_effect = { GER_bm_cardgame_draw = yes }
+		#reset game variables
+		set_variable = { GER_investment = 0 }
+		set_variable = { GER_stability = 0 }
+		set_variable = { GER_stability_bonus_factor = 0 }
+		set_variable = { GER_investment_bonus_factor = 0 }
 
+		#increase num of rounds
+		add_to_variable = { GER_bm_game_rounds = 1 }
+
+		#generate new crisis type, this could be done in a more clever system but for now just RNG works
+		hidden_effect = {
+			random_list = {
+				33 = {
+					set_variable = { GER_crisis_id = 1 } # no money?
+				}
+				33 = {
+					set_variable = { GER_crisis_id = 2 } # no fiscal stability?
+				}
+				33 = {
+					set_variable = { GER_crisis_id = 3 } # no employment?
+				}
+			}
+		}
+
+		#THIS SHOULD BE MADE TO "DRAW ENOUGH CARDS UNTIL YOU GET 6"
+		if = {
+			limit = {
+				has_country_flag = GER_technocratic_thinking_card_effect
+			}
+			set_temp_variable = { GER_cards_to_draw = 6 }
+			subtract_from_temp_variable = { GER_cards_to_draw = GER_bm_cardgame_cards_drawn_array^num }
+			clamp_temp_variable = { var = GER_cards_to_draw min = 0 max = 6 }
+		}
+		else = {
+			set_temp_variable = { GER_cards_to_draw = 5 }
+			subtract_from_temp_variable = { GER_cards_to_draw = GER_bm_cardgame_cards_drawn_array^num }
+			clamp_temp_variable = { var = GER_cards_to_draw min = 0 max = 5 }
+		}
+		custom_effect_tooltip = GER_bm_card_draw_tt
+		hidden_effect = {
+			GER_bm_cardgame_draw = yes
+			GER_set_bm_turn_timer = yes
+			country_event = gerblack.12
+		}
+	}
 }
 
 # draws cards from the deck without replacement with temp var argument GER_cards_to_draw
@@ -1731,9 +1736,8 @@ GER_democratic_union_alignment_effect = {
 	custom_effect_tooltip = GER_reichstag_faction_alignment_turn_tt
 	if = {
 		limit = {
-			3 = {
-				GER_is_possible_reichstag_target = yes # Target LVP (L)
-			}
+			check_variable = { GER_LVP_seats_l > 0 }
+			3 = { GER_is_possible_reichstag_target = yes } # Target LVP (L)
 		}
 		if = {
 			limit = {
@@ -1747,12 +1751,9 @@ GER_democratic_union_alignment_effect = {
 	}
 	if = {
 		limit = {
-			3 = {
-				is_in_array = { GER.democratic_union_members_array = THIS }
-			}
-			4 = {
-				GER_is_possible_reichstag_target = yes # Target LVP (R)
-			}
+			check_variable = { GER_LVP_seats_r > 0 }
+			is_in_array = { GER.democratic_union_members_array = 3.id }
+			4 = { GER_is_possible_reichstag_target = yes } # Target LVP (R)
 		}
 		if = {
 			limit = {
@@ -1766,16 +1767,13 @@ GER_democratic_union_alignment_effect = {
 	}
 	if = {
 		limit = {
-			4 = {
-				is_in_array = { GER.democratic_union_members_array = THIS }
-			}
-			5 = {
-				GER_is_possible_reichstag_target = yes # Target Minor Liberals
-			}
+			check_variable = { GER_liberal_seats_r > 0 }
+			is_in_array = { GER.democratic_union_members_array = 4.id }
+			6 = { GER_is_possible_reichstag_target = yes } # Target Minor Liberals
 		}
 		if = {
 			limit = {
-				is_in_array = { GER.protected_factions_array = 5.id }
+				is_in_array = { GER.protected_factions_array = 6.id }
 			}
 			custom_effect_tooltip = GER_liberal_target_du_win
 		}
@@ -1785,9 +1783,8 @@ GER_democratic_union_alignment_effect = {
 	}
 	if = {
 		limit = {
-			7 = {
-				GER_is_possible_reichstag_target = yes # Target Poles
-			}
+			check_variable = { GER_polish_seats_r > 0 }
+			7 = { GER_is_possible_reichstag_target = yes } # Target Poles
 		}
 		if = {
 			limit = {
@@ -1801,9 +1798,8 @@ GER_democratic_union_alignment_effect = {
 	}
 	if = {
 		limit = {
-			8 = {
-				GER_is_possible_reichstag_target = yes # Target Zentrum (L)
-			}
+			check_variable = { GER_Zentrum_seats_l > 0 }
+			8 = { GER_is_possible_reichstag_target = yes } # Target Zentrum (L)
 		}
 		if = {
 			limit = {
@@ -1817,12 +1813,9 @@ GER_democratic_union_alignment_effect = {
 	}
 	if = {
 		limit = {
-			8 = {
-				is_in_array = { GER.democratic_union_members_array = THIS }
-			}
-			9 = {
-				GER_is_possible_reichstag_target = yes # Target Zentrum (C)
-			}
+			check_variable = { GER_Zentrum_seats_c > 0 }
+			is_in_array = { GER.democratic_union_members_array = 8.id }
+			9 = { GER_is_possible_reichstag_target = yes } # Target Zentrum (C)
 		}
 		if = {
 			limit = {
@@ -1836,12 +1829,9 @@ GER_democratic_union_alignment_effect = {
 	}
 	if = {
 		limit = {
-			9 = {
-				is_in_array = { GER.democratic_union_members_array = THIS }
-			}
-			10 = {
-				GER_is_possible_reichstag_target = yes # Target Zentrum (R)
-			}
+			check_variable = { GER_Zentrum_seats_r > 0 }
+			is_in_array = { GER.democratic_union_members_array = 9.id }
+			10 = { GER_is_possible_reichstag_target = yes } # Target Zentrum (R)
 		}
 		if = {
 			limit = {
@@ -1855,12 +1845,9 @@ GER_democratic_union_alignment_effect = {
 	}
 	if = {
 		limit = {
-			9 = {
-				is_in_array = { GER.democratic_union_members_array = THIS }
-			}
-			5 = {
-				GER_is_possible_reichstag_target = yes # Target Guelphs
-			}
+			check_variable = { GER_Guelph_seats_r > 0 }
+			is_in_array = { GER.democratic_union_members_array = 9.id }
+			5 = { GER_is_possible_reichstag_target = yes } # Target Guelphs
 		}
 		if = {
 			limit = {
@@ -1874,12 +1861,9 @@ GER_democratic_union_alignment_effect = {
 	}
 	if = {
 		limit = {
-			9 = {
-				is_in_array = { GER.democratic_union_members_array = THIS }
-			}
-			11 = {
-				GER_is_possible_reichstag_target = yes # Target Agrarians
-			}
+			check_variable = { GER_agrarian_seats_r > 0 }
+			is_in_array = { GER.democratic_union_members_array = 9.id }
+			11 = { GER_is_possible_reichstag_target = yes } # Target Agrarians
 		}
 		if = {
 			limit = {
@@ -1894,11 +1878,10 @@ GER_democratic_union_alignment_effect = {
 	hidden_effect = {
 		random_list = {
 			0 = {
-				modifier = {
-					add = 50
-					3 = {
-						GER_is_possible_reichstag_target = yes # Target LVP (L)
-					}
+				modifier = { # Target LVP (L)
+					add = 1
+					check_variable = { GER_LVP_seats_l > 0 }
+					3 = { GER_is_possible_reichstag_target = yes }
 				}
 				if = {
 					limit = { NOT = { is_in_array = { GER.protected_factions_array = 3.id } } }
@@ -1908,14 +1891,11 @@ GER_democratic_union_alignment_effect = {
 				}
 			}
 			0 = {
-				modifier = {
-					add = 50
-					3 = {
-						is_in_array = { GER.democratic_union_members_array = THIS }
-					}
-					4 = {
-						GER_is_possible_reichstag_target = yes # Target LVP (R)
-					}
+				modifier = { # Target LVP (R)
+					add = 1
+					check_variable = { GER_LVP_seats_r > 0 }
+					is_in_array = { GER.democratic_union_members_array = 3.id }
+					4 = { GER_is_possible_reichstag_target = yes }
 				}
 				if = {
 					limit = { NOT = { is_in_array = { GER.protected_factions_array = 4.id } } }
@@ -1926,27 +1906,23 @@ GER_democratic_union_alignment_effect = {
 			}
 			0 = {
 				modifier = {
-					add = 50
-					4 = {
-						is_in_array = { GER.democratic_union_members_array = THIS }
-					}
-					5 = {
-						GER_is_possible_reichstag_target = yes # Target Minor Liberals
-					}
+					add = 1
+					check_variable = { GER_liberal_seats_r > 0 }
+					is_in_array = { GER.democratic_union_members_array = 4.id }
+					6 = { GER_is_possible_reichstag_target = yes } # Target Minor Liberals
 				}
 				if = {
-					limit = { NOT = { is_in_array = { GER.protected_factions_array = 5.id } } }
-					add_to_array = { GER.democratic_union_members_array = 5.id }
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 6.id } } }
+					add_to_array = { GER.democratic_union_members_array = 6.id }
 					add_to_variable = { GER_democratic_union_seats = GER_liberal_seats_r }
 					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
 				}
 			}
 			0 = {
-				modifier = {
-					add = 50
-					7 = {
-						GER_is_possible_reichstag_target = yes # Target Poles
-					}
+				modifier = { # Target Poles
+					add = 1
+					check_variable = { GER_polish_seats_r > 0 }
+					7 = { GER_is_possible_reichstag_target = yes }
 				}
 				if = {
 					limit = { NOT = { is_in_array = { GER.protected_factions_array = 7.id } } }
@@ -1956,11 +1932,10 @@ GER_democratic_union_alignment_effect = {
 				}
 			}
 			0 = {
-				modifier = {
-					add = 50
-					8 = {
-						GER_is_possible_reichstag_target = yes # Target Zentrum (L)
-					}
+				modifier = { # Target Zentrum (L)
+					add = 1
+					check_variable = { GER_Zentrum_seats_l > 0 }
+					8 = { GER_is_possible_reichstag_target = yes }
 				}
 				if = {
 					limit = { NOT = { is_in_array = { GER.protected_factions_array = 8.id } } }
@@ -1970,14 +1945,11 @@ GER_democratic_union_alignment_effect = {
 				}
 			}
 			0 = {
-				modifier = {
-					add = 50
-					8 = {
-						is_in_array = { GER.democratic_union_members_array = THIS }
-					}
-					9 = {
-						GER_is_possible_reichstag_target = yes # Target Zentrum (C)
-					}
+				modifier = { # Target Zentrum (C)
+					add = 1
+					check_variable = { GER_Zentrum_seats_c > 0 }
+					is_in_array = { GER.democratic_union_members_array = 8.id }
+					9 = { GER_is_possible_reichstag_target = yes }
 				}
 				if = {
 					limit = { NOT = { is_in_array = { GER.protected_factions_array = 9.id } } }
@@ -1987,14 +1959,11 @@ GER_democratic_union_alignment_effect = {
 				}
 			}
 			0 = {
-				modifier = {
-					add = 50
-					9 = {
-						is_in_array = { GER.democratic_union_members_array = THIS }
-					}
-					10 = {
-						GER_is_possible_reichstag_target = yes # Target Zentrum (R)
-					}
+				modifier = { # Target Zentrum (R)
+					add = 1
+					check_variable = { GER_Zentrum_seats_r > 0 }
+					is_in_array = { GER.democratic_union_members_array = 9.id }
+					10 = { GER_is_possible_reichstag_target = yes }
 				}
 				if = {
 					limit = { NOT = { is_in_array = { GER.protected_factions_array = 10.id } } }
@@ -2004,14 +1973,11 @@ GER_democratic_union_alignment_effect = {
 				}
 			}
 			0 = {
-				modifier = {
-					add = 50
-					9 = {
-						is_in_array = { GER.democratic_union_members_array = THIS }
-					}
-					5 = {
-						GER_is_possible_reichstag_target = yes # Target Guelphs
-					}
+				modifier = { # Target Guelphs
+					add = 1
+					check_variable = { GER_Guelph_seats_r > 0 }
+					is_in_array = { GER.democratic_union_members_array = 9.id }
+					5 = { GER_is_possible_reichstag_target = yes }
 				}
 				if = {
 					limit = { NOT = { is_in_array = { GER.protected_factions_array = 5.id } } }
@@ -2021,14 +1987,11 @@ GER_democratic_union_alignment_effect = {
 				}
 			}
 			0 = {
-				modifier = {
-					add = 50
-					9 = {
-						is_in_array = { GER.democratic_union_members_array = THIS }
-					}
-					11 = {
-						GER_is_possible_reichstag_target = yes # Target Agrarians
-					}
+				modifier = { # Target Agrarians
+					add = 1
+					check_variable = { GER_agrarian_seats_r > 0 }
+					is_in_array = { GER.democratic_union_members_array = 9.id }
+					11 = { GER_is_possible_reichstag_target = yes }
 				}
 				if = {
 					limit = { NOT = { is_in_array = { GER.protected_factions_array = 11.id } } }
@@ -2042,171 +2005,11 @@ GER_democratic_union_alignment_effect = {
 }
 
 GER_swr_alignment_effect = {
-	hidden_effect = {
-		random_list = {
-			0 = {
-				modifier = {
-					add = 50
-					12 = {
-						GER_is_possible_reichstag_target = yes # Target DkP
-					}
-				}
-				if = {
-					limit = { NOT = { is_in_array = { GER.protected_factions_array = 12.id } } }
-					add_to_array = { GER.swr_coalition_members_array = 12.id }
-					add_to_variable = { GER_swr_coalition_seats = GER_DkP_seats_r }
-					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
-				}
-			}
-			0 = {
-				modifier = {
-					add = 50
-					12 = {
-						is_in_array = { GER.swr_coalition_members_array = THIS }
-					}
-					11 = {
-						GER_is_possible_reichstag_target = yes # Target Agrarians
-					}
-				}
-				if = {
-					limit = { NOT = { is_in_array = { GER.protected_factions_array = 11.id } } }
-					add_to_array = { GER.swr_coalition_members_array = 11.id }
-					add_to_variable = { GER_swr_coalition_seats = GER_agrarian_seats_r }
-					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
-				}
-			}
-			0 = {
-				modifier = {
-					add = 50
-					10 = {
-						GER_is_possible_reichstag_target = yes # Target Zentrum (Right)
-					}
-				}
-				if = {
-					limit = { NOT = { is_in_array = { GER.protected_factions_array = 10.id } } }
-					add_to_array = { GER.swr_coalition_members_array = 10.id }
-					add_to_variable = { GER_swr_coalition_seats = GER_Zentrum_seats_r }
-					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
-				}
-			}
-			0 = {
-				modifier = {
-					add = 50
-					10 = {
-						is_in_array = { GER.swr_coalition_members_array = THIS }
-					}
-					5 = {
-						GER_is_possible_reichstag_target = yes # Target Guelphs
-					}
-				}
-				if = {
-					limit = { NOT = { is_in_array = { GER.protected_factions_array = 5.id } } }
-					add_to_array = { GER.swr_coalition_members_array = 5.id }
-					add_to_variable = { GER_swr_coalition_seats = GER_Guelph_seats_r }
-					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
-				}
-			}
-			0 = {
-				modifier = {
-					add = 50
-					10 = {
-						is_in_array = { GER.swr_coalition_members_array = THIS }
-					}
-					9 = {
-						GER_is_possible_reichstag_target = yes # Target Zentrum (Centre)
-					}
-				}
-				if = {
-					limit = { NOT = { is_in_array = { GER.protected_factions_array = 9.id } } }
-					add_to_array = { GER.swr_coalition_members_array = 9.id }
-					add_to_variable = { GER_swr_coalition_seats = GER_Zentrum_seats_c }
-					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
-				}
-			}
-			0 = {
-				modifier = {
-					add = 50
-					OR = {
-						9 = {
-							is_in_array = { GER.swr_coalition_members_array = THIS }
-						}
-						5 = {
-							is_in_array = { GER.swr_coalition_members_array = THIS }
-						}
-					}
-					6 = {
-						GER_is_possible_reichstag_target = yes # Target Liberal Parties
-					}
-				}
-				if = {
-					limit = { NOT = { is_in_array = { GER.protected_factions_array = 6.id } } }
-					add_to_array = { GER.swr_coalition_members_array = 6.id }
-					add_to_variable = { GER_swr_coalition_seats = GER_liberal_seats_r }
-					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
-				}
-			}
-			0 = {
-				modifier = {
-					add = 50
-					9 = {
-						is_in_array = { GER.swr_coalition_members_array = THIS }
-					}
-					8 = {
-						GER_is_possible_reichstag_target = yes # Target Zentrum (Left)
-					}
-				}
-				if = {
-					limit = { NOT = { is_in_array = { GER.protected_factions_array = 8.id } } }
-					add_to_array = { GER.swr_coalition_members_array = 8.id }
-					add_to_variable = { GER_swr_coalition_seats = GER_Zentrum_seats_l }
-					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
-				}
-			}
-			0 = {
-				modifier = {
-					add = 50
-					9 = {
-						is_in_array = { GER.swr_coalition_members_array = THIS }
-					}
-					7 = {
-						GER_is_possible_reichstag_target = yes # Target Polish Party
-					}
-				}
-				if = {
-					limit = { NOT = { is_in_array = { GER.protected_factions_array = 7.id } } }
-					add_to_array = { GER.swr_coalition_members_array = 7.id }
-					add_to_variable = { GER_swr_coalition_seats = GER_polish_seats_r }
-					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
-				}
-			}
-			0 = {
-				modifier = {
-					add = 50
-					9 = {
-						is_in_array = { GER.swr_coalition_members_array = THIS }
-					}
-					4 = {
-						GER_is_possible_reichstag_target = yes # Target LVP (Right)
-					}
-				}
-				if = {
-					limit = { NOT = { is_in_array = { GER.protected_factions_array = 4.id } } }
-					add_to_array = { GER.swr_coalition_members_array = 4.id }
-					add_to_variable = { GER_swr_coalition_seats = GER_LVP_seats_r }
-					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
-				}
-			}
-		}
-	}
-}
-
-GER_swr_alignment_effect_visible = {
 	custom_effect_tooltip = GER_reichstag_faction_alignment_turn_tt
 	if = {
 		limit = {
-			12 = {
-				GER_is_possible_reichstag_target = yes # Target DkP
-			}
+			check_variable = { GER_DkP_seats_r > 0 }
+			12 = { GER_is_possible_reichstag_target = yes } # Target DkP
 		}
 		if = {
 			limit = {
@@ -2220,12 +2023,9 @@ GER_swr_alignment_effect_visible = {
 	}
 	if = {
 		limit = {
-			12 = {
-				is_in_array = { GER.swr_coalition_members_array = THIS }
-			}
-			11 = {
-				GER_is_possible_reichstag_target = yes # Target Agrarians
-			}
+			check_variable = { GER_agrarian_seats_r > 0 }
+			is_in_array = { GER.swr_coalition_members_array = 12.id }
+			11 = { GER_is_possible_reichstag_target = yes } # Target Agrarians
 		}
 		if = {
 			limit = {
@@ -2239,9 +2039,8 @@ GER_swr_alignment_effect_visible = {
 	}
 	if = {
 		limit = {
-			10 = {
-				GER_is_possible_reichstag_target = yes # Target Zentrum (Right)
-			}
+			check_variable = { GER_Zentrum_seats_r > 0 }
+			10 = { GER_is_possible_reichstag_target = yes } # Target Zentrum (Right)
 		}
 		if = {
 			limit = {
@@ -2255,12 +2054,9 @@ GER_swr_alignment_effect_visible = {
 	}
 	if = {
 		limit = {
-			10 = {
-				is_in_array = { GER.swr_coalition_members_array = THIS }
-			}
-			5 = {
-				GER_is_possible_reichstag_target = yes # Target Guelphs
-			}
+			check_variable = { GER_Guelph_seats_r > 0 }
+			is_in_array = { GER.swr_coalition_members_array = 10.id }
+			5 = { GER_is_possible_reichstag_target = yes } # Target Guelphs
 		}
 		if = {
 			limit = {
@@ -2274,12 +2070,9 @@ GER_swr_alignment_effect_visible = {
 	}
 	if = {
 		limit = {
-			10 = {
-				is_in_array = { GER.swr_coalition_members_array = THIS }
-			}
-			9 = {
-				GER_is_possible_reichstag_target = yes # Target Zentrum (Centre)
-			}
+			check_variable = { GER_Zentrum_seats_c > 0 }
+			is_in_array = { GER.swr_coalition_members_array = 10.id }
+			9 = { GER_is_possible_reichstag_target = yes } # Target Zentrum (Centre)
 		}
 		if = {
 			limit = {
@@ -2293,17 +2086,12 @@ GER_swr_alignment_effect_visible = {
 	}
 	if = {
 		limit = {
+			check_variable = { GER_liberal_seats_r > 0 }
 			OR = {
-				9 = {
-					is_in_array = { GER.swr_coalition_members_array = THIS }
-				}
-				5 = {
-					is_in_array = { GER.swr_coalition_members_array = THIS }
-				}
+				is_in_array = { GER.swr_coalition_members_array = 9.id }
+				is_in_array = { GER.swr_coalition_members_array = 5.id }
 			}
-			6 = {
-				GER_is_possible_reichstag_target = yes # Target Liberal Parties
-			}
+			6 = { GER_is_possible_reichstag_target = yes } # Target Liberal Parties
 		}
 		if = {
 			limit = {
@@ -2317,12 +2105,9 @@ GER_swr_alignment_effect_visible = {
 	}
 	if = {
 		limit = {
-			9 = {
-				is_in_array = { GER.swr_coalition_members_array = THIS }
-			}
-			8 = {
-				GER_is_possible_reichstag_target = yes # Target Zentrum (Left)
-			}
+			check_variable = { GER_Zentrum_seats_l > 0 }
+			is_in_array = { GER.swr_coalition_members_array = 9.id }
+			8 = { GER_is_possible_reichstag_target = yes } # Target Zentrum (Left)
 		}
 		if = {
 			limit = {
@@ -2336,12 +2121,9 @@ GER_swr_alignment_effect_visible = {
 	}
 	if = {
 		limit = {
-			9 = {
-				is_in_array = { GER.swr_coalition_members_array = THIS }
-			}
-			7 = {
-				GER_is_possible_reichstag_target = yes # Target Polish Party
-			}
+			check_variable = { GER_polish_seats_r > 0 }
+			is_in_array = { GER.swr_coalition_members_array = 9.id }
+			7 = { GER_is_possible_reichstag_target = yes } # Target Polish Party
 		}
 		if = {
 			limit = {
@@ -2355,12 +2137,9 @@ GER_swr_alignment_effect_visible = {
 	}
 	if = {
 		limit = {
-			9 = {
-				is_in_array = { GER.swr_coalition_members_array = THIS }
-			}
-			4 = {
-				GER_is_possible_reichstag_target = yes # Target LVP (Right)
-			}
+			check_variable = { GER_LVP_seats_r > 0 }
+			is_in_array = { GER.swr_coalition_members_array = 9.id }
+			4 = { GER_is_possible_reichstag_target = yes } # Target LVP (Right)
 		}
 		if = {
 			limit = {
@@ -2372,7 +2151,139 @@ GER_swr_alignment_effect_visible = {
 			custom_effect_tooltip = GER_lvpr_target_swr_lose
 		}
 	}
+	hidden_effect = {
+		random_list = {
+			0 = {
+				modifier = { # Target DkP
+					add = 1
+					check_variable = { GER_DkP_seats_r > 0 }
+					12 = { GER_is_possible_reichstag_target = yes }
+				}
+				if = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 12.id } } }
+					add_to_array = { GER.swr_coalition_members_array = 12.id }
+					add_to_variable = { GER_swr_coalition_seats = GER_DkP_seats_r }
+					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
+				}
+			}
+			0 = {
+				modifier = { # Target Agrarians
+					add = 1
+					check_variable = { GER_agrarian_seats_r > 0 }
+					is_in_array = { GER.swr_coalition_members_array = 12.id }
+					11 = { GER_is_possible_reichstag_target = yes }
+				}
+				if = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 11.id } } }
+					add_to_array = { GER.swr_coalition_members_array = 11.id }
+					add_to_variable = { GER_swr_coalition_seats = GER_agrarian_seats_r }
+					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
+				}
+			}
+			0 = {
+				modifier = { # Target Zentrum (Right)
+					add = 1
+					check_variable = { GER_Zentrum_seats_r > 0 }
+					10 = { GER_is_possible_reichstag_target = yes }
+				}
+				if = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 10.id } } }
+					add_to_array = { GER.swr_coalition_members_array = 10.id }
+					add_to_variable = { GER_swr_coalition_seats = GER_Zentrum_seats_r }
+					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
+				}
+			}
+			0 = {
+				modifier = { # Target Guelphs
+					add = 1
+					check_variable = { GER_Guelph_seats_r > 0 }
+					is_in_array = { GER.swr_coalition_members_array = 10.id }
+					5 = { GER_is_possible_reichstag_target = yes }
+				}
+				if = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 5.id } } }
+					add_to_array = { GER.swr_coalition_members_array = 5.id }
+					add_to_variable = { GER_swr_coalition_seats = GER_Guelph_seats_r }
+					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
+				}
+			}
+			0 = {
+				modifier = { # Target Zentrum (Centre)
+					add = 1
+					check_variable = { GER_Zentrum_seats_c > 0 }
+					is_in_array = { GER.swr_coalition_members_array = 10.id }
+					9 = { GER_is_possible_reichstag_target = yes }
+				}
+				if = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 9.id } } }
+					add_to_array = { GER.swr_coalition_members_array = 9.id }
+					add_to_variable = { GER_swr_coalition_seats = GER_Zentrum_seats_c }
+					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
+				}
+			}
+			0 = {
+				modifier = { # Target Liberal Parties
+					add = 1
+					check_variable = { GER_liberal_seats_r > 0 }
+					OR = {
+						is_in_array = { GER.swr_coalition_members_array = 9.id }
+						is_in_array = { GER.swr_coalition_members_array = 5.id }
+					}
+					6 = { GER_is_possible_reichstag_target = yes }
+				}
+				if = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 6.id } } }
+					add_to_array = { GER.swr_coalition_members_array = 6.id }
+					add_to_variable = { GER_swr_coalition_seats = GER_liberal_seats_r }
+					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
+				}
+			}
+			0 = {
+				modifier = { # Target Zentrum (Left)
+					add = 1
+					check_variable = { GER_Zentrum_seats_l > 0 }
+					is_in_array = { GER.swr_coalition_members_array = 9.id }
+					8 = { GER_is_possible_reichstag_target = yes }
+				}
+				if = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 8.id } } }
+					add_to_array = { GER.swr_coalition_members_array = 8.id }
+					add_to_variable = { GER_swr_coalition_seats = GER_Zentrum_seats_l }
+					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
+				}
+			}
+			0 = {
+				modifier = { # Target Polish Party
+					add = 1
+					check_variable = { GER_polish_seats_r > 0 }
+					is_in_array = { GER.swr_coalition_members_array = 9.id }
+					7 = { GER_is_possible_reichstag_target = yes }
+				}
+				if = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 7.id } } }
+					add_to_array = { GER.swr_coalition_members_array = 7.id }
+					add_to_variable = { GER_swr_coalition_seats = GER_polish_seats_r }
+					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
+				}
+			}
+			0 = {
+				modifier = { # Target LVP (Right)
+					add = 1
+					check_variable = { GER_LVP_seats_r > 0 }
+					is_in_array = { GER.swr_coalition_members_array = 9.id }
+					4 = { GER_is_possible_reichstag_target = yes }
+				}
+				if = {
+					limit = { NOT = { is_in_array = { GER.protected_factions_array = 4.id } } }
+					add_to_array = { GER.swr_coalition_members_array = 4.id }
+					add_to_variable = { GER_swr_coalition_seats = GER_LVP_seats_r }
+					subtract_from_variable = { GER_free_factions = 1 } # reduce number of free factions
+				}
+			}
+		}
+	}
 }
+
 GER_reset_reichstag_game = {
 	clear_array = GER.protected_factions_array # Clear all protected factions
 	for_each_scope_loop = {
@@ -4073,6 +3984,46 @@ GER_calculate_wilhelmine_constitution = {
 		add_to_variable = { GER_Wilhelmine_Constitution_compliance_gain = 0.05 }
 		add_to_variable = { GER_Wilhelmine_Constitution_resistance_damage_to_garrison = -0.1 }
 	}
+	hidden_effect = { GER_add_full_parliamentarisation_extra_bonuses = yes }
+}
+GER_modify_constitution_dynmod_tooltip = {
+	if = {
+		limit = { has_cosmetic_tag = GER_rep }
+		custom_effect_tooltip = GER_modify_Republican_Constitution
+	}
+	else = {
+		custom_effect_tooltip = GER_modify_Wilhelmine_Constitution
+	}
+}
+GER_add_full_parliamentarisation_extra_bonuses = {
+	if = {
+		limit = {
+			count_triggers = {
+				amount = 8
+				has_completed_focus = GER_full_parliamentarisation
+				has_completed_focus = GER_fundamental_rights
+				has_completed_focus = GER_administrative_court
+				has_completed_focus = GER_uniform_municipal_law
+				has_completed_focus = GER_federal_police
+				has_completed_focus = GER_direct_legislation
+				has_completed_focus = GER_proportional_representation
+				has_completed_focus = GER_women_suffrage
+			}
+		}
+		GER_modify_constitution_dynmod_tooltip = yes
+		add_to_variable = {
+			GER_Wilhelmine_Constitution_political_power_factor = 0.1
+			tooltip = pp_factor_tooltip
+		}
+		add_to_variable = {
+			GER_Wilhelmine_Constitution_production_speed_buildings_factor = 0.1
+			tooltip = construction_speed_tooltip
+		}
+		add_to_variable = {
+			GER_Wilhelmine_Constitution_social_democrat_drift = 0.05
+			tooltip = social_democrat_drift_tooltip
+		}
+	}
 }
 GER_second_weltkrieg_legacy_effect = {
 	if = {
@@ -5310,18 +5261,35 @@ GER_nullification_reichsexecution_unsuccessful_tooltip = {
 
 GER_postwar_swr_elected_effect = {
 	add_stability = 0.05
-	set_politics = {
-		ruling_party = authoritarian_democrat
-		election_frequency = 60
-		elections_allowed = yes
-	}
 	if = {
-		limit = { has_completed_focus = GER_defang_german_liberalism }
-		set_temp_variable = { coalition_partner_var = token:market_liberal }
+		limit = { has_completed_focus = GER_abolish_universal_suffrage }
+		set_politics = {
+			ruling_party = paternal_autocrat
+			election_frequency = 60
+			elections_allowed = yes
+		}
+		if = {
+			limit = { has_completed_focus = GER_defang_german_liberalism }
+			set_temp_variable = { coalition_partner_var = token:market_liberal }
+			add_to_coalition = yes
+		}
+		set_temp_variable = { coalition_partner_var = token:authoritarian_democrat }
 		add_to_coalition = yes
 	}
-	set_temp_variable = { coalition_partner_var = token:paternal_autocrat }
-	add_to_coalition = yes
+	else = {
+		set_politics = {
+			ruling_party = authoritarian_democrat
+			election_frequency = 60
+			elections_allowed = yes
+		}
+		if = {
+			limit = { has_completed_focus = GER_defang_german_liberalism }
+			set_temp_variable = { coalition_partner_var = token:market_liberal }
+			add_to_coalition = yes
+		}
+		set_temp_variable = { coalition_partner_var = token:paternal_autocrat }
+		add_to_coalition = yes
+	}
 	set_temp_variable = { coalition_partner_var = token:national_populist }
 	add_to_coalition = yes
 }

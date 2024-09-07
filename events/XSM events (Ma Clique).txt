@@ -1021,7 +1021,7 @@ country_event = { #Mas win
 			### Add Northwestern War Idea to aid with supply issues - will be removed after war
 			add_ideas = XSM_northwest_war_idea
 			##Give it to TIB too
-			TIB = { add_ideas = TIB_MON_northwest_idea }
+			TIB = { add_ideas = TIB_northwest_war_idea }
 			### Delete templates - no cheating
 			if = {
 				limit = { has_template = "Yushu Garrison" }
@@ -1111,6 +1111,9 @@ country_event = { #Tibet loses
 		name = mac.203.a
 		add_stability = -0.1
 		add_war_support = 0.05
+		hidden_effect = {
+			add_ideas = XSM_northwest_war_idea
+		}
 	}
 }
 
@@ -1198,7 +1201,7 @@ country_event = { #Tie
 				set_province_controller = 12899
 				set_province_controller = 4964
 				##Give idea to TIB too
-				add_ideas = TIB_MON_northwest_idea
+				add_ideas = TIB_northwest_war_idea
 				### Delete templates - no cheating
 				if = {
 					limit = { has_template = "Yushu Raiders" }
@@ -1303,7 +1306,7 @@ country_event = { #Tibet wins
 			add_ideas = XSM_northwest_war_idea
 
 			##Give it to TIB too
-			TIB = { add_ideas = TIB_MON_northwest_idea }
+			TIB = { add_ideas = TIB_northwest_war_idea }
 			if = {
 				limit = { has_template = "Yushu Raiders" }
 				delete_unit_template_and_units = { division_template = "Yushu Raiders" disband = yes }
@@ -1766,15 +1769,22 @@ country_event = { #Propose peace to Mongolia/Tibet?
 			MON = {
 				has_war_with = ROOT
 				is_valid_peace_target = yes
+				surrender_progress < 0.5
 			}
 			TIB = {
 				has_war_with = ROOT
 				is_valid_peace_target = yes
+				surrender_progress < 0.5
 			}
 		}
-		is_valid_peace_target = yes
+		is_subject = no
+		is_in_faction = no
 		has_global_flag = northwest_conflict_begun
 		NOT = { has_global_flag = northwest_conflict_ended }
+	}
+
+	immediate = {
+		hidden_effect = { add_ideas = has_scripted_peace }
 	}
 
 	option = {
@@ -1796,6 +1806,7 @@ country_event = { #Propose peace to Mongolia/Tibet?
 		log = "[GetLogInfo]: event mac.225 option mac.225.b"
 		name = mac.225.b #We will never surrender
 		ai_chance = { base = 0 }
+		hidden_effect = { remove_ideas = has_scripted_peace }
 		add_stability = -0.10
 		add_war_support = -0.10
 	}
@@ -1824,6 +1835,17 @@ country_event = { #FROM offers terms
 		add_political_power = 50
 		FROM = {
 			white_peace_with_ROOT = yes
+			hidden_effect = {
+				if = {
+					limit = {
+						OR = {
+							NOT = { has_war_with = MON }
+							NOT = { has_war_with = TIB }
+						}
+					}
+					remove_ideas = has_scripted_peace
+				}
+			}
 			if = {
 				limit = { ROOT = { original_tag = TIB } }
 				### free MON if it was puppeted or annexed
@@ -1841,7 +1863,6 @@ country_event = { #FROM offers terms
 								state = 618 #Dzungaria
 							}
 						}
-						hidden_effect = { remove_claim_by = FROM }
 						transfer_state_to = MON
 					}
 					hidden_effect = {
@@ -1863,13 +1884,25 @@ country_event = { #FROM offers terms
 									state = 618 #Dzungaria
 								}
 							}
-							remove_claim_by = FROM
 							transfer_state_to = MON
 						}
 						if = {
 							limit = { MON = { has_government = paternal_autocrat } }
 							MON = { set_politics = { ruling_party = authoritarian_democrat } }
 						}
+					}
+				}
+				### give MON its claims
+				else = {
+					every_owned_state = {
+						limit = {
+							OR = {
+								region = 152 #Outer Mongolia
+								region = 222 #Inner Mongolia
+								state = 618 #Dzungaria
+							}
+						}
+						transfer_state_to = MON
 					}
 				}
 
@@ -1882,7 +1915,6 @@ country_event = { #FROM offers terms
 							state = 604 #Xining
 						}
 					}
-					hidden_effect = { remove_claim_by = FROM }
 					transfer_state_to = ROOT
 				}
 				hidden_effect = {
@@ -1912,7 +1944,6 @@ country_event = { #FROM offers terms
 								state = 604 #Xining
 							}
 						}
-						hidden_effect = { remove_claim_by = FROM }
 						transfer_state_to = TIB
 					}
 					hidden_effect = { TIB_remove_puppet_leader = yes }
@@ -1932,10 +1963,22 @@ country_event = { #FROM offers terms
 									state = 604 #Xining
 								}
 							}
-							remove_claim_by = FROM
 							transfer_state_to = TIB
 						}
 						TIB_remove_puppet_leader = yes
+					}
+				}
+				### give TIB its claims
+				else = {
+					every_owned_state = {
+						limit = {
+							OR = {
+								region = 146 #Himalayas
+								state = 353 #Yushu
+								state = 604 #Xining
+							}
+						}
+						transfer_state_to = TIB
 					}
 				}
 
@@ -1948,7 +1991,6 @@ country_event = { #FROM offers terms
 							state = 618 #Dzungaria
 						}
 					}
-					hidden_effect = { remove_claim_by = FROM }
 					transfer_state_to = ROOT
 				}
 				hidden_effect = {
@@ -2009,14 +2051,22 @@ country_event = { #Hui Victory in the Northwest? (MON)
 	trigger = {
 		original_tag = MON
 		has_war_with = XSM
-		surrender_progress > 0.2
-		is_valid_peace_target = yes
-		XSM = { is_valid_peace_target = yes }
+		surrender_progress > 0.5
 		has_global_flag = northwest_conflict_begun
 		NOT = { has_global_flag = northwest_conflict_ended }
+		is_valid_peace_target = yes
+		XSM = {
+			is_subject = no
+			is_in_faction = no
+			surrender_progress < 0.3
+		}
 	}
 
 	fire_only_once = yes
+
+	immediate = {
+		hidden_effect = { add_ideas = has_scripted_peace }
+	}
 
 	option = {
 		log = "[GetLogInfo]: event mac.228 option mac.228.a"
@@ -2026,12 +2076,14 @@ country_event = { #Hui Victory in the Northwest? (MON)
 			log = "KR_Event_Logging;MA WINS NORTHWESTERN WAR;[GetDateText]"
 		}
 		XSM = { country_event = { id = mac.230 days = 2 } }
+		#TIB = { country_event = { id = mac.232 days = 2 } }
 	}
 
 	option = {
 		log = "[GetLogInfo]: event mac.228 option mac.228.b"
 		name = mac.228.b #We seek total victory!
 		ai_chance = { base = 0 }
+		hidden_effect = { remove_ideas = has_scripted_peace }
 		add_stability = -0.10
 		add_war_support = -0.10
 	}
@@ -2046,14 +2098,22 @@ country_event = { #Hui Victory in the Northwest? (TIB)
 	trigger = {
 		original_tag = TIB
 		has_war_with = XSM
-		surrender_progress > 0.2
-		is_valid_peace_target = yes
-		XSM = { is_valid_peace_target = yes }
+		surrender_progress > 0.5
 		has_global_flag = northwest_conflict_begun
 		NOT = { has_global_flag = northwest_conflict_ended }
+		is_valid_peace_target = yes
+		XSM = {
+			is_subject = no
+			is_in_faction = no
+			surrender_progress < 0.3
+		}
 	}
 
 	fire_only_once = yes
+
+	immediate = {
+		hidden_effect = { add_ideas = has_scripted_peace }
+	}
 
 	option = {
 		log = "[GetLogInfo]: event mac.229 option mac.229.a"
@@ -2069,6 +2129,7 @@ country_event = { #Hui Victory in the Northwest? (TIB)
 		log = "[GetLogInfo]: event mac.229 option mac.229.b"
 		name = mac.229.b #We seek total victory!
 		ai_chance = { base = 0 }
+		hidden_effect = { remove_ideas = has_scripted_peace }
 		add_stability = -0.10
 		add_war_support = -0.10
 	}
@@ -2088,6 +2149,8 @@ country_event = { #FROM offers terms
 		name = mac.230.a #Yes, let's end this
 		add_political_power = -50
 		FROM = {
+			hidden_effect = { remove_ideas = has_scripted_peace }
+			set_country_flag = MON_defeated_in_northwest_war_flag
 			every_owned_state = {
 				limit = {
 					any_country_with_core = { is_ally_with = ROOT }
@@ -2095,20 +2158,15 @@ country_event = { #FROM offers terms
 				transfer_state_to = ROOT
 			}
 			if = {
-				limit = {
-					MON = { owns_state = 618 }
-				}
+				limit = { owns_state = 618 }
+				remove_state_claim = 618
 				618 = { transfer_state_to = 617.owner }
-				MON = { remove_state_claim = 618 }
 			}
 			white_peace_with_ROOT = yes
 			diplomatic_relation = {
 				country = ROOT
 				relation = non_aggression_pact
 				active = yes
-			}
-			hidden_effect = {
-				set_country_flag = MON_defeated_in_northwest_war_flag
 			}
 		}
 	}
@@ -2143,7 +2201,46 @@ country_event = { #FROM refuses peace
 	option = {
 		log = "[GetLogInfo]: event mac.231 option mac.231.a"
 		name = mac.231.a
+		hidden_effect = { remove_ideas = has_scripted_peace }
 		add_stability = 0.05
 		add_war_support = 0.05
 	}
 }
+
+#country_event = { #Hui Victory in the Northwest? (For Tibet if Mongolia peaced out)
+#	id = mac.232
+#	title = mac.232.t
+#	desc = mac.232.d
+#	picture = GFX_report_event_TIB_army
+#
+#	trigger = {
+#		has_war_with = XSM
+#		is_valid_peace_target = yes
+#		XSM = { is_valid_peace_target = yes }
+#	}
+#
+#	is_triggered_only = yes
+#
+#	immediate = {
+#		hidden_effect = { add_ideas = has_scripted_peace }
+#	}
+#
+#	option = {
+#		log = "[GetLogInfo]: event mac.232 option mac.232.a"
+#		name = mac.232.a #Offer terms to FROM
+#		if = {
+#			limit = { NOT = { MON = { has_war_with = XSM } } }
+#			log = "KR_Event_Logging;MA WINS NORTHWESTERN WAR;[GetDateText]"
+#		}
+#		XSM = { country_event = { id = mac.230 days = 2 } }
+#	}
+#
+#	option = {
+#		log = "[GetLogInfo]: event mac.232 option mac.232.b"
+#		name = mac.232.b #We seek total victory!
+#		ai_chance = { base = 0 }
+#		hidden_effect = { remove_ideas = has_scripted_peace }
+#		add_stability = -0.10
+#		add_war_support = -0.10
+#	}
+#}

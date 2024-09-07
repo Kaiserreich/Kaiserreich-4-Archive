@@ -3,7 +3,123 @@
 ##			By Drozdovite			  ##
 ########################################
 
-CENdem_politicc = {
+CENdem_status_of_belize = {
+	CENdem_status_british_honduras = {
+		icon = GFX_decision_border_war
+
+		available = {
+			has_full_control_of_state = 311
+			NOT = { has_war_with = FROM }
+		}
+
+		visible = {
+			owns_state = 311
+			311 = { is_core_of = WIF }
+			FROM = {
+				is_in_faction_with = ENT
+				has_socialist_government = no
+			}
+			hidden_trigger = {
+				has_completed_focus = CENdem_defending_our_interests
+			}
+		}
+
+		targets = { WIF }
+		target_root_trigger = {
+			owns_state = 311
+			311 = { is_core_of = WIF }
+		}
+		target_trigger = {
+			FROM = {
+				is_in_faction_with = ENT
+				has_socialist_government = no
+			}
+		}
+
+		cost = 25
+		fire_only_once = yes
+
+		highlight_states = {
+			highlight_state_targets = { state = 311 }
+		}
+
+		ai_will_do = {
+			base = 5
+			modifier = {
+				factor = 10
+				AND = {
+					MEX = { has_socialist_government = yes }
+					NOT = { has_global_flag = USA_civil_war_over_flag }
+				}
+			}
+			modifier = {
+				factor = 100
+				has_global_flag = USA_civil_war_over_flag
+				country_exists = CSA
+			}
+			modifier = {
+				factor = 100
+				OR = {
+					has_game_rule = { rule = CEN_forpol option = CEN_FORPOL_ENT }
+					has_game_rule = { rule = CEN_forpol option = CEN_FORPOL_ENT_BELIZE }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete CENdem_status_british_honduras target: [From.GetName]"
+			country_event = cendem.220	# What do we tell the WIF?
+		}
+	}
+	CENdem_core_british_honduras = {
+		icon = GFX_decision_generic_nationalism
+		allowed = { always = no } # activated by CENdem_military_alliances_will_bog_us_down
+
+		available = {
+			has_full_control_of_state = 311
+		}
+
+		visible = {
+			owns_state = 311
+			NOT = { 311 = { is_core_of = ROOT } }
+		}
+
+		cost = 0
+		days_remove = 50
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove CENdem_core_british_honduras"
+			311 = { enable_state_integration_80_compliance = yes }
+		}
+	}
+	CENdem_marlib_core_british_honduras = { #same as above but with a different desc
+		icon = GFX_decision_generic_nationalism
+		allowed = { always = no } # activated by CENdem_try_to_attain_neutrality
+
+		available = {
+			has_full_control_of_state = 311
+		}
+
+		visible = {
+			CEN = { is_guaranteed_by = CAN }
+			owns_state = 311
+			NOT = { 311 = { is_core_of = ROOT } }
+		}
+
+		cost = 0
+		days_remove = 50
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove CENdem_marlib_core_british_honduras"
+			311 = { enable_state_integration_80_compliance = yes }
+		}
+	}
 	CENdem_joining_the_Entente = {
 		icon = generic_nationalism
 
@@ -15,6 +131,7 @@ CENdem_politicc = {
 				}
 			}
 			at_peace_or_same_enemies_as_FROM = yes
+			has_country_flag = CENdem_succesful_negotiation
 		}
 
 		visible = {
@@ -22,6 +139,9 @@ CENdem_politicc = {
 			FROM = {
 				is_faction_leader = yes
 				NOT = { has_war_with = ROOT }
+			}
+			hidden_trigger = {
+				has_completed_focus = CENdem_defending_our_interests
 			}
 		}
 
@@ -52,6 +172,9 @@ CENdem_politicc = {
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete CENdem_joining_the_Entente target: [From.GetName]"
 			FROM = { country_event = cendem.226 }
+			hidden_effect = {
+				clr_country_flag = CENdem_succesful_negotiation
+			}
 		}
 	}
 }
@@ -60,9 +183,35 @@ CENdem_expansionism = {
 		icon = generic_nationalism
 
 		available = {
-			OR = {
-				is_neighbor_of = FROM
-				any_allied_country = { is_neighbor_of = FROM }
+			is_neighbor_of = FROM
+			minor_faction_member_cannot_start_inter_faction_war_before_wk = yes
+			custom_trigger_tooltip = {
+				tooltip = CEN_inter_faction_war_warning
+				if = {
+					limit = {
+						OR = {
+							AND = {
+								is_in_faction_with = GER
+								ENT = {
+									OR = {
+										is_in_faction_with = FROM
+										has_guaranteed = FROM
+									}
+								}
+							}
+							AND = {
+								is_in_faction_with = ENT
+								GER = {
+									OR = {
+										is_in_faction_with = FROM
+										has_guaranteed = FROM
+									}
+								}
+							}
+						}
+					}
+					GER = { has_war_with = ENT }
+				}
 			}
 		}
 
@@ -73,7 +222,7 @@ CENdem_expansionism = {
 
 		targets = { COS PAN }
 		target_root_trigger = {
-			has_completed_focus = CEN_DEM_stealthy_acquisition
+			has_completed_focus = CENdem_pounce_at_the_right_opportunity
 		}
 		target_trigger = {
 			can_declare_war_on = FROM
@@ -89,15 +238,11 @@ CENdem_expansionism = {
 			factor = 100
 			modifier = {
 				factor = 0
-				country_has_any_active_threat = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { default_attack_AI_trigger = yes }
-			}
-			modifier = {
-				factor = 0
-				FROM = { dont_start_major_faction_wars = yes }
+				OR = {
+					country_has_any_active_threat = yes
+					FROM = { default_attack_AI_trigger = yes }
+					FROM = { dont_start_major_faction_wars = yes }
+				}
 			}
 			modifier = {
 				factor = 0
