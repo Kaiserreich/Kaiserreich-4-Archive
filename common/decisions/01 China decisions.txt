@@ -29,7 +29,6 @@ foreign_politics = {
 			}
 			set_temp_variable = { target = FROM }
 			all_enemy_country_workaround_trigger = yes
-			has_global_flag = china_united
 		}
 
 		visible = {
@@ -38,6 +37,7 @@ foreign_politics = {
 				is_faction_leader = yes
 				NOT = { has_war_with = ROOT }
 			}
+			china_is_the_unifier_of_china_trigger = yes
 		}
 
 		targets = { INT }
@@ -118,7 +118,6 @@ foreign_politics = {
 				limit = { tag = SHX }
 				SHX_wang_xiang = { is_second_in_command = yes }
 			}
-			has_global_flag = china_united
 		}
 
 		visible = {
@@ -135,6 +134,7 @@ foreign_politics = {
 				limit = { tag = SHX }
 				has_completed_focus = SHX_statesman
 			}
+			china_is_the_unifier_of_china_trigger = yes
 		}
 
 		targets = { GER }
@@ -197,7 +197,6 @@ foreign_politics = {
 			}
 			set_temp_variable = { target = FROM }
 			all_enemy_country_workaround_trigger = yes
-			has_global_flag = china_united
 		}
 
 		visible = {
@@ -211,6 +210,7 @@ foreign_politics = {
 				NOT = { has_war_with = ROOT }
 				has_socialist_government = no
 			}
+			china_is_the_unifier_of_china_trigger = yes
 		}
 
 		targets = { RUS }
@@ -274,7 +274,6 @@ foreign_politics = {
 				SHX_komoto_daisaku = { is_second_in_command = yes }
 				has_completed_focus = SHX_currying_international_exports_focus
 			}
-			has_global_flag = china_united
 		}
 
 		visible = {
@@ -291,6 +290,7 @@ foreign_politics = {
 				limit = { tag = GXC }
 				has_country_leader = { character = GXC_chen_lianbo }
 			}
+			china_is_the_unifier_of_china_trigger = yes
 		}
 
 		targets = { JAP }
@@ -366,6 +366,72 @@ foreign_politics = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove china_invite_countries_to_faction target: [From.GetName]"
 			custom_effect_tooltip = china_invite_countries_to_faction_tt
 			FROM = { country_event = { id = china_events.425 days = 1 random_days = 3 } }
+		}
+	}
+	northwest_conflict_surrender = {
+		icon = generic_break_treaty
+		allowed = {
+			OR = {
+				original_tag = XSM
+				original_tag = TIB
+				original_tag = MON
+			}
+		}
+
+		available = {
+			if = {
+				limit = {
+					original_tag = TIB
+					MON = { has_country_flag = MON_defeated_in_northwest_war_flag }
+					XSM = { is_ai = yes }
+					TIB = { is_ai = yes }
+					MON = { is_ai = yes }
+				}
+				surrender_progress > 0.15
+			}
+			else = {
+				surrender_progress > 0.4
+			}
+		}
+
+		visible = {
+			has_global_flag = northwest_conflict_begun
+			NOT = { has_global_flag = northwest_conflict_ended }
+			OR = {
+				has_war_with = XSM
+				has_war_with = TIB
+				has_war_with = MON
+			}
+			has_civil_war = no
+			is_valid_peace_target = yes
+			has_capitulated = no
+		}
+
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete northwest_conflict_surrender"
+			add_ideas = has_scripted_peace
+			if = {
+				limit = {
+					original_tag = XSM
+				}
+				every_enemy_country = {
+					limit = {
+						OR = {
+							tag = TIB
+							tag = MON
+						}
+						is_valid_peace_target = yes
+					}
+					country_event = { id = mac.226 }
+				}
+			}
+			else = {
+				XSM = { country_event = mac.230 }
+			}
 		}
 	}
 }
@@ -543,6 +609,7 @@ chinese_unification = {
 			has_war_with_major = yes
 			has_civil_war = no
 			NOT = { has_event_target = china_united_front_leader }
+			NOT = { has_country_flag = FNG_collaborated_with_japan }
 			NOT = { has_global_flag = JAP_defeated_by_china }
 			NOT = { has_global_flag = china_united }
 			is_subject = no
@@ -618,6 +685,7 @@ chinese_unification = {
 			is_valid_peace_target = yes
 			NOT = { has_country_flag = china_refused_ceasefire }
 			is_working_with_JAP = no
+			NOT = { has_country_flag = FNG_collaborated_with_japan }
 			FROM = {
 				is_valid_peace_target = yes
 				has_capitulated = no
@@ -632,6 +700,7 @@ chinese_unification = {
 			is_valid_peace_target = yes
 			NOT = { has_country_flag = china_refused_ceasefire }
 			is_working_with_JAP = no
+			NOT = { has_country_flag = FNG_collaborated_with_japan }
 		}
 		target_trigger = {
 			has_war_with = FROM
@@ -639,6 +708,7 @@ chinese_unification = {
 				is_valid_peace_target = yes
 				has_capitulated = no
 				NOT = { has_country_flag = china_refused_ceasefire }
+				NOT = { has_country_flag = FNG_collaborated_with_japan }
 				is_working_with_JAP = no
 			}
 		}
@@ -695,7 +765,7 @@ chinese_unification = {
 			if = {
 				limit = {
 					has_country_leader = { character = SQI_zhang_tianran }
-					check_variable = { country_leader:china_alignment = token:zhili }
+					check_variable = { country_leader:china_alignment = token:northern_zhili }
 				}
 				OR = {
 					NOT = { QIE = { has_country_leader = { character = QIE_aisin_gioro_puyi } } }
@@ -766,12 +836,55 @@ chinese_unification = {
 					}
 				}
 			}
+			modifier = {
+				factor = 0
+				OR = {
+					AND = {
+						tag = ANQ
+						NOT = { has_game_rule = { rule = ANQ_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = ANQ_forpol option = ANQ_FORPOL_ANQ } }
+					}
+					AND = {
+						tag = GXC
+						NOT = { has_game_rule = { rule = GXC_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_GXC } }
+						NOT = { has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_FORM_NPA } }
+					}
+					AND = {
+						tag = LEP
+						NOT = { has_game_rule = { rule = LEP_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = LEP_forpol option = LEP_FORPOL_LEP } }
+					}
+					AND = {
+						tag = SHX
+						NOT = { has_game_rule = { rule = SHX_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_SHX } }
+					}
+					AND = {
+						tag = SQI
+						NOT = { has_game_rule = { rule = SQI_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = SQI_forpol option = SQI_FORPOL_SQI } }
+					}
+					AND = {
+						tag = SZC
+						NOT = { has_game_rule = { rule = SZC_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_SZC } }
+						NOT = { has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_FORM_NPA } }
+					}
+					AND = {
+						tag = YUN
+						NOT = { has_game_rule = { rule = YUN_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FORM_NPA } }
+					}
+				}
+			}
 		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete china_declare_government"
 			set_potential_national_government = yes
 			china_determine_possible_allies_effect = yes
+			china_enable_all_demand_submission_decisions = yes
 		}
 	}
 	china_declare_unification = {
@@ -782,55 +895,85 @@ chinese_unification = {
 		}
 
 		available = {
-			china_no_rival_governments_left = yes
+			custom_trigger_tooltip = {
+				tooltip = china_no_rival_governments_left_tt
+				china_no_rival_governments_left = yes
+			}
 			if = {
 				limit = {
 					original_tag = FNG
-					FNG_JAP_hostile = no
 				}
 				OR = {
-					592 = { is_owned_by_ROOT_or_subject = yes } #Guangzhou
-					592 = { owner = { is_ally_with = JAP } }
+					has_completed_focus = FNG_The_Question_of_the_Presidency
+					has_completed_focus = FNG_Restore_1923_Constitution
 				}
-				OR = {
-					608 = { is_owned_by_ROOT_or_subject = yes } #Beijing
-					608 = { owner = { is_ally_with = JAP } }
+				if = {
+					limit = {
+						FNG_JAP_hostile = no
+					}
+					custom_trigger_tooltip = {
+						tooltip = FNG_JAP_hostile_no_states_required_tt
+						AND = {
+							OR = {
+								592 = { is_owned_by_ROOT_or_subject = yes } #Guangzhou
+								592 = { owner = { is_ally_with = JAP } }
+							}
+							OR = {
+								608 = { is_owned_by_ROOT_or_subject = yes } #Beijing
+								608 = { owner = { is_ally_with = JAP } }
+							}
+							OR = {
+								613 = { is_owned_by_ROOT_or_subject = yes } #Nanjing
+								613 = { owner = { is_ally_with = JAP } }
+							}
+							OR = {
+								650 = { is_owned_by_ROOT_or_subject = yes } #Chongqing
+								650 = { owner = { is_ally_with = JAP } }
+							}
+							OR = {
+								716 = { is_owned_by_ROOT_or_subject = yes } #Shenyang
+								716 = { owner = { is_ally_with = JAP } }
+							}
+							OR = {
+								1048 = { is_owned_by_ROOT_or_subject = yes } #Wuhan
+								1048 = { owner = { is_ally_with = JAP } }
+							}
+						}
+					}
 				}
-				OR = {
-					613 = { is_owned_by_ROOT_or_subject = yes } #Nanjing
-					613 = { owner = { is_ally_with = JAP } }
-				}
-				OR = {
-					650 = { is_owned_by_ROOT_or_subject = yes } #Chongqing
-					650 = { owner = { is_ally_with = JAP } }
-				}
-				OR = {
-					716 = { is_owned_by_ROOT_or_subject = yes } #Shenyang
-					716 = { owner = { is_ally_with = JAP } }
-				}
-				OR = {
-					1048 = { is_owned_by_ROOT_or_subject = yes } #Wuhan
-					1048 = { owner = { is_ally_with = JAP } }
+				else = {
+					custom_trigger_tooltip = {
+						tooltip = china_states_required_tt
+						592 = { is_owned_by_ROOT_or_subject = yes } #Guangzhou
+						608 = { is_owned_by_ROOT_or_subject = yes } #Beijing
+						613 = { is_owned_by_ROOT_or_subject = yes } #Nanjing
+						650 = { is_owned_by_ROOT_or_subject = yes } #Chongqing
+						716 = { is_owned_by_ROOT_or_subject = yes } #Shenyang
+						1048 = { is_owned_by_ROOT_or_subject = yes } #Wuhan
+					}
 				}
 			}
 			else = {
-				592 = { is_owned_by_ROOT_or_subject = yes } #Guangzhou
-				608 = { is_owned_by_ROOT_or_subject = yes } #Beijing
-				613 = { is_owned_by_ROOT_or_subject = yes } #Nanjing
-				650 = { is_owned_by_ROOT_or_subject = yes } #Chongqing
-				716 = { is_owned_by_ROOT_or_subject = yes } #Shenyang
-				1048 = { is_owned_by_ROOT_or_subject = yes } #Wuhan
+				custom_trigger_tooltip = {
+					tooltip = china_states_required_tt
+					592 = { is_owned_by_ROOT_or_subject = yes } #Guangzhou
+					608 = { is_owned_by_ROOT_or_subject = yes } #Beijing
+					613 = { is_owned_by_ROOT_or_subject = yes } #Nanjing
+					650 = { is_owned_by_ROOT_or_subject = yes } #Chongqing
+					716 = { is_owned_by_ROOT_or_subject = yes } #Shenyang
+					1048 = { is_owned_by_ROOT_or_subject = yes } #Wuhan
+				}
 			}
 			surrender_progress < 0.05
-			if = {
-				limit = {
-					OR = {
-						tag = NPA
-						has_global_flag = NPA_revolt
-					}
-				}
-				has_global_flag = NPA_secured
-			}
+			#if = {
+			#	limit = {
+			#		OR = {
+			#			tag = NPA
+			#			has_global_flag = NPA_revolt
+			#		}
+			#	}
+			#	has_global_flag = NPA_secured
+			#}
 			OR = {
 				NOT = { has_war_with = JAP }
 				JAP = { has_capitulated = yes }
@@ -880,6 +1023,13 @@ chinese_unification = {
 					set_cosmetic_tag = united_china_qing
 					log = "KR_Event_Logging;CHINA UNITED BY Zhili Qing;[GetDateText]"
 					hidden_effect = { news_event = china_events.301 }
+					if = {
+						limit = { has_country_flag = QIE_anti_concessionist_policy }
+						country_event = qiedom.19 #Cao Resigns, triumphantly
+					}
+					else = {
+						country_event = qiedom.100 #Cao Resigns, mysteriously
+					}
 				}
 				else = {
 					set_cosmetic_tag = ZHL_united_china
@@ -947,10 +1097,13 @@ chinese_unification = {
 				else_if = {
 					limit = {
 						has_country_leader = { character = SQI_qu_yingguang }
-						check_variable = { country_leader:china_alignment = token:zhili }
+						check_variable = { country_leader:china_alignment = token:northern_zhili }
 					}
 					log = "KR_Event_Logging;CHINA UNITED BY A minor clique;[GetDateText]"
 					set_cosmetic_tag = ZHL_united_china
+					add_ideas = CHS_legitimacy1
+					add_ideas = CHS_bureaucracy1
+					add_ideas = CHS_military1
 					activate_targeted_decision = { decision = china_move_capital target = ROOT }
 					hidden_effect = { news_event = china_events.311 }
 				}
@@ -961,6 +1114,9 @@ chinese_unification = {
 					}
 					log = "KR_Event_Logging;CHINA UNITED BY A minor clique;[GetDateText]"
 					set_cosmetic_tag = AGJ_united_china
+					add_ideas = CHS_legitimacy1
+					add_ideas = CHS_bureaucracy1
+					add_ideas = CHS_military1
 					activate_targeted_decision = { decision = china_move_capital target = ROOT }
 					hidden_effect = { news_event = china_events.303 }
 				}
@@ -971,8 +1127,14 @@ chinese_unification = {
 				}
 			}
 			else_if = {
+				limit = { original_tag = LEP }
+				log = "KR_Event_Logging;CHINA UNITED BY A minor clique;[GetDateText]"
+				china_generic_unification_effect = yes
+				hidden_effect = { news_event = china_events.315 }
+			}
+			else_if = {
 				limit = {
-					check_variable = { country_leader:china_alignment = token:chinese_republican }
+					check_variable = { country_leader:china_alignment = token:chinese_southern_republican }
 				}
 				log = "KR_Event_Logging;CHINA UNITED BY A minor clique;[GetDateText]"
 				china_generic_unification_effect = yes
@@ -1058,9 +1220,39 @@ chinese_unification = {
 				}
 			}
 			else_if = {
-				limit = { check_variable = { country_leader:china_alignment = token:zhili } }
+				limit = {
+					check_variable = { country_leader:china_alignment = token:beiyang }
+				}
 				log = "KR_Event_Logging;CHINA UNITED BY A minor clique;[GetDateText]"
+				china_generic_unification_effect = yes
+				hidden_effect = { news_event = china_events.314 }
+			}
+			else_if = {
+				limit = {
+					check_variable = { country_leader:china_alignment = token:northern_zhili }
+				}
 				set_cosmetic_tag = ZHL_united_china
+				if = {
+					limit = {
+						SZC_zhili_in_exile = yes
+					}
+					log = "KR_Event_Logging;CHINA UNITED BY Sichuanese Exiles;[GetDateText]"
+				}
+				else = {
+					log = "KR_Event_Logging;CHINA UNITED BY A minor clique;[GetDateText]"
+					add_ideas = CHS_legitimacy1
+					add_ideas = CHS_bureaucracy1
+					add_ideas = CHS_military1
+				}
+				activate_targeted_decision = { decision = china_move_capital target = ROOT }
+				hidden_effect = { news_event = china_events.311 }
+			}
+			else_if = {
+				limit = { #Qi Xieyuan and Ma Ji
+					check_variable = { country_leader:china_alignment = token:southern_zhili }
+				}
+				log = "KR_Event_Logging;CHINA UNITED BY A minor clique;[GetDateText]"
+				set_cosmetic_tag = SZH_united_china
 				add_ideas = CHS_legitimacy1
 				add_ideas = CHS_bureaucracy1
 				add_ideas = CHS_military1
@@ -1093,9 +1285,18 @@ chinese_unification = {
 			mark_focus_tree_layout_dirty = yes
 			if = {
 				limit = { NOT = { tag = CHI } } #Has tagside content for this
-				add_timed_idea = {
-					idea = unite_china_justification_idea
-					days = 365
+				if = {
+					limit = { tag = QIE } #QIE receives a unique spirit
+					add_timed_idea = {
+						idea = QIE_united_china_idea
+						days = 365
+					}
+				}
+				else = {
+					add_timed_idea = {
+						idea = unite_china_justification_idea
+						days = 365
+					}
 				}
 				china_generic_land_reform_setup = yes
 			}
@@ -1359,19 +1560,31 @@ chinese_unification = {
 				limit = { FROM = { is_subject = yes } }
 				NOT = { has_non_aggression_pact_with = FROM.overlord }
 			}
+			FROM = { has_civil_war = no }
 			OR = {
 				is_neighbor_of = FROM
 				any_subject_country = { is_neighbor_of = FROM }
 				FROM = { any_subject_country = { is_neighbor_of = ROOT } }
 			}
+			if = {
+				limit = {
+					NOT = {
+						tag = ANQ
+						tag = CHI
+						tag = LEP
+					}
+					FROM = {
+						tag = SQI
+						has_dictatorship_government = yes
+					}
+					NOT = { has_global_flag = LEP_collapse_SQI_out }
+				}
+				has_global_flag = LEP_league_war_over
+			}
 		}
 
 		visible = {
 			can_declare_war_on = FROM
-			if = {
-				limit = { china_is_unaligned = no }
-				china_same_alignment_as_FROM = no
-			}
 			is_subject = no
 		}
 
@@ -1390,18 +1603,63 @@ chinese_unification = {
 		ai_will_do = {
 			factor = 100
 			modifier = {
+				factor = 10
+				tag = FNG #FNG should prioritse attacking tags with these states
+				FROM = {
+					OR = {
+						owns_state = 608 #Beijing
+						owns_state = 613 #Nanjing
+						owns_state = 1048 #Wuhan
+					}
+				}
+			}
+			modifier = {
 				factor = 0
 				OR = {
-					has_decision = china_demand_submission #ai will not take if if already taking another demand submission decision
 					has_decision = china_attack_decision #ai will not take if if already taking another attack decision
 					country_is_in_dangerous_war = yes #ai will not take it if already in a dangerous war
-					FROM = { default_attack_AI_trigger = yes } #ai will not take it if they think FROM is stronger
 				}
+			}
+			modifier = {
+				factor = 0
+				FROM = { default_attack_AI_trigger = yes } #ai will not take it if they think FROM is stronger and FROM is not in a dangerous war
+				FROM = { alliance_strength_ratio > 1.25 } #the > is intended because this 0 factor should only apply if FROM is NOT in a dangerous war
+			}
+			modifier = {
+				factor = 0
+				FROM = { is_subject = yes }
+				FROM = { overlord = { default_attack_AI_trigger = yes } } #ai will not take it if they think FROM's overlord is stronger and FROM's overlord is not in a dangerous war
+				FROM = { overlord = { alliance_strength_ratio > 1.25 } } #the > is intended because this 0 factor should only apply if FROM is NOT in a dangerous war
 			}
 			modifier = {
 				factor = 0
 				FROM = { original_tag = FNG }
 				china_proper_not_united = yes
+			}
+			modifier = {
+				factor = 0
+				original_tag = ANQ
+				OR = {
+					AND = {
+						china_is_aligned_with_northern_zhili = yes
+						FROM = { is_subject_of = QIE }
+					}
+					china_same_alignment_as_FROM = yes
+				}
+			}
+			modifier = {
+				factor = 0
+				FROM = { is_guaranteed_by = FNG }
+				any_of_scopes = {
+					array = global.china_tags_array
+					exists = yes
+					NOT = { is_ally_with = ROOT }
+					NOT = { is_ally_with = FNG }
+					NOT = { original_tag = XSM }
+					NOT = { original_tag = SIK }
+					NOT = { original_tag = KUM }
+					NOT = { tag = FROM }
+				}
 			}
 			modifier = {
 				factor = 0
@@ -1610,8 +1868,9 @@ chinese_unification = {
 				factor = 0
 				original_tag = GXC
 				OR = {
-					has_game_rule = { rule = GXC_path option = GXC_PATH_MARLIB }
-					has_game_rule = { rule = GXC_path option = GXC_PATH_PATAUT }
+					has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_FNG }
+					has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_QIE }
+					has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_ZHL }
 				}
 			}
 			modifier = {
@@ -1748,6 +2007,16 @@ chinese_unification = {
 				limit = { FROM = { tag = YUN } }
 				NOT = { FROM = { has_idea = YUN_chaos_army } }
 			}
+			else_if = {
+				limit = {
+					FROM = {
+						tag = SQI
+						has_dictatorship_government = yes
+					}
+					NOT = { has_global_flag = LEP_collapse_SQI_out }
+				}
+				has_global_flag = LEP_league_war_over
+			}
 		}
 
 		visible = {
@@ -1764,7 +2033,13 @@ chinese_unification = {
 		cost = 40
 		fire_only_once = yes
 
-		ai_will_do = { factor = 100 }
+		ai_will_do = {
+			factor = 200
+			modifier = {
+				factor = 2
+				FROM = { china_same_alignment_as_PREV = yes }
+			}
+		}
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete china_offer_alliance target: [From.GetName]"
@@ -1863,6 +2138,16 @@ chinese_unification = {
 				limit = { FROM = { tag = SHX } }
 				NOT = { has_idea = SHX_suiyuan_QIE_neutrality_idea }
 			}
+			else_if = {
+				limit = {
+					FROM = {
+						tag = SQI
+						has_dictatorship_government = yes
+					}
+					NOT = { has_global_flag = LEP_collapse_SQI_out }
+				}
+				has_global_flag = LEP_league_war_over
+			}
 		}
 
 		visible = {
@@ -1905,225 +2190,13 @@ chinese_unification = {
 		ai_will_do = {
 			factor = 100
 			modifier = {
-				factor = 0
-				OR = {
-					has_decision = china_demand_submission #ai will not take if if already taking another demand submission decision
-					has_decision = china_attack_decision #ai will not take if if already taking another attack decision
-					country_is_in_dangerous_war = yes #ai will not take it if already in a dangerous war
-					FROM = { default_attack_AI_trigger = yes } #ai will not take it if they think FROM is stronger
-				}
-			}
-			modifier = {
-				factor = 0
-				FROM = { original_tag = FNG }
-				china_proper_not_united = yes
-			}
-			modifier = {
-				factor = 0
-				original_tag = CHI
-				AND = {
-					NOT = { has_completed_focus = CHI_second_northern_expedition }
-					focus_progress = {
-						focus = CHI_second_northern_expedition
-						progress > 0
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				original_tag = GXC
-				OR = {
-					AND = {
-						NOT = { has_completed_focus = GXC_launch_hunan_expedition }
-						focus_progress = {
-							focus = GXC_launch_hunan_expedition
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = GXC_launch_western_expedition }
-						focus_progress = {
-							focus = GXC_launch_western_expedition
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = GXC_launch_eastern_expedition }
-						focus_progress = {
-							focus = GXC_launch_eastern_expedition
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = GXC_second_northern_expedition }
-						focus_progress = {
-							focus = GXC_second_northern_expedition
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = GXC_Purge_the_Party_State }
-						focus_progress = {
-							focus = GXC_Purge_the_Party_State
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = GXC_Attack_Qing }
-						focus_progress = {
-							focus = GXC_Attack_Qing
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = GXC_Liberate_the_Northeast }
-						focus_progress = {
-							focus = GXC_Liberate_the_Northeast
-							progress > 0
-						}
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				original_tag = QIE
-				OR = {
-					AND = {
-						NOT = { has_completed_focus = QIE_destroy_federalists }
-						focus_progress = {
-							focus = QIE_destroy_federalists
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = QIE_cross_the_dai_river }
-						focus_progress = {
-							focus = QIE_cross_the_dai_river
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = QIE_destroy_kuomintang }
-						focus_progress = {
-							focus = QIE_destroy_kuomintang
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = QIE_false_republic }
-						focus_progress = {
-							focus = QIE_false_republic
-							progress > 0
-						}
-					}
-					AND = {
-						FROM = { original_tag = HNN }
-						china_is_aligned_with_zhili = yes
-						HNN = { china_is_aligned_with_federalists = yes }
-						NOT = { has_completed_focus = QIE_destroy_federalists }
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				original_tag = SZC
-				OR = {
-					AND = {
-						NOT = { has_completed_focus = SZC_Destroy_the_Federalists }
-						focus_progress = {
-							focus = SZC_Destroy_the_Federalists
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = SZC_Cross_the_Dai_River }
-						focus_progress = {
-							focus = SZC_Cross_the_Dai_River
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = SZC_Destroy_the_Kuomintang }
-						focus_progress = {
-							focus = SZC_Destroy_the_Kuomintang
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = SZC_Recover_The_First_Province }
-						focus_progress = {
-							focus = SZC_Recover_The_First_Province
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = SZC_From_Chongqing_To_Beijing }
-						focus_progress = {
-							focus = SZC_From_Chongqing_To_Beijing
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = SZC_Liberate_the_Northeast }
-						focus_progress = {
-							focus = SZC_Liberate_the_Northeast
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = SZC_Purge_the_Party_State }
-						focus_progress = {
-							focus = SZC_Purge_the_Party_State
-							progress > 0
-						}
-					}
-				}
-			}
-			modifier = {
-				factor = 0
-				original_tag = YUN
-				OR = {
-					AND = {
-						NOT = { has_completed_focus = YUN_Ultimatium_To_Sichuan2 }
-						focus_progress = {
-							focus = YUN_Ultimatium_To_Sichuan2
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = YUN_Enter_Yangtze_River2 }
-						focus_progress = {
-							focus = YUN_Enter_Yangtze_River2
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = YUN_Strike_At_Liangguang }
-						focus_progress = {
-							focus = YUN_Strike_At_Liangguang
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = YUN_End_the_Monarchy }
-						focus_progress = {
-							focus = YUN_End_the_Monarchy
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = YUN_Deal_with_Nanjing }
-						focus_progress = {
-							focus = YUN_Deal_with_Nanjing
-							progress > 0
-						}
-					}
-					AND = {
-						NOT = { has_completed_focus = YUN_secure_northern_china }
-						focus_progress = {
-							focus = YUN_secure_northern_china
-							progress > 0
-						}
+				factor = 10
+				tag = FNG #FNG should prioritse attacking tags with these states
+				FROM = {
+					OR = {
+						owns_state = 608 #Beijing
+						owns_state = 613 #Nanjing
+						owns_state = 1048 #Wuhan
 					}
 				}
 			}
@@ -2519,7 +2592,10 @@ chinese_unification = {
 				any_subject_country = { is_neighbor_of = FROM }
 			}
 			FROM = { surrender_progress < 0.05 }
-			has_global_flag = northwest_conflict_ended
+			OR = {
+				has_global_flag = northwest_conflict_ended
+				XSM = { exists = no } #In case there's an early SSJW and Northwest War Never Happened
+			}
 			NOT = { has_idea = SHX_suiyuan_QIE_neutrality_idea }
 		}
 
@@ -2714,7 +2790,7 @@ chinese_unification = {
 					744 = { is_controlled_by_ROOT_owner_defeated_japan_or_mutual_enemy = yes }
 				}
 				if = {
-					limit = { FROM = { owns_state = 745 } } #Kwantung
+					limit = { FROM = { owns_state = 745 } } #Dalian
 					745 = { is_controlled_by_ROOT_owner_defeated_japan_or_mutual_enemy = yes }
 				}
 				if = {
@@ -2772,7 +2848,7 @@ chinese_unification = {
 					744 = { is_controlled_by_ROOT_owner_or_mutual_enemy = yes }
 				}
 				if = {
-					limit = { FROM = { owns_state = 745 } } #Kwantung
+					limit = { FROM = { owns_state = 745 } } #Dalian
 					745 = { is_controlled_by_ROOT_owner_or_mutual_enemy = yes }
 				}
 				if = {
@@ -2817,7 +2893,7 @@ chinese_unification = {
 			729.OWNER #Macau
 			743.OWNER #Shanghai
 			744.OWNER #Qingdao
-			745.OWNER #Kwantung
+			745.OWNER #Dalian
 			746.OWNER #Ningbo
 			747.OWNER #Fuzhou
 			801.OWNER #Shantou
@@ -2840,7 +2916,7 @@ chinese_unification = {
 					owns_state = 729 #Macau
 					owns_state = 743 #Shanghai
 					owns_state = 744 #Qingdao
-					owns_state = 745 #Kwantung
+					owns_state = 745 #Dalian
 					owns_state = 746 #Ningbo
 					owns_state = 747 #Fuzhou
 					owns_state = 801 #Shantou
@@ -2944,7 +3020,7 @@ chinese_unification = {
 					744 = { is_controlled_by_ROOT_owner_or_defeated_japan = yes }
 				}
 				if = {
-					limit = { FROM = { owns_state = 745 } } #Kwantung
+					limit = { FROM = { owns_state = 745 } } #Dalian
 					745 = { is_controlled_by_ROOT_owner_or_defeated_japan = yes }
 				}
 				if = {
@@ -3002,7 +3078,7 @@ chinese_unification = {
 					744 = { is_controlled_by_ROOT_or_owner = yes }
 				}
 				if = {
-					limit = { FROM = { owns_state = 745 } } #Kwantung
+					limit = { FROM = { owns_state = 745 } } #Dalian
 					745 = { is_controlled_by_ROOT_or_owner = yes }
 				}
 				if = {
@@ -3062,7 +3138,7 @@ chinese_unification = {
 					NOT = { owns_state = 729 } #Macau
 					NOT = { owns_state = 743 } #Shanghai
 					NOT = { owns_state = 744 } #Qingdao
-					NOT = { owns_state = 745 } #Kwantung
+					NOT = { owns_state = 745 } #Dalian
 					NOT = { owns_state = 746 } #Ningbo
 					NOT = { owns_state = 747 } #Fuzhou
 					NOT = { owns_state = 801 } #Shantou
@@ -3841,6 +3917,7 @@ china_league_collapse_decisions = {
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.4"
 						owner = ROOT
+						id = 1911
 					}
 				}
 			}
@@ -3914,10 +3991,12 @@ china_league_collapse_decisions = {
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.4"
 						owner = ROOT
+						id = 1911
 					}
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.4"
 						owner = ROOT
+						id = 1911
 					}
 				}
 			}
@@ -3993,10 +4072,12 @@ china_league_collapse_decisions = {
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.4"
 						owner = ROOT
+						id = 1911
 					}
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.4"
 						owner = ROOT
+						id = 1911
 					}
 				}
 			}
@@ -4068,16 +4149,19 @@ china_league_collapse_decisions = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.2"
 						owner = ROOT
 						prioritize_location = 11913
+						id = 1911
 					}
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.2"
 						owner = ROOT
 						prioritize_location = 11913
+						id = 1911
 					}
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.2"
 						owner = ROOT
 						prioritize_location = 11913
+						id = 1911
 					}
 				}
 			}
@@ -4153,6 +4237,7 @@ china_league_collapse_decisions = {
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.4"
 						owner = ROOT
+						id = 1911
 					}
 				}
 			}
@@ -4228,10 +4313,12 @@ china_league_collapse_decisions = {
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.4"
 						owner = ROOT
+						id = 1911
 					}
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.4"
 						owner = ROOT
+						id = 1911
 					}
 				}
 			}
@@ -4307,10 +4394,12 @@ china_league_collapse_decisions = {
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.4"
 						owner = ROOT
+						id = 1911
 					}
 					create_unit = {
 						division = "division_template = \"League War Militia\" start_experience_factor = 0.4"
 						owner = ROOT
+						id = 1911
 					}
 				}
 			}
@@ -4548,7 +4637,6 @@ china_league_collapse_decisions = {
 			hidden_effect = {
 				division_template = {
 					name = "Chinese Nationalist Militia"
-					is_locked = yes
 					division_names_group = CHYN_INF_01
 					regiments = {
 						irregular_infantry = { x = 0 y = 0 }
@@ -4568,10 +4656,12 @@ china_league_collapse_decisions = {
 					create_unit = {
 						division = "division_template = \"Chinese Nationalist Militia\" start_experience_factor = 0.4"
 						owner = ROOT
+						id = 1911
 					}
 					create_unit = {
 						division = "division_template = \"Chinese Nationalist Militia\" start_experience_factor = 0.4"
 						owner = ROOT
+						id = 1911
 					}
 				}
 			}
@@ -5178,7 +5268,7 @@ prospect_for_resources = {
 		ai_will_do = { factor = 100 }
 	}
 
-	QIE_develop_hebei_steel_decision = {
+	QIE_develop_zhili_steel_decision = {
 		icon = steel
 		allowed = { always = no }	# Activated by scripted effect for everyone except QIE/SZC
 
@@ -5201,10 +5291,10 @@ prospect_for_resources = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete QIE_develop_hebei_steel_decision target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision complete QIE_develop_zhili_steel_decision target: [From.GetName]"
 		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_develop_hebei_steel_decision target: [From.GetName]"
+			log = "[GetDateText]: [Root.GetName]: Decision remove QIE_develop_zhili_steel_decision target: [From.GetName]"
 			FROM = {
 				set_state_flag = QIE_steel_mines_developed
 				add_resource = {
@@ -5215,7 +5305,7 @@ prospect_for_resources = {
 			hidden_effect = {
 				for_each_scope_loop = {
 					array = global.china_tags_array
-					THIS = { remove_targeted_decision = { target = 1060 decision = QIE_develop_hebei_steel_decision } }
+					THIS = { remove_targeted_decision = { target = 1060 decision = QIE_develop_zhili_steel_decision } }
 				}
 			}
 		}

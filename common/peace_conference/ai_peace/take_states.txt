@@ -177,6 +177,7 @@ peace_ai_desires = {
 				AND = {
 					is_subject = yes
 					overlord = {
+						NOT = { tag = ROOT.FROM }
 						ROOT.FROM.FROM.FROM = {
 							OR = {
 								is_core_of = PREV
@@ -187,16 +188,30 @@ peace_ai_desires = {
 					}
 				}
 				#don't contest core/claims/ambitions claimed by allies
-				any_of_scopes = {
-					array = global.pc_winners_array
-					pc_is_winner = yes
-					is_ally_with = ROOT
-					ROOT.FROM.FROM.FROM = {
-						pc_is_state_claimed_by = PREV
-						OR = {
-							is_core_of = PREV
-							is_claimed_by = PREV
-							has_variable = ambition_area_@PREV
+				if = {
+					limit = { is_in_faction = yes }
+					any_allied_country = {
+						pc_is_winner = yes
+						NOT = { tag = ROOT.FROM }
+						ROOT.FROM.FROM.FROM = {
+							OR = {
+								is_core_of = PREV
+								is_claimed_by = PREV
+								has_variable = ambition_area_@PREV
+							}
+						}
+					}
+				}
+				else = {
+					any_subject_country = {
+						pc_is_winner = yes
+						NOT = { tag = ROOT.FROM }
+						ROOT.FROM.FROM.FROM = {
+							OR = {
+								is_core_of = PREV
+								is_claimed_by = PREV
+								has_variable = ambition_area_@PREV
+							}
 						}
 					}
 				}
@@ -266,5 +281,162 @@ peace_ai_desires = {
 			}
 		}
 		ai_desire = 400 #offsets do_not_grant_states_randomly
+	}
+
+	# this is a reversed version of take_states_default_restrictions and give_states_default_restrictions to prevent AI tags from endlessly contesting each other in edge case scenarios
+	stop_endless_contests = {
+		peace_action_type = take_states
+		enable = {
+			pc_turn > 23
+			if = {
+				limit = { tag = ROOT.FROM }
+				any_of_scopes = {
+					array = global.pc_winners_array
+					pc_is_winner = yes
+					pc_current_score > var:ROOT.pc_current_score
+
+					#check if the tag actually wants to take this state
+					OR = {
+						ROOT.FROM.FROM.FROM = { is_core_of = PREV }
+						ROOT.FROM.FROM.FROM = { is_claimed_by = PREV }
+						AND = {
+							is_subject = no
+							ROOT.FROM.FROM.FROM = { has_variable = ambition_area_@PREV }
+						}
+						AND = {
+							has_global_flag = pc_has_major_winner
+							is_major = yes
+							is_subject = no
+						}
+						AND = {
+							has_global_flag = pc_has_non_subject_winner
+							is_subject = no
+						}
+					}
+					NOT = {
+						AND = {
+							is_in_faction = yes
+							any_allied_country = {
+								pc_is_winner = yes
+								if = {
+									limit = { is_subject = yes }
+									ROOT.FROM.FROM.FROM = {
+										OR = {
+											is_claimed_by = PREV
+											is_core_of = PREV
+										}
+									}
+								}
+								else = {
+									ROOT.FROM.FROM.FROM = {
+										OR = {
+											is_claimed_by = PREV
+											is_core_of = PREV
+											has_variable = ambition_area_@PREV
+										}
+									}
+								}
+							}
+						}
+						AND = {
+							num_subjects > 0
+							any_subject_country = {
+								pc_is_winner = yes
+								ROOT.FROM.FROM.FROM = {
+									OR = {
+										is_claimed_by = PREV
+										is_core_of = PREV
+									}
+								}
+							}
+						}
+						AND = {
+							is_subject = yes
+							OR = {
+								overlord = {
+									pc_is_winner = yes
+									ROOT.FROM.FROM.FROM = {
+										OR = {
+											is_claimed_by = PREV
+											is_core_of = PREV
+											has_variable = ambition_area_@PREV
+										}
+									}
+								}
+								overlord = {
+									any_subject_country = {
+										pc_is_winner = yes
+										ROOT.FROM.FROM.FROM = {
+											OR = {
+												is_claimed_by = PREV
+												is_core_of = PREV
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			else = {
+				any_of_scopes = {
+					array = global.pc_winners_array
+					pc_is_winner = yes
+					pc_current_score > var:ROOT.pc_current_score
+
+					#check if the tag actually wants to give away this state
+					NOT = {
+						ROOT.FROM.FROM.FROM = {
+							OR = {
+								is_core_of = PREV
+								is_claimed_by = PREV
+								has_variable = ambition_area_@PREV
+							}
+						}
+						AND = {
+							is_subject = yes
+							overlord = {
+								ROOT.FROM.FROM.FROM = {
+									OR = {
+										is_core_of = PREV
+										is_claimed_by = PREV
+										has_variable = ambition_area_@PREV
+									}
+								}
+							}
+						}
+						if = {
+							limit = { is_in_faction = yes }
+							any_allied_country = {
+								pc_is_winner = yes
+								NOT = { tag = ROOT.FROM }
+								ROOT.FROM.FROM.FROM = {
+									OR = {
+										is_core_of = PREV
+										is_claimed_by = PREV
+										has_variable = ambition_area_@PREV
+									}
+								}
+							}
+						}
+						else = {
+							any_subject_country = {
+								pc_is_winner = yes
+								NOT = { tag = ROOT.FROM }
+								ROOT.FROM.FROM.FROM = {
+									OR = {
+										is_core_of = PREV
+										is_claimed_by = PREV
+										has_variable = ambition_area_@PREV
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		ai_desire = -1000
 	}
 }

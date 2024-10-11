@@ -1,128 +1,78 @@
 # Useful triggers for the annexation codebase
 is_valid_annexation_state = {
-	is_owned_by = ROOT
-	is_claim_or_core_of_ROOT = no
+	custom_trigger_tooltip = {
+		tooltip = is_valid_annexation_state
+		is_owned_by = ROOT
+		is_allowed_annexation_state = yes
+	}
+}
+
+is_allowed_annexation_state = {
+	NOT = { is_claimed_by = ROOT }
+	NOT = { is_core_of = ROOT }
 	hidden_trigger = {
-		NOT = { has_state_flag = retain_state_@PREV }
+		NOT = { has_state_flag = retain_state_@ROOT }
 		NOT = { check_variable = { retain_state_@THIS = 1 } }
 		NOT = { has_state_flag = occupied_by_@ROOT }
 		NOT = { check_variable = { occupied_by_@THIS = 1 } }
 	}
 }
 
-can_select_annexation_mission = {
+is_allowed_annexation_state_for_owner = {
+	NOT = { is_claimed_by = owner }
+	NOT = { is_core_of = owner }
+	hidden_trigger = {
+		NOT = { check_variable = { retain_state_@THIS = 1 } }
+		NOT = { check_variable = { occupied_by_@THIS = 1 } }
+		owner = {
+			PREV = {
+				NOT = { has_state_flag = retain_state_@PREV }
+				NOT = { has_state_flag = occupied_by_@PREV }
+			}
+		}
+	}
+}
+
+can_select_annexation_decision = {
 	hidden_trigger = { NOT = { has_country_flag = open_annexation_event } }
 }
 
-is_clear_other_claims = {
-	is_important_state = no
-	if = {
-		limit = { is_in_faction = no }
-		NOT = { any_subject_country = { PREV = { is_claim_or_core_of_PREV = yes } } }
-	}
-	else = {
-		NOT = { any_allied_country = { PREV = { is_claim_or_core_of_PREV = yes } } }
-	}
+is_claim_or_core_of_target = {
 	OR = {
-		NOT = { has_variable = ambition_area_@ROOT }
-		AND = {
-			ROOT = { tag = CAN }
-			is_british_colonial_claim = yes
-		}
-		AND = {
-			ROOT = { tag = ENG }
-			is_british_colonial_claim = yes
-		}
-		AND = {
-			ROOT = { tag = GBR }
-			is_british_colonial_claim = yes
-		}
-		AND = {
-			ROOT = { tag = FRA }
-			is_french_colonial_claim = yes
-		}
-		AND = {
-			ROOT = { tag = JAP }
-			OR = {
-				region = 194 #Malay Peninsula
-				region = 91 #Arafura & Banda Seas
-				region = 93 #Java & Flores Seas
-				region = 158 #Sunda Islands
-				region = 159 #Borneo
-				region = 167 #New Guinea
-				region = 192 #Sumatra
-			}
-		}
-		AND = {
-			ROOT = { tag = NFA }
-			is_french_colonial_claim = yes
-		}
-		ROOT = { is_ai = no }
-	}
-}
-
-has_no_african_interests = {
-	OR = {
-		has_socialist_government = yes
-		NOT = {
-			tag = POR
-			tag = MAF
-			tag = NFA
-			tag = SPA
-			tag = ITA
-			tag = SIC
-			tag = SRD
-			tag = VNC
-			tag = PAP
-			tag = LOM
-			AND = {
-				tag = GER
-				NOT = { has_subject = MAF }
-			}
-			AND = {
-				tag = GBR
-				NOT = { has_country_flag = GBR_decolonize }
-			}
-			AND = {
-				tag = CAN
-				NOT = { country_exists = GBR }
-			}
-		}
-	}
-}
-
-can_form_italy = {
-	2 = { is_owned_and_controlled_by = ROOT } #Latium
-	count_triggers = {
-		amount = 3
-		158 = { is_owned_and_controlled_by = ROOT } #Turin
-		159 = { is_owned_and_controlled_by = ROOT } #Milan
-		117 = { is_owned_and_controlled_by = ROOT } #Naples
-		162 = { is_owned_and_controlled_by = ROOT } #Florence
-	}
-	NOT = {
-		has_country_flag = KR_will_balkanize_italy
-		tag = ITA
-		tag = SRI
-		tag = SIC
-		tag = SRD
-		tag = PAP
-		tag = VNC
-		tag = EMI
-		tag = TUS
-		tag = LOM
+		is_claimed_by = var:tag_to_release
+		is_core_of = var:tag_to_release
 	}
 }
 
 ROOT_can_grant_land = {
+	ROOT = { is_subject = no }
 	exists = yes
 	NOT = { tag = ROOT }
-	OR = {
-		is_ally_with = ROOT
-		AND = {
-			both_socialist_or_both_not_socialist = yes
-			at_war_with_or_justifying_wargoal_against_ROOT = no
+	if = {
+		limit = { has_autonomy_state = colonial_government }
+		is_subject_of = ROOT
+	}
+	else = {
+		OR = {
+			is_ally_with = ROOT
+			AND = {
+				ROOT = { both_socialist_or_both_not_socialist = yes }
+				at_war_with_or_justifying_wargoal_against_ROOT = no
+			}
 		}
+	}
+}
+
+ROOT_can_grant_land_ignore_ideology = {
+	ROOT = { is_subject = no }
+	exists = yes
+	NOT = { tag = ROOT }
+	if = {
+		limit = { has_autonomy_state = colonial_government }
+		is_subject_of = ROOT
+	}
+	else = {
+		at_war_with_or_justifying_wargoal_against_ROOT = no
 	}
 }
 
@@ -151,7 +101,109 @@ remove_cores_of_tag_if_non_existent = {
 		original_tag = MAF
 		original_tag = GEA
 		original_tag = SPA
+		original_tag = GAL
+		original_tag = HAU
+		original_tag = KBR
+		original_tag = ADA
+		original_tag = RWA
+		original_tag = BRD
+		original_tag = KIV
+		original_tag = TKE
+		original_tag = BRT
 		#add new entries here as needed - remember to update the exceptions in clear_cores_of_tag_if_possible
 	}
 	NOT = { has_country_flag = reserved_dynamic_tag }
+}
+
+annexations_required_state_is_owned_by_either_side = {
+	OR = {
+		is_owned_by = PREV
+		is_valid_annexation_state = yes
+	}
+}
+
+annexations_state_owner_is_valid_grant_target = {
+	OR = {
+		is_claim_or_core_of_owner = yes
+		owner = { PREV = { has_state_flag = annexation_recent_transfer_@PREV } }
+	}
+}
+
+annexations_can_annex = {
+	has_event_target = can_annex
+}
+
+annexations_is_allowed_to_cancel = {
+	annexations_can_annex = no
+}
+
+annexations_should_give_lands_to_overlord = {
+	is_subject = yes
+	annexations_can_annex = no
+}
+
+annexations_can_make_alliance_offer = {
+	is_subject = no
+	is_in_faction = yes
+	OR = {
+		is_major = yes
+		is_ai = no
+	}
+}
+
+annexations_is_valid_target_for_alliance_offer = {
+	exists = yes
+	is_subject = no
+	NOT = { is_in_faction_with = ROOT }
+	has_capitulated = no
+	both_socialist_or_both_not_socialist = yes
+	at_war_with_or_justifying_wargoal_against_ROOT = no
+	at_peace_or_same_enemies_as_ROOT = yes
+}
+
+annexations_no_occupation_penalty = {
+	OR = {
+		has_state_flag = no_occupation_penalty
+		has_variable = can_integrate_@ROOT
+	}
+}
+
+annexations_state_is_tied_to_annexation_decision = {
+	check_variable = { PREV.annexation_target = THIS }
+	annexations_check_highest_scores_for_regional_annexation = yes
+}
+
+annexations_check_highest_scores_for_regional_annexation = {
+	if = {
+		limit = { has_variable = annexation_target:annexation_extra_states^num }
+		check_variable = { priority_state_@var:annexation_target = PREV }
+		check_variable = { priority_country_@var:annexation_target = ROOT }
+	}
+}
+
+annexations_state_has_valid_annexation = {
+	OR = {
+		is_valid_annexation_state = yes
+		has_variable = has_valid_state_@var:annexation_target
+	}
+}
+
+annexations_is_valid_annexation_region = {
+	if = {
+		limit = { NOT = { has_variable = annexation_target:annexation_extra_states } }
+		is_valid_annexation_state = yes
+	}
+	else = {
+		any_of_scopes = {
+			array = annexation_target:annexation_extra_states
+			is_valid_annexation_state = yes
+		}
+	}
+}
+
+add_state_to_resistance_target_array = {
+	if = {
+		limit = { NOT = { is_in_array = { resistance_target_states = annexation_target } } }
+		add_to_temp_array = { resistance_target_states = annexation_target }
+	}
 }

@@ -67,7 +67,15 @@ clear_all_relations = {
 			}
 		}
 	}
+	if = {
+		limit = { is_faction_leader = yes }
+		dismantle_faction = yes
+	}
 	else_if = {
+		limit = { is_in_faction = yes }
+		leave_faction = yes
+	}
+	if = {
 		limit = { num_subjects > 0 }
 		every_subject_country = {
 			overlord = {
@@ -79,39 +87,114 @@ clear_all_relations = {
 		}
 	}
 	if = {
-		limit = { is_faction_leader = yes }
-		dismantle_faction = yes
+		limit = { NOT = { has_variable = keep_wars } }
+		separate_peace_all_wars = yes
 	}
-	else_if = {
-		limit = { is_in_faction = yes }
-		leave_faction = yes
-	}
-	separate_peace_all_wars = yes
-	every_other_country = {
-		diplomatic_relation = {
-			country = PREV
-			relation = guarantee
-			active = no
-		}
-		diplomatic_relation = {
-			country = PREV
-			relation = non_aggression_pact
-			active = no
-		}
-		diplomatic_relation = {
-			country = PREV
-			relation = military_access
-			active = no
-		}
-		diplomatic_relation = {
-			country = PREV
-			relation = market_access_rights
-			active = no
-		}
-		PREV = {
+	effect_tooltip = {
+		every_other_country = {
+			limit = { has_guaranteed = PREV }
 			diplomatic_relation = {
 				country = PREV
 				relation = guarantee
+				active = no
+			}
+		}
+		every_other_country = {
+			limit = { has_non_aggression_pact_with = PREV }
+			diplomatic_relation = {
+				country = PREV
+				relation = non_aggression_pact
+				active = no
+			}
+		}
+		every_other_country = {
+			limit = { has_military_access_to = PREV }
+			diplomatic_relation = {
+				country = PREV
+				relation = military_access
+				active = no
+			}
+		}
+		every_other_country = {
+			limit = { is_guaranteed_by = PREV }
+			PREV = {
+				diplomatic_relation = {
+					country = PREV
+					relation = guarantee
+					active = no
+				}
+			}
+		}
+		every_other_country = {
+			limit = { gives_military_access_to = PREV }
+			PREV = {
+				diplomatic_relation = {
+					country = PREV
+					relation = military_access
+					active = no
+				}
+			}
+		}
+		every_other_country = {
+			limit = { gives_military_access_to = PREV }
+			PREV = {
+				diplomatic_relation = {
+					country = PREV
+					relation = military_access
+					active = no
+				}
+			}
+		}
+		if = {
+			limit = { has_dlc_bba = yes }
+			every_other_country = {
+				limit = { is_embargoing = PREV }
+				diplomatic_relation = {
+					country = ROOT
+					relation = embargo
+					active = no
+				}
+			}
+			every_other_country = {
+				limit = { is_embargoed_by = PREV }
+				PREV = {
+					diplomatic_relation = {
+						country = PREV
+						relation = embargo
+						active = no
+					}
+				}
+			}
+		}
+		else = {
+			every_other_country = {
+				limit = { has_country_flag = embargoed_@PREV }
+				remove_opinion_modifier = {
+					modifier = embargo
+					target = PREV
+				}
+			}
+			every_other_country = {
+				limit = { PREV = { has_country_flag = embargoed_@PREV } }
+				PREV = {
+					remove_opinion_modifier = {
+						modifier = embargo
+						target = PREV
+					}
+				}
+			}
+		}
+	}
+	hidden_effect = {
+		every_other_country = {
+			diplomatic_relation = {
+				country = PREV
+				relation = guarantee
+				active = no
+			}
+			diplomatic_relation = {
+				country = PREV
+				relation = non_aggression_pact
 				active = no
 			}
 			diplomatic_relation = {
@@ -124,8 +207,25 @@ clear_all_relations = {
 				relation = market_access_rights
 				active = no
 			}
+			PREV = {
+				diplomatic_relation = {
+					country = PREV
+					relation = guarantee
+					active = no
+				}
+				diplomatic_relation = {
+					country = PREV
+					relation = military_access
+					active = no
+				}
+				diplomatic_relation = {
+					country = PREV
+					relation = market_access_rights
+					active = no
+				}
+			}
+			clear_embargo_PREV = yes
 		}
-		clear_embargo_PREV = yes
 	}
 	CAN_remove_from_iedc = yes
 	if = {
@@ -204,33 +304,33 @@ clear_all_relations_with_TARGET = {
 		limit = { is_in_faction_with = var:target }
 		leave_faction = yes
 	}
-	every_other_country = {
-		limit = { is_ally_with = var:target }
-		diplomatic_relation = {
-			country = PREV
-			relation = guarantee
-			active = no
-		}
-		diplomatic_relation = {
-			country = PREV
-			relation = non_aggression_pact
-			active = no
-		}
-		diplomatic_relation = {
-			country = PREV
-			relation = military_access
-			active = no
-		}
-		diplomatic_relation = {
-			country = PREV
-			relation = market_access_rights
-			active = no
-		}
-		PREV = {
+	effect_tooltip = {
+		every_other_country = {
+			limit = {
+				is_ally_with = var:target
+				has_guaranteed = PREV
+			}
 			diplomatic_relation = {
 				country = PREV
 				relation = guarantee
 				active = no
+			}
+		}
+		every_other_country = {
+			limit = {
+				is_ally_with = var:target
+				has_non_aggression_pact_with = PREV
+			}
+			diplomatic_relation = {
+				country = PREV
+				relation = non_aggression_pact
+				active = no
+			}
+		}
+		every_other_country = {
+			limit = {
+				is_ally_with = var:target
+				has_military_access_to = PREV
 			}
 			diplomatic_relation = {
 				country = PREV
@@ -238,76 +338,108 @@ clear_all_relations_with_TARGET = {
 				active = no
 			}
 		}
-		clear_embargo_PREV = yes
-	}
-}
-
-# ends puppet status, removes from faction and clears all relations except wars (used for rebellions)
-clear_all_relations_except_wars = {
-	if = {
-		limit = { is_subject = yes }
-		overlord = {
-			set_autonomy = {
-				target = PREV
-				autonomy_state = autonomy_free
+		every_other_country = {
+			limit = {
+				is_ally_with = var:target
+				is_guaranteed_by = PREV
+			}
+			PREV = {
+				diplomatic_relation = {
+					country = PREV
+					relation = guarantee
+					active = no
+				}
 			}
 		}
-	}
-	else_if = {
-		limit = { num_subjects > 0 }
-		every_subject_country = {
-			overlord = {
-				set_autonomy = {
+		every_other_country = {
+			limit = {
+				is_ally_with = var:target
+				gives_military_access_to = PREV
+			}
+			PREV = {
+				diplomatic_relation = {
+					country = PREV
+					relation = military_access
+					active = no
+				}
+			}
+		}
+		every_other_country = {
+			limit = {
+				is_ally_with = var:target
+				gives_military_access_to = PREV
+			}
+			PREV = {
+				diplomatic_relation = {
+					country = PREV
+					relation = military_access
+					active = no
+				}
+			}
+		}
+		if = {
+			limit = { has_dlc_bba = yes }
+			every_other_country = {
+				limit = {
+					is_ally_with = var:target
+					is_embargoing = PREV
+				}
+				diplomatic_relation = {
+					country = ROOT
+					relation = embargo
+					active = no
+				}
+			}
+			every_other_country = {
+				limit = {
+					is_ally_with = var:target
+					is_embargoed_by = PREV
+				}
+				PREV = {
+					diplomatic_relation = {
+						country = PREV
+						relation = embargo
+						active = no
+					}
+				}
+			}
+		}
+		else = {
+			every_other_country = {
+				limit = {
+					is_ally_with = var:target
+					has_country_flag = embargoed_@PREV
+				}
+				remove_opinion_modifier = {
+					modifier = embargo
 					target = PREV
-					autonomy_state = autonomy_free
+				}
+			}
+			every_other_country = {
+				limit = {
+					is_ally_with = var:target
+					PREV = { has_country_flag = embargoed_@PREV }
+				}
+				PREV = {
+					remove_opinion_modifier = {
+						modifier = embargo
+						target = PREV
+					}
 				}
 			}
 		}
 	}
-	else_if = {
-		limit = { num_subjects > 0 }
-		every_subject_country = {
-			overlord = {
-				set_autonomy = {
-					target = PREV
-					autonomy_state = autonomy_free
-				}
-			}
-		}
-	}
-	if = {
-		limit = { is_faction_leader = yes }
-		dismantle_faction = yes
-	}
-	else_if = {
-		limit = { is_in_faction = yes }
-		leave_faction = yes
-	}
-	every_other_country = {
-		diplomatic_relation = {
-			country = PREV
-			relation = guarantee
-			active = no
-		}
-		diplomatic_relation = {
-			country = PREV
-			relation = non_aggression_pact
-			active = no
-		}
-		diplomatic_relation = {
-			country = PREV
-			relation = military_access
-			active = no
-		}
-		diplomatic_relation = {
-			country = PREV
-			relation = market_access_rights
-			active = no
-		}
-		PREV = {
+	hidden_effect = {
+		every_other_country = {
+			limit = { is_ally_with = var:target }
 			diplomatic_relation = {
 				country = PREV
 				relation = guarantee
+				active = no
+			}
+			diplomatic_relation = {
+				country = PREV
+				relation = non_aggression_pact
 				active = no
 			}
 			diplomatic_relation = {
@@ -320,28 +452,27 @@ clear_all_relations_except_wars = {
 				relation = market_access_rights
 				active = no
 			}
+			PREV = {
+				diplomatic_relation = {
+					country = PREV
+					relation = guarantee
+					active = no
+				}
+				diplomatic_relation = {
+					country = PREV
+					relation = military_access
+					active = no
+				}
+			}
+			clear_embargo_PREV = yes
 		}
-		clear_embargo_PREV = yes
 	}
-	CAN_remove_from_iedc = yes
-	if = {
-		limit = { is_in_tech_sharing_group = entente_research }
-		remove_from_tech_sharing_group = entente_research
-	}
-	GER_remove_from_mitteleuropa = yes
-	MIE_remove_from_intermarium = yes
-	if = {
-		limit = { is_in_tech_sharing_group = german_research }
-		remove_from_tech_sharing_group = german_research
-	}
-	if = {
-		limit = { is_in_tech_sharing_group = phalanstere_research }
-		remove_from_tech_sharing_group = phalanstere_research
-	}
-	if = {
-		limit = { is_in_tech_sharing_group = austrian_research }
-		remove_from_tech_sharing_group = austrian_research
-	}
+}
+
+# ends puppet status, removes from faction and clears all relations except wars (used for rebellions)
+clear_all_relations_except_wars = {
+	set_temp_variable = { keep_wars = 1 }
+	clear_all_relations = yes
 }
 
 # clears all relations with PREV (won't remove from faction if not a faction leader, nor stop wars if not a valid target)
@@ -423,6 +554,22 @@ clear_relations_with_PREV = {
 			country = PREV
 			relation = military_access
 			active = no
+		}
+	}
+	clear_embargo_PREV = yes
+	hidden_effect = {
+		#has_market_access doesn't exist as a trigger, so this needs to be hidden for now
+		diplomatic_relation = {
+			country = PREV
+			relation = market_access_rights
+			active = no
+		}
+		PREV = {
+			diplomatic_relation = {
+				country = PREV
+				relation = market_access_rights
+				active = no
+			}
 		}
 	}
 }
@@ -1159,8 +1306,13 @@ increase_state_category_by_one_level = {
 		limit = { has_state_category = eleven }
 		set_state_category = twelve
 	}
-	else = { add_extra_state_shared_building_slots = 1 }
-	custom_effect_tooltip = increase_state_category_by_one_level_tt
+	else = {
+		add_extra_state_shared_building_slots = 1
+	}
+	if = {
+		limit = { NOT = { has_state_category = twelve } }
+		custom_effect_tooltip = increase_state_category_by_one_level_tt
+	}
 }
 increase_state_category_by_two_levels = {
 	if = {
@@ -1206,10 +1358,19 @@ increase_state_category_by_two_levels = {
 	else_if = {
 		limit = { has_state_category = eleven }
 		set_state_category = twelve
+		custom_effect_tooltip = increase_state_category_by_one_level_tt
 		add_extra_state_shared_building_slots = 1
 	}
-	else = { add_extra_state_shared_building_slots = 2 }
-	custom_effect_tooltip = increase_state_category_by_two_levels_tt
+	else = {
+		add_extra_state_shared_building_slots = 2
+	}
+	if = {
+		limit = {
+			NOT = { has_state_category = eleven }
+			NOT = { has_state_category = twelve }
+		}
+		custom_effect_tooltip = increase_state_category_by_two_levels_tt
+	}
 }
 decrease_state_category_by_one_level = {
 	if = {
@@ -1256,7 +1417,10 @@ decrease_state_category_by_one_level = {
 		limit = { has_state_category = two }
 		set_state_category = one
 	}
-	custom_effect_tooltip = decrease_state_category_by_one_level_tt
+	if = {
+		limit = { NOT = { has_state_category = one } }
+		custom_effect_tooltip = decrease_state_category_by_one_level_tt
+	}
 }
 
 ### adds research slots until three, then gives a temporary research speed bonus
@@ -1670,38 +1834,6 @@ civil_war_set_flag_to_restore_elections = {
 		limit = { has_elections = yes }
 		set_country_flag = had_elections
 	}
-}
-
-log_RP_eastern_military = {
-	set_variable = { GER.ee_divcount = 0 }
-	set_variable = { GER.ee_divlimit = 0 }
-	set_variable = { GER.ee_armysize = 0 }
-	every_country = {
-		limit = {
-			is_in_faction_with = GER
-			OR = {
-				tag = POL
-				tag = LIT
-				tag = BAT
-				tag = LAT
-				tag = EST
-				tag = UKR
-				tag = GEO
-				tag = FIN
-				tag = AZR
-				tag = WHR
-			}
-		}
-		add_to_variable = {
-			var = GER.ee_divcount
-			value = num_divisions
-		}
-		add_to_variable = {
-			var = GER.ee_divlimit
-			value = max_divisions
-		}
-	}
-	log = "KR_Unit;[GetDateText];Reichspakt East;[?GER.ee_divcount];[?GER.ee_divlimit]"
 }
 
 # scope is the country being freed

@@ -108,44 +108,32 @@ JAP_fading_sun = {
 				remove_claim_by = JAP
 				clear_variable = ambition_area_JAP
 			}
-			537 = { #Sakhalin
-				if = {
-					limit = { NOT = { is_owned_by = JAP } }
-					remove_core_of = JAP
-					remove_claim_by = JAP
-				}
-			}
-			555 = { #Kuril Islands
-				if = {
-					limit = { NOT = { is_owned_by = JAP } }
-					remove_core_of = JAP
-					remove_claim_by = JAP
-				}
-			}
 
 			# disable all decisions
 			JAP_close_all = yes
 
 			# end the economic sphere
 			JAP = {
-				clr_country_flag = JAP_economic_sphere_member
 				if = {
 					limit = { has_dynamic_modifier = { modifier = JAP_asian_economic_sphere } }
 					remove_dynamic_modifier = { modifier = JAP_asian_economic_sphere }
 				}
+				clear_variable = global.sphere_industry_boost
+				clear_variable = global.sphere_goods_boost
+				clear_variable = global.sphere_resources_boost_member
+				clear_variable = global.sphere_goods_boost_member
+				if = {
+					limit = { is_economic_sphere_leader = yes }
+					every_country = {
+						limit = { is_in_same_economic_sphere_as_PREV = yes }
+						country_event = japfor.404
+					}
+					dismantle_economic_sphere = yes
+				}
 			}
-			every_country = {
-				limit = { has_country_flag = JAP_economic_sphere_member }
-				country_event = japfor.404
-			}
-			clear_array = global.asian_economic_sphere
-			clear_variable = global.sphere_industry_boost
-			clear_variable = global.sphere_goods_boost
-			clear_variable = global.sphere_resources_boost_member
-			clear_variable = global.sphere_goods_boost_member
 
 			# end the research group
-			every_country = {
+			every_possible_country = {
 				limit = { is_in_tech_sharing_group = japan_research }
 				remove_from_tech_sharing_group = japan_research
 			}
@@ -192,23 +180,24 @@ JAP_china_peace_next_country = {
 JAP_add_to_economic_sphere = {
 	if = {
 		limit = {
-			JAP = { is_faction_leader = yes }
-			NOT = { has_country_flag = JAP_economic_sphere_member }
+			JAP = {
+				is_economic_sphere_leader = yes
+				is_leader_of_economic_sphere_of_ROOT = no
+			}
 		}
-		custom_effect_tooltip = JAP_member_of_co_prosperity_sphere
 		clr_country_flag = JAP_refused_sphere_invitation
-		set_country_flag = JAP_economic_sphere_member
-		add_to_array = { global.asian_economic_sphere = THIS }
-		if = {
-			limit = { NOT = { has_dynamic_modifier = { modifier = JAP_asian_economic_sphere_member } } }
-			add_dynamic_modifier = { modifier = JAP_asian_economic_sphere_member }
-		}
+		set_temp_variable = { sphere_target = THIS }
 		JAP = {
+			add_to_economic_sphere = yes
 			hidden_effect = {
 				remove_opinion_modifier = { target = PREV modifier = KR_disapproves_of_govt }
 				remove_opinion_modifier = { target = PREV modifier = KR_hates_govt }
 				remove_opinion_modifier = { target = PREV modifier = KR_outraged }
 			}
+		}
+		if = {
+			limit = { NOT = { has_dynamic_modifier = { modifier = JAP_asian_economic_sphere_member } } }
+			add_dynamic_modifier = { modifier = JAP_asian_economic_sphere_member }
 		}
 		JAP_recalculate_economic_integration = yes
 	}
@@ -216,10 +205,10 @@ JAP_add_to_economic_sphere = {
 
 JAP_remove_from_economic_sphere = {
 	if = {
-		limit = { has_country_flag = JAP_economic_sphere_member }
+		limit = { JAP = { is_leader_of_economic_sphere_of_PREV = yes } }
 		custom_effect_tooltip = JAP_withdraws_from_sphere
-		clr_country_flag = JAP_economic_sphere_member
-		remove_from_array = { global.asian_economic_sphere = THIS }
+		set_temp_variable = { sphere_target = THIS }
+		JAP = { remove_from_economic_sphere = yes }
 		if = {
 			limit = { tag = ROOT }
 			if = {
@@ -307,7 +296,7 @@ JAP_recalculate_economic_integration = {
 	hidden_effect = {
 		set_temp_variable = { var_sphere_factories = 0 }
 		for_each_scope_loop = {
-			array = global.asian_economic_sphere
+			array = JAP.economic_sphere:members
 			add_to_temp_variable = { var_sphere_factories = THIS.num_of_civilian_factories }
 		}
 
@@ -350,9 +339,8 @@ JAP_recalculate_economic_integration = {
 			multiply_variable = { global.sphere_resources_boost_member = 1.1 }
 		}
 	}
-	JAP = { force_update_dynamic_modifier = yes }
 	for_each_scope_loop = {
-		array = global.asian_economic_sphere
+		array = JAP.economic_sphere:members
 		force_update_dynamic_modifier = yes
 	}
 }
@@ -479,9 +467,9 @@ JAP_open_JAP_co_prosperity_decisions_JAP_osaka_conference = {
 	activate_targeted_decision = { target = MYS decision = JAP_invite_into_economic_sphere }
 	activate_targeted_decision = { target = NZL decision = JAP_invite_into_economic_sphere }
 	activate_targeted_decision = { target = ORI decision = JAP_invite_into_economic_sphere }
-	activate_targeted_decision = { target = PAK decision = JAP_invite_into_economic_sphere }
-	activate_targeted_decision = { target = PHI decision = JAP_invite_into_economic_sphere }
 	activate_targeted_decision = { target = PJB decision = JAP_invite_into_economic_sphere }
+	activate_targeted_decision = { target = PHI decision = JAP_invite_into_economic_sphere }
+	activate_targeted_decision = { target = KHA decision = JAP_invite_into_economic_sphere }
 	activate_targeted_decision = { target = PNG decision = JAP_invite_into_economic_sphere }
 	activate_targeted_decision = { target = PRF decision = JAP_invite_into_economic_sphere }
 	activate_targeted_decision = { target = RJS decision = JAP_invite_into_economic_sphere }
@@ -609,6 +597,7 @@ JAP_close_all = {
 	remove_targeted_decision = { target = INS decision = JAP_invite_into_economic_sphere }
 	remove_targeted_decision = { target = KAC decision = JAP_invite_into_economic_sphere }
 	remove_targeted_decision = { target = KAS decision = JAP_invite_into_economic_sphere }
+	remove_targeted_decision = { target = KHA decision = JAP_invite_into_economic_sphere }
 	remove_targeted_decision = { target = KOR decision = JAP_invite_into_economic_sphere }
 	remove_targeted_decision = { target = LAO decision = JAP_invite_into_economic_sphere }
 	remove_targeted_decision = { target = LEC decision = JAP_invite_into_economic_sphere }
@@ -618,9 +607,8 @@ JAP_close_all = {
 	remove_targeted_decision = { target = MYS decision = JAP_invite_into_economic_sphere }
 	remove_targeted_decision = { target = NZL decision = JAP_invite_into_economic_sphere }
 	remove_targeted_decision = { target = ORI decision = JAP_invite_into_economic_sphere }
-	remove_targeted_decision = { target = PAK decision = JAP_invite_into_economic_sphere }
-	remove_targeted_decision = { target = PHI decision = JAP_invite_into_economic_sphere }
 	remove_targeted_decision = { target = PJB decision = JAP_invite_into_economic_sphere }
+	remove_targeted_decision = { target = PHI decision = JAP_invite_into_economic_sphere }
 	remove_targeted_decision = { target = PNG decision = JAP_invite_into_economic_sphere }
 	remove_targeted_decision = { target = PRF decision = JAP_invite_into_economic_sphere }
 	remove_targeted_decision = { target = RJS decision = JAP_invite_into_economic_sphere }
@@ -669,9 +657,8 @@ JAP_close_all = {
 	remove_targeted_decision = { target = THIS decision = JAP_divert_workers_towards_production }
 
 	### > JAP_open_JAP_co_prosperity_decisions < ###
-	for_each_scope_loop = {
-		array = global.asian_economic_sphere
-		FROM = {
+	every_possible_country = {
+		JAP = {
 			remove_targeted_decision = { target = PREV decision = JAP_invest_in_sphere_member }
 			remove_targeted_decision = { target = PREV decision = JAP_economic_sphere_takeover }
 			remove_targeted_decision = { target = PREV decision = JAP_invest_in_sphere_member_docks }
@@ -708,7 +695,6 @@ JAP_close_all = {
 	remove_targeted_decision = { target = KAC decision = JAP_attack_india }
 	remove_targeted_decision = { target = AST decision = JAP_attack_australia }
 	remove_targeted_decision = { target = NZL decision = JAP_attack_australia }
-	remove_targeted_decision = { target = FNG decision = JAP_invade_manchuria }
 	remove_targeted_decision = { target = RUS decision = JAP_attack_russia }
 	remove_targeted_decision = { target = TRM decision = JAP_attack_russia }
 }

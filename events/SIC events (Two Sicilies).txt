@@ -1087,10 +1087,8 @@ country_event = { #Initial Proposal
 		ai_chance = {
 			base = 100
 			modifier = {
-				factor = 0.5
+				factor = 0
 				has_war = yes
-				is_in_faction = yes
-				NOT = { is_in_faction_with = SIC }
 			}
 		}
 		add_political_power = 100
@@ -1107,7 +1105,7 @@ country_event = { #Initial Proposal
 						is_in_faction_with = ROOT
 						NOT = { tag = ROOT }
 					}
-					country_event = annex.284
+					country_event = annex.8
 				}
 			}
 			leave_faction = yes
@@ -1165,34 +1163,10 @@ country_event = { #Initial Proposal
 	option = {
 		log = "[GetLogInfo]: event sic.100 option sic.100.b"
 		name = sic.100.b #Ask again when the war is over
-		trigger = { has_war = yes }
-		ai_chance = {
-			base = 100
-			modifier = {
-				factor = 0.5
-				is_in_faction = no
-			}
-			modifier = {
-				factor = 0
-				is_in_faction_with = SIC
-			}
-			modifier = {
-				factor = 0
-				NOT = {
-					any_enemy_country = {
-						any_owned_state = {
-							OR = {
-								is_controlled_by = ROOT
-								AND = {
-									is_claim_or_core_of_ROOT = yes
-									controller = { is_in_faction_with = ROOT }
-								}
-							}
-						}
-					}
-				}
-			}
+		trigger = {
+			has_war = yes
 		}
+		ai_chance = { base = 100 }
 		set_country_flag = ITA_ask_after_war_@FROM
 		FROM = {
 			country_event = { id = sic.103 days = 1 }
@@ -1201,17 +1175,7 @@ country_event = { #Initial Proposal
 	option = {
 		log = "[GetLogInfo]: event sic.100 option sic.100.c"
 		name = sic.100.c #We refuse
-		ai_chance = {
-			base = 50
-			modifier = {
-				factor = 0.5
-				is_in_faction = no
-			}
-			modifier = {
-				factor = 0
-				is_in_faction_with = SIC
-			}
-		}
+		ai_chance = { base = 0 }
 		set_country_flag = ITA_refuse_join_@FROM
 		FROM = {
 			country_event = { id = sic.102 days = 1 }
@@ -1230,7 +1194,6 @@ country_event = { #Deal has been struck
 		log = "[GetLogInfo]: event sic.101 option sic.101.a"
 		name = sic.101.a
 		reverse_add_opinion_modifier = { target = FROM modifier = KR_returned_land }
-		clr_country_flag = PIEDMONT_CONQ
 		if = {
 			limit = { is_faction_leader = yes }
 			effect_tooltip = { add_to_faction = FROM }
@@ -1259,6 +1222,7 @@ country_event = { #Deal has been struck
 				}
 			}
 		}
+		recheck_annexations = yes
 	}
 }
 country_event = { #Deal has been refused
@@ -1272,7 +1236,7 @@ country_event = { #Deal has been refused
 	option = {
 		log = "[GetLogInfo]: event sic.102 option sic.102.a"
 		name = sic.102.a
-		clr_country_flag = PIEDMONT_CONQ
+		recheck_annexations = yes
 	}
 }
 country_event = { #Deal has been put off until after the war
@@ -1286,7 +1250,7 @@ country_event = { #Deal has been put off until after the war
 	option = {
 		log = "[GetLogInfo]: event sic.103 option sic.103.a"
 		name = sic.103.a
-		clr_country_flag = PIEDMONT_CONQ
+		recheck_annexations = yes
 	}
 }
 
@@ -1481,7 +1445,6 @@ country_event = { #Initial Offer
 		log = "[GetLogInfo]: event sic.110 option sic.110.a"
 		name = sic.110.a
 		trigger = {
-			has_elected_government = no
 			OR = {
 				is_in_faction = no
 				is_in_faction_with = FROM
@@ -1491,7 +1454,13 @@ country_event = { #Initial Offer
 			base = 100
 			modifier = {
 				factor = 0
-				has_war = yes
+				OR = {
+					any_neighbor_country = { has_war_with = ROOT } #== being invaded or invading someone
+					any_enemy_country = {
+						same_continent_as_ROOT = yes
+						has_capitulated = no
+					}
+				}
 			}
 		}
 		# Warnings for players
@@ -1515,7 +1484,6 @@ country_event = { #Initial Offer
 		log = "[GetLogInfo]: event sic.110 option sic.110.b"
 		name = sic.110.b
 		trigger = {
-			has_elected_government = no
 			is_in_faction = yes
 			NOT = { is_in_faction_with = FROM }
 		}
@@ -1523,7 +1491,13 @@ country_event = { #Initial Offer
 			base = 100
 			modifier = {
 				factor = 0
-				has_war = yes
+				OR = {
+					any_neighbor_country = { has_war_with = ROOT } #== being invaded or invading someone
+					any_enemy_country = {
+						same_continent_as_ROOT = yes
+						has_capitulated = no
+					}
+				}
 			}
 		}
 		# Warnings for players
@@ -1549,7 +1523,19 @@ country_event = { #Initial Offer
 		trigger = {
 			has_war = yes
 		}
-		ai_chance = { base = 100 }
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 100
+				OR = {
+					any_neighbor_country = { has_war_with = ROOT } #== being invaded or invading someone
+					any_enemy_country = {
+						same_continent_as_ROOT = yes
+						has_capitulated = no
+					}
+				}
+			}
+		}
 		set_country_flag = ITA_ask_after_war_@FROM
 		FROM = { country_event = { id = sic.129 days = 15 } }
 	}
@@ -2211,8 +2197,8 @@ country_event = { #They have decided to refuse because uniter won't join
 		FROM = { clr_country_flag = ITA_considering_invite_@FROM }
 	}
 	option = {
-		log = "[GetLogInfo]: event sic.121 option sic.121.b"
-		name = sic.121.b #Then this means war!
+		log = "[GetLogInfo]: event sic.121 option sic.120.b"
+		name = sic.120.b #Then this means war!
 		trigger = {
 			is_subject = no
 			has_capitulated = no
@@ -2411,8 +2397,8 @@ country_event = { #They have decided to refuse because faction leader asked them
 		FROM = { clr_country_flag = ITA_considering_invite_@FROM }
 	}
 	option = {
-		log = "[GetLogInfo]: event sic.125 option sic.121.b"
-		name = sic.121.b #Then this means war!
+		log = "[GetLogInfo]: event sic.125 option sic.120.b"
+		name = sic.120.b #Then this means war!
 		trigger = {
 			is_subject = no
 			has_capitulated = no
@@ -2435,8 +2421,6 @@ country_event = { #They have decided to refuse because faction leader asked them
 		}
 		FROM = {
 			add_war_support = 0.10
-			clr_country_flag = ITA_referendum_failed
-			clr_country_flag = ITA_referendum_passed
 			clr_country_flag = ITA_considering_invite_@FROM
 		}
 		add_war_support = 0.10

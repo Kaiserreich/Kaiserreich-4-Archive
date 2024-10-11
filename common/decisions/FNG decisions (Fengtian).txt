@@ -127,6 +127,12 @@ political_actions = {
 			}
 			give_military_access = FNG
 			FNG = { give_military_access = ROOT }
+			every_other_country = {
+				limit = {
+					is_subject_of = ROOT
+				}
+				give_military_access = FNG
+			}
 		}
 	}
 }
@@ -430,7 +436,7 @@ FNG_fixing_the_economy_category = { # Wang Yongjiang's Legacy
 			JAP = {
 				add_opinion_modifier = {
 					target = FNG
-					modifier = FNG_SILVER_RESERVE_FULL
+					modifier = FNG_silver_reserve_full
 				}
 			}
 		}
@@ -1730,12 +1736,9 @@ FNG_internal_conference = {
 		}
 
 		cancel_trigger = {
-			OR = {
-				NOT = {
-					owns_state = 608
-					has_war_with = 608.owner
-				}
-				is_in_faction_with = JAP
+			NOT = {
+				owns_state = 608
+				has_war_with = 608.owner
 			}
 		}
 
@@ -1789,7 +1792,12 @@ FNG_internal_conference = {
 					set_temp_variable = { FNG_federalists_active = 1 }
 				}
 				if = {
-					limit = { is_subject = yes }
+					limit = {
+						OR = {
+							is_subject = yes
+							is_in_faction_with = JAP
+						}
+					}
 					country_event = fngshen.413
 				}
 				else_if = {
@@ -1805,6 +1813,36 @@ FNG_internal_conference = {
 					country_event = fngconf.75
 				}
 			}
+		}
+	}
+	FNG_conference_timer = {
+		icon = generic_political_discourse
+
+		allowed = {
+			always = no #manually activated
+		}
+
+		available = {
+			hidden_trigger = {
+				NOT = { has_country_flag = FNG_conference_fired }
+			}
+		}
+
+		cancel_trigger = {
+			hidden_trigger = {
+				OR = {
+					has_country_flag = FNG_conference_second_phase
+					has_global_flag = FNG_conference_success
+					has_global_flag = FNG_conference_failed
+				}
+			}
+		}
+
+		fire_only_once = no
+		days_mission_timeout = 100
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout FNG_conference_timer"
 		}
 	}
 	FNG_End_Of_The_Conference = {
@@ -2112,6 +2150,44 @@ FNG_Preparing_For_The_Princes_Visit = {
 }
 
 FNG_railways = {
+	FNG_Break_Mantetsu_Monopoly = { #Break Mantetsu's Monopoly
+		icon = GFX_decision_train
+
+		available = {
+			OR = {
+				FNG_JAP_hostile = yes
+				has_war_with = JAP
+			}
+			any_owned_state = {
+				has_dynamic_modifier = { modifier = FNG_mantetsu_monopoly }
+			}
+		}
+
+		custom_cost_text = CP_50
+		custom_cost_trigger = {
+			command_power > 49.99
+		}
+
+		days_remove = 60
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Break_Mantetsu_Monopoly"
+			every_state = {
+				limit = {
+					OR = {
+						has_state_flag = FNG_monopoly
+						has_dynamic_modifier = { modifier = FNG_mantetsu_monopoly }
+					}
+				}
+				clr_state_flag = FNG_monopoly
+				remove_dynamic_modifier = { modifier = FNG_mantetsu_monopoly }
+			}
+		}
+	}
+
 	FNG_The_Jinhan_Railway = {
 		icon = GFX_decision_train
 
@@ -2273,7 +2349,7 @@ FNG_railways = {
 			clr_country_flag = FNG_reclaiming_railway_cf
 		}
 	}
-	FNG_Railway_Construction_Jilin_Hailong = {
+	FNG_Railway_Construction_Jilin_Shenyang = {
 		icon = GFX_decision_train
 
 		available = {
@@ -2306,63 +2382,73 @@ FNG_railways = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete FNG_Railway_Construction_Jilin_Hailong"
-			set_country_flag = FNG_Jilin_Hailong
-			random_list = {
-				10 = {
-					country_event = { id = fengtian.19 days = 55 }
+			log = "[GetDateText]: [Root.GetName]: Decision complete FNG_Railway_Construction_Jilin_Shenyang"
+			set_country_flag = FNG_Jilin_Shenyang
+			if = {
+				limit = { FNG_JAP_not_hostile = yes }
+				random_list = {
+					10 = {
+						country_event = { id = fengtian.19 days = 55 }
+					}
+					25 = {
+						country_event = { id = fengtian.25 days = 3 }
+					}
+					25 = {
+						country_event = { id = fengtian.26 days = 25 }
+					}
+					40 = {}
 				}
-				25 = {
-					country_event = { id = fengtian.25 days = 3 }
-				}
-				25 = {
-					country_event = { id = fengtian.26 days = 25 }
-				}
-				40 = {}
 			}
+			else = {}
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Railway_Construction_Jilin_Hailong"
-			set_country_flag = FNG_Jilin_Hailong_complete
+			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Railway_Construction_Jilin_Shenyang"
+			set_country_flag = FNG_Jilin_Shenyang_complete
 			build_railway = {
-				path = { 3932 3913 887 11808 }
+				path = { 7663 3932 3913 887 11808 11771 }
 			}
-			885 = {
+			every_owned_state = {
+				limit = {
+					OR = {
+						state = 328
+						state = 885
+						state = 886
+					}
+				}
 				if = {
 					limit = { has_dynamic_modifier = { modifier = FNG_mantetsu_monopoly } }
 					remove_dynamic_modifier = { modifier = FNG_mantetsu_monopoly }
 				}
 			}
+			885 = {
+				add_extra_state_shared_building_slots = 1
+			}
 			886 = {
-				if = {
-					limit = { has_dynamic_modifier = { modifier = FNG_mantetsu_monopoly } }
-					remove_dynamic_modifier = { modifier = FNG_mantetsu_monopoly }
+				add_extra_state_shared_building_slots = 2
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
 				}
 			}
 			328 = {
-				if = {
-					limit = { has_dynamic_modifier = { modifier = FNG_mantetsu_monopoly } }
-					remove_dynamic_modifier = { modifier = FNG_mantetsu_monopoly }
-				}
-			}
-			if = {
-				limit = { has_country_flag = FNG_Changchun_Dalai_complete }
-				716 = {
-					if = {
-						limit = { has_dynamic_modifier = { modifier = FNG_mantetsu_monopoly } }
-						remove_dynamic_modifier = { modifier = FNG_mantetsu_monopoly }
-					}
+				add_extra_state_shared_building_slots = 2
+				add_building_construction = {
+					type = infrastructure
+					level = 1
+					instant_build = yes
 				}
 			}
 		}
 	}
-	FNG_Railway_Construction_Changchun_Dalai = {
+
+	FNG_Railway_Construction_Pingqi = {
 		icon = GFX_decision_train
 
 		available = {
 			has_completed_focus = FNG_Reorganise_the_NTC
-			has_country_flag = FNG_Jilin_Hailong_complete
+			has_country_flag = FNG_Jilin_Shenyang_complete
 			controls_state = 715
 			controls_state = 886
 		}
@@ -2391,27 +2477,31 @@ FNG_railways = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete FNG_Railway_Construction_Changchun_Dalai"
-			set_country_flag = FNG_Changchun_Dalai
-			random_list = {
-				10 = {
-					country_event = { id = fengtian.19 days = 55 }
+			log = "[GetDateText]: [Root.GetName]: Decision complete FNG_Railway_Construction_Pingqi"
+			set_country_flag = FNG_Pingqi
+			if = {
+				limit = { FNG_JAP_not_hostile = yes }
+				random_list = {
+					10 = {
+						country_event = { id = fengtian.19 days = 55 }
+					}
+					25 = {
+						country_event = { id = fengtian.25 days = 3 }
+					}
+					25 = {
+						country_event = { id = fengtian.26 days = 25 }
+					}
+					40 = {}
 				}
-				25 = {
-					country_event = { id = fengtian.25 days = 3 }
-				}
-				25 = {
-					country_event = { id = fengtian.26 days = 25 }
-				}
-				40 = {}
 			}
+			else = {}
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Railway_Construction_Changchun_Dalai"
-			set_country_flag = FNG_Changchun_Dalai_complete
+			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Railway_Construction_Pingqi"
+			set_country_flag = FNG_Pingqi_complete
 			build_railway = {
-				path = { 9831 930 1499 4561 }
+				path = { 916 9831 930 1499 4561 4506 }
 			}
 			715 = {
 				clr_state_flag = FNG_monopoly
@@ -2419,16 +2509,15 @@ FNG_railways = {
 					limit = { has_dynamic_modifier = { modifier = FNG_mantetsu_monopoly } }
 					remove_dynamic_modifier = { modifier = FNG_mantetsu_monopoly }
 				}
-			}
-			714 = {
-				clr_state_flag = FNG_monopoly
-				if = {
-					limit = { has_dynamic_modifier = { modifier = FNG_mantetsu_monopoly } }
-					remove_dynamic_modifier = { modifier = FNG_mantetsu_monopoly }
+				increase_state_category_by_one_level = yes
+				add_building_construction = {
+					type = infrastructure
+					level = 1
+					instant_build = yes
 				}
 			}
 			if = {
-				limit = { has_country_flag = FNG_Jilin_Hailong_complete }
+				limit = { has_country_flag = FNG_Jilin_Shenyang_complete }
 				716 = {
 					clr_state_flag = FNG_monopoly
 					if = {
@@ -2439,21 +2528,21 @@ FNG_railways = {
 			}
 		}
 	}
-	FNG_Railway_Construction_Taonan_Suolun = {
+	FNG_Railway_Construction_Shenyang_Chengde = {
 		icon = GFX_decision_train
 
 		available = {
 			has_completed_focus = FNG_Reorganise_the_NTC
-			has_country_flag = FNG_Changchun_Dalai_complete
-			controls_state = 715
+			has_country_flag = FNG_Pingqi_complete
+			controls_state = 610
 		}
 
 		cancel_trigger = {
-			NOT = { controls_state = 715 }
+			NOT = { controls_state = 610 }
 		}
 
 		highlight_states = {
-			highlight_state_targets = { state = 715 }
+			highlight_state_targets = { state = 610 }
 		}
 
 		fire_only_once = yes
@@ -2469,29 +2558,43 @@ FNG_railways = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete FNG_Railway_Construction_Taonan_Suolun"
-			set_country_flag = FNG_Taonan_Suolun
-			random_list = {
-				10 = {
-					country_event = { id = fengtian.19 days = 55 }
+			log = "[GetDateText]: [Root.GetName]: Decision complete FNG_Railway_Construction_Shenyang_Chengde"
+			set_country_flag = FNG_Shenyang_Chengde
+			if = {
+				limit = { FNG_JAP_not_hostile = yes }
+				random_list = {
+					10 = {
+						country_event = { id = fengtian.19 days = 55 }
+					}
+					25 = {
+						country_event = { id = fengtian.25 days = 3 }
+					}
+					25 = {
+						country_event = { id = fengtian.26 days = 25 }
+					}
+					40 = { }
 				}
-				25 = {
-					country_event = { id = fengtian.25 days = 3 }
-				}
-				25 = {
-					country_event = { id = fengtian.26 days = 25 }
-				}
-				40 = { }
 			}
+			else = {}
 		}
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Railway_Construction_Taonan_Suolun"
+			log = "[GetDateText]: [Root.GetName]: Decision remove FNG_Railway_Construction_Shenyang_Chengde"
 			build_railway = {
-				path = { 12337 1499 930 9831 916 }
+				path = { 11771 6951 11815 3934 934 6898 3881 9873 }
 			}
-			715 = {
+			610 = {
 				increase_state_category_by_one_level = yes
+				add_building_construction = {
+					type = infrastructure
+					level = 1
+					instant_build = yes
+				}
+				add_dynamic_modifier = {
+					modifier = FNG_logistical_mastery
+					scope = FNG
+					days = 180
+				}
 			}
 		}
 	}
@@ -2586,7 +2689,7 @@ FNG_railways = {
 			886 = {
 				add_building_construction = {
 					type = infrastructure
-					level = 1
+					level = 2
 					instant_build = yes
 				}
 			}
@@ -2690,7 +2793,7 @@ FNG_foreign_policy = { #The Road to Reclamation
 		visible = {
 			country_exists = FROM
 			OR = {
-				QIE = { has_completed_focus = QIE_placateassembly }
+				QIE = { has_completed_focus = QIE_overtures_to_the_assembly }
 				country_exists = LEP
 				GEA = { owns_state = 744 } #Qingdao
 			}
@@ -2931,10 +3034,7 @@ FNG_foreign_policy = { #The Road to Reclamation
 							}
 						}
 					}
-					custom_trigger_tooltip = {
-						tooltip = FNG_ten_surrender_progress
-						surrender_progress > 0.1 #Fengtian should call in Japan often if they dont have Beijing or Tianjin
-					}
+					surrender_progress > 0.1 #Fengtian should call in Japan often if they dont have Beijing or Tianjin
 				}
 				else_if = {
 					limit = {
@@ -2947,10 +3047,7 @@ FNG_foreign_policy = { #The Road to Reclamation
 							}
 						}
 					}
-					custom_trigger_tooltip = {
-						tooltip = FNG_twenty_surrender_progress
-						surrender_progress > 0.2 #Fengtian should call in Japan often if they dont have Beijing or Tianjin
-					}
+					surrender_progress > 0.2 #Fengtian should call in Japan often if they dont have Beijing or Tianjin
 				}
 				else_if = {
 					limit = {
@@ -2963,10 +3060,7 @@ FNG_foreign_policy = { #The Road to Reclamation
 							}
 						}
 					}
-					custom_trigger_tooltip = {
-						tooltip = FNG_thirty_surrender_progress
-						surrender_progress > 0.30 #Fengtian should call in Japan even less often if they have Beijing but not Tianjin
-					}
+					surrender_progress > 0.30 #Fengtian should call in Japan even less often if they have Beijing but not Tianjin
 				}
 				else_if = {
 					limit = {
@@ -2977,61 +3071,128 @@ FNG_foreign_policy = { #The Road to Reclamation
 							609 = { is_owned_by = FNG } #controlled cores don't count towards surrender limit, only owned cores do
 						}
 					}
-					custom_trigger_tooltip = {
-						tooltip = FNG_fourty_surrender_progress
-						surrender_progress > 0.40 #Fengtian should call in Japan even less often if they have both Beijing and Tianjin
-					}
+					surrender_progress > 0.40 #Fengtian should call in Japan even less often if they have both Beijing and Tianjin
 				}
-				custom_trigger_tooltip = {
-					tooltip = FNG_no_allies
-					AND = {
-						NOT = { owns_state = 608 } #If Fengtian owns Beijing they should be way less willing to join Japan's faction
-						NOT = {
-							ANQ = {
-								exists = yes
-								NOT = { owns_state = 608 }
-								NOT = { is_subject_of = 608.owner }
-							}
-							CHI = {
-								exists = yes
-								NOT = { owns_state = 608 }
-							}
-							GXC = {
-								exists = yes
-								NOT = { owns_state = 608 }
-								NOT = { is_subject_of = 608.owner }
-							}
-							HNN = {
-								exists = yes
-								NOT = { owns_state = 608 }
-								NOT = { is_subject_of = 608.owner }
-							}
-							LEP = {
-								exists = yes
-								NOT = { owns_state = 608 }
-								NOT = { is_subject_of = 608.owner }
-							}
-							SHX = {
-								exists = yes
-								NOT = { owns_state = 608 }
-								NOT = { is_subject_of = 608.owner }
-							}
-							SQI = {
-								exists = yes
-								NOT = { owns_state = 608 }
-								NOT = { is_subject_of = 608.owner }
-							}
-							SZC = {
-								exists = yes
-								NOT = { owns_state = 608 }
-								NOT = { is_subject_of = 608.owner }
-							}
-							YUN = {
-								exists = yes
-								NOT = { owns_state = 608 }
-								NOT = { is_subject_of = 608.owner }
+				AND = {
+					NOT = { 608 = { is_owned_and_controlled_by = FNG } } #If Fengtian owns Beijing they should be way less willing to join Japan's faction
+					custom_trigger_tooltip = {
+						tooltip = FNG_no_allies
+						AND = {
+							NOT = {
+								ANQ = {
+									exists = yes
+									NOT = { owns_state = 608 }
+									NOT = { is_subject_of = 608.owner }
+									has_capitulated = no
+									NOT = { has_war_with = FNG }
+								}
+								CHI = {
+									exists = yes
+									NOT = { owns_state = 608 }
+									has_capitulated = no
+									NOT = { has_war_with = FNG }
+								}
+								GXC = {
+									exists = yes
+									NOT = { owns_state = 608 }
+									NOT = { is_subject_of = 608.owner }
+									has_capitulated = no
+									NOT = { has_war_with = FNG }
+								}
+								HNN = {
+									exists = yes
+									NOT = { owns_state = 608 }
+									NOT = { is_subject_of = 608.owner }
+									has_capitulated = no
+									NOT = { has_war_with = FNG }
+								}
+								LEP = {
+									exists = yes
+									NOT = { owns_state = 608 }
+									NOT = { is_subject_of = 608.owner }
+									has_capitulated = no
+									NOT = { has_war_with = FNG }
+								}
+								QIE = {
+									exists = yes
+									NOT = { owns_state = 608 }
+									NOT = { is_subject_of = 608.owner }
+									has_capitulated = no
+									NOT = { has_war_with = FNG }
+								}
+								SHX = {
+									exists = yes
+									NOT = { owns_state = 608 }
+									NOT = { is_subject_of = 608.owner }
+									has_capitulated = no
+									NOT = { has_war_with = FNG }
+								}
+								SQI = {
+									exists = yes
+									NOT = { owns_state = 608 }
+									NOT = { is_subject_of = 608.owner }
+									has_capitulated = no
+									NOT = { has_war_with = FNG }
+								}
+								SZC = {
+									exists = yes
+									NOT = { owns_state = 608 }
+									NOT = { is_subject_of = 608.owner }
+									has_capitulated = no
+									NOT = { has_war_with = FNG }
+								}
+								YUN = {
+									exists = yes
+									NOT = { owns_state = 608 }
+									NOT = { is_subject_of = 608.owner }
+									has_capitulated = no
+									NOT = { has_war_with = FNG }
+								}
 							}
 						}
+					}
+				}
+				AND = {
+					custom_trigger_tooltip = {
+						tooltip = FNG_war_began_one_year_tt
+						has_completed_focus = FNG_Begin_the_War_of_National_Reclamation
+						NOT = { has_country_flag = FNG_war_began_one_year }
+					}
+					OR = {
+						NOT = { controls_state = 608 } #Beijing
+						if = {
+							limit = {
+								has_war = yes
+							}
+							OR = {
+								custom_trigger_tooltip = {
+									tooltip = FNG_beijing_encircled
+									capital_scope = { state = 608 } #Beijing
+									NOT = { 716 = { is_in_home_area = yes } } #Shenyang
+								}
+								alliance_strength_ratio < 0.5 #Fengtian should call in Japan if they are outnumbered 2:1
+								num_divisions < 24 #Fengtian should call in Japan if they have less than 24 divisions
+							}
+						}
+						else_if = {
+							limit = {
+								has_war = no
+								NOT = { tag = CHN }
+							}
+							strength_ratio = { tag = CHN ratio < 0.5 } #Fengtian should call in Japan if they are outnumbered 2:1
+						}
+					}
+				}
+				AND = {
+					custom_trigger_tooltip = { #Fengtian should call in Japan if the war stalls after 2 years
+						tooltip = FNG_war_continued_one_year_tt
+						has_completed_focus = FNG_Continue_the_Reclamation_War
+						NOT = { has_country_flag = FNG_war_continued_one_year }
+					}
+					OR = {
+						NOT = { 608 = { is_owned_and_controlled_by = FNG } } #Beijing
+						1048 = { is_controlled_by_ROOT_or_subject = no } #Wuhan
+						613 = { is_controlled_by_ROOT_or_subject = no } #Nanjing
 					}
 				}
 			}
@@ -3064,8 +3225,12 @@ FNG_foreign_policy = { #The Road to Reclamation
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete FNG_Ask_Japan_for_Aid target: [From.GetName]"
+			set_country_flag = FNG_collaborated_with_japan
 			if = {
-				limit = { is_ai = yes }
+				limit = {
+					is_ai = yes
+					has_war = yes
+				}
 				add_timed_idea = { idea = has_scripted_peace days = 20 }
 			}
 			FROM = { country_event = fengtian.191 }

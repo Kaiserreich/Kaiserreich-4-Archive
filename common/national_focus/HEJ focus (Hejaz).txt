@@ -20,8 +20,8 @@ focus_tree = {
 		x = 0
 		y = 0
 
-		available = {
-			has_socialist_government = no
+		bypass = {
+			has_socialist_government = yes
 		}
 
 		available_if_capitulated = yes
@@ -155,9 +155,10 @@ focus_tree = {
 		y = 1
 
 		available = {
-			is_subject = no
 			NOT = { country_exists = OTT }
-			has_socialist_government = no
+		}
+		bypass = {
+			has_socialist_government = yes
 		}
 
 		prerequisite = { focus = HEJ_found_council }
@@ -180,9 +181,10 @@ focus_tree = {
 		y = 2
 
 		available = {
-			is_subject = no
 			NOT = { country_exists = OTT }
-			has_socialist_government = no
+		}
+		bypass = {
+			has_socialist_government = yes
 		}
 
 		prerequisite = { focus = HEJ_ministry_of_religious_affairs }
@@ -209,9 +211,13 @@ focus_tree = {
 		y = 4
 
 		available = {
-			is_subject = no
 			NOT = { country_exists = OTT }
-			has_socialist_government = no
+		}
+		bypass = {
+			OR = {
+				is_subject = yes
+				has_socialist_government = yes
+			}
 		}
 
 		prerequisite = { focus = HEJ_appoint_shayk }
@@ -457,9 +463,13 @@ focus_tree = {
 		y = 6
 
 		available = {
-			is_subject = no
-			NOT = { country_exists = OTT }
-			has_socialist_government = no
+			OR = {
+				owns_state = 292 #Najd
+				AND = {
+					is_subject = no
+					NOT = { country_exists = OTT }
+				}
+			}
 		}
 
 		prerequisite = { focus = HEJ_claim_caliphate }
@@ -470,24 +480,21 @@ focus_tree = {
 		will_lead_to_war_with = JBS
 
 		ai_will_do = {
-			factor = 1
+			factor = 1000
 			modifier = {
 				factor = 0
+				is_subject = no
 				can_declare_war_on = 292.owner
-				has_war = yes
-			}
-			modifier = {
-				factor = 0
-				can_declare_war_on = 292.owner
-				var:292.owner = {
-					is_in_faction = yes
-					faction_leader = { NOT = { tag = EGY } }
-				}
+				var:292.owner = { default_attack_AI_trigger = yes }
 			}
 		}
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus HEJ_pursue_arab_unification"
+			add_ideas = HEJ_unification_fevour
+			custom_effect_tooltip = tooltip_white_line
+			set_cosmetic_tag = HEJ_ARA
+			custom_effect_tooltip = tooltip_white_line
 			every_state = {
 				limit = {
 					OR = {
@@ -497,35 +504,57 @@ focus_tree = {
 						state = 981
 						state = 982
 					}
+					is_claim_or_core_of_ROOT = no
 				}
-				HEJ = {
-					add_state_claim = PREV
-				}
+				add_claim_by = ROOT
 			}
 			if = {
-				limit = { can_declare_war_on = 292.owner }
-				create_wargoal = {
-					target = 292.owner
-					type = annex_everything
+				limit = { is_subject = no }
+				if = {
+					limit = { is_in_faction_with = EGY }
+					leave_faction = yes
 				}
-			}
-			custom_effect_tooltip = tooltip_white_line
-
-			add_ideas = HEJ_unification_fevour
-			set_cosmetic_tag = HEJ_ARA
-
-			if = {
-				limit = {
-					OR = {
-						EGY = {
-							is_in_faction_with = JBS
-							is_in_faction_with = SAU
+				JBS = {
+					if = {
+						limit = {
+							is_in_faction_with = EGY
+							is_subject = no
 						}
+						leave_faction = yes
 					}
 				}
-				EGY = {
-					remove_from_faction = SAU
-					remove_from_faction = JBS
+				SAU = {
+					if = {
+						limit = {
+							is_in_faction_with = EGY
+							is_subject = no
+						}
+						leave_faction = yes
+					}
+				}
+				if = {
+					limit = {
+						OR = {
+							can_declare_war_on = JBS
+							is_in_faction_with = JBS #== for the tooltip
+						}
+					}
+					create_wargoal = {
+						target = JBS
+						type = annex_everything
+					}
+				}
+				if = {
+					limit = {
+						OR = {
+							can_declare_war_on = SAU
+							is_in_faction_with = SAU #== for the tooltip
+						}
+					}
+					create_wargoal = {
+						target = SAU
+						type = annex_everything
+					}
 				}
 			}
 		}
@@ -554,14 +583,7 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus HEJ_intcorporate_gulf"
-			every_state = {
-				limit = {
-					is_core_of = TRU
-				}
-				HEJ = {
-					add_state_core = PREV
-				}
-			}
+			TRU = { every_core_state = { remove_claim_and_add_core_of_ROOT = yes } }
 		}
 	}
 
@@ -588,15 +610,8 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus HEJ_intcorporate_central_arabia"
 			every_state = {
-				limit = {
-					OR = {
-						is_core_of = SAU
-						is_core_of = JBS
-					}
-				}
-				HEJ = {
-					add_state_core = PREV
-				}
+				limit = { is_arabia = yes }
+				remove_claim_and_add_core_of_ROOT = yes
 			}
 		}
 	}
@@ -611,7 +626,7 @@ focus_tree = {
 		y = 7
 
 		available = {
-			controls_state = 982
+			controls_state = 981
 		}
 
 		ai_will_do = { base = 100 }
@@ -622,8 +637,7 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus HEJ_intcorporate_asir"
-			add_state_core = 982
-			add_state_core = 981
+			981 = { remove_claim_and_add_core_of_ROOT = yes }
 		}
 	}
 

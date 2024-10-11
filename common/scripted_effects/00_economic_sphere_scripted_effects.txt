@@ -59,6 +59,26 @@ add_to_economic_sphere = {
 			set_variable = { sphere_target:economic_sphere = THIS }
 			add_to_array = { members = var:sphere_target }
 		}
+		hidden_effect = {
+			if = {
+				limit = {
+					has_dlc_aat = yes
+					has_global_flag = on_startup_completed
+				}
+				var:sphere_target = {
+					for_each_scope_loop = {
+						array = economic_sphere:members
+						if = {
+							limit = { NOT = { tag = PREV } }
+							diplomatic_relation = {
+								country = PREV
+								relation = market_access_rights
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -68,7 +88,25 @@ add_to_economic_sphere = {
 remove_from_economic_sphere = {
 	if = {
 		limit = { var:sphere_target = { is_in_same_economic_sphere_as_PREV = yes } }
-		var:sphere_target = { leave_economic_sphere = yes }
+		var:sphere_target = {
+			hidden_effect = {
+				if = {
+					limit = { has_dlc_aat = yes }
+					for_each_scope_loop = {
+						array = economic_sphere:members
+						if = {
+							limit = { NOT = { tag = PREV } }
+							diplomatic_relation = {
+								country = PREV
+								relation = market_access_rights
+								active = no
+							}
+						}
+					}
+				}
+			}
+			leave_economic_sphere = yes
+		}
 	}
 }
 
@@ -77,13 +115,26 @@ remove_from_economic_sphere = {
 leave_economic_sphere = {
 	if = {
 		limit = { has_variable = economic_sphere }
+		hidden_effect = {
+			if = {
+				limit = { has_dlc_aat = yes }
+				for_each_scope_loop = {
+					array = economic_sphere:members
+					if = {
+						limit = { NOT = { tag = PREV } }
+						diplomatic_relation = {
+							country = PREV
+							relation = market_access_rights
+							active = no
+						}
+					}
+				}
+			}
+		}
 		var:economic_sphere = {
 			remove_from_array = { members = PREV }
 		}
 		clear_variable = economic_sphere
-		clear_variable = red
-		clear_variable = green
-		clear_variable = blue
 	}
 }
 
@@ -94,7 +145,7 @@ dismantle_economic_sphere = {
 		var:economic_sphere = {
 			for_each_scope_loop = {
 				array = members
-				clear_variable = economic_sphere
+				leave_economic_sphere = yes
 			}
 			clear_array = members
 		}

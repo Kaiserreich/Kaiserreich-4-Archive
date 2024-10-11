@@ -5311,7 +5311,7 @@ country_event = {
 		add_stability = 0.10
 		reverse_add_opinion_modifier = {
 			target = FROM
-			modifier = AST_returned_land
+			modifier = KR_returned_land
 		}
 	}
 }
@@ -5933,10 +5933,10 @@ country_event = { #Unemployment decreases as a result of inflation
 		log = "[GetLogInfo]: event saf.162 option saf.162.a"
 		name = saf.162.a
 		add_political_power = 25
-		custom_effect_tooltip = SWE_tt_unemployment_lowered_two_percent
-		add_to_variable = {
+		subtract_from_variable = {
 			var = saf_var_unemployment
-			value = -0.02
+			value = 0.02
+			tooltip = SWE_tt_unemployment_lowered
 		}
 	}
 }
@@ -5965,10 +5965,7 @@ country_event = { #Hyperinflation
 		add_political_power = -200
 		add_stability = -0.3
 		custom_effect_tooltip = SWE_tt_inflation_back_to_two
-		set_variable = {
-			var = saf_var_inflation
-			value = 0.02
-		}
+		set_variable = { saf_var_inflation = 0.02 }
 	}
 }
 
@@ -6014,52 +6011,19 @@ country_event = { #The yearly report of the Commission
 		name = saf.165.a
 		#Pay interest
 		if = {
-			limit = {
-				check_variable = {
-					var = saf_var_debt
-					value = 0
-					compare = greater_than
-				}
-			}
-			set_temp_variable = {
-				var = saf_var_interest
-				value = saf_var_debt
-			}
-			divide_temp_variable = {
-				var = saf_var_interest
-				value = 10
-			}
-			subtract_from_variable = {
-				var = saf_var_budget
-				value = saf_var_interest
-			}
+			limit = { check_variable = { saf_var_debt > 0 } }
+			set_temp_variable = { saf_var_interest = saf_var_debt }
+			divide_temp_variable = { saf_var_interest = 10 }
+			subtract_from_variable = { saf_var_budget = saf_var_interest }
 			custom_effect_tooltip = SAF_tt_pays_interest
 		}
 		#Automatically take an extra loan if this makes your budget go below 0
 		if = {
-			limit = {
-				check_variable = {
-					var = saf_var_budget
-					value = 0
-					compare = less_than
-				}
-			}
-			set_temp_variable = {
-				var = saf_var_extra_debt
-				value = 0
-			}
-			subtract_from_temp_variable = {
-				var = saf_var_extra_debt
-				value = saf_var_budget
-			}
-			add_to_variable = {
-				var = saf_var_debt
-				value = saf_var_extra_debt
-			}
-			set_variable = {
-				var = saf_var_budget
-				value = 0
-			}
+			limit = { check_variable = { saf_var_budget < 0 } }
+			set_temp_variable = { saf_var_extra_debt = 0 }
+			subtract_from_temp_variable = { saf_var_extra_debt = saf_var_budget }
+			add_to_variable = { saf_var_debt = saf_var_extra_debt }
+			set_variable = { saf_var_budget = 0 }
 		}
 		custom_effect_tooltip = SWE_tt_takes_loan
 		#Sovereign debt crisis if that makes your debt go over 100 million
@@ -6116,17 +6080,14 @@ country_event = { #Sovereign debt crisis
 	option = { #Uh oh!
 		log = "[GetLogInfo]: event saf.166 option saf.166.a"
 		name = saf.166.a
-		set_variable = {
-			var = saf_var_debt
-			value = 0
-		}
+		set_variable = { saf_var_debt = 0 }
 		add_political_power = -200
 		add_stability = -0.4
-		set_country_flag = SWE_no_more_loans
-		custom_effect_tooltip = SWE_tt_unemployment_up_again
+		set_country_flag = SAF_no_more_loans
 		add_to_variable = {
 			var = saf_var_unemployment
 			value = 0.04
+			tooltip = SWE_tt_unemployment_increased
 		}
 		every_country = {
 			limit = {
@@ -6867,66 +6828,34 @@ country_event = { #Collapse of the Portuguese Empire: seize Mozambique as ZIM
 	is_triggered_only = yes
 
 	trigger = {
-		NOT = { country_exists = SAF }
-		controls_state = 545
-		POR = { controls_state = 950 }
+		controls_state = 545 #Rhodesia
+		POR = { has_full_control_of_state = 950 } #Lourenço Marques
+		NOT = { is_ally_with = 275.owner } #Transvaal
+		has_capitulated = no
 	}
 
 	option = { #Move in
 		log = "[GetLogInfo]: event saf.190 option saf.190.a"
 		name = saf.190.a
-		ai_chance = { base = 100 }
-		544 = {
-			add_claim_by = ZIM
-		}
-		950 = {
-			add_claim_by = ZIM
-		}
-		954 = {
-			add_claim_by = ZIM
-		}
-		POR = {
-			country_event = saf.191
-		}
-		MAF = {
-			country_event = { id = saf.192 hours = 2 }
-		}
-		transfer_state = 950
-		if = {
+		MZB = { every_core_state = { add_claim_by = ROOT } }
+		every_state = {
 			limit = {
-				954 = {
-					is_fully_controlled_by = POR
+				OR = {
+					is_core_of = MZB
+					is_core_of = MLW
+					state = 955 #East Luangwa
 				}
-			}
-			transfer_state = 954
-		}
-		if = {
-			limit = {
-				544 = {
-					is_fully_controlled_by = POR
-				}
-			}
-			transfer_state = 544
-		}
-		if = {
-			limit = {
-				871 = { #take Nyasaland if POR got it as result of bush war
+				OR = {
 					is_owned_by = POR
-					is_controlled_by = POR #I am using these two checks instead of "is fully controlled" because that doesn't work right due to lake in the Nyasaland state
+					owner = { is_subject_of = POR }
 				}
+				is_fully_controlled_by = owner
 			}
-			transfer_state = 871
-			add_state_claim = 871
+			add_claim_by = ROOT
+			transfer_state_to = ROOT
 		}
-		if = {
-			limit = {
-				955 = { #take Eastern Zambezia if POR got it as result of bush war
-					is_fully_controlled_by = POR
-				}
-			}
-			transfer_state = 955
-			add_state_claim = 955
-		}
+		POR = { country_event = saf.191 }
+		MAF = { country_event = { id = saf.192 hours = 2 } }
 	}
 
 	option = { #No - What you stupid, RHODESIA NEVER DIES!!
@@ -6947,24 +6876,17 @@ country_event = { #ZIM poaches Mozambique (POR)
 		log = "[GetLogInfo]: event saf.191 option saf.191.a"
 		name = saf.191.a
 		effect_tooltip = {
-			ZIM = {
-				transfer_state = 950
-				if = {
-					limit = {
-						954 = {
-							is_fully_controlled_by = POR
-						}
+			every_state = {
+				limit = {
+					OR = {
+						is_core_of = MZB
+						is_core_of = MLW
+						state = 955 #East Luangwa
 					}
-					transfer_state = 954
+					is_owned_by = FROM
 				}
-				if = {
-					limit = {
-						544 = {
-							is_fully_controlled_by = POR
-						}
-					}
-					transfer_state = 544
-				}
+				add_claim_by = FROM
+				transfer_state_to = FROM
 			}
 		}
 	}
@@ -6975,62 +6897,45 @@ country_event = { #ZIM poaches Mozambique (MAF)
 	desc = saf.192.d
 	picture = GFX_report_event_generic_farming
 
-	is_triggered_only = yes
 	trigger = {
 		OR = {
-			544 = { is_fully_controlled_by = ZIM }
-			954 = { is_fully_controlled_by = ZIM }
+			544 = { is_fully_controlled_by = FROM } #Moçambique
+			954 = { is_fully_controlled_by = FROM } #Tete
+			871 = { is_fully_controlled_by = FROM } #Nyasaland
+			955 = { is_fully_controlled_by = FROM } #East Luangwa
 		}
 		OR = {
-			871 = { is_owned_and_controlled_by = ROOT }
-			899 = { is_owned_and_controlled_by = ROOT }
+			899 = { is_owned_and_controlled_by = ROOT } #Ruvuma
+			956 = { is_owned_and_controlled_by = ROOT } #Northern Zambesia
 		}
 	}
+
+	is_triggered_only = yes
 
 	option = { #Move into the northern provinces before South Africa
 		log = "[GetLogInfo]: event saf.192 option saf.192.a"
 		name = saf.192.a
-		ai_chance = { base = 95 }
-		if = {
-			limit = {
-				954 = {
-					is_fully_controlled_by = ZIM
+		FROM = {
+			every_owned_state = {
+				limit = {
+					OR = {
+						is_core_of = MZB
+						is_core_of = MLW
+						state = 544 #Moçambique
+						state = 954 #Tete
+						state = 955 #East Luangwa
+					}
 				}
+				transfer_state_to = ROOT
 			}
-			transfer_state = 954
 		}
-		if = {
-			limit = {
-				544 = {
-					is_fully_controlled_by = ZIM
-				}
-			}
-			transfer_state = 544
-		}
-		if = { #Nyasaland - if POR took it in end of Bush war
-			limit = {
-				871 = {
-					is_owned_by = FROM
-					is_controlled_by = FROM #I am using these two checks instead of "is fully controlled" because that has issues due to lake in the Nyasaland state
-				}
-			}
-			transfer_state = 871
-		}
-		if = { # Eastern Zambezia - again if POR took it before from MAF
-			limit = {
-				955 = {
-					is_fully_controlled_by = FROM
-				}
-			}
-			transfer_state = 955
-		}
-		ZIM = { country_event = { id = saf.193 days = 2 } }
+		FROM = { country_event = saf.193 }
 	}
 
 	option = { #Let them take it
 		log = "[GetLogInfo]: event saf.192 option saf.192.b"
 		name = saf.192.b
-		ai_chance = { base = 5 }
+		ai_chance = { base = 0 }
 	}
 }
 country_event = { #MAF takes northern mozambique
@@ -7040,19 +6945,25 @@ country_event = { #MAF takes northern mozambique
 	picture = GFX_report_event_generic_farming
 
 	is_triggered_only = yes
-	trigger = {
-		MAF = {
-			OR = {
-				controls_state = 544
-				controls_state = 954
-			}
-		}
-	}
 
 	option = { #So be it
 		log = "[GetLogInfo]: event saf.193 option saf.193.a"
 		name = saf.193.a
-		custom_effect_tooltip = SAF_tt_MAF_takes_northern_mozambique
+		effect_tooltip = {
+			every_state = {
+				limit = {
+					OR = {
+						is_core_of = MZB
+						is_core_of = MLW
+						state = 544 #Moçambique
+						state = 954 #Tete
+						state = 955 #East Luangwa
+					}
+					is_owned_by = FROM
+				}
+				transfer_state_to = FROM
+			}
+		}
 	}
 }
 
@@ -9682,5 +9593,19 @@ country_event = { #The Africanist Convention
 			}
 			SAF_william_henry_andrews = { remove_all_country_leader_roles = yes }
 		}
+	}
+}
+
+### Flavour ###
+country_event = { #The Hobbit for South Africa,
+	id = saf.500
+	title = saf.500.t
+	desc = saf.500.d
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event saf.500 option saf.500.a"
+		name = saf.500.a
 	}
 }
