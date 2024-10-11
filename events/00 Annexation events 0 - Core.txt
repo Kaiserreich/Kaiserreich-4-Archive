@@ -1,0 +1,1630 @@
+﻿###########################
+# Events that happen after Annexations
+###########################
+# By lots of folks
+# Converted from on_actions to decisions by Rylock and Dr_Njitram
+# Any new post-annexation events need to have their triggers in the KR_on_actions file
+###########################
+
+add_namespace = annex
+
+country_event = { #Check for possible annexations (donotlog)
+	id = annex.1
+	hidden = yes
+	is_triggered_only = yes
+
+	trigger = {
+		NOT = {
+			# Special tags - these shouldn't exist outside of very specific circumstances
+			tag = XXA #debug tag
+			tag = INR #HND civil war
+			original_tag = IKH #not meant to survive
+			AND = {
+				has_civil_war = yes
+				any_enemy_country = {
+					original_tag = ROOT
+					civilwar_target = ROOT #== start_civil_war
+				}
+			}
+			surrender_progress > 0.1
+			any_of_scopes = {
+				array = global.majors
+				has_war_with = ROOT
+				has_capitulated = no
+				same_continent_as_ROOT = yes
+			}
+		}
+	}
+
+	option = {
+		for_each_scope_loop = {
+			array = owned_controlled_states
+
+			### build temp continent arrays
+			if = {
+				limit = {
+					NOT = { is_core_of = ROOT }
+					NOT = { is_claimed_by = ROOT }
+					NOT = { has_state_flag = occupied_by_@ROOT }
+					NOT = { has_state_flag = temporarily_disabled_annexation_@ROOT }
+				}
+				if = {
+					limit = { is_on_continent = europe }
+					add_to_temp_array = { annexation_states_europe = THIS }
+				}
+				else_if = {
+					limit = { is_on_continent = north_america }
+					add_to_temp_array = { annexation_states_north_america = THIS }
+				}
+				else_if = {
+					limit = { is_on_continent = central_america }
+					add_to_temp_array = { annexation_states_central_america = THIS }
+				}
+				else_if = {
+					limit = { is_on_continent = south_america }
+					add_to_temp_array = { annexation_states_south_america = THIS }
+				}
+				else_if = {
+					limit = { is_on_continent = australia } #Oceania
+					add_to_temp_array = { annexation_states_australia = THIS }
+				}
+				else_if = {
+					limit = { is_central_asia = yes }
+					add_to_temp_array = { annexation_states_central_asia = THIS }
+				}
+				else_if = {
+					limit = { is_on_continent = asia }
+					add_to_temp_array = { annexation_states_asia = THIS }
+				}
+				else_if = {
+					limit = { is_on_continent = india }
+					add_to_temp_array = { annexation_states_india = THIS }
+				}
+				else_if = {
+					limit = { is_on_continent = middle_east }
+					add_to_temp_array = { annexation_states_middle_east = THIS }
+				}
+				else_if = {
+					limit = { is_on_continent = africa }
+					add_to_temp_array = { annexation_states_africa = THIS }
+				}
+			}
+
+			### build needed variables for multi-state annexations
+			if = {
+				limit = { has_variable = annexation_target:annexation_extra_states^num }
+				if = {
+					limit = { var:annexation_target = { is_valid_annexation_state = yes } }
+					set_temp_variable = { priority_state_@var:annexation_target = annexation_target }
+					for_each_scope_loop = {
+						array = annexation_target:annexation_extra_states
+						if = {
+							limit = {
+								is_allowed_annexation_state_for_owner = yes
+								impassable = no
+							}
+
+							### build owners array
+							if = {
+								limit = { NOT = { is_in_array = { owners_@PREV = owner } } }
+								add_to_temp_array = { owners_@PREV = owner }
+							}
+
+							### add up total owned strategic value
+							add_to_temp_variable = { total_score_@var:owner = state_strategic_value }
+						}
+					}
+				}
+				else = {
+					for_each_scope_loop = {
+						array = annexation_target:annexation_extra_states
+						if = {
+							limit = {
+								is_allowed_annexation_state_for_owner = yes
+								impassable = no
+							}
+
+							### build owners array
+							if = {
+								limit = { NOT = { is_in_array = { owners_@PREV = owner } } }
+								add_to_temp_array = { owners_@PREV = owner }
+							}
+
+							### add up total owned strategic value
+							add_to_temp_variable = { total_score_@var:owner = state_strategic_value }
+
+							### select best state to target the decision
+							if = {
+								limit = {
+									is_owned_by = ROOT
+									check_variable = { annexation_target = PREV.annexation_target }
+								}
+								set_temp_variable = { has_valid_state_@var:annexation_target = THIS }
+								if = {
+									limit = { NOT = { has_variable = priority_state_@var:annexation_target } }
+									set_temp_variable = { priority_state_@var:annexation_target = THIS }
+								}
+								else_if = {
+									limit = { var:priority_state_@var:annexation_target = { check_variable = { state_strategic_value < PREV.state_strategic_value } } }
+									set_temp_variable = { priority_state_@var:annexation_target = THIS }
+								}
+								else_if = {
+									limit = { var:priority_state_@var:annexation_target = { check_variable = { id > PREV.id } } }
+									set_temp_variable = { priority_state_@var:annexation_target = THIS }
+								}
+							}
+						}
+					}
+				}
+
+				### assign total owned strategic value to each owner
+				for_each_loop = {
+					array = owners_@THIS
+					add_to_temp_array = { owner_scores_@THIS = total_score_@var:v }
+				}
+
+				### select country with the highest total owned strategic value
+				find_highest_in_array = { array = owner_scores_@THIS }
+				set_temp_variable = { priority_country_@var:annexation_target = owners_@THIS^i }
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					any_enemy_country = {
+						capital_scope = {
+							is_on_continent = europe
+							is_core_of = PREV #ignore wartime capital move antics
+						}
+						has_capitulated = no
+					}
+				}
+			}
+			for_each_scope_loop = {
+				array = annexation_states_europe
+				check_possible_annexations_europe = yes
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					any_enemy_country = {
+						capital_scope = {
+							is_on_continent = north_america
+							is_core_of = PREV #ignore wartime capital move antics
+						}
+						has_capitulated = no
+					}
+				}
+			}
+			for_each_scope_loop = {
+				array = annexation_states_north_america
+				check_possible_annexations_north_america = yes
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					any_enemy_country = {
+						capital_scope = {
+							is_on_continent = central_america
+							is_core_of = PREV #ignore wartime capital move antics
+						}
+						has_capitulated = no
+					}
+				}
+			}
+			for_each_scope_loop = {
+				array = annexation_states_central_america
+				check_possible_annexations_central_america = yes
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					any_enemy_country = {
+						capital_scope = {
+							is_on_continent = south_america
+							is_core_of = PREV #ignore wartime capital move antics
+						}
+						has_capitulated = no
+					}
+				}
+			}
+			for_each_scope_loop = {
+				array = annexation_states_south_america
+				check_possible_annexations_south_america = yes
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					any_enemy_country = {
+						capital_scope = {
+							is_on_continent = australia
+							is_core_of = PREV #ignore wartime capital move antics
+						}
+						has_capitulated = no
+					}
+				}
+			}
+			for_each_scope_loop = {
+				array = annexation_states_australia
+				check_possible_annexations_australia = yes
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					has_war_with = var:global.russia
+					has_war_with = var:617.owner #Dihua
+					has_war_with = var:619.owner #Kashgar
+					has_war_with = var:1083.owner #Kumul
+					any_enemy_country = {
+						OR = {
+							capital_scope = {
+								OR = {
+									is_central_asia = yes
+									is_xinjiang = yes
+								}
+								is_core_of = PREV #ignore wartime capital move antics
+							}
+						}
+						has_capitulated = no
+					}
+				}
+			}
+			for_each_scope_loop = {
+				array = annexation_states_central_asia
+				check_possible_annexations_central_asia = yes
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					any_enemy_country = {
+						capital_scope = {
+							is_on_continent = asia
+							is_central_asia = no
+							is_core_of = PREV #ignore wartime capital move antics
+						}
+						has_capitulated = no
+					}
+				}
+			}
+			for_each_scope_loop = {
+				array = annexation_states_asia
+				check_possible_annexations_asia = yes
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					any_enemy_country = {
+						capital_scope = {
+							is_on_continent = india
+							is_core_of = PREV #ignore wartime capital move antics
+						}
+						has_capitulated = no
+					}
+				}
+			}
+			for_each_scope_loop = {
+				array = annexation_states_india
+				check_possible_annexations_india = yes
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					any_enemy_country = {
+						capital_scope = {
+							is_on_continent = middle_east
+							is_core_of = PREV #ignore wartime capital move antics
+						}
+						has_capitulated = no
+					}
+				}
+			}
+			for_each_scope_loop = {
+				array = annexation_states_middle_east
+				check_possible_annexations_middle_east = yes
+			}
+		}
+		if = {
+			limit = {
+				NOT = {
+					any_enemy_country = {
+						capital_scope = {
+							is_on_continent = africa
+							is_core_of = PREV #ignore wartime capital move antics
+						}
+						has_capitulated = no
+					}
+				}
+			}
+			for_each_scope_loop = {
+				array = annexation_states_africa
+				check_possible_annexations_africa = yes
+			}
+		}
+		for_each_scope_loop = {
+			array = annexation_resistance_states
+			set_temp_variable = { target_id = ROOT.id }
+			round_temp_variable = target_id
+			meta_effect = {
+				text = { remove_resistance_target = [ID] }
+				ID = "[?target_id]"
+			}
+		}
+		clear_array = annexation_resistance_states
+		for_each_scope_loop = {
+			array = resistance_target_states
+			if = {
+				limit = { has_variable = annexation_target:annexation_extra_states^num }
+				for_each_scope_loop = {
+					array = annexation_target:annexation_extra_states
+					if = {
+						limit = {
+							is_valid_annexation_state = yes
+							annexations_no_occupation_penalty = no
+						}
+						add_to_array = { ROOT.annexation_resistance_states = THIS }
+						set_temp_variable = { target_id = ROOT.id }
+						round_temp_variable = target_id
+						meta_effect = {
+							text = {
+								add_resistance_target = {
+									amount = 40
+									occupier = ROOT
+									days = 3650
+									id = [ID]
+									tooltip = annexation_occupied_state
+								}
+							}
+							ID = "[?target_id]"
+						}
+					}
+				}
+			}
+			else_if = {
+				limit = {
+					is_valid_annexation_state = yes
+					annexations_no_occupation_penalty = no
+				}
+				add_to_array = { ROOT.annexation_resistance_states = THIS }
+				set_temp_variable = { target_id = ROOT.id }
+				round_temp_variable = target_id
+				meta_effect = {
+					text = {
+						add_resistance_target = {
+							amount = 40
+							occupier = ROOT
+							days = 3650
+							id = [ID]
+							tooltip = annexation_occupied_state
+						}
+					}
+					ID = "[?target_id]"
+				}
+			}
+		}
+	}
+}
+
+state_event = { #Generic "Land Granted" event
+	id = annex.2
+	title = annex.2.t
+	desc = annex.2.d
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event annex.2 option annex.2.a"
+		name = annex.2.a
+		effect_tooltip = { THIS = { transfer_state_to = ROOT } }
+	}
+}
+
+##############################################
+### LAND EXCHANGE FOR ALLIANCE EVENT CHAIN ###
+##############################################
+
+country_event = { #Offering land in exchange for faction membership
+	id = annex.5
+	title = "[GetLandExchangeOfferEventTitle]"
+	desc = "[GetLandExchangeOfferEventDesc]"
+
+	is_triggered_only = yes
+
+	immediate = {
+		hidden_effect = {
+			set_country_flag = { flag = open_annexation_event days = 16 value = 1 }
+			FROM = { set_country_flag = { flag = open_annexation_event days = 16 value = 1 } }
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.5 option 1"
+		name = "[GetLandExchangeOfferEventOptionAccept]"
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0	# These are so that the AI will always deny the offer to a tag outside of the faction they are supposed to join in the game rules
+				OR = {
+					AND = {
+						OR = {
+							tag = ROM
+							tag = SER
+						}
+						BPL_game_rule_wait_to_disband = yes
+					}
+					AND = {
+						tag = BUL
+						OR = {
+							AND = {
+								has_game_rule = { rule = BUL_forpol option = BUL_FORPOL_GER }
+								GER = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = GER }
+										has_country_flag = AUS_former_faction_member
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = BUL_forpol option = BUL_FORPOL_AUS }
+								AUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = AUS } }
+								FROM = { NOT = { is_in_faction_with = AUS } }
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = AUS }
+										AND = {
+											is_in_faction_with = AUS
+											NOT = { has_country_flag = AUS_former_faction_member }
+										}
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = BUL_forpol option = BUL_FORPOL_RUS }
+								RUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = RUS } }
+							}
+							AND = {
+								has_game_rule = { rule = BUL_forpol option = BUL_FORPOL_BPL }
+								BPL = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = BPL } }
+							}
+							AND = {
+								has_game_rule = { rule = BUL_forpol option = BUL_FORPOL_INT }
+								INT = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = INT } }
+							}
+						}
+					}
+					AND = {
+						tag = SIC
+						OR = {
+							AND = {
+								has_game_rule = { rule = SIC_forpol option = SIC_FORPOL_GER }
+								GER = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = GER }
+										has_country_flag = AUS_former_faction_member
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = SIC_forpol option = SIC_FORPOL_AUS }
+								AUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = AUS } }
+							}
+							AND = {
+								has_game_rule = { rule = SIC_forpol option = SIC_FORPOL_ENT }
+								ENT = { exists = yes }
+								FROM = { NOT = { is_in_faction_with = ENT } }
+							}
+						}
+					}
+					AND = {
+						tag = VNC
+						OR = {
+							AND = {
+								has_game_rule = { rule = VNC_forpol option = VNC_FORPOL_GER }
+								GER = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = GER }
+										has_country_flag = AUS_former_faction_member
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = VNC_forpol option = VNC_FORPOL_AUS }
+								AUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = AUS } }
+							}
+							AND = {
+								has_game_rule = { rule = VNC_forpol option = VNC_FORPOL_ENT }
+								ENT = { exists = yes }
+								FROM = { NOT = { is_in_faction_with = ENT } }
+							}
+						}
+					}
+					AND = {
+						tag = LOM
+						OR = {
+							AND = {
+								has_game_rule = { rule = LOM_forpol option = LOM_FORPOL_GER }
+								GER = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = GER }
+										has_country_flag = AUS_former_faction_member
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = LOM_forpol option = LOM_FORPOL_AUS }
+								AUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = AUS } }
+							}
+							AND = {
+								has_game_rule = { rule = LOM_forpol option = LOM_FORPOL_RUS }
+								RUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = RUS } }
+							}
+							AND = {
+								has_game_rule = { rule = LOM_forpol option = LOM_FORPOL_BPL }
+								BPL = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = BPL } }
+							}
+						}
+					}
+					AND = {
+						tag = ITA
+						OR = {
+							AND = {
+								has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_GER }
+								GER = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = GER }
+										has_country_flag = AUS_former_faction_member
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_AUS }
+								AUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = AUS } }
+							}
+							AND = {
+								has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_RUS }
+								RUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = RUS } }
+							}
+							AND = {
+								has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_ENT }
+								ENT = { exists = yes }
+								FROM = { NOT = { is_in_faction_with = ENT } }
+							}
+						}
+					}
+					AND = {
+						tag = DEI
+						OR = {
+							AND = {
+								has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_GER }
+								GER = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = GER }
+										has_country_flag = AUS_former_faction_member
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_ENT }
+								ENT = { exists = yes }
+								FROM = { NOT = { is_in_faction_with = ENT } }
+							}
+						}
+					}
+				}
+			}
+		}
+		effect_tooltip = {
+			if = {
+				limit = {
+					is_in_faction_with = BPL
+					OR = {
+						NOT = { is_in_faction_with = GRE }
+						NOT = { is_in_faction_with = SER }
+						NOT = { is_in_faction_with = ROM }
+					}
+				}
+				belgrade_pact_is_disbanded = yes
+				peace_out_non_neighbours_after_leaving_faction = yes
+			}
+			else_if = {
+				limit = { is_in_faction = yes }
+				every_other_country = {
+					limit = {
+						is_in_faction_with = ROOT
+						is_subject = no
+					}
+					country_event = annex.8
+				}
+				leave_faction = yes
+				peace_out_non_neighbours_after_leaving_faction = yes
+			}
+		}
+		FROM = {
+			effect_tooltip = {
+				every_owned_state = {
+					limit = { is_in_array = { FROM.offered_states_array = THIS } }
+					transfer_state_to = ROOT
+				}
+				faction_leader = { add_to_faction = ROOT }
+			}
+			country_event = { id = annex.6 days = 1 }
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.5 option 2"
+		name = "[GetLandExchangeOfferEventOptionRefuse]"
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 100	# These are so that the AI will always deny the offer to a tag outside of the faction they are supposed to join in the game rules
+				OR = {
+					AND = {
+						OR = {
+							tag = ROM
+							tag = SER
+						}
+						BPL_game_rule_wait_to_disband = yes
+					}
+					AND = {
+						tag = BUL
+						OR = {
+							AND = {
+								has_game_rule = { rule = BUL_forpol option = BUL_FORPOL_GER }
+								GER = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = GER }
+										has_country_flag = AUS_former_faction_member
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = BUL_forpol option = BUL_FORPOL_AUS }
+								AUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = AUS } }
+							}
+							AND = {
+								has_game_rule = { rule = BUL_forpol option = BUL_FORPOL_RUS }
+								RUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = RUS } }
+							}
+							AND = {
+								has_game_rule = { rule = BUL_forpol option = BUL_FORPOL_BPL }
+								BPL = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = BPL } }
+							}
+							AND = {
+								has_game_rule = { rule = BUL_forpol option = BUL_FORPOL_INT }
+								INT = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = INT } }
+							}
+						}
+					}
+					AND = {
+						tag = SIC
+						OR = {
+							AND = {
+								has_game_rule = { rule = SIC_forpol option = SIC_FORPOL_GER }
+								GER = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = GER }
+										has_country_flag = AUS_former_faction_member
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = SIC_forpol option = SIC_FORPOL_AUS }
+								AUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = AUS } }
+							}
+							AND = {
+								has_game_rule = { rule = SIC_forpol option = SIC_FORPOL_ENT }
+								ENT = { exists = yes }
+								FROM = { NOT = { is_in_faction_with = ENT } }
+							}
+						}
+					}
+					AND = {
+						tag = VNC
+						OR = {
+							AND = {
+								has_game_rule = { rule = VNC_forpol option = VNC_FORPOL_GER }
+								GER = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = GER }
+										has_country_flag = AUS_former_faction_member
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = VNC_forpol option = VNC_FORPOL_AUS }
+								AUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = AUS } }
+							}
+							AND = {
+								has_game_rule = { rule = VNC_forpol option = VNC_FORPOL_ENT }
+								ENT = { exists = yes }
+								FROM = { NOT = { is_in_faction_with = ENT } }
+							}
+						}
+					}
+					AND = {
+						tag = LOM
+						OR = {
+							AND = {
+								has_game_rule = { rule = LOM_forpol option = LOM_FORPOL_GER }
+								GER = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = GER }
+										has_country_flag = AUS_former_faction_member
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = LOM_forpol option = LOM_FORPOL_AUS }
+								AUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = AUS } }
+							}
+							AND = {
+								has_game_rule = { rule = LOM_forpol option = LOM_FORPOL_RUS }
+								RUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = RUS } }
+							}
+							AND = {
+								has_game_rule = { rule = LOM_forpol option = LOM_FORPOL_BPL }
+								BPL = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = BPL } }
+							}
+						}
+					}
+					AND = {
+						tag = ITA
+						OR = {
+							AND = {
+								has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_GER }
+								GER = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = GER }
+										has_country_flag = AUS_former_faction_member
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_AUS }
+								AUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = AUS } }
+							}
+							AND = {
+								has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_RUS }
+								RUS = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = { NOT = { is_in_faction_with = RUS } }
+							}
+							AND = {
+								has_game_rule = { rule = ITA_forpol option = ITA_FORPOL_ENT }
+								ENT = { exists = yes }
+								FROM = { NOT = { is_in_faction_with = ENT } }
+							}
+						}
+					}
+					AND = {
+						tag = DEI
+						OR = {
+							AND = {
+								has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_GER }
+								GER = {
+									exists = yes
+									is_subject = no
+								}
+								FROM = {
+									OR = {
+										NOT = { is_in_faction_with = GER }
+										has_country_flag = AUS_former_faction_member
+									}
+								}
+							}
+							AND = {
+								has_game_rule = { rule = HOL_forpol option = HOL_FORPOL_ENT }
+								ENT = { exists = yes }
+								FROM = { NOT = { is_in_faction_with = ENT } }
+							}
+						}
+					}
+				}
+			}
+		}
+		FROM = { country_event = { id = annex.7 days = 1 } }
+		recheck_annexations = yes
+	}
+}
+
+country_event = { #Land exchange deal has been struck
+	id = annex.6
+	title = "[GetLandExchangeAcceptedEventTitle]"
+	desc = "[GetLandExchangeAcceptedEventDesc]"
+
+	trigger = {
+		is_in_faction = yes
+	}
+
+	is_triggered_only = yes
+
+	immediate = {
+		hidden_effect = {
+			set_country_flag = { flag = open_annexation_event days = 16 value = 1 }
+			FROM = { set_country_flag = { flag = open_annexation_event days = 16 value = 1 } }
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.6 option 1"
+		name = "[GetLandExchangeAcceptedEventOption]"
+		FROM = {
+			if = {
+				limit = { is_in_faction_with = BPL }
+				belgrade_pact_is_disbanded = yes
+				peace_out_non_neighbours_after_leaving_faction = yes
+			}
+			else_if = {
+				limit = { is_in_faction = yes }
+				every_other_country = {
+					limit = {
+						is_in_faction_with = PREV
+						is_subject = no
+					}
+					country_event = annex.8
+				}
+				leave_faction = yes
+				peace_out_non_neighbours_after_leaving_faction = yes
+			}
+		}
+		set_temp_variable = { tag_to_release = FROM }
+		every_owned_state = {
+			limit = { is_in_array = { ROOT.offered_states_array = THIS } }
+			transfer_state_without_overriding_occupation = yes
+		}
+		set_temp_variable = { new_faction_leader = ROOT }
+		FROM = { AUS_flag_country_as_austrian_ally = yes }
+		faction_leader = { add_to_faction = FROM }
+		reverse_add_opinion_modifier = { target = FROM modifier = KR_returned_land }
+		hidden_effect = {
+			recheck_annexations_immediate = yes
+		}
+	}
+}
+
+country_event = { #Land exchange deal has been refused
+	id = annex.7
+	title = "[GetLandExchangeRefusedEventTitle]"
+	desc = "[GetLandExchangeRefusedEventDesc]"
+
+	is_triggered_only = yes
+
+	immediate = {
+		hidden_effect = {
+			set_country_flag = { flag = open_annexation_event days = 16 value = 1 }
+			FROM = { set_country_flag = { flag = open_annexation_event days = 16 value = 1 } }
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.7 option 1"
+		name = "[GetLandExchangeRefusedEventOption]"
+		recheck_annexations_immediate = yes
+	}
+}
+
+country_event = { #Land exchange notification to allies
+	id = annex.8
+	title = "[GetLandExchangeNotificationEventTitle]"
+	desc = "[GetLandExchangeNotificationEventDesc]"
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event annex.8 option 1"
+		name = "[GetLandExchangeNotificationEventOption]"
+		add_opinion_modifier = { target = FROM modifier = KR_hates_govt }
+		recheck_annexations = yes
+	}
+}
+
+#####################################
+##   C E N T R A L   E U R O P E   ##
+#####################################
+
+country_event = { #Austria: ??? receives lands
+	id = annex.18
+	title = annex.18.t
+	desc = annex.18.d
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event annex.18 option annex.18.a"
+		name = annex.18.a
+		add_political_power = 25
+		add_opinion_modifier = { target = FROM modifier = KR_approves_of_govt }
+		recheck_annexations = yes
+	}
+}
+
+#####################################
+##   W E S T E R N   E U R O P E   ##
+#####################################
+
+country_event = { #Ireland: Choosing the new Head of State
+
+	id = annex.184
+	title = annex.184.t
+	desc = annex.184.d
+
+	is_triggered_only = yes
+
+	option = { #Hugo O'Neill
+		log = "[GetLogInfo]: event annex.184 option annex.184.a"
+		name = annex.184.a
+		ai_chance = { base = 100 }
+		IRE = { country_event = annex.185 }
+		recheck_annexations = yes
+	}
+
+	option = { #let them decide
+		log = "[GetLogInfo]: event annex.184 option annex.184.b"
+		name = annex.184.b
+		ai_chance = { base = 0 }
+		hidden_effect = {
+			IRE = { IRE_create_govt_pataut_puppet = yes }
+		}
+		recheck_annexations = yes
+	}
+}
+
+country_event = { #Ireland: King Hugo arrives!
+
+	id = annex.185
+	title = annex.185.t
+	desc = annex.185.d
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event annex.185 option annex.185.a"
+
+		name = annex.185.a
+		IRE_create_govt_natpop_puppet = yes
+		recheck_annexations = yes
+	}
+}
+
+#####################################
+##  S O U T H E R N   E U R O P E  ##
+#####################################
+
+country_event = { #event to choose Italian tag to give lands to
+	id = annex.200
+	title = annex.200.t
+	desc = annex.200.desc
+	picture = GFX_report_event_generic_conference2
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event annex.200 option annex.200.a"
+		name = annex.200.a
+		trigger = {
+			has_variable = valid_italian_targets_grant^0
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_grant^0.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_grant^0.num_divisions
+			}
+			modifier = {
+				factor = 0.1
+				var:valid_italian_targets_grant^0 = { is_subject = yes }
+			}
+		}
+		set_temp_variable = { tag_to_release = valid_italian_targets_grant^0 }
+		every_owned_state = {
+			limit = {
+				is_in_array = { ROOT.offered_states_array = THIS }
+				is_valid_annexation_state = yes
+			}
+			transfer_state_and_notify = yes
+		}
+		recheck_annexations = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.200 option annex.200.b"
+		name = annex.200.b
+		trigger = {
+			has_variable = valid_italian_targets_grant^1
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_grant^1.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_grant^1.num_divisions
+			}
+			modifier = {
+				factor = 0.1
+				var:valid_italian_targets_grant^1 = { is_subject = yes }
+			}
+		}
+		set_temp_variable = { tag_to_release = valid_italian_targets_grant^1 }
+		every_owned_state = {
+			limit = {
+				is_in_array = { ROOT.offered_states_array = THIS }
+				is_valid_annexation_state = yes
+			}
+			transfer_state_and_notify = yes
+		}
+		recheck_annexations = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.200 option annex.200.c"
+		name = annex.200.c
+		trigger = {
+			has_variable = valid_italian_targets_grant^2
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_grant^2.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_grant^2.num_divisions
+			}
+			modifier = {
+				factor = 0.1
+				var:valid_italian_targets_grant^2 = { is_subject = yes }
+			}
+		}
+		set_temp_variable = { tag_to_release = valid_italian_targets_grant^2 }
+		every_owned_state = {
+			limit = {
+				is_in_array = { ROOT.offered_states_array = THIS }
+				is_valid_annexation_state = yes
+			}
+			transfer_state_and_notify = yes
+		}
+		recheck_annexations = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.200 option annex.200.d"
+		name = annex.200.d
+		trigger = {
+			has_variable = valid_italian_targets_grant^3
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_grant^3.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_grant^3.num_divisions
+			}
+			modifier = {
+				factor = 0.1
+				var:valid_italian_targets_grant^3 = { is_subject = yes }
+			}
+		}
+		set_temp_variable = { tag_to_release = valid_italian_targets_grant^3 }
+		every_owned_state = {
+			limit = {
+				is_in_array = { ROOT.offered_states_array = THIS }
+				is_valid_annexation_state = yes
+			}
+			transfer_state_and_notify = yes
+		}
+		recheck_annexations = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.200 option annex.200.e"
+		name = annex.200.e
+		trigger = {
+			has_variable = valid_italian_targets_grant^4
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_grant^4.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_grant^4.num_divisions
+			}
+			modifier = {
+				factor = 0.1
+				var:valid_italian_targets_grant^4 = { is_subject = yes }
+			}
+		}
+		set_temp_variable = { tag_to_release = valid_italian_targets_grant^4 }
+		every_owned_state = {
+			limit = {
+				is_in_array = { ROOT.offered_states_array = THIS }
+				is_valid_annexation_state = yes
+			}
+			transfer_state_and_notify = yes
+		}
+		recheck_annexations = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.200 option annex.200.f"
+		name = annex.200.f
+		trigger = {
+			has_variable = valid_italian_targets_grant^5
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_grant^5.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_grant^5.num_divisions
+			}
+			modifier = {
+				factor = 0.1
+				var:valid_italian_targets_grant^5 = { is_subject = yes }
+			}
+		}
+		set_temp_variable = { tag_to_release = valid_italian_targets_grant^5 }
+		every_owned_state = {
+			limit = {
+				is_in_array = { ROOT.offered_states_array = THIS }
+				is_valid_annexation_state = yes
+			}
+			transfer_state_and_notify = yes
+		}
+		recheck_annexations = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.200 option annex.200.g"
+		name = annex.200.g
+		trigger = {
+			has_variable = valid_italian_targets_grant^6
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_grant^6.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_grant^6.num_divisions
+			}
+			modifier = {
+				factor = 0.1
+				var:valid_italian_targets_grant^6 = { is_subject = yes }
+			}
+		}
+		set_temp_variable = { tag_to_release = valid_italian_targets_grant^6 }
+		every_owned_state = {
+			limit = {
+				is_in_array = { ROOT.offered_states_array = THIS }
+				is_valid_annexation_state = yes
+			}
+			transfer_state_and_notify = yes
+		}
+		recheck_annexations = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.200 option annex.200.h"
+		name = annex.200.h
+		trigger = {
+			has_variable = valid_italian_targets_grant^7
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_grant^7.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_grant^7.num_divisions
+			}
+			modifier = {
+				factor = 0.1
+				var:valid_italian_targets_grant^7 = { is_subject = yes }
+			}
+		}
+		set_temp_variable = { tag_to_release = valid_italian_targets_grant^7 }
+		every_owned_state = {
+			limit = {
+				is_in_array = { ROOT.offered_states_array = THIS }
+				is_valid_annexation_state = yes
+			}
+			transfer_state_and_notify = yes
+		}
+		recheck_annexations = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.200 option annex.200.i"
+		name = annex.200.i
+		trigger = {
+			has_variable = valid_italian_targets_grant^8
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_grant^8.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_grant^8.num_divisions
+			}
+			modifier = {
+				factor = 0.1
+				var:valid_italian_targets_grant^8 = { is_subject = yes }
+			}
+		}
+		set_temp_variable = { tag_to_release = valid_italian_targets_grant^8 }
+		every_owned_state = {
+			limit = {
+				is_in_array = { ROOT.offered_states_array = THIS }
+				is_valid_annexation_state = yes
+			}
+			transfer_state_and_notify = yes
+		}
+		recheck_annexations = yes
+	}
+}
+
+country_event = { #event to choose Italian tag to offer lands to
+	id = annex.201
+	title = annex.201.t
+	desc = annex.201.desc
+	picture = GFX_report_event_generic_conference2
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event annex.201 option annex.201.a"
+		name = annex.201.a
+		trigger = {
+			has_variable = valid_italian_targets_offer^0
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_offer^0.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_offer^0.num_divisions
+			}
+		}
+		var:valid_italian_targets_offer^0 = {
+			set_country_flag = offered_italy_@ROOT
+			offer_states_to_target = yes
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.201 option annex.201.b"
+		name = annex.201.b
+		trigger = {
+			has_variable = valid_italian_targets_offer^1
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_offer^1.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_offer^1.num_divisions
+			}
+		}
+		var:valid_italian_targets_offer^1 = {
+			set_country_flag = offered_italy_@ROOT
+			offer_states_to_target = yes
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.201 option annex.201.c"
+		name = annex.201.c
+		trigger = {
+			has_variable = valid_italian_targets_offer^2
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_offer^2.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_offer^2.num_divisions
+			}
+		}
+		var:valid_italian_targets_offer^2 = {
+			set_country_flag = offered_italy_@ROOT
+			offer_states_to_target = yes
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.201 option annex.201.d"
+		name = annex.201.d
+		trigger = {
+			has_variable = valid_italian_targets_offer^3
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_offer^3.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_offer^3.num_divisions
+			}
+		}
+		var:valid_italian_targets_offer^3 = {
+			set_country_flag = offered_italy_@ROOT
+			offer_states_to_target = yes
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.201 option annex.201.e"
+		name = annex.201.e
+		trigger = {
+			has_variable = valid_italian_targets_offer^4
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_offer^4.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_offer^4.num_divisions
+			}
+		}
+		var:valid_italian_targets_offer^4 = {
+			set_country_flag = offered_italy_@ROOT
+			offer_states_to_target = yes
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.201 option annex.201.f"
+		name = annex.201.f
+		trigger = {
+			has_variable = valid_italian_targets_offer^5
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_offer^5.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_offer^5.num_divisions
+			}
+		}
+		var:valid_italian_targets_offer^5 = {
+			set_country_flag = offered_italy_@ROOT
+			offer_states_to_target = yes
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.201 option annex.201.g"
+		name = annex.201.g
+		trigger = {
+			has_variable = valid_italian_targets_offer^6
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_offer^6.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_offer^6.num_divisions
+			}
+		}
+		var:valid_italian_targets_offer^6 = {
+			set_country_flag = offered_italy_@ROOT
+			offer_states_to_target = yes
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.201 option annex.201.h"
+		name = annex.201.h
+		trigger = {
+			has_variable = valid_italian_targets_offer^7
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_offer^7.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_offer^7.num_divisions
+			}
+		}
+		var:valid_italian_targets_offer^7 = {
+			set_country_flag = offered_italy_@ROOT
+			offer_states_to_target = yes
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event annex.201 option annex.201.i"
+		name = annex.201.i
+		trigger = {
+			has_variable = valid_italian_targets_offer^8
+		}
+		ai_chance = {
+			base = 1
+			modifier = {
+				add = var:valid_italian_targets_offer^8.num_of_controlled_factories
+			}
+			modifier = {
+				add = var:valid_italian_targets_offer^8.num_divisions
+			}
+		}
+		var:valid_italian_targets_offer^8 = {
+			set_country_flag = offered_italy_@ROOT
+			offer_states_to_target = yes
+		}
+	}
+}
+
+###########################
+##   E A S T   A S I A   ##
+###########################
+
+country_event = { #China: defeated Japan returns conquered lands
+	id = annex.300
+	title = annex.300.t
+	desc = annex.300.d
+
+	picture = GFX_report_event_JAP_announcement
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event annex.300 option annex.300.a"
+		name = annex.300.a
+		every_owned_state = {
+			limit = { has_state_flag = japan_forced_return }
+			effect_tooltip = { transfer_state_to = ROOT }
+			clr_state_flag = japan_forced_return
+		}
+		recheck_annexations = yes
+	}
+}

@@ -79,10 +79,12 @@ focus_tree = {
 				character = HNN_tang_hualong
 				ideology = social_democrat_subtype
 			}
-			set_party_name = { ideology = social_democrat name = HNN_ncera long_name = HNN_ncera_long }
+			set_party_name = { ideology = social_democrat name = HNN_CERA long_name = HNN_CERA_long }
 			hidden_effect = {
 				activate_targeted_decision = { target = QIE decision = HNN_join_zhili }
 				activate_targeted_decision = { target = SZC decision = HNN_join_zhili }
+				activate_targeted_decision = { target = LEP decision = HNN_join_lep }
+				activate_targeted_decision = { target = SHX decision = HNN_join_yan }
 			}
 		}
 		search_filters = { FOCUS_FILTER_STABILITY FOCUS_FILTER_POLITICAL }
@@ -266,6 +268,7 @@ focus_tree = {
 					NOT = { tag = XSM } #Exclude tags outside of China proper
 					NOT = { tag = KUM } #Exclude tags outside of China proper
 					NOT = { tag = GXC } #Tang Xiangming doesn't care that Ma Ji is zhili aligned since the zhili has collapsed at this point
+					NOT = { tag = LEP } #Tang Xiangming doesn't care that Qi Xieyuan is zhili aligned since the zhili has collapsed at this point
 					is_subject = no
 					exists = yes
 					china_compatible_alignment_to_PREV = yes
@@ -279,9 +282,11 @@ focus_tree = {
 		}
 		available = {
 			has_country_leader = { character = HNN_tang_xiangming }
-			can_declare_war_on = var:592.owner
-			NOT = { has_non_aggression_pact_with = var:592.owner }
 			has_global_flag = GXC_civil_war_over
+			NOT = { has_non_aggression_pact_with = GXC }
+		}
+		bypass = {
+			NOT = { can_declare_war_on = GXC }
 		}
 		prerequisite = {
 			focus = HNN_declare_martial_law
@@ -289,23 +294,16 @@ focus_tree = {
 		prerequisite = {
 			focus = HNN_establish_the_defence_commission
 		}
-		bypass = {
-			if = {
-				limit = { is_subject = yes }
-				owns_state = 592 #canton
-			}
-		}
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus HNN_march_to_the_sea"
 			add_war_support = 0.10
 			if = {
-				limit = { is_subject = no }
-				HNN_march_south_effect = yes
-			}
-			else_if = {
 				limit = { is_subject = yes }
 				country_event = hnn.zhili.8
+			}
+			else = {
+				HNN_march_south_effect = yes
 			}
 		}
 		search_filters = { FOCUS_FILTER_WAR_SUPPORT FOCUS_FILTER_ANNEXATION }
@@ -505,6 +503,7 @@ focus_tree = {
 				custom_effect_tooltip = tooltip_white_line
 				HNN_southern_political_council_effect = yes
 				custom_effect_tooltip = china_can_core_through_compliance
+				country_event = hnn.zhili.17
 			}
 			every_state = {
 				limit = {
@@ -524,6 +523,9 @@ focus_tree = {
 				add_compliance = 20
 			}
 			HNN_recruit_Zhili_generals = yes
+			hidden_effect = {
+				QIE = { country_event = { id = qiefor.119 } }
+			}
 		}
 		search_filters = { FOCUS_FILTER_POLITICAL }
 	}
@@ -616,6 +618,9 @@ focus_tree = {
 			log = "[GetDateText]: [Root.GetName]: Focus HNN_bolster_loyal_intellectuals"
 			china_add_research_slots = yes
 			remove_ideas = HNN_turbulent_intelligentsia
+			custom_effect_tooltip = available_political_advisor
+			show_ideas_tooltip = HNN_zuo_shunsheng_advisor
+			custom_effect_tooltip = tooltip_white_line
 			if = {
 				limit = {
 					HNN_hu_ying = { is_political_advisor = yes }
@@ -823,8 +828,19 @@ focus_tree = {
 					set_temp_variable = { coalition_partner_var = token:national_populist }
 					add_to_coalition = yes
 				}
+				if = {
+					limit = { HNN_tang_xiangming = { has_trait = HNN_inspector_general } }
+					HNN_tang_xiangming = { add_trait = { trait = HNN_inspector_general ideology = authoritarian_democrat_subtype } }
+				}
+				if = {
+					limit = {
+						NOT = { has_global_flag = QIE_manchu_restoration }
+						is_subject_of = QIE
+					}
+					QIE = { country_event = { id = qiefor.121 days = 1 } }
+				}
 			}
-			HNN_tang_xiangming = { add_trait = { trait = HNN_civilian_governor   ideology = authoritarian_democrat_subtype } }
+			HNN_tang_xiangming = { add_trait = { trait = HNN_civilian_governor ideology = authoritarian_democrat_subtype } }
 			country_event = { id = hnn.zhili.15 days = 1 }
 		}
 		search_filters = { FOCUS_FILTER_POLITICAL }
@@ -850,12 +866,21 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus HNN_maintain_martial_law"
-			HNN_tang_xiangming = { add_trait = { trait = HNN_commander_in_chief   ideology = paternal_autocrat_subtype } }
+			HNN_tang_xiangming = { add_trait = { trait = HNN_commander_in_chief ideology = paternal_autocrat_subtype } }
 			add_popularity = {
 				ideology = paternal_autocrat
 				popularity = 0.25
 			}
 			country_event = { id = hnn.zhili.16 days = 1 }
+			hidden_effect = {
+				if = {
+					limit = {
+						NOT = { has_global_flag = QIE_manchu_restoration }
+						is_subject_of = QIE
+					}
+					QIE = { country_event = { id = qiefor.120 days = 1 } }
+				}
+			}
 		}
 		search_filters = { FOCUS_FILTER_POLITICAL }
 	}
@@ -996,23 +1021,23 @@ focus_tree = {
 		}
 		available = {
 			has_country_leader = { character = HNN_zhao_hengti }
+			has_global_flag = GXC_civil_war_over
 			if = {
-				limit = {
-					is_ai = no
-				}
+				limit = { is_ai = no }
 				check_variable = {
 					tooltip = HNN_opposition_strength_slight_requirement
 					HNN_opposition_strength < 30
 				}
 			}
-			if = {
-				limit = {
-					is_subject = no
+			OR = {
+				is_subject = yes
+				NOT = { country_exists = GXC }
+				has_war_with = GXC
+				AND = {
+					can_declare_war_on = GXC
+					NOT = { has_non_aggression_pact_with = GXC }
 				}
-				can_declare_war_on = var:592.owner
-				NOT = { has_non_aggression_pact_with = var:592.owner }
 			}
-			has_global_flag = GXC_civil_war_over
 		}
 		prerequisite = {
 			focus = HNN_form_a_grand_coalition
@@ -1022,11 +1047,6 @@ focus_tree = {
 			log = "[GetDateText]: [Root.GetName]: Focus HNN_revise_the_monroe_doctrine"
 			if = {
 				limit = { is_subject = no }
-				diplomatic_relation = {
-					country = GXC
-					relation = non_aggression_pact
-					active = no
-				}
 				HNN_march_south_effect = yes
 			}
 			else = {
@@ -1034,9 +1054,7 @@ focus_tree = {
 			}
 			custom_effect_tooltip = tooltip_white_line
 			if = {
-				limit = {
-					HNN_zhong_boyi = { is_political_advisor = yes }
-				}
+				limit = { HNN_zhong_boyi = { is_political_advisor = yes } }
 				add_war_support = 0.03
 				custom_effect_tooltip = HNN_zhong_boyi_is_helpful_tooltip
 			}
@@ -3022,14 +3040,15 @@ focus_tree = {
 				HNN_led_by_tang_shengzhi = yes
 				HNN_led_by_cheng_qian = yes
 			}
-			if = {
-				limit = {
-					is_subject = no
-				}
-				can_declare_war_on = var:592.owner
-				NOT = { has_non_aggression_pact_with = var:592.owner }
-			}
 			has_global_flag = GXC_civil_war_over
+			OR = {
+				is_subject = yes
+				has_war_with = GXC
+				AND = {
+					can_declare_war_on = GXC
+					NOT = { has_non_aggression_pact_with = GXC }
+				}
+			}
 		}
 
 		prerequisite = {
@@ -3038,14 +3057,14 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus HNN_repudiate_the_canton_squatters"
+			add_war_support = 0.10
 			if = {
 				limit = { is_subject = no }
 				HNN_march_south_effect = yes
 			}
 			else = {
-				overlord = { country_event = { id = hnn.kmt.14 } }
+				overlord = { country_event = hnn.kmt.14 }
 			}
-			add_war_support = 0.10
 		}
 		search_filters = { FOCUS_FILTER_WAR_SUPPORT FOCUS_FILTER_ANNEXATION }
 	}
@@ -3100,8 +3119,8 @@ focus_tree = {
 				custom_effect_tooltip = HNN_formenting_the_kuomintang_revival_tt
 				custom_effect_tooltip = china_can_core_through_compliance
 			}
+			592 = { remove_claim_and_add_core_of_ROOT = yes }
 			set_capital = { state = 592 remember_old_capital = no }
-			add_state_core = 592
 			every_owned_state = {
 				limit = {
 					is_core_of = GXC
@@ -5161,11 +5180,14 @@ focus_tree = {
 				add_ideas = HNN_hunanese_high_command_KMT_dummy
 			}
 			hidden_effect = {
-				scoped_play_song = "I_have_a_gun"
 				add_dynamic_modifier = { modifier = HNN_the_revolutionary_model }
 				add_dynamic_modifier = { modifier = HNN_hunanese_high_command_KMT }
 				add_to_variable = { HNN_hunanese_high_command_KMT_combat_width_factor = -0.05 }
 				add_to_variable = { HNN_the_revolutionary_model_army_attack_against_major_factor = 0.05 }
+			}
+			if = {
+				limit = { has_global_flag = allow_sound_events_flag }
+				hidden_effect = { scoped_play_song = I_have_a_gun }
 			}
 		}
 		search_filters = { FOCUS_FILTER_ARMY_BONUS FOCUS_FILTER_MANPOWER }
@@ -5435,8 +5457,8 @@ focus_tree = {
 				tooltip = army_morale_factor_tooltip
 			}
 			add_to_variable = {
-				HNN_hunanese_high_command_KMT_terrain_penalty_reduction = 0.05
-				tooltip = terrain_penalty_reduction_tooltip
+				HNN_hunanese_high_command_KMT_out_of_supply_factor = -0.05
+				tooltip = out_of_supply_factor_tooltip
 			}
 			add_doctrine_cost_reduction = {
 				name = HNN_disciplined_and_motivated
@@ -5631,8 +5653,8 @@ focus_tree = {
 			}
 			custom_effect_tooltip = HNN_modify_HNN_hunanese_high_command_KMT_tt
 			add_to_variable = {
-				HNN_hunanese_high_command_KMT_terrain_penalty_reduction = 0.05
-				tooltip = terrain_penalty_reduction_tooltip
+				HNN_hunanese_high_command_KMT_out_of_supply_factor = -0.05
+				tooltip = out_of_supply_factor_tooltip
 			}
 			add_to_variable = {
 				HNN_hunanese_high_command_KMT_org_loss_when_moving = -0.05
@@ -5720,7 +5742,10 @@ focus_tree = {
 			hidden_effect = {
 				set_technology = { tech_integrated_specialists = 1 popup = no }
 				country_event = { id = HNN.military.4 days = 3 }
-				scoped_play_song = "soul_of_whampoa"
+			}
+			if = {
+				limit = { has_global_flag = allow_sound_events_flag }
+				hidden_effect = { scoped_play_song = soul_of_whampoa }
 			}
 		}
 		search_filters = { FOCUS_FILTER_ARMY_BONUS FOCUS_FILTER_RESEARCH FOCUS_FILTER_WAR_SUPPORT }

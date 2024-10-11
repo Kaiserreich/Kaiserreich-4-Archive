@@ -1510,8 +1510,11 @@ country_event = {
 			}
 			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
-		custom_effect_tooltip = GBR_improve_resistance_effect_5
-		subtract_from_variable = { GBR_synd_unrest = 5 }
+		subtract_from_variable = {
+			var = GBR_synd_unrest
+			value = 5
+			tooltip = GBR_improve_resistance_effect
+		}
 		GBR_recalculate_syndicalist_resistance = yes
 		if = {
 			limit = { NOT = { has_character = GBR_richard_crossman } }
@@ -1643,8 +1646,11 @@ country_event = {
 		}
 		if = {
 			limit = { has_dynamic_modifier = { modifier = GBR_syndicalist_resistance } }
-			custom_effect_tooltip = GBR_improve_resistance_effect_5
-			subtract_from_variable = { GBR_synd_unrest = 5 }
+			subtract_from_variable = {
+				var = GBR_synd_unrest
+				value = 5
+				tooltip = GBR_improve_resistance_effect
+			}
 			GBR_recalculate_syndicalist_resistance = yes
 		}
 		if = {
@@ -2304,19 +2310,14 @@ country_event = {
 		every_owned_state = {
 			limit = {
 				is_french_colonial_claim = yes
-				is_claim_or_core_of_ROOT = no
+				NOT = { is_core_of = ROOT }
 			}
-			add_claim_by = NFA
 			transfer_state_to = NFA
 		}
 		hidden_effect = {
 			every_state = {
 				limit = {
 					is_british_colonial_claim = yes
-					NOT = {
-						is_core_of = owner
-						is_claimed_by = owner
-					}
 					owner = {
 						is_in_faction_with = ROOT
 						NOT = { tag = NFA }
@@ -2339,9 +2340,8 @@ country_event = {
 		every_owned_state = {
 			limit = {
 				is_british_colonial_claim = yes
-				is_claim_or_core_of_ROOT = no
+				NOT = { is_core_of = ROOT }
 			}
-			add_claim_by = GBR
 			transfer_state_to = GBR
 		}
 		hidden_effect = {
@@ -2401,67 +2401,54 @@ state_event = {
 		log = "[GetLogInfo]: event uk.67 option uk.67.a"
 		name = uk.67.a #Agree
 		ai_chance = {
-			base = 90
+			base = 100
 			modifier = {
 				factor = 0
-				event_target:return_state = { is_claim_or_core_of_owner = yes }
-				NOT = {
-					AND = {
-						owner = { tag = CAN }
-						event_target:return_state = { state = 730 }
-					}
+				OR = {
+					is_core_of = ROOT
+					has_variable = can_integrate_@ROOT
+				}
+				if = {
+					limit = { ROOT = { original_tag = WIF } }
+					is_french_colonial_claim = no
+				}
+				else_if = {
+					limit = { ROOT = { CAN_is_dominion = yes } }
+					NOT = { state = 730 }
 				}
 			}
 			modifier = {
-				factor = 0.3
-				owner = { tag = CAN }
-				event_target:return_state = { state = 730 }
-			}
-		}
-		if = {
-			limit = {
-				owner = {
-					OR = {
-						tag = WIF
-						tag = GYA
-					}
+				factor = 0
+				is_claimed_by = ROOT
+				ROOT = {
+					NOT = { tag = CAN }
+					NOT = { original_tag = AST }
+					NOT = { original_tag = SAF }
+					NOT = { original_tag = WIF }
+					NOT = { original_tag = RAJ }
 				}
-				event_target:return_state = { is_core_of = ROOT }
 			}
-			event_target:return_state = { remove_core_of = ROOT }
 		}
-		if = {
-			limit = {
-				owner = {
-					OR = {
-						tag = WIF
-						tag = GYA
-					}
-				}
-				event_target:return_state = { is_claimed_by = ROOT }
-			}
-			event_target:return_state = { remove_claim_by = ROOT }
-		}
-		if = {
-			limit = {
-				owner = { tag = AST }
-				event_target:return_state = { is_claimed_by = ROOT }
-			}
-			event_target:return_state = { remove_claim_by = ROOT }
-		}
-		if = {
-			limit = {
-				owner = { tag = CAN }
-				event_target:return_state = { state = 730 } #St. Pierre
+		THIS = { #scoped for the tooltip
+			if = {
+				limit = { is_claimed_by = ROOT }
+				remove_claim_by = ROOT
 			}
 			hidden_effect = {
-				event_target:return_state = { add_core_of = FROM }
+				if = {
+					limit = {
+						state = 730 #St. Pierre
+						ROOT = { tag = CAN }
+					}
+					add_core_of = FROM
+				}
 			}
+			set_temp_variable = { target = FROM }
+			transfer_state_during_war = yes
 		}
-		set_temp_variable = { target = FROM }
-		event_target:return_state = { transfer_state_during_war = yes }
 		FROM = { country_event = nfa.193 }
 	}
+
 	option = {
 		log = "[GetLogInfo]: event uk.67 option uk.67.b"
 		name = uk.67.b #Refuse
@@ -2469,18 +2456,29 @@ state_event = {
 			base = 0
 			modifier = {
 				add = 100
-				event_target:return_state = { is_claim_or_core_of_owner = yes }
-				NOT = {
-					AND = {
-						owner = { tag = CAN }
-						event_target:return_state = { state = 730 }
-					}
+				OR = {
+					is_core_of = ROOT
+					has_variable = can_integrate_@ROOT
+				}
+				if = {
+					limit = { ROOT = { original_tag = WIF } }
+					is_french_colonial_claim = no
+				}
+				else_if = {
+					limit = { ROOT = { CAN_is_dominion = yes } }
+					NOT = { state = 730 }
 				}
 			}
 			modifier = {
-				add = 60
-				owner = { tag = CAN }
-				event_target:return_state = { state = 730 }
+				add = 100
+				is_claimed_by = ROOT
+				ROOT = {
+					NOT = { tag = CAN }
+					NOT = { original_tag = AST }
+					NOT = { original_tag = SAF }
+					NOT = { original_tag = WIF }
+					NOT = { original_tag = RAJ }
+				}
 			}
 		}
 		FROM = { country_event = nfa.194 }
@@ -4672,8 +4670,7 @@ country_event = {
 			}
 		}
 		remove_state_claim = 116
-		clr_country_flag = MLT_CONQ
-		116 = { clear_occupy_state = yes }
+		116 = { clear_occupy_state = yes } #Malta
 		FROM = {
 			add_opinion_modifier = { target = ROOT modifier = KR_pleased }
 			effect_tooltip = {

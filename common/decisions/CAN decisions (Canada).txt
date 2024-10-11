@@ -212,6 +212,7 @@ CAN_political_decisions = {
 
 	CAN_suppress_stlawrence = {
 		icon = oppression
+		desc = CAN_suppress_quebec_desc
 		allowed = { tag = CAN }
 
 		highlight_states = {
@@ -302,6 +303,7 @@ CAN_political_decisions = {
 
 	CAN_suppress_montreal = {
 		icon = oppression
+		desc = CAN_suppress_quebec_desc
 		allowed = { tag = CAN }
 
 		highlight_states = {
@@ -1535,7 +1537,7 @@ CAN_returning_home_decisions = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 1000
 			modifier = {
 				factor = 0
 				country_is_in_dangerous_war = yes
@@ -1549,6 +1551,7 @@ CAN_returning_home_decisions = {
 				FROM = {
 					original_tag = ENG
 					has_war_with_major = no
+					surrender_progress < 0.5
 				}
 				OR = {
 					NOT = { has_completed_focus = CAN_economic_recovery }
@@ -1562,43 +1565,52 @@ CAN_returning_home_decisions = {
 				}
 			}
 			modifier = {
-				factor = 0 #finish the Indian war first
-				is_ally_with = RAJ
-				OR = {
-					country_exists = HND
-					country_exists = PRF
+				factor = 0
+				FROM = {
+					original_tag = ENG
+					surrender_progress < 0.5
 				}
-			}
-			modifier = {
-				factor = 0 #help NEE unite America first
-				is_ally_with = NEE
 				OR = {
-					has_country_flag = CAN_supports_NEE
-					NEE = { has_country_flag = NEE_claimed_america }
+					#finish the Indian war first
+					AND = {
+						is_ally_with = RAJ
+						OR = {
+							country_exists = HND
+							country_exists = PRF
+						}
+					}
+					#help NEE unite America first
+					AND = {
+						is_ally_with = NEE
+						OR = {
+							has_country_flag = CAN_supports_NEE
+							NEE = { has_country_flag = NEE_claimed_america }
+						}
+						NOT = { has_country_flag = CAN_white_peaced_ACW }
+						NOT = { has_global_flag = USA_civil_war_over_flag }
+					}
+					#help USA unite America first
+					AND = {
+						has_country_flag = CAN_supports_USA
+						country_exists = USA
+						NOT = { has_country_flag = CAN_white_peaced_ACW }
+						NOT = { has_global_flag = USA_civil_war_over_flag }
+					}
+					#help PSA unite America first
+					AND = {
+						has_country_flag = CAN_supports_PSA
+						country_exists = PSA
+						NOT = { has_country_flag = CAN_white_peaced_ACW }
+						NOT = { has_global_flag = USA_civil_war_over_flag }
+					}
+					#help TEX unite America first
+					AND = {
+						has_country_flag = CAN_supports_TEX
+						country_exists = TEX
+						NOT = { has_country_flag = CAN_white_peaced_ACW }
+						NOT = { has_global_flag = USA_civil_war_over_flag }
+					}
 				}
-				NOT = { has_country_flag = CAN_white_peaced_ACW }
-				NOT = { has_global_flag = USA_civil_war_over_flag }
-			}
-			modifier = {
-				factor = 0 #help USA unite America first
-				has_country_flag = CAN_supports_USA
-				country_exists = USA
-				NOT = { has_country_flag = CAN_white_peaced_ACW }
-				NOT = { has_global_flag = USA_civil_war_over_flag }
-			}
-			modifier = {
-				factor = 0 #help PSA unite America first
-				has_country_flag = CAN_supports_PSA
-				country_exists = PSA
-				NOT = { has_country_flag = CAN_white_peaced_ACW }
-				NOT = { has_global_flag = USA_civil_war_over_flag }
-			}
-			modifier = {
-				factor = 0 #help TEX unite America first
-				has_country_flag = CAN_supports_TEX
-				country_exists = TEX
-				NOT = { has_country_flag = CAN_white_peaced_ACW }
-				NOT = { has_global_flag = USA_civil_war_over_flag }
 			}
 			modifier = {
 				factor = 100
@@ -1755,7 +1767,7 @@ CAN_returning_home_decisions = {
 		custom_cost_trigger = {
 			has_equipment = { infantry_equipment > 1999 }
 		}
-		custom_cost_text = 2000_infantry_equipment_1
+		custom_cost_text = 2000_guns
 		priority = 8
 		fire_only_once = yes
 
@@ -2054,17 +2066,18 @@ CAN_returning_home_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete CAN_seize_greenland target: [From.GetName]"
-			101 = { transfer_and_occupy_state = yes } #Coastal Greenland
-			926 = { transfer_and_occupy_state = yes } #Humboldt Glacier
-			if = {
-				limit = { 337 = { is_owned_by = FROM } }
-				337 = { transfer_and_occupy_state = yes } #Faeroe Islands
-			}
-			if = {
-				limit = { 100 = { is_owned_by = FROM } }
-				transfer_state = 100 #Iceland (just in case)
-			}
 			FROM = {
+				every_owned_state = {
+					limit = {
+						OR = {
+							state = 100 #Iceland
+							state = 101 #Greenland
+							state = 337 #Faroe Islands
+							state = 926 #Humboldt Glacier
+						}
+					}
+					transfer_state_to = ROOT
+				}
 				country_event = canada.231
 			}
 		}
@@ -2850,12 +2863,12 @@ CAN_iedc_decisions = {
 			}
 			custom_trigger_tooltip = {
 				tooltip = CAN_iedc_can_invest
-				set_temp_variable = { temp = iedc_civ_factories }
-				add_to_temp_variable = { temp = iedc_mil_factories }
-				add_to_temp_variable = { temp = iedc_nav_factories }
-				multiply_temp_variable = { temp = 10 }
-				subtract_from_temp_variable = { temp = ROOT.num_of_factories }
-				check_variable = { var = temp value = 0 compare = less_than_or_equals }
+				set_temp_variable = { CAN_factory_compare = iedc_civ_factories }
+				add_to_temp_variable = { CAN_factory_compare = iedc_mil_factories }
+				add_to_temp_variable = { CAN_factory_compare = iedc_nav_factories }
+				multiply_temp_variable = { CAN_factory_compare = 10 }
+				subtract_from_temp_variable = { CAN_factory_compare = num_of_controlled_factories }
+				check_variable = { CAN_factory_compare < 1 }
 			}
 		}
 		visible = {
@@ -2924,12 +2937,12 @@ CAN_iedc_decisions = {
 			}
 			custom_trigger_tooltip = {
 				tooltip = CAN_iedc_can_invest_FROM
-				set_temp_variable = { global.temp = FROM.iedc_civ_factories }
-				add_to_temp_variable = { global.temp = FROM.iedc_mil_factories }
-				add_to_temp_variable = { global.temp = FROM.iedc_nav_factories }
-				multiply_temp_variable = { global.temp = 10 }
-				subtract_from_temp_variable = { global.temp = FROM.num_of_factories }
-				check_variable = { var = global.temp value = 0 compare = less_than_or_equals }
+				set_temp_variable = { CAN_factory_compare = FROM.iedc_civ_factories }
+				add_to_temp_variable = { CAN_factory_compare = FROM.iedc_mil_factories }
+				add_to_temp_variable = { CAN_factory_compare = FROM.iedc_nav_factories }
+				multiply_temp_variable = { CAN_factory_compare = 10 }
+				subtract_from_temp_variable = { CAN_factory_compare = FROM.num_of_controlled_factories }
+				check_variable = { CAN_factory_compare < 1 }
 			}
 		}
 
@@ -3806,6 +3819,9 @@ CAN_american_civil_war_decisions = {
 
 	CAN_intervene_in_ACW_PSA = {
 		icon = generic_ignite_civil_war
+		name = CAN_intervene_in_ACW_USA
+		desc = CAN_intervene_in_ACW_USA_desc
+
 		available = {
 			has_completed_focus = CAN_crossing_the_border
 			controls_all_owned_states = yes
@@ -4113,6 +4129,9 @@ CAN_american_civil_war_decisions = {
 
 	CAN_intervene_in_ACW_AUS = {
 		icon = generic_ignite_civil_war
+		name = CAN_intervene_in_ACW_USA
+		desc = CAN_intervene_in_ACW_USA_desc
+
 		available = {
 			has_completed_focus = CAN_crossing_the_border
 			controls_all_owned_states = yes
@@ -4766,6 +4785,7 @@ CAN_new_england_decisions = {
 
 	CAN_nee_recruitment2 = {
 		icon = generic_agreement
+		desc = CAN_nee_recruitment1_desc
 		allowed = { always = no }
 
 		available = {
@@ -4813,6 +4833,8 @@ CAN_new_england_decisions = {
 
 	CAN_nee_recruitment3 = {
 		icon = generic_agreement
+		name = CAN_nee_recruitment2
+		desc = CAN_nee_recruitment1_desc
 		allowed = { always = no }
 
 		available = {

@@ -94,6 +94,7 @@ JAP_fading_sun = {
 		allowed = { always = no } #activated by japfor.229
 
 		available = {
+			hidden_trigger = { always = no } #handled by JAP_fading_sun_timer, the below is only for player information
 			KOR = { all_core_state = { owner = { has_full_control_of_state = PREV } } }
 			if = {
 				limit = {
@@ -139,7 +140,7 @@ JAP_fading_sun = {
 							any_owned_state = {
 								is_china_claim_area = yes
 								NOT = { state = 524 } #Taiwan
-								NOT = { state = 745 } #Kwantung
+								NOT = { state = 745 } #Dalian
 								is_controlled_by = ROOT
 							}
 						}
@@ -149,12 +150,18 @@ JAP_fading_sun = {
 		}
 
 		cancel_trigger = {
-			OR = {
-				NOT = { has_war_with = JAP }
-				JAP = { has_capitulated = yes }
-				JAP = { is_subject = yes }
-				JAP = { is_in_faction_but_not_leader = yes }
-				JAP = { surrender_progress > 0.15 }
+			hidden_trigger = { always = no } #handled by JAP_fading_sun_timer, the below is only for player information
+			JAP = {
+				OR = {
+					has_war = no
+					is_subject = yes
+					has_capitulated = yes
+					is_in_faction_but_not_leader = yes
+					if = {
+						limit = { is_ai = yes }
+						surrender_progress > 0.15
+					}
+				}
 			}
 		}
 
@@ -224,7 +231,7 @@ JAP_fading_sun = {
 							any_owned_state = {
 								is_china_claim_area = yes
 								NOT = { state = 524 } #Taiwan
-								NOT = { state = 745 } #Kwantung
+								NOT = { state = 745 } #Dalian
 								is_controlled_by = ROOT
 							}
 						}
@@ -280,6 +287,24 @@ JAP_fading_sun = {
 					}
 					country_event = japfor.230
 				}
+			}
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = global.china_tags_array
+						is_ai = no
+						has_war_with = JAP
+						OR = {
+							is_subject = no
+							overlord = { is_chinese_tag = yes }
+						}
+						OR = {
+							is_in_faction = no
+							faction_leader = { is_chinese_tag = yes }
+						}
+					}
+				}
+				set_global_flag = walking_on_the_sun_achievement_condition
 			}
 		}
 	}
@@ -762,7 +787,7 @@ JAP_influence_china = {
 		cancel_trigger = {
 			FROM = { has_country_flag = JAP_no_training_help }
 		}
-		custom_cost_text = army_xp_more_than_10
+		custom_cost_text = army_xp_10
 		ai_will_do = { factor = 1 }
 		modifier = {
 			army_org_factor = -0.05
@@ -1330,12 +1355,18 @@ JAP_influence_china = {
 				has_wargoal_against = FROM
 				has_war_with = FROM
 			}
+			FROM = {
+				exists = yes
+				is_working_with_JAP = no
+			}
+			NOT = { has_global_flag = JAP_defeated_by_china }
 		}
 		cost = 35
 		days_remove = 30
-		fire_only_once = yes
+		fire_only_once = no
 		war_with_target_on_remove = yes
 		cancel_if_not_visible = yes
+		target_non_existing = yes
 		ai_will_do = {
 			factor = 1
 			modifier = {
@@ -2571,6 +2602,9 @@ JAP_economy_cat = {
 				remove_idea = JAP_mass_shipbuilding_2
 				add_idea = JAP_mass_shipbuilding_3
 			}
+			hidden_effect = {
+				set_country_flag = perfect_circle_achievement_condition
+			}
 		}
 		timeout_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision timeout JAP_complete_the_fourth_circle_plan"
@@ -2642,7 +2676,7 @@ JAP_co_prosperity_decisions = {
 		}
 
 		visible = {
-			is_faction_leader = yes
+			is_economic_sphere_leader = yes
 			FROM = { japan_tag_can_be_invited_to_economic_sphere = yes }
 		}
 
@@ -2656,7 +2690,7 @@ JAP_co_prosperity_decisions = {
 		target_array = global.indian_tags_array
 		target_root_trigger = { has_completed_focus = JAP_osaka_conference }
 		target_trigger = {
-			is_faction_leader = yes
+			is_economic_sphere_leader = yes
 			FROM = { japan_tag_can_be_invited_to_economic_sphere = yes }
 		}
 
@@ -2732,9 +2766,9 @@ JAP_co_prosperity_decisions = {
 		}
 
 		visible = {
+			is_leader_of_economic_sphere_of_FROM = yes
 			FROM = {
 				NOT = { has_idea = JAP_member_integration_3 }
-				has_socialist_government = no
 				is_subject = no
 			}
 		}
@@ -2743,12 +2777,12 @@ JAP_co_prosperity_decisions = {
 		fire_only_once = no
 
 		priority = 3
-		target_array = global.asian_economic_sphere
+		target_array = economic_sphere:members
 		target_root_trigger = { has_completed_focus = JAP_integrate_asian_economies }
 		target_trigger = {
+			is_leader_of_economic_sphere_of_FROM = yes
 			FROM = {
 				NOT = { has_idea = JAP_member_integration_3 }
-				has_socialist_government = no
 				is_subject = no
 			}
 		}
@@ -2798,10 +2832,10 @@ JAP_co_prosperity_decisions = {
 		}
 
 		visible = {
+			is_leader_of_economic_sphere_of_FROM = yes
 			FROM = {
 				has_idea = JAP_member_integration_3
 				is_subject = no
-				has_socialist_government = no
 			}
 		}
 
@@ -2809,13 +2843,13 @@ JAP_co_prosperity_decisions = {
 		fire_only_once = no
 
 		priority = 4
-		target_array = global.asian_economic_sphere
+		target_array = economic_sphere:members
 		target_root_trigger = { has_completed_focus = JAP_integrate_asian_economies }
 		target_trigger = {
+			is_leader_of_economic_sphere_of_FROM = yes
 			FROM = {
 				has_idea = JAP_member_integration_3
 				is_subject = no
-				has_socialist_government = no
 			}
 		}
 
@@ -2861,23 +2895,19 @@ JAP_co_prosperity_decisions = {
 		}
 
 		visible = {
-			FROM = {
-				num_of_naval_factories > 0
-				has_socialist_government = no
-			}
+			is_leader_of_economic_sphere_of_FROM = yes
+			FROM = { num_of_naval_factories > 0 }
 		}
 
 		cost = 50
 		fire_only_once = yes
 
 		priority = 1
-		target_array = global.asian_economic_sphere
+		target_array = economic_sphere:members
 		target_root_trigger = { has_completed_focus = JAP_copro_development_plan }
 		target_trigger = {
-			FROM = {
-				num_of_naval_factories > 0
-				has_socialist_government = no
-			}
+			is_leader_of_economic_sphere_of_FROM = yes
+			FROM = { num_of_naval_factories > 0 }
 		}
 
 		complete_effect = {
@@ -2922,23 +2952,19 @@ JAP_co_prosperity_decisions = {
 		}
 
 		visible = {
-			FROM = {
-				num_of_naval_factories > 0
-				has_socialist_government = no
-			}
+			is_leader_of_economic_sphere_of_FROM = yes
+			FROM = { num_of_naval_factories > 0 }
 		}
 
 		cost = 20
 		fire_only_once = yes
 
 		priority = 1
-		target_array = global.asian_economic_sphere
+		target_array = economic_sphere:members
 		target_root_trigger = { has_completed_focus = JAP_naval_engineering_assistance }
 		target_trigger = {
-			FROM = {
-				num_of_naval_factories > 0
-				has_socialist_government = no
-			}
+			is_leader_of_economic_sphere_of_FROM = yes
+			FROM = { num_of_naval_factories > 0 }
 		}
 
 		complete_effect = {
@@ -2979,23 +3005,19 @@ JAP_co_prosperity_decisions = {
 		}
 
 		visible = {
-			FROM = {
-				num_of_naval_factories > 0
-				has_socialist_government = no
-			}
+			is_leader_of_economic_sphere_of_FROM = yes
+			FROM = { num_of_naval_factories > 0 }
 		}
 
 		cost = 20
 		fire_only_once = yes
 
 		priority = 1
-		target_array = global.asian_economic_sphere
+		target_array = economic_sphere:members
 		target_root_trigger = { has_completed_focus = JAP_prosperity_ships }
 		target_trigger = {
-			FROM = {
-				num_of_naval_factories > 0
-				has_socialist_government = no
-			}
+			is_leader_of_economic_sphere_of_FROM = yes
+			FROM = { num_of_naval_factories > 0 }
 		}
 
 		complete_effect = {
@@ -3034,10 +3056,10 @@ JAP_co_prosperity_decisions = {
 		}
 
 		visible = {
+			is_leader_of_economic_sphere_of_FROM = yes
 			FROM = {
 				has_country_flag = JAP_invest_docks
 				NOT = { has_country_flag = JAP_refused_dockyards }
-				has_socialist_government = no
 			}
 		}
 
@@ -3045,13 +3067,13 @@ JAP_co_prosperity_decisions = {
 		cost = 50
 
 		priority = 1
-		target_array = global.asian_economic_sphere
+		target_array = economic_sphere:members
 		target_root_trigger = { has_completed_focus = JAP_unified_production }
 		target_trigger = {
+			is_leader_of_economic_sphere_of_FROM = yes
 			FROM = {
 				has_country_flag = JAP_invest_docks
 				NOT = { has_country_flag = JAP_refused_dockyards }
-				has_socialist_government = no
 			}
 		}
 
@@ -3073,7 +3095,7 @@ JAP_co_prosperity_decisions = {
 		}
 
 		remove_trigger = {
-			NOT = { FROM = { has_country_flag = JAP_economic_sphere_member } }
+			is_in_same_economic_sphere_as_FROM = no
 		}
 
 		remove_effect = {
@@ -3774,13 +3796,10 @@ JAP_co_prosperity_member_decisions = {
 		target_trigger = {
 			OR = {
 				is_in_faction_with = FROM
-				has_country_flag = JAP_economic_sphere_member
+				is_in_economic_sphere_led_by_FROM = yes
 			}
 			NOT = { is_in_tech_sharing_group = japan_research }
-			FROM = {
-				is_in_tech_sharing_group = japan_research
-				is_faction_leader = yes
-			}
+			FROM = { is_in_tech_sharing_group = japan_research }
 		}
 
 		fire_only_once = yes
@@ -3834,9 +3853,8 @@ JAP_co_prosperity_member_decisions = {
 		target_trigger = {
 			OR = {
 				is_in_faction_with = FROM
-				has_country_flag = JAP_economic_sphere_member
+				is_in_economic_sphere_led_by_FROM = yes
 			}
-			FROM = { is_faction_leader = yes }
 			NOT = { has_war_with = FROM }
 		}
 
@@ -3889,19 +3907,16 @@ JAP_co_prosperity_member_decisions = {
 		icon = generic_break_treaty
 
 		allowed = {
-			NOT = { tag = JAP }
+			NOT = { original_tag = JAP }
 		}
 
 		available = {
 			is_subject = no
-			if = {
-				limit = { has_war = yes }
-				controls_all_owned_states = yes
-			}
+			controls_all_owned_states = yes
 		}
 
 		visible = {
-			has_country_flag = JAP_economic_sphere_member
+			is_in_economic_sphere_led_by_FROM = yes
 			NOT = {
 				has_idea = JAP_member_integration_1
 				has_idea = JAP_member_integration_2
@@ -3909,11 +3924,16 @@ JAP_co_prosperity_member_decisions = {
 			}
 		}
 
+		targets = { JAP }
+		target_trigger = {
+			is_in_economic_sphere_led_by_FROM = yes
+		}
+
 		cost = 50
 		fire_only_once = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_withdraw_from_sphere"
+			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_withdraw_from_sphere target: [From.GetName]"
 			custom_effect_tooltip = JAP_withdraws_from_sphere
 			hidden_effect = { country_event = japfor.404 }
 			JAP = {
@@ -3930,19 +3950,16 @@ JAP_co_prosperity_member_decisions = {
 		icon = generic_break_treaty
 
 		allowed = {
-			NOT = { tag = JAP }
+			NOT = { original_tag = JAP }
 		}
 
 		available = {
 			is_subject = no
-			if = {
-				limit = { has_war = yes }
-				controls_all_owned_states = yes
-			}
+			controls_all_owned_states = yes
 		}
 
 		visible = {
-			has_country_flag = JAP_economic_sphere_member
+			is_in_economic_sphere_led_by_FROM = yes
 			OR = {
 				has_idea = JAP_member_integration_1
 				has_idea = JAP_member_integration_2
@@ -3950,11 +3967,16 @@ JAP_co_prosperity_member_decisions = {
 			}
 		}
 
+		targets = { JAP }
+		target_trigger = {
+			is_in_economic_sphere_led_by_FROM = yes
+		}
+
 		cost = JAP_investment_buyout?100
 		fire_only_once = yes
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_nationalize_japanese_investments"
+			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_nationalize_japanese_investments target: [From.GetName]"
 			custom_effect_tooltip = JAP_withdraws_from_sphere
 			hidden_effect = { country_event = japfor.404 }
 			JAP = {
@@ -3972,12 +3994,14 @@ JAP_foreign_policy_decisions = {
 		icon = generic_tank
 		allowed = { always = no }
 
+		available = {
+			NOT = { has_non_aggression_pact_with = FROM }
+			NOT = { has_guaranteed = FROM }
+		}
+
 		visible = {
 			can_declare_war_on = FROM
-			NOT = {
-				has_country_flag = JAP_has_threatened_philippines
-				FROM = { has_country_flag = JAP_economic_sphere_member }
-			}
+			FROM = { is_in_same_economic_sphere_as_ROOT = no }
 		}
 
 		cost = 0
@@ -4025,9 +4049,14 @@ JAP_foreign_policy_decisions = {
 		icon = generic_tank
 		allowed = { always = no }
 
+		available = {
+			NOT = { has_non_aggression_pact_with = FROM }
+			NOT = { has_guaranteed = FROM }
+		}
+
 		visible = {
 			can_declare_war_on = FROM
-			NOT = { FROM = { has_country_flag = JAP_economic_sphere_member } }
+			FROM = { is_in_same_economic_sphere_as_ROOT = no }
 		}
 
 		cost = 25
@@ -4101,9 +4130,14 @@ JAP_foreign_policy_decisions = {
 		icon = generic_tank
 		allowed = { always = no }
 
+		available = {
+			NOT = { has_non_aggression_pact_with = FROM }
+			NOT = { has_guaranteed = FROM }
+		}
+
 		visible = {
 			can_declare_war_on = FROM
-			NOT = { FROM = { has_country_flag = JAP_economic_sphere_member } }
+			FROM = { is_in_same_economic_sphere_as_ROOT = no }
 		}
 
 		cost = 50
@@ -4172,11 +4206,13 @@ JAP_foreign_policy_decisions = {
 				any_allied_country = { is_neighbor_of = FROM }
 				FROM = { any_owned_state = { is_coastal = yes } }
 			}
+			NOT = { has_non_aggression_pact_with = FROM }
+			NOT = { has_guaranteed = FROM }
 		}
 
 		visible = {
 			can_declare_war_on = FROM
-			NOT = { FROM = { has_country_flag = JAP_economic_sphere_member } }
+			FROM = { is_in_same_economic_sphere_as_ROOT = no }
 		}
 
 		cost = 50
@@ -4246,12 +4282,14 @@ JAP_foreign_policy_decisions = {
 				327 = { is_controlled_by_ROOT_or_ally = yes } #Luzon
 				1020 = { is_controlled_by_ROOT_or_ally = yes } #Batavia
 			}
+			NOT = { has_non_aggression_pact_with = FROM }
+			NOT = { has_guaranteed = FROM }
 		}
 
 		visible = {
 			can_declare_war_on = FROM
 			FROM = {
-				NOT = { has_country_flag = JAP_economic_sphere_member }
+				is_in_same_economic_sphere_as_ROOT = no
 				NOT = { has_country_flag = AST_has_ties_with_japan }
 			}
 		}
@@ -4298,145 +4336,50 @@ JAP_foreign_policy_decisions = {
 		}
 	}
 
-	JAP_invade_manchuria = {
-		icon = generic_tank
-		allowed = { always = no }
-
-		visible = {
-			FROM = {
-				exists = yes
-				NOT = {
-					has_war_with = JAP
-					has_capitulated = yes
-				}
-			}
-		}
-
-		cost = 0
-		days_remove = 30
-		fire_only_once = yes
-		war_with_target_on_remove = yes
-		cancel_if_not_visible = yes
-
-		ai_will_do = {
-			factor = 1000
-			modifier = {
-				factor = 0
-				strength_ratio = { tag = FROM ratio < 1.0 }
-			}
-			modifier = {
-				factor = 0.1
-				has_war = yes
-				any_enemy_country = { is_actual_major = yes }
-			}
-		}
-
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel JAP_invade_manchuria target: [From.GetName]"
-			clear_decision_attack_AI = yes
-		}
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete JAP_invade_manchuria target: [From.GetName]"
-			add_war_support = 0.05
-			setup_decision_attack_AI = yes
-			FROM = { incoming_war_notification_effect = yes }
-		}
-		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove JAP_invade_manchuria target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			clear_JAP_FNG_hostile_AI = yes
-			if = {
-				limit = { is_in_faction_with = FROM }
-				remove_from_faction = FROM
-			}
-			if = {
-				limit = { has_guaranteed = FROM }
-				diplomatic_relation = {
-					country = FROM
-					relation = guarantee
-					active = no
-				}
-			}
-			if = {
-				limit = { has_non_aggression_pact_with = FROM }
-				diplomatic_relation = {
-					country = FROM
-					relation = non_aggression_pact
-					active = no
-				}
-			}
-			if = {
-				limit = { has_military_access_to = FROM }
-				diplomatic_relation = {
-					country = FROM
-					relation = military_access
-					active = no
-				}
-			}
-			if = {
-				limit = { gives_military_access_to = FROM }
-				FROM = {
-					diplomatic_relation = {
-						country = ROOT
-						relation = military_access
-						active = no
-					}
-				}
-			}
-			if = {
-				limit = { FROM = { is_subject_of = ROOT } }
-				set_autonomy = {
-					target = FROM
-					autonomy_state = autonomy_free
-				}
-			}
-			if = {
-				limit = { is_in_faction_with = FROM }
-				remove_from_faction = FROM
-			}
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
-			}
-			hidden_effect = {
-				FROM = {
-					country_event = fngconf.36
-				}
-			}
-		}
-	}
-
 	JAP_demand_hawaii = {
 		icon = GFX_decision_jap_pacific_guardian
 
 		allowed = { tag = JAP }
 
 		available = {
+			FROM = { controls_state = 629 } #Hawaii
+			NOT = { has_non_aggression_pact_with = FROM }
+			NOT = { has_guaranteed = FROM }
+		}
+
+		visible = {
+			FROM = {
+				owns_state = 629 #Hawaii
+				is_american_tag = yes
+			}
 			can_declare_war_on = FROM
 		}
 
-		targets = { CSA NEE PSA TEX USA }
+		cancel_trigger = {
+			OR = {
+				NOT = { 629 = { is_owned_and_controlled_by = FROM } } #Hawaii
+				NOT = { can_declare_war_on = FROM }
+				has_non_aggression_pact_with = FROM
+				has_guaranteed = FROM
+			}
+		}
+
+		targets = { 629.OWNER }
+		target_root_trigger = {
+			629 = { is_claimed_by = ROOT } #Hawaii
+			has_global_flag = USA_civil_war_over_flag
+		}
 		target_trigger = {
 			FROM = {
-				is_american_tag = yes
-				is_ally_of_ROOT = no
 				owns_state = 629 #Hawaii
+				is_american_tag = yes
 			}
-			ROOT = { has_country_flag = JAP_has_claimed_pacific }
-			has_global_flag = USA_civil_war_over_flag
+			can_declare_war_on = FROM
 		}
 
 		cost = 35
 		fire_only_once = yes
 		days_remove = 15
-		cancel_trigger = {
-			FROM = {
-				OR = {
-					has_war_with = JAP
-					is_ally_with = JAP
-				}
-			}
-		}
 
 		ai_will_do = {
 			factor = 10

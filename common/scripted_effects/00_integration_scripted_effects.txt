@@ -1,190 +1,78 @@
 enable_country_integration_50_compliance = {
-	if = {
-		limit = { NOT = { check_variable = { PREV.can_integrate_@THIS = 50 } } }
-		set_variable = { PREV.can_integrate_@THIS = 50 }
-		if = {
-			limit = { PREV = { core_compliance = { occupied_country_tag = PREV value > 50 } } }
-			set_temp_variable = { target = THIS }
-			PREV = { add_country_cores_upon_reaching_compliance_threshold = yes }
-		}
-		else = {
-			hidden_effect = { start_country_integration_resistance = yes }
-			force_update_map_mode = { mapmode = cores_claims_map_mode }
-		}
-	}
+	set_temp_variable = { integration_threshold = 50 }
+	enable_country_integration = yes
 }
 
 enable_country_integration_80_compliance = {
-	if = {
-		limit = { NOT = { check_variable = { PREV.can_integrate_@THIS = 80 } } }
-		set_variable = { PREV.can_integrate_@THIS = 80 }
-		if = {
-			limit = { PREV = { core_compliance = { occupied_country_tag = PREV value > 80 } } }
-			set_temp_variable = { target = THIS }
-			PREV = { add_country_cores_upon_reaching_compliance_threshold = yes }
-		}
-		else = {
-			hidden_effect = { start_country_integration_resistance = yes }
-			force_update_map_mode = { mapmode = cores_claims_map_mode }
-		}
-	}
+	set_temp_variable = { integration_threshold = 80 }
+	enable_country_integration = yes
 }
 
-disable_country_integration = {
-	if = {
-		limit = { has_variable = PREV.can_integrate_@THIS }
-		clear_variable = PREV.can_integrate_@THIS
-		hidden_effect = {
+enable_country_integration = {
+	effect_tooltip = {
+		every_core_state = {
+			limit = {
+				is_owned_and_controlled_by = PREV.PREV
+				compliance > var:integration_threshold?50
+				NOT = { check_variable = { can_integrate_@PREV.PREV = integration_threshold?50 } }
+				NOT = { is_core_of = PREV.PREV }
+			}
+			add_state_core_upon_reaching_compliance_threshold = yes
+		}
+		every_core_state = {
+			limit = {
+				NOT = { check_variable = { can_integrate_@PREV.PREV = integration_threshold?50 } }
+				NOT = { is_core_of = PREV.PREV }
+				OR = {
+					NOT = { is_owned_and_controlled_by = PREV.PREV }
+					NOT = { compliance > var:integration_threshold?50 }
+				}
+			}
+			state_integration_tooltip = yes
+		}
+	}
+	hidden_effect = {
+		every_core_state = {
+			limit = { NOT = { check_variable = { can_integrate_@PREV.PREV = integration_threshold?50 } } }
+			set_variable = { can_integrate_@PREV.PREV = integration_threshold?50 }
 			if = {
-				limit = { PREV = { any_occupied_country = { tag = PREV.PREV } } }
-				set_occupation_law_where_available = default_law
+				limit = {
+					is_owned_and_controlled_by = PREV.PREV
+					compliance > var:integration_threshold?50
+				}
+				add_state_core_upon_reaching_compliance_threshold = yes
+			}
+			else = {
+				if = {
+					limit = {
+						is_controlled_by = PREV.PREV
+						NOT = { is_core_of = PREV.PREV }
+					}
+					start_state_integration_resistance = yes
+				}
 			}
 		}
 		force_update_map_mode = { mapmode = cores_claims_map_mode }
 	}
 }
 
-enable_state_integration_50_compliance = {
-	if = {
-		limit = { has_variable = integrator_target }
-		if = {
-			limit = { NOT = { check_variable = { can_integrate_@var:integrator_target = 50 } } }
-			set_variable = { can_integrate_@var:integrator_target = 50 }
-			if = {
-				limit = {
-					is_controlled_by = var:integrator_target
-					compliance > 50
-				}
-				add_core_of = var:integrator_target
+disable_country_integration = {
+	effect_tooltip = {
+		every_core_state = {
+			limit = {
+				has_variable = can_integrate_@PREV.PREV
+				is_controlled_by = PREV.PREV
+				NOT = { is_core_of = PREV.PREV }
 			}
-			else = {
-				if = {
-					limit = { NOT = { is_core_of = var:integrator_target } }
-					enable_state_integration_50_tooltip = yes
-				}
-				hidden_effect = {
-					if = {
-						limit = {
-							is_controlled_by = var:integrator_target
-							NOT = { is_core_of = var:integrator_target }
-						}
-						start_state_integration_resistance = yes
-					}
-				}
-				force_update_map_mode = { mapmode = cores_claims_map_mode }
-			}
+			custom_effect_tooltip = state_integration_disabled_tooltip
 		}
 	}
-	else = {
-		if = {
-			limit = { NOT = { check_variable = { can_integrate_@PREV = 50 } } }
-			set_variable = { can_integrate_@PREV = 50 }
+	hidden_effect = {
+		every_core_state = {
+			limit = { has_variable = can_integrate_@PREV.PREV }
+			clear_variable = PREV.can_integrate_@PREV.PREV
 			if = {
-				limit = {
-					is_controlled_by = PREV
-					compliance > 50
-				}
-				add_core_of = PREV
-			}
-			else = {
-				if = {
-					limit = { NOT = { is_core_of = PREV } }
-					enable_state_integration_50_tooltip = yes
-				}
-				hidden_effect = {
-					if = {
-						limit = {
-							is_controlled_by = PREV
-							NOT = { is_core_of = PREV }
-						}
-						start_state_integration_resistance = yes
-					}
-				}
-				force_update_map_mode = { mapmode = cores_claims_map_mode }
-			}
-		}
-	}
-}
-
-enable_state_integration_50_tooltip = {
-	custom_effect_tooltip = state_integration_at_fifty_compliance
-	custom_effect_tooltip = state_integration_law_unlocked
-}
-
-enable_state_integration_80_compliance = {
-	if = {
-		limit = { has_variable = integrator_target }
-		if = {
-			limit = { NOT = { check_variable = { can_integrate_@var:integrator_target = 80 } } }
-			set_variable = { can_integrate_@var:integrator_target = 80 }
-			if = {
-				limit = {
-					is_controlled_by = var:integrator_target
-					compliance > 80
-				}
-				add_core_of = var:integrator_target
-			}
-			else = {
-				if = {
-					limit = { NOT = { is_core_of = var:integrator_target } }
-					enable_state_integration_80_tooltip = yes
-				}
-				hidden_effect = {
-					if = {
-						limit = {
-							is_controlled_by = var:integrator_target
-							NOT = { is_core_of = var:integrator_target }
-						}
-						start_state_integration_resistance = yes
-					}
-				}
-				force_update_map_mode = { mapmode = cores_claims_map_mode }
-			}
-		}
-	}
-	else = {
-		if = {
-			limit = { NOT = { check_variable = { can_integrate_@PREV = 80 } } }
-			set_variable = { can_integrate_@PREV = 80 }
-			if = {
-				limit = {
-					is_controlled_by = PREV
-					compliance > 80
-				}
-				add_core_of = PREV
-			}
-			else = {
-				if = {
-					limit = { NOT = { is_core_of = PREV } }
-					enable_state_integration_80_tooltip = yes
-				}
-				hidden_effect = {
-					if = {
-						limit = {
-							is_controlled_by = PREV
-							NOT = { is_core_of = PREV }
-						}
-						start_state_integration_resistance = yes
-					}
-				}
-				force_update_map_mode = { mapmode = cores_claims_map_mode }
-			}
-		}
-	}
-}
-
-enable_state_integration_80_tooltip = {
-	custom_effect_tooltip = state_integration_at_eighty_compliance
-	custom_effect_tooltip = state_integration_law_unlocked
-}
-
-disable_state_integration = {
-	if = {
-		limit = { has_variable = can_integrate_@PREV }
-		clear_variable = can_integrate_@PREV
-		hidden_effect = {
-			if = {
-				limit = { is_controlled_by = PREV }
+				limit = { is_controlled_by = PREV.PREV }
 				clear_state_integration_resistance = yes
 			}
 		}
@@ -192,17 +80,82 @@ disable_state_integration = {
 	}
 }
 
-#requires a target temp variable
+enable_state_integration_50_compliance = {
+	set_temp_variable = { integration_threshold = 50 }
+	enable_state_integration = yes
+}
+
+enable_state_integration_80_compliance = {
+	set_temp_variable = { integration_threshold = 80 }
+	enable_state_integration = yes
+}
+
+enable_state_integration = {
+	if = {
+		limit = { NOT = { check_variable = { can_integrate_@PREV = integration_threshold?50 } } }
+		set_variable = { can_integrate_@PREV = integration_threshold?50 }
+		if = {
+			limit = {
+				is_owned_and_controlled_by = PREV
+				compliance > var:integration_threshold?50
+			}
+			add_state_core_upon_reaching_compliance_threshold = yes
+		}
+		else = {
+			if = {
+				limit = { NOT = { is_core_of = PREV } }
+				state_integration_tooltip = yes
+			}
+			hidden_effect = {
+				if = {
+					limit = {
+						is_controlled_by = PREV
+						NOT = { is_core_of = PREV }
+					}
+					start_state_integration_resistance = yes
+				}
+				force_update_map_mode = { mapmode = cores_claims_map_mode }
+			}
+		}
+	}
+}
+
+disable_state_integration = {
+	if = {
+		limit = { has_variable = can_integrate_@PREV }
+		clear_variable = can_integrate_@PREV
+		if = {
+			limit = { NOT = { is_core_of = PREV } }
+			custom_effect_tooltip = state_integration_disabled_tooltip
+		}
+		hidden_effect = {
+			if = {
+				limit = { is_controlled_by = PREV }
+				clear_state_integration_resistance = yes
+			}
+			force_update_map_mode = { mapmode = cores_claims_map_mode }
+		}
+	}
+}
+
+enable_state_integration_50_tooltip = {
+	set_temp_variable = { integration_threshold = 50 }
+	state_integration_tooltip = yes
+}
+
+enable_state_integration_80_tooltip = {
+	set_temp_variable = { integration_threshold = 80 }
+	state_integration_tooltip = yes
+}
+
+state_integration_tooltip = {
+	custom_effect_tooltip = state_integration_enabled_tooltip
+	custom_effect_tooltip = state_integration_law_unlocked
+}
+
+#requires a temp variable target
 copy_integration_of_TARGET = {
 	effect_tooltip = {
-		every_possible_country = {
-			limit = { check_variable = { target:can_integrate_@THIS = 80 } }
-			enable_state_integration_80_tooltip = yes
-		}
-		every_possible_country = {
-			limit = { check_variable = { target:can_integrate_@THIS = 50 } }
-			enable_state_integration_50_tooltip = yes
-		}
 		every_state = {
 			limit = { check_variable = { can_integrate_@var:target = 80 } }
 			enable_state_integration_80_compliance = yes
@@ -213,36 +166,27 @@ copy_integration_of_TARGET = {
 		}
 	}
 	hidden_effect = {
-		every_possible_country = {
-			limit = {
-				is_dynamic_country = no
-				has_variable = target:can_integrate_@THIS
-			}
-			if = {
-				limit = { check_variable = { target:can_integrate_@THIS = 80 } }
-				enable_country_integration_80_compliance = yes
-			}
-			else = {
-				enable_country_integration_50_compliance = yes
-			}
-		}
 		every_state = {
 			limit = { has_variable = can_integrate_@var:target }
-			if = {
-				limit = { check_variable = { can_integrate_@var:target = 80 } }
-				enable_state_integration_80_compliance = yes
-			}
-			else = {
-				enable_state_integration_50_compliance = yes
-			}
+			set_temp_variable = { integration_threshold = can_integrate_@var:target }
+			enable_state_integration = yes
 		}
 	}
 }
 
 add_state_core_upon_reaching_compliance_threshold = {
-	add_core_of = FROM
+	add_core_of = var:controller
 	hidden_effect = {
-		remove_claim_by = FROM
+		every_neighbor_state = {
+			limit = {
+				impassable = yes
+				has_variable = paired_impassable
+				var:paired_impassable = { is_core_of = PREV.controller }
+			}
+			add_core_of = var:PREV.controller
+			remove_claim_by = var:PREV.controller
+		}
+		remove_claim_by = var:controller
 
 		#disable resistance if set
 		force_enable_resistance = { occupied = XXA clear = yes }
@@ -270,64 +214,15 @@ add_state_core_upon_reaching_compliance_threshold = {
 		#fire notification if player
 		if = {
 			limit = {
-				FROM = { is_ai = no }
-				NOT = { is_in_array = { FROM.state_integration_alerts = THIS } }
+				var:controller = { is_ai = no }
+				NOT = { is_in_array = { controller:state_integration_alerts = THIS } }
 			}
-			set_variable = { FROM.integration_progressbar_value_@THIS = -317 }
-			set_variable = { FROM.integration_alert_timer_@THIS = 0 }
-			add_to_array = { FROM.state_integration_alerts = THIS }
+			set_variable = { controller:integration_progressbar_value_@THIS = -317 }
+			set_variable = { controller:integration_alert_timer_@THIS = 0 }
+			add_to_array = { controller:state_integration_alerts = THIS }
 			save_event_target_as = integrated_state
-			FROM = { scoped_sound_effect = coring_sfx }
-			state_event = { id = generic_events.40 hours = 1 trigger_for = FROM }
-			set_variable_to_random = global.kaiserreich_alerts_dirty
-		}
-
-		#update mapmode
-		force_update_map_mode = { mapmode = cores_claims_map_mode }
-	}
-}
-
-add_country_cores_upon_reaching_compliance_threshold = {
-	every_controlled_state = {
-		limit = {
-			OR = {
-				is_core_of = var:target
-				AND = {
-					has_resistance = yes
-					occupied_country_tag = var:target
-				}
-			}
-			NOT = { is_core_of = ROOT }
-			core_of_FROM_can_be_integrated_by_ROOT = yes
-		}
-		add_core_of = ROOT
-		hidden_effect = { remove_claim_by = ROOT }
-		flag_specific_integrated_states = yes
-	}
-	hidden_effect = {
-		#remove all cores of FROM, unless they're the last core of the state or the owner needs the core for integration
-		if = {
-			limit = {
-				NOT = { country_exists = var:target }
-				var:target = { remove_cores_of_tag_if_non_existent = yes }
-			}
-			var:target = { clear_cores_of_tag_if_possible = yes }
-		}
-
-		#fire notification if player
-		if = {
-			limit = {
-				ROOT = { is_ai = no }
-				NOT = { is_in_array = { ROOT.country_integration_alerts = target } }
-			}
-			set_variable = { integration_progressbar_value_@var:target = -317 }
-			set_variable = { integration_alert_timer_@var:target = 0 }
-			add_to_array = { ROOT.country_integration_alerts = target }
-			var:target = {
-				save_event_target_as = integrated_country
-				country_event = generic_events.45
-			}
-			ROOT = { scoped_sound_effect = coring_sfx }
+			var:controller = { scoped_sound_effect = coring_sfx }
+			state_event = { id = generic_events.40 hours = 1 trigger_for = controller }
 			set_variable_to_random = global.kaiserreich_alerts_dirty
 		}
 
@@ -339,137 +234,127 @@ add_country_cores_upon_reaching_compliance_threshold = {
 	}
 }
 
-flag_specific_integrated_states = {
-	if = {
-		limit = { state = 463 } #Alaska
-		save_event_target_as = USA_cored_alaska
-	}
-	else_if = {
-		limit = { state = 950 } #Inhambane & Gaza
-		save_event_target_as = SAF_cored_lourenco_marques
-	}
-}
-
 fire_country_specific_integration_content = {
 	if = {
-		limit = { original_tag = ANQ }
-		country_event = { id = anq.181 days = 1 }
-	}
-	if = {
-		limit = { original_tag = RUS }
-		country_event = { id = rusfor.1273 days = 150 }
-	}
-	if = {
-		limit = { original_tag = SAF }
-		if = {
-			limit = { var:target = { original_tag = NMB } }
-			country_event = { id = saf.314 days = 90 random_days = 30 }
+		limit = {
+			state = 463 #Alaska
+			controller = { USA_has_america_cosmetic_tag = yes }
 		}
-		else_if = {
-			limit = { has_event_target = SAF_cored_lourenco_marques }
-			950 = { set_state_name = STATE_950_SOUTH_AFRICAN }
-			country_event = { id = saf.313 days = 90 random_days = 30 }
-		}
+		controller = { country_event = ustates.153 } #Alaska statehood
 	}
 	else_if = {
 		limit = {
-			OR = {
-				original_tag = USA
-				original_tag = PSA
-			}
+			state = 629 #Hawaii
+			controller = { USA_has_america_cosmetic_tag = yes }
 		}
-		if = {
-			limit = { var:target = { original_tag = PUE } }
-			country_event = ustates.155 #Puerto Rico statehood
+		controller = { country_event = ustates.154 } #Hawaii statehood
+	}
+	else_if = {
+		limit = {
+			state = 686 #Puerto Rico
+			controller = { USA_has_america_cosmetic_tag = yes }
 		}
-		else_if = {
-			limit = { var:target = { original_tag = HAW } }
-			country_event = ustates.154 #Hawaii statehood
+		controller = { country_event = ustates.155 } #Puerto Rico statehood
+	}
+	else_if = {
+		limit = {
+			state = 541 #Damaraland
+			controller = { original_tag = SAF }
 		}
-		else_if = {
-			limit = { has_event_target = USA_cored_alaska }
-			country_event = ustates.153 #Alaska statehood
+		controller = { country_event = { id = saf.314 days = 90 random_days = 30 } }
+	}
+	else_if = {
+		limit = {
+			state = 950 #Lourenço Marques
+			controller = { original_tag = SAF }
 		}
+		controller = { country_event = { id = saf.313 days = 90 random_days = 30 } }
+	}
+	else_if = {
+		limit = { controller = { original_tag = ANQ } }
+		controller = { country_event = { id = anq.181 days = 1 } }
+	}
+	else_if = {
+		limit = { controller = { original_tag = RUS } }
+		controller = { country_event = { id = rusfor.1273 days = 150 } }
 	}
 }
 
 clear_cores_of_tag_if_possible = {
-	every_core_state = {
-		limit = {
-			check_variable = { core_countries^num > 1 } #is not the state's last core
-			if = {
-				limit = { PREV = { is_american_tag = yes } }
-				any_country_with_core = {
-					NOT = { tag = PREV.PREV }
-					is_american_tag = yes
-				}
-			}
-			else_if = {
-				limit = { PREV = { is_italian_tag = yes } }
-				any_country_with_core = {
-					NOT = { tag = PREV.PREV }
-					is_italian_tag = yes
-				}
-			}
-			else_if = {
-				limit = { PREV = { is_indian_tag = yes } }
-				any_country_with_core = {
-					NOT = { tag = PREV.PREV }
-					is_indian_tag = yes
-				}
-			}
-			else_if = {
-				limit = { PREV = { is_chinese_tag = yes } }
-				any_country_with_core = {
-					NOT = { tag = PREV.PREV }
-					is_chinese_tag = yes
-				}
-			}
-			else_if = {
-				limit = { PREV = { is_arabian_tag = yes } }
-				any_country_with_core = {
-					NOT = { tag = PREV.PREV }
-					is_arabian_tag = yes
-				}
-			}
-			else_if = {
-				limit = { PREV = { original_tag = KUM } }
-				any_country_with_core = {
-					NOT = { tag = PREV.PREV }
-					OR = {
-						original_tag = ETS
-						original_tag = SIK
+	if = {
+		limit = { exists = no }
+		every_core_state = {
+			limit = {
+				check_variable = { core_countries^num > 1 } #is not the state's last core
+				if = {
+					limit = { PREV = { is_american_tag = yes } }
+					any_country_with_core = {
+						NOT = { tag = PREV.PREV }
+						is_american_tag = yes
 					}
 				}
-			}
-			else_if = {
-				limit = { PREV = { original_tag = LEC } }
-				any_country_with_core = {
-					NOT = { tag = PREV.PREV }
-					is_chinese_tag = yes
+				else_if = {
+					limit = { PREV = { is_italian_tag = yes } }
+					any_country_with_core = {
+						NOT = { tag = PREV.PREV }
+						is_italian_tag = yes
+					}
 				}
-			}
-			NOT = {
-				AND = {
-					has_resistance = yes
-					occupied_country_tag = PREV
-					controller = { has_variable = can_integrate_@PREV.PREV }
+				else_if = {
+					limit = { PREV = { is_indian_tag = yes } }
+					any_country_with_core = {
+						NOT = { tag = PREV.PREV }
+						is_indian_tag = yes
+					}
 				}
-				AND = {
-					NOT = { is_core_of = controller }
-					controller = { has_variable = can_integrate_@PREV.PREV }
-					NOT = {
-						any_country_with_core = {
-							NOT = { tag = PREV.PREV }
-							NOT = { var:PREV.controller = { has_variable = can_integrate_@PREV } }
+				else_if = {
+					limit = { PREV = { is_chinese_tag = yes } }
+					any_country_with_core = {
+						NOT = { tag = PREV.PREV }
+						is_chinese_tag = yes
+					}
+				}
+				else_if = {
+					limit = { PREV = { is_arabian_tag = yes } }
+					any_country_with_core = {
+						NOT = { tag = PREV.PREV }
+						is_arabian_tag = yes
+					}
+				}
+				else_if = {
+					limit = { PREV = { original_tag = KUM } }
+					any_country_with_core = {
+						NOT = { tag = PREV.PREV }
+						OR = {
+							original_tag = ETS
+							original_tag = SIK
+						}
+					}
+				}
+				else_if = {
+					limit = { PREV = { original_tag = LEC } }
+					any_country_with_core = {
+						NOT = { tag = PREV.PREV }
+						is_chinese_tag = yes
+					}
+				}
+				else_if = {
+					limit = { PREV = { original_tag = GAL } }
+					any_country_with_core = {
+						NOT = { tag = PREV.PREV }
+						OR = {
+							tag = POL
+							tag = UKR
+							tag = ROM
 						}
 					}
 				}
 			}
+			remove_core_of = PREV
 		}
-		remove_core_of = PREV
+		every_state = { remove_claim_by = PREV }
+		force_update_map_mode = { mapmode = cores_claims_map_mode }
 	}
-	force_update_map_mode = { mapmode = cores_claims_map_mode }
 }
 
 start_state_integration_resistance = {
@@ -488,7 +373,7 @@ start_state_integration_resistance = {
 		set_resistance = var:previous_resistance?0
 		remove_core_of = XXA
 	}
-	PREV = { XXA = { set_occupation_law_where_available = territorial_integration } }
+	controller = { XXA = { set_occupation_law_where_available = territorial_integration } }
 }
 
 clear_state_integration_resistance = {
@@ -502,45 +387,10 @@ clear_state_integration_resistance = {
 		set_temp_variable = { previous_resistance = resistance }
 		cancel_resistance = yes
 		if = {
-			limit = {
-				NOT = { is_core_of = PREV }
-				check_variable = { core_countries^num > 0 }
-			}
+			limit = { check_variable = { core_countries^num > 0 } }
 			start_resistance = yes
 			set_compliance = var:previous_compliance?0
 			set_resistance = var:previous_resistance?0
 		}
-	}
-}
-
-start_country_integration_resistance = {
-	#PREV is the country being integrated
-	#PREV.PREV is the integrator
-	every_core_state = {
-		limit = {
-			is_controlled_by = PREV.PREV
-			NOT = { is_core_of = PREV.PREV }
-			impassable = no
-			NOT = { occupied_country_tag = PREV }
-			NOT = {
-				AND = {
-					has_resistance = yes
-					occupied = { has_variable = PREV.PREV.can_integrate_@THIS }
-				}
-			}
-		}
-		if = {
-			limit = { has_resistance = yes }
-			set_temp_variable = { previous_compliance = compliance }
-			set_temp_variable = { previous_resistance = resistance }
-			cancel_resistance = yes
-		}
-		start_resistance = PREV
-		set_compliance = var:previous_compliance?0
-		set_resistance = var:previous_resistance?0
-	}
-	if = {
-		limit = { PREV = { any_occupied_country = { tag = PREV.PREV } } }
-		set_occupation_law_where_available = territorial_integration
 	}
 }

@@ -19,7 +19,6 @@ CAN_remove_from_iedc = {
 }
 
 CAN_remove_from_iedc_effect = {
-	clear_variable = iedc_contribution
 	if = {
 		limit = { has_idea = CAN_iedc_econ1 }
 		remove_ideas = CAN_iedc_econ1
@@ -60,40 +59,54 @@ CAN_remove_from_iedc_effect = {
 		limit = { check_variable = { iedc_civ_factories > 0 } }
 		custom_effect_tooltip = CAN_remove_iedc_civ
 		hidden_effect = {
-			set_variable = { tempvar1 = 0 }
-			subtract_from_variable = { var = tempvar1 value = iedc_civ_factories }
-			add_offsite_building = { type = industrial_complex level = tempvar1 }
-			clear_variable = tempvar1
+			set_temp_variable = { tempvar1 = iedc_mil_factories }
+			multiply_temp_variable = { tempvar1 = -1 }
+			add_offsite_building = { type = industrial_complex level = var:tempvar1 }
 		}
 	}
 	if = {
 		limit = { check_variable = { iedc_mil_factories > 0 } }
 		custom_effect_tooltip = CAN_remove_iedc_mil
 		hidden_effect = {
-			set_variable = { tempvar2 = 0 }
-			subtract_from_variable = { var = tempvar2 value = iedc_mil_factories }
-			add_offsite_building = { type = arms_factory level = tempvar2 }
-			clear_variable = tempvar2
+			set_temp_variable = { tempvar3 = iedc_mil_factories }
+			multiply_temp_variable = { tempvar3 = -1 }
+			add_offsite_building = { type = arms_factory level = var:tempvar2 }
 		}
 	}
 	if = {
 		limit = { check_variable = { iedc_nav_factories > 0 } }
 		custom_effect_tooltip = CAN_remove_iedc_nav
 		hidden_effect = {
-			set_variable = { tempvar3 = 0 }
-			subtract_from_variable = { var = tempvar3 value = iedc_nav_factories }
-			add_offsite_building = { type = dockyard level = tempvar3 }
-			clear_variable = tempvar3
+			set_temp_variable = { tempvar3 = iedc_nav_factories }
+			multiply_temp_variable = { tempvar3 = -1 }
+			add_offsite_building = { type = dockyard level = var:tempvar3 }
 		}
 	}
+	clear_variable = iedc_contribution
+	clear_variable = iedc_civ_factories
+	clear_variable = iedc_mil_factories
+	clear_variable = iedc_nav_factories
 	hidden_effect = {
-		clear_variable = iedc_civ_factories
-		clear_variable = iedc_mil_factories
-		clear_variable = iedc_nav_factories
 		event_target:iedc_leader = {
 			remove_opinion_modifier = { target = ROOT modifier = CAN_iedc_member }
 		}
 	}
+}
+
+#requires a temp variable ENT_pp_investment
+CAN_add_iedc_pp = {
+	multiply_temp_variable = { ENT_pp_investment = -1 }
+	add_political_power = var:ENT_pp_investment
+	multiply_temp_variable = { ENT_pp_investment = -1 }
+	add_to_variable = {
+		global.iedc_pp = ENT_pp_investment
+		tooltip = CAN_add_pp_to_iedc
+	}
+	if = {
+		limit = { has_completed_focus = IRE_anglo_irish_connections }
+		multiply_temp_variable = { ENT_pp_investment = 2 }
+	}
+	set_variable = { iedc_contribution = ENT_pp_investment }
 }
 
 CAN_find_entente_leader = {
@@ -750,17 +763,9 @@ CAN_release_uk = {
 		}
 		every_owned_state = {
 			limit = {
-				OR = {
-					is_on_continent = africa
-					region = 4 #Ireland
-					region = 45 #Norwegian Sea
-					region = 64 #Scotia Sea
-					region = 161 #Iceland
-					state = 116 #Malta
-					state = 118 #Gibraltar
-					state = 326 #Hong Kong
-				}
+				is_british_colonial_claim = yes
 				NOT = { is_core_of = ROOT }
+				NOT = { has_variable = ambition_area_@ROOT }
 			}
 			remove_claim_by = ROOT
 			save_current_factory_count = yes
@@ -771,16 +776,7 @@ CAN_release_uk = {
 	else = {
 		every_owned_state = {
 			limit = {
-				OR = {
-					is_on_continent = africa
-					region = 4 #Ireland
-					region = 45 #Norwegian Sea
-					region = 64 #Scotia Sea
-					region = 161 #Iceland
-					state = 116 #Malta
-					state = 118 #Gibraltar
-					state = 326 #Hong Kong
-				}
+				is_british_colonial_claim = yes
 				is_claim_or_core_or_ambition_of_ROOT = no
 			}
 			save_current_factory_count = yes

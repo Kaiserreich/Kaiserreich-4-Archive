@@ -240,14 +240,14 @@ country_event = {
 				is_in_belgrade_pact = yes
 			}
 			add_ideas = belgrade_part_arms_embargo
-			add_opinion_modifier = { target = ROOT modifier = Belgrade_Pact_supported_enemy }
+			add_opinion_modifier = { target = ROOT modifier = KR_supported_our_enemies }
 			country_event = pact.7
 		}
 		set_country_flag = SER_supported_bulgaria
 		GER = { country_event = pact.8 }
 		ALB = { country_event = pact.8 }
 		BUL = {
-			add_opinion_modifier = { target = ROOT modifier = Belgrade_Pact_supported_us }
+			add_opinion_modifier = { target = ROOT modifier = KR_supported_us }
 		}
 	}
 	option = {
@@ -309,12 +309,12 @@ country_event = {
 			limit = {
 				is_in_belgrade_pact = yes
 			}
-			add_opinion_modifier = { target = ROOT modifier = Belgrade_Pact_supported_enemy }
+			add_opinion_modifier = { target = ROOT modifier = KR_supported_our_enemies }
 			country_event = pact.7
 		}
 		set_country_flag = SER_supported_bulgaria
 		BUL = {
-			add_opinion_modifier = { target = ROOT modifier = Belgrade_Pact_supported_us }
+			add_opinion_modifier = { target = ROOT modifier = KR_supported_us }
 		}
 	}
 	option = {
@@ -1018,7 +1018,10 @@ country_event = {
 		has_war_with = BUL
 		has_country_flag = OTT_war_for_thrace
 		is_valid_peace_target = yes
-		BUL = { is_valid_peace_target = yes }
+		BUL = {
+			is_valid_peace_target = yes
+			NOT = { has_country_flag = BUL_byzantine_larp_timer }
+		}
 		NOT = {
 			controls_state = 184 #Komotini
 			controls_state = 1089 #Kardzhali
@@ -1057,7 +1060,7 @@ country_event = {
 	immediate = {
 		if = {
 			limit = { NOT = { has_country_flag = BUL_balkan_peace_loss } }
-			add_state_claim = 341 #Adrianople
+			hidden_effect = { add_state_claim = 341 } #Adrianople
 		}
 	}
 
@@ -1092,15 +1095,6 @@ country_event = {
 			ALB = {
 				white_peace_with_TARGET = yes
 			}
-		}
-	}
-	option = {
-		log = "[GetLogInfo]: event pact.43 option pact.43.b"
-		name = pact.43.b #Refuse
-		ai_chance = { base = 0 }
-		add_war_support = -0.10
-		TUR = {
-			country_event = pact.46
 		}
 	}
 }
@@ -1218,14 +1212,10 @@ country_event = {
 		}
 		hidden_effect = {
 			every_enemy_country = {
-				limit = {
-					is_ally_with = SER
-				}
+				limit = { is_ally_with = SER }
 				set_country_flag = SER_joined_balkan_war
 			}
-			SER = {
-				save_event_target_as = white_peace_receiver
-			}
+			SER = { save_event_target_as = white_peace_receiver }
 		}
 	}
 
@@ -1236,34 +1226,28 @@ country_event = {
 		add_political_power = 200
 
 		SER = {
-			white_peace_with_ROOT = yes
-			if = {
-				limit = {
-					OR = {
-						has_war_with = AUS
-						has_war_with = HUN
-						has_war_with = CRO
-					}
-				}
-				every_enemy_country = {
-					limit = {
-						OR = {
-							tag = AUS
-							tag = HUN
-							tag = CRO
-							tag = GAL
-							tag = CZE
-						}
-						is_valid_peace_target = yes
-					}
-					white_peace = PREV
-				}
-			}
 			hidden_effect = {
 				if = {
-					limit = { surrender_progress < 0.05 }
+					limit = {
+						is_faction_leader = no
+						surrender_progress < 0.05
+					}
 					set_faction_leader = yes
 				}
+			}
+			white_peace_with_ROOT = yes
+			every_enemy_country = {
+				limit = {
+					OR = {
+						tag = AUS
+						tag = HUN
+						tag = CRO
+						tag = GAL
+						tag = CZE
+					}
+					is_valid_peace_target = yes
+				}
+				white_peace_with_TARGET = yes
 			}
 		}
 
@@ -2090,45 +2074,36 @@ country_event = {
 # Belgrade Pact vs. Austria
 ###########################
 
-# Preventing Pact members from collapsing just because Serbia has
-country_event = {
+country_event = { # looping hidden event to move the Pact leader to another member who's still fighting (donotlog)
 	id = pact.100
 
 	hidden = yes
 	is_triggered_only = yes
 
-	trigger = {
-		is_in_faction_with = BPL
-		NOT = { has_country_flag = belgrade_pact_major }
-	}
-
 	option = {
-		log = "[GetLogInfo]: event pact.100 option 1"
-		set_country_flag = belgrade_pact_major
-		set_major = yes
-	}
-}
-
-# Re-setting their major status
-country_event = {
-	id = pact.101
-
-	hidden = yes
-	is_triggered_only = yes
-
-	trigger = {
-		has_country_flag = belgrade_pact_major
-		OR = {
-			has_war = no
-			is_in_faction = no
-			NOT = { faction_leader = { tag = BPL } }
+		if = {
+			limit = {
+				is_faction_leader = yes
+				surrender_progress > 0.85
+			}
+			random_other_country = {
+				limit = {
+					is_in_faction_with = ROOT
+					is_subject = no
+					NOT = { surrender_progress > 0.85 }
+				}
+				set_faction_leader = yes
+			}
 		}
-	}
 
-	option = {
-		log = "[GetLogInfo]: event pact.101 option 1"
-		clr_country_flag = belgrade_pact_major
-		set_major = no
+		#break the loop if no longer in the faction or no longer at war
+		if = {
+			limit = {
+				is_in_faction_with = BPL
+				has_war = yes
+			}
+			country_event = { id = pact.100 days = 1 }
+		}
 	}
 }
 
