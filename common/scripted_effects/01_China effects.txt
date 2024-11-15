@@ -77,7 +77,12 @@ fengtian_china_enable_alliance_decisions = {
 
 manchu_china_enable_alliance_deicisons = {
 	add_to_array = { china_possible_allies_array = SQI }
-	add_to_array = { china_possible_allies_array_northwest = KUM }
+	if = {
+		limit = {
+			NOT = { original_tag = QIE }
+		}
+		add_to_array = { china_possible_allies_array_northwest = KUM }
+	}
 }
 
 kuomintang_china_enable_alliance_decisions = {
@@ -1501,10 +1506,10 @@ china_set_government_tag_specific_scripted_effect = {
 			limit = {
 				OR = {
 					original_tag = CHI #Wang Jingwei
-					owns_state = 608 #Nanjing
+					owns_state = 613 #Nanjing
 				}
 			}
-			set_capital = { state = 608 remember_old_capital = no } #Nanjing
+			set_capital = { state = 613 remember_old_capital = no } #Nanjing
 			set_cosmetic_tag = LKT_government_nanjing_cosmetic #Nanjing Nationalist Government
 			set_country_flag = CHI_phase_two_begins_flag
 			if = {
@@ -2260,6 +2265,23 @@ china_enable_outskirts_decisions = {
 	if = {
 		limit = { can_declare_war_on = KUM }
 		if = {
+			limit = {
+				OR = {
+					AND = {
+						KUM = { china_is_aligned_with_zhili = yes }
+						ROOT = { china_is_aligned_with_zhili = yes }
+					}
+					AND = {
+						KUM = { china_is_aligned_with_manchu = yes }
+						ROOT = { china_is_aligned_with_manchu = yes }
+					}
+				}
+			}
+			add_to_array = { ROOT.china_possible_targets_array = KUM }
+			add_to_array = { china_possible_allies_array_northwest = KUM }
+			effect_tooltip = { activate_targeted_decision = { target = KUM decision = china_demand_submission } }
+		}
+		else_if = {
 			limit = { KUM = { has_country_flag = KUM_is_chinese_tag } }
 			add_to_array = { ROOT.china_possible_targets_array = KUM }
 			effect_tooltip = { activate_targeted_decision = { target = KUM decision = china_demand_submission } }
@@ -2711,4 +2733,174 @@ CHN_setup_major_dockyards_decision_effect = {
 			}
 		}
 	}
+}
+
+### China Alignment Scripted GUI Calculation Effects ###
+CHN_calculate_china_alignment_gui_effect = {
+	### Clear all alignment arrays ###
+	for_each_scope_loop = {
+		array = global.china_alignment_leaders
+		set_temp_variable = { current_china_alignment_leader = THIS }
+		clear_array = current_china_alignment_leader:china_alignment_members
+	}
+	clear_array = global.china_alignment_leaders
+	clear_array = global.china_alignment_tokens
+	### Check which factions exist add them to the leader array as well as their alignment token
+	for_each_scope_loop = {
+		array = global.china_tags_array
+		if = {
+			limit = { exists = yes }
+			if = {
+				limit = { tag = NZH } #North Zhili
+				add_to_array = { global.china_alignment_leaders = NZH }
+				add_to_array = { global.china_alignment_tokens = token:northern_zhili }
+			}
+			else_if = {
+				limit = {
+					tag = SZH #South Zhili
+					is_subject = no #account for LEP joining QIE
+				}
+				add_to_array = { global.china_alignment_leaders = SZH }
+				add_to_array = { global.china_alignment_tokens = token:southern_zhili }
+			}
+			else_if = {
+				limit = { tag = MCU } #Restorationists
+				add_to_array = { global.china_alignment_leaders = MCU }
+				add_to_array = { global.china_alignment_tokens = token:manchu_qing }
+			}
+			else_if = {
+				limit = { tag = AGJ } #Anguojun
+				add_to_array = { global.china_alignment_leaders = AGJ }
+				add_to_array = { global.china_alignment_tokens = token:fengtian }
+			}
+			else_if = {
+				limit = { tag = UPC } #Federalists
+				add_to_array = { global.china_alignment_leaders = UPC }
+				add_to_array = { global.china_alignment_tokens = token:federalists }
+			}
+			else_if = {
+				limit = { tag = LKT } #Left Kuomintang
+				add_to_array = { global.china_alignment_leaders = LKT }
+				add_to_array = { global.china_alignment_tokens = token:left_kuomintang }
+			}
+			else_if = {
+				limit = { tag = RKT } #Right Kuomintang
+				add_to_array = { global.china_alignment_leaders = RKT }
+				add_to_array = { global.china_alignment_tokens = token:right_kuomintang }
+			}
+			else_if = {
+				limit = { tag = NPA } #National Protection Alliance
+				add_to_array = { global.china_alignment_leaders = NPA }
+				add_to_array = { global.china_alignment_tokens = token:CHN_non_aligned } #Placeholder to not break up token order
+			}
+			else_if = {
+				limit = { tag = RGC } #GEACPS (Japan)
+				add_to_array = { global.china_alignment_leaders = RGC }
+				add_to_array = { global.china_alignment_tokens = token:geacps }
+			}
+		}
+	}
+
+	### Assign each non-leader chinese country to the appropriate faction ###
+	for_each_scope_loop = {
+		array = global.china_tags_array
+		set_temp_variable = { current_chinese_tag = THIS }
+		if = {
+			limit = { #Check first if the tag exists and is not an existing faction leader
+				NOT = { is_in_array = { global.china_alignment_leaders = var:current_chinese_tag } }
+				exists = yes
+			}
+			for_loop_effect = {
+				start = 0
+				end = global.china_alignment_tokens^num
+				compare = less_than_or_equals
+				break = alignment_found
+
+				if = { #If none of the below are held true, it must mean that they are completely unaligned to any existing governments
+					limit = { check_variable = { v = global.china_alignment_tokens^num } }
+					add_to_array = { XXA.china_alignment_members = var:current_chinese_tag }
+				}
+				else = {
+					set_temp_variable = { current_china_alignment_leader = global.china_alignment_leaders^v }
+					if = { #Check first if the tag is a subject of another tag
+						limit = {
+							var:current_chinese_tag = { is_subject_of = var:current_china_alignment_leader }
+						}
+						add_to_array = { current_china_alignment_leader:china_alignment_members = var:current_chinese_tag }
+						set_temp_variable = { alignment_found = 1 }
+					}
+					else_if = { #Special Case that accounts for RGC alignment
+						limit = {
+							country_exists = RGC
+							var:current_chinese_tag = { is_ally_with = JAP }
+						}
+						add_to_array = { RGC.china_alignment_members = var:current_chinese_tag }
+						set_temp_variable = { alignment_found = 1 }
+					}
+				}
+			}
+		}
+	}
+	KUM = {
+		set_temp_variable = { current_chinese_tag = THIS }
+		if = {
+			limit = {
+				NOT = { has_country_flag = KUM_is_chinese_tag } #KUM gets added to global.china_tags_array if it becomes Han
+				NOT = { is_in_array = { global.china_alignment_leaders = var:current_chinese_tag } }
+				exists = yes
+			}
+
+			for_loop_effect = {
+				start = 0
+				end = global.china_alignment_tokens^num
+				compare = less_than_or_equals
+				break = alignment_found
+				if = { #If none of the above are held true, it must mean that they are completely unaligned to any existing governments
+					limit = { check_variable = { v = global.china_alignment_tokens^num } }
+					add_to_array = { XXA.china_alignment_members = var:current_chinese_tag }
+				}
+				else = {
+					set_temp_variable = { current_china_alignment_leader = global.china_alignment_leaders^v }
+					if = { #Check first if the tag is a subject of another tag
+						limit = {
+							var:current_chinese_tag = { is_subject_of = var:current_china_alignment_leader }
+						}
+						add_to_array = { current_china_alignment_leader:china_alignment_members = var:current_chinese_tag }
+						set_temp_variable = { alignment_found = 1 }
+					}
+				}
+			}
+		}
+	}
+	### To account for GXC civil war ###
+	every_country_with_original_tag = {
+		original_tag_to_check = GXC
+		limit = {
+			is_dynamic_country = yes
+			GXC = { has_civil_war = yes }
+		}
+		set_temp_variable = { current_chinese_tag = THIS }
+		add_to_array = { XXA.china_alignment_members = var:current_chinese_tag }
+	}
+	### To account for MAN being a Japanese puppet ###
+	MAN = {
+		if = {
+			limit = {
+				country_exists = RGC
+				is_ally_with = JAP
+			}
+			add_to_array = { RGC.china_alignment_members = THIS }
+		}
+	}
+
+	### Check to see if there are any Independent Cliques ###
+	if = {
+		limit = { check_variable = { XXA.china_alignment_members^num > 0 } }
+		add_to_array = { global.china_alignment_leaders = XXA } #Independent Cliques
+	}
+}
+
+CHN_update_china_alignment_gui = {
+	### Use to update the GUI ###
+	set_variable_to_random = global.china_alignment_gui_update
 }

@@ -1544,7 +1544,7 @@ COS_Cortes_decisions = {
 			has_completed_focus = COS_Educational_Reforms
 		}
 
-		cost = 50
+		cost = 60
 
 		fire_only_once = yes
 
@@ -1558,6 +1558,10 @@ COS_Cortes_decisions = {
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete COS_Build_New_Schools"
+			add_timed_idea = {
+				idea = COS_Educating_the_Countryside
+				days = 720
+			}
 			add_popularity = {
 				ideology = social_conservative
 				popularity = 0.03
@@ -2115,9 +2119,9 @@ COS_Ferrer_Aggro_decisions = {
 				name = "Brigada de Milicia"
 				division_names_group = SPAN_MIL_01
 				regiments = {
-					infantry = { x = 0 y = 0 }
-					infantry = { x = 0 y = 1 }
-					infantry = { x = 0 y = 2 }
+					militia = { x = 0 y = 0 }
+					militia = { x = 0 y = 1 }
+					militia = { x = 0 y = 2 }
 				}
 			}
 			CEN = {
@@ -2144,14 +2148,14 @@ COS_Ferrer_Aggro_decisions = {
 		allowed = { always = no } #activated by effect
 
 		available = {
-			has_war = no
+			OR = {
+				has_war = no
+				controls_state = FROM
+			}
 		}
 
 		cancel_trigger = {
-			OR = {
-				NOT = { can_declare_war_on = CEN }
-				NOT = { FROM = { is_owned_by = CEN } }
-			}
+			NOT = { FROM = { is_owned_by = CEN } }
 		}
 
 		custom_cost_text = MP_50
@@ -2186,10 +2190,31 @@ COS_Ferrer_Aggro_decisions = {
 
 		remove_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision remove COS_Supply_Rebels target: [From.GetName]"
-			custom_effect_tooltip = COS_suplied_rebels_tooltip
-			FROM = { set_state_flag = COS_supplied_rebels }
-			hidden_effect = {
-				remove_targeted_decision = { decision = COS_Supply_Rebels target = FROM }
+			if = {
+				limit = { has_war = no }
+				custom_effect_tooltip = COS_suplied_rebels_tooltip
+				FROM = { set_state_flag = COS_supplied_rebels }
+			}
+			else = {
+				if = {
+					limit = { NOT = { has_template = "Brigada de Milicia" } }
+					division_template = {
+						name = "Brigada de Milicia"
+						division_names_group = SPAN_MIL_01
+						regiments = {
+							militia = { x = 0 y = 0 }
+							militia = { x = 0 y = 1 }
+							militia = { x = 0 y = 2 }
+						}
+					}
+				}
+				FROM = {
+					create_unit = {
+						division = "division_template = \"Brigada de Milicia\" start_experience_factor = 0.1 start_equipment_factor = 0.9"
+						allow_spawning_on_enemy_provs = yes
+						owner = ROOT
+					}
+				}
 			}
 		}
 	}
@@ -2464,7 +2489,7 @@ COS_Democratic_Alliance_of_the_Caribbean_decisions = {
 					add_ideas = CENdem_beacon_democracy
 					ROOT = {
 						COS_jose_figueres_ferrer = { set_nationality = CEN }
-						COS_fernando_figuls_quiros = { set_nationality = CEN }
+						COS_rafael_castro_quesada = { set_nationality = CEN }
 						every_core_state = { add_core_of = CEN }
 						every_subject_country = {
 							set_temp_variable = { target = THIS }
@@ -2642,6 +2667,7 @@ COS_Democratic_Alliance_of_the_Caribbean_decisions = {
 		icon = GFX_decision_generic_ignite_civil_war
 
 		visible = {
+			is_faction_leader = yes
 			OR = {
 				has_completed_focus = COS_Fullfill_our_Duty
 				AND = {
@@ -2726,8 +2752,10 @@ COS_Democratic_Alliance_of_the_Caribbean_decisions = {
 				factor = 0
 				FROM = {
 					NOT = { TAG = COS }
-					is_in_faction_with = GER
-					is_guaranteed_by = GER
+					OR = {
+						is_in_faction_with = GER
+						is_guaranteed_by = GER
+					}
 				}
 				GER = {
 					surrender_progress < 0.65
@@ -2740,8 +2768,10 @@ COS_Democratic_Alliance_of_the_Caribbean_decisions = {
 						TAG = COS
 						TAG = PAN
 					}
-					is_in_faction_with = ENT
-					is_guaranteed_by = ENT
+					OR = {
+						is_in_faction_with = ENT
+						is_guaranteed_by = ENT
+					}
 				}
 				ENT = {
 					surrender_progress < 0.5

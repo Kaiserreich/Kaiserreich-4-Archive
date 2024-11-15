@@ -9506,54 +9506,76 @@ country_event = {
 	desc = {
 		text = entente.340.d.british
 		trigger = {
-			has_event_target = ENT_has_british_land
-			NOT = { has_event_target = ENT_has_french_land }
+			NOT = { original_tag = NFA }
 		}
 	}
 	desc = {
 		text = entente.340.d.french
 		trigger = {
-			has_event_target = ENT_has_french_land
-			NOT = { has_event_target = ENT_has_british_land }
-		}
-	}
-	desc = {
-		text = entente.340.d.both
-		trigger = {
-			has_event_target = ENT_has_british_land
-			has_event_target = ENT_has_french_land
+			original_tag = NFA
 		}
 	}
 
 	trigger = {
-		tag = ENT
-		is_faction_leader = yes
-		any_allied_country = {
-			is_subject = no
-			NOT = { has_country_flag = ENT_receiving_demand }
-			OR = {
-				AND = {
-					NOT = { country_exists = GBR }
-					OR = {
-						has_subject = GBP
-						has_subject = ENG
-						has_subject = SCO
-						has_subject = WLS
-						any_owned_state = {
-							is_great_britain = yes
-							is_claim_or_core_of_PREV = no
+		OR = {
+			AND = {
+				tag = event_target:KR_king_base
+				NOT = { country_exists = GBR }
+				is_in_faction_with = ENT
+				is_subject = no
+				OR = {
+					GBP = {
+						is_subject = yes
+						overlord = {
+							is_ally_of_ROOT = yes
+							NOT = { has_country_flag = ENT_receiving_demand }
 						}
 					}
-				}
-				AND = {
-					is_in_faction_with = NFA
-					NOT = { tag = NFA }
-					OR = {
-						has_subject = BRI
-						any_owned_state = {
-							is_mainland_france_state = yes
-							is_claim_or_core_of_PREV = no
+					SCO = {
+						is_subject = yes
+						overlord = {
+							is_ally_of_ROOT = yes
+							NOT = { has_country_flag = ENT_receiving_demand }
 						}
+					}
+					WLS = {
+						is_subject = yes
+						overlord = {
+							is_ally_of_ROOT = yes
+							NOT = { has_country_flag = ENT_receiving_demand }
+						}
+					}
+					any_of_scopes = {
+						array = britain_states_array
+						owner = {
+							is_ally_of_ROOT = yes
+							is_subject = no
+							NOT = { has_country_flag = ENT_receiving_demand }
+						}
+						is_claim_or_core_of_owner = no
+					}
+				}
+			}
+			AND = {
+				original_tag = NFA
+				is_in_faction_with = ENT
+				is_subject = no
+				OR = {
+					BRI = {
+						is_subject = yes
+						overlord = {
+							is_ally_of_ROOT = yes
+							NOT = { has_country_flag = ENT_receiving_demand }
+						}
+					}
+					any_of_scopes = {
+						array = france_states_array
+						owner = {
+							is_ally_of_ROOT = yes
+							is_subject = no
+							NOT = { has_country_flag = ENT_receiving_demand }
+						}
+						is_claim_or_core_of_owner = no
 					}
 				}
 			}
@@ -9562,43 +9584,31 @@ country_event = {
 
 	immediate = {
 		hidden_effect = {
-			random_other_country = {
-				limit = {
-					is_in_faction_with = ROOT
-					is_subject = no
-					NOT = { has_country_flag = ENT_receiving_demand }
-					OR = {
-						AND = {
-							NOT = { country_exists = GBR }
-							OR = {
-								has_subject = GBP
-								has_subject = ENG
-								has_subject = SCO
-								has_subject = WLS
-								any_owned_state = {
-									is_great_britain = yes
-									is_claim_or_core_of_PREV = no
-								}
-							}
-						}
-						AND = {
-							is_in_faction_with = NFA
-							NOT = { tag = NFA }
-							OR = {
-								has_subject = BRI
-								any_owned_state = {
-									is_mainland_france_state = yes
-									is_claim_or_core_of_PREV = no
-								}
+			if = {
+				limit = { original_tag = NFA }
+				random_other_country = {
+					limit = {
+						is_in_faction_with = ROOT
+						is_subject = no
+						NOT = { has_country_flag = ENT_receiving_demand }
+						OR = {
+							has_subject = BRI
+							any_owned_state = {
+								is_mainland_france_state = yes
+								is_claim_or_core_of_PREV = no
 							}
 						}
 					}
+					save_event_target_as = ENT_demand
+					set_country_flag = ENT_receiving_demand
 				}
-				save_event_target_as = ENT_demand
-				set_country_flag = ENT_receiving_demand
-				if = {
+			}
+			else = {
+				random_other_country = {
 					limit = {
-						NOT = { country_exists = GBR }
+						is_in_faction_with = ROOT
+						is_subject = no
+						NOT = { has_country_flag = ENT_receiving_demand }
 						OR = {
 							has_subject = GBP
 							has_subject = ENG
@@ -9610,21 +9620,8 @@ country_event = {
 							}
 						}
 					}
-					save_event_target_as = ENT_has_british_land
-				}
-				if = {
-					limit = {
-						is_in_faction_with = NFA
-						NOT = { tag = NFA }
-						OR = {
-							has_subject = BRI
-							any_owned_state = {
-								is_mainland_france_state = yes
-								is_claim_or_core_of_PREV = no
-							}
-						}
-					}
-					save_event_target_as = ENT_has_french_land
+					save_event_target_as = ENT_demand
+					set_country_flag = ENT_receiving_demand
 				}
 			}
 		}
@@ -9658,12 +9655,27 @@ country_event = {
 		log = "[GetLogInfo]: event entente.341 option entente.341.a"
 		name = entente.341.a #return the lands
 		clr_country_flag = ENT_receiving_demand
+		reverse_add_opinion_modifier = { target = FROM modifier = KR_approves_of_govt }
 		if = {
-			limit = { has_event_target = ENT_has_british_land }
+			limit = { FROM = { original_tag = NFA } }
 			if = {
-				limit = { FROM = { original_tag = IMP } }
-				reverse_add_opinion_modifier = { target = FROM modifier = KR_approves_of_govt }
+				limit = { has_subject = BRI }
+				FROM = {
+					annex_country = {
+						target = BRI
+						transfer_troops = no
+					}
+				}
 			}
+			every_owned_state = {
+				limit = {
+					is_mainland_france_state = yes
+					is_claim_or_core_of_ROOT = no
+				}
+				transfer_state_to = FROM
+			}
+		}
+		else = {
 			every_subject_country = {
 				limit = {
 					OR = {
@@ -9682,26 +9694,6 @@ country_event = {
 					is_claim_or_core_of_ROOT = no
 				}
 				transfer_state_to = FROM
-			}
-		}
-		if = {
-			limit = { has_event_target = ENT_has_french_land }
-			reverse_add_opinion_modifier = { target = NFA modifier = KR_approves_of_govt }
-			if = {
-				limit = { has_subject = BRI }
-				NFA = {
-					annex_country = {
-						target = BRI
-						transfer_troops = no
-					}
-				}
-			}
-			every_owned_state = {
-				limit = {
-					is_mainland_france_state = yes
-					is_claim_or_core_of_ROOT = no
-				}
-				transfer_state_to = NFA
 			}
 		}
 	}

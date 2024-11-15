@@ -1,114 +1,953 @@
-foreign_politics = {
-	den_invade_denmark = {
-		icon = GFX_decision_infiltrate_state
-		allowed = { always = no }
+DEN_crisis_mission_category = {
+	DEN_crisis_resolution = {
+		icon = GFX_decision_generic_monarchy
+
+		allowed = { always = no } #activated by DEN.96
+
 		available = {
-			OR = {
-				has_war_with = NOR
-				has_war_with = SWE
-				AND = {
-					has_war_with = ENG
-					OR = {
-						is_in_faction_with = NOR
-						is_in_faction_with = SWE
-					}
-				}
+			custom_trigger_tooltip = {
+				tooltip = DEN_tt_win_concrisis
+				check_variable = { DEN_influence_power > 10 }
 			}
 		}
 
-		visible = {
-			can_declare_war_on = FROM
-			is_subject = no
+		is_good = no
+		selectable_mission = no
+		days_mission_timeout = 300
+
+		cancel_trigger = {
+			check_variable = { DEN_corrupt_token > 2 }
 		}
 
-		cost = 0
-		days_remove = 25
-		fire_only_once = yes
-		war_with_target_on_remove = yes
-		cancel_if_not_visible = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				OR = {
-					country_has_any_active_threat = yes
-					FROM = { dont_start_major_faction_wars = yes }
-					FROM = { default_attack_AI_trigger = yes }
-				}
+		cancel_effect = { #ya dun goofed
+			log = "[GetDateText]: [Root.GetName]: Decision cancel DEN_crisis_resolution"
+			if = {
+				limit = { has_government = social_democrat }
+				country_event = den.37
 			}
-			modifier = {
-				factor = 0   #AI shouldn't invade before Denmark sorts its shit out
-				NOT = {
-					has_country_flag = GER_ai_no_DENvasion
-					FROM = {
-						has_country_flag = DEN_constitutional_crisis_over
-					}
-				}
+			else_if = {
+				limit = { has_government = market_liberal }
+				country_event = den.40
 			}
+			DEN_clear_constitutional_crisis = yes
 		}
 
-		cancel_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision cancel den_invade_denmark target: [From.GetName]"
-			clear_decision_attack_AI = yes
+		timeout_effect = { #ya dun goofed too
+			log = "[GetDateText]: [Root.GetName]: Decision timeout DEN_crisis_resolution"
+			if = {
+				limit = { has_government = social_democrat }
+				country_event = den.37
+			}
+			else_if = {
+				limit = { has_government = market_liberal }
+				country_event = den.40
+			}
+			DEN_clear_constitutional_crisis = yes
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete den_invade_denmark target: [From.GetName]"
-			FROM = { incoming_war_notification_effect = yes }
-			setup_decision_attack_AI = yes
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_crisis_resolution"
+			if = {
+				limit = { has_country_flag = DEN_sided_with_king }
+				set_country_flag = DEN_minigame_win_king
+				country_event = den.149
+				GER = { country_event = den.34 }
+			}
+			else = {
+				DEN_remove_monarchy = yes
+				DEN_thorvald_stauning = {
+					promote_character = social_democrat_subtype
+				}
+				activate_advisor = DEN_peter_munch_sic
+				country_event = den.149
+				GER = { country_event = { id = den.51 days = 3 } }
+			}
+			DEN_clear_constitutional_crisis = yes
+		}
+	}
+	DEN_military_decision = { #military parades or anti military parades
+		icon = GFX_decision_generic_military
+
+		allowed = { always = no }
+
+		cost = 0
+		days_remove = 60
+		days_re_enable = 14
+		available = {
+			if = {
+				limit = { has_country_flag = DEN_sided_with_king }
+				divisions_in_state = {
+					size > 2
+					state = 37
+				}
+			}
+			else = {
+				divisions_in_state = {
+					size < 2
+					state = 37
+				}
+			}
 		}
 
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				check_variable = { DEN_corrupt_token = 2 }
+				NOT = { has_game_rule = { rule = DEN_path option = DEFAULT } }
+				NOT = { has_game_rule = { rule = DEN_path option = DEN_PATH_PURSCHEL_AUTDEM } }
+				NOT = { has_game_rule = { rule = DEN_path option = DEN_PATH_SOCCON } }
+				NOT = { has_game_rule = { rule = DEN_path option = DEN_PATH_WESTERGAARD_AUTDEM } }
+				has_country_flag = DEN_competency
+			}
+		}
+
+		modifier = {
+			training_time_army_factor = 0.1
+			war_support_weekly = -0.003
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_military_decision"
+			add_to_variable = {
+				DEN_influence_power = 2
+				tooltip = DEN_influence_power_tt
+			}
+			add_to_variable = {
+				DEN_corrupt_token = 1
+				tooltip = DEN_corrupt_token_tt
+			}
+		}
+	}
+
+	DEN_gather_political_support = { #Gain political support
+		icon = GFX_decision_hol_radio_oranje
+
+		allowed = { always = no }
+
+		cost = 0
+		days_remove = 60
+		days_re_enable = 14
+
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				check_variable = { DEN_corrupt_token = 2 }
+				NOT = { has_game_rule = { rule = DEN_path option = DEFAULT } }
+				NOT = { has_game_rule = { rule = DEN_path option = DEN_PATH_PURSCHEL_AUTDEM } }
+				NOT = { has_game_rule = { rule = DEN_path option = DEN_PATH_SOCCON } }
+				NOT = { has_game_rule = { rule = DEN_path option = DEN_PATH_WESTERGAARD_AUTDEM } }
+				has_country_flag = DEN_competency
+			}
+		}
+
+		modifier = {
+			political_power_cost = 0.25
+			consumer_goods_factor = 0.1
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_gather_political_support"
+			add_to_variable = {
+				DEN_influence_power = 2
+				tooltip = DEN_influence_power_tt
+			}
+			add_to_variable = {
+				DEN_corrupt_token = 1
+				tooltip = DEN_corrupt_token_tt
+			}
+		}
+	}
+	DEN_backroom_deals = { #Shady deals
+		icon = GFX_decision_give_cash
+
+		allowed = { always = no }
+
+		available = {
+			check_variable = {
+				tooltip = DEN_required_party_pop_tt
+				party_popularity@ruling_party > 0.02
+			}
+		}
+
+		cost = 0
+		days_remove = 60
+		days_re_enable = 14
+
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				check_variable = { DEN_corrupt_token = 2 }
+				NOT = { has_game_rule = { rule = DEN_path option = DEFAULT } }
+				NOT = { has_game_rule = { rule = DEN_path option = DEN_PATH_PURSCHEL_AUTDEM } }
+				NOT = { has_game_rule = { rule = DEN_path option = DEN_PATH_SOCCON } }
+				NOT = { has_game_rule = { rule = DEN_path option = DEN_PATH_WESTERGAARD_AUTDEM } }
+				has_country_flag = DEN_competency
+			}
+			modifier = {
+				factor = 0.25
+				check_variable = { party_popularity@ruling_party < 0.15 }
+			}
+		}
+
+		modifier = {
+			stability_weekly = -0.003
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_backroom_deals"
+			add_to_variable = {
+				DEN_influence_power = 2
+				tooltip = DEN_influence_power_tt
+			}
+			add_to_variable = {
+				DEN_corrupt_token = 1
+				tooltip = DEN_corrupt_token_tt
+			}
+		}
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove den_invade_denmark target: [From.GetName]"
-			clear_decision_attack_AI = yes
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
+			log = "[GetDateText]: [Root.GetName]: Decision remove DEN_backroom_deals"
+			set_temp_variable = { ideology_change_var = -0.03 }
+			change_ruling_party_popularity = yes
+		}
+	}
+	DEN_cleanse_corruption = { #Corruption remover
+		icon = GFX_decision_generic_political_address
+
+		allowed = { always = no }
+
+		cost = 75
+		days_re_enable = 30
+		visible = { check_variable = { DEN_corrupt_token > 0 } }
+
+		ai_will_do = {
+			base = 150
+			modifier = {
+				factor = 0
+				OR = {
+					check_variable = { DEN_corrupt_token < 2 }
+					has_game_rule = { rule = DEN_path option = DEN_PATH_PURSCHEL_AUTDEM }
+					has_game_rule = { rule = DEN_path option = DEN_PATH_SOCCON }
+					has_game_rule = { rule = DEN_path option = DEN_PATH_WESTERGAARD_AUTDEM }
+					has_country_flag = DEN_incompetency
+				}
+			}
+			modifier = {
+				factor = 2
+				has_country_flag = DEN_competency
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_cleanse_corruption"
+			if = {
+				limit = { is_ai = yes }
+				add_to_variable = { DEN_influence_power = 5 }
+			}
+			set_variable = {
+				DEN_corrupt_token = 0
+				tooltip = DEN_corruption_begone_tt
 			}
 		}
 	}
 }
 
-political_actions = {
-	DEN_referendum_raise_awareness = {
-		icon = GFX_decision_SOV_place_hq
-		allowed = { always = no }
-		visible = {
-			has_country_flag = den_referendum_underway
-			has_democratic_government = yes
-			NOT = { has_country_flag = den_hybrid }
-			NOT = { has_country_flag = DEN_referendum_raise_awareness_hidden }
+DEN_freedom_crisis_category = {
+	DEN_BOPA_guerilla_activity = {
+		icon = GFX_decision_SWI_consolidate_council_power
+
+		priority = 10
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			hidden_trigger = { always = no }
 		}
-		cost = 50
+
+		is_good = no
+		fixed_random_seed = no
+		selectable_mission = no
+		days_mission_timeout = 90
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout DEN_BOPA_guerilla_activity"
+			hidden_effect = { activate_mission = DEN_BOPA_guerilla_activity }
+			random_list = {
+				30 = {
+					modifier = {
+						add = -5
+						OR = {
+							has_idea = DEN_idea_BOPA_intensity1
+							has_idea = DEN_idea_BOPA_intensity2
+						}
+					}
+					modifier = {
+						add = -15
+						has_idea = DEN_idea_BOPA_intensity3
+					}
+					country_event = den.131 #City Centre Attack
+				}
+				25 = {
+					modifier = {
+						add = -5
+						OR = {
+							has_idea = DEN_idea_BOPA_intensity1
+							has_idea = DEN_idea_BOPA_intensity2
+						}
+					}
+					modifier = {
+						add = -15
+						has_idea = DEN_idea_BOPA_intensity3
+					}
+					country_event = den.132 #Factory Sabotage
+				}
+				35 = {
+					modifier = {
+						add = -5
+						OR = {
+							has_idea = DEN_idea_BOPA_intensity1
+							has_idea = DEN_idea_BOPA_intensity2
+						}
+					}
+					modifier = {
+						add = -20
+						has_idea = DEN_idea_BOPA_intensity3
+					}
+					country_event = den.133 #Armoury Raided
+				}
+				10 = {
+					modifier = {
+						add = 15
+						OR = {
+							has_idea = DEN_idea_BOPA_intensity1
+							has_idea = DEN_idea_BOPA_intensity2
+						}
+					}
+					modifier = {
+						add = 50
+						has_idea = DEN_idea_BOPA_intensity3
+					}
+					#Attack Stopped; no effect
+				}
+			}
+		}
+	}
+}
+
+DEN_naval_research_category = {
+	DEN_module_research = {
+		icon = GFX_decision_generic_research
+
+		allowed = { always = no } #activated by DEN_self_defense_fleet or DEN_seaworthy_fleet
+
+		custom_cost_text = DEN_credit_1_cost
+		custom_cost_trigger = {
+			check_variable = { DEN_naval_credits > 0 }
+		}
+
+		fire_only_once = no
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_module_research"
+			subtract_from_variable = { DEN_naval_credits = 1 }
+			if = {
+				limit = { has_dlc_mtg = yes }
+				add_tech_bonus = {
+					name = DEN_module_research_tech
+					bonus = 0.5
+					uses = 3
+					category = ship_modules_tech
+				}
+			}
+			else = {
+				navy_experience = 50
+			}
+		}
+	}
+
+	DEN_radar_research = {
+		icon = GFX_decision_radar
+
+		allowed = { always = no } #activated by DEN_self_defense_fleet or DEN_seaworthy_fleet
+
+		custom_cost_text = DEN_credit_2_cost
+		custom_cost_trigger = {
+			check_variable = { DEN_naval_credits > 1 }
+		}
+
+		fire_only_once = no
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_radar_research"
+			subtract_from_variable = { DEN_naval_credits = 2 }
+			add_tech_bonus = {
+				name = DEN_radar_research_tech
+				bonus = 1
+				uses = 2
+				category = radar_tech
+			}
+		}
+	}
+
+	DEN_destroyer_research = {
+		icon = generic_naval
+
+		allowed = { always = no } #activated by DEN_self_defense_fleet or DEN_seaworthy_fleet
+
+		custom_cost_text = DEN_credit_2_cost
+		custom_cost_trigger = {
+			check_variable = { DEN_naval_credits > 1 }
+		}
+
+		fire_only_once = no
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_destroyer_research"
+			subtract_from_variable = { DEN_naval_credits = 2 }
+			add_tech_bonus = {
+				name = DEN_destroyer_research_tech
+				bonus = 2
+				uses = 1
+				category = dd_tech
+			}
+		}
+	}
+	DEN_submarine_research = {
+		icon = generic_naval
+
+		allowed = { always = no } #activated by DEN_self_defense_fleet or DEN_seaworthy_fleet
+
+		custom_cost_text = DEN_credit_2_cost
+		custom_cost_trigger = {
+			check_variable = { DEN_naval_credits > 1 }
+		}
+
+		fire_only_once = no
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_submarine_research"
+			subtract_from_variable = { DEN_naval_credits = 2 }
+			add_tech_bonus = {
+				name = DEN_submarine_research_tech
+				bonus = 2
+				uses = 1
+				category = ss_tech
+			}
+		}
+	}
+	DEN_cruiser_research = {
+		icon = generic_naval
+
+		allowed = { always = no } #activated by DEN_self_defense_fleet or DEN_seaworthy_fleet
+
+		custom_cost_text = DEN_credit_2_cost
+		custom_cost_trigger = {
+			check_variable = { DEN_naval_credits > 1 }
+		}
+
+		fire_only_once = no
+
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_completed_focus = DEN_self_defense_fleet
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_cruiser_research"
+			subtract_from_variable = { DEN_naval_credits = 2 }
+			add_tech_bonus = {
+				name = DEN_cruiser_research_tech
+				bonus = 1
+				uses = 1
+				category = cl_tech
+			}
+			add_tech_bonus = {
+				name = DEN_cruiser_research_tech
+				bonus = 1
+				uses = 1
+				category = ca_tech
+			}
+		}
+	}
+}
+DEN_black_monday_category = {
+	DEN_bm_crisis_worsens = {
+		icon = GFX_decision_generic_inflation
+		priority = 10
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			hidden_trigger = { always = no }
+		}
+
+		is_good = no
+		selectable_mission = no
+		days_mission_timeout = 90
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout DEN_bm_crisis_worsens"
+			DEN = { country_event = { id = den.8 } }
+			custom_effect_tooltip = DEN_tt_preka_tree_unlock
+		}
+	}
+
+	DEN_encourage_local_investment = {
+		icon = GFX_decision_hol_attract_foreign_investors
+
+		allowed = { always = no } #activated by DEN_strengthening_investor_confidence
+
+		custom_cost_text = DEN_1_eco_point_cost
+		custom_cost_trigger = {
+			check_variable = { DEN_economic_credits > 0 }
+		}
+
+		fire_only_once = yes
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_encourage_local_investment"
+			subtract_from_variable = { DEN_economic_credits = 1 }
+			add_ideas = DEN_idea_confidence_in_government
+		}
+	}
+
+	DEN_increased_industry_investments = {
+		icon = GFX_decision_factories
+
+		allowed = { always = no } #activated by DEN_state_funded_industry
+
+		custom_cost_text = DEN_1_eco_point_cost
+		custom_cost_trigger = {
+			check_variable = { DEN_economic_credits > 0 }
+		}
+
+		fire_only_once = yes
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_increased_industry_investments"
+			subtract_from_variable = { DEN_economic_credits = 1 }
+			add_offsite_building = {
+				type = industrial_complex
+				level = 2
+			}
+		}
+	}
+
+	DEN_sponsored_hospital_construction = {
+		icon = GFX_decision_generic_healthcare
+
+		days_remove = 75
+
+		allowed = { always = no } #activated by DEN_universal_healthcare
+
+		custom_cost_text = DEN_1_eco_point_cost
+		custom_cost_trigger = {
+			check_variable = { DEN_economic_credits > 0 }
+		}
+
+		fire_only_once = yes
+
+		ai_will_do = { base = 100 }
+
+		modifier = {
+			consumer_goods_factor = 0.05
+			production_factory_efficiency_gain_factor = 0.1
+			monthly_population = 0.4
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_sponsored_hospital_construction"
+			subtract_from_variable = { DEN_economic_credits = 1 }
+		}
+	}
+
+	DEN_augmented_insurance_programmes = {
+		icon = GFX_decision_gre_investment_decisions
+
+		days_remove = 365
+
+		allowed = { always = no } #activated by DEN_encourage_unempl_insurance
+
+		custom_cost_text = DEN_1_eco_point_cost
+		custom_cost_trigger = {
+			check_variable = { DEN_economic_credits > 0 }
+		}
+
+		fire_only_once = yes
+
+		ai_will_do = { base = 0 }
+
+		modifier = {
+			consumer_goods_factor = -0.15
+			production_factory_max_efficiency_factor = 0.05
+			stability_factor = -0.15
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_augmented_insurance_programmes"
+			subtract_from_variable = { DEN_economic_credits = 1 }
+		}
+	}
+
+	DEN_extra_loan_deposits = {
+		icon = GFX_decision_cash_flow
+
+		allowed = { always = no } #activated by DEN_loan_to_danish_companies
+
+		available = {
+			has_idea = DEN_idea_investing_companies
+		}
+
+		custom_cost_text = DEN_1_eco_point_cost
+		custom_cost_trigger = {
+			check_variable = { DEN_economic_credits > 0 }
+		}
+
+		fire_only_once = yes
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_extra_loan_deposits"
+			subtract_from_variable = { DEN_economic_credits = 1 }
+			remove_ideas = DEN_idea_investing_companies
+			add_timed_idea = {
+				idea = DEN_idea_investing_companies2
+				days = 365
+			}
+		}
+	}
+
+	DEN_entice_immediate_investments = {
+		icon = GFX_decision_factories
+
+		allowed = { always = no } #activated by DEN_encourage_foreign_investment
+
+		custom_cost_text = DEN_1_eco_point_cost
+		custom_cost_trigger = {
+			check_variable = { DEN_economic_credits > 0 }
+		}
+
+		fire_only_once = yes
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_entice_immediate_investments"
+			subtract_from_variable = { DEN_economic_credits = 1 }
+			add_offsite_building = {
+				type = industrial_complex
+				level = 1
+			}
+			add_offsite_building = {
+				type = arms_factory
+				level = 1
+			}
+		}
+	}
+}
+DEN_pacifist_accord_category = {
+	DEN_convincing_mission_1 = { #First Obstacle Removed
+		icon = GFX_decision_generic_protection
+
+		available = { hidden_trigger = { always = no } }
+		allowed = { always = no }
+
+		is_good = yes
+		selectable_mission = no
+		days_mission_timeout = 120
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout DEN_convincing_mission_1" #Next!
+			activate_mission = DEN_convincing_mission_2
+			swap_ideas = {
+				remove_idea = DEN_idea_pacifist_accord
+				add_idea = DEN_idea_pacifist_accord_partial
+			}
+		}
+	}
+
+	DEN_convincing_mission_2 = { #Second Obstacle Removed
+		icon = GFX_decision_generic_protection
+
+		available = { hidden_trigger = { always = no } }
+		allowed = { always = no }
+
+		is_good = yes
+		selectable_mission = no
+		days_mission_timeout = 120
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout DEN_convincing_mission_2" #Next!
+			activate_mission = DEN_convincing_mission_3
+			swap_ideas = {
+				remove_idea = DEN_idea_pacifist_accord_partial
+				add_idea = DEN_idea_pacifist_accord_diminished
+			}
+		}
+	}
+
+	DEN_convincing_mission_3 = { #Pacifist Accord Removed
+		icon = GFX_decision_generic_protection
+
+		available = { hidden_trigger = { always = no } }
+		allowed = { always = no }
+
+		is_good = yes
+		selectable_mission = no
+		days_mission_timeout = 120
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout DEN_convincing_mission_3" #Win
+			country_event = den.143
+			remove_ideas = DEN_idea_pacifist_accord_diminished
+		}
+	}
+
+	DEN_prior_munch_negotiations = { #Army for safekeeping
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no }
+
+		cost = 25
+		days_remove = 10
+
 		ai_will_do = {
 			base = 0
 			modifier = {
 				add = 25
-				has_country_flag = {
-					flag = DEN_awareness_raised
-					value < 2
-				}
+				has_political_power > 50
+			}
+			modifier = {
+				add = 50
+				has_political_power > 100
 			}
 		}
+
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_referendum_raise_awareness"
-			custom_effect_tooltip = den_tt_awareness_been_raised
-			modify_country_flag = {
-				flag = DEN_awareness_raised
-				value = 1
-			}
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_prior_munch_negotiations"
+			add_war_support = 0.01
 			if = {
 				limit = {
-					has_country_flag = den_referendum_underway
+					has_active_mission = DEN_convincing_mission_1
 				}
-				set_country_flag = { flag = DEN_referendum_raise_awareness_hidden days = 2 }
-				hidden_effect = {
-					activate_targeted_decision = { target = THIS decision = DEN_referendum_raise_awareness }
+				add_days_mission_timeout = {
+					mission = DEN_convincing_mission_1
+					days = -10
+				}
+			}
+			else_if = {
+				limit = {
+					has_active_mission = DEN_convincing_mission_2
+				}
+				add_days_mission_timeout = {
+					mission = DEN_convincing_mission_2
+					days = -10
+				}
+			}
+			else_if = {
+				limit = {
+					has_active_mission = DEN_convincing_mission_3
+				}
+				add_days_mission_timeout = {
+					mission = DEN_convincing_mission_3
+					days = -10
 				}
 			}
 		}
-		days_remove = 2
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove DEN_prior_munch_negotiations"
+		}
+	}
+
+	DEN_threaten_munch = { #Pressure on fears of internal instability
+		icon = GFX_decision_eng_trade_unions_demand
+
+		allowed = { always = no }
+
+		cost = 0
+		days_remove = 10
+
+		available = {
+			check_variable = {
+				tooltip = DEN_required_party_pop_tt
+				party_popularity@ruling_party > 0.02
+			}
+		}
+
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				check_variable = { party_popularity@ruling_party < 0.25 }
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_threaten_munch"
+			set_temp_variable = { ideology_change_var = -0.03 }
+			change_ruling_party_popularity = yes
+			add_war_support = 0.02
+			if = {
+				limit = {
+					has_active_mission = DEN_convincing_mission_1
+				}
+				add_days_mission_timeout = {
+					mission = DEN_convincing_mission_1
+					days = -12
+				}
+			}
+			else_if = {
+				limit = {
+					has_active_mission = DEN_convincing_mission_2
+				}
+				add_days_mission_timeout = {
+					mission = DEN_convincing_mission_2
+					days = -12
+				}
+			}
+			else_if = {
+				limit = {
+					has_active_mission = DEN_convincing_mission_3
+				}
+				add_days_mission_timeout = {
+					mission = DEN_convincing_mission_3
+					days = -12
+				}
+			}
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove DEN_threaten_munch"
+		}
+	}
+
+	DEN_welfare_compromises = { #Socdem Only - Compromise on Welfare State budget
+		icon = GFX_decision_generic_fundraising
+
+		allowed = { always = no }
+
+		custom_cost_trigger = {
+			has_stability > 0.05
+		}
+		custom_cost_text = stability5
+		days_remove = 30
+
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_stability < 0.3
+			}
+		}
+
+		modifier = {
+			consumer_goods_factor = -0.1
+			stability_factor = -0.2
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_welfare_compromises"
+			hidden_effect = { add_stability = -0.05 }
+			add_war_support = 0.04
+			if = {
+				limit = {
+					has_active_mission = DEN_convincing_mission_1
+				}
+				add_days_mission_timeout = {
+					mission = DEN_convincing_mission_1
+					days = -20
+				}
+			}
+			else_if = {
+				limit = {
+					has_active_mission = DEN_convincing_mission_2
+				}
+				add_days_mission_timeout = {
+					mission = DEN_convincing_mission_2
+					days = -20
+				}
+			}
+			else_if = {
+				limit = {
+					has_active_mission = DEN_convincing_mission_3
+				}
+				add_days_mission_timeout = {
+					mission = DEN_convincing_mission_3
+					days = -20
+				}
+			}
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove DEN_welfare_compromises"
+		}
+	}
+
+	DEN_social_spending = { #MarLib Only - Introduce some social spending
+		icon = GFX_decision_generic_welfare
+
+		allowed = { always = no }
+
+		cost = 0
+		days_remove = 30
+
+		ai_will_do = { base = 100 }
+
+		modifier = {
+			production_factory_max_efficiency_factor = -0.25
+			production_factory_efficiency_gain_factor = -0.2
+			stability_factor = 0.15
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete DEN_social_spending"
+			add_war_support = 0.04
+			if = {
+				limit = {
+					has_active_mission = DEN_convincing_mission_1
+				}
+				add_days_mission_timeout = {
+					mission = DEN_convincing_mission_1
+					days = -20
+				}
+			}
+			else_if = {
+				limit = {
+					has_active_mission = DEN_convincing_mission_2
+				}
+				add_days_mission_timeout = {
+					mission = DEN_convincing_mission_2
+					days = -20
+				}
+			}
+			else_if = {
+				limit = {
+					has_active_mission = DEN_convincing_mission_3
+				}
+				add_days_mission_timeout = {
+					mission = DEN_convincing_mission_3
+					days = -20
+				}
+			}
+		}
+		remove_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision remove DEN_social_spending"
+		}
 	}
 }
-
