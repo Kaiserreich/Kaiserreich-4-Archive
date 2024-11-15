@@ -14,6 +14,7 @@ country_event = { #Check for possible annexations (donotlog)
 	is_triggered_only = yes
 
 	trigger = {
+		surrender_progress < 0.1
 		NOT = {
 			# Special tags - these shouldn't exist outside of very specific circumstances
 			tag = XXA #debug tag
@@ -21,22 +22,73 @@ country_event = { #Check for possible annexations (donotlog)
 			original_tag = IKH #not meant to survive
 			AND = {
 				has_civil_war = yes
-				any_enemy_country = {
-					original_tag = ROOT
+				any_country_with_original_tag = {
+					original_tag_to_check = ROOT
 					civilwar_target = ROOT #== start_civil_war
+					has_war_with = ROOT #sanity check
 				}
-			}
-			surrender_progress > 0.1
-			any_of_scopes = {
-				array = global.majors
-				has_war_with = ROOT
-				has_capitulated = no
-				same_continent_as_ROOT = yes
 			}
 		}
 	}
 
 	option = {
+		every_other_country = {
+			limit = {
+				has_capitulated = no
+				OR = {
+					AND = {
+						is_ally_with = ROOT
+						any_home_area_neighbor_country = {
+							has_war_with = PREV
+							has_capitulated = no
+						}
+					}
+					AND = {
+						has_war_with = ROOT
+						any_home_area_neighbor_country = {
+							is_ally_with = ROOT
+							has_capitulated = no
+						}
+					}
+				}
+			}
+			if = {
+				limit = { is_in_europe = yes }
+				set_temp_variable = { europe_blocked = 1 }
+			}
+			else_if = {
+				limit = { is_in_north_america = yes }
+				set_temp_variable = { north_america_blocked = 1 }
+			}
+			else_if = {
+				limit = { is_in_central_america = yes }
+				set_temp_variable = { central_america_blocked = 1 }
+			}
+			else_if = {
+				limit = { is_in_south_america = yes }
+				set_temp_variable = { south_america_blocked = 1 }
+			}
+			else_if = {
+				limit = { is_in_australia = yes } #Oceania
+				set_temp_variable = { australia_blocked = 1 }
+			}
+			else_if = {
+				limit = { is_in_asia = yes }
+				set_temp_variable = { asia_blocked = 1 }
+			}
+			else_if = {
+				limit = { is_in_india = yes }
+				set_temp_variable = { india_blocked = 1 }
+			}
+			else_if = {
+				limit = { is_in_middle_east = yes }
+				set_temp_variable = { middle_east_blocked = 1 }
+			}
+			else_if = {
+				limit = { is_in_africa = yes }
+				set_temp_variable = { africa_blocked = 1 }
+			}
+		}
 		for_each_scope_loop = {
 			array = owned_controlled_states
 
@@ -89,269 +141,89 @@ country_event = { #Check for possible annexations (donotlog)
 					add_to_temp_array = { annexation_states_africa = THIS }
 				}
 			}
-
-			### build needed variables for multi-state annexations
-			if = {
-				limit = { has_variable = annexation_target:annexation_extra_states^num }
-				if = {
-					limit = { var:annexation_target = { is_valid_annexation_state = yes } }
-					set_temp_variable = { priority_state_@var:annexation_target = annexation_target }
-					for_each_scope_loop = {
-						array = annexation_target:annexation_extra_states
-						if = {
-							limit = {
-								is_allowed_annexation_state_for_owner = yes
-								impassable = no
-							}
-
-							### build owners array
-							if = {
-								limit = { NOT = { is_in_array = { owners_@PREV = owner } } }
-								add_to_temp_array = { owners_@PREV = owner }
-							}
-
-							### add up total owned strategic value
-							add_to_temp_variable = { total_score_@var:owner = state_strategic_value }
-						}
-					}
-				}
-				else = {
-					for_each_scope_loop = {
-						array = annexation_target:annexation_extra_states
-						if = {
-							limit = {
-								is_allowed_annexation_state_for_owner = yes
-								impassable = no
-							}
-
-							### build owners array
-							if = {
-								limit = { NOT = { is_in_array = { owners_@PREV = owner } } }
-								add_to_temp_array = { owners_@PREV = owner }
-							}
-
-							### add up total owned strategic value
-							add_to_temp_variable = { total_score_@var:owner = state_strategic_value }
-
-							### select best state to target the decision
-							if = {
-								limit = {
-									is_owned_by = ROOT
-									check_variable = { annexation_target = PREV.annexation_target }
-								}
-								set_temp_variable = { has_valid_state_@var:annexation_target = THIS }
-								if = {
-									limit = { NOT = { has_variable = priority_state_@var:annexation_target } }
-									set_temp_variable = { priority_state_@var:annexation_target = THIS }
-								}
-								else_if = {
-									limit = { var:priority_state_@var:annexation_target = { check_variable = { state_strategic_value < PREV.state_strategic_value } } }
-									set_temp_variable = { priority_state_@var:annexation_target = THIS }
-								}
-								else_if = {
-									limit = { var:priority_state_@var:annexation_target = { check_variable = { id > PREV.id } } }
-									set_temp_variable = { priority_state_@var:annexation_target = THIS }
-								}
-							}
-						}
-					}
-				}
-
-				### assign total owned strategic value to each owner
-				for_each_loop = {
-					array = owners_@THIS
-					add_to_temp_array = { owner_scores_@THIS = total_score_@var:v }
-				}
-
-				### select country with the highest total owned strategic value
-				find_highest_in_array = { array = owner_scores_@THIS }
-				set_temp_variable = { priority_country_@var:annexation_target = owners_@THIS^i }
-			}
 		}
 		if = {
-			limit = {
-				NOT = {
-					any_enemy_country = {
-						capital_scope = {
-							is_on_continent = europe
-							is_core_of = PREV #ignore wartime capital move antics
-						}
-						has_capitulated = no
-					}
-				}
-			}
+			limit = { NOT = { has_variable = europe_blocked } }
 			for_each_scope_loop = {
 				array = annexation_states_europe
+				build_annexation_temp_arrays = yes
 				check_possible_annexations_europe = yes
 			}
 		}
 		if = {
-			limit = {
-				NOT = {
-					any_enemy_country = {
-						capital_scope = {
-							is_on_continent = north_america
-							is_core_of = PREV #ignore wartime capital move antics
-						}
-						has_capitulated = no
-					}
-				}
-			}
+			limit = { NOT = { has_variable = north_america_blocked } }
 			for_each_scope_loop = {
 				array = annexation_states_north_america
+				build_annexation_temp_arrays = yes
 				check_possible_annexations_north_america = yes
 			}
 		}
 		if = {
-			limit = {
-				NOT = {
-					any_enemy_country = {
-						capital_scope = {
-							is_on_continent = central_america
-							is_core_of = PREV #ignore wartime capital move antics
-						}
-						has_capitulated = no
-					}
-				}
-			}
+			limit = { NOT = { has_variable = central_america_blocked } }
 			for_each_scope_loop = {
 				array = annexation_states_central_america
+				build_annexation_temp_arrays = yes
 				check_possible_annexations_central_america = yes
 			}
 		}
 		if = {
-			limit = {
-				NOT = {
-					any_enemy_country = {
-						capital_scope = {
-							is_on_continent = south_america
-							is_core_of = PREV #ignore wartime capital move antics
-						}
-						has_capitulated = no
-					}
-				}
-			}
+			limit = { NOT = { has_variable = south_america_blocked } }
 			for_each_scope_loop = {
 				array = annexation_states_south_america
+				build_annexation_temp_arrays = yes
 				check_possible_annexations_south_america = yes
 			}
 		}
 		if = {
-			limit = {
-				NOT = {
-					any_enemy_country = {
-						capital_scope = {
-							is_on_continent = australia
-							is_core_of = PREV #ignore wartime capital move antics
-						}
-						has_capitulated = no
-					}
-				}
-			}
+			limit = { NOT = { has_variable = australia_blocked } }
 			for_each_scope_loop = {
 				array = annexation_states_australia
+				build_annexation_temp_arrays = yes
 				check_possible_annexations_australia = yes
 			}
 		}
 		if = {
-			limit = {
-				NOT = {
-					has_war_with = var:global.russia
-					has_war_with = var:617.owner #Dihua
-					has_war_with = var:619.owner #Kashgar
-					has_war_with = var:1083.owner #Kumul
-					any_enemy_country = {
-						OR = {
-							capital_scope = {
-								OR = {
-									is_central_asia = yes
-									is_xinjiang = yes
-								}
-								is_core_of = PREV #ignore wartime capital move antics
-							}
-						}
-						has_capitulated = no
-					}
-				}
-			}
+			limit = { NOT = { has_variable = asia_blocked } }
 			for_each_scope_loop = {
 				array = annexation_states_central_asia
+				build_annexation_temp_arrays = yes
 				check_possible_annexations_central_asia = yes
-			}
-		}
-		if = {
-			limit = {
-				NOT = {
-					any_enemy_country = {
-						capital_scope = {
-							is_on_continent = asia
-							is_central_asia = no
-							is_core_of = PREV #ignore wartime capital move antics
-						}
-						has_capitulated = no
-					}
-				}
 			}
 			for_each_scope_loop = {
 				array = annexation_states_asia
+				build_annexation_temp_arrays = yes
 				check_possible_annexations_asia = yes
 			}
 		}
 		if = {
-			limit = {
-				NOT = {
-					any_enemy_country = {
-						capital_scope = {
-							is_on_continent = india
-							is_core_of = PREV #ignore wartime capital move antics
-						}
-						has_capitulated = no
-					}
-				}
-			}
+			limit = { NOT = { has_variable = india_blocked } }
 			for_each_scope_loop = {
 				array = annexation_states_india
+				build_annexation_temp_arrays = yes
 				check_possible_annexations_india = yes
 			}
 		}
 		if = {
-			limit = {
-				NOT = {
-					any_enemy_country = {
-						capital_scope = {
-							is_on_continent = middle_east
-							is_core_of = PREV #ignore wartime capital move antics
-						}
-						has_capitulated = no
-					}
-				}
-			}
+			limit = { NOT = { has_variable = middle_east_blocked } }
 			for_each_scope_loop = {
 				array = annexation_states_middle_east
+				build_annexation_temp_arrays = yes
 				check_possible_annexations_middle_east = yes
 			}
 		}
 		if = {
-			limit = {
-				NOT = {
-					any_enemy_country = {
-						capital_scope = {
-							is_on_continent = africa
-							is_core_of = PREV #ignore wartime capital move antics
-						}
-						has_capitulated = no
-					}
-				}
-			}
+			limit = { NOT = { has_variable = africa_blocked } }
 			for_each_scope_loop = {
 				array = annexation_states_africa
+				build_annexation_temp_arrays = yes
 				check_possible_annexations_africa = yes
 			}
 		}
+		set_temp_variable = { target_id = id }
+		round_temp_variable = target_id
 		for_each_scope_loop = {
 			array = annexation_resistance_states
-			set_temp_variable = { target_id = ROOT.id }
-			round_temp_variable = target_id
+			clr_state_flag = annexations_resistance_@ROOT
 			meta_effect = {
 				text = { remove_resistance_target = [ID] }
 				ID = "[?target_id]"
@@ -370,8 +242,7 @@ country_event = { #Check for possible annexations (donotlog)
 							annexations_no_occupation_penalty = no
 						}
 						add_to_array = { ROOT.annexation_resistance_states = THIS }
-						set_temp_variable = { target_id = ROOT.id }
-						round_temp_variable = target_id
+						set_state_flag = annexations_resistance_@ROOT
 						meta_effect = {
 							text = {
 								add_resistance_target = {
@@ -393,8 +264,7 @@ country_event = { #Check for possible annexations (donotlog)
 					annexations_no_occupation_penalty = no
 				}
 				add_to_array = { ROOT.annexation_resistance_states = THIS }
-				set_temp_variable = { target_id = ROOT.id }
-				round_temp_variable = target_id
+				set_state_flag = annexations_resistance_@ROOT
 				meta_effect = {
 					text = {
 						add_resistance_target = {
