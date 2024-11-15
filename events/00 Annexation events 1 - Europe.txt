@@ -9574,6 +9574,10 @@ country_event = { #Fate of Britain
 				}
 			}
 			if = {
+				limit = { is_british_tag = yes }
+				save_event_target_as = can_annex
+			}
+			if = {
 				limit = {
 					has_event_target = KR_king_base
 					event_target:KR_king_base = { ROOT_can_grant_land = yes }
@@ -9592,7 +9596,7 @@ country_event = { #Fate of Britain
 		name = annex.1044.a
 		trigger = {
 			121 = { is_valid_annexation_state = yes } #Lothian
-			NOT = { is_in_faction_with = ENT }
+			annexations_can_release_united_kingdom = no
 			is_subject = no
 		}
 		ai_chance = { base = 60 }
@@ -9632,12 +9636,13 @@ country_event = { #Fate of Britain
 		}
 		recheck_annexations = yes
 	}
+
 	option = { #release England and Scotland
 		log = "[GetLogInfo]: event annex.1044 option annex.1044.b"
 		name = annex.1044.b
 		trigger = {
 			121 = { is_valid_annexation_state = yes } #Lothian
-			NOT = { is_in_faction_with = ENT }
+			annexations_can_release_united_kingdom = no
 			is_subject = no
 		}
 		ai_chance = { base = 0 }
@@ -9685,13 +9690,14 @@ country_event = { #Fate of Britain
 		}
 		recheck_annexations = yes
 	}
+
 	option = { #release England, Scotland and Wales
 		log = "[GetLogInfo]: event annex.1044 option annex.1044.c"
 		name = annex.1044.c
 		trigger = {
 			121 = { is_valid_annexation_state = yes } #Lothian
 			122 = { is_valid_annexation_state = yes } #South Wales
-			NOT = { is_in_faction_with = ENT }
+			annexations_can_release_united_kingdom = no
 			is_subject = no
 		}
 		ai_chance = { base = 0 }
@@ -9757,7 +9763,7 @@ country_event = { #Fate of Britain
 		name = annex.1044.d
 		trigger = {
 			121 = { is_valid_annexation_state = no } #Lothian
-			NOT = { is_in_faction_with = ENT }
+			annexations_can_release_united_kingdom = no
 			is_subject = no
 		}
 		ai_chance = { base = 0 }
@@ -9798,13 +9804,7 @@ country_event = { #Fate of Britain
 		log = "[GetLogInfo]: event annex.1044 option annex.1044.e"
 		name = annex.1044.e
 		trigger = {
-			OR = {
-				is_ally_with = event_target:KR_king_base
-				AND = {
-					is_in_faction_with = ENT
-					NOT = { country_exists = event_target:KR_king_base }
-				}
-			}
+			annexations_can_release_united_kingdom = yes
 			is_subject = no
 		}
 		country_event = uk.1
@@ -9817,7 +9817,14 @@ country_event = { #Fate of Britain
 		trigger = {
 			has_event_target = british_exiles
 		}
-		ai_chance = { base = 40 }
+		ai_chance = {
+			base = 40
+			modifier = {
+				factor = 0
+				is_major = yes
+				NOT = { is_ally_with = event_target:british_exiles }
+			}
+		}
 		set_temp_variable = { tag_to_release = event_target:british_exiles }
 		every_owned_state = {
 			limit = {
@@ -9847,6 +9854,28 @@ country_event = { #Fate of Britain
 				is_valid_annexation_state = yes
 			}
 			transfer_state_and_notify = yes
+		}
+		recheck_annexations = yes
+	}
+
+	option = { #Integrate
+		log = "[GetLogInfo]: event annex.1044 option annex.integration"
+		name = annex.integration
+		trigger = {
+			annexations_can_annex = yes
+		}
+		every_owned_state = {
+			limit = { is_great_britain = yes }
+			add_claim_of_ROOT = yes
+		}
+		if = {
+			limit = { owns_state = 121 } #Lothian
+			GBP_change_to_britain = yes
+			if = {
+				limit = { has_cosmetic_tag = ENG_england }
+				effect_tooltip = { set_cosmetic_tag = ENG }
+				drop_cosmetic_tag = yes
+			}
 		}
 		recheck_annexations = yes
 	}
@@ -22716,60 +22745,32 @@ country_event = { #Fate of Saxony
 				}
 				save_event_target_as = can_annex
 			}
-			annexations_create_german_event_targets = yes
 			if = {
-				limit = { annexations_germany_is_independent_ally_or_puppet_of_ROOT = no }
-				if = {
-					limit = {
-						59 = { #Hanover
-							annexations_state_owner_is_valid_grant_target = yes
-							owner = {
-								NOT = { tag = event_target:germany }
-								NOT = { tag = event_target:hanover }
-								ROOT_can_grant_land = yes }
+				limit = {
+					59 = { #Hanover
+						annexations_state_owner_is_valid_grant_target = yes
+						owner = {
+							NOT = { tag = event_target:germany }
+							NOT = { tag = event_target:hanover }
+							ROOT_can_grant_land = yes }
+					}
+				}
+				var:59.owner = { save_event_target_as = hanover }
+			}
+			if = {
+				limit = {
+					64 = { #Brandenburg
+						annexations_state_owner_is_valid_grant_target = yes
+						owner = {
+							NOT = { tag = event_target:germany }
+							NOT = { tag = event_target:hanover }
+							ROOT_can_grant_land = yes
 						}
 					}
-					var:59.owner = { save_event_target_as = hanover }
 				}
-				if = {
-					limit = {
-						64 = { #Brandenburg
-							annexations_state_owner_is_valid_grant_target = yes
-							owner = {
-								NOT = { tag = event_target:germany }
-								NOT = { tag = event_target:hanover }
-								ROOT_can_grant_land = yes
-							}
-						}
-					}
-					var:64.owner = { save_event_target_as = brandenburg }
-				}
+				var:64.owner = { save_event_target_as = brandenburg }
 			}
 		}
-	}
-
-	option = { #Give to Germany
-		log = "[GetLogInfo]: event annex.1115 option annex.europe.give_to_germany"
-		name = annex.europe.give_to_germany
-		trigger = {
-			has_event_target = germany
-		}
-		ai_chance = {
-			base = 100
-			modifier = {
-				factor = 0
-				annexations_can_annex = yes
-			}
-		}
-		set_temp_variable = { tag_to_release = event_target:germany }
-		every_owned_state = {
-			limit = {
-				is_saxony = yes
-				is_valid_annexation_state = yes
-			}
-			transfer_state_and_notify = yes
-		}
-		recheck_annexations = yes
 	}
 
 	option = { #Give to German tag 1 (owner of Hanover)

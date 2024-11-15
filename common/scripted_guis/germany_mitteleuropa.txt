@@ -78,10 +78,6 @@ scripted_gui = {
 							base = 1
 							modifier = {
 								factor = 0
-								check_variable = { agenda:agenda_idea = MIT_supported_agenda:agenda_idea } #don't cancel your vote
-							}
-							modifier = {
-								factor = 0
 								has_war_with = agenda:agenda_supporters^0
 							}
 							modifier = {
@@ -102,7 +98,7 @@ scripted_gui = {
 								ic_ratio = { tag = MIT ratio < 0.3 }
 							}
 							modifier = {
-								factor = 10
+								factor = 25
 								original_tag = GER
 								is_in_array = { agenda:available_for = THIS }
 							}
@@ -113,7 +109,7 @@ scripted_gui = {
 							}
 							modifier = {
 								set_temp_variable = { consolidation_factor = agenda:agenda_supporters^num }
-								divide_temp_variable = { consolidation_factor = 8 }
+								divide_temp_variable = { consolidation_factor = 20 }
 								add_to_temp_variable = { consolidation_factor = 1 }
 								factor = consolidation_factor
 							}
@@ -148,8 +144,13 @@ scripted_gui = {
 								OR = {
 									original_tag = BEL
 									original_tag = POL
+									original_tag = UKR
 								}
 								MIT = { tag = GER }
+							}
+							modifier = {
+								factor = 10 #everyone wants the enlargement directorate
+								check_variable = { agenda:agenda_idea = token:MIT_enlargement_directorate_idea }
 							}
 							modifier = {
 								factor = 1.25
@@ -389,25 +390,63 @@ scripted_gui = {
 				}
 				else_if = {
 					limit = { check_variable = { MIT_supported_agenda = agenda } }
-					#if the leader of a leadership challenge gives up, clear it
 					if = {
-						limit = {
-							var:MIT_supported_agenda = {
-								has_character_flag = MIT_challenge_leadership
-								var:agenda_supporters^0 = { tag = ROOT }
+						limit = { is_ai = no } #temp workaround
+						if = { #if the leader of a leadership challenge gives up, clear it
+							limit = {
+								var:MIT_supported_agenda = {
+									has_character_flag = MIT_challenge_leadership
+									var:agenda_supporters^0 = { tag = ROOT }
+								}
+							}
+							every_country = {
+								limit = {
+									has_variable = MIT_supported_agenda
+									var:MIT_supported_agenda = { has_character_flag = MIT_challenge_leadership }
+								}
+								var:MIT_supported_agenda = { MIT_stop_supporting_agenda = yes }
+							}
+							MIT_apply_voting_cooldown = yes
+						}
+						else_if = { #if the leader of a country-restricted agenda cancels it, and it is not available to anyone else, clear it
+							limit = {
+								var:MIT_supported_agenda = {
+									is_in_array = { available_for = ROOT }
+									var:agenda_supporters^0 = { tag = ROOT }
+								}
+							}
+							if = {
+								limit = {
+									var:MIT_supported_agenda = {
+										any_of_scopes = {
+											array = available_for
+											NOT = { tag = ROOT }
+											is_in_array = { PREV.agenda_supporters = THIS }
+										}
+									}
+								}
+								var:MIT_supported_agenda = {
+									MIT_stop_supporting_agenda = yes
+									random_scope_in_array = {
+										array = available_for
+										limit = { is_in_array = { PREV.agenda_supporters = THIS } }
+										PREV = { MIT_set_as_agenda_leader = yes }
+									}
+								}
+							}
+							else = {
+								every_country = {
+									limit = {
+										has_variable = MIT_supported_agenda
+										var:MIT_supported_agenda = { has_character_flag = MIT_challenge_leadership }
+									}
+									var:MIT_supported_agenda = { MIT_stop_supporting_agenda = yes }
+								}
 							}
 						}
-						every_country = {
-							limit = {
-								has_variable = MIT_supported_agenda
-								var:MIT_supported_agenda = { has_character_flag = MIT_challenge_leadership }
-							}
+						else = {
 							var:MIT_supported_agenda = { MIT_stop_supporting_agenda = yes }
 						}
-						MIT_apply_voting_cooldown = yes
-					}
-					else = {
-						var:MIT_supported_agenda = { MIT_stop_supporting_agenda = yes }
 					}
 				}
 				else = {
