@@ -43,6 +43,7 @@ NDefines.NDiplomacy.MAX_TRUST_VALUE = 200									-- Vanilla is 100
 NDefines.NDiplomacy.MIN_TRUST_VALUE = -200									-- Vanilla is -100
 NDefines.NDiplomacy.MAX_OPINION_VALUE = 200									-- Vanilla is 100
 NDefines.NDiplomacy.MIN_OPINION_VALUE = -200								-- Vanilla is -100
+NDefines.NDiplomacy.BASE_TRUCE_PERIOD = 400									-- Vanilla is 180
 NDefines.NDiplomacy.VERY_GOOD_OPINION = 100									-- Vanilla is 50
 NDefines.NDiplomacy.VERY_BAD_OPINION = -100									-- Vanilla is -50
 NDefines.NDiplomacy.FRONT_IS_DANGEROUS = 0									-- Vanilla is -100
@@ -182,3 +183,6 @@ NDefines.NAI.DESIRE_USE_XP_TO_UPGRADE_AIR_EQUIPMENT = 1.5					-- Vanilla is 1 - 
 NDefines.NSupply.AI_FRONT_MINIMUM_UNITS_PER_PROVINCE_FOR_SUPPLY_CALCULATIONS = 0	-- Vanilla is 1
 NDefines.NSupply.AI_FRONT_DIVISIONS_PER_SUPPLY_POINT = 0.7							-- Vanilla is 1.0
 NDefines.NAITheatre.AI_THEATRE_SUPPLY_CRISIS_LIMIT = 0.25								-- Vanilla is 0.1
+
+-- Geography
+NDefines.NGeography.MEDITERRANEAN_SEA_REGIONS = { 29, 68, 69, 168, 169, 223, 271 }	-- KR map changes
