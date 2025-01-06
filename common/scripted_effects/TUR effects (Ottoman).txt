@@ -786,12 +786,12 @@ OTT_launch_revolts = {
 }
 
 OTT_set_up_suez_canal_zone = {
-	set_global_flag = SUEZ_SUCCESS
-	PAL = {
-		add_state_core = 753
-		transfer_state = 753
-		remove_state_core = 453
-		remove_state_core = 454
+	hidden_effect = {
+		set_temp_variable = { tag_to_release = PAL }
+		753 = { remove_claim_and_add_core_of_target = yes }
+		release_targeted_tag = yes
+	}
+	var:tag_to_release = {
 		set_cosmetic_tag = PAL_suez
 		set_politics = {
 			ruling_party = market_liberal
@@ -822,9 +822,8 @@ OTT_set_up_suez_canal_zone = {
 		}
 	}
 	if = {
-		limit = {
-			tag = OTT
-		}
+		limit = { tag = OTT }
+		set_global_flag = SUEZ_SUCCESS
 		every_country = {
 			limit = {
 				has_socialist_government = no
@@ -837,21 +836,18 @@ OTT_set_up_suez_canal_zone = {
 					tag = CAN
 					tag = GBR
 					tag = ENT
-					tag = OTT
 					tag = SIC
 					tag = HOL
 					tag = BEL
 					tag = GRE
 				}
-			}
-			PAL = {
-				give_military_access = PREV
 			}
 			country_event = ottfor.49
 		}
 		activate_decision = Axis_Suez_Commence_Reparations_OTT
 	}
 	else = {
+		clr_global_flag = SUEZ_CANAL_BLOCKED
 		every_country = {
 			limit = {
 				has_socialist_government = no
@@ -864,54 +860,60 @@ OTT_set_up_suez_canal_zone = {
 					tag = CAN
 					tag = GBR
 					tag = ENT
-					tag = OTT
 					tag = SIC
 					tag = HOL
 					tag = BEL
 					tag = GRE
+					tag = TUR
 				}
-			}
-			PAL = {
-				give_military_access = PREV
 			}
 			country_event = ottfor.491
 		}
-		clr_global_flag = SUEZ_CANAL_BLOCKED
 	}
 }
 
 PAL_remove_from_convention = {
-	clr_country_flag = PAL_convention_member
 	if = {
-		limit = { has_guaranteed = PAL }
-		diplomatic_relation = {
-			country = PAL
-			relation = guarantee
-			active = no
+		limit = { has_country_flag = PAL_convention_member }
+		clr_country_flag = PAL_convention_member
+		if = {
+			limit = { has_guaranteed = PAL }
+			diplomatic_relation = {
+				country = PAL
+				relation = guarantee
+				active = no
+			}
 		}
-	}
-	add_ai_strategy = {
-		type = ignore_claim
-		id = PAL
-		value = -1
-	}
-	add_ai_strategy = {
-		type = befriend
-		id = PAL
-		value = -200
-	}
-	add_ai_strategy = {
-		type = invade
-		id = PAL
-		value = 200
-	}
-	remove_ideas = {
-		pal_dividends
-		pal_red_cross_port_said
+		if = {
+			limit = { has_non_aggression_pact_with = PAL }
+			diplomatic_relation = {
+				country = PAL
+				relation = non_aggression_pact
+				active = no
+			}
+		}
+		if = {
+			limit = { has_military_access_to = PAL }
+			PAL = {
+				diplomatic_relation = {
+					country = PREV
+					relation = military_access
+					active = no
+				}
+			}
+		}
+		if = {
+			limit = { has_idea = pal_dividends }
+			remove_ideas = pal_dividends
+		}
+		if = {
+			limit = { has_idea = pal_red_cross_port_said }
+			remove_ideas = pal_red_cross_port_said
+		}
 	}
 }
 
-ott_russo_ottoman_convention = {
+OTT_russo_ottoman_convention_effect = {
 	### News Event
 	news_event = worldnews.442
 
@@ -961,18 +963,10 @@ ott_russo_ottoman_convention = {
 		}
 		if = {
 			limit = {
-				has_global_flag = RUSSIAN_OTTOMAN_DEAL_AFG_ANNEX
-			}
-			set_country_flag = RUS_will_attack_afghanistan
-			unlock_decision_tooltip = RUS_Attack_Afghanistan
-		}
-		else_if = {
-			limit = {
 				has_global_flag = RUSSIAN_OTTOMAN_DEAL_AFG_PUPPET
 			}
-			AFG = {
-				country_event = { id = ottfor.78 hours = 12 }
-			}
+			set_country_flag = RUS_will_attack_afghanistan
+			RUS = { activate_targeted_decision = { decision = RUS_attack target = AFG } }
 		}
 	}
 
@@ -1027,7 +1021,7 @@ ott_russo_ottoman_convention = {
 			}
 			else = {
 				set_country_flag = RUS_will_attack_persia
-				unlock_decision_tooltip = RUS_Attack_Persia
+				RUS = { activate_targeted_decision = { decision = RUS_attack target = PER } }
 				OTT = {
 					add_state_claim = 413 #Khuzestan
 					add_state_claim = 417 #Urmia
@@ -1123,42 +1117,6 @@ OTT_remove_kemalist_ideas = {
 			ott_railroad_effort
 			ott_model_farm
 			ott_autarky
-		}
-	}
-}
-
-PAL_remove_demilitarized_areas = {
-	453 = {
-		if = {
-			limit = {
-				NOT = {
-					is_owned_and_controlled_by = PAL
-				}
-				is_demilitarized_zone = yes
-			}
-			set_demilitarized_zone = no
-		}
-	}
-	454 = {
-		if = {
-			limit = {
-				NOT = {
-					is_owned_and_controlled_by = PAL
-				}
-				is_demilitarized_zone = yes
-			}
-			set_demilitarized_zone = no
-		}
-	}
-	753 = {
-		if = {
-			limit = {
-				NOT = {
-					is_owned_and_controlled_by = PAL
-				}
-				is_demilitarized_zone = yes
-			}
-			set_demilitarized_zone = no
 		}
 	}
 }
@@ -1781,14 +1739,14 @@ OTT_create_halide_edip_advisor = {
 			character = TUR_halide_edip_adivar
 			advisor = {
 				slot = political_advisor
-				idea_token = TUR_halide_edip_adivar
+				idea_token = TUR_halide_edip_adivar_advisor
 				traits = { KR_feminist_ultranationalist }
 			}
 		}
 	}
 	else = {
 		custom_effect_tooltip = available_political_advisor
-		show_ideas_tooltip = TUR_halide_edip_adivar
+		show_ideas_tooltip = TUR_halide_edip_adivar_advisor
 	}
 }
 
@@ -1824,7 +1782,10 @@ TUR_add_millet_mektepleri = {
 		}
 	}
 	else = {
-		custom_effect_tooltip = TUR_modify_millet_mektepleri
+		custom_effect_tooltip = {
+			localization_key = tooltip_modify_dynmod
+			DYNMOD = millet_mektepleri_dynamic_modifier
+		}
 		add_to_variable = {
 			ott_millet_mektepleri_research_speed = TUR_millet_mektepleri_temp
 			tooltip = research_speed_factor_tooltip

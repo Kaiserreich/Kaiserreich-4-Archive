@@ -1,0 +1,166 @@
+on_actions = {
+	on_startup = {
+		effect = {
+			KAZ = {
+				if = {
+					limit = { is_ai = no }
+					TRK = { change_tag_from = PREV }
+				}
+			}
+			BUK = {
+				set_temp_variable = { coalition_partner_var = token:paternal_autocrat }
+				add_to_coalition = yes
+				set_variable = { BUK.coalition_stability = 0.5 }
+			}
+			TRK = {
+				set_temp_variable = { coalition_partner_var = token:paternal_autocrat }
+				add_to_coalition = yes
+				set_variable = { TRK.coalition_stability = 0.5 }
+			}
+			###temporarytrk
+			586 = {
+				remove_building = {
+					type = supply_node
+					level = 1
+					province = 12583
+				}
+			}
+		}
+	}
+	on_war = {
+		effect = {
+			if = {
+				limit = {
+					FROM = { tag = BUK }
+					ROOT = { tag = TRK }
+				}
+				BUK = {
+					activate_targeted_decision = { target = THIS decision = BUK_prep_stockpile_equipment }
+					activate_targeted_decision = { target = THIS decision = BUK_prep_sell_supplies }
+				}
+			}
+		}
+	}
+
+	#ROOT is winner #FROM is loser
+	on_peaceconference_ended = {
+		effect = {
+			if = {
+				limit = {
+					FROM = { tag = TRK }
+					tag = RUS
+					NOT = { has_global_flag = CA_turkestan_victorious }
+				}
+				BUK = {
+					if = {
+						limit = { exists = yes }
+						set_country_flag = BUK_survived_CA_war
+						country_event = bukhara.700
+						get_current_government_type = yes
+						if = {
+							limit = { has_socialist_government = yes }
+							RUS = {
+								set_autonomy = { target = BUK autonomy_state = union_republic end_wars = no }
+							}
+						}
+						else = {
+							RUS = {
+								set_autonomy = { target = BUK autonomy_state = autonomous_puppet end_wars = no }
+							}
+						}
+						restore_previous_government_type = yes
+					}
+				}
+				if = {
+					limit = {
+						RUS = {
+							has_socialist_government = yes
+							NOT = { has_completed_focus = RUS_coordinate_development }
+						}
+					}
+					RUS = { country_event = russia.578 }
+				}
+				TRK = { set_major = no }
+				KHI = { set_major = no }
+			}
+		}
+	}
+
+	#ROOT is winner #FROM gets annexed - For civil wars on_civil_war_end is also fired
+	on_annex = {
+		effect = {
+			if = {
+				limit = {
+					FROM = { tag = TRK }
+					ROOT = { tag = KHI }
+				}
+				KHI = {
+					country_event = khikhan.700
+				}
+			}
+			if = {
+				limit = {
+					FROM = { tag = KHI }
+					ROOT = { tag = TRK }
+				}
+				TRK = {
+					country_event = trkrep.700
+				}
+			}
+			if = {
+				limit = {
+					FROM = { tag = TRK }
+					ROOT = { tag = RUS }
+				}
+				TRK = { clr_country_flag = TRK_central_asia_conflict_active }
+			}
+		}
+	}
+	# FROM = country receiving volunteers, ROOT = country sending volunteers
+	on_send_volunteers = {
+		effect = {
+			if = {
+				limit = {
+					FROM = {
+						OR = {
+							tag = TRK
+							tag = KHI
+							tag = KAZ
+						}
+						has_war_with = RUS
+					}
+					ROOT = {
+						OR = {
+							tag = GER
+							tag = AUS
+							is_in_faction_with = GER
+							is_in_faction_with = AUS
+						}
+						NOT = { has_country_flag = CA_sent_volunteers }
+					}
+				}
+				ROOT = {
+					country_event = rusfor.1403
+				}
+				if = {
+					limit = { RUS = { has_socialist_government = no } }
+					RUS = {
+						add_days_mission_timeout = {
+							mission = RUS_defeat_central_asia
+							days = 40
+						}
+					}
+				}
+				else = {
+					RUS = {
+						add_days_mission_timeout = {
+							mission = RUS_Socialist_liberate_central_asia
+							days = 40
+						}
+					}
+				}
+			}
+		}
+	}
+}
+

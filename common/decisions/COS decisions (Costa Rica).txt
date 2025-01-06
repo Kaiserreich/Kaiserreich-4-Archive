@@ -2212,7 +2212,7 @@ COS_Democratic_Alliance_of_the_Caribbean_decisions = {
 				separate_peace_all_wars = yes
 				leave_faction = yes
 			}
-			create_faction = cos_carib_faction
+			create_faction = democratic_alliance_of_the_caribbean
 			hidden_effect = {
 				country_event = cos.132
 			}
@@ -2280,12 +2280,14 @@ COS_Democratic_Alliance_of_the_Caribbean_decisions = {
 		ai_will_do = { factor = 300 }
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete COS_form_economic_bloc"
+			log = "[GetDateText]: [Root.GetName]: Decision complete COS_form_economic_bloc target: [From.GetName]"
 			ROOT = { add_ideas = COS_car_economic_bloc_idea }
 
-			set_variable = { COS_car_eco_bloc_modifier = 0.015 }
-			set_variable = { COS_car_eco_bloc_research = 0.01 }
-			force_update_dynamic_modifier = yes
+			COS = {
+				set_variable = { COS_car_eco_bloc_modifier = 0.015 }
+				set_variable = { COS_car_eco_bloc_research = 0.01 }
+				force_update_dynamic_modifier = yes
+			}
 		}
 	}
 
@@ -2482,8 +2484,12 @@ COS_Democratic_Alliance_of_the_Caribbean_decisions = {
 						}
 					}
 					ROOT = {
-						COS_jose_figueres_ferrer = { set_nationality = CEN }
+						COS_arturo_quiros_carranza = { set_nationality = CEN }
 						COS_rafael_castro_quesada = { set_nationality = CEN }
+						if = {
+							limit = { has_character = COS_jose_figueres_ferrer }
+							COS_jose_figueres_ferrer = { set_nationality = CEN }
+						}
 						every_core_state = { add_core_of = CEN }
 						every_subject_country = {
 							set_temp_variable = { target = THIS }
@@ -2732,9 +2738,13 @@ COS_Democratic_Alliance_of_the_Caribbean_decisions = {
 					OR = {
 						capital_scope = { region = 53 } #Caribbean Sea
 						NOT = { is_owner_neighbor_of = ROOT }
+						TAG = PAN
 					}
 					default_attack_AI_trigger_consider_naval_strength = yes
 				}
+			}
+			modifier = {
+				factor = 0
 				NOT = { has_tech = transport }
 				NOT = { has_tech = mtg_transport }
 			}
@@ -2758,10 +2768,7 @@ COS_Democratic_Alliance_of_the_Caribbean_decisions = {
 			modifier = {
 				factor = 0
 				FROM = {
-					NOT = {
-						TAG = COS
-						TAG = PAN
-					}
+					NOT = { TAG = COS }
 					OR = {
 						is_in_faction_with = ENT
 						is_guaranteed_by = ENT
@@ -2896,7 +2903,7 @@ COS_Diplomacy_decisions = {
 }
 
 COS_Ferrer_Pacifist_decisions = {
-	COS_Tribunal_Saciones_Inmediatas = {
+	COS_Tribunal_Sanciones_Inmediatas = {
 		icon = GFX_decision_eng_trade_unions_demand
 		allowed = { original_tag = COS }
 
@@ -2913,7 +2920,7 @@ COS_Ferrer_Pacifist_decisions = {
 		ai_will_do = { factor = 300 }
 
 		remove_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision remove COS_Tribunal_Saciones_Inmediatas"
+			log = "[GetDateText]: [Root.GetName]: Decision remove COS_Tribunal_Sanciones_Inmediatas"
 			add_stability = 0.10
 		}
 	}
@@ -3055,6 +3062,180 @@ COS_Ferrer_Pacifist_decisions = {
 				add_idea = COS_beacon_democracy_3a
 			}
 			country_event = cos.124
+		}
+	}
+}
+political_actions = {
+	CEN_COS_peace_timer = {
+		icon = revolt
+
+		allowed = { always = no } #activated by on_state_control_changed
+
+		available = {
+			COS = { surrender_progress < 0.65 }
+		}
+
+		cancel_trigger = {
+			OR = {
+				has_war = no
+				is_subject = yes
+				has_capitulated = yes
+			}
+		}
+
+		is_good = no
+		days_mission_timeout = 90
+
+		cancel_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision cancel CEN_COS_peace_timer"
+			hidden_effect = {
+				every_country = {
+					limit = { has_active_mission = COS_peace_timer }
+					remove_mission = COS_peace_timer
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision complete CEN_COS_peace_timer"
+			hidden_effect = {
+				every_country = {
+					limit = { has_active_mission = COS_peace_timer }
+					remove_mission = COS_peace_timer
+				}
+			}
+		}
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout CEN_COS_peace_timer"
+			if = {
+				limit = {
+					PAN = {
+						is_ally_with = COS
+						has_capitulated = yes
+					}
+				}
+				PAN = {
+					if = {
+						limit = { is_subject = yes }
+						overlord = {
+							set_autonomy = {
+								target = PREV
+								autonomy_state = autonomy_free
+							}
+						}
+					}
+					if = {
+						limit = { is_in_faction_with = COS }
+						leave_faction = yes
+					}
+				}
+			}
+			if = {
+				limit = {
+					YUC = {
+						is_ally_with = COS
+						has_capitulated = yes
+					}
+				}
+				YUC = {
+					if = {
+						limit = { is_subject = yes }
+						overlord = {
+							set_autonomy = {
+								target = PREV
+								autonomy_state = autonomy_free
+							}
+						}
+					}
+					if = {
+						limit = { is_in_faction_with = COS }
+						leave_faction = yes
+					}
+				}
+			}
+			COS = { leave_faction = yes }
+			event_target:new_cos_faction_leader = {
+				white_peace_with_ROOT = yes
+				dismantle_faction = yes
+			}
+		}
+	}
+	COS_peace_timer = {
+		icon = revolt
+
+		allowed = { always = no } #activated by on_state_control_changed
+
+		available = {
+			COS = { surrender_progress < 0.65 }
+		}
+
+		cancel_trigger = {
+			OR = {
+				NOT = { has_war_with = event_target:costa_rica_attacker }
+				event_target:costa_rica_attacker = { has_capitulated = yes }
+				event_target:costa_rica_attacker = { is_subject = yes }
+			}
+		}
+
+		is_good = yes
+		days_mission_timeout = 90
+
+		timeout_effect = {
+			log = "[GetDateText]: [Root.GetName]: Decision timeout COS_peace_timer"
+			effect_tooltip = {
+				if = {
+					limit = {
+						PAN = {
+							is_ally_with = COS
+							has_capitulated = yes
+						}
+					}
+					PAN = {
+						if = {
+							limit = { is_subject = yes }
+							overlord = {
+								set_autonomy = {
+									target = PREV
+									autonomy_state = autonomy_free
+								}
+							}
+						}
+						if = {
+							limit = { is_in_faction_with = COS }
+							leave_faction = yes
+						}
+					}
+				}
+				if = {
+					limit = {
+						YUC = {
+							is_ally_with = COS
+							has_capitulated = yes
+						}
+					}
+					YUC = {
+						if = {
+							limit = { is_subject = yes }
+							overlord = {
+								set_autonomy = {
+									target = PREV
+									autonomy_state = autonomy_free
+								}
+							}
+						}
+						if = {
+							limit = { is_in_faction_with = COS }
+							leave_faction = yes
+						}
+					}
+				}
+				COS = { leave_faction = yes }
+				event_target:new_cos_faction_leader = {
+					CEN = { white_peace_with_ROOT = yes }
+					dismantle_faction = yes
+				}
+			}
 		}
 	}
 }

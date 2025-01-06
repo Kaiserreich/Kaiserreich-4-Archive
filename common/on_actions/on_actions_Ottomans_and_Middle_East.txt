@@ -77,7 +77,203 @@ on_actions = {
 	#ROOT is winner #FROM gets annexed - For civil wars on_civil_war_end is also fired
 	on_annex = {
 		effect = {
-			FROM = { on_annex_ottomans_middle_east_effect = yes }
+			FROM = {
+				#Clear Senussi state effects if the Senussis get destroyed
+				if = {
+					limit = { tag = LBA }
+					every_state = {
+						limit = {
+							has_dynamic_modifier = {
+								modifier = pervasive_senussi_influence
+							}
+						}
+						remove_dynamic_modifier = {
+							modifier = pervasive_senussi_influence
+						}
+						clr_state_flag = lba_zawiya_1
+						clr_state_flag = lba_zawiya_2
+					}
+				}
+
+				#Disable Russo-Ottoman Convention if either tag dies
+				else_if = {
+					limit = { tag = RUS }
+					country_event = ottfor.771
+				}
+
+				#Disable Russo-Ottoman Convention if either tag dies
+				else_if = {
+					limit = { tag = TUR }
+					RUS = { country_event = ottfor.771 }
+				}
+
+				#Remove CYP cores on the Aegean
+				else_if = {
+					limit = { tag = CYP }
+					remove_state_core = 187
+					remove_state_core = 164
+				}
+
+				#Fire OTT events
+				else_if = {
+					limit = { tag = SYR }
+					TUR = { country_event = { id = syrrev.8 days = 2 } }
+				}
+				else_if = {
+					limit = { tag = KDR }
+					TUR = { country_event = { id = ottkem.34 days = 2 } }
+				}
+				# Greek general going home
+				else_if = {
+					limit = { tag = CYP }
+					GRE = { country_event = { id = cyp.4 days = 2 } }
+				}
+				else_if = {
+					limit = { tag = EGY }
+					OTT_wins_levantine_war = yes
+				}
+				else_if = {
+					limit = { tag = PER }
+					OTT_wins_levantine_war = yes
+				}
+
+				# revert Arab Federation scripts
+				if = {
+					limit = { tag = event_target:arab_federation_tag }
+					for_each_loop = {
+						array = arab_federation_tag_array
+						every_character = {
+							limit = { has_character_flag = was_leader_of_@var:v }
+							clr_character_flag = was_leader_of_@var:v
+							set_nationality = var:v
+						}
+					}
+					clear_array = arab_federation_tag_array
+					clear_global_event_target = arab_federation_tag
+					every_state = {
+						limit = { has_state_flag = arab_federation_integration }
+						disable_state_integration = yes
+					}
+				}
+
+				# Remove PAL demilitarized zones and ideas
+				if = {
+					limit = { tag = PAL }
+					PAL = { every_core_state = { set_demilitarized_zone = no } }
+					every_possible_country = {
+						limit = { has_country_flag = PAL_convention_member }
+						PAL_remove_from_convention = yes
+					}
+				}
+				else_if = {
+					limit = { has_country_flag = PAL_convention_member }
+					PAL_remove_from_convention = yes
+				}
+
+				# clear League of Arab States
+				if = {
+					limit = {
+						has_dynamic_modifier = {
+							modifier = League_of_Arab_States_dynamic_modifier
+							scope = EGY
+						}
+					}
+					if = {
+						limit = { tag = EGY }
+						clear_variable = EGY.var_LOA_members
+						remove_dynamic_modifier = {
+							modifier = League_of_Arab_States_dynamic_modifier
+							scope = EGY
+						}
+						every_country = {
+							limit = {
+								has_dynamic_modifier = {
+									modifier = League_of_Arab_States_dynamic_modifier
+									scope = EGY
+								}
+							}
+							remove_dynamic_modifier = {
+								modifier = League_of_Arab_States_dynamic_modifier
+								scope = EGY
+							}
+						}
+					}
+					else = {
+						remove_dynamic_modifier = {
+							modifier = League_of_Arab_States_dynamic_modifier
+							scope = EGY
+						}
+					}
+				}
+				else_if = {
+					limit = {
+						has_dynamic_modifier = {
+							modifier = League_of_Arab_States_dynamic_modifier
+							scope = SYR
+						}
+					}
+					if = {
+						limit = { tag = SYR }
+						clear_variable = SYR.var_LOA_members
+						remove_dynamic_modifier = {
+							modifier = League_of_Arab_States_dynamic_modifier
+							scope = SYR
+						}
+						every_country = {
+							limit = {
+								has_dynamic_modifier = {
+									modifier = League_of_Arab_States_dynamic_modifier
+									scope = SYR
+								}
+							}
+							remove_dynamic_modifier = {
+								modifier = League_of_Arab_States_dynamic_modifier
+								scope = SYR
+							}
+						}
+					}
+					else = {
+						remove_dynamic_modifier = {
+							modifier = League_of_Arab_States_dynamic_modifier
+							scope = SYR
+						}
+					}
+				}
+				else_if = {
+					limit = {
+						has_dynamic_modifier = {
+							modifier = League_of_Arab_States_dynamic_modifier
+							scope = IRQ
+						}
+					}
+					if = {
+						limit = { tag = IRQ }
+						clear_variable = IRQ.var_LOA_members
+						remove_dynamic_modifier = {
+							modifier = League_of_Arab_States_dynamic_modifier
+							scope = IRQ
+						}
+						every_country = {
+							limit = {
+								has_dynamic_modifier = {
+									modifier = League_of_Arab_States_dynamic_modifier
+									scope = IRQ
+								}
+							}
+							remove_dynamic_modifier = {
+								modifier = League_of_Arab_States_dynamic_modifier
+								scope = IRQ
+							}
+						}
+					}
+					else = {
+						remove_dynamic_modifier = {
+							modifier = League_of_Arab_States_dynamic_modifier
+							scope = IRQ
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -194,10 +390,7 @@ on_actions = {
 				}
 			}
 			if = {
-				limit = {
-					has_country_flag = PAL_convention_member
-					has_socialist_government = yes
-				}
+				limit = { has_socialist_government = yes }
 				PAL_remove_from_convention = yes
 			}
 		}
@@ -411,26 +604,10 @@ on_actions = {
 
 	on_peace = {
 		effect = {
-			# Failsafe in case on_annex doesn't fire
-			if = {
-				limit = { exists = no }
-				on_annex_ottomans_middle_east_effect = yes
-			}
-
 			# Persian events
 			if = {
 				limit = { tag = PER }
 				country_event = { id = pers.36 days = 2 }
-			}
-
-			if = {
-				limit = {
-					tag = PAL
-					is_subject_of = OTT
-				}
-				every_owned_state = {
-					set_demilitarized_zone = yes
-				}
 			}
 
 			### Ottoman events
@@ -498,6 +675,19 @@ on_actions = {
 						modifier = volunteer_limit_plus_one
 						target = ROOT
 					}
+				}
+			}
+		}
+	}
+
+	#ROOT is winner #FROM is loser
+	on_before_peace_conference_start = {
+		effect = {
+			FROM = {
+				if = {
+					limit = { has_subject = PAL }
+					PAL = { every_owned_state = { set_demilitarized_zone = no } }
+					annex_country = { target = PAL transfer_troops = yes }
 				}
 			}
 		}

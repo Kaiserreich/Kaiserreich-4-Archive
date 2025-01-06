@@ -1,0 +1,247 @@
+﻿###########################
+# Puppet France Events
+###########################
+# By Noot
+###########################
+
+add_namespace = frp
+
+country_event = { #bounce to choose path
+	id = frp.1
+	is_triggered_only = yes
+	hidden = yes
+
+	immediate = {
+		set_politics = {
+			ruling_party = authoritarian_democrat
+		}
+		set_popularities = {
+			totalist = 9
+			radical_socialist = 18
+			syndicalist = 18
+			social_democrat = 7
+			social_liberal = 12
+			market_liberal = 4
+			social_conservative = 13
+			authoritarian_democrat = 15
+			paternal_autocrat = 4
+			national_populist = 0
+		}
+		if = {
+			limit = {
+				NOT = { has_country_flag = FRP_released_before }
+			}
+			add_timed_idea = {
+				idea = FRP_ashes_of_syndicalism
+				days = 500
+			}
+		}
+		set_country_flag = FRP_released_before
+	}
+
+	option = {
+		log = "[GetLogInfo]: event frp.1 option 1"
+		trigger = {
+			overlord = { has_elected_government = yes }
+		}
+		country_event = frp.2
+		set_party_name = {
+			ideology = authoritarian_democrat
+			name = FRP_authoritarian_democrat_party_parliamentary
+			long_name = FRP_authoritarian_democrat_party_parliamentary_long
+		}
+
+	}
+	option = {
+		log = "[GetLogInfo]: event frp.1 option 2"
+		trigger = {
+			overlord = { has_elected_government = no }
+		}
+		country_event = frp.3
+		set_party_name = {
+			ideology = authoritarian_democrat
+			name = FRP_authoritarian_democrat_party
+			long_name = FRP_authoritarian_democrat_party_long
+		}
+	}
+}
+
+country_event = { #democratic elections
+	id = frp.2
+	is_triggered_only = yes
+	hidden = yes
+
+	option = {
+		log = "[GetLogInfo]: event frp.2 option 1"
+		remove_ideas = {
+			FRP_republican_front
+			FRP_new_national_bloc
+			FRP_bloc_of_rights
+			FRP_bloc_of_rights_authdem
+		}
+		random_list = {
+			10 = {
+				set_politics = {
+					ruling_party = social_liberal
+					elections_allowed = yes #elections are done in on_actions_Internationale
+				}
+
+				set_temp_variable = { coalition_partner_var = token:social_democrat }
+				add_to_coalition = yes
+
+				set_temp_variable = { coalition_partner_var = token:social_conservative }
+				add_to_coalition = yes
+				add_ideas = FRP_republican_front
+			}
+			5 = {
+				set_politics = {
+					ruling_party = social_conservative
+					elections_allowed = yes
+				}
+
+				set_temp_variable = { coalition_partner_var = token:social_liberal }
+				add_to_coalition = yes
+
+				set_temp_variable = { coalition_partner_var = token:market_liberal }
+				add_to_coalition = yes
+				add_ideas = FRP_new_national_bloc
+			}
+			5 = {
+				set_politics = {
+					ruling_party = social_conservative
+					elections_allowed = yes
+				}
+
+				set_temp_variable = { coalition_partner_var = token:authoritarian_democrat }
+				add_to_coalition = yes
+
+				set_temp_variable = { coalition_partner_var = token:market_liberal }
+				add_to_coalition = yes
+				add_ideas = FRP_bloc_of_rights
+			}
+			10 = {
+				modifier = {
+					factor = 0.5
+					has_elected_government = yes
+				}
+				set_politics = {
+					ruling_party = authoritarian_democrat
+					elections_allowed = yes
+				}
+
+				set_temp_variable = { coalition_partner_var = token:social_conservative }
+				add_to_coalition = yes
+				add_ideas = FRP_bloc_of_rights_authdem
+			}
+		}
+	}
+}
+
+country_event = { #Dorgeres takes power
+	id = frp.3
+	is_triggered_only = yes
+	hidden = yes
+
+	option = {
+		log = "[GetLogInfo]: event frp.3 option 1"
+		remove_ideas = {
+			FRP_republican_front
+			FRP_new_national_bloc
+			FRP_bloc_of_rights
+			FRP_bloc_of_rights_authdem
+		}
+		add_ideas = FRP_coalition_of_expertise
+		set_politics = {
+			ruling_party = authoritarian_democrat
+			elections_allowed = yes
+		}
+		set_temp_variable = { coalition_partner_var = token:paternal_autocrat }
+		add_to_coalition = yes
+		if = {
+			limit = {
+				is_monarchy = yes
+				overlord = { is_monarchy = yes } #if repuppeted by a republican authoritarian regime, the monarchy will be removed
+			}
+			set_temp_variable = { coalition_partner_var = token:national_populist }
+			add_to_coalition = yes
+		}
+		else = {
+			if = {
+				limit = { is_monarchy = yes } #when mathe added, will be changed to "has_government = authoritarian_democrat"
+				retire_country_leader = yes
+			}
+			drop_cosmetic_tag = yes
+			#create_country_leader = {
+			#	name = FRP_henri_dorgeres
+			#	picture = GFX_portrait_FRA_henri_dorgeres_civilian_large
+			#	ideology = authoritarian_democrat_subtype
+			#}
+		}
+	}
+}
+
+country_event = { #Henri de Borbon restored if possible. Spain's Jaime monarchy handled through focus, will need to be reconsidered in rework
+	id = frp.4
+	is_triggered_only = yes
+	hidden = yes
+	option = {
+		log = "[GetLogInfo]: event frp.4 option 1"
+		if = {
+			limit = {
+				OR = {
+					NFA = { is_monarchy = no }
+					NOT = { country_exists = NFA }
+				}
+			}
+			set_cosmetic_tag = NFA_kingdom
+			NFA_henri_vi = {
+				if = {
+					limit = { has_ideology = authoritarian_democrat_subtype }
+					promote_character = authoritarian_democrat_subtype
+				}
+				else = {
+					add_country_leader_role = {
+						country_leader = {
+							desc = NFA_henri_vi_leader_desc
+							ideology = authoritarian_democrat_subtype
+							traits = { NFA_Young_Prince }
+						}
+						promote_leader = yes
+					}
+				}
+				if = {
+					limit = { has_ideology = paternal_autocrat_subtype }
+					promote_character = paternal_autocrat_subtype
+				}
+				else = {
+					add_country_leader_role = {
+						country_leader = {
+							desc = NFA_henri_vi_leader_desc
+							ideology = paternal_autocrat_subtype
+							traits = { NFA_Young_Prince }
+						}
+						promote_leader = yes
+					}
+				}
+				if = { #to get the correct name
+					limit = { has_ideology = national_populist_subtype }
+					promote_character = national_populist_subtype
+				}
+				else = {
+					add_country_leader_role = {
+						country_leader = {
+							desc = NFA_henri_vi_leader_desc
+							ideology = national_populist_subtype
+							traits = { NFA_Young_Prince }
+						}
+						promote_leader = yes
+					}
+				}
+			}
+		}
+		add_popularity = {
+			ideology = national_populist
+			popularity = 0.01
+		}
+	}
+}

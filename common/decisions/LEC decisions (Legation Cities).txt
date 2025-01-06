@@ -19,6 +19,17 @@ LEC_votes_category = {
 					event_target:LEC_has_american_vote = { has_capitulated = yes }
 				}
 			}
+			else_if = {
+				limit = { has_global_flag = LEC_russia_vote }
+				OR = {
+					is_subject = yes
+					NOT = { country_exists = var:global.russia }
+					has_war_with = var:global.russia
+					var:global.russia = { is_subject = yes }
+					var:global.russia = { has_capitulated = yes }
+					var:global.russia = { has_socialist_government = yes }
+				}
+			}
 			else = {
 				hidden_trigger = { always = no }
 			}
@@ -30,6 +41,10 @@ LEC_votes_category = {
 		cancel_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision cancel LEC_vote_timer"
 			clr_global_flag = LEC_america_vote
+			clr_global_flag = LEC_russia_vote
+			clear_variable = global.legations_yes_votes
+			clear_variable = global.legations_no_votes
+			clear_variable = global.legations_abstain_votes
 		}
 
 		timeout_effect = {
@@ -78,11 +93,6 @@ LEC_votes_category = {
 				limit = { has_global_flag = LEC_germany_vote }
 				clr_global_flag = LEC_germany_vote
 				country_event = lec.86
-			}
-			else_if = {
-				limit = { has_global_flag = LEC_transamur_vote }
-				clr_global_flag = LEC_transamur_vote
-				country_event = lec.113
 			}
 			else_if = {
 				limit = { has_global_flag = LEC_conscription_vote }
@@ -448,24 +458,32 @@ LEC_votes_category = {
 		icon = GFX_decision_generic_political_discourse
 
 		available = {
-			RUS = { is_faction_leader = yes }
-			OR = {
-				NOT = { country_exists = TRM }
-				TRM = { is_subject = yes }
+			var:global.russia = {
+				owns_state = 408 #Vladivostok
+				OR = {
+					is_faction_leader = yes
+					has_country_flag = RUS_lost_wk2
+				}
+				NOT = { has_completed_focus = RUS_sino_russian_relations }
 			}
-			NOT = { has_active_mission = LEC_vote_timer }
+			OR = {
+				GER = { exists = no }
+				JAP = { has_global_flag = JAP_Fading_Sun }
+			}
+			NOT = {
+				has_government = paternal_autocrat
+				has_government = national_populist
+				has_active_mission = LEC_vote_timer
+			}
 		}
 
 		visible = {
-			RUS = {
+			is_subject = no
+			var:global.russia = {
 				exists = yes
 				is_subject = no
-				has_civil_war = no
 				has_socialist_government = no
-				NOT = {
-					has_war_with = ROOT
-					is_subject_of = JAP
-				}
+				NOT = { has_war_with = ROOT }
 			}
 		}
 
@@ -479,47 +497,20 @@ LEC_votes_category = {
 			country_event = lec.10
 		}
 	}
-	LEC_restore_transamurian_vote = {
-		icon = GFX_decision_generic_political_discourse
-
-		available = {
-			OR = {
-				NOT = { country_exists = RUS }
-				RUS = { is_subject = yes }
-				RUS = { has_socialist_government = yes }
-			}
-			NOT = { has_active_mission = LEC_vote_timer }
-		}
-
-		visible = {
-			country_exists = TRM
-			NOT = {
-				has_war_with = TRM
-				is_subject_of = JAP
-			}
-			TRM = { is_subject = no }
-		}
-
-		cost = 25
-		fire_only_once = yes
-
-		ai_will_do = { factor = 100 }
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision complete LEC_restore_transamurian_vote"
-			country_event = lec.110
-		}
-	}
 }
 
 LEC_military_aid_category = {
 	LEC_assemble_brit_air_squadron = {
 		icon = generic_air
 		available = {
-			NOT = { has_war_with = CAN }
+			NOT = { has_war_with = IMP }
 			NOT = { has_war_with = AST }
 			has_war = yes
-			AST = { is_in_faction_with = CAN }
+			if = {
+				limit = { AST = { has_socialist_government = no } }
+				AST = { is_in_faction_with = IMP }
+			}
+			else = { AST = { has_socialist_government = no } }
 			has_capitulated = no
 			has_dictatorship_government = no
 		}
