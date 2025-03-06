@@ -1,4 +1,4 @@
-﻿###########################
+###########################
 # Entente Events
 ###########################
 # By Rylock
@@ -8,38 +8,7 @@ add_namespace = entente
 
 ### IEDC Events
 
-# IEDC created (fired by focus)
-country_event = {
-	id = entente.1
-	title = entente.1.t
-	desc = entente.1.d
-	picture = GFX_report_event_CAN_commission
-
-	is_triggered_only = yes
-
-	option = {
-		log = "[GetLogInfo]: event entente.1 option entente.1.a"
-		name = entente.1.a
-		set_global_flag = CAN_iedc_created
-		set_country_flag = CAN_joined_iedc
-		add_ideas = CAN_iedc_main
-		unlock_decision_category_tooltip = CAN_iedc_decisions
-		set_temp_variable = { ENT_pp_investment = 50 }
-		CAN_add_iedc_pp = yes
-		hidden_effect = {
-			create_economic_sphere = yes
-			var:economic_sphere = {
-				set_character_name = CAN_iedc
-				var:icon = { set_character_name = "GFX_goal_CAN_iedc" }
-				set_variable = { red = 0.470 }
-				set_variable = { green = 0.188 }
-				set_variable = { blue = 0.233 }
-			}
-		}
-	}
-}
-
-# Invitation to the IEDC (fired by decision)
+# Invitation to the IEDC (fired by focus or decision)
 country_event = {
 	id = entente.2
 	title = entente.2.t
@@ -49,8 +18,23 @@ country_event = {
 	is_triggered_only = yes
 
 	trigger = {
-		has_capitulated = no
-		is_in_faction_with = FROM
+		OR = {
+			is_in_faction_with = FROM
+			AND = {
+				is_subject = no
+				is_in_faction = no
+				is_in_economic_sphere = no
+				has_socialist_government = no
+				at_war_with_or_justifying_wargoal_against_FROM = no
+				NOT = { has_country_flag = CAN_joined_iedc }
+				NOT = { has_country_flag = CAN_refused_iedc }
+				NOT = { has_country_flag = CAN_invited_to_iedc }
+			}
+		}
+	}
+
+	immediate = {
+		set_country_flag = CAN_invited_to_iedc
 	}
 
 	option = {
@@ -58,12 +42,17 @@ country_event = {
 		name = entente.2.a #join +25PP
 		ai_chance = {
 			base = 50
-			#do not join if you have more than double the factories of the Entente leader
 			modifier = {
-				factor = 0
-				set_temp_variable = { num_fact = FROM.num_of_factories }
-				multiply_temp_variable = { num_fact = 2 }
-				num_of_factories > num_fact
+				factor = 0.8
+				has_political_power > 50
+			}
+			modifier = {
+				factor = 0.5
+				has_political_power > 100
+			}
+			modifier = {
+				factor = 0.2
+				has_political_power > 200
 			}
 		}
 		if = {
@@ -90,25 +79,17 @@ country_event = {
 				factor = 0
 				num_of_factories < 10
 			}
-			#do not join if you have more than double the factories of the Entente leader
 			modifier = {
 				factor = 0
-				set_temp_variable = { num_fact = FROM.num_of_factories }
-				multiply_temp_variable = { num_fact = 2 }
-				num_of_factories > num_fact
-			}
-			modifier = {
-				factor = 0.5
-				has_political_power < 0
-			}
-			modifier = {
-				factor = 0.25
-				has_political_power < -50
+				has_political_power < 50
 			}
 			modifier = {
 				factor = 2
-				has_political_power > 99
-				has_political_power < 200
+				has_political_power > 100
+			}
+			modifier = {
+				factor = 2
+				has_political_power > 150
 			}
 		}
 		if = {
@@ -129,23 +110,23 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event entente.2 option entente.2.c"
 		name = entente.2.c #join +100PP
-		trigger = { has_political_power > 99 }
 		ai_chance = {
 			base = 20
 			modifier = {
 				factor = 0
 				num_of_factories < 20
 			}
-			#do not join if you have more than double the factories of the Entente leader
 			modifier = {
 				factor = 0
-				set_temp_variable = { num_fact = FROM.num_of_factories }
-				multiply_temp_variable = { num_fact = 2 }
-				num_of_factories > num_fact
+				has_political_power < 100
 			}
 			modifier = {
 				factor = 2
-				has_political_power > 199
+				has_political_power > 200
+			}
+			modifier = {
+				factor = 2
+				has_political_power > 300
 			}
 		}
 		if = {
@@ -166,22 +147,7 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event entente.2 option entente.2.e"
 		name = entente.2.e #do not join
-		ai_chance = {
-			base = 50
-			#always join if the Entente leader has more factories than you
-			modifier = {
-				factor = 0
-				FROM = { num_of_factories > ROOT.num_of_factories }
-			}
-			modifier = {
-				factor = 0
-				is_subject = yes
-			}
-			modifier = {
-				factor = 0.5
-				tag = NFA
-			}
-		}
+		ai_chance = { base = 0 }
 		clr_country_flag = CAN_invited_to_iedc
 		set_country_flag = CAN_refused_iedc
 		reverse_add_opinion_modifier = { target = FROM modifier = KR_disapproves_of_govt }
@@ -456,7 +422,6 @@ country_event = {
 
 	trigger = {
 		has_country_flag = { flag = CAN_joined_iedc days > 354 }
-		is_ally_with = event_target:iedc_leader
 	}
 
 	mean_time_to_happen = {
@@ -623,13 +588,9 @@ country_event = {
 
 	trigger = {
 		has_country_flag = CAN_joined_iedc
-		NOT = { is_ally_with = event_target:iedc_leader }
-		has_global_flag = CAN_iedc_created
 	}
 
-	mean_time_to_happen = {
-		days = 3
-	}
+	is_triggered_only = yes
 
 	immediate = {
 		hidden_effect = {
@@ -701,7 +662,7 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event entente.15 option entente.15.a"
 		name = entente.15.a
-		effect_tooltip = { add_to_tech_sharing_group = entente_research }
+		add_to_tech_sharing_group = entente_research
 	}
 }
 

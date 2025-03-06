@@ -1651,3 +1651,159 @@ BUL_uncomplete_opportunism_if_in_faction = {
 		}
 	}
 }
+
+BUL_enable_ITRO_decisions = {
+	if = {
+		limit = { NOT = { has_active_mission = BUL_ITRO_timeout_decrease } }
+		activate_mission = BUL_ITRO_timeout_decrease
+		if = {
+			limit = { NOT = { has_global_flag = BUL_ITRO_diplomatic_protest } }
+			activate_targeted_decision = { decision = BUL_ITRO_issue_formal_protest target = BUL }
+		}
+		if = {
+			limit = { NOT = { has_global_flag = BUL_ITRO_madzharov_gone } }
+			activate_targeted_decision = { decision = BUL_ITRO_hunt_down_madzharov target = BUL }
+		}
+		activate_targeted_decision = { decision = BUL_ITRO_raid_bulgarian_villages target = BUL }
+		activate_targeted_decision = { decision = BUL_ITRO_organised_counterinsurgency target = BUL }
+		activate_targeted_decision = { decision = BUL_ITRO_reestabilish_control_of_border_areas target = BUL }
+	}
+}
+
+BUL_disable_ITRO_decisions = {
+	if = {
+		limit = { has_active_mission = BUL_ITRO_timeout_decrease }
+		remove_mission = BUL_ITRO_timeout_decrease
+	}
+	remove_targeted_decision = { decision = BUL_ITRO_issue_formal_protest target = BUL }
+	remove_targeted_decision = { decision = BUL_ITRO_raid_bulgarian_villages target = BUL }
+	remove_targeted_decision = { decision = BUL_ITRO_hunt_down_madzharov target = BUL }
+	remove_targeted_decision = { decision = BUL_ITRO_organised_counterinsurgency target = BUL }
+	remove_targeted_decision = { decision = BUL_ITRO_reestabilish_control_of_border_areas target = BUL }
+}
+
+BUL_recheck_ITRO_states = {
+	for_each_scope_loop = {
+		array = global.BUL_ITRO_states
+		if = {
+			limit = { owner = { is_ally_with = BUL } }
+			BUL_remove_ITRO_modifier = yes
+			add_to_temp_array = { BUL_states_to_remove = THIS }
+		}
+		for_each_scope_loop = {
+			array = BUL_states_to_remove
+			remove_from_array = { global.BUL_ITRO_states = THIS }
+		}
+	}
+}
+
+BUL_recheck_ITRO_decisions = {
+	if = {
+		limit = {
+			any_of_scopes = {
+				array = global.BUL_ITRO_states
+				is_owned_by = PREV
+				OR = {
+					is_claimed_by = PREV
+					is_core_of = PREV
+					has_variable = can_integrate_@PREV
+				}
+			}
+		}
+		BUL_enable_ITRO_decisions = yes
+	}
+	else = {
+		BUL_disable_ITRO_decisions = yes
+	}
+}
+
+BUL_remove_ITRO_modifier = {
+	clear_variable = BUL_ITRO_strength_in_state
+	clear_variable = BUL_attrition_reduction
+	clear_variable = BUL_army_speed_factor_for_controller_reduction
+	clear_variable = BUL_local_org_regain_reduction
+	clear_variable = BUL_local_supplies_for_controller_reduction
+
+	remove_dynamic_modifier = { modifier = BUL_ITRO_modifier }
+}
+
+BUL_change_ITRO_strength = {
+	if = {
+		limit = { has_dynamic_modifier = { modifier = BUL_ITRO_modifier } }
+		if = {
+			limit = { NOT = { check_variable = { BUL_ITRO_strength_in_state > BUL_amount?1 } } }
+			remove_from_array = { global.BUL_ITRO_states = THIS }
+			BUL_remove_ITRO_modifier = yes
+		}
+		else = {
+			subtract_from_variable = { BUL_ITRO_strength_in_state = BUL_amount?1 }
+
+			set_temp_variable = { BUL_attrition_reduction = -0.025 }
+			set_temp_variable = { BUL_army_speed_factor_for_controller_reduction = 0.05 }
+			set_temp_variable = { BUL_local_org_regain_reduction = 0.05 }
+			set_temp_variable = { BUL_local_supplies_for_controller_reduction = 0.075 }
+
+			multiply_temp_variable = { BUL_attrition_reduction = BUL_amount?1 }
+			multiply_temp_variable = { BUL_army_speed_factor_for_controller_reduction = BUL_amount?1 }
+			multiply_temp_variable = { BUL_local_org_regain_reduction = BUL_amount?1 }
+			multiply_temp_variable = { BUL_local_supplies_for_controller_reduction = BUL_amount?1 }
+
+			custom_effect_tooltip = {
+				localization_key = tooltip_modify_dynmod
+				DYNMOD = BUL_ITRO_modifier
+			}
+			add_to_variable = {
+				BUL_ITRO_attrition = BUL_attrition_reduction
+				tooltip = attrition_tooltip
+			}
+			add_to_variable = {
+				BUL_ITRO_army_speed_factor_for_controller = BUL_army_speed_factor_for_controller_reduction
+				tooltip = army_speed_factor_tooltip
+			}
+			add_to_variable = {
+				BUL_ITRO_local_org_regain = BUL_local_org_regain_reduction
+				tooltip = local_org_regain_tooltip
+			}
+			add_to_variable = {
+				BUL_ITRO_local_supplies_for_controller = BUL_local_supplies_for_controller_reduction
+				tooltip = local_supplies_tooltip
+			}
+		}
+	}
+	hidden_effect = {
+		if = {
+			limit = {
+				has_global_flag = BUL_itro_active
+				check_variable = { global.BUL_ITRO_states^num < 1 }
+			}
+			clr_global_flag = BUL_itro_active
+			clear_array = global.BUL_ITRO_states
+			every_possible_country = { BUL_disable_ITRO_decisions = yes }
+		}
+		else_if = {
+			limit = {
+				NOT = {
+					any_of_scopes = {
+						array = global.BUL_ITRO_states
+						is_owned_by = PREV.owner
+					}
+				}
+			}
+			owner = { BUL_disable_ITRO_decisions = yes }
+		}
+	}
+}
+
+BUL_decrease_ITRO_strength = {
+	BUL_change_ITRO_strength = yes
+}
+
+BUL_decrease_ITRO_strength_2 = {
+	set_temp_variable = { BUL_amount = 2 }
+	BUL_change_ITRO_strength = yes
+}
+
+BUL_increase_ITRO_strength = {
+	set_temp_variable = { BUL_amount = -1 }
+	BUL_change_ITRO_strength = yes
+}

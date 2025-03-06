@@ -499,7 +499,7 @@ political_actions = {
 		allowed = { always = no }
 
 		available = {
-			has_war = no
+			NOT = { has_war_with = AUS }
 		}
 
 		visible = {
@@ -508,14 +508,25 @@ political_actions = {
 			BPL = { is_faction_leader = yes }
 		}
 
-		cost = 25
+		cost = 0
 		fire_only_once = yes
 
 		ai_will_do = { factor = 100 }
 
 		complete_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision complete CZE_leave_belgrade_pact"
+			hidden_effect = {
+				every_owned_state = {
+					teleport_armies = {
+						limit = {
+							is_ally_with = BPL
+						}
+						to_state_array = owned_controlled_states
+					}
+				}
+			}
 			leave_faction = yes
+			peace_out_non_neighbours_after_leaving_faction = yes
 			BPL = { country_event = ausgleich.new.914 }
 		}
 	}
@@ -590,6 +601,14 @@ political_actions = {
 			else = {
 				FROM = { country_event = { id = gal.2 days = 2 } }
 				custom_effect_tooltip = if_they_accept_tt
+				if = {
+					limit = {
+						owns_state = 73 #Transcarpathia
+					}
+					73 = { #Transcarpathia -> Slovakia
+						transfer_state_to = 70.owner
+					}
+				}
 				effect_tooltip = {
 					FROM = {
 						add_state_core = 88 #Krakow
@@ -616,6 +635,7 @@ political_actions = {
 			is_subject = no
 			has_war_with = AUS
 			NOT = { is_in_faction = yes }
+			at_peace_or_same_enemies_as_FROM = yes
 		}
 
 		visible = {
@@ -716,17 +736,7 @@ SER_The_Road_To_Unification_decisions = {
 		cancel_if_not_visible = yes
 		war_with_target_on_remove = yes
 
-		ai_will_do = {
-			factor = 1000
-			modifier = {
-				factor = 0
-				NOT = { FROM = { has_war_with = AUS } } #exception - intervene ASAP in Austrian CW
-				OR = {
-					country_is_in_dangerous_war = yes
-					FROM = { default_attack_ai_trigger = yes }
-				}
-			}
-		}
+		ai_will_do = { factor = 1000 }
 
 		cancel_effect = {
 			log = "[GetDateText]: [Root.GetName]: Decision cancel SER_Ultimatum_To_Illyria target: [From.GetName]"
@@ -739,11 +749,8 @@ SER_The_Road_To_Unification_decisions = {
 			FROM = { country_event = { id = ausgleich.new.911 days = 2 } } #warning event
 			if = {
 				limit = {
-					can_declare_war_on = AUS
-					AUS = {
-						is_subject = no
-						has_cosmetic_tag = AUS_empire
-					}
+					AUS = { can_declare_war_on = SER }
+					NOT = { has_global_flag = AUS_treaty_of_budapest }
 				}
 				custom_effect_tooltip = AUS_may_lead_to_war_with_austria
 			}
@@ -755,6 +762,32 @@ SER_The_Road_To_Unification_decisions = {
 			declare_war_on = {
 				target = FROM
 				type = annex_everything
+			}
+			hidden_effect = {
+				add_timed_idea = {
+					idea = SER_cannot_capitulate
+					days = 30
+				}
+				every_other_country = {
+					limit = {
+						is_in_faction_with = BPL
+						can_declare_war_on = CRO
+						OR = {
+							original_tag = GRE
+							original_tag = ROM
+						}
+					}
+					country_event = ausgleich.new.9011
+				}
+				if = {
+					limit = {
+						AUS = { can_declare_war_on = SER }
+						NOT = { has_global_flag = AUS_treaty_of_budapest }
+					}
+					AUS = {
+						country_event = ausgleich.new.920
+					}
+				}
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-﻿################################################################################################################
+################################################################################################################
 # Russia Events 																					   		   #
 ################################################################################################################
 # First attempted rework by Rylock and Alpinia																   #
@@ -688,10 +688,10 @@ country_event = { #Towards Total War
 			days = 400
 		}
 		if = {
-			limit = {
-				FER = { exists = yes }
-			}
-			561 = {
+			limit = { country_exists = FER }
+			random_owned_controlled_state = {
+				prioritize = { 561 }
+				limit = { valid_state_for_spawning_friendly_unit = yes }
 				create_unit = {
 					division = "division_template = \"Kazachya diviziya\" start_experience_factor = 0.5"
 					owner = ROOT
@@ -2497,7 +2497,6 @@ unit_leader_event = { #The Russian State
 	option = {
 		log = "[GetLogInfo]: event russia.236 option russia.236.a"
 		name = russia.236.a
-		hidden_effect = { remove_temp_unit_leader_role = yes }
 	}
 }
 
@@ -3545,8 +3544,8 @@ country_event = { #New Supreme Commander-in-Chief
 				slot = army_chief
 				idea_token = RUS_anton_turkul_army_chief
 				desc = RUS_anton_turkul_commander_desc
-				cost = 50
 				traits = { KR_army_chief_manoeuvre_1 }
+				cost = 50
 				can_be_fired = no
 			}
 		}
@@ -3583,8 +3582,8 @@ country_event = { #New Supreme Commander-in-Chief
 				slot = army_chief
 				idea_token = RUS_vladimir_manstein_army_chief
 				desc = RUS_vladimir_manstein_high_command_desc
-				cost = 100
 				traits = { KR_army_chief_morale_2 }
+				cost = 100
 				can_be_fired = no
 			}
 		}
@@ -3606,8 +3605,8 @@ country_event = { #New Supreme Commander-in-Chief
 				slot = army_chief
 				idea_token = RUS_pyotr_glazenap_army_chief
 				desc = RUS_pyotr_glazenap_high_command_desc
-				cost = 100
 				traits = { KR_army_chief_manoeuvre_2 }
+				cost = 100
 				can_be_fired = no
 			}
 		}
@@ -4577,7 +4576,10 @@ country_event = { #MA Economic Organisation yearly plan
 				RUS_MA_navy_plan
 				RUS_MA_air_plan
 				RUS_MA_infra_plan
-				RUS_MA_autarky_plan
+			}
+			if = { #This idea should NEVER trigger on_remove effect if it was not already present, or else you break synthetic refinery rubber production!
+				limit = { has_idea = RUS_MA_autarky_plan }
+				remove_ideas = RUS_MA_autarky_plan
 			}
 		}
 	}
@@ -4648,7 +4650,10 @@ country_event = { #MA Economic Organisation yearly plan for members
 				RUS_MA_navy_plan
 				RUS_MA_air_plan
 				RUS_MA_infra_plan
-				RUS_MA_autarky_plan
+			}
+			if = { #This idea should NEVER trigger on_remove effect if it was not already present, or else you break synthetic refinery rubber production!
+				limit = { has_idea = RUS_MA_autarky_plan }
+				remove_ideas = RUS_MA_autarky_plan
 			}
 		}
 	}
@@ -4749,7 +4754,7 @@ country_event = { #Flying Squads of the Security Department
 	id = russia.295
 	title = russia.295.t
 	desc = russia.295.d
-	picture = GFX_report_event_RUS_arctic
+	picture = GFX_report_event_RUS_gun
 	is_triggered_only = yes
 	trigger = { has_government = national_populist }
 
@@ -5110,8 +5115,8 @@ country_event = { #The Palace Coup
 							slot = army_chief
 							idea_token = RUS_aleksandr_kutepov_army_chief
 							desc = RUS_aleksandr_kutepov_high_command_desc
-							cost = 100
 							traits = { KR_army_chief_reform_2 }
+							cost = 100
 							can_be_fired = no
 						}
 						activate = yes
@@ -5141,6 +5146,7 @@ country_event = { #Relaxation of the Economy
 		}
 		add_stability = -0.1
 		retire_character = RUS_aleksandr_voznesensky
+		every_owned_state = { RUS_remove_VES_modifier = yes }
 	}
 	option = {
 		log = "[GetLogInfo]: event russia.306 option russia.306.b"
@@ -5820,7 +5826,7 @@ country_event = { #German influence removed from Russia
 	picture = GFX_report_event_BUL_crowd
 
 	trigger = {
-		has_variable = RUS.RUS_german_economic_influence
+		has_variable = RUS_german_economic_influence
 	}
 
 	fire_only_once = yes
@@ -5830,11 +5836,31 @@ country_event = { #German influence removed from Russia
 		log = "[GetLogInfo]: event russia.405 option russia.405.a"
 		name = russia.405.a
 		if = {
-			limit = { has_war_with = GER }
-			custom_effect_tooltip = tooltip_white_line
+			limit = {
+				has_war_with = GER
+				has_variable = RUS_german_economic_influence
+				check_variable = { RUS_german_economic_influence < 4 }
+			}
+			add_timed_idea = {
+				idea = RUS_economic_fallout
+				days = 90
+			}
+		}
+		else_if = {
+			limit = {
+				has_war_with = GER
+				has_variable = RUS_german_economic_influence
+			}
 			add_timed_idea = {
 				idea = RUS_economic_fallout
 				days = 180
+			}
+		}
+		if = {
+			limit = {
+				has_government = national_populist
+				has_war_with = GER
+				has_variable = RUS_german_economic_influence
 			}
 			custom_effect_tooltip = tooltip_white_line
 			set_temp_variable = { RUS_anger_change = RUS_german_economic_influence }
@@ -6986,9 +7012,9 @@ country_event = { #Ukraine, Belarus, or Baltics?
 		custom_effect_tooltip = russia.442.b.tt
 		ai_chance = { base = 0 }
 		trigger = {
-			WHR = { is_in_faction_with = GER }
+			BLR = { is_in_faction_with = GER }
 		}
-		set_country_flag = RUS_WHR_bonus
+		set_country_flag = RUS_BLR_bonus
 		country_event = { id = russia.443 days = 2 }
 	}
 	option = { #Baltics, Shatilov suggestion (under patronage of Wrangel), Venera operation
@@ -7062,7 +7088,7 @@ country_event = { #Capital Captured, momentum gained
 				206 = { is_controlled_by_ROOT_or_ally = no } #Minsk
 				NOT = { has_country_flag = RUS_taken_minsk_before }
 			}
-			add_ideas = RUS_WHR_shock_plan
+			add_ideas = RUS_BLR_shock_plan
 			activate_mission = RUS_take_minsk
 		}
 		else_if = {
@@ -7089,7 +7115,7 @@ country_event = { #Capital Captured, momentum gained
 				206 = { is_controlled_by_ROOT_or_ally = no } #Minsk
 				NOT = { has_country_flag = RUS_taken_minsk_before }
 			}
-			add_ideas = RUS_WHR_fire_plan
+			add_ideas = RUS_BLR_fire_plan
 			activate_mission = RUS_take_minsk
 		}
 		else_if = {
@@ -7690,11 +7716,12 @@ country_event = { #The Land Tenure Issue
 			}
 		}
 		RUS_cossack_division_check = yes
-		589 = {
+		random_owned_controlled_state = {
+			prioritize = { 589 }
+			limit = { valid_state_for_spawning_friendly_unit = yes }
 			create_unit = {
 				division = "division_template = \"Kazachya diviziya\" start_experience_factor = 2.0 start_equipment_factor = 1.0"
 				owner = ROOT
-				prioritize_location = 1591
 				count = 2
 			}
 		}
@@ -7723,7 +7750,7 @@ country_event = { #The Land Tenure Issue
 			limit = {
 				OR = {
 					state = 589 #Semirechye
-					state = 810 #Semipalatinsk
+					state = 810 #Alash-kala
 					state = 404 #Karaganda
 					state = 402 #Turgay
 				}
@@ -7886,7 +7913,7 @@ country_event = { #Kazakhs in Crisis
 				is_controlled_by = RUS
 				OR = {
 					state = 589 #Semirechye
-					state = 810 #Semipalatinsk
+					state = 810 #Alash-kala
 					state = 404 #Karaganda
 				}
 			}
@@ -7919,7 +7946,7 @@ country_event = { #Kazakhs in Crisis
 				is_controlled_by = RUS
 				OR = {
 					state = 589 #Semirechye
-					state = 810 #Semipalatinsk
+					state = 810 #Alash-kala
 					state = 404 #Karaganda
 					state = 402 #Turgay
 					state = 406 #Guryev
@@ -8212,7 +8239,7 @@ country_event = { #The Rise of Ayukevich
 				is_controlled_by = RUS
 				OR = {
 					state = 589 #Semirechye
-					state = 810 #Semipalatinsk
+					state = 810 #Alash-kala
 					state = 404 #Karaganda
 				}
 				NOT = {
@@ -8233,7 +8260,7 @@ country_event = { #The Rise of Ayukevich
 				is_controlled_by = RUS
 				OR = {
 					state = 589 #Semirechye
-					state = 810 #Semipalatinsk
+					state = 810 #Alash-kala
 					state = 404 #Karaganda
 					state = 406 #Guryev
 					state = 587 #Mangyshlak
@@ -8272,7 +8299,7 @@ country_event = { #Fate of Alash Autonomy
 						state = 404 #Karaganda
 						state = 587 #Mangyshlak
 						state = 590 #Akmolinsk
-						state = 810 #Semipalatinsk
+						state = 810 #Alash-kala
 						state = 589 #Semireche
 					}
 					NOT = {
@@ -8788,6 +8815,13 @@ country_event = { #The Circle of St. George
 	option = {
 		log = "[GetLogInfo]: event russia.602 option russia.602.b"
 		name = russia.602.b
+		ai_chance = {
+			base = 1
+			modifier = {
+				factor = 0
+				has_active_mission = RUS_demands_from_unions_monarchy
+			}
+		}
 		trigger = {
 			OR = {
 				is_monarchy = yes
@@ -9225,7 +9259,7 @@ country_event = { #Trial of the Idiots
 		}
 		if = {
 			limit = { RUS_is_spiridonist = yes }
-			add_to_variable = { RUS_faith = 1 }
+			set_temp_variable = { RUS_spiridonist_influence_change = 1 }
 			RUS_add_faith = yes
 		}
 		set_temp_variable = { ideology_change_var = -4 }
@@ -10053,17 +10087,17 @@ country_event = { #Anger from surrender progress
 	title = russia.962.t
 	desc = russia.962.d
 	picture = GFX_report_event_RUS_border
-	fire_only_once = yes
+
 	trigger = {
-		original_tag = RUS
-		has_war = yes
+		surrender_progress > 0.1
 		OR = {
 			has_idea = RUS_military_anger
 			has_idea = RUS_military_anger_dem
 		}
-		surrender_progress > 0.1
 	}
-	mean_time_to_happen = { months = 2 }
+
+	is_triggered_only = yes
+	fire_only_once = yes
 
 	option = {
 		log = "[GetLogInfo]: event russia.962 option russia.961.a"
@@ -10666,7 +10700,9 @@ country_event = { #Commander of the Ukrainian Military District
 		}
 		if = {
 			limit = { has_template = "Kazachya diviziya" }
-			202 = {
+			random_owned_controlled_state = {
+				prioritize = { 202 }
+				limit = { valid_state_for_spawning_friendly_unit = yes }
 				create_unit = {
 					division = "division_template = \"Kazachya diviziya\" start_experience_factor = 0.6 start_equipment_factor = 1.0"
 					owner = ROOT
@@ -10833,7 +10869,7 @@ country_event = { #With Russia or with Communism
 			limit = {
 				OR = {
 					is_core_of = UKR
-					is_core_of = WHR
+					is_core_of = BLR
 					is_core_of = LIT
 					is_core_of = LAT
 					is_core_of = EST
@@ -11166,7 +11202,7 @@ country_event = { #Position of the Ukrainian and Belarusian Language
 			limit = {
 				OR = {
 					is_core_of = UKR
-					is_core_of = WHR
+					is_core_of = BLR
 				}
 				NOT = { is_core_of = ROOT }
 			}
@@ -11182,7 +11218,7 @@ country_event = { #Position of the Ukrainian and Belarusian Language
 			limit = {
 				OR = {
 					is_core_of = UKR
-					is_core_of = WHR
+					is_core_of = BLR
 				}
 				NOT = { is_core_of = ROOT }
 			}
@@ -11196,11 +11232,11 @@ country_event = { #uprising in ukraine
 	id = russia.1120
 	title = russia.1120.t
 	desc = russia.1120.d
-	fire_only_once = yes
+
 	is_triggered_only = yes
+	fire_only_once = yes
 
 	trigger = {
-		original_tag = RUS
 		has_war_with = INT
 		controls_state = 202 #Kyiv
 		OR = {
@@ -11359,36 +11395,42 @@ country_event = { #uprising in ukraine
 					}
 				}
 			}
-			792 = {
+			random_owned_controlled_state = {
+				prioritize = { 792 }
+				limit = { valid_state_for_spawning_friendly_unit = yes }
 				create_unit = {
 					division = "division_template = \"Dyviziia Opolchennia\" start_experience_factor = 0.5 start_equipment_factor = 1.0"
-					owner = UKR
+					owner = PREV
 					count = 2
 				}
 				create_unit = {
 					division = "division_template = \"Kavaleriya Dyviziya\" start_experience_factor = 0.7 start_equipment_factor = 1.0"
-					owner = UKR
-					count = 2
-				}
-			}
-			192 = {
-				create_unit = {
-					division = "division_template = \"Dyviziia Opolchennia\" start_experience_factor = 0.5 start_equipment_factor = 1.0"
-					owner = UKR
+					owner = PREV
 					count = 2
 				}
 			}
 			random_owned_controlled_state = {
+				prioritize = { 192 }
+				limit = { valid_state_for_spawning_friendly_unit = yes }
+				create_unit = {
+					division = "division_template = \"Dyviziia Opolchennia\" start_experience_factor = 0.5 start_equipment_factor = 1.0"
+					owner = PREV
+					count = 2
+				}
+			}
+			random_owned_controlled_state = {
+				limit = { valid_state_for_spawning_friendly_unit = yes }
 				create_unit = {
 					division = "division_template = \"Kavaleriya Dyviziya\" start_experience_factor = 0.5 start_equipment_factor = 1.0"
-					owner = UKR
+					owner = PREV
 					count = 2
 				}
 			}
 			every_owned_state = {
+				limit = { is_controlled_by = PREV }
 				create_unit = {
 					division = "division_template = \"Dyviziia Opolchennia\" start_experience_factor = 0.5 start_equipment_factor = 1.0"
-					owner = UKR
+					owner = PREV
 				}
 			}
 		}
@@ -11407,7 +11449,7 @@ country_event = { #Belarus Latinisation
 		name = russia.1124.a
 		add_political_power = 20
 		every_owned_state = {
-			limit = { is_core_of = WHR }
+			limit = { is_core_of = BLR }
 			add_compliance = -5
 		}
 	}
@@ -11419,7 +11461,7 @@ country_event = { #Recovered Northwestern Gubernias
 	desc = russia.1125.d
 	fire_only_once = yes
 	is_triggered_only = yes
-	picture = GFX_report_event_WHR_national_theatre
+	picture = GFX_report_event_BLR_national_theatre
 	immediate = {
 		hidden_effect = {
 			country_event = { id = russia.1124 days = 200 } #Delatinisation of Belarusian Language
@@ -11446,7 +11488,9 @@ country_event = { #Recovered Northwestern Gubernias
 		}
 		add_political_power = -20
 		RUS_cossack_division_check = yes
-		206 = { #Minsk
+		random_owned_controlled_state = {
+			prioritize = { 206 } #Minsk
+			limit = { valid_state_for_spawning_friendly_unit = yes }
 			create_unit = {
 				division = "name = \"Diviziya Bulak-Balakhovich\" division_template = \"Kazachya diviziya\" start_experience_factor = 0.6"
 				owner = ROOT
@@ -11455,7 +11499,7 @@ country_event = { #Recovered Northwestern Gubernias
 		every_owned_state = {
 			limit = {
 				is_controlled_by = ROOT
-				is_core_of = WHR
+				is_core_of = BLR
 			}
 			set_state_flag = belarus_state
 			add_resistance = -10
@@ -11490,7 +11534,7 @@ country_event = { #Recovered Northwestern Gubernias
 		every_owned_state = {
 			limit = {
 				is_controlled_by = ROOT
-				is_core_of = WHR
+				is_core_of = BLR
 			}
 			set_state_flag = belarus_state
 			add_compliance = 3
@@ -11525,7 +11569,7 @@ country_event = { #Recovered Northwestern Gubernias
 		every_owned_state = {
 			limit = {
 				is_controlled_by = ROOT
-				is_core_of = WHR
+				is_core_of = BLR
 			}
 			add_compliance = -20
 			add_resistance = 40
@@ -11549,7 +11593,7 @@ country_event = { #Elections in Belarusian Automony
 		name = russia.1126.a
 		add_stability = 0.03
 		every_owned_state = {
-			limit = { is_core_of = WHR }
+			limit = { is_core_of = BLR }
 			add_compliance = 5
 		}
 		add_popularity = { ideology = social_democrat popularity = 0.03 }
@@ -11560,7 +11604,7 @@ country_event = { #Elections in Belarusian Automony
 		name = russia.1126.b
 		add_stability = 0.05
 		every_owned_state = {
-			limit = { is_core_of = WHR }
+			limit = { is_core_of = BLR }
 			add_compliance = 3
 			add_resistance = -8
 		}
@@ -11576,7 +11620,7 @@ country_event = { #The Belarusian Resistance
 	trigger = { controls_state = 206 }
 	is_triggered_only = yes
 	fire_only_once = yes
-	picture = GFX_report_event_WHR_partisans
+	picture = GFX_report_event_BLR_partisans
 	option = {
 		log = "[GetLogInfo]: event russia.1127 option russia.1127.a"
 		name = russia.1127.a
@@ -11584,7 +11628,7 @@ country_event = { #The Belarusian Resistance
 			add_dynamic_modifier = { modifier = RUS_generic_rebels }
 		}
 		if = {
-			limit = { WHR = { has_completed_focus = WHR_Partisan_Warfare } }
+			limit = { BLR = { has_completed_focus = BLR_Partisan_Warfare } }
 			95 = { #Pinsk
 				add_dynamic_modifier = { modifier = RUS_generic_rebels }
 			}
@@ -11595,7 +11639,7 @@ country_event = { #The Belarusian Resistance
 					var:96.owner = { #Vilnius
 						has_socialist_government = yes
 					}
-					WHR = { has_government = national_populist }
+					BLR = { has_government = national_populist }
 				}
 			}
 			204 = { #Novogrudok
@@ -11615,7 +11659,7 @@ country_event = { #The Belarusian Resistance
 			ROOT = { activate_targeted_decision = { decision = RUS_counter_insurgency target = PREV } }
 		}
 		every_owned_state = {
-			limit = { is_core_of = WHR }
+			limit = { is_core_of = BLR }
 			add_resistance = 30
 			add_compliance = -10
 		}
@@ -11643,7 +11687,7 @@ country_event = { #Ataman of Belarus
 		trigger = { has_government = national_populist }
 		add_political_power = 20
 		every_owned_state = {
-			limit = { is_core_of = WHR }
+			limit = { is_core_of = BLR }
 			add_compliance = 3
 		}
 		add_popularity = { ideology = national_populist popularity = 0.02 }
@@ -11653,7 +11697,7 @@ country_event = { #Ataman of Belarus
 		name = russia.1128.b
 		trigger = { RUS_is_demrus = yes }
 		every_owned_state = {
-			limit = { is_core_of = WHR }
+			limit = { is_core_of = BLR }
 			add_compliance = 3
 			add_resistance = -3
 		}
@@ -12180,6 +12224,15 @@ country_event = { #Fate of North Caucasus
 	desc = russia.1150.d
 	is_triggered_only = yes
 	picture = GFX_report_event_RUS_caucasus
+	immediate = {
+		hidden_effect = {
+			every_owned_state = {
+				limit = { has_dynamic_modifier = { modifier = RUS_oskab_modifier } }
+				remove_dynamic_modifier = { modifier = RUS_oskab_modifier }
+				clr_state_flag = oskab_state
+			}
+		}
+	}
 
 	option = {
 		name = russia.1150.a
@@ -12187,11 +12240,6 @@ country_event = { #Fate of North Caucasus
 		custom_effect_tooltip = RUS_autonomy_will_be_formed
 		custom_effect_tooltip = north_caucasus_state
 		custom_effect_tooltip = tooltip_white_line
-		every_owned_state = {
-			limit = { has_dynamic_modifier = { modifier = RUS_oskab_modifier } }
-			remove_dynamic_modifier = { modifier = RUS_oskab_modifier }
-			force_enable_resistance = { occupier = RUS clear = yes }
-		}
 		233 = {
 			add_dynamic_modifier = { modifier = RUS_oskab_modifier_autonomy }
 			set_state_flag = north_caucasus_state
@@ -12202,23 +12250,12 @@ country_event = { #Fate of North Caucasus
 		}
 		if = {
 			limit = {
-				NOT = {
-					has_country_flag = RUS_abolished_cossack_hosts
-					787 = { has_dynamic_modifier = { modifier = RUS_ethnic_autonomy } }
-				}
+				NOT = { has_country_flag = RUS_abolished_cossack_hosts }
+				NOT = { 787 = { has_state_flag = terek_state } }
 			}
 			787 = {
-				remove_dynamic_modifier = { modifier = RUS_cossack_host_modifier }
+				add_dynamic_modifier = { modifier = RUS_cossack_host_modifier }
 				set_state_flag = terek_state
-			}
-		}
-		else_if = {
-			limit = {
-				787 = { has_dynamic_modifier = { modifier = RUS_ethnic_autonomy } }
-			}
-			787 = {
-				add_dynamic_modifier = { modifier = RUS_ethnic_autonomy }
-				set_state_flag = kalmyk_state
 			}
 		}
 		RUS_autonomy_effect = yes
@@ -12230,10 +12267,6 @@ country_event = { #Fate of North Caucasus
 		custom_effect_tooltip = kabard_state
 		custom_effect_tooltip = chechen_state
 		custom_effect_tooltip = tooltip_white_line
-		every_owned_state = {
-			limit = { has_dynamic_modifier = { modifier = RUS_oskab_modifier } }
-			remove_dynamic_modifier = { modifier = RUS_oskab_modifier }
-		}
 		233 = {
 			add_dynamic_modifier = { modifier = RUS_ethnic_autonomy }
 			set_state_flag = kabard_state
@@ -12244,43 +12277,27 @@ country_event = { #Fate of North Caucasus
 		}
 		if = {
 			limit = {
-				NOT = {
-					has_country_flag = RUS_abolished_cossack_hosts
-					787 = { has_dynamic_modifier = { modifier = RUS_ethnic_autonomy } }
-				}
+				NOT = { has_country_flag = RUS_abolished_cossack_hosts }
+				NOT = { 787 = { has_state_flag = terek_state } }
 			}
 			787 = {
-				remove_dynamic_modifier = { modifier = RUS_cossack_host_modifier }
+				add_dynamic_modifier = { modifier = RUS_cossack_host_modifier }
 				set_state_flag = terek_state
 			}
 		}
-		else_if = {
-			limit = {
-				787 = { has_dynamic_modifier = { modifier = RUS_ethnic_autonomy } }
-			}
-			787 = {
-				add_dynamic_modifier = { modifier = RUS_ethnic_autonomy }
-				set_state_flag = kalmyk_state
-			}
-		}
+		#Kalmyk Autonomy is created through decision RUS_caspian_autonomies
 	}
 	option = {
 		name = russia.1150.c
 		log = "[GetLogInfo]: event russia.1150 option russia.1150.c"
-		every_owned_state = {
-			limit = { has_dynamic_modifier = { modifier = RUS_oskab_modifier } }
-			remove_dynamic_modifier = { modifier = RUS_oskab_modifier }
-		}
-		add_stability = 0.02
+		add_stability = 0.01
 		if = {
 			limit = {
-				NOT = {
-					has_country_flag = RUS_abolished_cossack_hosts
-					787 = { has_dynamic_modifier = { modifier = RUS_ethnic_autonomy } }
-				}
+				NOT = { has_country_flag = RUS_abolished_cossack_hosts }
+				NOT = { 787 = { has_state_flag = terek_state } }
 			}
 			787 = {
-				remove_dynamic_modifier = { modifier = RUS_cossack_host_modifier }
+				add_dynamic_modifier = { modifier = RUS_cossack_host_modifier }
 				set_state_flag = terek_state
 			}
 		}
@@ -12757,10 +12774,6 @@ unit_leader_event = { # 3rd Constitutional Asssembly
 		log = "[GetLogInfo]: event ruselections.1 option ruselections.1.a"
 		name = ruselections.1.a
 		hidden_effect = {
-			random_unit_leader = {
-				limit = { has_character_flag = temp_unit_leader }
-				remove_temp_unit_leader_role = yes
-			}
 			var:country_leader = {
 				unit_leader_event = { id = ruselections.2 days = 1 } #Opening speech
 			}
@@ -12814,7 +12827,6 @@ unit_leader_event = { # Opening speech
 		trigger = { RUS_pyotr_wrangel = { is_country_leader = yes } }
 		hidden_effect = {
 			RUS_dmitry_romanov = {
-				add_temp_unit_leader_role = yes
 				unit_leader_event = { id = ruselections.6 days = 2 }
 			}
 		}
@@ -12836,9 +12848,6 @@ unit_leader_event = { # Crisis in the Kadet Faction
 			limit = { has_decision = RUS_russia_is_monarchy }
 			custom_effect_tooltip = RUS_support_marlib
 			add_to_variable = { RUS_marlib_var = 1 }
-		}
-		hidden_effect = {
-			RUS_aleksandr_golitsyn = { remove_temp_unit_leader_role = yes }
 		}
 	}
 }
@@ -12993,7 +13002,6 @@ unit_leader_event = { # Speech of Dmitry Aleksandrovich Romanov
 		log = "[GetLogInfo]: event ruselections.6 option ruselections.6.a"
 		name = ruselections.6.a
 		hidden_effect = {
-			RUS_dmitry_romanov = { remove_temp_unit_leader_role = yes }
 			random_list = {
 				50 = {
 					set_country_flag = RUS_maria_marriage
@@ -13035,7 +13043,6 @@ unit_leader_event = { # Elections in 90 days announced by Denikin/Wrangel
 				CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 			}
 			RUS_vasily_maklakov = {
-				add_temp_unit_leader_role = yes
 				unit_leader_event = { id = ruselections.11 days = 2 } #Kadet intro
 			}
 		}
@@ -13076,17 +13083,14 @@ unit_leader_event = { #Kadet intro
 			add_to_variable = { RUS_kadet_var = 1 }
 		}
 		hidden_effect = {
-			RUS_vasily_maklakov = { remove_temp_unit_leader_role = yes }
 			if = {
 				limit = { is_monarchy = yes }
 				RUS_ilya_fondaminsky = {
-					add_temp_unit_leader_role = yes
 					unit_leader_event = { id = ruselections.12 days = 2 } #SR intro
 				}
 			}
 			else = {
 				RUS_vladimir_rikhter = {
-					add_temp_unit_leader_role = yes
 					unit_leader_event = { id = ruselections.12 days = 2 } #SR intro
 				}
 			}
@@ -13136,9 +13140,7 @@ unit_leader_event = { #SR intro
 			add_to_variable = { RUS_PSR_var = 1 }
 		}
 		hidden_effect = {
-			RUS_vladimir_rikhter = { remove_temp_unit_leader_role = yes }
 			RUS_aleksandr_titov = {
-				add_temp_unit_leader_role = yes
 				unit_leader_event = { id = ruselections.13 days = 2 } #RDP intro
 			}
 		}
@@ -13161,9 +13163,7 @@ unit_leader_event = { #SR intro
 			add_to_variable = { RUS_PSR_var = 1 }
 		}
 		hidden_effect = {
-			RUS_ilya_fondaminsky = { remove_temp_unit_leader_role = yes }
 			RUS_aleksandr_titov = {
-				add_temp_unit_leader_role = yes
 				unit_leader_event = { id = ruselections.13 days = 2 } #RDP intro
 			}
 		}
@@ -13206,9 +13206,7 @@ unit_leader_event = { #RDP intro
 			add_to_variable = { RUS_RDP_var = -1 }
 		}
 		hidden_effect = {
-			RUS_aleksandr_titov = { remove_temp_unit_leader_role = yes }
 			RUS_aleksandr_golitsyn = {
-				add_temp_unit_leader_role = yes
 				unit_leader_event = { id = ruselections.14 days = 2 } #VPP intro
 			}
 		}
@@ -13252,7 +13250,6 @@ unit_leader_event = { #VPP intro
 			add_to_variable = { RUS_VPP_var = -1 }
 		}
 		hidden_effect = {
-			RUS_aleksandr_golitsyn = { remove_temp_unit_leader_role = yes }
 			country_event = { id = ruselections.15 days = 2 } #Choose your side
 		}
 	}
@@ -13379,7 +13376,6 @@ country_event = { #Cooperation with communists?
 			custom_effect_tooltip = RUS_radical_RDP_tt
 			hidden_effect = {
 				RUS_vladimir_levitsky = {
-					add_temp_unit_leader_role = yes
 					unit_leader_event = { id = ruselections.17 days = 5 } #Titov ousted
 				}
 			}
@@ -13387,7 +13383,6 @@ country_event = { #Cooperation with communists?
 		else = {
 			hidden_effect = {
 				RUS_aleksandr_titov = {
-					add_temp_unit_leader_role = yes
 					unit_leader_event = { id = ruselections.18 days = 5 } #Titov stays
 				}
 			}
@@ -13414,7 +13409,6 @@ country_event = { #Cooperation with communists?
 			if = {
 				limit = { has_country_flag = RUS_rdp_pov }
 				RUS_aleksandr_titov = {
-					add_temp_unit_leader_role = yes
 					unit_leader_event = { id = ruselections.18 days = 5 } #Titov stays
 				}
 			}
@@ -13452,7 +13446,6 @@ unit_leader_event = { #Titov ousted
 		custom_effect_tooltip = RUS_decrease_left_anger
 		add_to_variable = { RUS_temp_left_anger = -1 }
 		hidden_effect = {
-			RUS_vladimir_levitsky = { remove_temp_unit_leader_role = yes }
 			country_event = { id = ruselections.19 days = 5 } #Protests against military
 		}
 	}
@@ -13479,7 +13472,6 @@ unit_leader_event = { #Titov stays
 		custom_effect_tooltip = RUS_increase_left_anger
 		add_to_variable = { RUS_temp_left_anger = 1 }
 		hidden_effect = {
-			RUS_aleksandr_titov = { remove_temp_unit_leader_role = yes }
 			country_event = { id = ruselections.19 days = 5 } #Protests against military
 		}
 	}
@@ -13733,7 +13725,6 @@ country_event = { #Kadets and the Right
 		add_to_variable = { RUS_temp_right_anger = -1 }
 		hidden_effect = {
 			RUS_maria_spiridonova = {
-				add_temp_unit_leader_role = yes
 				unit_leader_event = { id = ruselections.23 days = 4 } #PLSR alliance
 			}
 		}
@@ -13757,7 +13748,6 @@ country_event = { #Kadets and the Right
 		add_popularity = { ideology = market_liberal popularity = 0.04 }
 		hidden_effect = {
 			RUS_maria_spiridonova = {
-				add_temp_unit_leader_role = yes
 				unit_leader_event = { id = ruselections.23 days = 4 } #PLSR alliance
 			}
 		}
@@ -13796,7 +13786,6 @@ unit_leader_event = { #Negotiating with PLSR
 		custom_effect_tooltip = RUS_boost_RDP
 		add_to_variable = { RUS_RDP_var = 1 }
 		hidden_effect = {
-			RUS_maria_spiridonova = { remove_temp_unit_leader_role = yes }
 			country_event = { id = ruselections.24 days = 4 }  #Prominent backer
 		}
 	}
@@ -13824,7 +13813,6 @@ unit_leader_event = { #Negotiating with PLSR
 			add_stability = -0.02
 		}
 		hidden_effect = {
-			RUS_maria_spiridonova = { remove_temp_unit_leader_role = yes }
 			country_event = { id = ruselections.24 days = 4 }  #Prominent backer
 		}
 	}
@@ -13846,7 +13834,6 @@ country_event = { #Prominent backer
 		add_to_variable = { RUS_VPP_var = 1 }
 		hidden_effect = {
 			RUS_vasily_shulgin = {
-				add_temp_unit_leader_role = yes
 				unit_leader_event = { id = ruselections.25 days = 4 } #Question of SOR
 			}
 		}
@@ -13876,7 +13863,6 @@ country_event = { #Prominent backer
 		}
 		hidden_effect = {
 			RUS_vasily_shulgin = {
-				add_temp_unit_leader_role = yes
 				unit_leader_event = { id = ruselections.25 days = 4 } #Question of SOR
 			}
 		}
@@ -13918,7 +13904,6 @@ unit_leader_event = { #Question of SOR
 		custom_effect_tooltip = RUS_increase_left_anger
 		add_to_variable = { RUS_temp_left_anger = 1 }
 		hidden_effect = {
-			RUS_vasily_shulgin = { remove_temp_unit_leader_role = yes }
 			country_event = { id = ruselections.26 days = 1 } #Who really toppled Savinkov?
 			country_event = { id = ruselections.27 days = 4 } #Campaigning over minorities?
 		}
@@ -13941,7 +13926,6 @@ unit_leader_event = { #Question of SOR
 		custom_effect_tooltip = RUS_increase_right_anger
 		add_to_variable = { RUS_temp_right_anger = 1 }
 		hidden_effect = {
-			RUS_vasily_shulgin = { remove_temp_unit_leader_role = yes }
 			country_event = { id = ruselections.26 days = 1 } #Who really toppled Savinkov?
 			country_event = { id = ruselections.27 days = 4 } #Campaigning over minorities?
 		}
@@ -14070,7 +14054,6 @@ country_event = { #Ex-svobodniks?
 			if = {
 				limit = { is_monarchy = no }
 				RUS_ivan_solonevich = {
-					add_temp_unit_leader_role = yes
 					unit_leader_event = { id = ruselections.29 days = 4 } #Solonevich coups VPP?
 				}
 			}
@@ -14146,9 +14129,6 @@ unit_leader_event = { #Solonevich coups VPP?
 			character = RUS_ivan_solonevich
 			ideology = social_conservative_subtype
 		}
-		hidden_effect = {
-			RUS_ivan_solonevich = { remove_temp_unit_leader_role = yes }
-		}
 	}
 }
 country_event = { #Duma election results
@@ -14201,11 +14181,16 @@ country_event = { #Duma election results
 			has_country_flag = RUS_RDP_victory
 			is_monarchy = no
 		}
-		hold_election = ROOT
-		set_politics = {
-			ruling_party = social_democrat
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_democrat
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		if = {
 			limit = { has_country_flag = RUS_RDP_leader_levitsky }
@@ -14230,19 +14215,21 @@ country_event = { #Duma election results
 				}
 			}
 		}
-		hold_election = ROOT
-		set_politics = {
-			ruling_party = social_liberal
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_liberal
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		if = {
 			limit = { is_monarchy = yes }
 			add_popularity = { ideology = social_liberal popularity = 0.05 }
-			RUS_ilya_fondaminsky = {
-				add_temp_unit_leader_role = yes
-				unit_leader_event = ruselections.38 #Tsar appoints SR PM
-			}
+			RUS_ilya_fondaminsky = { unit_leader_event = ruselections.38 } #Tsar appoints SR PM
 		}
 		else = {
 			add_popularity = { ideology = social_liberal popularity = 0.05 }
@@ -14254,11 +14241,16 @@ country_event = { #Duma election results
 		log = "[GetLogInfo]: event ruselections.30 option ruselections.30.c"
 		name = ruselections.30.c
 		trigger = { has_country_flag = RUS_kadet_victory }
-		hold_election = ROOT
-		set_politics = {
-			ruling_party = market_liberal
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = market_liberal
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		add_popularity = { ideology = market_liberal popularity = 0.05 }
 		if = {
@@ -14274,11 +14266,16 @@ country_event = { #Duma election results
 		log = "[GetLogInfo]: event ruselections.30 option ruselections.30.e"
 		name = ruselections.30.e
 		trigger = { has_country_flag = RUS_VPP_victory }
-		hold_election = ROOT
-		set_politics = {
-			ruling_party = social_conservative
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_conservative
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		add_popularity = { ideology = social_conservative popularity = 0.05 }
 		if = {
@@ -14454,6 +14451,13 @@ country_event = { #Maklakov Sworn in
 	option = {
 		log = "[GetLogInfo]: event ruselections.35 option ruselections.35.c"
 		name = ruselections.35.c
+		ai_chance = {
+			base = 1
+			modifier = {
+				factor = 0
+				has_country_flag = RUS_maklakov_ai
+			}
+		}
 		activate_mission = RUS_political_apathy
 		activate_advisor = RUS_nikolay_nekrasov_sic
 		set_temp_variable = { coalition_partner_var = token:social_conservative }
@@ -14520,7 +14524,6 @@ unit_leader_event = { #Tsar Appoints Progressive Cabinet
 		set_temp_variable = { coalition_partner_var = token:market_liberal }
 		add_to_coalition = yes
 		activate_mission = RUS_PSR_conference
-		RUS_ilya_fondaminsky = { remove_temp_unit_leader_role = yes }
 		mark_focus_tree_layout_dirty = yes
 		add_war_support = -0.05
 		RUS_increase_democracy = yes
@@ -14730,7 +14733,7 @@ country_event = { #President's agenda
 		name = ruselections.50.a
 		trigger = { RUS_kartashyov = yes }
 		#Array for checking tags for quest 1
-		add_to_array = { array = RUS_kartashyov_targets value = WHR }
+		add_to_array = { array = RUS_kartashyov_targets value = BLR }
 		add_to_array = { array = RUS_kartashyov_targets value = UKR }
 		add_to_array = { array = RUS_kartashyov_targets value = ROM }
 		add_to_array = { array = RUS_kartashyov_targets value = SER }
@@ -14777,7 +14780,7 @@ country_event = { #President's agenda
 		name = ruselections.50.a
 		trigger = { RUS_solonevich = yes }
 		#Array for checking relevant tags for quest 3
-		add_to_array = { array = RUS_solonevich_targets value = WHR }
+		add_to_array = { array = RUS_solonevich_targets value = BLR }
 		add_to_array = { array = RUS_solonevich_targets value = UKR }
 		add_to_array = { array = RUS_solonevich_targets value = ROM }
 		add_to_array = { array = RUS_solonevich_targets value = SER }
@@ -14817,8 +14820,11 @@ country_event = { #Future elections for republic
 	trigger = {
 		is_monarchy = no
 		RUS_is_demrus = yes
+		RUS_wrangel_path = no
 		has_country_flag = RUS_had_first_election
 		NOT = { has_country_flag = RUS_had_second_election }
+		NOT = { has_war_with = GER }
+		NOT = { has_war_with = INT }
 	}
 	immediate = {
 		hidden_effect = {
@@ -14870,14 +14876,17 @@ country_event = { #Future elections for republic
 				NOT = { has_country_flag = RUS_titov_ai }
 			}
 		}
-		hold_election = ROOT
-		hidden_effect = {
-			RUS_aleksandr_titov = { promote_character = { ideology = social_democrat_subtype } }
-		}
-		set_politics = {
-			ruling_party = social_democrat
-			elections_allowed = yes
-			election_frequency = 60
+		RUS_aleksandr_titov = { promote_character = { ideology = social_democrat_subtype } }
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_democrat
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		if = {
 			limit = { RUS_titov = no }
@@ -14905,11 +14914,16 @@ country_event = { #Future elections for republic
 				NOT = { has_country_flag = RUS_sr_ai }
 			}
 		}
-		hold_election = ROOT
-		set_politics = {
-			ruling_party = social_liberal
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_liberal
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		activate_advisor = RUS_nikolay_martyanov_sic
 		set_country_flag = { flag = RUS_peaceful_election_change days = 1 }
@@ -14940,14 +14954,17 @@ country_event = { #Future elections for republic
 				NOT = { has_country_flag = RUS_sr_ai }
 			}
 		}
-		hold_election = ROOT
-		hidden_effect = {
-			RUS_pitirim_sorokin = { promote_character = { ideology = social_liberal_subtype } }
-		}
-		set_politics = {
-			ruling_party = social_liberal
-			elections_allowed = yes
-			election_frequency = 60
+		RUS_pitirim_sorokin = { promote_character = { ideology = social_liberal_subtype } }
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_liberal
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		if = {
 			limit = { NOT = { has_government = social_liberal } }
@@ -14988,14 +15005,17 @@ country_event = { #Future elections for republic
 				NOT = { has_country_flag = RUS_sr_ai }
 			}
 		}
-		hold_election = ROOT
-		hidden_effect = {
-			RUS_ilya_fondaminsky = { promote_character = { ideology = social_liberal_subtype } }
-		}
-		set_politics = {
-			ruling_party = social_liberal
-			elections_allowed = yes
-			election_frequency = 60
+		RUS_ilya_fondaminsky = { promote_character = { ideology = social_liberal_subtype } }
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_liberal
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		if = {
 			limit = { NOT = { has_government = social_liberal } }
@@ -15027,14 +15047,17 @@ country_event = { #Future elections for republic
 				NOT = { has_country_flag = RUS_kadet_ai }
 			}
 		}
-		hold_election = ROOT
-		hidden_effect = {
-			RUS_anton_kartashyov = { promote_character = { ideology = market_liberal_subtype } }
-		}
-		set_politics = {
-			ruling_party = market_liberal
-			elections_allowed = yes
-			election_frequency = 60
+		RUS_anton_kartashyov = { promote_character = { ideology = market_liberal_subtype } }
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = market_liberal
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		if = {
 			limit = { NOT = { has_government = market_liberal } }
@@ -15071,28 +15094,31 @@ country_event = { #Future elections for republic
 				NOT = { has_country_flag = RUS_kadet_ai }
 			}
 		}
-		hold_election = ROOT
-		hidden_effect = {
-			RUS_nikolay_nekrasov = {
-				if = {
-					limit = { has_ideology = market_liberal_subtype }
-					promote_character = market_liberal_subtype
-				}
-				else = {
-					add_country_leader_role = {
-						country_leader = {
-							desc = RUS_nikolay_nekrasov_sic_desc
-							ideology = market_liberal_subtype
-						}
-						promote_leader = yes
+		RUS_nikolay_nekrasov = {
+			if = {
+				limit = { has_ideology = market_liberal_subtype }
+				promote_character = market_liberal_subtype
+			}
+			else = {
+				add_country_leader_role = {
+					country_leader = {
+						desc = RUS_nikolay_nekrasov_sic_desc
+						ideology = market_liberal_subtype
 					}
+					promote_leader = yes
 				}
 			}
 		}
-		set_politics = {
-			ruling_party = market_liberal
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = market_liberal
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		if = {
 			limit = { NOT = { has_government = market_liberal } }
@@ -15135,11 +15161,16 @@ country_event = { #Future elections for republic
 				NOT = { has_game_rule = { rule = RUS_path option = RUS_PATH_SOLONEVICH_SOCCON } }
 			}
 		}
-		hold_election = ROOT
-		set_politics = {
-			ruling_party = social_conservative
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_conservative
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		set_country_flag = RUS_solonevich_re-elected
 		add_political_power = 100
@@ -15175,19 +15206,22 @@ country_event = { #Future elections for republic
 				NOT = { has_country_flag = RUS_vpp_ai }
 			}
 		}
-		hold_election = ROOT
 		if = {
 			limit = { RUS_solonevich = yes }
 			custom_effect_tooltip = RUS_solonevich_election_fail
 		}
-		hidden_effect = {
-			RUS_aleksandr_golitsyn = { promote_character = { ideology = social_conservative_subtype } }
-			RUS_restore_VPP = yes
-		}
-		set_politics = {
-			ruling_party = social_conservative
-			elections_allowed = yes
-			election_frequency = 60
+		RUS_aleksandr_golitsyn = { promote_character = { ideology = social_conservative_subtype } }
+		hidden_effect = { RUS_restore_VPP = yes }
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_conservative
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		if = {
 			limit = { NOT = { has_government = social_conservative } }
@@ -15229,34 +15263,37 @@ country_event = { #Future elections for republic
 				NOT = { has_country_flag = RUS_vpp_ai }
 			}
 		}
-		hold_election = ROOT
 		if = {
 			limit = { RUS_solonevich = yes }
 			custom_effect_tooltip = RUS_solonevich_election_fail
 		}
-		set_politics = {
-			ruling_party = social_conservative
-			elections_allowed = yes
-			election_frequency = 60
-		}
-		hidden_effect = {
+		RUS_dmitry_romanov = {
 			if = {
-				limit = { NOT = { has_country_leader = { character = RUS_dmitry_romanov } } }
-				RUS_dmitry_romanov = {
-					add_country_leader_role = {
-						country_leader = {
-							desc = RUS_dmitry_romanov_leader_desc
-							ideology = social_conservative_subtype
-						}
-						promote_leader = yes
-					}
-				}
+				limit = { has_ideology = social_conservative_subtype }
+				promote_character = social_conservative_subtype
 			}
 			else = {
-				RUS_dmitry_romanov = { promote_character = { ideology = social_conservative_subtype } }
+				add_country_leader_role = {
+					country_leader = {
+						desc = RUS_dmitry_romanov_leader_desc
+						ideology = social_conservative_subtype
+					}
+					promote_leader = yes
+				}
 			}
-			RUS_restore_VPP = yes
 		}
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_conservative
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
+		}
+		hidden_effect = { RUS_restore_VPP = yes }
 		activate_advisor = RUS_georgy_vernadsky_sic
 		add_political_power = 50
 	}
@@ -15270,9 +15307,12 @@ country_event = { #Future elections for empire
 	picture = GFX_report_event_UKR_election
 	trigger = {
 		is_monarchy = yes
+		RUS_wrangel_path = no
 		has_elected_government = yes
 		has_country_flag = RUS_had_first_election
 		NOT = { has_country_flag = RUS_had_second_election }
+		NOT = { has_war_with = GER }
+		NOT = { has_war_with = INT }
 	}
 	immediate = {
 		hidden_effect = {
@@ -15306,11 +15346,16 @@ country_event = { #Future elections for empire
 				NOT = { has_country_flag = RUS_fondaminsky_ai }
 			}
 		}
-		hold_election = ROOT
-		set_politics = {
-			ruling_party = social_liberal
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_liberal
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		add_popularity = { ideology = social_liberal popularity = 0.1 }
 		set_temp_variable = { coalition_partner_var = token:market_liberal }
@@ -15341,11 +15386,16 @@ country_event = { #Future elections for empire
 				NOT = { has_country_flag = RUS_kadet_ai }
 			}
 		}
-		hold_election = ROOT
-		set_politics = {
-			ruling_party = market_liberal
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = market_liberal
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		add_popularity = { ideology = market_liberal popularity = 0.1 }
 		set_temp_variable = { coalition_partner_var = token:social_liberal }
@@ -15369,11 +15419,16 @@ country_event = { #Future elections for empire
 				NOT = { has_country_flag = RUS_kadet_ai }
 			}
 		}
-		hold_election = ROOT
-		set_politics = {
-			ruling_party = market_liberal
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = market_liberal
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		add_popularity = { ideology = market_liberal popularity = 0.1 }
 		set_temp_variable = { coalition_partner_var = token:social_conservative }
@@ -15400,11 +15455,16 @@ country_event = { #Future elections for empire
 				NOT = { has_country_flag = RUS_vpp_ai }
 			}
 		}
-		hold_election = ROOT
-		set_politics = {
-			ruling_party = social_conservative
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_conservative
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		add_popularity = { ideology = social_conservative popularity = 0.1 }
 		set_temp_variable = { coalition_partner_var = token:market_liberal }
@@ -15431,11 +15491,16 @@ country_event = { #Future elections for empire
 				NOT = { has_country_flag = RUS_vpp_ai }
 			}
 		}
-		hold_election = ROOT
-		set_politics = {
-			ruling_party = social_conservative
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_conservative
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		set_temp_variable = { coalition_partner_var = token:authoritarian_democrat }
 		add_to_coalition = yes
@@ -15465,11 +15530,16 @@ country_event = { #Future elections for empire
 				NOT = { has_country_flag = RUS_vpp_ai }
 			}
 		}
-		hold_election = ROOT
-		set_politics = {
-			ruling_party = social_conservative
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_conservative
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		add_advisor_role = {
 			character = RUS_dmitry_romanov
@@ -15495,9 +15565,19 @@ country_event = { #The Red Regiments Strike
 	id = ruselections.53
 	title = ruselections.53.t
 	desc = ruselections.53.d
+
 	is_triggered_only = yes
 	fire_only_once = yes
-	trigger = { RUS_is_demrus = yes }
+
+	trigger = {
+		has_country_flag = RUS_had_first_election
+		RUS_is_demrus = yes
+		RUS_wrangel_path = no
+		OR = {
+			has_war_with = GER
+			has_war_with = INT
+		}
+	}
 
 	option = {
 		log = "[GetLogInfo]: event ruselections.53 option ruselections.53.a"
@@ -16395,9 +16475,8 @@ country_event = { #Remove Denikin
 					activate = yes
 					advisor = {
 						slot = army_chief
-						#no idea_token means it will default to <character>_army_chief
-						cost = 200
 						traits = { KR_army_chief_offensive_3 }
+						cost = 200
 						can_be_fired = no
 					}
 				}
@@ -16436,8 +16515,8 @@ country_event = { #Denikin retires
 						advisor = {
 							slot = army_chief
 							idea_token = RUS_sergey_markov_army_chief
-							cost = 200
 							traits = { KR_army_chief_manoeuvre_3 }
+							cost = 200
 							can_be_fired = no
 						}
 					}
@@ -17559,6 +17638,13 @@ country_event = { #Law on Russian Freedoms
 	option = {
 		log = "[GetLogInfo]: event demrus.64 option demrus.64.c"
 		name = demrus.64.c
+		ai_chance = {
+			base = 1
+			modifier = {
+				factor = 50
+				has_country_flag = RUS_maklakov_ai
+			}
+		}
 		trigger = { RUS_maklakov = yes }
 		custom_effect_tooltip = RUS_law_on_freedoms_tt
 		add_political_power = -80
@@ -18620,7 +18706,6 @@ country_event = { #Establishment of 'enforced democracy'
 				RUS_deadlocked_duma
 				RUS_win_back_peasants_idea
 				RUS_literary_clubs
-				RUS_literary_clubs_2
 				RUS_democratic_education_idea
 				RUS_democratic_foundation
 				RUS_democratic_foundation_2
@@ -18648,9 +18733,6 @@ country_event = { #Establishment of 'enforced democracy'
 	option = {
 		log = "[GetLogInfo]: event demrus.104 option demrus.104.a"
 		name = demrus.104.a
-		hidden_effect = {
-			hold_election = ROOT
-		}
 		RUS_aleksandr_golitsyn = {
 			promote_character = { ideology = social_conservative_subtype }
 		}
@@ -18665,10 +18747,16 @@ country_event = { #Establishment of 'enforced democracy'
 				add_idea = RUS_republic_under_watch_2
 			}
 		}
-		set_politics = {
-			ruling_party = social_conservative
-			elections_allowed = yes
-			election_frequency = 60
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_conservative
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		activate_advisor = RUS_georgy_vernadsky_sic
 		set_temp_variable = { coalition_partner_var = token:authoritarian_democrat }
@@ -20428,7 +20516,7 @@ unit_leader_event = { #Wrangel becomes imperial regent
 		name = monrus.1.a
 		trigger = { NOT = { has_war_with = GER } }
 		set_cosmetic_tag = RUS_empire
-		RUS_pyotr_wrangel = { set_character_flag = is_regent }
+		RUS_pyotr_wrangel = { set_character_as_regent = yes }
 		mark_focus_tree_layout_dirty = yes
 		hidden_effect = {
 			country_event = { id = monrus.2 days = 20 } #Crown Kirill/Vladimir
@@ -20813,6 +20901,13 @@ country_event = { #Resurgent Combat Organisation
 	option = {
 		log = "[GetLogInfo]: event monrus.11 option monrus.11.b"
 		name = monrus.11.b
+		ai_chance = {
+			base = 1
+			modifier = {
+				factor = 0
+				has_active_mission = RUS_demands_from_unions_monarchy
+			}
+		}
 		add_stability = -0.05
 		add_popularity = { ideology = national_populist popularity = 0.06 }
 		add_popularity = { ideology = totalist popularity = -0.03 }
@@ -21116,25 +21211,21 @@ country_event = { #The Patriotic Information Bureau
 	option = {
 		log = "[GetLogInfo]: event monrus.19 option monrus.19.a"
 		name = monrus.19.a
-		add_political_power = -40
-		if = {
-			limit = {
-				OR = {
-					has_government = social_conservative
-					has_government = paternal_autocrat
-				}
+		trigger = {
+			OR = {
+				has_government = social_conservative
+				has_authoritarian_government = yes
 			}
-			set_temp_variable = { ideology_change_var = 5 }
-			change_ruling_party_popularity = yes
 		}
-		add_popularity = { ideology = authoritarian_democrat popularity = 0.05 }
-		RUS_increase_imperial_popularity = yes
+		add_political_power = -25
+		set_temp_variable = { ideology_change_var = 5 }
+		change_ruling_party_popularity = yes
 	}
 	option = {
 		log = "[GetLogInfo]: event monrus.19 option monrus.19.b"
 		name = monrus.19.b
 		add_popularity = { ideology = authoritarian_democrat popularity = 0.05 }
-		add_popularity = { ideology = national_populist popularity = 0.02 }
+		add_popularity = { ideology = paternal_autocrat popularity = 0.05 }
 	}
 	option = {
 		log = "[GetLogInfo]: event monrus.19 option monrus.19.c"
@@ -21194,11 +21285,12 @@ country_event = { #The Garde Equipage
 			}
 		}
 		add_war_support = 0.01
-		219 = { #Moscow
+		random_owned_controlled_state = {
+			prioritize = { 219 } #Moscow
+			limit = { valid_state_for_spawning_friendly_unit = yes }
 			create_unit = {
 				division = "division_template = \"Imperskiy Gvardeyskaya\" start_experience_factor = 1"
-				owner = RUS
-				prioritize_location = 6380 #Moscow
+				owner = ROOT
 			}
 		}
 		add_manpower = -9500
@@ -21894,7 +21986,6 @@ country_event = { #Restoration of Civilian Government
 	is_triggered_only = yes
 	immediate = {
 		hidden_effect = {
-			hold_election = ROOT
 			remove_ideas = {
 				RUS_embers_of_democracy
 				RUS_weak_democracy
@@ -21919,9 +22010,16 @@ country_event = { #Restoration of Civilian Government
 			remove_idea = RUS_rule_by_decree
 			add_idea = RUS_guided_democracy
 		}
-		set_politics = {
-			ruling_party = social_conservative
-			elections_allowed = yes
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_conservative
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		activate_advisor = RUS_aleksandr_golitsyn_sic
 		set_temp_variable = { ideology_change_var = 10 }
@@ -21941,9 +22039,16 @@ country_event = { #Restoration of Civilian Government
 			remove_idea = RUS_rule_by_decree
 			add_idea = RUS_guided_democracy
 		}
-		set_politics = {
-			ruling_party = authoritarian_democrat
-			elections_allowed = yes
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = authoritarian_democrat
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		activate_advisor = RUS_vasily_shulgin_sic
 	}
@@ -22196,8 +22301,8 @@ country_event = { #Coronation of Wrangel
 					slot = army_chief
 					idea_token = RUS_mikhail_drozdovsky_army_chief
 					desc = RUS_mikhail_drozdovsky_commander_desc
-					cost = 100
 					traits = { KR_army_chief_morale_3 }
+					cost = 100
 					can_be_fired = no
 				}
 				activate = yes
@@ -22431,9 +22536,9 @@ country_event = { #Post-War elections for Wrangel
 	picture = GFX_report_event_RUS_election
 	is_triggered_only = yes
 	fire_only_once = yes
+
 	immediate = {
 		hidden_effect = {
-			hold_election = ROOT
 			RUS_clear_earlier_demrus_focuses = yes
 		}
 	}
@@ -22455,10 +22560,16 @@ country_event = { #Post-War elections for Wrangel
 		}
 		complete_national_focus = RUS_soccons
 		add_popularity = { ideology = social_conservative popularity = 0.1 }
-		set_politics = {
-			ruling_party = social_conservative
-			election_frequency = 60
-			elections_allowed = yes
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = social_conservative
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		set_temp_variable = { coalition_partner_var = token:authoritarian_democrat }
 		add_to_coalition = yes
@@ -22487,10 +22598,16 @@ country_event = { #Post-War elections for Wrangel
 		}
 		complete_national_focus = RUS_marlibs
 		add_popularity = { ideology = market_liberal popularity = 0.15 }
-		set_politics = {
-			ruling_party = market_liberal
-			election_frequency = 60
-			elections_allowed = yes
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = market_liberal
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		activate_advisor = RUS_anton_kartashyov_sic
 		RUS_increase_democracy = yes
@@ -22516,10 +22633,16 @@ country_event = { #Post-War elections for Wrangel
 			}
 		}
 		complete_national_focus = RUS_authdems
-		set_politics = {
-			ruling_party = authoritarian_democrat
-			election_frequency = 60
-			elections_allowed = yes
+		meta_effect = {
+			text = {
+				set_politics = {
+					ruling_party = authoritarian_democrat
+					last_election = "[CURRENT_DATE]"
+					election_frequency = 60
+					elections_allowed = yes
+				}
+			}
+			CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 		}
 		activate_advisor = RUS_vasily_shulgin_sic
 		set_temp_variable = { coalition_partner_var = token:social_conservative }
@@ -22764,7 +22887,7 @@ country_event = { #Unstable Coalition
 	option = {
 		log = "[GetLogInfo]: event socrus.11 option socrus.11.a"
 		name = socrus.11.a
-		add_political_power = -20
+		add_political_power = -40
 		set_temp_variable = { RUS_relation_change = 2 }
 		RUS_PSR_relation = yes
 		RUS_decrease_VST_centre_unity = yes
@@ -22869,7 +22992,7 @@ country_event = { #Russian Communist Party
 	option = {
 		log = "[GetLogInfo]: event socrus.31 option socrus.31.a"
 		name = socrus.31.a
-		add_popularity = { ideology = totalist popularity = 0.05 }
+		add_popularity = { ideology = totalist popularity = 0.1 }
 		hidden_effect = {
 			country_event = { id = socrus.9 days = 5 }
 		}
@@ -22899,13 +23022,13 @@ country_event = { #Bolsheviks in the Officer Corps
 		log = "[GetLogInfo]: event socrus.32 option socrus.32.b"
 		name = socrus.32.b #Promote some
 		RUS_fix_army_soc = yes
-		add_political_power = -30
+		add_political_power = -40
 	}
 	option = {
 		log = "[GetLogInfo]: event socrus.32 option socrus.32.c"
 		name = socrus.32.c #They have proved capable
 		RUS_fix_army_soc = yes
-		add_popularity = { ideology = totalist popularity = 0.05 }
+		add_popularity = { ideology = totalist popularity = 0.1 }
 		if = {
 			limit = { RUS_VST = yes }
 			RUS_decrease_VST_centre_unity = yes
@@ -23218,7 +23341,6 @@ country_event = { #Revolt in the Duma
 	option = {
 		log = "[GetLogInfo]: event socrus.40 option socrus.40.a"
 		name = socrus.40.a #We have no choice but agree
-		add_political_power = -30
 		country_event = { id = socrus.44 days = 14 }
 		if = {
 			limit = { RUS_VST = yes }
@@ -23242,7 +23364,9 @@ country_event = { #Revolt in the Duma
 	option = {
 		log = "[GetLogInfo]: event socrus.40 option socrus.40.b"
 		name = socrus.40.b #Let him shout
-		add_stability = -0.04
+		add_stability = -0.05
+		set_temp_variable = { ideology_change_var = -10 }
+		change_ruling_party_popularity = yes
 		if = {
 			limit = { RUS_VST = yes }
 			set_temp_variable = { RUS_relation_change = -1 }
@@ -23291,7 +23415,7 @@ country_event = { #The General Strike
 			idea = RUS_soc_strike
 			days = 70
 		}
-		set_temp_variable = { ideology_change_var = -8 }
+		set_temp_variable = { ideology_change_var = -10 }
 		change_ruling_party_popularity = yes
 		if = {
 			limit = { RUS_VST = yes }
@@ -23347,7 +23471,6 @@ country_event = { #Negotiated Solution
 		log = "[GetLogInfo]: event socrus.42 option socrus.42.a"
 		name = socrus.42.a
 		add_stability = 0.04
-		#trait for Levitsky for negotiating this?
 	}
 }
 
@@ -23434,7 +23557,7 @@ country_event = { #Fighting in the Countryside
 		else = { set_temp_variable = { ideology_change_var = -5 } }
 		change_ruling_party_popularity = yes
 		hidden_effect = {
-			country_event = { id = socrus.45 days = 45 random_days = 15 }
+			country_event = { id = socrus.45 days = 45 random_days = 15 } #Vozhd i Svoboda!
 		}
 	}
 }
@@ -23801,7 +23924,7 @@ country_event = { #The Sebezhsky Mass Grave
 		}
 		if = {
 			limit = { RUS_is_spiridonist = yes }
-			set_temp_variable = { RUS_spiridonist_influence_change = 4 }
+			set_temp_variable = { RUS_spiridonist_influence_change = -3 }
 			RUS_add_faith = yes
 		}
 	}
@@ -23820,6 +23943,8 @@ country_event = { #The Sebezhsky Mass Grave
 		if = {
 			limit = { RUS_is_spiridonist = yes }
 			add_stability = 0.05
+			set_temp_variable = { RUS_spiridonist_influence_change = -3 }
+			RUS_add_faith = yes
 			set_temp_variable = { RUS_spiridonist_influence_change = -3 }
 			RUS_add_faith = yes
 		}
@@ -23992,10 +24117,10 @@ country_event = { #Drafting the Operation Kutuzov
 			}
 		}
 		set_country_flag = RUS_speed_bonus
-		set_country_flag = RUS_WHR_bonus
+		set_country_flag = RUS_BLR_bonus
 		custom_effect_tooltip = RUS_upon_taking_war_focus_tt
 		effect_tooltip = {
-			add_ideas = RUS_WHR_shock_plan
+			add_ideas = RUS_BLR_shock_plan
 		}
 	}
 	option = {
@@ -24522,7 +24647,7 @@ country_event = { #High Anti-Soc resistance event
 		}
 		if = {
 			limit = { RUS_is_spiridonist = yes }
-			add_to_variable = { RUS_faith = -5 }
+			set_temp_variable = { RUS_spiridonist_influence_change = -5 }
 			RUS_add_faith = yes
 			add_popularity = { ideology = radical_socialist popularity = -0.08 }
 		}
@@ -24897,7 +25022,7 @@ country_event = { #Direction of the Revolutionary Struggle
 	id = socrus.103
 	title = socrus.103.t
 	desc = socrus.103.d
-	picture = GFX_report_event_WHR_sojm_meeting
+	picture = GFX_report_event_BLR_sojm_meeting
 	is_triggered_only = yes
 
 	option = { #Spiridonovist side
@@ -24911,10 +25036,7 @@ country_event = { #Direction of the Revolutionary Struggle
 			}
 		}
 		hidden_effect = {
-			RUS_maria_spiridonova = {
-				add_temp_unit_leader_role = yes
-				unit_leader_event = socrus.161
-			}
+			RUS_maria_spiridonova = { unit_leader_event = socrus.161 }
 		}
 		set_country_flag = RUS_spiridonist_side
 		custom_effect_tooltip = socrus.103.a.tt
@@ -24943,10 +25065,7 @@ country_event = { #Direction of the Revolutionary Struggle
 			}
 		}
 		hidden_effect = {
-			RUS_aleksey_ustinov = {
-				add_temp_unit_leader_role = yes
-				unit_leader_event = socrus.141
-			}
+			RUS_aleksey_ustinov = { unit_leader_event = socrus.141 }
 			remove_trait = {
 				character = RUS_andrey_kolegayev
 				slot = political_advisor
@@ -24986,7 +25105,7 @@ country_event = { #Question of Econ Ministry
 	id = socrus.104
 	title = socrus.104.t
 	desc = socrus.104.d
-	picture = GFX_report_event_WHR_sojm_meeting
+	picture = GFX_report_event_BLR_sojm_meeting
 	is_triggered_only = yes
 
 	option = { #Stanislav
@@ -25044,7 +25163,7 @@ country_event = { #On Security Matters
 	id = socrus.105
 	title = socrus.105.t
 	desc = socrus.105.d
-	picture = GFX_report_event_WHR_sojm_meeting
+	picture = GFX_report_event_BLR_sojm_meeting
 	is_triggered_only = yes
 
 	option = { #Zdobnov
@@ -25739,20 +25858,7 @@ country_event = { #Blyukher Report Part 2
 		log = "[GetLogInfo]: event socrus.132 option socrus.132.e"
 		name = socrus.132.e
 		trigger = { RUS_VST = yes }
-		RUS_aleksandr_yegorov = {
-			promote_leader = yes
-			add_advisor_role = {
-				activate = yes
-				advisor = {
-					slot = army_chief
-					idea_token = RUS_aleksandr_yegorov_army_chief
-					desc = RUS_aleksandr_yegorov_high_command_desc
-					cost = 100
-					traits = { KR_army_chief_reform_2 }
-					can_be_fired = no
-				}
-			}
-		}
+		activate_advisor = RUS_aleksandr_yegorov_army_chief
 		add_stability = 0.02
 	}
 	option = { #Frunze
@@ -25971,7 +26077,6 @@ unit_leader_event = { #Maximalist introduction
 		custom_effect_tooltip = socrus.141.a.tt
 		hidden_effect = {
 			RUS_aleksey_ustinov = {
-				remove_temp_unit_leader_role = yes
 			}
 		}
 	}
@@ -26076,7 +26181,6 @@ unit_leader_event = { #Ustinov Takeover
 		hidden_effect = {
 			RUS_aleksey_ustinov = {
 				promote_character = { ideology = totalist_subtype }
-				remove_temp_unit_leader_role = yes
 			}
 			set_politics = {
 				ruling_party = totalist
@@ -26201,8 +26305,17 @@ country_event = { #The Question of the Cossacks
 			RUS_is_maximalist = no
 		}
 		add_political_power = -40
+		set_temp_variable = { ideology_change_var = -4 }
+		change_ruling_party_popularity = yes
 		add_stability = 0.05
-		country_event = { id = socrus.151 days = 180 } #1st People's Cossack Cavalry Corps
+		if = {
+			limit = { RUS_is_spiridonist = yes }
+			set_temp_variable = { RUS_spiridonist_influence_change = 2 }
+			RUS_add_faith = yes
+		}
+		hidden_effect = {
+			country_event = { id = socrus.151 days = 180 } #1st People's Cossack Cavalry Corps
+		}
 	}
 }
 
@@ -26403,7 +26516,7 @@ country_event = { #Pavlov's Rebellion Dies Down
 		RUS_decrease_antisoc_resistance = yes
 		if = {
 			limit = { RUS_is_spiridonist = yes }
-			add_to_variable = { RUS_faith = -4 }
+			set_temp_variable = { RUS_spiridonist_influence_change = -4 }
 			RUS_add_faith = yes
 		}
 		clr_country_flag = RUS_pavlov_rebellion_flag
@@ -26421,7 +26534,7 @@ country_event = { #Pavlov's Rebellion Dies Down
 		RUS_decrease_antisoc_resistance = yes
 		if = {
 			limit = { RUS_is_spiridonist = yes }
-			add_to_variable = { RUS_faith = 3 }
+			set_temp_variable = { RUS_spiridonist_influence_change = 3 }
 			RUS_add_faith = yes
 		}
 		if = {
@@ -26582,7 +26695,9 @@ country_event = { #The Pavlovites join Free Russian Army
 				}
 			}
 		}
-		64 = { #Berlin
+		random_owned_controlled_state = {
+			prioritize = { 64 } #Berlin
+			limit = { valid_state_for_spawning_friendly_unit = yes }
 			create_unit = {
 				division = "division_template = \"Svobodny Kazachya diviziya\" start_experience_factor = 0.2 start_equipment_factor = 1.0"
 				owner = ROOT
@@ -26607,7 +26722,6 @@ unit_leader_event = { #Spiridonovist introduction event
 		log = "[GetLogInfo]: event socrus.161 option socrus.161.a"
 		name = socrus.161.a
 		custom_effect_tooltip = socrus.161.a.tt
-		RUS_maria_spiridonova = { remove_temp_unit_leader_role = yes }
 	}
 }
 
@@ -26730,7 +26844,6 @@ unit_leader_event = { #PSR Conference
 			NOT = {
 				AND = {
 					has_country_flag = RUS_siberian_direction_complete
-					has_country_flag = RUS_completed_devolution_of_authority
 					has_country_flag = RUS_completed_incentivise_creation_of_rural_enterprises
 					has_country_flag = RUS_completed_modernisation_of_agricultural_communes
 					has_country_flag = RUS_completed_mordva_autonomies
@@ -26744,7 +26857,6 @@ unit_leader_event = { #PSR Conference
 	desc = {
 		trigger = {
 			has_country_flag = RUS_siberian_direction_complete
-			has_country_flag = RUS_completed_devolution_of_authority
 			has_country_flag = RUS_completed_incentivise_creation_of_rural_enterprises
 			has_country_flag = RUS_completed_modernisation_of_agricultural_communes
 			has_country_flag = RUS_completed_mordva_autonomies
@@ -26764,7 +26876,6 @@ unit_leader_event = { #PSR Conference
 			NOT = {
 				AND = {
 					has_country_flag = RUS_siberian_direction_complete
-					has_country_flag = RUS_completed_devolution_of_authority
 					has_country_flag = RUS_completed_incentivise_creation_of_rural_enterprises
 					has_country_flag = RUS_completed_modernisation_of_agricultural_communes
 					has_country_flag = RUS_completed_mordva_autonomies
@@ -26774,16 +26885,12 @@ unit_leader_event = { #PSR Conference
 			}
 		}
 		set_country_flag = RUS_zdobnov_victory
-		hidden_effect = {
-			RUS_nikolay_zdobnov = { remove_temp_unit_leader_role = yes }
-		}
 	}
 	option = {
 		log = "[GetLogInfo]: event socrus.167 option socrus.167.b"
 		name = socrus.167.b
 		trigger = {
 			has_country_flag = RUS_siberian_direction_complete
-			has_country_flag = RUS_completed_devolution_of_authority
 			has_country_flag = RUS_completed_incentivise_creation_of_rural_enterprises
 			has_country_flag = RUS_completed_modernisation_of_agricultural_communes
 			has_country_flag = RUS_completed_mordva_autonomies
@@ -26793,7 +26900,6 @@ unit_leader_event = { #PSR Conference
 		set_country_flag = RUS_kamkov_victory
 		custom_effect_tooltip = socrus.167.b.tt
 		hidden_effect = {
-			RUS_boris_kamkov = { remove_temp_unit_leader_role = yes }
 			country_event = { id = socrus.185 days = 20 random_days = 20 }
 		}
 	}
@@ -26921,7 +27027,6 @@ country_event = { #PSR Conference hidden event to fire unit leader event
 				NOT = {
 					AND = {
 						has_country_flag = RUS_siberian_direction_complete
-						has_country_flag = RUS_completed_devolution_of_authority
 						has_country_flag = RUS_completed_incentivise_creation_of_rural_enterprises
 						has_country_flag = RUS_completed_modernisation_of_agricultural_communes
 						has_country_flag = RUS_completed_mordva_autonomies
@@ -26931,13 +27036,11 @@ country_event = { #PSR Conference hidden event to fire unit leader event
 				}
 			}
 			RUS_nikolay_zdobnov = {
-				add_temp_unit_leader_role = yes
 				unit_leader_event = { id = socrus.167 days = 1 } #PSR Conference
 			}
 		}
 		else = {
 			RUS_boris_kamkov = {
-				add_temp_unit_leader_role = yes
 				unit_leader_event = { id = socrus.167 days = 1 } #PSR Conference
 			}
 		}
@@ -27060,7 +27163,6 @@ unit_leader_event = { #Catechism of a Revolutionary
 		log = "[GetLogInfo]: event socrus.180 option socrus.180.a"
 		name = socrus.180.a
 		hidden_effect = {
-			RUS_aleksey_ustinov = { remove_temp_unit_leader_role = yes }
 			country_event = { id = socrus.181 days = 50 random_days = 100 }
 			country_event = { id = socrus.199 days = 200 random_days = 100 }
 			country_event = { id = socrus.202 days = 365 random_days = 150 }
@@ -27337,7 +27439,7 @@ country_event = { #Renaming of Cities
 		397 = {
 			set_global_flag = ustsysolsk_renamed
 			set_state_name = STATE_397_SYKYTYVDIN
-			set_province_name = { id = 7330 name = VICTORY_POINTS_7330_SYKYTYVDIN }
+			set_province_name = { id = 6121 name = VICTORY_POINTS_6121_SYKYTYVDIN }
 		}
 	}
 }
@@ -28494,7 +28596,7 @@ country_event = { # The Internationalist Jewish Congress
 		add_war_support = 0.04
 		hidden_effect = {
 			UKR = { country_event = socrus.311 }
-			WHR = { country_event = socrus.311 }
+			BLR = { country_event = socrus.311 }
 			POL = { country_event = socrus.311 }
 			LIT = { country_event = socrus.311 }
 		}
@@ -28887,7 +28989,6 @@ unit_leader_event = { # Zinovyev boots Kamenev due to Radicalism
 		add_stability = -0.1
 		RUS_grigory_zinovyev = {
 			promote_character = syndicalist_subtype
-			remove_temp_unit_leader_role = yes
 		}
 		custom_effect_tooltip = tooltip_white_line
 		activate_advisor = RUS_lev_kamenev_sic
@@ -29355,10 +29456,7 @@ country_event = { # Radicalism warning at 8
 			}
 		}
 		hidden_effect = {
-			RUS_grigory_zinovyev = {
-				add_temp_unit_leader_role = yes
-				unit_leader_event = socrus.329
-			}
+			RUS_grigory_zinovyev = { unit_leader_event = socrus.329 }
 		}
 	}
 
@@ -29617,14 +29715,11 @@ country_event = { #Preparing for the Worst
 	id = socrus.355
 	title = socrus.355.t
 	desc = socrus.355.d
-	is_triggered_only = yes
-	trigger = { has_government = syndicalist }
 	picture = GFX_report_event_RUS_sulimov
-	immediate = {
-		hidden_effect = {
-			RUS_daniil_sulimov = { remove_temp_unit_leader_role = yes }
-		}
-	}
+
+	trigger = { has_government = syndicalist }
+
+	is_triggered_only = yes
 
 	option = {
 		log = "[GetLogInfo]: event socrus.355 option socrus.355.a"
@@ -29687,13 +29782,15 @@ country_event = { #War over the Central Committee
 	id = socrus.358
 	title = socrus.358.t
 	desc = socrus.358.d
-	is_triggered_only = yes
-	trigger = { has_active_mission = RUS_left_ultimatum }
 	picture = GFX_report_event_RUS_kamenev
+
+	trigger = { has_active_mission = RUS_left_ultimatum }
+
+	is_triggered_only = yes
+
 	immediate = {
 		hidden_effect = {
 			RUS_lev_kamenev = {
-				add_temp_unit_leader_role = yes
 				unit_leader_event = { id = socrus.359 days = 4 } #Crisis Meeting
 			}
 		}
@@ -29750,9 +29847,6 @@ unit_leader_event = { #Levitsky meets Kamenev
 			mission = RUS_left_ultimatum
 			days = 15
 		}
-		hidden_effect = {
-			RUS_lev_kamenev = { remove_temp_unit_leader_role = yes }
-		}
 	}
 	option = {
 		log = "[GetLogInfo]: event socrus.359 option socrus.359.b"
@@ -29768,9 +29862,6 @@ unit_leader_event = { #Levitsky meets Kamenev
 			}
 		}
 		country_event = { id = socrus.360 days = 5 } #To Protect the Revolution
-		hidden_effect = {
-			RUS_lev_kamenev = { remove_temp_unit_leader_role = yes }
-		}
 	}
 }
 
@@ -30328,7 +30419,6 @@ unit_leader_event = { #Friendly Exchange
 		RUS_PSR_relation = yes
 		RUS_grigory_zinovyev = {
 			promote_character = syndicalist_subtype
-			remove_temp_unit_leader_role = yes
 		}
 		custom_effect_tooltip = tooltip_white_line
 		activate_advisor = RUS_lev_kamenev_sic
@@ -31843,15 +31933,19 @@ country_event = { #The Union of Socialist Labour Republics
 		hidden_effect = {
 			787 = { remove_core_of = MNR } #Terek
 		}
+		release_puppet = MNR
 		set_autonomy = {
 			target = MNR
 			autonomy_state = union_republic
 		}
-		every_owned_state = {
-			limit = {
-				is_core_of = MNR
+		hidden_effect = {
+			if = {
+				limit = { NOT = { has_country_flag = RUS_nationalise_oil_completed } }
+				MNR = {
+					give_resource_rights = { state = 232 receiver = GER } #Dagestan
+					give_resource_rights = { state = 961 receiver = GER } #Chechenya
+				}
 			}
-			transfer_state_to = MNR
 		}
 		if = {
 			limit = {
@@ -32168,7 +32262,7 @@ country_event = { #POL socialist uprising guaranteed
 				is_in_faction_with = RUS
 			}
 		}
-		WHR = {
+		BLR = {
 			OR = {
 				has_capitulated = yes
 				is_in_faction_with = RUS
@@ -32564,7 +32658,7 @@ country_event = { #Boldyrev's Trial
 		}
 		if = {
 			limit = { RUS_is_spiridonist = yes }
-			add_to_variable = { RUS_faith = -1 }
+			set_temp_variable = { RUS_spiridonist_influence_change = -1 }
 			RUS_add_faith = yes
 		}
 		else = {
@@ -33142,14 +33236,19 @@ country_event = { #Elections
 				has_game_rule = { rule = RSA_path option = RSA_PATH_OPPOSITION }
 			}
 		}
-		hold_election = ROOT
 		if = {
 			limit = { has_country_flag = RUS_socdem_boldyrev }
 			RUS_vasily_boldyrev = { promote_character = { ideology = social_democrat_subtype } }
-			set_politics = {
-				ruling_party = social_democrat
-				elections_allowed = yes
-				election_frequency = 60
+			meta_effect = {
+				text = {
+					set_politics = {
+						ruling_party = social_democrat
+						last_election = "[CURRENT_DATE]"
+						election_frequency = 60
+						elections_allowed = yes
+					}
+				}
+				CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 			}
 			set_temp_variable = { coalition_partner_var = token:social_liberal }
 			add_to_coalition = yes
@@ -33172,10 +33271,16 @@ country_event = { #Elections
 		else_if = {
 			limit = { has_country_flag = RUS_soclib_boldyrev }
 			RUS_vasily_boldyrev = { promote_character = { ideology = social_liberal_subtype } }
-			set_politics = {
-				ruling_party = social_liberal
-				elections_allowed = yes
-				election_frequency = 60
+			meta_effect = {
+				text = {
+					set_politics = {
+						ruling_party = social_liberal
+						last_election = "[CURRENT_DATE]"
+						election_frequency = 60
+						elections_allowed = yes
+					}
+				}
+				CURRENT_DATE = "[?global.date.GetDateStringNoHour]"
 			}
 			set_temp_variable = { coalition_partner_var = token:social_democrat }
 			add_to_coalition = yes
@@ -33597,12 +33702,12 @@ country_event = { #Korpus Polski w Rosji
 				infantry = { x = 0 y = 0 }
 				infantry = { x = 0 y = 1 }
 				infantry = { x = 0 y = 2 }
+				infantry = { x = 0 y = 3 }
 				infantry = { x = 1 y = 0 }
 				infantry = { x = 1 y = 1 }
 				infantry = { x = 1 y = 2 }
-				infantry = { x = 2 y = 0 }
-				infantry = { x = 2 y = 1 }
-				artillery_brigade = { x = 2 y = 2 }
+				infantry = { x = 1 y = 3 }
+				artillery_brigade = { x = 2 y = 0 }
 				medium_armor = { x = 3 y = 0 }
 				medium_armor = { x = 3 y = 1 }
 			}
@@ -33614,12 +33719,12 @@ country_event = { #Korpus Polski w Rosji
 		}
 		random_owned_controlled_state = {
 			prioritize = { 219 }
+			limit = { valid_state_for_spawning_friendly_unit = yes }
 			custom_effect_tooltip = RUS_korpus_polski_tt
 			hidden_effect = {
 				create_unit = {
 					division = "name = \"I Korpus Polski w Rosji\" division_template = \"Korpus Polski w Rosji\" start_experience_factor = 0.4 start_equipment_factor = 1"
-					owner = RUS
-					prioritize_location = 6380
+					owner = ROOT
 				}
 			}
 		}
@@ -34898,11 +35003,11 @@ country_event = { #Finland sues for peace
 	id = rusfor.41
 	title = rusfor.41.t
 	desc = {
-		trigger = { has_war_with = GER }
+		trigger = { GER = { exists = yes } }
 		text = rusfor.41.d
 	}
 	desc = {
-		trigger = { NOT = { has_war_with = GER } }
+		trigger = { GER = { exists = no } }
 		text = rusfor.41.d2
 	}
 	picture = GFX_report_event_RUS_army2
@@ -36201,8 +36306,18 @@ country_event = { #Russia demands Territories
 	title = rusfor.80.t
 	desc = rusfor.80.d
 	picture = GFX_report_event_RUS_kremlin_1
-
 	is_triggered_only = yes
+
+	trigger = {
+		FROM = {
+			is_faction_leader = yes
+			can_declare_war_on = ROOT
+		}
+		OR = {
+			owns_state = 418 #Ashkhabad
+			418 = { owner = { is_subject_of = ROOT } }
+		}
+	}
 
 	option = {
 		log = "[GetLogInfo]: event rusfor.80 option rusfor.80.a"
@@ -36279,19 +36394,8 @@ country_event = { #Iran accepts!
 				ROOT = { annex_country = { target = PREV } }
 			}
 		}
-		every_state = {
-			limit = {
-				OR = {
-					region = 134 #Transcaucasia
-					state = 418 #Ashkhabad
-					is_claim_or_core_of_ROOT = yes
-				}
-				OR = {
-					is_owned_by = FROM
-					owner = { is_subject_of = FROM }
-				}
-			}
-			transfer_state_to = ROOT
+		418 = { #Ashkhabad
+			transfer_state_to = var:584.owner #Karakum, either RUS or their CA puppet
 		}
 		diplomatic_relation = {
 			country = FROM
@@ -37301,40 +37405,26 @@ country_event = { #UKR gets Anti-German Resistance
 	}
 }
 
-country_event = { #POL national uprising guaranteed
+country_event = { #Failure of POL national uprising
 	id = rusfor.111
 	title = rusfor.111.t
 	desc = rusfor.111.d
 	is_triggered_only = yes
 	trigger = {
-		has_socialist_government = no
-		POL_rydz = no
-		POL_dobo = no
-		UKR = { has_capitulated = yes }
-		WHR = { has_capitulated = yes }
-		BAT = {
-			OR = {
-				has_capitulated = yes
-				exists = no
+		NOT = {
+			POL = { has_socialist_government = yes }
+			POL = { is_ally_with = RUS }
+			AND = {
+				UKR = { has_capitulated = yes }
+				BLR = { has_capitulated = yes }
 			}
 		}
-		has_war_with = RUS
 	}
 
 	option = { #Based
 		log = "[GetLogInfo]: event rusfor.111 option rusfor.111.a"
 		name = rusfor.111.a
-		if = {
-			limit = {
-				NOT = { has_active_mission = POL_nationalist_threat }
-			}
-			activate_mission = POL_nationalist_threat
-		}
-		set_country_flag = POL_nationalist_uprising_guaranteed
-		set_temp_variable = { POL_influence_change = 100 }
-		POL_add_nationalist_influence = yes
-		custom_effect_tooltip = tooltip_white_line
-		custom_effect_tooltip = rusfor.111.a.tt
+		clr_country_flag = RUS_national_committee
 	}
 }
 
@@ -37348,11 +37438,11 @@ country_event = { #Generic resistance for Oststaaten from Russia
 		log = "[GetLogInfo]: event rusfor.112 option rusfor.112.a"
 		name = rusfor.112.a
 		if = {
-			limit = { tag = WHR }
+			limit = { tag = BLR }
 			effect_tooltip = {
 				RUS = {
 					add_intel = {
-						target = WHR
+						target = BLR
 						civilian_intel = 40
 						army_intel = 40
 						navy_intel = 40
@@ -37360,7 +37450,7 @@ country_event = { #Generic resistance for Oststaaten from Russia
 					}
 				}
 				add_intel = {
-					target = WHR
+					target = BLR
 					civilian_intel = 40
 					army_intel = 40
 					navy_intel = 40
@@ -39570,6 +39660,13 @@ country_event = { #Tilsit Succeeds
 							}
 						}
 						AND = {
+							has_civil_war = yes
+							any_enemy_country = {
+								civilwar_target = PREV
+								is_ally_with = INT
+							}
+						}
+						AND = {
 							any_home_area_neighbor_country = {
 								is_ally_with = INT
 								has_war_with = PREV
@@ -39585,7 +39682,7 @@ country_event = { #Tilsit Succeeds
 							}
 							meta_trigger = {
 								text = {
-									ORIGINAL_CAPITAL = { controller = { is_ally_with = INT } }
+									[ORIGINAL_CAPITAL] = { controller = { is_ally_with = INT } }
 								}
 								ORIGINAL_CAPITAL = "[THIS.OriginalCapital.GetId]"
 							}
@@ -39611,6 +39708,13 @@ country_event = { #Tilsit Succeeds
 							}
 						}
 						AND = {
+							has_civil_war = yes
+							any_enemy_country = {
+								civilwar_target = PREV
+								is_ally_with = ENT
+							}
+						}
+						AND = {
 							any_home_area_neighbor_country = {
 								is_ally_with = ENT
 								has_war_with = PREV
@@ -39626,7 +39730,7 @@ country_event = { #Tilsit Succeeds
 							}
 							meta_trigger = {
 								text = {
-									ORIGINAL_CAPITAL = { controller = { is_ally_with = ENT } }
+									[ORIGINAL_CAPITAL] = { controller = { is_ally_with = ENT } }
 								}
 								ORIGINAL_CAPITAL = "[THIS.OriginalCapital.GetId]"
 							}
@@ -39858,7 +39962,9 @@ country_event = { #For GER - hidden event to fire peace
 		else = {
 			country_event = rusfor.1300
 		}
-		RUS = { add_ideas = has_scripted_peace }
+		hidden_effect = {
+			RUS = { add_ideas = has_scripted_peace }
+		}
 	}
 }
 
@@ -39888,7 +39994,7 @@ country_event = { #For GER - ask for peace with RUS
 		add_war_support = -0.1
 		RUS = {
 			add_ideas = RUS_patriotic_war_3
-			remove_ideas = has_scripted_peace
+			hidden_effect = { remove_ideas = has_scripted_peace }
 		}
 		ai_chance = { base = 0 }
 	}
@@ -39932,11 +40038,12 @@ country_event = { #GER gets event
 		RUS = {
 			every_other_country = {
 				limit = {
-					is_in_faction_with = RUS
+					is_in_faction_with = PREV
+					is_central_asian_tag = no
 					has_capitulated = no
 				}
 				if = {
-					limit = { is_subject_of = RUS }
+					limit = { is_subject_of = PREV }
 					remove_puppet_and_leave_faction = yes
 				}
 				else_if = {
@@ -39948,9 +40055,7 @@ country_event = { #GER gets event
 					if = {
 						limit = {
 							OR = {
-								tag = KAZ
 								tag = MON
-								tag = TRK
 								tag = MNR
 							}
 							is_subject = no
@@ -39971,7 +40076,6 @@ country_event = { #GER gets event
 				limit = { is_in_tech_sharing_group = russian_research }
 				remove_from_tech_sharing_group = russian_research
 			}
-			dismantle_faction = yes
 		}
 		hidden_effect = { RUS_set_up_peace_conference_with_germany = yes }
 		start_peace_conference = {
@@ -40113,9 +40217,17 @@ country_event = { #Korean Volunteers in Manchuria
 	id = rusfor.1312
 	title = rusfor.1312.t
 	desc = rusfor.1312.d
+	picture = GFX_report_event_RUS_korean_army_flavor
+
+	trigger = {
+		has_socialist_government = yes
+		has_war_with = JAP
+		KOR = { any_core_state = { is_controlled_by = ROOT } }
+	}
+
 	is_triggered_only = yes
 	fire_only_once = yes
-	picture = GFX_report_event_RUS_korean_army_flavor
+
 	option = {
 		log = "[GetLogInfo]: event rusfor.1312 option rusfor.1312.a"
 		name = rusfor.1312.a
@@ -40140,11 +40252,11 @@ country_event = { #Korean Volunteers in Manchuria
 				}
 			}
 		}
-		1100 = { #Gwanbuk
+		random_controlled_state = { #Gwanbuk
+			limit = { is_core_of = KOR }
 			create_unit = {
 				division = "name = \"88ya Otdelnaya Strelkovaja Brigada\" division_template = \"Koreyskaya Dobrovolchesskaya Brigada\" start_experience_factor = 0.2"
-				prioritize_location = 6944
-				owner = RUS
+				owner = ROOT
 			}
 		}
 	}
@@ -40362,7 +40474,7 @@ country_event = { #Russian Army flavour
 	id = rusfla.7
 	title = rusfla.7.t
 	desc = rusfla.7.d
-	picture = GFX_report_event_RUS_at_arms
+	picture = GFX_report_event_RUS_white_army
 	is_triggered_only = yes
 
 	option = {
@@ -41118,7 +41230,13 @@ country_event = { #The Fate of the Veterans' Organisations
 		log = "[GetLogInfo]: event rusfla.34 option rusfla.34.e"
 		name = rusfla.34.e
 		trigger = { RUS_is_demrus = yes }
-		ai_chance = { base = 100 }
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_active_mission = RUS_demands_from_unions_monarchy
+			}
+		}
 		add_stability = -0.02
 		add_popularity = { ideology = national_populist popularity = 0.02 }
 	}
@@ -41197,6 +41315,13 @@ country_event = { #The Volunteers March
 	option = {
 		log = "[GetLogInfo]: event rusfla.35 option rusfla.35.b"
 		name = rusfla.35.b
+		ai_chance = {
+			base = 1
+			modifier = {
+				factor = 0
+				has_active_mission = RUS_demands_from_unions_monarchy
+			}
+		}
 		add_popularity = { ideology = national_populist popularity = 0.05 }
 		set_temp_variable = { RUS_anger_change = -1 }
 		RUS_change_military_anger = yes
@@ -41234,7 +41359,7 @@ country_event = { #Operation Against Union of Volunteers
 		add_political_power = -30
 		if = {
 			limit = { RUS_is_spiridonist = yes }
-			add_to_variable = { RUS_faith = -1 }
+			set_temp_variable = { RUS_spiridonist_influence_change = -1 }
 			RUS_add_faith = yes
 		}
 		country_event = { id = rusfla.37 days = 7 } #Trial of the Alekseyev Conspirators
@@ -41279,7 +41404,7 @@ country_event = { #Doubts over the Alekseyev Conspiracy
 		}
 		if = {
 			limit = { RUS_is_spiridonist = yes }
-			add_to_variable = { RUS_faith = -2 }
+			set_temp_variable = { RUS_spiridonist_influence_change = -2 }
 			RUS_add_faith = yes
 		}
 		if = {
@@ -41313,15 +41438,18 @@ country_event = { #Wave of White Sabotage
 	id = rusfla.39
 	title = rusfla.39.t
 	desc = rusfla.39.d
-	trigger = { has_socialist_government = yes }
-	is_triggered_only = yes
-	immediate = {
-		set_temp_variable = { RUS_white_sabotage = 1 }
-	}
 	picture = GFX_report_event_RUS_partisans1
+
+	trigger = {
+		has_socialist_government = yes
+	}
+
+	is_triggered_only = yes
+
 	option = {
 		log = "[GetLogInfo]: event rusfla.39 option rusfla.39.a"
 		name = rusfla.39.a
+		set_temp_variable = { RUS_white_sabotage = 1 }
 		if = {
 			limit = { has_country_flag = RUS_allowed_veterans_unions }
 			add_to_temp_variable = { RUS_white_sabotage = 2 }
@@ -41939,7 +42067,7 @@ country_event = { #On American Shores
 		add_ace = {
 			name = "Valerian"
 			surname = "Chkalov"
-			callsign = "Kolchak's Falcon"
+			callsign = "Kolchakovets"
 			type = support_unique
 		}
 		air_experience = 15
@@ -43862,7 +43990,7 @@ country_event = { #Table of Ranks
 country_event = { #Shostakovich
 	id = rusfla.130
 	title = {
-		trigger = { surrender_progress < 0.01 }
+		trigger = { controls_all_owned_states = yes }
 		text = rusfla.130.t
 	}
 	title = {
@@ -43870,7 +43998,7 @@ country_event = { #Shostakovich
 		text = rusfla.130.t2
 	}
 	desc = {
-		trigger = { surrender_progress < 0.01 }
+		trigger = { controls_all_owned_states = yes }
 		text = rusfla.130.d
 	}
 	desc = {
@@ -44939,7 +45067,9 @@ country_event = { #Daughters of the Motherland
 				}
 			}
 		}
-		219 = {
+		random_owned_controlled_state = {
+			prioritize = { 219 }
+			limit = { valid_state_for_spawning_friendly_unit = yes }
 			create_unit = {
 				division = "name = \"Zhenskaya Dobrovolnaya Pekhotnaya Divizya\" division_template = \"Zhenskaya Dobrovolnaya Pekhotnaya Divizya\" start_experience_factor = 0.2 start_equipment_factor = 1"
 				owner = ROOT
@@ -45215,15 +45345,23 @@ country_event = { #Germans Beg for Peace
 		trigger = { RUS_savinkov = yes }
 		text = rusfla.172.d2
 	}
-	is_triggered_only = yes
-	fire_only_once = yes
 	picture = GFX_report_event_generic_conference3
+
 	trigger = {
 		has_socialist_government = no
-		has_war_with = GER
-		GER = { has_war_with = INT }
-		any_controlled_state = { is_germany = yes }
+		GER = {
+			has_war_with = ROOT
+			has_war_with = INT
+			surrender_progress > 0.2
+			any_owned_state = {
+				is_core_of = PREV
+				is_controlled_by = ROOT
+			}
+		}
 	}
+
+	is_triggered_only = yes
+	fire_only_once = yes
 
 	option = {
 		log = "[GetLogInfo]: event rusfla.172 option rusfla.172.a"
@@ -45503,13 +45641,13 @@ country_event = { #Event for constructing random buildings from OSOAVIA
 
 	option = {
 		log = "[GetLogInfo]: event russia.1002 option 1"
-		RUS_OSOAVIA_Factories = yes
+		RUS_Gamayun_Factories = yes
 		if = {
 			limit = {
-				mio:RUS_osoavia_organisation = {
-					is_mio_trait_completed = osoavia_upgrade_1_4
+				mio:RUS_gamayun_organisation = {
+					is_mio_trait_completed = gamayun_upgrade_1_4
 				}
-				mio:RUS_osoavia_organisation = {
+				mio:RUS_gamayun_organisation = {
 					has_mio_policy_active = RUS_mio_policy_buy_out_land_holdings
 				}
 			}
@@ -45520,18 +45658,18 @@ country_event = { #Event for constructing random buildings from OSOAVIA
 		else_if = {
 			limit = {
 				OR = {
-					mio:RUS_osoavia_organisation = {
-						is_mio_trait_completed = osoavia_upgrade_1_4
+					mio:RUS_gamayun_organisation = {
+						is_mio_trait_completed = gamayun_upgrade_1_4
 					}
-					mio:RUS_osoavia_organisation = {
+					mio:RUS_gamayun_organisation = {
 						has_mio_policy_active = RUS_mio_policy_buy_out_land_holdings
 					}
 				}
 				NOT = {
-					mio:RUS_osoavia_organisation = {
-						is_mio_trait_completed = osoavia_upgrade_1_4
+					mio:RUS_gamayun_organisation = {
+						is_mio_trait_completed = gamayun_upgrade_1_4
 					}
-					mio:RUS_osoavia_organisation = {
+					mio:RUS_gamayun_organisation = {
 						has_mio_policy_active = RUS_mio_policy_buy_out_land_holdings
 					}
 				}
@@ -45576,7 +45714,7 @@ country_event = { #Event for giving random funds to MIOs from Gamayun MIO
 		log = "[GetLogInfo]: event russia.1010 option 1"
 		trigger = {
 			mio:RUS_gamayun_organisation = {
-				has_mio_policy_active = RUS_mio_policy_private_assistance_gamayun
+				has_mio_policy_active = RUS_mio_policy_private_assistance_osoavia
 			}
 		}
 		RUS_private_assistance = yes
@@ -47022,7 +47160,6 @@ country_event = {
 					promote_leader = yes
 				}
 			}
-			#set_character_flag = is_monarch
 		}
 		set_politics = {
 			ruling_party = paternal_autocrat

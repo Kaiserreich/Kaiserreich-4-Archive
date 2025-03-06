@@ -29,6 +29,22 @@ on_actions = {
 					remove_targeted_decision = { decision = CEN_request_oil target = MEX }
 					remove_targeted_decision = { decision = CEN_lower_oil target = MEX }
 				}
+				if = {
+					limit = { tag = event_target:democratic_alliance_of_the_caribbean_leader }
+					clear_global_event_target = democratic_alliance_of_the_caribbean_leader
+				}
+			}
+		}
+	}
+
+	on_leave_faction = {
+		effect = {
+			if = {
+				limit = {
+					tag = event_target:democratic_alliance_of_the_caribbean_leader
+					FROM = { tag = event_target:democratic_alliance_of_the_caribbean_leader }
+				}
+				clear_global_event_target = democratic_alliance_of_the_caribbean_leader
 			}
 		}
 	}
@@ -105,26 +121,28 @@ on_actions = {
 			if = {
 				limit = {
 					FROM = {
-						is_in_faction_with = COS
-						is_faction_leader = yes
+						tag = event_target:democratic_alliance_of_the_caribbean_leader
 						surrender_progress > 0.65
-					}
-					ROOT = {
-						OR = {
-							tag = MEX
-							tag = CEN
-						}
 					}
 				}
 				random_country = {
 					limit = {
-						is_in_faction_with = COS
+						is_in_faction_with = event_target:democratic_alliance_of_the_caribbean_leader
 						is_subject = no
-						NOT = { surrender_progress > 0.85 }
+						NOT = { surrender_progress > 0.65 }
 					}
-					save_global_event_target_as = new_cos_faction_leader
 					set_faction_leader = yes
 				}
+			}
+		}
+	}
+
+	# ROOT is the new faction leader FROM is the old faction leader
+	on_assume_faction_leadership = {
+		effect = {
+			if = {
+				limit = { FROM = { tag = event_target:democratic_alliance_of_the_caribbean_leader } }
+				save_global_event_target_as = democratic_alliance_of_the_caribbean_leader
 			}
 		}
 	}
@@ -136,10 +154,14 @@ on_actions = {
 			if = {
 				limit = {
 					tag = COS
+					OR = {
+						is_subject = yes
+						is_in_faction = yes
+					}
 					FROM = {
 						OR = {
-							tag = MEX
-							tag = CEN
+							original_tag = MEX
+							original_tag = CEN
 						}
 					}
 				}
@@ -147,10 +169,8 @@ on_actions = {
 					activate_mission = CEN_COS_peace_timer
 					save_global_event_target_as = costa_rica_attacker
 				}
-				every_other_country = {
-					limit = {
-						is_in_faction_with = COS
-					}
+				every_country = {
+					limit = { is_ally_with = ROOT }
 					activate_mission = COS_peace_timer
 				}
 			}

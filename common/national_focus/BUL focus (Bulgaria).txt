@@ -393,18 +393,7 @@ focus_tree = {
 			}
 			GER = { country_event = bulfor.18 }
 			custom_effect_tooltip = if_they_accept_tt
-			effect_tooltip = {
-				GER = {
-					send_equipment = {
-						target = BUL
-						type = infantry_equipment
-						amount = 1000
-					}
-				}
-				add_ideas = GER_mil_support_idea
-				army_experience = 50
-			}
-			custom_effect_tooltip = BUL_german_diplomacy_template_tt
+			event_option_tooltip = bulfor.19.a
 		}
 		search_filters = { FOCUS_FILTER_POLITICAL FOCUS_FILTER_ARMY_XP }
 	}
@@ -4181,6 +4170,14 @@ focus_tree = {
 			country_event = bulgaria.53
 			custom_effect_tooltip = BUL_macedonia_intervention_tt
 			clear_variable = BUL_Legion_AI_attack_Var
+			hidden_effect = {
+				SER = {
+					add_timed_idea = {
+						idea = SER_cannot_capitulate
+						days = 30
+					}
+				}
+			}
 		}
 	}
 
@@ -5874,17 +5871,11 @@ focus_tree = {
 						upgrade_intelligence_agency = upgrade_training_centers
 					}
 				}
-				else_if = {
-					limit = { has_intelligence_agency = no }
+				else = {
 					create_intelligence_agency = yes
 				}
 			}
-			if = {
-				limit = {
-					NOT = {
-						has_dlc_lar = yes
-					}
-				}
+			else = {
 				add_ideas = BUL_ds_established
 			}
 			if = { #check if this is the final focus the player needs to complete in the RadSoc tree, and if it is, remove royalist resistance
@@ -5996,6 +5987,10 @@ focus_tree = {
 				has_country_flag = BUL_balkan_union
 			}
 			is_subject = no
+		}
+		available = {
+			NOT = { has_global_flag = germany_demands_end_to_balkan_war }
+			NOT = { has_global_flag = austria_demands_end_to_balkan_war }
 		}
 		ai_will_do = { factor = 20 }
 		completion_reward = {
@@ -7885,14 +7880,10 @@ focus_tree = {
 		available = {
 			is_subject = no
 			OR = {
-				NOT = { owns_state = 184 }
-				NOT = { owns_state = 731 }
-				NOT = { owns_state = 769 }
-				NOT = { owns_state = 1089 }
-			}
-			NOT = {
-				is_in_faction_with = GRE
-				is_in_faction_with = TUR
+				NOT = { 184 = { owner = { is_ally_with = ROOT } } } #Komotini
+				NOT = { 731 = { owner = { is_ally_with = ROOT } } } #Florina
+				NOT = { 769 = { owner = { is_ally_with = ROOT } } } #Serres
+				NOT = { 1089 = { owner = { is_ally_with = ROOT } } } #Kardzhali
 			}
 		}
 		bypass_if_unavailable = yes
@@ -7912,52 +7903,144 @@ focus_tree = {
 		}
 		completion_reward = {
 			log = "[GetDateText]: [Root.GetName]: Focus BUL_establish_itro"
+			set_global_flag = BUL_itro_active
 			every_state = {
 				limit = {
-					NOT = {
-						is_owned_by = BUL
-					}
 					OR = {
-						state = 731
-						state = 769
-						state = 184
-						state = 1089
+						state = 184 #Komotini
+						state = 731 #Florina
+						state = 769 #Serres
+						state = 1089 #Kardzhali
 					}
+					NOT = { owner = { is_ally_with = ROOT } }
 				}
-				add_dynamic_modifier = { modifier = BUL_ITRO_modifier }
-				custom_effect_tooltip = BUL_ITRO_modifier_tt
+				add_to_array = { global.BUL_ITRO_states = THIS }
+				set_variable = { BUL_ITRO_strength_in_state = 4 }
+				set_variable = { BUL_ITRO_attrition = 0.1 }
+				set_variable = { BUL_ITRO_army_speed_factor_for_controller = -0.2 }
+				set_variable = { BUL_ITRO_local_org_regain = -0.2 }
+				set_variable = { BUL_ITRO_local_supplies_for_controller = -0.3 }
+				effect_tooltip = {
+					add_dynamic_modifier = { modifier = BUL_ITRO_modifier_dummy }
+				}
+				custom_override_tooltip = {
+					tooltip = BUL_ITRO_modifier_tt
+					add_dynamic_modifier = { modifier = BUL_ITRO_modifier }
+				}
 			}
-			if = {
+			every_other_country = {
 				limit = {
-					GRE = {
-						OR = {
-							owns_state = 731
-							owns_state = 769
-							owns_state = 184
-							owns_state = 1089
+					OR = {
+						184 = { #Komotini
+							is_owned_by = PREV
+							OR = {
+								is_claimed_by = PREV
+								is_core_of = PREV
+								has_variable = can_integrate_@PREV
+							}
+						}
+						731 = { #Florina
+							is_owned_by = PREV
+							OR = {
+								is_claimed_by = PREV
+								is_core_of = PREV
+								has_variable = can_integrate_@PREV
+							}
+						}
+						769 = { #Serres
+							is_owned_by = PREV
+							OR = {
+								is_claimed_by = PREV
+								is_core_of = PREV
+								has_variable = can_integrate_@PREV
+							}
+						}
+						1089 = { #Kardzhali
+							is_owned_by = PREV
+							OR = {
+								is_claimed_by = PREV
+								is_core_of = PREV
+								has_variable = can_integrate_@PREV
+							}
 						}
 					}
+					NOT = { is_ally_with = ROOT }
 				}
-				GRE = {
-					country_event = bulgariaflavour.7
-				}
+				country_event = bulgariaflavour.7
 			}
-			if = {
-				limit = {
-					TUR = {
-						OR = {
-							owns_state = 731
-							owns_state = 769
-							owns_state = 184
-							owns_state = 1089
+		}
+	}
+
+	focus = {
+		id = BUL_strengthen_thracian_identity
+		icon = GFX_focus_BUL_bulgaria_on_the_three_seas
+		cost = 3
+
+		relative_position_id = BUL_establish_itro
+		x = 1
+		y = 1
+
+		search_filters = { FOCUS_FILTER_POLITICAL }
+		prerequisite = {
+			focus = BUL_establish_itro
+		}
+		available = {
+			is_subject = no
+			custom_trigger_tooltip = {
+				tooltip = BUL_ITRO_active_tt
+				has_global_flag = BUL_itro_active
+			}
+			NOT = { has_country_flag = BUL_ITRO_formally_disbanded }
+		}
+		ai_will_do = { factor = 15 }
+		bypass_if_unavailable = yes
+		completion_reward = {
+			log = "[GetDateText]: [Root.GetName]: Focus BUL_strengthen_thracian_identity"
+			effect_tooltip = {
+				every_state = {
+					limit = {
+						if = {
+							limit = { has_global_flag = BUL_itro_active }
+							has_dynamic_modifier = { modifier = BUL_ITRO_modifier }
+						}
+						else = {
+							OR = {
+								state = 184 #Komotini
+								state = 731 #Florina
+								state = 769 #Serres
+								state = 1089 #Kardzhali
+							}
+							NOT = { owner = { is_ally_with = ROOT } }
 						}
 					}
-				}
-				TUR = {
-					country_event = bulgariaflavour.7
+					custom_effect_tooltip = {
+						localization_key = tooltip_modify_dynmod
+						DYNMOD = BUL_ITRO_modifier
+					}
+					add_to_variable = {
+						BUL_ITRO_attrition = 0.025
+						tooltip = attrition_tooltip
+					}
+					add_to_variable = {
+						BUL_ITRO_army_speed_factor_for_controller = -0.05
+						tooltip = army_speed_factor_tooltip
+					}
+					add_to_variable = {
+						BUL_ITRO_local_org_regain = -0.05
+						tooltip = local_org_regain_tooltip
+					}
+					add_to_variable = {
+						BUL_ITRO_local_supplies_for_controller = -0.075
+						tooltip = local_supplies_tooltip
+					}
 				}
 			}
-			set_global_flag = { flag = BUL_itro_active days = 1825 value = 1 }
+			hidden_effect = {
+				every_state = {
+					limit = { has_dynamic_modifier = { modifier = BUL_ITRO_modifier } }
+					BUL_increase_ITRO_strength = yes
+				}
+			}
 		}
 	}
 
@@ -8285,6 +8368,7 @@ focus_tree = {
 					has_socialist_government = no
 					NOT = { has_country_leader = { character = SER_petar_ii } }
 					NOT = { has_country_leader = { character = SER_petar_zivkovic } }
+					NOT = { has_country_leader = { character = SER_milan_stojadinovic } }
 					NOT = { has_country_leader = { character = SER_milan_nedic } }
 				}
 			}

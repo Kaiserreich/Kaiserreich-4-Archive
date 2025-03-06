@@ -1,4 +1,4 @@
-﻿###########################
+###########################
 # Ausgleich Events 3.0
 ###########################
 # By ~mw~
@@ -1081,8 +1081,8 @@ country_event = {
 				limit = {
 					has_global_flag = AUS_ausgleich_secret_deal
 				}
-				HUN = {
-					country_event = { id = ausgleich.new.325 days = 2 } #Illyrian Conflict
+				CRO = {
+					country_event = { id = ausgleich.new.325 days = 2 } #HUN demands payment
 				}
 			}
 			else_if = {
@@ -1346,7 +1346,7 @@ country_event = {
 		}
 		hidden_effect = {
 			AUS = {
-				country_event = { id = ausgleich.new.328 days = 2 }
+				country_event = { id = ausgleich.new.328 }
 			}
 			CRO = {
 				set_cosmetic_tag = CRO_illyria
@@ -1375,7 +1375,7 @@ country_event = {
 		}
 		declare_war_on = {
 			target = CRO
-			type = civil_war
+			type = annex_everything
 		}
 	}
 	option = { # Well, can't do anything about it
@@ -1498,6 +1498,7 @@ country_event = {
 			has_global_flag = AUS_ausgleich_secret_deal
 		}
 		hidden_effect = {
+			set_global_flag = AUS_enacted_military_occupation
 			HUN = {
 				set_cosmetic_tag = HUN_habsburg
 				get_current_government_type = yes
@@ -1515,13 +1516,15 @@ country_event = {
 						to_state_array = owned_controlled_states
 					}
 				}
+				activate_targeted_decision = { target = GER decision = CZE_join_germany }
 			}
 			CZE = {
-				country_event = { id = ausgleich.new.900 days = 2 }
+				country_event = { id = ausgleich.new.900 }
 			}
 			GAL = {
-				country_event = { id = ausgleich.new.900 days = 3 }
+				country_event = { id = ausgleich.new.900 }
 			}
+			SER = { activate_targeted_decision = { target = CRO decision = SER_Ultimatum_To_Illyria } }
 			random_other_country = {
 				news_event = { id = worldnews.7 days = 1 }
 			}
@@ -1548,6 +1551,7 @@ country_event = {
 			owns_state = 109
 			HUN = { owns_state = 109 }
 		}
+		HUN = { has_autonomy_state = crownland }
 	}
 
 	is_triggered_only = yes
@@ -2554,6 +2558,82 @@ country_event = { #MilOcc revolts (for AUS)
 	}
 }
 
+country_event = { #Vienna gone insane
+	id = ausgleich.new.90000
+	title = ausgleich.new.90000.t
+	desc = ausgleich.new.90000.d
+	picture = GFX_report_event_gre_diplomacy
+
+	is_triggered_only = yes
+
+	option = { #Inform Vienna of our decision.
+		log = "[GetLogInfo]: event ausgleich.new.90000 option ausgleich.new.90000.a"
+		name = ausgleich.new.90000.a
+
+		ai_chance = { base = 0 }
+
+		leave_faction = yes
+		if = {
+			limit = {
+				original_tag = POL
+			}
+			country_event = { id = poland.284 } #GER asks POL to join RP
+		}
+		else_if = {
+			limit = {
+				original_tag = UKR
+			}
+			UKR_update_military = yes
+			country_event = { id = ukraine_forpol.34 }
+		}
+	}
+
+	option = { #Ask if the Galicians wish to join us.
+		log = "[GetLogInfo]: event ausgleich.new.90000 option ausgleich.new.90000.b"
+		name = ausgleich.new.90000.b
+
+		trigger = {
+			OR = {
+				original_tag = POL
+				AND = {
+					original_tag = UKR
+					NOT = { has_country_flag = POL_galicia_ask_only }
+				}
+			}
+		}
+
+		leave_faction = yes
+		if = {
+			limit = {
+				original_tag = POL
+			}
+			country_event = { id = poland.284 } #GER asks POL to join RP
+			var:88.owner = {
+				if = {
+					limit = { is_subject = yes }
+					OVERLORD = { country_event = { id = poland.233 days = 1 } }
+				}
+				else = { country_event = { id = poland.233 days = 1 } }
+			}
+		}
+		else_if = {
+			limit = {
+				original_tag = UKR
+			}
+			country_event = { id = ukraine_forpol.34 } #GER asks UKR to join RP
+			var:89.owner = {
+				if = {
+					limit = { is_subject = yes }
+					overlord = { country_event = { id = ukraine_republican.100 days = 1 } }
+				}
+				else = {
+					country_event = { id = ukraine_republican.100 days = 1 }
+				}
+			}
+		}
+	}
+}
+
 # CZE events
 country_event = { #Czechia pleads for support
 	id = ausgleich.new.901
@@ -2566,13 +2646,7 @@ country_event = { #Czechia pleads for support
 	option = {
 		log = "[GetLogInfo]: event ausgleich.new.901 option ausgleich.new.901.a"
 		name = ausgleich.new.901.a #This is our chance! To war!
-		ai_chance = {
-			base = 100
-			modifier = {
-				factor = 0
-				surrender_progress > 0
-			}
-		}
+		ai_chance = { base = 100 }
 		SER = { SER_add_balkan_claims = yes }
 		add_to_faction = FROM
 		FROM = { country_event = { id = ausgleich.new.902 days = 1 } }
@@ -2590,20 +2664,110 @@ country_event = { #Czechia pleads for support
 				type = annex_everything
 			}
 		}
+		if = {
+			limit = {
+				original_tag = SER
+			}
+			hidden_effect = {
+				add_timed_idea = {
+					idea = SER_cannot_capitulate
+					days = 30
+				}
+			}
+		}
+		hidden_effect = {
+			every_other_country = {
+				limit = {
+					is_in_faction_with = BPL
+				}
+				country_event = ausgleich.new.9010
+			}
+		}
 	}
 
 	option = {
 		log = "[GetLogInfo]: event ausgleich.new.901 option ausgleich.new.901.b"
 		name = ausgleich.new.901.b #Austria is too strong...
-		ai_chance = {
-			base = 0
-			modifier = {
-				add = 100
-				NOT = { has_war_with = AUS }
-				surrender_progress > 0
+		ai_chance = { base = 0 }
+		FROM = { country_event = { id = ausgleich.new.903 days = 2 } }
+	}
+}
+
+country_event = { #BPL has attacked AUS, should we join?
+	id = ausgleich.new.9010
+	title = ausgleich.new.9010.t
+	desc = ausgleich.new.9010.d
+	picture = GFX_report_event_gre_diplomacy
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event ausgleich.new.9010 option ausgleich.new.9010.a"
+		name = ausgleich.new.9010.a #This is our chance! To war!
+		if = {
+			limit = { can_declare_war_on = HUN }
+			declare_war_on = {
+				target = HUN
+				type = annex_everything
 			}
 		}
-		FROM = { country_event = { id = ausgleich.new.903 days = 2 } }
+		if = {
+			limit = { can_declare_war_on = AUS }
+			declare_war_on = {
+				target = AUS
+				type = annex_everything
+			}
+		}
+		if = {
+			limit = {
+				original_tag = SER
+			}
+			hidden_effect = {
+				add_timed_idea = {
+					idea = SER_cannot_capitulate
+					days = 30
+				}
+			}
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event ausgleich.new.9010 option ausgleich.new.9010.b"
+		name = ausgleich.new.9010.b #Austria is too strong...
+		ai_chance = { base = 0 }
+	}
+}
+
+country_event = { #SER has attacked CRO, should we join?
+	id = ausgleich.new.9011
+	title = ausgleich.new.9011.t
+	desc = ausgleich.new.9011.d
+	picture = GFX_report_event_gre_diplomacy
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event ausgleich.new.9011 option ausgleich.new.9011.a"
+		name = ausgleich.new.9011.a #This is our chance! To war!
+		if = {
+			limit = { original_tag = AUS }
+			declare_war_on = {
+				target = SER
+				type = annex_everything
+			}
+		}
+		else = {
+			declare_war_on = {
+				target = CRO
+				type = annex_everything
+			}
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event ausgleich.new.9011 option ausgleich.new.9011.b"
+		name = ausgleich.new.9011.b #On second thought...
+		ai_chance = { base = 0 }
 	}
 }
 
@@ -2699,14 +2863,7 @@ country_event = { #Galicia wishes to join the Pact
 	option = {
 		log = "[GetLogInfo]: event ausgleich.new.906 option ausgleich.new.906.a"
 		name = ausgleich.new.906.a #We welcome them, but they must cede Bucovina
-		ai_chance = {
-			base = 100
-			modifier = {
-				factor = 0
-				NOT = { has_war_with = AUS }
-				surrender_progress > 0
-			}
-		}
+		ai_chance = { base = 100 }
 		trigger = {
 			is_in_faction_with = ROM
 			FROM = {
@@ -2722,14 +2879,7 @@ country_event = { #Galicia wishes to join the Pact
 	option = {
 		log = "[GetLogInfo]: event ausgleich.new.906 option ausgleich.new.906.b"
 		name = ausgleich.new.906.b #Allies are always welcome
-		ai_chance = {
-			base = 100
-			modifier = {
-				factor = 0
-				NOT = { has_war_with = AUS }
-				surrender_progress > 0
-			}
-		}
+		ai_chance = { base = 100 }
 		trigger = {
 			OR = {
 				NOT = { is_in_faction_with = ROM }
@@ -2748,14 +2898,7 @@ country_event = { #Galicia wishes to join the Pact
 	option = {
 		log = "[GetLogInfo]: event ausgleich.new.906 option ausgleich.new.906.c"
 		name = ausgleich.new.906.c #We don't need them
-		ai_chance = {
-			base = 0
-			modifier = {
-				add = 100
-				NOT = { has_war_with = AUS }
-				surrender_progress > 0
-			}
-		}
+		ai_chance = { base = 0 }
 		FROM = { country_event = { id = ausgleich.new.903 days = 1 } }
 	}
 }
@@ -2959,10 +3102,8 @@ country_event = { #Illyria accepts
 		remove_decision = SER_Ultimatum_To_Illyria
 		if = {
 			limit = {
-				AUS = {
-					is_subject = no
-					has_war_with = CRO
-				}
+				AUS = { has_war_with = CRO }
+				NOT = { has_global_flag = AUS_treaty_of_budapest }
 			}
 			AUS = { country_event = ausgleich.new.920 }
 		}
@@ -2983,7 +3124,7 @@ country_event = { #Illyria accepts
 	}
 }
 
-country_event = { #Illyria accepts
+country_event = { #Illyria refuses
 	id = ausgleich.new.913
 	title = ausgleich.new.913.t
 	desc = ausgleich.new.913.d
@@ -3042,6 +3183,15 @@ country_event = { #Fall of the Habsburgs
 		hidden_effect = {
 			AUS_remove_monarchy = yes
 			news_event = ausgleich.new.918
+			if = {
+				limit = {
+					has_completed_focus = AUS_military_occupation
+				}
+				uncomplete_national_focus = {
+					focus = AUS_military_occupation
+					uncomplete_children = yes
+				}
+			}
 		}
 		drop_cosmetic_tag = yes
 		custom_effect_tooltip = tooltip_white_line
@@ -3061,7 +3211,10 @@ country_event = { #Fall of the Habsburgs
 		custom_effect_tooltip = tooltip_white_line
 		every_owned_state = {
 			limit = {
-				is_core_of = HUN
+				OR = {
+					is_core_of = HUN
+					is_core_of = TRS
+				}
 				NOT = { is_core_of = ROOT }
 			}
 			transfer_state_to = HUN
@@ -3215,7 +3368,7 @@ news_event = { #Chaos in the Balkans
 
 	option = {
 		name = ausgleich.new.919.a
-		trigger = { AUS = { is_ally_with = ROOT } }
+		trigger = { is_ally_with = AUS }
 	}
 
 	option = {
@@ -3227,7 +3380,7 @@ news_event = { #Chaos in the Balkans
 		name = ausgleich.new.919.c
 		trigger = {
 			NOT = {
-				AUS = { is_ally_with = ROOT }
+				is_ally_with = AUS
 				has_war_with = AUS
 			}
 		}
