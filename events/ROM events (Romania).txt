@@ -1474,23 +1474,14 @@ country_event = {
 			has_war_with = 84.owner
 			can_declare_war_on = 84.owner
 		}
+		has_capitulated = no
 	}
 
 	fire_only_once = yes
 	is_triggered_only = yes
 
 	immediate = {
-		var:84.owner = {
-			save_event_target_as = ROM_transylvania_target
-			if = {
-				limit = { is_subject = yes }
-				overlord = { save_event_target_as = ROM_transylvania_ally }
-			}
-			else_if = {
-				limit = { is_in_faction = yes }
-				faction_leader = { save_event_target_as = ROM_transylvania_ally }
-			}
-		}
+		var:84.owner = { save_event_target_as = ROM_transylvania_target }
 	}
 
 	option = {
@@ -1523,10 +1514,6 @@ country_event = {
 				limit = { is_ally_with = event_target:ROM_transylvania_target }
 				country_event = romania.50
 			}
-			if = {
-				limit = { event_target:ROM_transylvania_target = { original_tag = TRS } }
-				annex_country = { target = event_target:ROM_transylvania_target transfer_troops = yes }
-			}
 
 			TRS = {
 				#create array for valid targets to teleport
@@ -1535,12 +1522,7 @@ country_event = {
 						limit = {
 							NOT = { is_core_of = TRS }
 							is_controlled_by = owner
-							owner = {
-								OR = {
-									is_ally_with = event_target:ROM_transylvania_target
-									is_ally_with = event_target:ROM_transylvania_ally
-								}
-							}
+							owner = { is_ally_with = event_target:ROM_transylvania_target }
 						}
 						add_to_temp_array = { teleport_targets = THIS }
 					}
@@ -1553,7 +1535,6 @@ country_event = {
 								tag = ROOT
 								has_war_with = ROOT
 								is_ally_with = event_target:ROM_transylvania_target
-								is_ally_with = event_target:ROM_transylvania_ally
 							}
 						}
 						NOT = { state = 875 }
@@ -1567,7 +1548,6 @@ country_event = {
 								OR = {
 									has_war_with = ROOT
 									is_ally_with = event_target:ROM_transylvania_target
-									is_ally_with = event_target:ROM_transylvania_ally
 								}
 							}
 							to_state_array = teleport_targets
@@ -1579,10 +1559,61 @@ country_event = {
 								OR = {
 									has_war_with = ROOT
 									is_ally_with = event_target:ROM_transylvania_target
-									is_ally_with = event_target:ROM_transylvania_ally
 								}
 							}
 							to_state_array = owned_controlled_states
+						}
+					}
+
+					#remove any AUS/HUN units that might have crossed over into Romania itself
+					every_neighbor_state = {
+						limit = {
+							event_target:ROM_transylvania_target = {
+								OR = {
+									divisions_in_state = { state = PREV size > 0 }
+									if = {
+										limit = { is_in_faction = yes }
+										any_allied_country = { divisions_in_state = { state = PREV.PREV size > 0 } }
+									}
+									else = {
+										any_subject_country = { divisions_in_state = { state = PREV.PREV size > 0 } }
+									}
+								}
+							}
+							owner = { has_war_with = event_target:ROM_transylvania_target }
+							OR = {
+								region = 15 #Romania
+								region = 24 #Central Balkans
+								region = 144 #Transylvania
+								state = 89 #Stanislawow
+							}
+						}
+						if = {
+							limit = { has_variable = teleport_targets^num }
+							teleport_armies = {
+								limit = {
+									OR = {
+										has_war_with = ROOT
+										is_ally_with = event_target:ROM_transylvania_target
+									}
+								}
+								to_state_array = teleport_targets
+							}
+						}
+						else = {
+							teleport_armies = {
+								limit = {
+									OR = {
+										has_war_with = ROOT
+										is_ally_with = event_target:ROM_transylvania_target
+									}
+								}
+								to_state_array = owned_controlled_states
+							}
+						}
+						set_state_province_controller = {
+							controller = owner
+							limit = { NOT = { is_ally_with = event_target:ROM_transylvania_target } }
 						}
 					}
 
@@ -1590,7 +1621,12 @@ country_event = {
 					set_state_owner_to = ROOT
 					set_state_province_controller = {
 						controller = ROOT
-						limit = { has_war_with = ROOT }
+						limit = {
+							OR = {
+								has_war_with = ROOT
+								is_ally_with = ROOT
+							}
+						}
 					}
 
 					if = {
@@ -1602,6 +1638,11 @@ country_event = {
 						add_dynamic_modifier = { modifier = ROM_transylvanian_collaboration }
 					}
 				}
+			}
+
+			if = {
+				limit = { event_target:ROM_transylvania_target = { original_tag = TRS } }
+				annex_country = { target = event_target:ROM_transylvania_target transfer_troops = yes }
 			}
 
 			#Strongest possible revolt
@@ -2694,7 +2735,6 @@ country_event = {
 				factor = 1.5
 				paternal_autocrat > 0.15
 			}
-
 			modifier = {
 				factor = 1.5
 				paternal_autocrat > 0.25
@@ -3453,7 +3493,6 @@ country_event = {
 					has_game_rule = { rule = ROM_path option = ROM_PATH_SOCCON }
 					has_game_rule = { rule = ROM_path option = ROM_PATH_MARLIB }
 					has_game_rule = { rule = ROM_path option = ROM_PATH_ELECTED_NATPOP }
-					has_game_rule = { rule = ROM_path option = ROM_PATH_NATPOP }
 					has_game_rule = { rule = ROM_path option = ROM_PATH_CANTACUZINO_NATPOP }
 				}
 			}
@@ -3477,7 +3516,10 @@ country_event = {
 			base = 50
 			modifier = {
 				factor = 0
-				has_game_rule = { rule = ROM_path option = ROM_PATH_PATAUT }
+				OR = {
+					has_game_rule = { rule = ROM_path option = ROM_PATH_PATAUT }
+					has_game_rule = { rule = ROM_path option = ROM_PATH_NATPOP }
+				}
 			}
 		}
 		ROM_corneliu_codreanu = { kill_character = yes }
@@ -3563,13 +3605,7 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event romania.90 option romania.90.a"
 		name = romania.90.a # open fire if they do first
-		ai_chance = {
-			base = 50
-			modifier = {
-				factor = 0
-				has_game_rule = { rule = ROM_path option = ROM_PATH_PATAUT }
-			}
-		}
+		ai_chance = { base = 50 }
 
 		hidden_effect = {
 			random_list = {
@@ -3577,6 +3613,11 @@ country_event = {
 					country_event = romania.91
 				}
 				50 = {#legionaries retreat
+					modifier = {
+						factor = 0
+						is_ai = yes
+						has_game_rule = { rule = ROM_path option = ROM_PATH_NATPOP }
+					}
 					country_event = romania.92
 				}
 			}
@@ -3586,8 +3627,13 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event romania.90 option romania.90.b"
 		name = romania.90.b # Make concessions
-
-		ai_chance = { base = 50 }
+		ai_chance = {
+			base = 50
+			modifier = {
+				factor = 0
+				has_game_rule = { rule = ROM_path option = ROM_PATH_NATPOP }
+			}
+		}
 
 		add_political_power = -100
 		add_popularity = {
@@ -3602,11 +3648,23 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event romania.90 option romania.90.c"
 		name = romania.90.c # Shoot them!
-		ai_chance = { base = 50 }
+		ai_chance = {
+			base = 50
+			modifier = {
+				factor = 0
+				has_game_rule = { rule = ROM_path option = ROM_PATH_PATAUT }
+			}
+		}
 		add_stability = -0.1
 		if = { #they refuse due to legionary symphaties
 			limit = {
-				national_populist > 0.6
+				OR = {
+					AND = {
+						is_ai = yes
+						has_game_rule = { rule = ROM_path option = ROM_PATH_NATPOP }
+					}
+					national_populist > 0.6
+				}
 			}
 			custom_effect_tooltip = romania.90.tt
 			hidden_effect = {
@@ -3652,6 +3710,11 @@ country_event = {
 						factor = 2
 						paternal_autocrat > 0.4
 					}
+					modifier = {
+						factor = 0
+						is_ai = yes
+						has_game_rule = { rule = ROM_path option = ROM_PATH_NATPOP }
+					}
 					country_event = { id = romania.103 days = 10 }
 				}
 				5 = { #avengers strike
@@ -3662,6 +3725,11 @@ country_event = {
 					modifier = {
 						factor = 2
 						national_populist > 0.5
+					}
+					modifier = {
+						factor = 0
+						is_ai = yes
+						has_game_rule = { rule = ROM_path option = ROM_PATH_PATAUT }
 					}
 					country_event = { id = romania.216 days = 10 }
 				}
@@ -4384,6 +4452,10 @@ country_event = {#first election
 	option = {#Legion
 		log = "[GetLogInfo]: event romania.105 option romania.105.b"
 		name = romania.105.b
+		trigger = {
+			NOT = { has_country_flag = ROM_legion_banned }
+			is_subject = no
+		}
 		ai_chance = {
 			base = 10
 			modifier = {
@@ -4395,10 +4467,6 @@ country_event = {#first election
 					has_game_rule = { rule = ROM_path option = ROM_PATH_MARLIB }
 				}
 			}
-		}
-		trigger = {
-			NOT = { has_country_flag = ROM_legion_banned }
-			is_subject = no
 		}
 		set_politics = {
 			ruling_party = national_populist
@@ -7236,8 +7304,14 @@ country_event = {
 country_event = {
 	id = romania.216
 	title = romania.216.t
-	desc = romania.216.d
-
+	desc = {
+		text = romania.216.d1
+		trigger = { NOT = { has_character = ROM_corneliu_codreanu } }
+	}
+	desc = {
+		text = romania.216.d2
+		trigger = { has_character = ROM_corneliu_codreanu }
+	}
 	is_triggered_only = yes
 	fire_only_once = yes
 
@@ -7254,6 +7328,7 @@ country_event = {
 					has_game_rule = { rule = ROM_path option = ROM_PATH_SOCLIB }
 					has_game_rule = { rule = ROM_path option = ROM_PATH_SOCCON }
 					has_game_rule = { rule = ROM_path option = ROM_PATH_MARLIB }
+					has_game_rule = { rule = ROM_path option = ROM_PATH_NATPOP }
 					has_game_rule = { rule = ROM_path option = ROM_PATH_ELECTED_NATPOP }
 					has_game_rule = { rule = ROM_path option = ROM_PATH_CANTACUZINO_NATPOP }
 				}
@@ -7281,6 +7356,7 @@ country_event = {
 					has_game_rule = { rule = ROM_path option = ROM_PATH_SOCLIB }
 					has_game_rule = { rule = ROM_path option = ROM_PATH_SOCCON }
 					has_game_rule = { rule = ROM_path option = ROM_PATH_MARLIB }
+					has_game_rule = { rule = ROM_path option = ROM_PATH_NATPOP }
 					has_game_rule = { rule = ROM_path option = ROM_PATH_ELECTED_NATPOP }
 					has_game_rule = { rule = ROM_path option = ROM_PATH_CANTACUZINO_NATPOP }
 				}
@@ -7506,10 +7582,11 @@ country_event = {
 			}
 			add_country_leader_role = {
 				country_leader = {
-					ideology = national_populist_subtype
 					desc = ROM_mihail_sturdza_leader_desc
+					ideology = national_populist_subtype
 					traits = { ROM_legionary_king }
 				}
+				promote_leader = yes
 			}
 		}
 	}
@@ -7752,10 +7829,6 @@ country_event = {
 	title = romania.240.t
 	desc = romania.240.d
 
-	trigger = {
-		has_idea = ROM_great_game
-	}
-
 	is_triggered_only = yes
 	fire_only_once = yes
 
@@ -7919,6 +7992,7 @@ country_event = { # Revising the Polish-Romanian Border
 
 	trigger = {
 		original_tag = ROM
+		has_capitulated = no
 		var:713.owner = { #Suceava
 			NOT = { is_ally_with = AUS }
 			NOT = { has_war_with = AUS }

@@ -140,7 +140,7 @@ political_actions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision seize_some_trains_woo"
+			log = "[GetLogRoot]: Decision seize_some_trains_woo"
 			add_stability = -0.05
 			add_equipment_to_stockpile = {
 				type = train_equipment
@@ -172,132 +172,13 @@ political_actions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision restructure_supply_system"
+			log = "[GetLogRoot]: Decision restructure_supply_system"
 			set_variable = { node_goal = num_of_supply_nodes }
 			add_to_variable = { node_goal = 3 } #maximum 3 additional nodes
 		}
 
 		cancel_trigger = {
 			check_variable = { node_goal < num_of_supply_nodes } #if the number of supply nodes exceeds the old number by +3, immediately cancel
-		}
-	}
-
-	AI_expand_air_bases = {
-		icon = generic_political_discourse
-
-		visible = {
-			has_global_flag = second_weltkrieg_has_started
-			is_ai = yes
-			has_war = yes
-			has_manpower > 1000 #make sure they're not deploying due to lack of manpower
-
-			#the AI never stockpiles planes if it can avoid it, so a positive stockpile ratio means they've run out of airbase space
-			OR = {
-				stockpile_ratio = { archetype = small_plane_airframe ratio > 0.02 }
-				stockpile_ratio = { archetype = small_plane_cas_airframe ratio > 0.02 }
-				stockpile_ratio = { archetype = small_plane_naval_bomber_airframe ratio > 0.02 }
-				stockpile_ratio = { archetype = medium_plane_airframe ratio > 0.02 }
-				stockpile_ratio = { archetype = medium_plane_fighter_airframe ratio > 0.02 }
-				stockpile_ratio = { archetype = medium_plane_scout_plane_airframe ratio > 0.02 }
-				stockpile_ratio = { archetype = large_plane_airframe ratio > 0.02 }
-				stockpile_ratio = { archetype = large_plane_maritime_patrol_plane_airframe ratio > 0.02 }
-			}
-		}
-
-		cost = 0
-		days_re_enable = 30
-		fire_only_once = no
-		fixed_random_seed = no
-
-		ai_will_do = { factor = 100 }
-
-		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision AI_expand_air_bases"
-			every_controlled_state = {
-				if = {
-					limit = {
-						is_fully_controlled_by = ROOT
-						air_base < 10
-					}
-					add_to_temp_array = { air_base_potential_states = THIS }
-				}
-				if = {
-					limit = {
-						any_neighbor_state = { controller = { has_war_with = ROOT } }
-					}
-					if = {
-						limit = {
-							is_fully_controlled_by = ROOT
-							air_base < 10
-						}
-						add_to_temp_array = { air_base_potential_states_neighbouring_enemy = THIS }
-					}
-					every_neighbor_state = {
-						limit = {
-							is_fully_controlled_by = ROOT
-							air_base < 10
-						}
-						add_to_temp_array = { air_base_potential_states_close_to_enemy = THIS }
-					}
-				}
-				if = {
-					limit = {
-						any_of_scopes = {
-							array = air_base_potential_states_neighbouring_enemy
-							is_in_home_area = yes
-						}
-					}
-					set_temp_variable = { home_area_neighbouring_enemy = 1 }
-				}
-				if = {
-					limit = {
-						any_of_scopes = {
-							array = air_base_potential_states_close_to_enemy
-							is_in_home_area = yes
-						}
-					}
-					set_temp_variable = { home_area_close_to_enemy = 1 }
-				}
-				if = {
-					limit = {
-						any_of_scopes = {
-							array = air_base_potential_states
-							is_in_home_area = yes
-						}
-					}
-					set_temp_variable = { home_area_potential = 1 }
-				}
-			}
-			random_controlled_state = {
-				limit = {
-					is_in_array = { air_base_potential_states = THIS }
-					if = {
-						limit = { has_variable = air_base_potential_states_neighbouring_enemy^num }
-						is_in_array = { air_base_potential_states_neighbouring_enemy = THIS }
-						if = {
-							limit = { has_variable = home_area_neighbouring_enemy }
-							is_in_home_area = yes
-						}
-					}
-					else_if = {
-						limit = { has_variable = air_base_potential_states_close_to_enemy^num }
-						is_in_array = { air_base_potential_states_close_to_enemy = THIS }
-						if = {
-							limit = { has_variable = home_area_close_to_enemy }
-							is_in_home_area = yes
-						}
-					}
-					else_if = {
-						limit = { has_variable = home_area_potential }
-						is_in_home_area = yes
-					}
-				}
-				add_building_construction = {
-					type = air_base
-					level = 1
-					instant_build = no
-				}
-			}
 		}
 	}
 
@@ -329,7 +210,7 @@ political_actions = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision KR_fight_for_independence target: [From.GetName]"
+			log = "[GetLogRoot][GetLogFrom]: Decision KR_fight_for_independence"
 			clr_country_flag = KR_independence_refused
 			FROM = {
 				add_opinion_modifier = { target = ROOT modifier = KR_outraged }
@@ -347,6 +228,13 @@ political_actions = {
 				country_event = { id = generic_events.109 days = 1 }
 			}
 		}
+	}
+
+	AI_dont_spend_PP = { #Use this to help the AI focus on PP heavy mini-games
+		icon = GFX_decision_government_down
+		allowed = { always = no } #Needs to be activated from script
+		cost = 9999
+		ai_will_do = { base = 100000 }
 	}
 }
 
@@ -424,7 +312,7 @@ crisis = {
 		is_good = no
 
 		timeout_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision timeout war_exhaustion_mission"
+			log = "[GetLogRoot]: Decision timeout war_exhaustion_mission"
 			#formula = 1 + max (1, 5 - number of controlled states)
 			set_temp_variable = { war_support_hit = 5 }
 			subtract_from_temp_variable = { war_support_hit = num_of_controlled_states }
@@ -459,7 +347,7 @@ propaganda_efforts = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision war_propaganda"
+			log = "[GetLogRoot]: Decision war_propaganda"
 		}
 
 		ai_will_do = {
@@ -707,7 +595,7 @@ propaganda_efforts = {
 	}
 }
 
-KR_foreign_support = {
+foreign_support = {
 	return_cores_to_ally = {
 		icon = generic_agreement
 
@@ -758,7 +646,7 @@ KR_foreign_support = {
 		}
 
 		complete_effect = {
-			log = "[GetDateText]: [Root.GetName]: Decision return_cores_to_ally target: [From.GetName]"
+			log = "[GetLogRoot][GetLogFrom]: Decision return_cores_to_ally"
 			set_country_flag = KR_returning_land
 			FROM = { save_event_target_as = return_to }
 			country_event = generic_events.75

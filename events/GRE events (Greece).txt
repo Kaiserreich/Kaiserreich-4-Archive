@@ -459,14 +459,14 @@ country_event = {
 
 	trigger = {
 		original_tag = GRE
-		has_country_flag = GRE_1938_elections_happened
+		has_global_flag = GRE_1938_elections_happened
 		NOT = { focus_progress = { focus = GRE_monarchy_referendum progress > 0 } }
 		has_idea = GRE_memories_of_king
 		has_elected_government = yes
 		has_war = no
 		OR = {
 			has_stability > 0.60
-			has_country_flag = GRE_balkan_war_loss
+			has_global_flag = GRE_balkan_war_loss
 			AND = {
 				owns_state = 731 #Florina
 				owns_state = 769 #Serres
@@ -587,7 +587,7 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event gre.17 option gre.17.a"
 		name = gre.17.a
-		set_country_flag = GRE_balkan_war_loss
+		set_global_flag = GRE_balkan_war_loss
 		add_stability = -0.20
 		set_temp_variable = { ideology_change_var = -0.2 }
 		change_ruling_party_popularity = yes
@@ -605,13 +605,34 @@ country_event = {
 
 	trigger = {
 		original_tag = GRE
-		has_country_flag = GRE_balkan_war_loss
-		controls_all_owned_states = yes
+		has_global_flag = GRE_balkan_war_loss
+		if = {
+			limit = { has_civil_war = yes }
+			NOT = {
+				any_country_with_original_tag = {
+					original_tag_to_check = ROOT
+					civilwar_target = ROOT
+					surrender_progress > ROOT.surrender_progress
+				}
+			}
+		}
+		else = {
+			controls_all_owned_states = yes
+		}
 		is_subject = no
 	}
 
 	mean_time_to_happen = {
 		months = 1
+	}
+
+	immediate = {
+		hidden_effect = {
+			random_other_country = {
+				limit = { civilwar_target = ROOT }
+				save_event_target_as = GRE_civil_war_target
+			}
+		}
 	}
 
 	option = {
@@ -620,6 +641,7 @@ country_event = {
 		trigger = {
 			has_character = GRE_ioannis_metaxas
 			NOT = { has_government = paternal_autocrat }
+			has_civil_war = no
 		}
 		ai_chance = {
 			base = 35
@@ -666,6 +688,7 @@ country_event = {
 		name = gre.18.b #Athanasios Klaras wrests control in a coup
 		trigger = {
 			has_socialist_government = no
+			has_civil_war = no
 		}
 		ai_chance = {
 			base = 50
@@ -712,6 +735,7 @@ country_event = {
 				has_socialist_government = yes
 			}
 			NOT = { has_cosmetic_tag = GRE_kingdom }
+			has_civil_war = no
 		}
 		ai_chance = {
 			base = 50
@@ -756,6 +780,10 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event gre.18 option gre.18.e"
 		name = gre.18.e #The King abdicates the throne, restoring the republic
+		trigger = {
+			has_cosmetic_tag = GRE_kingdom
+			has_civil_war = no
+		}
 		ai_chance = {
 			base = 30
 			modifier = {
@@ -767,9 +795,6 @@ country_event = {
 					has_game_rule = { rule = GRE_referendum option = GRE_REFERENDUM_PAUL_PATAUT }
 				}
 			}
-		}
-		trigger = {
-			has_cosmetic_tag = GRE_kingdom
 		}
 		if = {
 			limit = { NOT = { has_completed_focus = GRE_monarchy_referendum } }
@@ -816,6 +841,7 @@ country_event = {
 		trigger = {
 			has_elected_government = yes
 			NOT = { has_cosmetic_tag = GRE_kingdom }
+			has_civil_war = no
 		}
 		ai_chance = {
 			base = 15
@@ -861,6 +887,70 @@ country_event = {
 			set_country_flag = GRE_was_socdem
 		}
 		country_event = { id = gre.54 days = 1 }
+	}
+	option = {
+		log = "[GetLogInfo]: event gre.18 option gre.18.g"
+		name = gre.18.g #The government surrenders to the rebels
+		trigger = {
+			has_civil_war = yes
+		}
+		if = {
+			limit = { is_ai = no }
+			add_stability = -0.10
+			add_political_power = -200
+			hidden_effect = { clear_all_relations = yes }
+			clear_variable = GRE_previous_faction_leader
+			clr_country_flag = GRE_republicans_win_referendum
+			clr_country_flag = GRE_monarchists_win_referendum
+			if = {
+				limit = { has_socialist_government = yes }
+				GRE_stop_being_syndicalist = yes
+			}
+			else = {
+				GRE_become_syndicalist = yes
+			}
+			event_target:GRE_civil_war_target = {
+				ROOT = { copy_government_of_PREV = yes }
+				var:country_leader = {
+					hidden_effect = { set_nationality = ROOT }
+					promote_character = yes
+				}
+				effect_tooltip = {
+					annex_country = {
+						target = ROOT
+						transfer_troops = yes
+					}
+				}
+				hidden_effect = {
+					ROOT = {
+						annex_country = {
+							target = PREV
+							transfer_troops = yes
+						}
+					}
+				}
+			}
+			if = {
+				limit = {
+					OR = {
+						has_cosmetic_tag = GRE_civil_war
+						has_cosmetic_tag = GRE_civil_war_socialist
+					}
+				}
+				drop_cosmetic_tag = yes
+			}
+		}
+		else = {
+			random_other_country = {
+				limit = { civilwar_target = ROOT }
+				start_peace_conference = {
+					tag = ROOT
+					score_factor = 1
+					winner_scope = LIMITED
+					loser_scope = LIMITED
+				}
+			}
+		}
 	}
 }
 
@@ -920,13 +1010,19 @@ country_event = {
 			limit = { has_cosmetic_tag = GRE_kingdom }
 			add_country_leader_role = {
 				character = GRE_nikolaos_plastiras
-				country_leader = { ideology = social_democrat_subtype }
+				country_leader = {
+					desc = GRE_nikolaos_plastiras_advisor_desc
+					ideology = social_democrat_subtype
+				}
 			}
 		}
 		else = {
 			add_country_leader_role = {
 				character = GRE_nikolaos_plastiras
-				country_leader = { ideology = social_democrat_subtype }
+				country_leader = {
+					desc = GRE_nikolaos_plastiras_advisor_desc
+					ideology = social_democrat_subtype
+				}
 				promote_leader = yes
 			}
 		}
@@ -960,7 +1056,10 @@ country_event = {
 		name = gre.20.a
 		add_country_leader_role = {
 			character = GRE_nikos_ploumpidis
-			country_leader = { ideology = radical_socialist_subtype }
+			country_leader = {
+				desc = GRE_nikos_ploumpidis_leader_desc
+				ideology = radical_socialist_subtype
+			}
 			promote_leader = yes
 		}
 		retire_character = GRE_kostas_gavriilides
@@ -995,13 +1094,19 @@ country_event = {
 			limit = { has_cosmetic_tag = GRE_kingdom }
 			add_country_leader_role = {
 				character = GRE_panagiotis_kanellopoulos
-				country_leader = { ideology = social_liberal_subtype }
+				country_leader = {
+					desc = GRE_panagiotis_kanellopoulos_leader_desc
+					ideology = social_liberal_subtype
+				}
 			}
 		}
 		else = {
 			add_country_leader_role = {
 				character = GRE_panagiotis_kanellopoulos
-				country_leader = { ideology = social_liberal_subtype }
+				country_leader = {
+					desc = GRE_panagiotis_kanellopoulos_leader_desc
+					ideology = social_liberal_subtype
+				}
 				promote_leader = yes
 			}
 		}
@@ -1045,13 +1150,19 @@ country_event = {
 			limit = { has_cosmetic_tag = GRE_kingdom }
 			add_country_leader_role = {
 				character = GRE_konstantinos_tsatsos
-				country_leader = { ideology = market_liberal_subtype }
+				country_leader = {
+					desc = GRE_konstantinos_tsatsos_leader_desc
+					ideology = market_liberal_subtype
+				}
 			}
 		}
 		else = {
 			add_country_leader_role = {
 				character = GRE_konstantinos_tsatsos
-				country_leader = { ideology = market_liberal_subtype }
+				country_leader = {
+					desc = GRE_konstantinos_tsatsos_leader_desc
+					ideology = market_liberal_subtype
+				}
 				promote_leader = yes
 			}
 		}
@@ -1075,13 +1186,19 @@ country_event = {
 			limit = { has_cosmetic_tag = GRE_kingdom }
 			add_country_leader_role = {
 				character = GRE_konstantinos_tsaldaris
-				country_leader = { ideology = social_conservative_subtype }
+				country_leader = {
+					desc = GRE_konstantinos_tsaldaris_leader_desc
+					ideology = social_conservative_subtype
+				}
 			}
 		}
 		else = {
 			add_country_leader_role = {
 				character = GRE_konstantinos_tsaldaris
-				country_leader = { ideology = social_conservative_subtype }
+				country_leader = {
+					desc = GRE_konstantinos_tsaldaris_leader_desc
+					ideology = social_conservative_subtype
+				}
 				promote_leader = yes
 			}
 		}
@@ -1144,9 +1261,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 			unlock_national_focus = GRE_elections_1938
 		}
 		unlock_national_focus = GRE_soc_conservatives
@@ -1183,9 +1300,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 			unlock_national_focus = GRE_elections_1938
 		}
 		unlock_national_focus = GRE_soc_liberals
@@ -1224,9 +1341,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 			unlock_national_focus = GRE_elections_1938
 		}
 		unlock_national_focus = GRE_market_liberals
@@ -1264,9 +1381,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 			unlock_national_focus = GRE_elections_1938
 		}
 		unlock_national_focus = GRE_soc_dems
@@ -1335,9 +1452,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 			unlock_national_focus = GRE_elections_1938
 		}
 		unlock_national_focus = GRE_soc_conservatives
@@ -1389,9 +1506,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 			unlock_national_focus = GRE_elections_1938
 		}
 		unlock_national_focus = GRE_radical_socialists
@@ -1442,9 +1559,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 			unlock_national_focus = GRE_elections_1938
 		}
 		unlock_national_focus = GRE_soc_dems
@@ -1482,9 +1599,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 			unlock_national_focus = GRE_elections_1938
 		}
 		unlock_national_focus = GRE_soc_liberals
@@ -1523,9 +1640,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 			unlock_national_focus = GRE_elections_1938
 		}
 		unlock_national_focus = GRE_market_liberals
@@ -1594,9 +1711,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 			unlock_national_focus = GRE_elections_1938
 		}
 		unlock_national_focus = GRE_soc_conservatives
@@ -1632,9 +1749,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 			unlock_national_focus = GRE_elections_1938
 		}
 		unlock_national_focus = GRE_soc_liberals
@@ -1671,9 +1788,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 			unlock_national_focus = GRE_elections_1938
 		}
 		unlock_national_focus = GRE_market_liberals
@@ -1749,9 +1866,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 		}
 	}
 
@@ -1942,9 +2059,9 @@ country_event = {
 		if = {
 			limit = {
 				date > 1938.1.1
-				NOT = { has_country_flag = GRE_1938_elections_happened }
+				NOT = { has_global_flag = GRE_1938_elections_happened }
 			}
-			set_country_flag = GRE_1938_elections_happened
+			set_global_flag = GRE_1938_elections_happened
 		}
 	}
 
@@ -3666,7 +3783,7 @@ country_event = {
 		num_divisions > 4
 		surrender_progress < 0.01
 		owns_state = 768 #Thessaly
-		NOT = { has_country_flag = GRE_had_civil_war }
+		NOT = { has_global_flag = GRE_had_civil_war }
 	}
 
 	mean_time_to_happen = {
@@ -3674,7 +3791,7 @@ country_event = {
 	}
 
 	immediate = {
-		set_country_flag = GRE_had_civil_war
+		set_global_flag = GRE_had_civil_war
 		hidden_effect = { country_lock_all_division_template = yes }
 	}
 
@@ -4007,7 +4124,7 @@ country_event = {
 
 	trigger = {
 		has_government = syndicalist
-		NOT = { has_country_flag = GRE_had_second_congress }
+		NOT = { has_global_flag = GRE_had_second_congress }
 	}
 
 	immediate = {
@@ -4019,13 +4136,13 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event gre.156 option gre.156.a"
 		name = gre.156.a #Zachariadis ushers in a new cabinet and retains control
-		set_country_flag = GRE_had_second_congress
+		set_global_flag = GRE_had_second_congress
 		add_stability = 0.05
 	}
 	option = {
 		log = "[GetLogInfo]: event gre.156 option gre.156.b"
 		name = gre.156.b #Konstantinos Speras wins the most votes and becomes chairman
-		set_country_flag = GRE_had_second_congress
+		set_global_flag = GRE_had_second_congress
 		add_political_power = 75
 		promote_character = GRE_konstantinos_speras
 	}
@@ -4054,7 +4171,7 @@ country_event = {
 
 	trigger = {
 		has_government = syndicalist
-		has_country_flag = GRE_had_second_congress
+		has_global_flag = GRE_had_second_congress
 	}
 
 	immediate = {
@@ -4092,7 +4209,10 @@ country_event = {
 		add_political_power = 75
 		add_country_leader_role = {
 			character = GRE_nikos_beloyannis
-			country_leader = { ideology = syndicalist_subtype }
+			country_leader = {
+				desc = GRE_nikos_beloyannis_leader_desc
+				ideology = syndicalist_subtype
+			}
 			promote_leader = yes
 		}
 	}
@@ -4115,7 +4235,7 @@ country_event = {
 		surrender_progress < 0.01
 		num_divisions > 4
 		owns_state = 768 #Thessaly
-		NOT = { has_country_flag = GRE_had_civil_war }
+		NOT = { has_global_flag = GRE_had_civil_war }
 	}
 
 	mean_time_to_happen = {
@@ -4123,7 +4243,7 @@ country_event = {
 	}
 
 	immediate = {
-		set_country_flag = GRE_had_civil_war
+		set_global_flag = GRE_had_civil_war
 		hidden_effect = { country_lock_all_division_template = yes }
 	}
 

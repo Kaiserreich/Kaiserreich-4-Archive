@@ -97,7 +97,7 @@ country_event = {
 		log = "[GetLogInfo]: event ai_events.200 option 1"
 		set_global_flag = second_weltkrieg_has_started
 		set_global_flag = { flag = weltkrieg_home_by_christmas_achievement_timer value = 1 days = 365 }
-		log = "KR_Event_Logging;THE SECOND WELTKRIEG;[GetDateText]"
+		log = "KR_Event_Logging;THE SECOND WELTKRIEG"
 		add_named_threat = {
 			threat = 20
 			name = second_weltkrieg_threat
@@ -480,5 +480,127 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event ai_events.211 option 1"
 		set_global_flag = second_weltkrieg_has_ended
+	}
+}
+
+country_event = { #hidden recurring event to make the AI build more air bases if needed (donotlog)
+	id = ai_events.212
+	hidden = yes
+
+	trigger = {
+		is_ai = yes
+		has_manpower > 2000 #make sure they're not deploying due to lack of manpower
+		OR = {
+			has_equipment = { small_plane_airframe > 99 }
+			has_equipment = { small_plane_cas_airframe > 99 }
+			has_equipment = { small_plane_naval_bomber_airframe > 99 }
+			AND = {
+				has_manpower > 4000 #make sure they're not deploying due to lack of manpower
+				OR = {
+					has_equipment = { medium_plane_airframe > 99 }
+					has_equipment = { medium_plane_fighter_airframe > 99 }
+				}
+			}
+			AND = {
+				has_manpower > 8000 #make sure they're not deploying due to lack of manpower
+				OR = {
+					has_equipment = { large_plane_airframe > 99 }
+					has_equipment = { large_plane_maritime_patrol_plane_airframe > 99 }
+				}
+			}
+		}
+		NOT = { has_country_flag = AI_expand_air_bases_cooldown }
+	}
+
+	is_triggered_only = yes #on_weekly
+
+	option = {
+		log = "[GetLogInfo]: event ai_events.212 - AI_expand_air_bases"
+		set_country_flag = { flag = AI_expand_air_bases_cooldown days = 45 value = 1 }
+		every_controlled_state = {
+			if = {
+				limit = {
+					is_fully_controlled_by = ROOT
+					air_base < 10
+				}
+				add_to_temp_array = { air_base_potential_states = THIS }
+			}
+			if = {
+				limit = {
+					any_neighbor_state = { controller = { has_war_with = ROOT } }
+				}
+				if = {
+					limit = {
+						is_fully_controlled_by = ROOT
+						air_base < 10
+					}
+					add_to_temp_array = { air_base_potential_states_neighbouring_enemy = THIS }
+				}
+				every_neighbor_state = {
+					limit = {
+						is_fully_controlled_by = ROOT
+						air_base < 10
+					}
+					add_to_temp_array = { air_base_potential_states_close_to_enemy = THIS }
+				}
+			}
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = air_base_potential_states_neighbouring_enemy
+						is_in_home_area = yes
+					}
+				}
+				set_temp_variable = { home_area_neighbouring_enemy = 1 }
+			}
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = air_base_potential_states_close_to_enemy
+						is_in_home_area = yes
+					}
+				}
+				set_temp_variable = { home_area_close_to_enemy = 1 }
+			}
+			if = {
+				limit = {
+					any_of_scopes = {
+						array = air_base_potential_states
+						is_in_home_area = yes
+					}
+				}
+				set_temp_variable = { home_area_potential = 1 }
+			}
+		}
+		random_controlled_state = {
+			limit = {
+				is_in_array = { air_base_potential_states = THIS }
+				if = {
+					limit = { has_variable = air_base_potential_states_neighbouring_enemy^num }
+					is_in_array = { air_base_potential_states_neighbouring_enemy = THIS }
+					if = {
+						limit = { has_variable = home_area_neighbouring_enemy }
+						is_in_home_area = yes
+					}
+				}
+				else_if = {
+					limit = { has_variable = air_base_potential_states_close_to_enemy^num }
+					is_in_array = { air_base_potential_states_close_to_enemy = THIS }
+					if = {
+						limit = { has_variable = home_area_close_to_enemy }
+						is_in_home_area = yes
+					}
+				}
+				else_if = {
+					limit = { has_variable = home_area_potential }
+					is_in_home_area = yes
+				}
+			}
+			add_building_construction = {
+				type = air_base
+				level = 1
+				instant_build = no
+			}
+		}
 	}
 }
