@@ -848,6 +848,8 @@ RUS_remove_savinkov = {
 			RUS_supreme_economic_council
 			RUS_supreme_economic_council_2
 			RUS_supreme_economic_council_3
+			RUS_supreme_economic_council_4
+			RUS_supreme_economic_council_5
 			RUS_new_russian_culture_1
 			RUS_new_russian_culture_2
 			RUS_new_russian_culture_3
@@ -1969,7 +1971,7 @@ RUS_create_cossack_hosts = {
 	if = {
 		limit = {
 			tag = FER
-			564 = { is_owned_by = ROOT NOT = { has_state_flag = terek_state } }
+			564 = { is_owned_by = ROOT NOT = { has_state_flag = transbaikal_state } }
 		}
 		564 = {
 			remove_dynamic_modifier = { modifier = RUS_cossack_host_modifier }
@@ -2324,6 +2326,8 @@ RUS_initialise_socrus = {
 			RUS_republic_under_watch
 			RUS_republic_under_watch_2
 			RUS_republic_under_watch_3
+			RUS_guarantor_of_stability
+			RUS_guarantor_of_stability_2
 		}
 		RUS_remove_military_plan_ideas = yes
 		every_character = { #Remove hired advisors
@@ -2336,12 +2340,13 @@ RUS_initialise_socrus = {
 				set_nationality = ROOT
 			}
 		}
-		every_owned_state = {
-			limit = {
-				has_dynamic_modifier = { modifier = RUS_central_asia_chaos }
+		every_state = {
+			limit = { is_central_asia = yes }
+			if = {
+				limit = { has_dynamic_modifier = { modifier = RUS_central_asia_chaos } }
+				remove_dynamic_modifier = { modifier = RUS_central_asia_chaos }
 			}
-			remove_dynamic_modifier = { modifier = RUS_central_asia_chaos }
-			force_disable_resistance = RUS
+			force_enable_resistance = { occupier = RUS clear = yes }
 		}
 		RUS_vladimir_levitsky = {
 			promote_character = { ideology = syndicalist_subtype }
@@ -2357,7 +2362,10 @@ RUS_initialise_socrus = {
 		}
 		RUS_gergard_zeller = {
 			add_country_leader_role = {
-				country_leader = { ideology = social_democrat_subtype }
+				country_leader = {
+					desc = RUS_gergard_zeller_advisor_desc
+					ideology = social_democrat_subtype
+				}
 				promote_leader = yes
 			}
 		}
@@ -2376,7 +2384,10 @@ RUS_initialise_socrus = {
 		}
 		RUS_sergey_melgunov = {
 			add_country_leader_role = {
-				country_leader = { ideology = market_liberal_subtype }
+				country_leader = {
+					desc = RUS_sergey_melgunov_sic_desc
+					ideology = market_liberal_subtype
+				}
 				promote_leader = yes
 			}
 		}
@@ -2387,7 +2398,10 @@ RUS_initialise_socrus = {
 		}
 		RUS_mikhail_georgiyevsky = {
 			add_country_leader_role = {
-				country_leader = { ideology = authoritarian_democrat_subtype }
+				country_leader = {
+					desc = RUS_mikhail_georgiyevsky_advisor_desc
+					ideology = authoritarian_democrat_subtype
+				}
 				promote_leader = yes
 			}
 		}
@@ -3440,9 +3454,7 @@ RUS_clear_zinovyev_minigame = {
 		remove_targeted_decision = { decision = RUS_expel_sds target = ROOT }
 		remove_targeted_decision = { decision = RUS_ideological_restriction target = ROOT }
 		remove_targeted_decision = { decision = RUS_appoint_bolsheviks target = ROOT }
-		remove_targeted_decision = { decision = RUS_favor_left target = ROOT }
 		remove_targeted_decision = { decision = RUS_bolshevik_operation target = ROOT }
-		remove_targeted_decision = { decision = RUS_favor_right target = ROOT }
 		remove_targeted_decision = { decision = RUS_backing_from_esers target = ROOT }
 	}
 }
@@ -3682,7 +3694,7 @@ RUS_VST_party_check = {
 		if = {
 			limit = { RUS_VST_centre = yes }
 			add_to_variable = { vst_popularity_var = vst_centre_unity }
-			multiply_variable = { vst_popularity_var = 2 } #Double effect of VST centre unity
+			multiply_variable = { vst_popularity_var = 1.5 } #Increase effect of VST centre unity by 50%
 		}
 		else = {
 			add_to_variable = { vst_popularity_var = vst_centre_var }
@@ -3921,6 +3933,15 @@ RUS_PSR_relation = {
 			}
 			hidden_effect = { country_event = { id = socrus.69 days = 3 } }
 		}
+		else_if = { #Restore coalition if opinions are high
+			limit = {
+				check_variable = { sr_var > 5 }
+				is_in_coalition_with_radical_socialist = no
+				NOT = { has_government = totalist }
+			}
+			set_temp_variable = { coalition_partner_var = token:radical_socialist }
+			add_to_coalition = yes
+		}
 		else_if = {
 			limit = { check_variable = { sr_var < 3 } }
 			hidden_effect = { country_event = { id = socrus.70 days = 3 } }
@@ -4154,6 +4175,7 @@ RUS_democratic_bloc_event_chain_finish = {
 RUS_enable_union_integration = {
 	custom_effect_tooltip = union_republics_enable_integration_tt
 	hidden_effect = {
+		MNR = { enable_country_integration_50_compliance = yes }
 		UKR = { enable_country_integration_50_compliance = yes }
 		BLR = { enable_country_integration_50_compliance = yes }
 		KAZ = { enable_country_integration_50_compliance = yes }
@@ -4646,47 +4668,6 @@ RUS_eurasianist_effect = {
 	}
 }
 
-RUS_create_turkestan_puppet = {
-	hidden_effect = {
-		country_event = { id = bukhara.711 days = 10 }
-		every_owned_state = {
-			limit = {
-				is_central_asia = yes
-				NOT = { is_core_of = ROOT }
-				NOT = { is_core_of = KAZ }
-				NOT = { state = 584 } #Karakum
-			}
-			remove_claim_by = ROOT
-		}
-	}
-	if = {
-		limit = {
-			NOT = { country_exists = BUK }
-			owns_state = 405 #Bukhara
-		}
-		set_temp_variable = { tag_to_release = BUK }
-		release_targeted_tag = yes
-	}
-	hidden_effect = {
-		584 = { add_claim_by = ROOT } #Karakum
-		every_state = {
-			limit = {
-				OR = {
-					is_khiva = yes
-					is_bukhara = yes
-					is_turkestan = yes
-				}
-				is_owned_by_ROOT_or_ally = yes
-				is_claim_or_core_of_ROOT = no
-			}
-			remove_claim_by = ROOT
-			add_core_of = BUK
-			transfer_state_to = BUK
-		}
-		BUK = { set_capital = { state = 407 remember_old_capital = no } } #Tashkent
-	}
-}
-
 RUS_add_CA_unrest = {
 	if = {
 		limit = { check_variable = { RUS_central_asia_unrest_temp < 0 } }
@@ -4985,8 +4966,8 @@ RUS_puppet_setup = {
 					character = RUS_oi_shigemoto
 					promote_leader = yes
 					country_leader = {
-						ideology = paternal_autocrat_subtype
 						desc = RUS_oi_shigemoto_leader_desc
+						ideology = paternal_autocrat_subtype
 					}
 				}
 				hidden_effect = {
@@ -5015,7 +4996,10 @@ RUS_puppet_setup = {
 							RUS_vladimir_tolstov = {
 								set_nationality = PREV.PREV
 								add_country_leader_role = {
-									country_leader = { ideology = [IDEOLOGY] }
+									country_leader = {
+										desc = RUS_vladimir_tolstov_commander_desc
+										ideology = [IDEOLOGY]
+									}
 									promote_leader = yes
 								}
 							}
@@ -5036,6 +5020,16 @@ RUS_puppet_setup = {
 			}
 			else = {
 				RUS_setup_demrus_postwar = yes
+			}
+			hidden_effect = {
+				if = {
+					limit = { has_global_flag = RUS_peace_refused_by_player }
+					set_stability = 0
+					set_war_support = 0
+					set_political_power = -500
+					set_temp_variable = { ideology_change_var = -40 }
+					change_ruling_party_popularity = yes
+				}
 			}
 		}
 	}
@@ -5075,12 +5069,12 @@ RUS_setup_demrus_postwar = {
 			if = {
 				limit = {
 					country_exists = FER
-					has_character = MON_roman_von_ungern_sternberg
+					has_character = MON_roman_ungern_sternberg
 				}
 				every_character = {
 					limit = {
 						OR = {
-							MON = { MON_roman_von_ungern_sternberg = { is_character = PREV.PREV } }
+							MON = { MON_roman_ungern_sternberg = { is_character = PREV.PREV } }
 							MON = { MON_mikhail_tornovsky = { is_character = PREV.PREV } }
 							MON = { MON_boris_rezukhin = { is_character = PREV.PREV } }
 							has_trait = RUS_savinkovist_officer
@@ -5135,51 +5129,59 @@ RUS_setup_demrus_postwar = {
 			country_event = { id = demrus.38 days = 500 random_days = 200 } #The Chernov Monument
 		}
 		else_if = {
-			limit = { is_subject = yes }
-			if = {
-				limit = {
+			limit = {
+				OR = {
 					overlord = {
 						is_monarchy = yes
 						has_authoritarian_government = yes
-						GER_is_schleicher_path = no #Only SWR does this
+					}
+					GER = {
+						exists = yes
+						GER_is_swr_path = yes
 					}
 				}
-				RUS_create_postwar_monarchy = yes
 			}
-			else_if = {
-				limit = {
+			RUS_create_postwar_monarchy = yes
+		}
+		else_if = {
+			limit = {
+				OR = {
 					overlord = { has_left_democratic_government = yes }
-					NOT = { has_completed_focus = RUS_soclibs }
+					GER = {
+						exists = yes
+						GER_is_du_path = yes
+					}
 				}
-				RUS_remove_monarchy = yes
-				RUS_create_postwar_soclib = yes
+				NOT = { has_completed_focus = RUS_soclibs }
 			}
-			else_if = {
-				limit = {
-					overlord = { has_government = market_liberal }
-					NOT = { has_completed_focus = RUS_marlibs }
-				}
-				RUS_remove_monarchy = yes
-				RUS_create_postwar_marlib = yes
+			RUS_remove_monarchy = yes
+			RUS_create_postwar_soclib = yes
+		}
+		else_if = {
+			limit = {
+				overlord = { has_government = market_liberal }
+				NOT = { has_completed_focus = RUS_marlibs }
 			}
-			else_if = {
-				limit = {
-					overlord = { has_government = national_populist }
-				}
-				RUS_remove_monarchy = yes
-				RUS_create_natpop_vonsyatsky = yes
-				if = {
-					limit = { has_character = RUS_sergey_markov }
-					activate_advisor = RUS_sergey_markov_army_chief
-				}
-				activate_advisor = RUS_vasily_shulgin_sic
-				set_temp_variable = { coalition_partner_var = token:paternal_autocrat }
-				add_to_coalition = yes
+			RUS_remove_monarchy = yes
+			RUS_create_postwar_marlib = yes
+		}
+		else_if = {
+			limit = {
+				overlord = { has_government = national_populist }
 			}
-			else = {
-				RUS_remove_monarchy = yes
-				RUS_create_postwar_soccon = yes
+			RUS_remove_monarchy = yes
+			RUS_create_natpop_vonsyatsky = yes
+			if = {
+				limit = { has_character = RUS_sergey_markov }
+				activate_advisor = RUS_sergey_markov_army_chief
 			}
+			activate_advisor = RUS_vasily_shulgin_sic
+			set_temp_variable = { coalition_partner_var = token:paternal_autocrat }
+			add_to_coalition = yes
+		}
+		else = {
+			RUS_remove_monarchy = yes
+			RUS_create_postwar_soccon = yes
 		}
 
 		KAZ = { enable_country_integration_50_compliance = yes }
@@ -5473,8 +5475,8 @@ RUS_create_natpop_vonsyatsky = {
 			}
 			add_country_leader_role = {
 				country_leader = {
-					ideology = national_populist_subtype
 					desc = RUS_anastasy_vonsyatsky_advisor_desc
+					ideology = national_populist_subtype
 					traits = { KR_flamboyant_brute }
 				}
 				promote_leader = yes
@@ -5670,7 +5672,7 @@ RUS_socialist_puppet = {
 		FER = { enable_country_integration_50_compliance = yes }
 
 		add_ideas = {
-			RUS_lack_of_officers
+			RUS_white_army_red_baron
 			volunteer_only
 			free_trade
 			civilian_economy
@@ -5714,12 +5716,19 @@ RUS_restore_bolshevik_exiles = {
 					can_be_fired = no
 				}
 			}
+			promote_leader = yes
 		}
-		RUS_vasily_blyukher = { set_nationality = var:global.russia }
+		RUS_vasily_blyukher = {
+			set_nationality = var:global.russia
+			promote_leader = yes
+		}
 		RUS_boris_shaposhnikov = { set_nationality = var:global.russia }
 		RUS_kirill_meretskov = { set_nationality = var:global.russia }
 		RUS_semyon_timoshenko = { set_nationality = var:global.russia }
-		RUS_mikhail_frunze = { set_nationality = var:global.russia }
+		RUS_mikhail_frunze = {
+			set_nationality = var:global.russia
+			promote_leader = yes
+		}
 		RUS_iosif_stalin = { set_nationality = var:global.russia }
 		RUS_aleksandr_yegorov = { set_nationality = var:global.russia }
 		RUS_vladimir_triandafillov = {
@@ -5890,6 +5899,7 @@ RUS_spawn_postwar_army = {
 
 RUS_enable_integration = {
 	ROOT = { #needed due to PREV shenanigans in history file
+		MNR = { enable_country_integration_50_compliance = yes }
 		KAZ = { enable_country_integration_50_compliance = yes }
 		537 = { enable_state_integration_80_compliance = yes } #South Sakhalin
 		555 = { enable_state_integration_80_compliance = yes } #Kuril Islands
@@ -6071,23 +6081,23 @@ RUS_solonevich_fight_careful = {
 	clr_country_flag = RUS_solonevich_heal
 	random_list = {
 		20 = {
-			custom_effect_tooltip = RUS_solonevich_successful_atk
-			set_country_flag = RUS_solonevich_successful_atk
-			add_to_variable = { RUS_assailant_hp = -1 }
-		}
-		30 = {
-			custom_effect_tooltip = RUS_solonevich_parry
-			set_country_flag = RUS_solonevich_parry
+			custom_effect_tooltip = RUS_solonevich_fail
+			set_country_flag = RUS_solonevich_fail
+			add_to_variable = { RUS_solonevich_hp = -1 }
 		}
 		30 = {
 			custom_effect_tooltip = RUS_solonevich_heal
 			set_country_flag = RUS_solonevich_heal
 			add_to_variable = { RUS_solonevich_hp = 1 }
 		}
+		30 = {
+			custom_effect_tooltip = RUS_solonevich_parry
+			set_country_flag = RUS_solonevich_parry
+		}
 		20 = {
-			custom_effect_tooltip = RUS_solonevich_fail
-			set_country_flag = RUS_solonevich_fail
-			add_to_variable = { RUS_solonevich_hp = -1 }
+			custom_effect_tooltip = RUS_solonevich_successful_atk
+			set_country_flag = RUS_solonevich_successful_atk
+			add_to_variable = { RUS_assailant_hp = -1 }
 		}
 	}
 }
@@ -7366,7 +7376,7 @@ RUS_complete_sokol_upgrade_2 = {
 }
 
 RUS_AV_set_random_decaying_funds_bonus = {
-	log = "[GetDateText]: [Root.GetName]: Executed scripted effect RUS_AV_set_random_decaying_funds_bonus"
+	log = "[GetLogRoot]: Executed scripted effect RUS_AV_set_random_decaying_funds_bonus"
 	custom_effect_tooltip = RUS_AV_Number_Of_Funds_Bonus_Granted_tt
 	RUS_execute_AV = yes
 	FROM = { mio:RUS_av_organisation = { add_to_variable = { total_campaign_funds_bonus = 1 } } }
@@ -7395,7 +7405,7 @@ RUS_AV_set_random_decaying_funds_bonus = {
 }
 
 RUS_execute_AV = {
-	log = "[GetDateText]: [Root.GetName]: Executed scripted effect RUS_execute_AV"
+	log = "[GetLogRoot]: Executed scripted effect RUS_execute_AV"
 	hidden_effect = {
 		FROM = {
 			mio:RUS_av_organisation = { set_temp_variable = { Temp_Funds_Bonus = Funds_Bonus } }
@@ -7633,7 +7643,7 @@ RUS_execute_AV = {
 }
 
 RUS_Update_Decaying_Funds_Bonus = {
-	log = "[GetDateText]: [Root.GetName]: Executed scripted effect RUS_Update_Decaying_Funds_Bonus"
+	log = "[GetLogRoot]: Executed scripted effect RUS_Update_Decaying_Funds_Bonus"
 	mio:RUS_av_organisation = { set_temp_variable = { Temp_Weekly_funds_decay = Weekly_funds_decay } }
 	set_variable = { visible_Weekly_funds_decay = Temp_Weekly_funds_decay }
 	every_military_industrial_organization = {
@@ -8705,81 +8715,84 @@ RUS_Balance_Report = {
 }
 
 RUS_setup_custom_russian_MIOs = {
-	#Setup the R&D MIOs
-	every_military_industrial_organization = {
-		limit = {
-			OR = {
-				is_military_industrial_organization = RUS_chtz_organisation
-				is_military_industrial_organization = RUS_tsagi_organisation
-				is_military_industrial_organization = RUS_as_organisation
-				is_military_industrial_organization = RUS_vpoz_organisation
-				is_military_industrial_organization = RUS_bmz_organisation
+	if = {
+		limit = { has_dlc_aat = yes }
+		#Setup the R&D MIOs
+		every_military_industrial_organization = {
+			limit = {
+				OR = {
+					is_military_industrial_organization = RUS_chtz_organisation
+					is_military_industrial_organization = RUS_tsagi_organisation
+					is_military_industrial_organization = RUS_as_organisation
+					is_military_industrial_organization = RUS_vpoz_organisation
+					is_military_industrial_organization = RUS_bmz_organisation
+				}
 			}
+			set_variable = { max_research_speed = 0.5 }
+			set_variable = { weekly_research_speed_gain = 0.01 }
+			set_variable = { weekly_funds_requirement = 9 }
+			set_variable = { max_research_speed_loc = 50 }
+			set_variable = { weekly_research_speed_gain_loc = 1 }
+			set_variable = { weekly_funds_requirement_loc = weekly_funds_requirement }
+			divide_variable = { weekly_funds_requirement_loc = 7 }
+			set_variable = { total_campaign_research_speed = 0 }
 		}
-		set_variable = { max_research_speed = 0.5 }
-		set_variable = { weekly_research_speed_gain = 0.01 }
-		set_variable = { weekly_funds_requirement = 9 }
-		set_variable = { max_research_speed_loc = 50 }
-		set_variable = { weekly_research_speed_gain_loc = 1 }
-		set_variable = { weekly_funds_requirement_loc = weekly_funds_requirement }
-		divide_variable = { weekly_funds_requirement_loc = 7 }
-		set_variable = { total_campaign_research_speed = 0 }
-	}
-	#Setup the XP MIOs
-	every_military_industrial_organization = {
-		limit = {
-			OR = {
-				is_military_industrial_organization = RUS_obukhov_organisation
-				is_military_industrial_organization = RUS_osoavia_organisation
-				is_military_industrial_organization = RUS_bz_organisation
+		#Setup the XP MIOs
+		every_military_industrial_organization = {
+			limit = {
+				OR = {
+					is_military_industrial_organization = RUS_obukhov_organisation
+					is_military_industrial_organization = RUS_osoavia_organisation
+					is_military_industrial_organization = RUS_bz_organisation
+				}
 			}
+			set_variable = { weekly_funds_requirement = 9 }
+			set_variable = { xp_gain_loc = 0.2 }
+			set_variable = { weekly_funds_requirement_loc = weekly_funds_requirement }
+			divide_variable = { weekly_funds_requirement_loc = 7 }
+			set_variable = { total_campaign_xp = 0 }
 		}
-		set_variable = { weekly_funds_requirement = 9 }
-		set_variable = { xp_gain_loc = 0.2 }
-		set_variable = { weekly_funds_requirement_loc = weekly_funds_requirement }
-		divide_variable = { weekly_funds_requirement_loc = 7 }
-		set_variable = { total_campaign_xp = 0 }
-	}
-	#Setup AMO
-	mio:RUS_amo_organisation = {
-		set_variable = { CIC_bonus = 500 }
-		set_variable = { total_campaign_CIC = 0 }
-	}
-	mio:RUS_amo_organisation_non_nsb = {
-		set_variable = { CIC_bonus = 500 }
-		set_variable = { total_campaign_CIC = 0 }
-	}
-	#Setup Gamayun
-	mio:RUS_gamayun_organisation = {
-		set_variable = { Civ_chance_loc = 33 }
-		set_variable = { Mil_chance_loc = 33 }
-		set_variable = { Dockyard_chance_loc = 33 }
-		set_variable = { Min_Progress_loc = 0 }
-		set_variable = { Max_Progress_loc = 20 }
-		set_variable = { Min_Days_loc = 160 }
-		set_variable = { Max_Days_loc = 200 }
-		set_variable = { total_campaign_factories = 0 }
-		set_variable = { total_campaign_civs = 0 }
-		set_variable = { total_campaign_mils = 0 }
-		set_variable = { total_campaign_dockyards = 0 }
-		set_variable = { total_campaign_factory_progress = 0 }
-		set_variable = { average_campaign_factory_progress = 0 }
-	}
-	#Setup AV
-	mio:RUS_av_organisation = {
-		set_variable = { Funds_Bonus = 1.00 }
-		set_variable = { Weekly_funds_decay = 0.03 }
-		set_variable = { Number_of_funds_decay_granted = 1 }
-		set_variable = { Funds_Bonus_loc = 100 }
-		set_variable = { Weekly_funds_decay_loc = 3 }
-		set_variable = { total_campaign_funds_bonus = 0 }
-	}
-	#Setup TsTZ
-	mio:RUS_tstz_organisation = {
-		set_variable = { tstz_eff_cap_counter = 9 }
-		set_variable = { tstz_eff_gro_counter = 9 }
-		set_variable = { tstz_resources_counter = 9 }
-		set_variable = { tstz_conversion_counter = 9 }
+		#Setup AMO
+		mio:RUS_amo_organisation = {
+			set_variable = { CIC_bonus = 500 }
+			set_variable = { total_campaign_CIC = 0 }
+		}
+		mio:RUS_amo_organisation_non_nsb = {
+			set_variable = { CIC_bonus = 500 }
+			set_variable = { total_campaign_CIC = 0 }
+		}
+		#Setup Gamayun
+		mio:RUS_gamayun_organisation = {
+			set_variable = { Civ_chance_loc = 33 }
+			set_variable = { Mil_chance_loc = 33 }
+			set_variable = { Dockyard_chance_loc = 33 }
+			set_variable = { Min_Progress_loc = 0 }
+			set_variable = { Max_Progress_loc = 20 }
+			set_variable = { Min_Days_loc = 160 }
+			set_variable = { Max_Days_loc = 200 }
+			set_variable = { total_campaign_factories = 0 }
+			set_variable = { total_campaign_civs = 0 }
+			set_variable = { total_campaign_mils = 0 }
+			set_variable = { total_campaign_dockyards = 0 }
+			set_variable = { total_campaign_factory_progress = 0 }
+			set_variable = { average_campaign_factory_progress = 0 }
+		}
+		#Setup AV
+		mio:RUS_av_organisation = {
+			set_variable = { Funds_Bonus = 1.00 }
+			set_variable = { Weekly_funds_decay = 0.03 }
+			set_variable = { Number_of_funds_decay_granted = 1 }
+			set_variable = { Funds_Bonus_loc = 100 }
+			set_variable = { Weekly_funds_decay_loc = 3 }
+			set_variable = { total_campaign_funds_bonus = 0 }
+		}
+		#Setup TsTZ
+		mio:RUS_tstz_organisation = {
+			set_variable = { tstz_eff_cap_counter = 9 }
+			set_variable = { tstz_eff_gro_counter = 9 }
+			set_variable = { tstz_resources_counter = 9 }
+			set_variable = { tstz_conversion_counter = 9 }
+		}
 	}
 }
 
@@ -9089,137 +9102,201 @@ RUS_unlock_as_trait = {
 }
 
 RUS_set_up_peace_conference_with_germany = {
-	RUS = {
-		every_owned_state = {
-			limit = {
-				OR = {
-					NOT = {
-						region = 40 #Transvolga
-						region = 132 #Northern Russia
-						region = 133 #Central Russia
-						region = 135 #North Caucasus
-						region = 150 #Arctic Russia
-						AND = {
-							region = 137 #Caspian Lowlands
-							NOT = { check_variable = { annexation_target = 810.id } } #Alash-kala
-						}
-						region = 256 #Ural Mountains
-						is_siberia = yes
-						is_russian_far_east = yes
-					}
-					any_country_with_core = {
-						has_war_with = RUS
-						NOT = { original_tag = RUS }
-						NOT = { original_tag = RSA }
-						NOT = { original_tag = FER }
-					}
-					any_of_scopes = {
-						array = RUS.enemies
-						NOT = { original_tag = RUS }
-						NOT = { original_tag = RSA }
-						NOT = { original_tag = FER }
-						OR = {
-							PREV = { is_claimed_by = PREV }
-							PREV = { has_variable = ambition_area_@PREV }
-						}
-					}
-				}
-			}
-			set_state_flag = RUS_to_peace_conference
+	if = {
+		limit = {
+			NOT = { country_exists = RSA }
+			RUS = { has_idea = RUS_patriotic_war_3 }
 		}
+		set_global_flag = RUS_peace_refused_by_player
 	}
-
-	### handle FER
-	FER = {
-		if = {
-			limit = {
-				exists = yes
-				has_war_with = RUS
-			}
-			set_temp_variable = { target = FER }
-			every_controlled_state = {
+	else = {
+		RUS = {
+			every_owned_state = {
 				limit = {
-					owner = { is_ally_with = RUS }
-					any_neighbor_state = {
-						impassable = no
-						OR = {
-							is_coastal = yes
-							owner = { is_ally_with = FER }
-							controller = { is_ally_with = FER }
+					OR = {
+						NOT = {
+							region = 40 #Transvolga
+							region = 132 #Northern Russia
+							region = 133 #Central Russia
+							region = 135 #North Caucasus
+							region = 150 #Arctic Russia
+							AND = {
+								region = 137 #Caspian Lowlands
+								NOT = { check_variable = { annexation_target = 810.id } } #Alash-kala
+							}
+							region = 256 #Ural Mountains
+							is_siberia = yes
+							is_russian_far_east = yes
+						}
+						AND = {
+							is_core_of = MNR
+							GER = { has_completed_focus = GER_clash_of_civilisations }
+						}
+						any_country_with_core = {
+							has_war_with = RUS
+							NOT = { original_tag = RUS }
+							NOT = { original_tag = RSA }
+							NOT = { original_tag = FER }
+						}
+						any_of_scopes = {
+							array = RUS.enemies
+							NOT = { original_tag = RUS }
+							NOT = { original_tag = RSA }
+							NOT = { original_tag = FER }
+							OR = {
+								PREV = { is_claimed_by = PREV }
+								PREV = { has_variable = ambition_area_@PREV }
+							}
 						}
 					}
-					NOT = { has_state_flag = RUS_to_peace_conference }
 				}
+				set_state_flag = RUS_to_peace_conference
+			}
+		}
+
+		### handle FER
+		FER = {
+			if = {
+				limit = {
+					exists = yes
+					has_war_with = RUS
+				}
+				set_temp_variable = { target = FER }
+				every_controlled_state = {
+					limit = {
+						owner = { is_ally_with = RUS }
+						any_neighbor_state = {
+							impassable = no
+							OR = {
+								is_coastal = yes
+								owner = { is_ally_with = FER }
+								controller = { is_ally_with = FER }
+							}
+						}
+						NOT = { has_state_flag = RUS_to_peace_conference }
+					}
+					transfer_state_during_war = yes
+				}
+			}
+		}
+
+		### handle RSA
+		if = {
+			limit = { NOT = { country_exists = RSA } }
+			set_temp_variable = { RUS_set_up_defeated_russia = 1 }
+		}
+		RUS = {
+			delete_unit = { disband = yes }
+			set_temp_variable = { target = RSA }
+			every_owned_state = {
+				limit = { NOT = { has_state_flag = RUS_to_peace_conference } }
+				add_core_of = var:target
+				remove_claim_by = var:target
 				transfer_state_during_war = yes
 			}
-		}
-	}
-
-	### handle RSA
-	if = {
-		limit = { NOT = { country_exists = RSA } }
-		set_temp_variable = { RUS_set_up_defeated_russia = 1 }
-	}
-	RUS = {
-		delete_unit = { disband = yes }
-		set_temp_variable = { target = RSA }
-		every_owned_state = {
-			limit = { NOT = { has_state_flag = RUS_to_peace_conference } }
-			add_core_of = var:target
-			remove_claim_by = var:target
-			transfer_state_during_war = yes
+			if = {
+				limit = { NOT = { country_exists = FER } }
+				if = {
+					limit = { RSA = { is_ai = yes } }
+					send_equipment_fraction = { target = RSA value = 0.8 }
+				}
+				else = {
+					send_equipment_fraction = { target = RSA value = 0.3 }
+				}
+			}
+			else_if = {
+				limit = { RSA = { is_ai = yes } }
+				send_equipment_fraction = { target = RSA value = 0.6 }
+			}
+			else = {
+				send_equipment_fraction = { target = RSA value = 0.2 }
+			}
+			transfer_navy = { target = RSA }
 		}
 		if = {
-			limit = { NOT = { country_exists = FER } }
-			if = {
-				limit = { RSA = { is_ai = yes } }
-				send_equipment_fraction = { target = RSA value = 0.8 }
+			limit = { has_variable = RUS_set_up_defeated_russia }
+			RUS = {
+				RSA = { transfer_technology_without_doctrines = yes }
+				RUS_nikolay_martyanov = { set_nationality = RSA }
+				if = {
+					limit = { has_country_flag = RUS_semyonov_killed }
+					RUS_pavel_bermondt_avalov = { set_nationality = RSA }
+				}
 			}
-			else = {
-				send_equipment_fraction = { target = RSA value = 0.3 }
-			}
-		}
-		else_if = {
-			limit = { RSA = { is_ai = yes } }
-			send_equipment_fraction = { target = RSA value = 0.6 }
-		}
-		else = {
-			send_equipment_fraction = { target = RSA value = 0.2 }
-		}
-		transfer_navy = { target = RSA }
-	}
-	if = {
-		limit = { has_variable = RUS_set_up_defeated_russia }
-		RUS = {
-			RSA = { transfer_technology_without_doctrines = yes }
-			RUS_nikolay_martyanov = { set_nationality = RSA }
-			if = {
-				limit = { has_country_flag = RUS_semyonov_killed }
-				RUS_pavel_bermondt_avalov = { set_nationality = RSA }
-			}
-		}
-		RSA = {
-			RUS_setup_demrus_postwar = yes
-			if = {
-				limit = {
-					GER = {
-						OR = {
-							has_completed_focus = GER_clash_of_civilisations
-							has_country_leader = { character = GER_max_bauer }
+			RSA = {
+				RUS_setup_demrus_postwar = yes
+				if = {
+					limit = {
+						GER = {
+							OR = {
+								has_completed_focus = GER_clash_of_civilisations
+								has_country_leader = { character = GER_max_bauer }
+							}
 						}
 					}
+					add_ideas = RUS_treaty_of_moscow_2
 				}
-				add_ideas = RUS_treaty_of_moscow_2
-			}
-			else = {
-				add_ideas = RUS_treaty_of_moscow
+				else = {
+					add_ideas = RUS_treaty_of_moscow
+				}
 			}
 		}
+		else = {
+			RSA = {
+				RUS_setup_demrus_postwar = yes
+				remove_puppet_and_leave_faction = yes
+				separate_peace_all_wars = yes
+				if = {
+					limit = {
+						GER = {
+							OR = {
+								has_completed_focus = GER_clash_of_civilisations
+								has_country_leader = { character = GER_max_bauer }
+							}
+						}
+					}
+					add_ideas = RUS_treaty_of_moscow_2
+				}
+				else = {
+					add_ideas = RUS_treaty_of_moscow
+				}
+				if = {
+					limit = { owns_state = 961 } #Chechnya
+					give_resource_rights = {
+						receiver = ROOT
+						state = 961
+						resources = { oil }
+					}
+				}
+				if = {
+					limit = { owns_state = 232 } #Dagestan
+					give_resource_rights = {
+						receiver = ROOT
+						state = 232
+						resources = { oil }
+					}
+				}
+
+				#If FER agreed to join Boldyrev, annex them into RSA
+				if = {
+					limit = { NOT = { has_global_flag = RUS_boldyrev_semyonov_pact } }
+					FER = { country_event = { id = fer.52 days = 7 } }
+				}
+				else = {
+					FER = { country_event = { id = rsa.20 days = 7 } }
+				}
+			}
+		}
+		if = {
+			limit = { RUS = { has_idea = RUS_patriotic_war_3 } }
+			set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
+			add_to_faction = RSA
+		}
+
+		### news event
+		news_event = { id = rusnews.13 days = 2 }
+
+		### cleanup
+		every_state = { clr_state_flag = RUS_to_peace_conference }
 	}
-
-	### news event
-	news_event = { id = rusnews.13 days = 2 }
-
-	### cleanup
-	every_state = { clr_state_flag = RUS_to_peace_conference }
 }

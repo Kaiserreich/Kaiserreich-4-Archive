@@ -1,4 +1,14 @@
 on_actions = {
+	on_startup = {
+		effect = {
+
+			#Coalitions
+			HOL = {
+				set_temp_variable = { coalition_partner_var = token:market_liberal }
+				add_to_coalition = yes
+			}
+		}
+	}
 
 	# ROOT is capitulated country, FROM is winner
 	on_capitulation_immediate = {
@@ -53,18 +63,44 @@ on_actions = {
 							}
 						}
 					}
-					DEI = { country_event = { id = holex.39 days = 1 } }
+					HOL_set_up_dutch_exiles = yes
 				}
 			}
 		}
 	}
 
-	on_government_change = {
+	on_peaceconference_ended = {
 		effect = {
 			if = {
+				limit = { original_tag = GER }
+				country_event = { id = belind.56 days = 1 }
+			}
+			else_if = {
+				limit = { FROM = { original_tag = GER } }
+				INT = { country_event = { id = belind.56 days = 1 } }
+			}
+		}
+	}
+
+	on_ruling_party_change = {
+		effect = {
+			if = {
+				limit = { tag = BEL }
+				if = {
+					limit = {
+						has_idea = MAF_African_Investments
+						has_socialist_government = yes
+					}
+					remove_ideas = MAF_African_Investments
+				}
+			}
+			else_if = {
 				limit = { tag = HOL }
 				if = {
-					limit = { has_socialist_government = yes }
+					limit = {
+						has_socialist_government = yes
+						previous_government_was_socialist = no
+					}
 					HOL_add_socialist_ideas = yes
 					remove_ideas = {
 						HOL_idea_ambtenarenverbod
@@ -83,6 +119,50 @@ on_actions = {
 				}
 				else = {
 					HOL_remove_socialist_ideas = yes
+				}
+				if = {
+					limit = {
+						has_socialist_government = yes
+						NOT = { has_country_flag = HOL_disabled_indonesian_ambition_areas }
+					}
+					set_country_flag = HOL_disabled_indonesian_ambition_areas
+					every_state = {
+						limit = {
+							OR = {
+								region = 158 #Sunda Islands
+								region = 192 #Sumatra
+								region = 93 #Java & Flores Seas
+								region = 159 #Borneo
+								region = 167 #New Guinea
+								region = 91 #Arafura & Banda Seas
+								region = 99 #Indian Ocean
+								region = 71 #Indian Ocean
+							}
+						}
+						clear_variable = ambition_area_HOL
+					}
+				}
+				else_if = {
+					limit = {
+						has_country_flag = HOL_disabled_indonesian_ambition_areas
+						has_socialist_government = no
+					}
+					clr_country_flag = HOL_disabled_indonesian_ambition_areas
+					every_state = {
+						limit = {
+							OR = {
+								region = 158 #Sunda Islands
+								region = 192 #Sumatra
+								region = 93 #Java & Flores Seas
+								region = 159 #Borneo
+								region = 167 #New Guinea
+								region = 91 #Arafura & Banda Seas
+								region = 99 #Indian Ocean
+								region = 71 #Indian Ocean
+							}
+						}
+						set_variable = { ambition_area_@HOL = 1 }
+					}
 				}
 			}
 		}
@@ -168,23 +248,84 @@ on_actions = {
 		}
 	}
 
-	on_war_relation_added = {
+	#FROM is war target
+	on_declare_war = {
 		effect = {
 			if = {
 				limit = {
-					is_ally_with = INT
+					tag = GER
+					FROM = {
+						tag = BEL
+						is_valid_peace_target = yes
+					}
+				}
+				hidden_effect = {
+					FROM = { activate_mission = BEL_peace_with_germany }
+				}
+			}
+		}
+	}
+
+	on_war = {
+		effect = {
+			if = {
+				limit = {
+					tag = BEL
+					has_war_with = GER
+					is_valid_peace_target = yes
+				}
+				activate_mission = BEL_peace_with_germany
+			}
+		}
+	}
+
+	on_war_relation_added = {
+		effect = {
+			if = {
+				limit = { #if INT and GER go to war, and BEL has neutrality
+					ROOT = {
+						OR = {
+							original_tag = GER
+							tag = INT
+						}
+					}
 					FROM = {
 						OR = {
-							original_tag = HOL
-							is_belgian_tag = yes
+							original_tag = GER
+							tag = INT
+						}
+					}
+					BEL = {
+						OR = {
+							is_faction_leader = yes
+							is_in_faction = no
 						}
 					}
 				}
-				BEL = { country_event = { id = belind.50 days = 1 } }
-				HOL = { country_event = { id = belind.50 days = 1 } }
-				WAL = { country_event = { id = belind.50 days = 1 } }
-				FLA = { country_event = { id = belind.50 days = 1 } }
+				if = {
+					limit = {
+						OR = {
+							GER = {
+								has_authoritarian_government = yes
+							}
+							AND = {
+								GER = { has_authoritarian_government = no }
+								INT = { NOT = { has_government = totalist } }
+							}
+						}
+					}
+					GER = { country_event = { id = belind.55 days = 1 } }
+				}
+				else = {
+					FRA = { country_event = { id = belind.52 days = 1 }}
+				}
 			}
+		}
+	}
+
+	on_weekly_BEL = {
+		effect = {
+			GER = { country_event = bel.73 }
 		}
 	}
 }

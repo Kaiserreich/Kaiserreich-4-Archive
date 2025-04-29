@@ -66,12 +66,17 @@ country_event = {
 		log = "[GetLogInfo]: event austria.4 option austria.4.a"
 		name = austria.4.a
 		if = {
-			limit = { AUS_karl_von_skoda = { is_political_advisor = yes } }
+			limit = { AUS_emil_von_skoda = { is_political_advisor = yes } }
+			set_country_flag = AUS_skoda_hired
+		}
+		AUS_emil_von_skoda = { kill_character = yes }
+		if = {
+			limit = { has_country_flag = AUS_skoda_hired }
 			add_advisor_role = {
-				character = AUS_hans_lauda
+				character = AUS_hans_von_lauda
 				advisor = {
 					slot = political_advisor
-					idea_token = AUS_karl_von_skoda_advisor
+					idea_token = AUS_hans_von_lauda_advisor
 					traits = { KR_war_industrialist }
 				}
 				activate = yes
@@ -79,15 +84,15 @@ country_event = {
 		}
 		else = {
 			add_advisor_role = {
-				character = AUS_hans_lauda
+				character = AUS_hans_von_lauda
 				advisor = {
 					slot = political_advisor
-					idea_token = AUS_karl_von_skoda_advisor
+					idea_token = AUS_hans_von_lauda_advisor
 					traits = { KR_war_industrialist }
 				}
 			}
 		}
-		AUS_karl_von_skoda = { kill_character = yes }
+		clr_country_flag = AUS_skoda_hired
 	}
 }
 
@@ -389,6 +394,14 @@ country_event = {
 	is_triggered_only = yes
 
 	option = {
+		trigger = {
+			SIC = {
+				exists = yes
+				is_subject = no
+				is_in_faction = no
+				NOT = { has_war_with = ROOT }
+			}
+		}
 		log = "[GetLogInfo]: event austria.100 option austria.100.a"
 		name = austria.100.a
 		ai_chance = { base = 40 }
@@ -405,16 +418,19 @@ country_event = {
 	}
 
 	option = {
-		log = "[GetLogInfo]: event austria.100 option austria.100.b"
-		name = austria.100.b
-		ai_chance = {
-			base = 60
-			modifier = {
-				factor = 0
-				ITA = { has_government = national_populist }
+		trigger = {
+			ITA = {
+				exists = yes
+				is_subject = no
+				is_in_faction = no
+				NOT = { has_war_with = ROOT }
+				NOT = { has_government = national_populist }
 			}
 		}
-		set_country_flag = sicilian_disengage
+		log = "[GetLogInfo]: event austria.100 option austria.100.b"
+		name = austria.100.b
+		ai_chance = { base = 60 }
+		set_country_flag = AUS_italy_support_republicans
 		add_stability = 0.05
 	}
 }
@@ -479,6 +495,20 @@ country_event = {
 			target = FROM
 			modifier = AUS_italy_bond
 		}
+		if = {
+			limit = {
+				NOT = { ITA = { has_war_with = SRI } }
+			}
+			diplomatic_relation = {
+				country = ITA
+				relation = non_aggression_pact
+			}
+			give_guarantee = ITA
+			ITA = { give_military_access = AUS }
+		}
+		else = {
+			add_to_faction = ITA
+		}
 	}
 }
 ### Italian Response Bad
@@ -497,6 +527,17 @@ country_event = {
 			target = FROM
 			modifier = AUS_italy_rival
 		}
+		if = {
+			limit = {
+				has_completed_focus = AUS_italy_republic_friendship
+			}
+			uncomplete_national_focus = {
+				focus = AUS_italy_republic_friendship
+				uncomplete_children = yes
+			}
+		}
+		clr_country_flag = AUS_italy_support_republicans
+		set_country_flag = AUS_italy_refused_friendship
 	}
 }
 
@@ -611,22 +652,30 @@ country_event = {
 			modifier = AUS_italy_bond
 		}
 		set_country_flag = sicilian_reengage
-		diplomatic_relation = {
-			country = SIC
-			relation = non_aggression_pact
-		}
-		give_guarantee = SIC
-		SIC = { give_military_access = AUS }
 		if = {
 			limit = {
-				SIC = { has_subject = PAP }
+				NOT = { SIC = { has_war_with = SRI } }
 			}
 			diplomatic_relation = {
-				country = PAP
+				country = SIC
 				relation = non_aggression_pact
 			}
-			give_guarantee = PAP
-			PAP = { give_military_access = AUS }
+			give_guarantee = SIC
+			SIC = { give_military_access = AUS }
+			if = {
+				limit = {
+					SIC = { has_subject = PAP }
+				}
+				diplomatic_relation = {
+					country = PAP
+					relation = non_aggression_pact
+				}
+				give_guarantee = PAP
+				PAP = { give_military_access = AUS }
+			}
+		}
+		else = {
+			add_to_faction = SIC
 		}
 	}
 }
@@ -674,7 +723,7 @@ country_event = {
 		name = aus.tree.4011.a #Brothers in Arms once more!
 		effect_tooltip = { add_to_faction = AUS }
 		AUS = { country_event = aus.tree.4013 }
-		log = "KR_Event_Logging;AUSTRIA IN 2WK;[GetDateText]"
+		log = "KR_Event_Logging;AUSTRIA IN 2WK"
 	}
 	option = {
 		log = "[GetLogInfo]: event aus.tree.4011 option aus.tree.4011.b"

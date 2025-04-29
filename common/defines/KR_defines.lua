@@ -10,14 +10,13 @@ NDefines.NCareerProfile.MOD_STATISTICS_GROUP = "kaiserreich_career_profile"
 NDefines.NCareerProfile.MOD_STATISTICS_GROUP_NAME = "KAISERREICH_CAREER_PROFILE"
 
 -- Game
-NDefines.NGame.SAVE_VERSION = 143											-- Vanilla is 20
+NDefines.NGame.SAVE_VERSION = 144											-- Vanilla is 20
 NDefines.NGame.END_DATE = "1959.1.1.1"										-- Vanilla is 1949.1.1.1
 NDefines.NGame.HANDS_OFF_START_TAG = "BHU"									-- Vanilla is URG
 NDefines.NGame.DECISION_ALERT_TIMEOUT_DAYS = 60								-- Vanilla is 30
 NDefines.NCountry.MIN_STABILITY = -1.0										-- Vanilla is 0.0
 NDefines.NCountry.EVENT_PROCESS_OFFSET = 5									-- Vanilla is 20
 NDefines.NPolitics.BASE_POLITICAL_POWER_INCREASE = 1.5						-- Vanilla is 2
-NDefines.NBuildings.OWNER_CHANGE_EXTRA_SHARED_SLOTS_FACTOR = 1              -- Vanilla is 0.5
 NDefines.NCountry.SPECIAL_FORCES_CAP_BASE = 0.1								-- Vanilla is 0.05
 NDefines.NCountry.SPECIAL_FORCES_CAP_MIN = 32								-- Vanilla is 24
 NDefines.NMilitary.EQUIPMENT_COMBAT_LOSS_FACTOR = 0.45						-- Vanilla is 0.7
@@ -27,9 +26,6 @@ NDefines.NGame.LAG_DAYS_FOR_PAUSE = 60										-- Vanilla is 25
 -- Resistance
 NDefines.NResistance.RESISTANCE_TARGET_MODIFIER_PER_STABILITY_LOSS = 0.1	-- Vanilla is 0.2
 NDefines.NResistance.MAXIMUM_GARRISON_HARDNESS_WHEN_ATTACKED = 0.70         -- vanilla is 0.90
-
--- Annexations
-NDefines.NBuildings.DESTRUCTION_COOLDOWN_IN_WAR = 70						-- Vanilla is 30
 
 -- War Support
 NDefines.NCountry.WAR_SUPPORT_OFFNSIVE_WAR = 0								-- Vanilla is -0.2
@@ -83,6 +79,7 @@ NDefines.NAI.PEACE_AI_EVALUATE_OTHER_ALWAYS = true							-- Vanilla is false
 
 NDefines.NDiplomacy.PEACE_COST_FACTOR_CAPITAL_SHIP_IC = 0.02				-- Vanilla is 0.005
 NDefines.NDiplomacy.PEACE_COST_FACTOR_SCREENING_SHIP_IC = 0.02				-- Vanilla is 0.005
+NDefines.NDiplomacy.PEACE_ACTION_MAX_COST = 99999							-- Vanilla is 9999
 
 -- Volunteers
 NDefines.NAI.SEND_VOLUNTEER_EVAL_BASE_DISTANCE = 1000.0  					-- Vanilla is 175.0
