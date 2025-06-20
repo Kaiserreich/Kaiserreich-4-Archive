@@ -67,7 +67,7 @@ MON_foreign_policy_decisions = {
 		}
 
 		available = {
-			FROM = { has_war_with = TIB }
+			has_global_flag = northwest_conflict_begun
 			has_capitulated = no
 			NOT = { has_non_aggression_pact_with = XSM }
 		}
@@ -84,12 +84,13 @@ MON_foreign_policy_decisions = {
 				is_subject = yes
 				has_capitulated = yes
 				NOT = { can_declare_war_on = FROM }
-				NOT = { FROM = { has_war_with = TIB } }
+				has_country_flag = MON_defeated_in_northwest_war_flag
+				has_global_flag = northwest_conflict_ended
 			}
 		}
 
 		cost = 0
-		days_remove = 25
+		days_remove = 10
 		fire_only_once = yes
 		war_with_target_on_remove = yes
 
@@ -103,10 +104,6 @@ MON_foreign_policy_decisions = {
 			modifier = {
 				factor = 0
 				country_is_in_dangerous_war = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { has_war = no }
 			}
 		}
 
@@ -147,6 +144,7 @@ MON_foreign_policy_decisions = {
 		available = {
 			has_capitulated = no
 			NOT = { is_in_faction_with = var:global.russia }
+			is_neighbor_of = FROM
 		}
 
 		cancel_trigger = {
@@ -155,6 +153,7 @@ MON_foreign_policy_decisions = {
 				is_subject = yes
 				has_capitulated = yes
 				NOT = { can_declare_war_on = FROM }
+				NOT = { is_neighbor_of = FROM }
 			}
 		}
 
@@ -176,6 +175,21 @@ MON_foreign_policy_decisions = {
 
 		ai_will_do = {
 			base = 0
+			modifier = {
+				factor = 0
+				OR = {
+					country_has_any_active_threat = yes
+					FROM = { dont_start_major_faction_wars = yes }
+					FROM = { default_attack_AI_trigger = yes } #Ai will avoid striking opponent that is way stronger.
+				}
+			}
+			modifier = {
+				factor = 0
+				FROM = {
+					tag = RUS
+					surrender_progress < 0.25
+				}
+			}
 			modifier = {
 				add = 100
 				#Mongolia will attack if they outnumber their opponent by more than 2x
@@ -201,21 +215,6 @@ MON_foreign_policy_decisions = {
 				add = 100
 				#Mongolia will always strike if they meet the below checks and their opponent is down bad.
 				FROM = { surrender_progress > 0.65 }
-			}
-			modifier = {
-				factor = 0
-				OR = {
-					country_has_any_active_threat = yes
-					FROM = { dont_start_major_faction_wars = yes }
-					FROM = { default_attack_AI_trigger = yes } #Ai will avoid striking opponent that is way stronger.
-				}
-			}
-			modifier = {
-				factor = 0
-				FROM = {
-					tag = RUS
-					surrender_progress < 0.25
-				}
 			}
 		}
 
@@ -286,6 +285,13 @@ MON_foreign_policy_decisions = {
 					FROM = { default_attack_AI_trigger = yes }
 				}
 			}
+			modifier = {
+				factor = 0
+				FROM = {
+					tag = RUS
+					surrender_progress < 0.25
+				}
+			}
 		}
 
 		cancel_effect = {
@@ -348,6 +354,68 @@ MON_foreign_policy_decisions = {
 		complete_effect = {
 			log = "[GetLogRoot]: Decision complete MON_declare_pan_mongol_state_decision"
 			country_event = mon.184
+		}
+	}
+
+	MON_join_co_pro = {
+		icon = eng_trade_unions_support
+
+		allowed = { tag = MON }
+
+		available = {
+			has_global_flag = northwest_conflict_ended
+			OR = {
+				has_war_with = CHN
+				custom_trigger_tooltip = {
+					tooltip = china_has_war_with_CUF_tt
+					has_war_with = CUF
+				}
+				AND = {
+					FNG = { is_in_faction_with = JAP }
+					FNG = { china_is_the_unifier_of_china_trigger = yes }
+				}
+			}
+			any_neighbor_country = {
+				is_in_faction_with = JAP
+			}
+			at_peace_or_same_enemies_as_FROM = yes
+		}
+
+		visible = {
+			is_subject = no
+			is_in_faction = no
+			has_completed_focus = MON_the_khanate_unshackled
+			NOT = { has_global_flag = JAP_defeated_by_china }
+			FROM = {
+				is_faction_leader = yes
+				NOT = { has_war_with = ROOT }
+			}
+		}
+
+		targets = { JAP }
+		target_root_trigger = {
+			has_completed_focus = MON_the_khanate_unshackled
+		}
+		target_trigger = {
+			FROM = { is_subject = no }
+			FROM = { is_faction_leader = yes }
+			NOT = { has_war_with = FROM }
+		}
+
+		cost = 0
+		fire_only_once = yes
+
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				FROM = { surrender_progress > 0.1 } #Wont join if Japan is being invaded
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete MON_join_co_pro"
+			FROM = { ask_to_join_faction = yes }
 		}
 	}
 }

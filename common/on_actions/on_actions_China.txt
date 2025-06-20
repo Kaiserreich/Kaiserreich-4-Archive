@@ -1,12 +1,8 @@
 on_actions = {
 	on_daily = {
 		effect = {
-			### Update GUI automatically once China is on fire ###
 			if = {
-				limit = {
-					NOT = { has_global_flag = CHN_still_under_zhili }
-					tag = CHN
-				}
+				limit = { has_country_flag = china_alignment_gui_visibility }
 				CHN_calculate_china_alignment_gui_effect = yes
 				CHN_update_china_alignment_gui = yes
 			}
@@ -79,37 +75,8 @@ on_actions = {
 			QIE = { set_potential_national_government = yes }
 
 			# Save LEP and CHI as SZH and LKT - needed for alignment scripted GUI
-
 			LEP = { save_global_event_target_as = SZH_leader }
 			CHI = { save_global_event_target_as = LKT_leader }
-
-			### Setup Alignment Scripted GUI ###
-			# Create China Alignment Leaders Array
-			add_to_array = { global.china_alignment_leaders = LKT } #Left Kuomintang
-			add_to_array = { global.china_alignment_leaders = AGJ } #Anguojun
-			add_to_array = { global.china_alignment_leaders = NZH } #North Zhili
-
-			# Create China Alignment Tokens Array
-			add_to_array = { global.china_alignment_tokens = token:left_kuomintang }
-			add_to_array = { global.china_alignment_tokens = token:fengtian }
-			add_to_array = { global.china_alignment_tokens = token:northern_zhili }
-
-			for_each_scope_loop = {
-				array = global.china_tags_array
-				if = {
-					limit = {
-						OR = {
-							is_subject_of = NZH
-							is_subject_of = LEP
-						}
-					}
-					add_to_array = { NZH.china_alignment_members = THIS }
-				}
-			}
-			add_to_array = { NZH.china_alignment_members = KUM }
-			CHN = { CHN_update_china_alignment_gui = yes }
-			set_global_flag = CHN_still_under_zhili
-			### End of Alignment Scripted GUI Setup ###
 
 			# Initialise resource decisions for Chinese tags
 			QIE = {
@@ -197,6 +164,16 @@ on_actions = {
 			}
 			YUN = {
 				set_temp_variable = { coalition_partner_var = token:paternal_autocrat }
+				add_to_coalition = yes
+			}
+			FNG = {
+				set_temp_variable = { coalition_partner_var = token:authoritarian_democrat }
+				add_to_coalition = yes
+			}
+			SZC = {
+				set_temp_variable = { coalition_partner_var = token:market_liberal }
+				add_to_coalition = yes
+				set_temp_variable = { coalition_partner_var = token:social_conservative }
 				add_to_coalition = yes
 			}
 
@@ -396,36 +373,6 @@ on_actions = {
 			else_if = {
 				limit = { FROM = { tag = QIE } }
 				QIE_enable_manchu_qing_alignment = yes
-				if = {
-					limit = {
-						ANQ = { has_cosmetic_tag = LSEP_QIE }
-					}
-					ANQ = { set_cosmetic_tag = LSEP_REP }
-				}
-				if = {
-					limit = {
-						HNN = { has_cosmetic_tag = HNN_zhili_monarchy }
-					}
-					HNN = { set_cosmetic_tag = HNN_zhili_republic }
-				}
-				if = {
-					limit = {
-						LEP = { has_cosmetic_tag = LSEP_QIE }
-					}
-					LEP = { set_cosmetic_tag = LSEP_REP }
-				}
-				else_if = {
-					limit = {
-						LEP = { has_cosmetic_tag = LEP_LEP }
-					}
-					LEP = { set_cosmetic_tag = LEP_LEP_REP }
-				}
-				if = {
-					limit = {
-						SHD = { china_is_aligned_with_zhili = yes }
-					}
-					SHD = { set_cosmetic_tag = SHD_REP }
-				}
 			}
 			# Kuomintang Exiles arrive in SHX
 			else_if = {
@@ -704,10 +651,8 @@ on_actions = {
 			if = {
 				limit = {
 					FROM = { has_character = HNN_zhao_hengti }
-					ROOT = {
-						tag = QIE
-						NOT = { has_country_leader = { character = QIE_aisin_gioro_puyi } }
-					}
+					tag = QIE
+					NOT = { has_country_leader = { character = QIE_aisin_gioro_puyi } }
 				}
 				set_temp_variable = { QIE_zhao_home = FROM }
 				FROM = { save_event_target_as = zhao_home }
@@ -747,6 +692,7 @@ on_actions = {
 				limit = {
 					num_subjects > 0
 					is_chinese_tag = yes
+					NOT = { is_in_faction_with = CUF } #Governments in the United Front stay united.
 					FROM = { is_chinese_tag = yes }
 				}
 				every_subject_country = {
@@ -786,7 +732,7 @@ on_actions = {
 					FROM = { owns_state = 613 } #Nanjing
 				}
 				clr_global_flag = LEP_wuxi_vp_increased
-				add_victory_points = { province = 10076 value = -10 }
+				add_victory_points = { province = 10076 value = -5 }
 			}
 
 			# logging
@@ -1588,6 +1534,64 @@ on_actions = {
 				}
 				country_event = { id = shx_endgame.1 days = 3 } #A Rising Power in the North
 			}
+
+			#End of Northwestern Conflict if player ignored surrender event or ai accidentally annexed a tag
+			if = {
+				limit = {
+					OR = {
+						tag = MON
+						tag = TIB
+						tag = XSM
+					}
+					OR = {
+						FROM = { tag = MON }
+						FROM = { tag = TIB }
+						FROM = { tag = XSM }
+					}
+					has_global_flag = northwest_conflict_begun
+					NOT = { has_global_flag = northwest_conflict_ended }
+					NOT = { TIB = { has_war_with = XSM } }
+					NOT = { MON = { has_war_with = XSM } }
+					OR = {
+						MON = { has_country_flag = MON_defeated_in_northwest_war_flag }
+						NOT = { country_exists = MON }
+						NOT = { country_exists = XSM }
+					}
+				}
+				set_global_flag = northwest_conflict_ended
+				TIB = { country_event = { id = tib.2 days = 370 } }
+				XSM = { country_event = { id = mac.208 days = 3 } }
+			}
+
+			#Gives Chinese fleet (usually QIE) to someone if it wasn't claimed already in the peace conference.
+			if = {
+				limit = {
+					FROM = {
+						is_chinese_tag = yes
+						has_navy_size = { size > 0 }
+					}
+				}
+				if = {
+					#Goes to CHN first since that's the strongest/most legitimate tag
+					limit = { country_exists = CHN }
+					CHN = { FROM = { transfer_navy = { target = PREV } } }
+				}
+				else_if = {
+					#Then goes to the owner of Beijing
+					limit = { var:608.owner = { is_chinese_tag = yes } }
+					608.owner = { FROM = { transfer_navy = { target = PREV } } }
+				}
+				else_if = {
+					#Then goes to the owner of Hangzhou
+					limit = { var:596.owner = { is_chinese_tag = yes } }
+					596.owner = { FROM = { transfer_navy = { target = PREV } } }
+				}
+				else_if = {
+					#Then goes to the owner of Guangzhou
+					limit = { var:592.owner = { is_chinese_tag = yes } }
+					592.owner = { FROM = { transfer_navy = { target = PREV } } }
+				}
+			}
 		}
 	}
 
@@ -2139,7 +2143,6 @@ on_actions = {
 			}
 			else_if = {
 				limit = { tag = FNG }
-				country_event = fngsystem.15
 				if = { #Cuts Prince Kan'in Kotohito's Visit short
 					limit = { has_country_flag = FNG_prince_visit }
 					country_event = { id = fengtian.1500 hours = 12 }
@@ -2437,21 +2440,6 @@ on_actions = {
 
 			country_event = { id = lngupc.111 hours = 8 } #Country joins the UPC after finishing its wars
 
-			#End of Northwestern Conflict (Moved from on_peaceconference_ended because that does not fire if this war ends through scripted peace. Possible issues: can NW war last so long it merges with other wars? Does this still trigger if XSM dies?)
-			if = {
-				limit = {
-					tag = XSM
-					has_global_flag = northwest_conflict_begun
-					NOT = {
-						has_global_flag = northwest_conflict_ended
-						TIB = { has_war_with = XSM }
-						MON = { has_war_with = XSM }
-					}
-				}
-				set_global_flag = northwest_conflict_ended
-				TIB = { country_event = { id = tib.2 days = 370 } }
-				XSM = { country_event = { id = mac.208 days = 3 } }
-			}
 		}
 	}
 }

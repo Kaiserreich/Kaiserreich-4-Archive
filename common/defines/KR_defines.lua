@@ -2,7 +2,7 @@
 -- Commented out items are under re-evaluation
 
 -- Links
-NDefines.NWiki.BASE_URL = "https://kaiserreich.fandom.com/wiki/The_Kaiserreich_Wiki"
+NDefines.NWiki.BASE_URL = "https://kaiserreich.wiki/The_Kaiserreich_Wiki"
 -- Vanilla is "http://www.hoi4wiki.com/"
 
 -- Career Profile

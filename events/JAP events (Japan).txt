@@ -1997,7 +1997,12 @@ country_event = { #dem puppet GetYear general elections
 			elections_allowed = yes
 			election_frequency = 48
 		}
-		activate_advisor = JAP_hatoyama_ichiro_sic
+		if = {
+			limit = {
+				NOT = { has_cosmetic_tag = JAP_republic }
+			}
+			activate_advisor = JAP_hatoyama_ichiro_sic
+		}
 	}
 
 	option = { #Jiyuto - marklib
@@ -2017,7 +2022,12 @@ country_event = { #dem puppet GetYear general elections
 			elections_allowed = yes
 			election_frequency = 48
 		}
-		activate_advisor = JAP_yoshida_shigeru_sic
+		if = {
+			limit = {
+				NOT = { has_cosmetic_tag = JAP_republic }
+			}
+			activate_advisor = JAP_yoshida_shigeru_sic
+		}
 	}
 
 	option = { #Shakaito - socdem
@@ -2037,7 +2047,12 @@ country_event = { #dem puppet GetYear general elections
 			elections_allowed = yes
 			election_frequency = 48
 		}
-		activate_advisor = JAP_katayama_tetsu_sic
+		if = {
+			limit = {
+				NOT = { has_cosmetic_tag = JAP_republic }
+			}
+			activate_advisor = JAP_katayama_tetsu_sic
+		}
 	}
 }
 
@@ -2051,13 +2066,18 @@ country_event = { #Fate of Hirohito - Democratic
 
 	trigger = {
 		has_subject = JAP
-		has_democratic_government = yes
+		has_socialist_government = no
 	}
 
 	option = {
 		log = "[GetLogInfo]: event japdom.240 option japdom.240.a"
 		name = japdom.240.a
-		ai_chance = { base = 80 }
+		ai_chance = { base = 85 }
+		if = {
+			limit = { has_elected_government = yes }
+			add_stability = -0.05 #Representing public disapproval over not "punishing" the royals for the costly invasion needed to capitulate Japan
+			custom_effect_tooltip = tooltip_white_line
+		}
 		JAP = {
 			add_stability = 0.1
 			add_timed_idea = {
@@ -2070,7 +2090,7 @@ country_event = { #Fate of Hirohito - Democratic
 	option = {
 		log = "[GetLogInfo]: event japdom.240 option japdom.240.b"
 		name = japdom.240.b
-		ai_chance = { base = 15 }
+		ai_chance = { base = 20 }
 		JAP = {
 			JAP_regent_effect = yes
 			custom_effect_tooltip = tooltip_white_line
@@ -2082,6 +2102,35 @@ country_event = { #Fate of Hirohito - Democratic
 			deactivate_advisor = JAP_higashikuni_naruhiko_sic
 			custom_effect_tooltip = tooltip_white_line
 			activate_advisor = JAP_kishi_nobusuke_sic
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event japdom.240 option japdom.240.c"
+		name = japdom.240.c
+		ai_chance = {
+			base = 5
+			modifier = {
+				add = 40
+				is_american_tag = yes
+			}
+		}
+		if = {
+			limit = { has_elected_government = yes }
+			add_stability = 0.05
+			custom_effect_tooltip = tooltip_white_line
+		}
+		JAP = {
+			JAP_republic_effect = yes
+			custom_effect_tooltip = tooltip_white_line
+			add_ideas = JAP_unpopular_republic_idea_1
+			custom_effect_tooltip = tooltip_white_line
+			deactivate_advisor = JAP_higashikuni_naruhiko_sic
+			custom_effect_tooltip = tooltip_white_line
+			activate_advisor = JAP_imperial_diet_sic
+		}
+		hidden_effect = {
+			JAP = { news_event = { id = worldnews.245 days = 1 } }
 		}
 	}
 }
@@ -4787,77 +4836,32 @@ country_event = { #hidden event to fire the peace mission
 			is_ai = no
 			NOT = { has_global_flag = JAP_will_surrender }
 		}
-		KOR = {
-			any_core_state = { is_owned_by_ROOT_or_ally = yes }
-			all_core_state = {
+		JAP_fading_sun_korea_fully_controlled = no
+		JAP_fading_sun_manchuria_not_capitulated = no
+		OR = {
+			var:global.russia = {
+				has_war_with = ROOT
+				is_valid_peace_target = yes
+				set_temp_variable = { at_war_with_russia = 1 }
+			}
+			any_enemy_country = {
+				is_chinese_tag = yes
 				OR = {
-					is_owned_by_ROOT_or_ally = no
-					is_controlled_by_ROOT_or_ally = no
+					china_is_potential_government = yes
+					is_faction_leader = yes #United Front
 				}
+				is_valid_peace_target = yes
+				set_temp_variable = { at_war_with_china = 1 }
 			}
 		}
-		OR = {
-			surrender_progress > 0.3
-			AND = {
-				any_enemy_country = {
-					is_chinese_tag = yes
-					OR = {
-						china_is_potential_government = yes
-						is_faction_leader = yes #United Front
-					}
-					is_valid_peace_target = yes
-				}
-				if = {
-					limit = { is_ally_with = MAN }
-					MAN = { has_capitulated = yes }
-				}
-				else_if = {
-					limit = { NOT = { has_war_with = FNG } }
-					OR = {
-						NOT = { country_exists = FNG }
-						FNG = { has_capitulated = yes }
-					}
-				}
-				if = {
-					limit = { is_ally_with = LEC }
-					LEC = { has_capitulated = yes }
-				}
-				NOT = {
-					any_allied_country = {
-						is_tag_in_china_area = yes
-						has_capitulated = no
-					}
-					any_owned_state = {
-						is_china_claim_area = yes
-						NOT = { state = 524 } #Taiwan
-						NOT = { state = 745 } #Dalian
-						is_controlled_by = ROOT
-					}
-				}
-			}
-			AND = {
-				RUS = {
-					has_war_with = ROOT
-					is_valid_peace_target = yes
-				}
-				if = {
-					limit = {
-						country_exists = MAN
-						is_ally_with = MAN
-					}
-					MAN = { has_capitulated = yes }
-				}
-				if = {
-					limit = {
-						RUS = { has_war_with = FNG }
-						FNG = { has_capitulated = yes }
-					}
-				}
-				OR = {
-					NOT = { country_exists = FER }
-					FER = { has_capitulated = yes }
-				}
-			}
+		if = {
+			limit = { has_variable = at_war_with_russia }
+			JAP_fading_sun_far_eastern_republic_not_capitulated = no
+		}
+		if = {
+			limit = { has_variable = at_war_with_china }
+			JAP_fading_sun_controls_major_chinese_city = no
+			JAP_fading_sun_any_chinese_ally_not_capitulated = no
 		}
 	}
 
@@ -4868,15 +4872,18 @@ country_event = { #hidden event to fire the peace mission
 	option = {
 		log = "[GetLogInfo]: event japfor.229 option 1"
 		activate_mission = JAP_fading_sun_timer
-		every_enemy_country = {
-			limit = {
-				is_ai = no
-				OR = {
-					is_tag_in_china_area = yes
-					is_russian_tag = yes
+		if = {
+			limit = { is_ai = yes }
+			every_enemy_country = {
+				limit = {
+					is_ai = no
+					OR = {
+						is_tag_in_china_area = yes
+						is_russian_tag = yes
+					}
 				}
+				activate_mission = JAP_fading_sun_timer_enemy
 			}
-			activate_mission = JAP_fading_sun_timer_enemy
 		}
 	}
 }
@@ -6352,6 +6359,7 @@ country_event = { #The American islands are ours!
 		log = "[GetLogInfo]: event japfor.317 option japfor.317.a"
 		name = japfor.317.a
 		add_stability = 0.05
+		clear_decision_attack_AI = yes
 		FROM = {
 			every_owned_state = {
 				limit = { is_american_pacific_islands = yes }
@@ -6401,6 +6409,7 @@ country_event = { #The Americans object
 				strength_ratio = { tag = FROM ratio > 2 }
 			}
 		}
+		clear_decision_attack_AI = yes
 		create_wargoal = {
 			target = FROM
 			type = take_claimed_state
@@ -6425,17 +6434,19 @@ country_event = { #The Americans object
 				}
 			}
 		}
+		clear_decision_attack_AI = yes
 		set_country_flag = JAP_backed_down_pacific
 		add_stability = -0.05
-		every_state = {
-			limit = {
-				NOT = { ROOT = { has_country_flag = JAP_demanding_hawaii_flag } }
-				is_claimed_by = ROOT
-				is_american_pacific_islands = yes
+		if = {
+			limit = { NOT = { has_event_target = JAP_demanded_hawaii } }
+			every_state = {
+				limit = {
+					is_claimed_by = ROOT
+					is_american_pacific_islands = yes
+				}
+				remove_claim_by = ROOT
 			}
-			remove_claim_by = ROOT
 		}
-		clr_country_flag = JAP_demanding_hawaii_flag
 	}
 }
 

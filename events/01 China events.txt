@@ -107,9 +107,9 @@ country_event = { #FROM demands ROOT submit
 					original_tag = ANQ
 				}
 				FROM = {
-					NOT = { check_variable = { country_leader:china_alignment = token:left_kuomintang } }
-					NOT = { check_variable = { country_leader:china_alignment = token:right_kuomintang } }
-					NOT = { check_variable = { country_leader:china_alignment = token:manchu_qing } }
+					china_alignment_left_kuomintang = no
+					china_alignment_right_kuomintang = no
+					china_alignment_manchu_qing = no
 				}
 			}
 			if = {
@@ -122,6 +122,7 @@ country_event = { #FROM demands ROOT submit
 					china_is_aligned_with_zhili = no
 				}
 			}
+			FROM = { china_is_aligned_with_manchu = no }
 		}
 		ai_chance = {
 			base = 20
@@ -348,12 +349,6 @@ country_event = { #FROM demands ROOT submit
 				china_compatible_alignment_to_FROM = no
 			}
 			modifier = {
-				factor = 0.5
-				#Manchu QIE has a disadvantage in convincing warlords to submit.
-				FROM = { china_is_aligned_with_manchu = yes }
-				china_is_aligned_with_manchu = no
-			}
-			modifier = {
 				factor = 2
 				has_opinion = { target = FROM value > 99 }
 			}
@@ -507,6 +502,7 @@ country_event = { #FROM demands ROOT submit
 					AND = { #check for QIE
 						has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_QIE }
 						FROM = { tag = QIE }
+						FROM = { china_is_aligned_with_manchu = no }
 					}
 					AND = { #check for Zhili Exiles
 						has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_ZHL }
@@ -564,6 +560,7 @@ country_event = { #FROM demands ROOT submit
 					AND = { #check for QIE
 						has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_QIE }
 						FROM = { tag = QIE }
+						FROM = { china_is_aligned_with_manchu = no }
 					}
 				}
 			}
@@ -599,6 +596,7 @@ country_event = { #FROM demands ROOT submit
 					AND = { #check for QIE
 						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_QIE }
 						FROM = { tag = QIE }
+						FROM = { china_is_aligned_with_manchu = no }
 					}
 					AND = { #check for Zhili Exiles
 						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_ZHL }
@@ -628,6 +626,10 @@ country_event = { #FROM demands ROOT submit
 					SZC = { exists = no }
 				}
 				LEP = { exists = no }
+			}
+			modifier = {
+				factor = 0
+				FROM = { china_is_the_unifier_of_china_trigger = yes }
 			}
 			modifier = {
 				factor = 0
@@ -939,7 +941,7 @@ country_event = { #FROM wants alliance with ROOT (THIS IS FROM POV OF THE POTENT
 		FROM = {
 			#if = {
 			#	limit = { china_same_alignment_as_PREV = yes }
-			#	var:country_leader = { clear_variable = china_alignment }
+			#	var:country_leader = { china_set_character_alignment_unaligned = yes }
 			#}
 			if = {
 				limit = { is_in_array = { china_possible_allies_array = ROOT } }
@@ -1025,12 +1027,12 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 				factor = 0
 				CHN_no_aligned_unifier_exists_trigger = no
 				china_same_alignment_as_FROM = no
-				NOT = { check_variable = { country_leader:china_alignment = token:southern_zhili } } #Handled seprately because of Ma Ji
+				NOT = { china_alignment_southern_zhili = yes } #Handled seprately because of Ma Ji
 			}
 			modifier = {
 				#Fixes edge case caused by Ma Ji
 				factor = 0
-				check_variable = { country_leader:china_alignment = token:southern_zhili }
+				china_alignment_southern_zhili = yes
 				SZH = {
 					china_is_potential_government = yes
 					exists = yes
@@ -1042,11 +1044,11 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 				factor = 2
 				#If potential leader is owning major cities, will swing odds of alignment
 				FROM = {
-					OR = {
-						owns_state = 592 #Guangzhou
-						owns_state = 608 #Beijing
-						owns_state = 613 #Nanjing
-						owns_state = 1048 #Wuhan
+					owns_any_state_of = {
+						592 #Guangzhou
+						608 #Beijing
+						613 #Nanjing
+						1048 #Wuhan
 					}
 				}
 			}
@@ -1075,10 +1077,10 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 				factor = 0
 				tag = SZC
 				OR = {
-					FROM = { check_variable = { country_leader:china_alignment = token:right_kuomintang } } #Will not join the Right Kuomintang
+					FROM = { china_alignment_right_kuomintang = yes } #Will not join the Right Kuomintang
 					AND = { #Lu Chao will not join the Federalists if CHI exists
 						has_country_leader = { character = SZC_lu_chao }
-						FROM = { check_variable = { country_leader:china_alignment = token:federalists } }
+						FROM = { china_alignment_federalists = yes }
 						CHI = { exists = yes }
 					}
 					AND = {
@@ -1087,7 +1089,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 							has_country_leader = { character = SZC_liu_wenhui }
 							has_country_leader = { character = SZC_deng_xihou }
 						}
-						FROM = { check_variable = { country_leader:china_alignment = token:left_kuomintang } }
+						FROM = { china_alignment_left_kuomintang = yes }
 						event_target:original_liangguang = { GXC_chen_jiongming = { is_dead = no } }
 					}
 				}
@@ -1233,11 +1235,11 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 						NOT = { #Ignore forpol rules under the following conditions to prevent the player from doing stuff they're not supposed to
 							AND = { #Lu Chao is leader and LKMT are FROM
 								has_country_leader = { character = SZC_lu_chao }
-								FROM = { check_variable = { country_leader:china_alignment = token:left_kuomintang } }
+								FROM = { china_alignment_left_kuomintang = yes }
 							}
 							AND = { #Lu Chao is leader, Feds are FROM, and LKMT are dead
 								has_country_leader = { character = SZC_lu_chao }
-								FROM = { check_variable = { country_leader:china_alignment = token:federalists } }
+								FROM = { china_alignment_federalists = yes }
 								CHI = { exists = no }
 							}
 							AND = { #Xiong Kewu, Liu Wenhui, or Deng Xihou are leader and Feds are FROM
@@ -1246,7 +1248,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 									has_country_leader = { character = SZC_liu_wenhui }
 									has_country_leader = { character = SZC_deng_xihou }
 								}
-								FROM = { check_variable = { country_leader:china_alignment = token:federalists } }
+								FROM = { china_alignment_federalists = yes }
 							}
 							AND = { #Xiong Kewu, Liu Wenhui, or Deng Xihou are leader and LKMT are FROM AND Chen Jiongming is not around
 								OR = {
@@ -1254,7 +1256,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 									has_country_leader = { character = SZC_liu_wenhui }
 									has_country_leader = { character = SZC_deng_xihou }
 								}
-								FROM = { check_variable = { country_leader:china_alignment = token:left_kuomintang } }
+								FROM = { china_alignment_left_kuomintang = yes }
 								event_target:original_liangguang = { GXC_chen_jiongming = { is_dead = yes } }
 							}
 						}
@@ -1350,11 +1352,11 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 			modifier = {
 				factor = 0.5
 				#Tags that own a major city are less likely to naturally align.
-				OR = {
-					owns_state = 592 #Guangzhou
-					owns_state = 608 #Beijing
-					owns_state = 613 #Nanjing
-					owns_state = 1048 #Wuhan
+				owns_any_state_of = {
+					592 #Guangzhou
+					608 #Beijing
+					613 #Nanjing
+					1048 #Wuhan
 				}
 			}
 			modifier = {
@@ -1373,41 +1375,41 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 				tag = HNN
 				OR = {
 					AND = { #Zhao Hengti is leader, FROM are the Northern Zhili in Beijing, the other federalists aren't around
-						check_variable = { country_leader:china_alignment = token:federalists }
+						china_alignment_federalists = yes
 						FROM = {
 							tag = QIE
-							check_variable = { country_leader:china_alignment = token:northern_zhili }
+							china_alignment_northern_zhili = yes
 						}
 						NOT = { GXC = { has_country_leader = { character = GXC_chen_jiongming } } }
 						NOT = { SZC = { has_country_leader = { character = GXC_chen_jiongming } } }
 						NOT = { YUN = { has_country_leader = { character = YUN_tang_jiyao } } }
 					}
 					AND = { #Tang Shengzhi is leader and
-						check_variable = { country_leader:china_alignment = token:left_kuomintang }
+						china_alignment_left_kuomintang = yes
 						OR = {
 							AND = { #FROM are the RKMT and the LKMT don't exist
 								NOT = { country_exists = LKT }
-								FROM = { check_variable = { country_leader:china_alignment = token:right_kuomintang } }
+								FROM = { china_alignment_right_kuomintang = yes }
 							}
 							AND = { #FROM are the Federalists and both the LKMT and RKMT don't exist
 								NOT = { country_exists = LKT }
 								NOT = { country_exists = RKT }
-								FROM = { check_variable = { country_leader:china_alignment = token:federalists } }
+								FROM = { china_alignment_federalists = yes }
 							}
 						}
 					}
 					AND = { #Cheng Qian is leader, FROM are the LKMT, and the RKMT don't exist
-						check_variable = { country_leader:china_alignment = token:right_kuomintang }
+						china_alignment_right_kuomintang = yes
 						NOT = { country_exists = RKT }
 						FROM = {
-							check_variable = { country_leader:china_alignment = token:left_kuomintang }
+							china_alignment_left_kuomintang = yes
 						}
 					}
 					AND = { #Tang Xiangming is leader, FROM are the Southern Zhili, and the Northern Zhili don't exist
-						check_variable = { country_leader:china_alignment = token:northern_zhili }
+						china_alignment_northern_zhili = yes
 						NOT = { country_exists = NZH }
 						FROM = {
-							check_variable = { country_leader:china_alignment = token:southern_zhili }
+							china_alignment_southern_zhili = yes
 						}
 					}
 				}
@@ -1419,11 +1421,11 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 				OR = {
 					AND = { #Lu Chao is leader and LKMT are FROM
 						has_country_leader = { character = SZC_lu_chao }
-						FROM = { check_variable = { country_leader:china_alignment = token:left_kuomintang } }
+						FROM = { china_alignment_left_kuomintang = yes }
 					}
 					AND = { #Lu Chao is leader, Feds are FROM, and LKMT are dead
 						has_country_leader = { character = SZC_lu_chao }
-						FROM = { check_variable = { country_leader:china_alignment = token:federalists } }
+						FROM = { china_alignment_federalists = yes }
 						CHI = { exists = no }
 					}
 					AND = { #Xiong Kewu, Liu Wenhui, or Deng Xihou are leader and Feds are FROM
@@ -1432,7 +1434,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 							has_country_leader = { character = SZC_liu_wenhui }
 							has_country_leader = { character = SZC_deng_xihou }
 						}
-						FROM = { check_variable = { country_leader:china_alignment = token:federalists } }
+						FROM = { china_alignment_federalists = yes }
 					}
 					AND = { #Xiong Kewu, Liu Wenhui, or Deng Xihou are leader and LKMT are FROM AND Chen Jiongming is not around
 						OR = {
@@ -1440,7 +1442,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 							has_country_leader = { character = SZC_liu_wenhui }
 							has_country_leader = { character = SZC_deng_xihou }
 						}
-						FROM = { check_variable = { country_leader:china_alignment = token:left_kuomintang } }
+						FROM = { china_alignment_left_kuomintang = yes }
 						event_target:original_liangguang = { GXC_chen_jiongming = { is_dead = yes } }
 					}
 				}
@@ -1580,10 +1582,10 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 					AND = {
 						tag = SZC
 						NOT = {
-							FROM = { check_variable = { country_leader:china_alignment = token:right_kuomintang } } #Will not join the Right Kuomintang no matter what rule is set
+							FROM = { china_alignment_right_kuomintang = yes } #Will not join the Right Kuomintang no matter what rule is set
 							AND = { #Lu Chao will not join the Federalists if CHI exists no matter what rule is set
 								has_country_leader = { character = SZC_lu_chao }
-								FROM = { check_variable = { country_leader:china_alignment = token:federalists } }
+								FROM = { china_alignment_federalists = yes }
 								CHI = { exists = yes }
 							}
 							AND = {
@@ -1592,7 +1594,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 									has_country_leader = { character = SZC_liu_wenhui }
 									has_country_leader = { character = SZC_deng_xihou }
 								}
-								FROM = { check_variable = { country_leader:china_alignment = token:left_kuomintang } }
+								FROM = { china_alignment_left_kuomintang = yes }
 								event_target:original_liangguang = { GXC_chen_jiongming = { is_dead = no } }
 							}
 						}
@@ -1668,11 +1670,16 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 					}
 				}
 			}
+			modifier = {
+				#Will always say yes if FROM has already united China
+				factor = 0
+				FROM = { china_is_the_unifier_of_china_trigger = yes }
+			}
 		}
 		set_country_flag = china_refused_alliance_@FROM
 		#if = {
 		#	limit = { china_same_alignment_as_FROM = yes }
-		#	var:country_leader = { clear_variable = china_alignment }
+		#	var:country_leader = { china_set_character_alignment_unaligned = yes }
 		#}
 		if = {
 			limit = { is_in_array = { china_possible_allies_array = FROM } }
@@ -1695,6 +1702,14 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 		}
 		else_if = {
 			limit = {
+				tag = LEP
+				has_cosmetic_tag = LEP_LEP
+				FROM = { has_cosmetic_tag = QIE_government_qing }
+			}
+			set_cosmetic_tag = LEP_LEP_REP
+		}
+		else_if = {
+			limit = {
 				tag = SHD
 				has_country_leader = { character = SHD_qu_yingguang }
 				FROM = { has_cosmetic_tag = QIE_government_qing }
@@ -1703,7 +1718,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 		}
 		else_if = {
 			limit = {
-				tag = SHD
+				tag = HNN
 				has_cosmetic_tag = HNN_zhili_monarchy
 				FROM = { has_cosmetic_tag = QIE_government_qing }
 			}
@@ -1828,7 +1843,7 @@ country_event = { #FROM requests our integration
 			add_political_power = -100
 			#if = {
 			#	limit = { china_same_alignment_as_FROM = yes }
-			#	var:country_leader = { clear_variable = china_alignment }
+			#	var:country_leader = { china_set_character_alignment_unaligned = yes }
 			#}
 		}
 		set_country_flag = china_revolted_against_@FROM
@@ -2914,7 +2929,7 @@ country_event = { #The Central Government Demands Beijing
 			add_political_power = -200
 			#if = {
 			#	limit = { china_same_alignment_as_FROM = yes }
-			#	var:country_leader = { clear_variable = china_alignment }
+			#	var:country_leader = { china_set_character_alignment_unaligned = yes }
 			#}
 		}
 		set_country_flag = china_revolted_against_@FROM
@@ -3119,6 +3134,7 @@ country_event = { #MON/TIB/ETS: China demands our annexation
 				set_autonomy = {
 					target = ROOT
 					autonomy_state = chinese_suzerainty
+					end_wars = no
 				}
 			}
 		}
@@ -3322,6 +3338,7 @@ country_event = { #China: FROM demands autonomy
 			set_autonomy = {
 				target = FROM
 				autonomy_state = chinese_suzerainty
+				end_wars = no
 			}
 		}
 		FROM = { country_event = { id = china_events.103 days = 1 } } #MON/TIB/ETS: China accepts autonomy
@@ -3427,6 +3444,7 @@ country_event = { #MON/TIB/ETS: China wants Han lands
 				set_autonomy = {
 					target = PREV
 					autonomy_state = chinese_suzerainty
+					end_wars = no
 				}
 			}
 			country_event = china_events.105 #China: FROM returns lands
@@ -3732,6 +3750,7 @@ country_event = { #MON/TIB/ETS: repeating event to exhaust options
 				set_autonomy = {
 					target = ROOT
 					autonomy_state = chinese_suzerainty
+					end_wars = no
 				}
 			}
 		}
@@ -5191,19 +5210,34 @@ country_event = { #Establishing a Mongolian Administration
 			add_compliance = -5
 			add_resistance = 5
 		}
+		hidden_effect = {
+			every_state = {
+				limit = {
+					NOT = { is_owned_by = ROOT }
+					OR = {
+						region = 152 #Outer Mongolia
+						region = 222 #Inner Mongolia
+						state = 610 #Rehe
+						state = 715 #Liaobei
+						state = 884 #Xing'an
+					}
+				}
+				ROOT = { activate_targeted_decision = { target = PREV decision = china_expand_autonomous_region } } #In case you acquire more territory. Broad in case you acquire inner Mongolia second.
+			}
+		}
 	}
 	option = {
 		log = "[GetLogInfo]: event china_events.150 option china_events.150.b" #Establish both an Inner and Outer Mongolian Autonomous Region.
 		name = china_events.150.b
 		trigger = {
-			OR = {
-				owns_state = 348 #Ningxia
-				owns_state = 616 #Ordos
-				owns_state = 621 #Suiyuan
-				owns_state = 612 #Chahar
-				owns_state = 610 #Rehe
-				owns_state = 715 #Liaobei
-				owns_state = 884 #Xing'an
+			owns_any_state_of = {
+				348 #Ningxia
+				616 #Ordos
+				621 #Suiyuan
+				612 #Chahar
+				610 #Rehe
+				715 #Liaobei
+				884 #Xing'an
 			}
 		}
 		every_owned_state = {
@@ -5222,6 +5256,20 @@ country_event = { #Establishing a Mongolian Administration
 			add_dynamic_modifier = {
 				modifier = CHN_autonomous_region_modifier
 				scope = THIS
+			}
+			hidden_effect = {
+				every_state = {
+					limit = {
+						OR = {
+							region = 152 #Outer Mongolia
+							region = 222 #Inner Mongolia
+							state = 610 #Rehe
+							state = 715 #Liaobei
+							state = 884 #Xing'an
+						}
+					}
+					ROOT = { activate_targeted_decision = { target = PREV decision = china_expand_autonomous_region } } #In case you acquire more territory.
+				}
 			}
 		}
 	}
@@ -5276,6 +5324,15 @@ country_event = { #Establishing a Xinjiang Administration
 				scope = THIS
 			}
 		}
+		hidden_effect = {
+			every_state = {
+				limit = {
+					NOT = { is_owned_by = ROOT }
+					is_xinjiang = yes
+				}
+				ROOT = { activate_targeted_decision = { target = PREV decision = china_expand_autonomous_region } } #In case you acquire more territory.
+			}
+		}
 	}
 	option = {
 		log = "[GetLogInfo]: event china_events.151 option china_events.151.b" #Xinjiang shall remain a province.
@@ -5300,10 +5357,13 @@ country_event = { #Establishing a Tibetan Administration
 	is_triggered_only = yes
 
 	option = {
-		log = "[GetLogInfo]: event china_events.152 option china_events.152.a" #Authorise the creation of an \"Inner\" Tibet Autonomous Region only.
+		log = "[GetLogInfo]: event china_events.152 option china_events.152.a" #Authorise the creation of an \"Outer\" Tibet Autonomous Region only.
 		name = china_events.152.a
 		every_owned_state = {
-			limit = { is_tibet = yes }
+			limit = {
+				is_tibet = yes
+				NOT = { state = 353 } #Yushu
+			}
 			if = {
 				limit = { has_resistance = yes }
 				add_compliance = 20
@@ -5325,15 +5385,28 @@ country_event = { #Establishing a Tibetan Administration
 			add_compliance = -5
 			add_resistance = 5
 		}
+		hidden_effect = {
+			every_state = {
+				limit = {
+					NOT = { is_owned_by = ROOT }
+					OR = {
+						is_tibet = yes
+						state = 604 #Xining
+						state = 601 #Xikang
+					}
+				}
+				ROOT = { activate_targeted_decision = { target = PREV decision = china_expand_autonomous_region } } #In case you acquire more territory. Broad in case you take inner Tibet and they are like "wait why don't I have an option to expand the autonomous zone?"
+			}
+		}
 	}
 	option = {
-		log = "[GetLogInfo]: event china_events.152 option china_events.152.b" #The Tibet Autonomous Region should be expanded to include \"Outer Tibet\".
+		log = "[GetLogInfo]: event china_events.152 option china_events.152.b" #The Tibet Autonomous Region should be expanded to include \"Inner Tibet\".
 		name = china_events.152.b
 		trigger = {
-			OR = {
-				owns_state = 353 #Yushu
-				owns_state = 604 #Xining
-				owns_state = 601 #Xikang
+			owns_any_state_of = {
+				353 #Yushu
+				604 #Xining
+				601 #Xikang
 			}
 		}
 		every_owned_state = {
@@ -5352,6 +5425,19 @@ country_event = { #Establishing a Tibetan Administration
 			add_dynamic_modifier = {
 				modifier = CHN_autonomous_region_modifier
 				scope = THIS
+			}
+		}
+		hidden_effect = {
+			every_state = {
+				limit = {
+					NOT = { is_owned_by = ROOT }
+					OR = {
+						is_tibet = yes
+						state = 604 #Xining
+						state = 601 #Xikang
+					}
+				}
+				ROOT = { activate_targeted_decision = { target = PREV decision = china_expand_autonomous_region } } #In case you acquire more territory.
 			}
 		}
 	}
@@ -5378,6 +5464,123 @@ country_event = { #Establishing a Tibetan Administration
 			}
 			add_compliance = -10
 			add_resistance = 10
+		}
+	}
+}
+
+country_event = { #The Sino-Phile Coup
+	id = china_events.153
+	title = china_events.153.t
+	desc = china_events.153.d
+
+	picture = GFX_report_event_SIK_xinjiang_troops
+
+	is_triggered_only = yes #Triggered by decision china_orchestrate_sinophile_coup
+
+	option = {
+		log = "[GetLogInfo]: event china_events.153 option china_events.153.a"
+		name = china_events.153.a #We can do little but accept the inevitable.
+		ai_chance = { base = 100 }
+		add_stability = -0.25
+		add_war_support = -0.25
+		FROM = {
+			effect_tooltip = {
+				if = {
+					limit = { ROOT = { tag = TIB } }
+					TIB_puppet_setup = yes
+				}
+				else_if = {
+					limit = { ROOT = { tag = MON } }
+					MON_puppet_setup = yes
+				}
+				else_if = {
+					limit = { ROOT = { tag = ETS } }
+					ETS_puppet_setup = yes
+				}
+				else = {
+					#KUM
+					KUM_puppet_setup = yes
+				}
+			}
+			country_event = { id = china_events.154 days = 3 } #Bloodless Coup in [FROM.Capital.GetCapitalVictoryPointName]
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.153 option china_events.153.b"
+		name = china_events.153.b #Perhaps it is our moment to shine...
+		ai_chance = { base = 0 }
+		FROM = {
+			set_autonomy = {
+				target = ROOT
+				autonomy_state = autonomy_free
+			}
+			effect_tooltip = {
+				create_wargoal = {
+					target = ROOT
+					type = annex_everything
+				}
+			}
+			country_event = { id = china_events.155 days = 3 } #Sinophile Coup in [FROM.Capital.GetCapitalVictoryPointName] Collapses
+		}
+	}
+}
+
+country_event = { #Bloodless Coup in [FROM.Capital.GetCapitalVictoryPointName]
+	id = china_events.154
+	title = china_events.154.t
+	desc = china_events.154.d
+
+	picture = GFX_report_event_generic_beijing_map
+
+	is_triggered_only = yes #Triggered by [EVENT] china_events.153.a
+
+	option = {
+		log = "[GetLogInfo]: event china_events.154 option china_events.154.a"
+		name = china_events.154.a #That settles the matter.
+		FROM = {
+			add_stability = -0.25
+			add_war_support = -0.25
+		}
+		if = {
+			limit = { FROM = { tag = TIB } }
+			TIB_puppet_setup = yes
+		}
+		else_if = {
+			limit = { FROM = { tag = MON } }
+			MON_puppet_setup = yes
+		}
+		else_if = {
+			limit = { FROM = { tag = ETS } }
+			ETS_puppet_setup = yes
+		}
+		else = {
+			#KUM
+			KUM_puppet_setup = yes
+		}
+	}
+}
+
+country_event = { #Sinophile Coup in [FROM.Capital.GetCapitalVictoryPointName] Collapses
+	id = china_events.155
+	title = china_events.155.t
+	desc = china_events.155.d
+
+	picture = GFX_report_event_generic_beijing_map
+
+	is_triggered_only = yes #Triggered by [EVENT] china_events.153.b
+
+	option = {
+		log = "[GetLogInfo]: event china_events.155 option china_events.155.a"
+		name = china_events.155.a #It seems they would prefer to be a province after all...
+		effect_tooltip = {
+			set_autonomy = {
+				target = FROM
+				autonomy_state = autonomy_free
+			}
+		}
+		create_wargoal = {
+			target = FROM
+			type = annex_everything
 		}
 	}
 }
@@ -8070,6 +8273,29 @@ news_event = { #LEP Unites China
 
 	option = {
 		name = china_events.315.a
+	}
+}
+news_event = { #Anti-Concessionist Zhili Qing Unites China
+	id = china_events.316
+	immediate = { log = "[GetLogInfo]: event china_events.316" }
+	title = china_events.316.t
+	desc = china_events.316.d
+	picture = GFX_news_event_QIE_wu_peifu_overcoat
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.316.a
 	}
 }
 news_event = { #Wang Jingwei Holds On

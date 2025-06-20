@@ -219,27 +219,11 @@ foreign_politics = {
 			}
 			modifier = { #if CAN has guaranteed PUE and supported you, don't take the decision
 				factor = 0
-				OR = {
-					AND = {
-						tag = USA
-						CAN = {
-							has_country_flag = CAN_supports_USA
-							has_guaranteed = PUE
-						}
-					}
-					AND = {
-						tag = TEX
-						CAN = {
-							has_country_flag = CAN_supports_TEX
-							has_guaranteed = PUE
-						}
-					}
-					AND = {
-						tag = PSA
-						CAN = {
-							has_country_flag = CAN_supports_PSA
-							has_guaranteed = PUE
-						}
+				has_global_flag = CAN_supports_@ROOT
+				FROM = {
+					OR = {
+						is_guaranteed_by = CAN
+						is_ally_with = CAN
 					}
 				}
 			}
@@ -983,64 +967,72 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 				tag = TEX
 			}
 		}
+
 		available = {
-			controls_all_owned_states = yes
+			is_neighbor_of = FROM
 			if = {
-				limit = { country_exists = NEE }
-				NEE = {
-					controls_all_owned_states = yes
-					is_neighbor_of = ROOT
-				}
+				limit = { FROM = { has_subject = NEE } }
+				is_neighbor_of = NEE
 			}
-			if = {
-				limit = {
-					CAN = {
-						OR = {
-							owns_state = 357 #Maine
-							owns_state = 796 #Albany
-							owns_state = 930 #Buffalo
-							owns_state = 931 #Connecticut
-							owns_state = 932 #Massachusetts
-							owns_state = 933 #Vermont
-							owns_state = 934 #New Hampshire
-							owns_state = 935 #Rhode Island
-						}
+		}
+
+		visible = {
+			is_subject = no
+			FROM = {
+				NOT = { has_war_with = ROOT }
+				OR = {
+					has_subject = NEE
+					owns_any_state_of = {
+						357 #Maine
+						796 #Albany
+						930 #Buffalo
+						931 #Connecticut
+						932 #Massachusetts
+						933 #Vermont
+						934 #New Hampshire
+						935 #Rhode Island
 					}
-				}
-				CAN = {
-					controls_all_owned_states = yes
-					is_neighbor_of = ROOT
 				}
 			}
 		}
-		visible = {
-			is_subject = no
-			932 = {
-				is_claim_or_core_of_ROOT = yes
-			}
-			NOT = {
-				has_war_with = CAN
-				has_war_with = NEE
-				count_triggers = {
-					amount = 2
-					country_exists = USA
-					country_exists = PSA
-					country_exists = TEX
-					country_exists = CSA
+
+		cancel_trigger = {
+			OR = {
+				has_war_with = FROM
+				is_subject = yes
+				FROM = {
+					NOT = {
+						has_subject = NEE
+						owns_any_state_of = {
+							357 #Maine
+							796 #Albany
+							930 #Buffalo
+							931 #Connecticut
+							932 #Massachusetts
+							933 #Vermont
+							934 #New Hampshire
+							935 #Rhode Island
+						}
+					}
 				}
 			}
-			OR = {
-				NEE = { is_subject_of = CAN }
-				CAN = {
-					OR = {
-						owns_state = 357 #Maine
-						owns_state = 796 #Albany
-						owns_state = 930 #Buffalo
-						owns_state = 931 #Connecticut
-						owns_state = 932 #Massachusetts
-						owns_state = 933 #Vermont
-						owns_state = 934 #New Hampshire
-						owns_state = 935 #Rhode Island
+		}
+
+		targets = { CAN }
+		target_trigger = {
+			FROM = {
+				NOT = { has_war_with = ROOT }
+				OR = {
+					has_subject = NEE
+					owns_any_state_of = {
+						357 #Maine
+						796 #Albany
+						930 #Buffalo
+						931 #Connecticut
+						932 #Massachusetts
+						933 #Vermont
+						934 #New Hampshire
+						935 #Rhode Island
 					}
 				}
 			}
@@ -1048,32 +1040,35 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 
 		cost = 40
 		days_remove = 30
+		war_with_target_on_remove = yes
 		fire_only_once = yes
 
 		ai_will_do = {
 			factor = 1000
 			modifier = {
 				factor = 0
-				can_declare_war_on = CAN
-				country_is_in_dangerous_war = yes
-			}
-			modifier = {
-				factor = 0
-				can_declare_war_on = CAN
-				CAN = { default_attack_AI_trigger = yes }
+				can_declare_war_on = FROM
+				OR = {
+					country_is_in_dangerous_war = yes
+					FROM = { default_attack_AI_trigger = yes }
+				}
 			}
 		}
 
+		cancel_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision cancel USA_reclaim_new_england_decision"
+			clear_decision_attack_AI = yes
+		}
+
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete USA_reclaim_new_england_decision"
-			set_country_flag = { flag = imminent_war days = 35 value = 1 }
+			log = "[GetLogRoot][GetLogFrom]: Decision complete USA_reclaim_new_england_decision"
 			setup_decision_attack_AI = yes
 		}
 
 		remove_effect = {
-			log = "[GetLogRoot]: Decision remove USA_reclaim_new_england_decision"
-			CAN = { country_event = ustates.270 }
+			log = "[GetLogRoot][GetLogFrom]: Decision remove USA_reclaim_new_england_decision"
 			clear_decision_attack_AI = yes
+			CAN = { country_event = ustates.270 }
 		}
 	}
 
@@ -1127,7 +1122,7 @@ USA_reconstruction_decisions = {# Reconstruction Stuff
 
 		cost = 40
 		fire_only_once = yes
-		war_with_target_on_remove = yes
+		war_with_target_on_complete = yes
 
 		ai_will_do = {
 			factor = 1000
@@ -1622,13 +1617,9 @@ USA_rainbow_war_plans_decisions = {
 			}
 			modifier = {
 				factor = 0
-				FROM = {
-					NOT = {
-						has_country_flag = CAN_supports_@ROOT
-						has_country_flag = ACW_supported_@ROOT
-					}
-				}
 				NOT = {
+					has_global_flag = CAN_supports_@ROOT
+					FROM = { has_country_flag = ACW_supported_@ROOT }
 					AND = {
 						tag = USA
 						has_game_rule = { rule = USA_forpol option = USA_FORPOL_ENT }
@@ -1663,7 +1654,7 @@ USA_rainbow_war_plans_decisions = {
 					}
 					AND = {
 						has_game_rule = { rule = RSA_forpol option = RSA_FORPOL_USA }
-						GER = { exists = yes }
+						country_exists = GER
 					}
 				}
 			}
@@ -1743,7 +1734,7 @@ USA_rainbow_war_plans_decisions = {
 			modifier = {
 				factor = 0
 				has_game_rule = { rule = RSA_forpol option = RSA_FORPOL_USA }
-				GER = { exists = yes }
+				country_exists = GER
 			}
 		}
 		complete_effect = {

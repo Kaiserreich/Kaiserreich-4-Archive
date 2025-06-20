@@ -74,6 +74,259 @@ TUR_research_transports_to_invade_cyprus_non_mtg = {
 	}
 }
 
+### Ottoman AI strategies
+### tag = OTT checks for NOT being a defeated Turkey, or a subject
+### EGY being faction leader checks for the year leading up to the LC, and the war not being over
+
+### Caucasus Frontline strategies ###
+TUR_manage_armenian_azeri_fronts = {
+	###Always be hostile towards ARM, never towards AZR
+	allowed = {
+		original_tag = TUR
+	}
+	enable = {
+		tag = OTT
+		#Disable if AZR situation changes
+		AZR = {
+			exists = yes
+			is_subject = no
+			NOT = {
+				has_war_with = ROOT
+				is_justifying_wargoal_against = ROOT
+				has_wargoal_against = ROOT
+			}
+		}
+	}
+	abort_when_not_enabled = yes
+
+	#Armenia is always hostile
+	ai_strategy = {
+		type = conquer
+		id = ARM
+		value = 200
+	}
+	ai_strategy = {
+		type = antagonize
+		id = ARM
+		value = 1000
+	}
+	#Azerbaijan is never hostile
+	ai_strategy = {
+		type = conquer
+		id = AZR
+		value = -200
+	}
+	ai_strategy = {
+		type = antagonize
+		id = AZR
+		value = -1000
+	}
+	#Don't put troops on AZR border
+	ai_strategy = {
+		type = front_unit_request
+		tag = AZR
+		value = -200
+	}
+}
+
+TUR_manage_georgian_front = {
+	###Ignore GEO unless it's actively pursuing its claims
+	allowed = {
+		original_tag = TUR
+	}
+	enable = {
+		tag = OTT
+		EGY = { is_faction_leader = yes }
+		GEO = {
+			NOT = {
+				is_ally_with = RUS
+				has_country_flag = GEO_invading_ott
+				has_war_with = ROOT
+				is_justifying_wargoal_against = ROOT
+				has_wargoal_against = ROOT
+			}
+		}
+	}
+	abort_when_not_enabled = yes
+
+	#Don't put troops on Georgia's border
+	ai_strategy = {
+		type = conquer
+		id = GEO
+		value = -200
+	}
+	ai_strategy = {
+		type = antagonize
+		id = GEO
+		value = -1000
+	}
+	ai_strategy = {
+		type = front_unit_request
+		tag = GEO
+		value = -200
+	}
+}
+
+### Arabian Front Strategies ###
+TUR_ignore_ally_arabia = {
+	###Don't put divisions in Persian Gulf states when all bordering tags are friendly
+	allowed = {
+		original_tag = TUR
+	}
+	enable = {
+		tag = OTT
+
+		#Arabia and Khasab controller have no chance of invading
+		347 = { NOT = { is_owned_and_controlled_by = PER } } #Khasab
+		var:915.controller = {  #Ha'il
+			is_ally_with = ROOT
+			NOT = { has_war_together_with = OTT }
+		}
+
+		#Neutral/Friendly Muscat is not currently being pushed into from the West
+		OMA = {
+			NOT = { has_war_with = ROOT }
+			controls_state = 294 #Muscat
+			controls_state = 859 #Oman
+		}
+		#Disable if IKH exists
+		NOT = { country_exists = IKH }
+	}
+	abort_when_not_enabled = yes
+
+	ai_strategy = {
+		type = front_unit_request
+		state = 656 #Hasa
+		state = 991 #Summan
+		tag = OMA
+		value = -100
+	}
+}
+
+TUR_less_troops_in_hejaz = {
+	###Reduce amount of divisions being sent into Hejazi states early on in the war so as to prevent getting encircled
+	allowed = {
+		original_tag = TUR
+	}
+	enable = {
+		tag = OTT
+		EGY = { is_faction_leader = yes }
+
+		#Disable early into the LC
+		NOT = {
+			has_war_with = YEM
+			has_war_with = HEJ
+		}
+
+		#Disable after Arabia joins on either side
+		var:915.owner = { #Ha'il
+			NOT = {
+				tag = OTT
+				has_war_with = ROOT
+				is_subject_of = ROOT
+			}
+		}
+	}
+	abort_when_not_enabled = yes
+
+	ai_strategy = {
+		type = front_unit_request
+		state = 675 #Qassim
+		state = 915 #Ha'il
+		state = 982 #Asir
+		state = 994 #Jawf
+		value = -200
+	}
+}
+
+TUR_attack_carefully_into_arabia = {
+	###Do not overextend into enemy Arabian tag's territory early on; mind the supply
+	allowed = {
+		original_tag = TUR
+	}
+	enable = {
+		tag = OTT
+
+		#Arabian tag is not ally or neutral
+		var:915.owner = { #Ha'il
+			has_war_with = ROOT
+		}
+
+		#EGY is on the initiative
+		EGY = {
+			has_war_with = ROOT
+			controls_state = 753 #Suez Canal
+			NOT = { has_idea = EGY_levant_crisis_initiative_lost }
+		}
+	}
+	abort_when_not_enabled = yes
+
+	ai_strategy = {
+		type = front_control
+		strategic_region = 187 #Arabia
+		ordertype = front
+		execution_type = balanced
+		execute_order = no
+		manual_attack = yes
+	}
+}
+
+### Libyan Front Strategies ###
+TUR_leave_benghazi = {
+	###Exploit-proofing a player ability to get repeat encirclements into Benghazi tile
+	allowed = {
+		original_tag = TUR
+	}
+	enable = {
+		tag = OTT
+		has_war_with = LBA
+		controls_state = 450 #Benghazi
+
+		#If division(s) stationed in Benghazi before the war are destroyed, do NOT send more garrisons there
+		divisions_in_state = { state = 450 size < 1 } #Benghazi
+
+		#Disable if captured an adjacent tile
+		LBA = { has_full_control_of_state = 451 } #Ajdabiya
+
+		#Disable if able to push in from Egypt front
+		452 = { is_controlled_by_ROOT_or_ally = no } #Libyan Plateau
+	}
+	abort_when_not_enabled = yes
+
+	ai_strategy = {
+		type = front_unit_request
+		state = 451 #Ajdabiya
+		value = -100
+	}
+}
+
+### Egyptian Front Strategies ###
+TUR_prepare_for_egypt = {
+	###Keep garrisons in Levant before Syria rises up
+	allowed = {
+		original_tag = TUR
+	}
+	enable = {
+		tag = OTT
+		EGY = { is_faction_leader = yes }
+		NOT = { has_war_with = SYR }
+	}
+	abort_when_not_enabled = yes
+
+	ai_strategy = {
+		type = put_unit_buffers
+		states = {
+			#Syria
+			455 #Transjordan
+			553 #Beirut
+			554 #Damascus
+			992 #Haifa
+			995 #Homs
+		}
+		ratio = 0.35
+	}
+}
+
 TUR_crush_egypt = {
 	allowed = {
 		original_tag = TUR
@@ -81,7 +334,20 @@ TUR_crush_egypt = {
 	enable = {
 		has_war_with = EGY
 		EGY = { has_idea = EGY_levant_crisis_initiative_lost }
-		NOT = { any_core_state = { is_controlled_by = PER } } ## focus on Iran first if a threat
+		## focus on Iran first if a threat
+		count_triggers = {
+			amount = 4
+			controls_state = 291 #Baghdad
+			controls_state = 349 #Kirkuk
+			controls_state = 350 #Diyarbakir
+			controls_state = 352 #Van
+			controls_state = 819 #Sulaymaniyah
+			controls_state = 1000 #Kars
+		}
+
+		#Don't be too aggressive if you have no resources
+		has_manpower > 10000
+		stockpile_ratio = { archetype = infantry_equipment ratio > 0.05 }
 
 		#activate every 25 days, then pause for another 25
 		set_temp_variable = { frequency = global.num_days }
@@ -107,6 +373,272 @@ TUR_crush_egypt = {
 		ordertype = front
 		execution_type = rush_weak
 		execute_order = yes
+	}
+}
+
+### Iranian Front Strategies ###
+TUR_prepare_for_iran = {
+	###Keep garrisons in Iraq & Eastern Anatolia before war with Armenia
+	allowed = {
+		original_tag = TUR
+	}
+	enable = {
+		tag = OTT
+		EGY = { is_faction_leader = yes }
+
+		#Disable when Armenia rises up
+		NOT = { country_exists = ARM }
+
+		#Disable if PER is no longer a threat
+		PER = {
+			exists = yes
+			is_subject = no
+			NOT = { has_idea = generic_neutral_foreign_policy }
+		}
+	}
+	abort_when_not_enabled = yes
+
+	#Put buffers close to ARM; ignore Yerevan state, OTT troops will be teleported out
+	ai_strategy = {
+		type = put_unit_buffers
+		states = {
+			#Transcaucasia
+			585 #Batumi
+			1000 #Kars
+
+			#Kurdistan
+			350 #Diyarbakir
+			354 #Erzurum
+			819 #Sulaymaniyah
+
+			#Iraq
+			291 #Baghdad
+			349 #Kirkuk
+			676 #Mosul
+			812 #Basra
+		}
+		ratio = 0.4
+	}
+}
+
+TUR_take_back_iraq = {
+	###If starting to get pushed out of Iraq, focus on taking it back
+	allowed = {
+		original_tag = TUR
+	}
+	enable = {
+		tag = OTT
+		OR = {
+			has_war_with = PER
+			has_war_with = IRQ
+		}
+		OR = {
+			NOT = { controls_state = 291 } #Baghdad
+			NOT = { controls_state = 676 } #Mosul
+		}
+
+		#Don't be too aggressive if you have no resources
+		has_manpower > 10000
+		stockpile_ratio = { archetype = infantry_equipment ratio > 0.05 }
+
+		#activate every 25 days, then pause for another 25
+		set_temp_variable = { frequency = global.num_days }
+		modulo_temp_variable = { frequency = 50 }
+		check_variable = { frequency < 25 }
+	}
+	abort_when_not_enabled = yes
+
+	ai_strategy = {
+		type = strategic_air_importance
+		id = 239 #Mesopotamia
+		value = 20000
+	}
+	#Remain careful in Kurdistan
+	ai_strategy = {
+		type = front_unit_request
+		strategic_region = 252 #Kurdistan
+		value = 50
+	}
+	ai_strategy = {
+		type = front_control
+		strategic_region = 252 #Kurdistan
+		ordertype = front
+		execution_type = balanced
+		execute_order = no
+		manual_attack = yes
+	}
+	#Push into lost Iraqi states
+	ai_strategy = {
+		type = front_unit_request
+		state = 291 #Baghdad
+		state = 676 #Mosul
+		value = 100
+	}
+	ai_strategy = {
+		type = front_control
+		state = 291 #Baghdad
+		state = 676 #Mosul
+		priority = 200
+		ordertype = front
+		execution_type = rush_weak
+		execute_order = yes
+	}
+	ai_strategy = {
+		type = force_concentration_front_factor
+		state = 291 #Baghdad
+		state = 676 #Mosul
+		value = 500
+	}
+	ai_strategy = {
+		type = force_concentration_target_weight
+		state = 291 #Baghdad
+		state = 676 #Mosul
+		value = 500
+	}
+}
+
+TUR_attack_carefully_into_urmia = {
+	###Avoid catastrophic pushes against Urmia & Van early on in the war
+	allowed = {
+		original_tag = TUR
+	}
+	enable = {
+		tag = OTT
+		has_war_with = PER
+		#Has not lost Northern Kurdistan
+		controls_state = 354 #Erzurum
+		controls_state = 350 #Diyarbakir
+		#Has not lost Iraq
+		controls_state = 291 #Baghdad
+
+		#EGY is not pushed into yet
+		EGY = {
+			has_war_with = ROOT
+			controls_state = 753 #Suez Canal
+		}
+
+		#Iran is not being pushed into
+		PER = {
+			controls_state = 266 #Teheran
+			controls_state = 419 #Tabriz
+		}
+	}
+	abort_when_not_enabled = yes
+
+	ai_strategy = {
+		type = front_control
+		state = 417 #Urmia
+		state = 352 #Van
+		priority = 50
+		ordertype = front
+		execution_type = careful
+		execute_order = no
+		manual_attack = yes
+	}
+	#Station more in the South
+	ai_strategy = {
+		type = front_unit_request
+		state = 413 #Khuzestan
+		state = 421 #Kermanshah
+		value = 50
+	}
+}
+
+TUR_crush_iran = {
+	###After defeating the Cairo Pact, focus on Iran
+	allowed = {
+		original_tag = TUR
+	}
+	enable = {
+		has_war_with = PER
+		tag = OTT
+		controls_state = 291 #Baghdad
+		controls_state = 676 #Mosul
+		#Egypt was pushed to surrender
+		EGY = {
+			OR = {
+				has_capitulated = yes
+				NOT = { has_war_with = ROOT }
+			}
+		}
+
+		#Avoid being too aggressive if Russia is about to invade
+		var:global.russia = {
+			NOT = {
+				has_war_with = ROOT
+				is_justifying_wargoal_against = ROOT
+				has_wargoal_against = ROOT
+			}
+		}
+
+		#Don't be too aggressive if you have no resources
+		has_manpower > 10000
+		stockpile_ratio = { archetype = infantry_equipment ratio > 0.05 }
+
+		#activate every 25 days, then pause for another 25
+		set_temp_variable = { frequency = global.num_days }
+		modulo_temp_variable = { frequency = 50 }
+		check_variable = { frequency < 25 }
+	}
+	abort_when_not_enabled = yes
+
+	ai_strategy = {
+		type = conquer
+		id = PER
+		value = 100
+	}
+	ai_strategy = {
+		type = strategic_air_importance
+		id = 239 #Mesopotamia
+		value = 20000
+	}
+	ai_strategy = {
+		type = strategic_air_importance
+		id = 116 #Alborz Mountains
+		value = 30000
+	}
+
+	#Concentrate and push into Khuzestan, then North towards Teheran & Tabriz
+	ai_strategy = {
+		type = front_unit_request
+		tag = PER
+		value = 100
+	}
+	ai_strategy = {
+		type = front_control
+		state = 413 #Khuzestan
+		state = 411 #Isfahan
+		strategic_region = 116 #Alborz Mountains
+		priority = 100
+		ordertype = front
+		execution_type = rush
+		execute_order = yes
+	}
+	ai_strategy = {
+		type = force_concentration_front_factor
+		state = 413 #Khuzestan
+		state = 411 #Isfahan
+		strategic_region = 116 #Alborz Mountains
+		value = 500
+	}
+	ai_strategy = {
+		type = force_concentration_target_weight
+		state = 413 #Khuzestan
+		state = 411 #Isfahan
+		strategic_region = 116 #Alborz Mountains
+		value = 500
+	}
+
+	#Push more carefully into Kurdistan, Urmia & Kermanshah states
+	ai_strategy = {
+		type = force_concentration_target_weight
+		strategic_region = 252 #Kurdistan
+		value = -500
+	}
+	ai_strategy = {
+		type = force_concentration_front_factor
+		strategic_region = 252 #Kurdistan
+		value = -500
 	}
 }
 

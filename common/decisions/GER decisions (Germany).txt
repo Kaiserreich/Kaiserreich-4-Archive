@@ -3,6 +3,79 @@
 ###########################
 
 political_actions = {
+
+	GER_remove_schacht = {
+		icon = GFX_decision_soldierly_discipline
+
+		allowed = { always = no } #activated by effect
+
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = GER_remove_schacht_need_kaiser_approval_tt
+				always = yes
+			}
+			if = {
+				limit = {
+					GER_is_swr_path = yes
+				}
+				has_completed_focus = GER_prussia_privy_council
+				custom_trigger_tooltip = {
+					tooltip = GER_swr_balanced_or_dkp_tt
+					OR = {
+						GER_ulrich_von_hassell = {
+							has_trait = KR_leader_of_dvlp_average
+						}
+						GER_ulrich_von_hassell = {
+							has_trait = KR_leader_of_dvlp_low
+						}
+						GER_ulrich_von_hassell = {
+							has_trait = KR_leader_of_dvlp_min
+						}
+						NOT = {
+							GER_ulrich_von_hassell = {
+								has_advisor_role = political_advisor
+							}
+						}
+					}
+				}
+			}
+			else_if = {
+				limit = {
+					GER_is_du_path = yes
+				}
+				NOT = {
+					has_idea = GER_SPD_rebellion
+					GER_hofgeismar_circle = {
+						is_political_advisor = yes
+					}
+				}
+				NOT = {
+					has_completed_focus = GER_left_spd_demands_4
+				}
+				NOT = {
+					has_active_mission = GER_brunswick_front_activity
+				}
+				NOT = {
+					has_dynamic_modifier = { modifier = GER_Government_Paralysis }
+				}
+			}
+			else = {
+				has_country_flag = GER_red_general_new_state_flag
+				NOT = { has_country_flag = GER_nullification_ongoing }
+			}
+		}
+
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_remove_schacht"
+			country_event = gerflavour.114
+			set_country_flag = GER_schacht_removed
+		}
+	}
+
 	GER_war_preparedness_act = {
 		icon = GFX_decision_soldierly_discipline
 
@@ -614,54 +687,31 @@ foreign_politics = {
 		allowed = { tag = GER }
 
 		available = {
-			NOT = { has_war_with = NFA }
+			FRA = { is_government_in_exile = yes }
 		}
 
 		visible = {
 			has_war_with = FRA
-			FRA = { is_government_in_exile = yes }
-			FROM = {
-				has_war_with = FRA
-				NOT = { has_war_with = ROOT }
+			country_exists = FROM
+			NOT = { has_war_with = FROM }
+			any_state_in = {
+				strategic_region = 20 #Southern France
+				is_controlled_by = GER
 			}
-
-			set_temp_variable = { cof_states = 0 }
-			set_temp_variable = { nfa_states = 0 }
-			FRA = {
-				all_owned_state = {
-					if = {
-						limit = {
-							is_core_of = FRA
-							is_controlled_by = GER
-							region = 20
-						}
-						add_to_temp_variable = { ROOT.cof_states = 1 }
-					}
-					if = {
-						limit = {
-							is_core_of = FRA
-							is_controlled_by = NFA
-						}
-						add_to_temp_variable = { ROOT.nfa_states = 1 }
-						subtract_from_temp_variable = { ROOT.cof_states = 1 }
+			NOT = {
+				FRA = {
+					any_core_state = {
+						count = 3
+						is_controlled_by = NFA
 					}
 				}
 			}
-			check_variable = { cof_states > 0 }
-			check_variable = { nfa_states < 3 }
-		}
-
-		target_root_trigger = {
-			has_war_with = FRA
 		}
 
 		targets = { NFA }
-
+		target_root_trigger = { has_war_with = FRA }
 		target_trigger = {
-			FROM = {
-				has_war_with = FRA
-				NOT = { has_war_with = ROOT }
-			}
+			NOT = { has_war_with = FROM }
 		}
 
 		fire_only_once = yes
@@ -1797,142 +1847,6 @@ foreign_politics = {
 			invite_decision_target_to_faction = yes
 		}
 	}
-	GER_destroy_NOR = {
-		icon = generic_tank
-
-		allowed = { always = no } #activated by effect
-
-		available = {
-			is_faction_leader = yes
-			OR = {
-				INT = { is_in_faction_with = FROM }
-				RUS = { is_in_faction_with = FROM }
-			}
-			second_weltkrieg_can_start = yes
-			NOT = { has_non_aggression_pact_with = FROM }
-			NOT = { has_guaranteed = FROM }
-		}
-
-		visible = {
-			can_declare_war_on = FROM
-		}
-
-		cancel_trigger = {
-			OR = {
-				NOT = { can_declare_war_on = FROM }
-				is_faction_leader = no
-				FROM = {
-					NOT = { is_in_faction_with = INT }
-					NOT = { is_in_faction_with = RUS }
-				}
-				second_weltkrieg_can_start = no
-				has_non_aggression_pact_with = FROM
-				has_guaranteed = FROM
-			}
-		}
-
-		cost = 15
-		days_remove = 20
-		war_with_target_on_remove = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				OR = {
-					country_has_any_active_threat = yes
-					FROM = { default_attack_AI_trigger = yes }
-				}
-			}
-		}
-
-		cancel_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision cancel GER_destroy_NOR"
-			clear_decision_attack_AI = yes
-		}
-
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete GER_destroy_NOR"
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove GER_destroy_NOR"
-			clear_decision_attack_AI = yes
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
-			}
-		}
-	}
-	GER_destroy_SWE = {
-		icon = generic_tank
-
-		allowed = { always = no } #activated by effect
-
-		available = {
-			is_faction_leader = yes
-			OR = {
-				INT = { is_in_faction_with = FROM }
-				RUS = { is_in_faction_with = FROM }
-			}
-			second_weltkrieg_can_start = yes
-			NOT = { has_non_aggression_pact_with = FROM }
-			NOT = { has_guaranteed = FROM }
-		}
-
-		visible = {
-			can_declare_war_on = FROM
-		}
-
-		cancel_trigger = {
-			OR = {
-				NOT = { can_declare_war_on = FROM }
-				is_faction_leader = no
-				FROM = {
-					NOT = { is_in_faction_with = INT }
-					NOT = { is_in_faction_with = RUS }
-				}
-				second_weltkrieg_can_start = no
-				has_non_aggression_pact_with = FROM
-				has_guaranteed = FROM
-			}
-		}
-
-		cost = 15
-		days_remove = 20
-		war_with_target_on_remove = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				OR = {
-					country_has_any_active_threat = yes
-					FROM = { default_attack_AI_trigger = yes }
-				}
-			}
-		}
-
-		cancel_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision cancel GER_destroy_SWE"
-			clear_decision_attack_AI = yes
-		}
-
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete GER_destroy_SWE"
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove GER_destroy_SWE"
-			clear_decision_attack_AI = yes
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
-			}
-		}
-	}
 	GER_attack_syndicalists = {
 		name = invade_country
 		icon = generic_tank
@@ -1950,13 +1864,7 @@ foreign_politics = {
 				}
 				OR = {
 					is_neighbor_of = FROM
-					if = {
-						limit = { is_in_faction = yes }
-						any_allied_country = { is_neighbor_of = FROM }
-					}
-					else = {
-						any_subject_country = { is_neighbor_of = FROM }
-					}
+					FROM = { any_home_area_neighbor_country = { is_ally_with = ROOT } }
 					FROM = { capital_scope = { is_one_state_island = yes } }
 				}
 			}
@@ -2062,13 +1970,7 @@ foreign_politics = {
 				}
 				OR = {
 					is_neighbor_of = FROM
-					if = {
-						limit = { is_in_faction = yes }
-						any_allied_country = { is_neighbor_of = FROM }
-					}
-					else = {
-						any_subject_country = { is_neighbor_of = FROM }
-					}
+					FROM = { any_home_area_neighbor_country = { is_ally_with = ROOT } }
 					FROM = { capital_scope = { is_one_state_island = yes } }
 				}
 			}
@@ -2175,7 +2077,13 @@ foreign_politics = {
 		cost = 10
 		fire_only_once = yes
 
-		ai_will_do = { base = 100 }
+		ai_will_do = {
+			base = 1
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+		}
 
 		complete_effect = {
 			log = "[GetLogRoot][GetLogFrom]: Decision complete GER_topple_natpops_BAT"
@@ -2245,6 +2153,14 @@ foreign_politics = {
 		cost = 10
 		fire_only_once = yes
 
+		ai_will_do = {
+			base = 1
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+		}
+
 		complete_effect = {
 			log = "[GetLogRoot][GetLogFrom]: Decision complete GER_topple_EST_govt"
 			FROM = { country_event = newgerfor.146 }
@@ -2285,6 +2201,14 @@ foreign_politics = {
 
 		cost = 10
 		fire_only_once = yes
+
+		ai_will_do = {
+			base = 1
+			modifier = {
+				factor = 0
+				has_war = yes
+			}
+		}
 
 		complete_effect = {
 			log = "[GetLogRoot][GetLogFrom]: Decision complete GER_topple_BLR_govt"
@@ -3567,75 +3491,6 @@ foreign_politics = {
 			}
 		}
 	}
-	GER_destroy_POL = {
-		icon = GFX_decision_generic_tank
-
-		allowed = { always = no } #activated by effect
-
-		available = {
-			is_faction_leader = yes
-			OR = {
-				INT = { is_in_faction_with = FROM }
-				RUS = { is_in_faction_with = FROM }
-			}
-			second_weltkrieg_can_start = yes
-			NOT = { has_non_aggression_pact_with = FROM }
-			NOT = { has_guaranteed = FROM }
-		}
-
-		visible = {
-			can_declare_war_on = FROM
-		}
-
-		cancel_trigger = {
-			OR = {
-				NOT = { can_declare_war_on = FROM }
-				is_faction_leader = no
-				FROM = {
-					NOT = { is_in_faction_with = INT }
-					NOT = { is_in_faction_with = RUS }
-				}
-				second_weltkrieg_can_start = no
-				has_non_aggression_pact_with = FROM
-				has_guaranteed = FROM
-			}
-		}
-
-		cost = 15
-		days_remove = 20
-		war_with_target_on_remove = yes
-
-		ai_will_do = {
-			factor = 100
-			modifier = {
-				factor = 0
-				country_is_in_dangerous_war = yes
-			}
-			modifier = {
-				factor = 0
-				FROM = { default_attack_AI_trigger = yes }
-			}
-		}
-
-		cancel_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision cancel GER_destroy_POL"
-			clear_decision_attack_AI = yes
-		}
-
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete GER_destroy_POL"
-			setup_decision_attack_AI = yes
-		}
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove GER_destroy_POL"
-			clear_decision_attack_AI = yes
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
-			}
-		}
-	}
 	GER_break_open_gibraltar = {
 		icon = GFX_decision_hol_draw_up_staff_plans
 
@@ -3909,7 +3764,7 @@ GER_black_monday_category = {
 		}
 	}
 
-	GER_bm_cardgame_money_issuance = {
+	GER_bm_cardgame_money_issuance_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -3937,13 +3792,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_money_issuance"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_money_issuance_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_money_issuance_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_capital_controls = {
+	GER_bm_cardgame_capital_controls_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -3971,13 +3826,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_capital_controls"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_capital_controls_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_capital_controls_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_employment_programme = {
+	GER_bm_cardgame_employment_programme_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4005,13 +3860,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_employment_programme"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_employment_programme_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_employment_programme_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_cooperation_business = {
+	GER_bm_cardgame_cooperation_business_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4034,13 +3889,13 @@ GER_black_monday_category = {
 		fixed_random_seed = no
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_cooperation_business"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_cooperation_business_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_cooperation_business_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_reichsbank_analysis = {
+	GER_bm_cardgame_reichsbank_analysis_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4063,13 +3918,13 @@ GER_black_monday_category = {
 		fixed_random_seed = no
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_reichsbank_analysis"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_reichsbank_analysis_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_reichsbank_analysis_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_fireside_chat = {
+	GER_bm_cardgame_fireside_chat_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4104,13 +3959,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_fireside_chat"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_fireside_chat_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_fireside_chat_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_eastern_assistance = {
+	GER_bm_cardgame_eastern_assistance_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4133,13 +3988,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_eastern_assistance"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_eastern_assistance_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_eastern_assistance_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_price_monitoring = {
+	GER_bm_cardgame_price_monitoring_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4153,7 +4008,7 @@ GER_black_monday_category = {
 		ai_will_do = { factor = 50 }
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_price_monitoring"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_price_monitoring_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_price_monitoring_object }
 			GER_bm_cardgame_effects_apply = yes
 
@@ -4163,7 +4018,7 @@ GER_black_monday_category = {
 		}
 	}
 
-	GER_bm_cardgame_institutional_public_works = {
+	GER_bm_cardgame_institutional_public_works_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4177,7 +4032,7 @@ GER_black_monday_category = {
 		ai_will_do = { factor = 50 }
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_institutional_public_works"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_institutional_public_works_decision"
 			set_country_flag = GER_institutional_public_works_played
 
 			GER_economic_planning_card_begin_counting = yes
@@ -4220,7 +4075,7 @@ GER_black_monday_category = {
 		}
 	}
 
-	GER_bm_cardgame_economic_planning = {
+	GER_bm_cardgame_economic_planning_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4234,14 +4089,14 @@ GER_black_monday_category = {
 		ai_will_do = { factor = 50 }
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_economic_planning"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_economic_planning_decision"
 			set_country_flag = GER_economic_planning_played #TO BE ADJUSTED LATER!
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_economic_planning_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_federal_income_taxes = {
+	GER_bm_cardgame_federal_income_taxes_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4255,14 +4110,14 @@ GER_black_monday_category = {
 		ai_will_do = { factor = 50 }
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_federal_income_taxes"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_federal_income_taxes_decision"
 			set_country_flag = GER_federal_income_taxes_played # to be updated later.
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_federal_income_taxes_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_rathenauplan = {
+	GER_bm_cardgame_rathenauplan_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4276,12 +4131,12 @@ GER_black_monday_category = {
 		ai_will_do = { factor = 50 }
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_rathenauplan"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_rathenauplan_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_rathenauplan_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
-	GER_bm_cardgame_tbplan = {
+	GER_bm_cardgame_tbplan_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4295,13 +4150,13 @@ GER_black_monday_category = {
 		ai_will_do = { factor = 50 }
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_tbplan"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_tbplan_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_tbplan_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_arbeitsdienst = {
+	GER_bm_cardgame_arbeitsdienst_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4329,13 +4184,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_arbeitsdienst"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_arbeitsdienst_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_arbeitsdienst_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_land_improvement = {
+	GER_bm_cardgame_land_improvement_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4363,13 +4218,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_land_improvement"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_land_improvement_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_land_improvement_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_corporate_assistance = {
+	GER_bm_cardgame_corporate_assistance_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4383,13 +4238,13 @@ GER_black_monday_category = {
 		ai_will_do = { factor = 50 }
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_corporate_assistance"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_corporate_assistance_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_corporate_assistance_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_import_tariffs = {
+	GER_bm_cardgame_import_tariffs_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4417,13 +4272,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_import_tariffs"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_import_tariffs_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_import_tariffs_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_mitteleuropa_loans = {
+	GER_bm_cardgame_mitteleuropa_loans_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4451,13 +4306,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_mitteleuropa_loans"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_mitteleuropa_loans_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_mitteleuropa_loans_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_administrative_reform = {
+	GER_bm_cardgame_administrative_reform_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4477,13 +4332,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_administrative_reform"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_administrative_reform_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_administrative_reform_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_nationalisation_of_foreign_companies = {
+	GER_bm_cardgame_nationalisation_of_foreign_companies_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4503,13 +4358,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_nationalisation_of_foreign_companies"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_nationalisation_of_foreign_companies_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_nationalisation_of_foreign_companies_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_trade_union_collaboration = {
+	GER_bm_trade_union_collaboration_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4534,13 +4389,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_trade_union_collaboration"
+			log = "[GetLogRoot]: Decision complete GER_bm_trade_union_collaboration_decision"
 			set_temp_variable = { GER_card_played = GER_bm_trade_union_collaboration_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_strategic_tax_hikes = {
+	GER_bm_cardgame_strategic_tax_hikes_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4568,13 +4423,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_strategic_tax_hikes"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_strategic_tax_hikes_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_strategic_tax_hikes_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_price_depression = {
+	GER_bm_cardgame_price_depression_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4602,13 +4457,13 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_price_depression"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_price_depression_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_price_depression_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
 
-	GER_bm_cardgame_money_issuance_large = {
+	GER_bm_cardgame_money_issuance_large_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4636,12 +4491,12 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_money_issuance_large"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_money_issuance_large_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_money_issuance_large_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
-	GER_bm_cardgame_fiscal_austerity = {
+	GER_bm_cardgame_fiscal_austerity_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4669,12 +4524,12 @@ GER_black_monday_category = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_fiscal_austerity"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_fiscal_austerity_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_fiscal_austerity_object }
 			GER_bm_cardgame_effects_apply = yes
 		}
 	}
-	GER_bm_cardgame_technocratic_thinking = {
+	GER_bm_cardgame_technocratic_thinking_decision = {
 		icon = GFX_decision_card
 
 		allowed = { always = no }
@@ -4688,7 +4543,7 @@ GER_black_monday_category = {
 		ai_will_do = { factor = 50 }
 
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_technocratic_thinking"
+			log = "[GetLogRoot]: Decision complete GER_bm_cardgame_technocratic_thinking_decision"
 			set_temp_variable = { GER_card_played = GER_bm_cardgame_technocratic_thinking_object }
 			set_temp_variable = { extra_lines_for_tt = 1 }
 			GER_bm_cardgame_effects_apply = yes
@@ -5045,12 +4900,23 @@ GER_economic_decisions_category = {
 		available = {
 			num_divisions > 0
 			has_war_support > 0.05
+			has_war = no
+			NOT = { any_claim = yes }
 		}
 
 		cost = 15
 		days_remove = 30
 
-		ai_will_do = { factor = 10 }
+		ai_will_do = {
+			factor = 10
+			modifier = {
+				factor = 0
+				OR = {
+					num_divisions < 100
+					has_war_support < 0.3
+				}
+			}
+		}
 
 		remove_effect = {
 			log = "[GetLogRoot]: Decision remove GER_Demobilisation"
@@ -5493,8 +5359,9 @@ GER_economic_decisions_category = {
 					instant_build = yes
 				}
 				add_building_construction = {
-					type = infrastructure
+					type = dam
 					level = 1
+					province = 6559
 					instant_build = yes
 				}
 			}
@@ -8271,6 +8138,14 @@ GER_conservative_revolution_mechanics_category = {
 			else = {
 				custom_effect_tooltip = GER_agrarian_events_tt
 			}
+			if = {
+				limit = {
+					has_country_flag = GER_zentrum_swr_coalition
+				}
+				custom_effect_tooltip = tooltip_white_line
+				custom_effect_tooltip = GER_zentrum_swr_coalition_helps_tt
+				add_to_variable = { GER_Zentrum_seats_r = 5 }
+			}
 		}
 	}
 	GER_luninck_east_elbia = {
@@ -8452,6 +8327,100 @@ GER_conservative_revolution_mechanics_category = {
 				}
 				custom_effect_tooltip = GER_strengthens_hugenberg_tt
 			}
+		}
+	}
+	GER_SWR_invite_agrarians = {
+		icon = GFX_decision_hand_out
+
+		allowed = { always = no } #activated by effect
+
+		visible = {
+			NOT = {
+				has_country_flag = GER_swr_agrarians_in_coalition
+			}
+			has_government = paternal_autocrat
+		}
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = SWR_party_has_more_than_0_seats_tt
+				check_variable = { GER_agrarian_seats > 0 }
+			}
+		}
+
+		fire_only_once = yes
+		cost = 25
+
+		ai_will_do = { base = 500 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_SWR_invite_agrarians"
+			add_to_variable = { GER_swr_coalition_number = GER_agrarian_seats }
+			set_country_flag = GER_swr_agrarians_in_coalition
+			custom_effect_tooltip = GER_swr_agr_add_to_coalition
+		}
+	}
+
+	GER_SWR_invite_natlibs = {
+		icon = GFX_decision_hand_out
+
+		allowed = { always = no } #activated by effect
+
+		visible = {
+			NOT = {
+				has_country_flag = GER_swr_natlibs_in_coalition
+			}
+			has_government = paternal_autocrat
+		}
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = SWR_party_has_more_than_0_seats_tt
+				check_variable = { GER_liberal_seats > 0 }
+			}
+		}
+
+		fire_only_once = yes
+		cost = 25
+
+		ai_will_do = { base = 500 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_SWR_invite_natlibs"
+			add_to_variable = { GER_swr_coalition_number = GER_liberal_seats }
+			set_country_flag = GER_swr_natlibs_in_coalition
+			custom_effect_tooltip = GER_swr_natlib_add_to_coalition
+			set_temp_variable = { coalition_partner_var = token:market_liberal }
+			add_to_coalition = yes
+		}
+	}
+
+	GER_SWR_invite_hanoverians = {
+		icon = GFX_decision_hand_out
+
+		allowed = { always = no } #activated by effect
+
+		visible = {
+			NOT = {
+				has_country_flag = GER_swr_guelphs_in_coalition
+			}
+			has_government = paternal_autocrat
+		}
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = SWR_party_has_more_than_0_seats_tt
+				check_variable = { GER_Guelph_seats > 0 }
+			}
+		}
+
+		fire_only_once = yes
+		cost = 25
+
+		ai_will_do = { base = 500 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_SWR_invite_hanoverians"
+			add_to_variable = { GER_swr_coalition_number = GER_Guelph_seats }
+			set_country_flag = GER_swr_guelphs_in_coalition
+			custom_effect_tooltip = GER_swr_guelph_add_to_coalition
 		}
 	}
 }
@@ -8783,6 +8752,9 @@ GER_democratic_union_mechanics_category = {
 							check_variable = { GER_Left_SPD_loyalty < 1 }
 						}
 						country_event = gerspd.7
+					}
+					10 = {
+						country_event = gerspd.83
 					}
 					50 = {
 						# nothing
@@ -9148,7 +9120,7 @@ GER_democratic_union_mechanics_category = {
 		days_mission_timeout = 60
 
 		ai_will_do = {
-			factor = 200
+			factor = 100000
 			modifier = {
 				factor = 0
 				check_variable = { days_mission_timeout@GER_brunswick_front_activity < 10 }
@@ -9204,8 +9176,7 @@ GER_democratic_union_mechanics_category = {
 			}
 			if = {
 				limit = {
-					set_temp_variable = { coalition_target = token:social_conservative }
-					has_coalition_with_target = yes
+					is_in_coalition_with_social_conservative = yes
 					has_country_flag = GER_papen_active_brunswick
 				}
 				custom_effect_tooltip = GER_papen_active_brunswick_tt
@@ -9218,8 +9189,7 @@ GER_democratic_union_mechanics_category = {
 				if = {
 					limit = {
 						check_variable = { GER_Z_loyalty < 1 }
-						set_temp_variable = { coalition_target = token:social_conservative }
-						has_coalition_with_target = yes
+						is_in_coalition_with_social_conservative = yes
 					}
 					activate_mission = GER_SPD_Z_rift
 				}
@@ -9298,8 +9268,7 @@ GER_democratic_union_mechanics_category = {
 		allowed = { always = no } #activated by effect
 
 		available = {
-			set_temp_variable = { coalition_target = token:social_liberal }
-			has_coalition_with_target = no
+			is_in_coalition_with_social_liberal = no
 			has_government = social_democrat
 		}
 
@@ -9321,7 +9290,7 @@ GER_democratic_union_mechanics_category = {
 		visible = {
 			has_idea = GER_prussian_budget_crisis
 			OR = {
-				GER_reichskanzler_in_prussia = { is_hired_as_advisor = no }
+				NOT = { has_country_flag = GER_schleicher_appointed_mp }
 				has_completed_focus = GER_spd_prussia
 				has_completed_focus = GER_shuffle_prussian_ministries
 			}
@@ -9355,7 +9324,7 @@ GER_democratic_union_mechanics_category = {
 
 		visible = {
 			has_idea = GER_prussian_budget_crisis
-			GER_reichskanzler_in_prussia = { is_hired_as_advisor = yes }
+			has_country_flag = GER_schleicher_appointed_mp
 			NOT = {
 				OR = {
 					has_completed_focus = GER_spd_prussia
@@ -9654,7 +9623,7 @@ GER_democratic_union_mechanics_category = {
 		days_re_enable = 20
 
 		ai_will_do = {
-			base = 100
+			base = 200000
 			modifier = {
 				factor = 0
 				check_variable = { GER_iron_front_organisation > 80 }
@@ -9689,7 +9658,7 @@ GER_democratic_union_mechanics_category = {
 		days_re_enable = 20
 
 		ai_will_do = {
-			base = 100
+			base = 200000
 			modifier = {
 				factor = 0
 				check_variable = { GER_iron_front_organisation > 80 }
@@ -9724,7 +9693,7 @@ GER_democratic_union_mechanics_category = {
 		}
 
 		ai_will_do = {
-			base = 100
+			base = 200000
 			modifier = {
 				factor = 0
 				check_variable = { GER_iron_front_organisation > 50 }
@@ -9762,7 +9731,7 @@ GER_democratic_union_mechanics_category = {
 		}
 
 		ai_will_do = {
-			base = 100
+			base = 200000
 			modifier = {
 				factor = 0
 				check_variable = { GER_iron_front_organisation > 80 }
@@ -9829,8 +9798,7 @@ GER_democratic_union_mechanics_category = {
 		}
 		custom_cost_text = GER_10_iron_front_organisation_25_PP
 		available = {
-			set_temp_variable = { coalition_target = token:social_conservative }
-			has_coalition_with_target = yes
+			is_in_coalition_with_social_conservative = yes
 		}
 		visible = {
 			has_dynamic_modifier = { modifier = GER_Government_Paralysis }
@@ -9840,7 +9808,7 @@ GER_democratic_union_mechanics_category = {
 		days_remove = 21
 
 		ai_will_do = {
-			base = 1000
+			base = 201000
 			modifier = {
 				factor = 0
 				check_variable = { GER_iron_front_organisation < 30 }
@@ -11412,6 +11380,761 @@ GER_military_decisions_category = {
 				add_max_trait = 1
 				add_attack = 1
 			}
+		}
+	}
+}
+GER_red_general_decisions_category = {
+	GER_red_general_populist_policies = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		cost = 10
+		days_remove = 90
+		modifier = {
+			consumer_goods_factor = 0.1
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_populist_policies"
+			custom_effect_tooltip = GER_schleicher_move_left
+			add_to_variable = { GER_schleicher_ideology = 20 }
+			clamp_variable = { var = GER_schleicher_ideology max = 100 min = 0 }
+			add_stability = 0.02
+			add_war_support = -0.02
+		}
+	}
+	GER_red_general_walk_the_clubs = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		cost = 10
+		days_remove = 90
+		modifier = {
+			political_power_factor = -0.15
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_walk_the_clubs"
+			custom_effect_tooltip = GER_schleicher_move_right
+			add_to_variable = { GER_schleicher_ideology = -20 }
+			clamp_variable = { var = GER_schleicher_ideology max = 100 min = 0 }
+			add_stability = -0.02
+			add_war_support = 0.02
+		}
+	}
+	GER_red_general_new_state = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_new_state"
+			set_country_flag = GER_red_general_new_state_flag
+			add_ideas = GER_new_state_1
+			# Sets up the New State idea
+			custom_effect_tooltip = GER_building_new_state_tt
+		}
+	}
+	GER_red_general_anti_democratic_civil_service = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+
+		cost = 30
+		days_remove = 90
+		modifier = {
+			political_power_factor = -0.15
+			compliance_growth = -0.03
+			consumer_goods_factor = 0.1
+		}
+
+		available = {
+			has_country_flag = GER_red_general_new_state_flag
+		}
+
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_game_rule = { rule = GER_path option = GER_PATH_SCHLEICHER_AUTDEM }
+				has_idea = GER_new_state_5
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_anti_democratic_civil_service"
+			set_country_flag = GER_anti_democratic_civil_service_ongoing
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove GER_red_general_anti_democratic_civil_service"
+			if = {
+				limit = {
+					has_country_flag = GER_red_general_new_state_flag
+				}
+				GER_increase_new_state = yes
+			}
+			else = {
+				swap_ideas = {
+					remove_idea = GER_new_state_1
+					add_idea = GER_new_state_2
+				}
+				# only exists for tooltip
+			}
+			clr_country_flag = GER_anti_democratic_civil_service_ongoing
+		}
+	}
+	GER_red_general_gleichen_russwurm = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+
+		cost = 50
+
+		available = {
+			check_variable = {
+				tooltip = GER_schleicher_right_or_centre
+				GER_schleicher_ideology < 67
+			}
+			has_country_flag = GER_red_general_new_state_flag
+		}
+
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_game_rule = { rule = GER_path option = GER_PATH_SCHLEICHER_AUTDEM }
+				OR = {
+					has_idea = GER_new_state_5
+					AND = {
+						has_idea = GER_new_state_4
+						has_country_flag = GER_anti_democratic_civil_service_ongoing
+					}
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_gleichen_russwurm"
+			if = {
+				limit = {
+					has_country_flag = GER_red_general_new_state_flag
+				}
+				GER_increase_new_state = yes
+			}
+			else = {
+				swap_ideas = {
+					remove_idea = GER_new_state_1
+					add_idea = GER_new_state_2
+				}
+				# only exists for tooltip
+			}
+			custom_effect_tooltip = GER_schleicher_move_right
+			add_to_variable = { GER_schleicher_ideology = -20 }
+			clamp_variable = { var = GER_schleicher_ideology max = 100 min = 0 }
+			custom_effect_tooltip = tooltip_white_line
+		}
+	}
+	GER_red_general_geheimes_polizeiamt = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+
+		cost = 50
+
+		available = {
+			GER_ferdinand_von_bredow = { is_political_advisor = yes }
+			has_country_flag = GER_red_general_new_state_flag
+		}
+
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_game_rule = { rule = GER_path option = GER_PATH_SCHLEICHER_AUTDEM }
+				OR = {
+					has_idea = GER_new_state_5
+					AND = {
+						has_idea = GER_new_state_4
+						has_country_flag = GER_anti_democratic_civil_service_ongoing
+					}
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_geheimes_polizeiamt"
+			if = {
+				limit = {
+					has_country_flag = GER_red_general_new_state_flag
+				}
+				GER_increase_new_state = yes
+			}
+			else = {
+				swap_ideas = {
+					remove_idea = GER_new_state_1
+					add_idea = GER_new_state_2
+				}
+				# only exists for tooltip
+			}
+		}
+	}
+	GER_red_general_embrace_tat_circle = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+
+		available = {
+			check_variable = {
+				tooltip = GER_schleicher_right_or_centre
+				GER_schleicher_ideology < 67
+			}
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_embrace_tat_circle"
+			country_event = gerschl.58
+			custom_effect_tooltip = GER_schleicher_move_right
+			add_to_variable = { GER_schleicher_ideology = -20 }
+			clamp_variable = { var = GER_schleicher_ideology max = 100 min = 0 }
+			custom_effect_tooltip = tooltip_white_line
+		}
+	}
+	GER_red_general_workers_leisure = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 20
+		days_remove = 120
+		modifier = {
+			consumer_goods_factor = 0.1
+		}
+
+		available = {
+			check_variable = {
+				tooltip = GER_schleicher_left_or_centre
+				GER_schleicher_ideology > 34
+			}
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_workers_leisure"
+			add_stability = 0.05
+			add_popularity = {
+				ideology = authoritarian_democrat
+				popularity = 0.05
+			}
+			add_timed_idea = { idea = GER_worker_bribery days = 180 }
+			custom_effect_tooltip = GER_schleicher_move_left
+			add_to_variable = { GER_schleicher_ideology = 20 }
+			clamp_variable = { var = GER_schleicher_ideology max = 100 min = 0 }
+			custom_effect_tooltip = tooltip_white_line
+		}
+	}
+	GER_red_general_intimidate_reichstag = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 30
+
+		available = {
+			has_country_flag = GER_red_general_new_state_flag
+		}
+
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_game_rule = { rule = GER_path option = GER_PATH_SCHLEICHER_AUTDEM }
+				OR = {
+					has_idea = GER_new_state_5
+					AND = {
+						has_idea = GER_new_state_4
+						has_country_flag = GER_anti_democratic_civil_service_ongoing
+					}
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_intimidate_reichstag"
+			if = {
+				limit = {
+					has_country_flag = GER_red_general_new_state_flag
+				}
+				GER_increase_new_state = yes
+			}
+			else = {
+				swap_ideas = {
+					remove_idea = GER_new_state_1
+					add_idea = GER_new_state_2
+				}
+				# only exists for tooltip
+			}
+		}
+	}
+	GER_red_general_expand_schleicher_block = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 10
+
+		available = {
+			has_completed_focus = GER_querverbindung
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_expand_schleicher_block"
+			add_timed_idea = { idea = GER_smooth_parliament_work days = 180 }
+			add_stability = 0.04
+		}
+	}
+	GER_red_general_curatorium_for_adolescence = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 20
+		days_remove = 120
+		modifier = {
+			conscription_factor = -0.05
+		}
+
+		available = {
+			has_country_flag = GER_red_general_new_state_flag
+		}
+
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				has_game_rule = { rule = GER_path option = GER_PATH_SCHLEICHER_AUTDEM }
+				OR = {
+					has_idea = GER_new_state_5
+					AND = {
+						has_idea = GER_new_state_4
+						has_country_flag = GER_anti_democratic_civil_service_ongoing
+					}
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_curatorium_for_adolescence"
+			if = {
+				limit = {
+					has_country_flag = GER_red_general_new_state_flag
+				}
+				GER_increase_new_state = yes
+			}
+			else = {
+				swap_ideas = {
+					remove_idea = GER_new_state_1
+					add_idea = GER_new_state_2
+				}
+				# only exists for tooltip
+			}
+		}
+	}
+	GER_red_general_take_over_kyffhauser = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 20
+		days_remove = 120
+		modifier = {
+			consumer_goods_factor = 0.1
+		}
+
+		available = {
+			check_variable = {
+				tooltip = GER_schleicher_right_or_centre
+				GER_schleicher_ideology < 67
+			}
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_take_over_kyffhauser"
+			add_war_support = 0.05
+			add_timed_idea = { idea = GER_kyffhauser days = 180 }
+			custom_effect_tooltip = GER_schleicher_move_right
+			add_to_variable = { GER_schleicher_ideology = -20 }
+			clamp_variable = { var = GER_schleicher_ideology max = 100 min = 0 }
+			custom_effect_tooltip = tooltip_white_line
+		}
+	}
+	GER_red_general_local_women_suffrage = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 20
+
+		available = {
+			check_variable = {
+				tooltip = GER_schleicher_left_only
+				GER_schleicher_ideology > 66
+			}
+			has_country_flag = GER_red_general_reichsfrauenbund_flag
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_local_women_suffrage"
+			swap_ideas = {
+				remove_idea = GER_schleicher_women_1
+				add_idea = GER_schleicher_women_2
+			}
+			add_stability = 0.05
+		}
+	}
+	GER_red_general_reichsfrauenbund = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 50
+
+		available = {
+			check_variable = {
+				tooltip = GER_schleicher_right_or_centre
+				GER_schleicher_ideology < 67
+			}
+			has_completed_focus = GER_national_unity_front
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_reichsfrauenbund"
+			set_country_flag = GER_red_general_reichsfrauenbund_flag
+			add_popularity = {
+				ideology = authoritarian_democrat
+				popularity = 0.05
+			}
+			add_ideas = GER_schleicher_women_1
+			add_war_support = 0.05
+		}
+	}
+	GER_red_general_national_jews_association = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+
+		available = {
+			has_completed_focus = GER_national_unity_front
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_national_jews_association"
+			add_political_power = 50
+			add_stability = 0.01
+		}
+	}
+	GER_red_general_align_volkisch_associations = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+
+		available = {
+			check_variable = {
+				tooltip = GER_schleicher_right_only
+				GER_schleicher_ideology < 34
+			}
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_align_volkisch_associations"
+			add_political_power = 75
+			add_popularity = {
+				ideology = national_populist
+				popularity = 0.03
+			}
+			hidden_effect = { GER_eduard_stadtler = { set_nationality = ROOT } }
+			custom_effect_tooltip = available_political_advisor
+			show_ideas_tooltip = GER_eduard_stadtler_advisor
+		}
+	}
+	GER_red_general_absorb_aspd = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 25
+
+		available = {
+			check_variable = {
+				tooltip = GER_schleicher_left_only
+				GER_schleicher_ideology > 66
+			}
+			has_completed_focus = GER_gewerkschaftsbund
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_absorb_aspd"
+			set_country_flag = GER_red_general_absorb_aspd_flag
+			add_popularity = {
+				ideology = social_democrat
+				popularity = -0.06
+			}
+			set_party_name = {
+				ideology = social_democrat
+				long_name = GER_old_social_democrat_party_long
+				name = GER_old_social_democrat_party
+			}
+			set_temp_variable = { coalition_partner_var = token:social_democrat }
+			add_to_coalition = yes
+			hidden_effect = { GER_ernst_niekisch = { set_nationality = ROOT } }
+			custom_effect_tooltip = available_political_advisor
+			show_ideas_tooltip = GER_ernst_niekisch_advisor
+			custom_effect_tooltip = GER_schleicher_move_left
+			add_to_variable = { GER_schleicher_ideology = 20 }
+			clamp_variable = { var = GER_schleicher_ideology max = 100 min = 0 }
+		}
+	}
+	GER_red_general_federal_land = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 25
+
+		available = {
+			has_completed_focus = GER_nationalise_prussian_secret_police
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_federal_land"
+			random_owned_controlled_state = {
+				add_extra_state_shared_building_slots = 1
+			}
+			random_owned_controlled_state = {
+				add_extra_state_shared_building_slots = 1
+			}
+			random_owned_controlled_state = {
+				add_extra_state_shared_building_slots = 1
+			}
+		}
+	}
+	GER_red_general_seize_industries = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 40
+		days_remove = 200
+		modifier = {
+			consumer_goods_factor = -0.1
+			production_speed_buildings_factor = 0.05
+			political_power_factor = -0.15
+		}
+
+		available = {
+			check_variable = {
+				tooltip = GER_schleicher_left_only
+				GER_schleicher_ideology > 66
+			}
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_seize_industries"
+			random_owned_controlled_state = {
+				limit = {
+					is_core_of = ROOT
+					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
+				}
+				add_extra_state_shared_building_slots = 1
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
+				}
+			}
+			random_owned_controlled_state = {
+				limit = {
+					is_core_of = ROOT
+					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
+				}
+				add_extra_state_shared_building_slots = 1
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
+				}
+			}
+			random_owned_controlled_state = {
+				limit = {
+					is_core_of = ROOT
+					free_building_slots = { building = industrial_complex size > 0 include_locked = yes }
+				}
+				add_extra_state_shared_building_slots = 1
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
+				}
+			}
+			custom_effect_tooltip = GER_schleicher_move_left
+			add_to_variable = { GER_schleicher_ideology = 20 }
+			clamp_variable = { var = GER_schleicher_ideology max = 100 min = 0 }
+			custom_effect_tooltip = tooltip_white_line
+		}
+	}
+	GER_red_general_privatize_industries = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 40
+		days_remove = 200
+		modifier = {
+			consumer_goods_factor = -0.1
+			production_speed_industrial_complex_factor = 0.4
+			production_speed_arms_factory_factor = -0.15
+		}
+
+		available = {
+			check_variable = {
+				tooltip = GER_schleicher_right_only
+				GER_schleicher_ideology < 34
+			}
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_privatize_industries"
+			add_stability = 0.04
+			custom_effect_tooltip = GER_schleicher_move_right
+			add_to_variable = { GER_schleicher_ideology = -20 }
+			clamp_variable = { var = GER_schleicher_ideology max = 100 min = 0 }
+			custom_effect_tooltip = tooltip_white_line
+		}
+	}
+	GER_red_general_army_of_labour = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 25
+
+		available = {
+			check_variable = {
+				tooltip = GER_schleicher_left_or_centre
+				GER_schleicher_ideology > 34
+			}
+			has_idea = GER_freiwillige_arbeitsdienst_idea
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_army_of_labour"
+			swap_ideas = {
+				remove_idea = GER_freiwillige_arbeitsdienst_idea
+				add_idea = GER_labour_army_idea
+			}
+			custom_effect_tooltip = GER_schleicher_move_left
+			add_to_variable = { GER_schleicher_ideology = 20 }
+			clamp_variable = { var = GER_schleicher_ideology max = 100 min = 0 }
+			custom_effect_tooltip = tooltip_white_line
+		}
+	}
+	GER_red_general_ally_national_liberals = {
+		icon = GFX_decision_generic_army_support
+
+		allowed = { always = no } #activated by effect
+
+		fire_only_once = yes
+		cost = 25
+
+		available = {
+			check_variable = {
+				tooltip = GER_schleicher_right_only
+				GER_schleicher_ideology < 34
+			}
+		}
+
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GER_red_general_ally_national_liberals"
+			set_country_flag = GER_red_general_ally_national_liberals_flag
+			add_popularity = {
+				ideology = market_liberal
+				popularity = 0.06
+			}
+			set_party_name = {
+				ideology = market_liberal
+				long_name = GER_market_liberal_nlp_party_long
+				name = GER_market_liberal_nlp_party
+			}
+			set_temp_variable = { coalition_partner_var = token:market_liberal }
+			add_to_coalition = yes
+			hidden_effect = { GER_paul_reusch = { set_nationality = ROOT } }
+			custom_effect_tooltip = available_political_advisor
+			show_ideas_tooltip = GER_paul_reusch_advisor
+			custom_effect_tooltip = GER_schleicher_move_right
+			add_to_variable = { GER_schleicher_ideology = -20 }
+			clamp_variable = { var = GER_schleicher_ideology max = 100 min = 0 }
+			custom_effect_tooltip = tooltip_white_line
 		}
 	}
 }

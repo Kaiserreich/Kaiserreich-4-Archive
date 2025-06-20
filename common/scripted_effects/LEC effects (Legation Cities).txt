@@ -3,30 +3,36 @@
 # default increase is +1 - set a temp_variable LEC_currency_change for different values
 LEC_change_currency_reserves = {
 	if = {
-		limit = { has_idea = var:LEC_currency_idea }
-		if = {
-			limit = { NOT = { has_variable = LEC_currency_change } }
-			set_temp_variable = { LEC_currency_change = 1 }
+		limit = { has_variable = LEC.LEC_currency_reserves }
+
+		set_temp_variable = { LEC_new_currency_value = LEC.LEC_currency_reserves }
+		add_to_temp_variable = { LEC_new_currency_value = LEC_currency_change?1 }
+
+		# avoid going < 1 or > 9
+		clamp_temp_variable = {
+			var = LEC_new_currency_value
+			min = 1
+			max = 9
 		}
-		set_temp_variable = { LEC_currency_reserves_temp = LEC_currency_reserves }
-		add_to_temp_variable = { LEC_currency_reserves_temp = LEC_currency_change }
-		clamp_temp_variable = { var = LEC_currency_reserves_temp min = 1 max = 9 }
+
 		if = {
-			limit = { NOT = { check_variable = { LEC_currency_reserves = LEC_currency_reserves_temp } } }
-			effect_tooltip = {
-				swap_ideas = {
-					remove_idea = var:LEC_currency_idea
-					add_idea = var:LEC_currency_ideas^LEC_currency_reserves_temp
-				}
-			}
-			add_to_variable = { LEC_currency_reserves = LEC_currency_change }
-			clamp_variable = { var = LEC_currency_reserves min = 1 max = 9 }
-			hidden_effect = {
-				#do not use swap_ideas here, it breaks the on_add/on_remove logic
-				if = {
-					limit = { NOT = { has_idea = var:LEC_currency_ideas^LEC_currency_reserves } }
-					remove_ideas = var:LEC_currency_idea
-					add_ideas = var:LEC_currency_ideas^LEC_currency_reserves
+			limit = { NOT = { check_variable = { LEC_new_currency_value = LEC.LEC_currency_reserves } } }
+			LEC = {
+				meta_effect = {
+					text = {
+						effect_tooltip = {
+							swap_ideas = {
+								remove_idea = LEC_currency_[OLD_LEVEL]
+								add_idea = LEC_currency_[NEW_LEVEL]
+							}
+						}
+						hidden_effect = {
+							remove_ideas = LEC_currency_[OLD_LEVEL]
+							add_ideas = LEC_currency_[NEW_LEVEL]
+						}
+					}
+					OLD_LEVEL = "[?LEC_currency_reserves]"
+					NEW_LEVEL = "[?LEC_new_currency_value]"
 				}
 			}
 		}

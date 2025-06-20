@@ -14,12 +14,8 @@ unique_id = kr_achievements
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			# 2WK has come and gone, player is not at war (i.e. they lived)
-			has_global_flag = second_weltkrieg_has_started
+			has_global_flag = second_weltkrieg_has_ended
 			has_war = no
-			custom_trigger_tooltip = {
-				tooltip = second_weltkrieg_is_over_tooltip
-				second_weltkrieg_is_over = yes
-			}
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -85,16 +81,13 @@ unique_id = kr_achievements
 				tooltip = achievement_home_by_christmas_tooltip
 				has_global_flag = { flag = weltkrieg_home_by_christmas_achievement_timer value > 0 }
 			}
-			has_war = no
 			OR = { # Reichspakt, Moscow Accord, or Internationale
 				is_in_faction_with = GER
 				is_in_faction_with = RUS
 				is_in_faction_with = INT
 			}
-			custom_trigger_tooltip = {
-				tooltip = second_weltkrieg_is_over_tooltip
-				second_weltkrieg_is_over = yes
-			}
+			has_global_flag = second_weltkrieg_has_ended
+			has_war_with_major = no
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -130,7 +123,7 @@ ARG_reconquest_of_the_desert_achievement = {
 			owns_state = 1029 # Santa Cruz
 			OR = {
 				CHL = { has_socialist_government = no }
-				CHL = { exists = no }
+				NOT = { country_exists = CHL }
 			}
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
@@ -188,12 +181,7 @@ AUS_indivisibiliter_ac_inseparabiliter_achievement = {
 				107 = { is_owned_by_ROOT_or_ally = yes } # Belgrade
 				46 = { is_owned_by_ROOT_or_ally = yes } # Muntenia
 			}
-			has_global_flag = second_weltkrieg_has_started
-			custom_trigger_tooltip = {
-				tooltip = second_weltkrieg_is_over_tooltip
-				second_weltkrieg_is_over = yes
-			}
-			has_war = no
+			second_weltkrieg_is_over_in_europe = yes
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -229,12 +217,7 @@ BAT_baltic_knight_rises_achievement = {
 			BAT = {
 				NOT = { has_country_flag = BAT_flight_to_riga }
 			}
-			has_global_flag = second_weltkrieg_has_started
-			has_war = no
-			custom_trigger_tooltip = {
-				tooltip = second_weltkrieg_is_over_tooltip
-				second_weltkrieg_is_over = yes
-			}
+			second_weltkrieg_is_over_in_europe = yes
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -302,12 +285,7 @@ BLR_get_out_of_my_marsh_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			tag = BLR #Disable for RSA or any tag switch
 			# 2WK has come and gone, player is not at war (i.e. they lived)
-			has_global_flag = second_weltkrieg_has_started
-			has_war = no
-			custom_trigger_tooltip = {
-				tooltip = second_weltkrieg_is_over_tooltip
-				second_weltkrieg_is_over = yes
-			}
+			second_weltkrieg_is_over_in_europe = yes
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -493,7 +471,7 @@ CHINA_FED_begonia_with_many_leaves_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			custom_trigger_tooltip = {
 				tooltip = formed_upc_tooltip
-				check_variable = { country_leader:china_alignment = token:federalists }
+				china_alignment_federalists = yes
 				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
@@ -592,7 +570,7 @@ CHINA_QIE_raise_your_banners_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			custom_trigger_tooltip = {
 				tooltip = formed_qing_tooltip
-				check_variable = { country_leader:china_alignment = token:manchu_qing }
+				china_alignment_manchu_qing = yes
 				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
@@ -640,7 +618,7 @@ CHINA_RKMT_forget_not_what_happened_in_ju_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			custom_trigger_tooltip = {
 				tooltip = formed_roc_tooltip
-				check_variable = { country_leader:china_alignment = token:right_kuomintang }
+				china_alignment_right_kuomintang = yes
 				china_is_the_unifier_of_china_trigger = yes
 			}
 		}
@@ -694,8 +672,8 @@ CHINA_SIK_watching_the_western_wall_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			tag = SIK
 			has_global_flag = SIK_ETS_rebellion
-			ETS = { exists = no }
-			KUM = { exists = no }
+			NOT = { country_exists = ETS }
+			NOT = { country_exists = KUM }
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -740,7 +718,7 @@ CHINA_XSM_master_of_the_northwest_achievement = {
 
 CHINA_little_trouble_in_big_china_achievement = {
 	possible = {
-		is_chinese_tag = yes
+		is_chinese_or_potential_chinese_tag = yes
 	}
 
 	happened = {
@@ -748,7 +726,12 @@ CHINA_little_trouble_in_big_china_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			custom_trigger_tooltip = {
 				tooltip = little_trouble_in_big_china_achievement_tooltip
-				is_chinese_tag = yes
+				if = { # putting this on all generic China achievements to make sure KUM can only do it if ruled by a Han leader
+					limit = {
+						original_tag = KUM
+					}
+					has_country_flag = KUM_is_chinese_tag
+				}
 				all_of_scopes = {
 					array = global.chinese_states
 					is_owned_by_ROOT_or_subject = yes
@@ -761,7 +744,7 @@ CHINA_little_trouble_in_big_china_achievement = {
 
 CHINA_source_of_the_nation_achievement = {
 	possible = {
-		is_chinese_tag = yes
+		is_chinese_or_potential_chinese_tag = yes
 	}
 
 	happened = {
@@ -769,6 +752,12 @@ CHINA_source_of_the_nation_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			custom_trigger_tooltip = {
 				tooltip = source_of_the_nation_achievement_tooltip
+				if = { # putting this on all generic China achievements to make sure KUM can only do it if ruled by a Han leader
+					limit = {
+						original_tag = KUM
+					}
+					has_country_flag = KUM_is_chinese_tag
+				}
 				capital_scope = { state = 799 } # Guanzhong (Xi'an)
 			}
 			has_country_flag = china_is_potential_government
@@ -780,7 +769,7 @@ CHINA_source_of_the_nation_achievement = {
 
 CHINA_walking_on_sunshine_achievement = {
 	possible = {
-		is_chinese_tag = yes
+		is_chinese_or_potential_chinese_tag = yes
 	}
 
 	happened = {
@@ -788,7 +777,12 @@ CHINA_walking_on_sunshine_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			custom_trigger_tooltip = {
 				tooltip = walking_on_the_sun_achievement_tooltip
-				is_chinese_tag = yes # putting this on all generic China achievements to make sure ETS and KUM can't do them
+				if = { # putting this on all generic China achievements to make sure KUM can only do it if ruled by a Han leader
+					limit = {
+						original_tag = KUM
+					}
+					has_country_flag = KUM_is_chinese_tag
+				}
 				has_global_flag = walking_on_the_sun_achievement_condition
 			}
 		}
@@ -822,11 +816,11 @@ ENG_the_peoples_flag_achievement = {
 	happened = {
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
-			has_global_flag = second_weltkrieg_has_started # 2WK has started
-			GER = { exists = no }
+			has_global_flag = second_weltkrieg_has_ended # 2WK in Europe is over
+			NOT = { country_exists = GER }
 			custom_trigger_tooltip = {
 				tooltip = the_peoples_flag_achievement_tooltip
-				ENT = { exists = no }
+				NOT = { country_exists = ENT }
 			}
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
@@ -846,12 +840,7 @@ EST_trees_speak_finno_ugric_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			tag = EST
 			# 2WK has come and gone, player is not at war (i.e. they lived)
-			has_global_flag = second_weltkrieg_has_started
-			has_war = no
-			custom_trigger_tooltip = {
-				tooltip = second_weltkrieg_is_over_tooltip
-				second_weltkrieg_is_over = yes
-			}
+			second_weltkrieg_is_over_in_europe = yes
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -870,8 +859,8 @@ ETS_yarkando_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			tag = ETS
 			has_global_flag = SIK_ETS_rebellion
-			SIK = { exists = no }
-			KUM = { exists = no }
+			NOT = { country_exists = SIK }
+			NOT = { country_exists = KUM }
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -917,9 +906,8 @@ FRA_syndicalist_bias_achievement = {
 	happened = {
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
-			has_global_flag = second_weltkrieg_has_started # 2WK has started
-			GER = { exists = no }
-			NFA = { exists = no }
+			has_global_flag = second_weltkrieg_has_ended # GER was defeated
+			NOT = { country_exists = NFA }
 			custom_trigger_tooltip = {
 				tooltip = syndicalist_bias_achievement_tooltip
 				28 = { is_owned_and_controlled_by = ROOT } # Alcase-Lorraine
@@ -939,7 +927,7 @@ GBR_just_a_very_long_holiday_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			tag = GBR
 			has_global_flag = second_weltkrieg_has_started # 2WK has started
-			ENG = { exists = no }
+			NOT = { country_exists = ENG }
 			custom_trigger_tooltip = {
 				tooltip = just_a_very_long_holiday_achievement_tooltip
 				CAN = { has_country_flag = CAN_returned_king } # UK restored
@@ -1007,10 +995,8 @@ GER_name_of_the_game_achievement = {
 	happened = {
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
-			has_global_flag = second_weltkrieg_has_started # 2WK has started
 			tag = GER #Disable for RSA or any tag switch
-			RUS = { is_faction_leader = no } # RUS lost
-			INT = { NOT = { has_war_with = GER } } # Either the 3I is dead, or Peace with Honour
+			second_weltkrieg_is_over_in_europe = yes
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -1030,9 +1016,7 @@ GER_only_mostly_dead_achievement = {
 					has_country_flag = GER_republic_established
 					has_country_flag = GER_bauer_putsch
 				}
-				has_global_flag = second_weltkrieg_has_started # 2WK has started
-				RUS = { is_faction_leader = no } # RUS lost
-				INT = { NOT = { has_war_with = GER } } # Either the 3I is dead, or Peace with Honour
+				second_weltkrieg_is_over_in_europe = yes
 			}
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
@@ -1075,12 +1059,7 @@ GRE_greeks_shall_inherit_the_earth_achievement = {
 			owns_state = 731 # Western Macedonia
 			owns_state = 769 # Eastern Macedonia
 			# 2WK has come and gone, player is not at war (i.e. they lived)
-			has_global_flag = second_weltkrieg_has_started
-			has_war = no
-			custom_trigger_tooltip = {
-				tooltip = second_weltkrieg_is_over_tooltip
-				second_weltkrieg_is_over = yes
-			}
+			second_weltkrieg_is_over_in_europe = yes
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -1289,7 +1268,7 @@ IRE_fighting_irish_achievement = {
 							exists = yes
 							is_subject = no
 						}
-						FOP = { exists = no }
+						NOT = { country_exists = FOP }
 					}
 					AND = {
 						has_country_flag = IRE_supported_FOP
@@ -1297,7 +1276,7 @@ IRE_fighting_irish_achievement = {
 							exists = yes
 							is_subject = no
 						}
-						ARG = { exists = no }
+						NOT = { country_exists = ARG }
 					}
 				}
 			}
@@ -1306,7 +1285,7 @@ IRE_fighting_irish_achievement = {
 				OR = {
 					AND = {
 						has_country_flag = IRE_supported_OTT
-						OTT = { exists = yes }
+						country_exists = OTT
 						OTT_cairo_pact_defeated = yes
 					}
 					AND = {
@@ -1367,12 +1346,7 @@ IRE_youll_never_beat_the_irish_achievement = {
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			# 2WK has come and gone, player is not at war (i.e. they lived)
-			has_global_flag = second_weltkrieg_has_started
-			has_war = no
-			custom_trigger_tooltip = {
-				tooltip = second_weltkrieg_is_over_tooltip
-				second_weltkrieg_is_over = yes
-			}
+			second_weltkrieg_is_over_in_europe = yes
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -1387,12 +1361,12 @@ ITA_bandiera_rossa_achievement = {
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			has_country_flag = SRI_italy_unified_flag
-			ITA = { exists = no }
-			SIC = { exists = no }
-			PAP = { exists = no }
-			SRD = { exists = no }
-			LOM = { exists = no }
-			VNC = { exists = no }
+			NOT = { country_exists = ITA }
+			NOT = { country_exists = SIC }
+			NOT = { country_exists = PAP }
+			NOT = { country_exists = SRD }
+			NOT = { country_exists = LOM }
+			NOT = { country_exists = VNC }
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -1408,10 +1382,10 @@ ITA_going_into_business_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			has_completed_focus = ITA_ani_elected
 			has_country_flag = ITA_united_italia
-			SRI = { exists = no }
-			SIC = { exists = no }
-			PAP = { exists = no }
-			SRD = { exists = no }
+			NOT = { country_exists = SRI }
+			NOT = { country_exists = SIC }
+			NOT = { country_exists = PAP }
+			NOT = { country_exists = SRD }
 			owns_state = 783 # Trento
 			owns_state = 488 # Trieste
 		}
@@ -1428,12 +1402,12 @@ ITA_outside_bet_achievement = {
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			has_completed_focus = SRD_italia_riunita
-			SRI = { exists = no }
-			ITA = { exists = no }
-			SIC = { exists = no }
-			PAP = { exists = no }
-			LOM = { exists = no }
-			VNC = { exists = no }
+			NOT = { country_exists = SRI }
+			NOT = { country_exists = ITA }
+			NOT = { country_exists = SIC }
+			NOT = { country_exists = PAP }
+			NOT = { country_exists = LOM }
+			NOT = { country_exists = VNC }
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -1449,10 +1423,10 @@ ITA_reversimento_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			has_completed_focus = ITA_king_of_italy
 			has_country_flag = ITA_united_italia
-			SRI = { exists = no }
-			SIC = { exists = no }
-			PAP = { exists = no }
-			SRD = { exists = no }
+			NOT = { country_exists = SRI }
+			NOT = { country_exists = SIC }
+			NOT = { country_exists = PAP }
+			NOT = { country_exists = SRD }
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -1470,10 +1444,10 @@ ITA_risposta_meridionale_achievement = {
 				has_country_flag = SIC_confed
 				has_country_flag = SIC_empire
 			}
-			SRI = { exists = no }
-			ITA = { exists = no }
+			NOT = { country_exists = SRI }
+			NOT = { country_exists = ITA }
 			OR = {
-				SRD = { exists = no }
+				NOT = { country_exists = SRD }
 				SRD = { is_subject_of = SIC }
 			}
 		}
@@ -1491,6 +1465,8 @@ ITA_road_to_redemption_achievement = {
 				tag = SIC
 				tag = SRD
 				tag = PAP
+				tag = LOM
+				tag = VNC
 			}
 		}
 	}
@@ -1527,10 +1503,10 @@ ITA_thought_and_action_achievement = {
 				}
 			}
 			has_country_flag = ITA_united_italia
-			SRI = { exists = no }
-			SIC = { exists = no }
-			PAP = { exists = no }
-			SRD = { exists = no }
+			NOT = { country_exists = SRI }
+			NOT = { country_exists = SIC }
+			NOT = { country_exists = PAP }
+			NOT = { country_exists = SRD }
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -1574,8 +1550,8 @@ KUM_wrath_of_the_khan_achievement = {
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			has_global_flag = SIK_ETS_rebellion
-			ETS = { exists = no }
-			SIK = { exists = no }
+			NOT = { country_exists = ETS }
+			NOT = { country_exists = SIK }
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -1595,12 +1571,7 @@ LAT_triumph_of_the_partisan_republic_achievement = {
 			tag = LAT
 			owns_state = 842 # Riga
 			# 2WK has come and gone, player is not at war (i.e. they lived)
-			has_global_flag = second_weltkrieg_has_started
-			has_war = no
-			custom_trigger_tooltip = {
-				tooltip = second_weltkrieg_is_over_tooltip
-				second_weltkrieg_is_over = yes
-			}
+			second_weltkrieg_is_over_in_europe = yes
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -1632,10 +1603,17 @@ LBA_caravan_simulator_achievement = {
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			custom_trigger_tooltip = {
-				tooltip = caravan_simulator_achievement_tooltip
+				tooltip = caravan_simulator_zawiya_tooltip
+				all_of_scopes = {
+					array = global.lba_zawiya_states
+					has_state_flag = lba_zawiya_2
+				}
+			}
+			custom_trigger_tooltip = {
+				tooltip = caravan_simulator_caravan_tooltip
 				all_of_scopes = {
 					array = global.lba_caravan_states
-					has_state_flag = lba_zawiya_2
+					has_state_flag = trading_post_upgraded
 				}
 			}
 		}
@@ -1678,12 +1656,7 @@ LIT_red_flood_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			tag = LIT #Disable for RSA or any tag switch
 			# 2WK has come and gone, player is not at war (i.e. they lived)
-			has_global_flag = second_weltkrieg_has_started
-			has_war = no
-			custom_trigger_tooltip = {
-				tooltip = second_weltkrieg_is_over_tooltip
-				second_weltkrieg_is_over = yes
-			}
+			second_weltkrieg_is_over_in_europe = yes
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -1816,14 +1789,14 @@ NFA_macmahons_third_law_achievement = {
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			has_global_flag = second_weltkrieg_has_started # 2WK has started
-			FRA = { exists = no }
-			OR = {
-				owns_state = 14 # Upper Brittany (Nantes)
-				owns_state = 16 # Ile de France (Paris)
-				owns_state = 19 # Aquitaine (Bordeaux)
-				owns_state = 20 # Lyonnais (Lyon)
-				owns_state = 21 # Provence (Marseille)
-				owns_state = 980 # Lille
+			NOT = { country_exists = FRA }
+			owns_any_state_of = {
+				14 # Upper Brittany (Nantes)
+				16 # Ile de France (Paris)
+				19 # Aquitaine (Bordeaux)
+				20 # Lyonnais (Lyon)
+				21 # Provence (Marseille)
+				980 # Lille
 			}
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
@@ -1931,12 +1904,7 @@ POL_still_not_lost_achievement = {
 					date > 1945.1.1
 					has_capitulated = no
 				}
-				custom_trigger_tooltip = {
-					tooltip = second_weltkrieg_is_over_tooltip
-					has_global_flag = second_weltkrieg_has_started
-					has_war = no
-					second_weltkrieg_is_over = yes
-				}
+				second_weltkrieg_is_over_in_europe = yes
 			}
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
@@ -2014,7 +1982,7 @@ RUS_and_hades_followed_achievement = {
 	happened = {
 		tag = RUS #Disable for FER / RSA
 		has_government = national_populist
-		GER = { exists = no }
+		NOT = { country_exists = GER }
 		custom_trigger_tooltip = {
 			tooltip = and_hades_followed_achievement_tooltip
 			NOT = {
@@ -2032,6 +2000,7 @@ RUS_from_siberia_with_love_achievement = {
 			hidden_trigger = { tag = RUS } #Tag switch
 			hidden_trigger = { tag = FNG } #Tag switch
 			hidden_trigger = { tag = JAP } #Tag switch
+			hidden_trigger = { tag = MON } #Tag switch
 		}
 	}
 
@@ -2050,8 +2019,7 @@ RUS_see_nick_that_wasnt_so_hard_achievement_achievement = {
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			tag = RUS #Disable for FER / RSA
-			has_global_flag = second_weltkrieg_has_started # 2WK has started
-			GER = { exists = no }
+			has_global_flag = second_weltkrieg_has_ended # GER was defeated
 			custom_trigger_tooltip = {
 				tooltip = see_nick_achievement_tooltip
 			# all starting Oststaaten territory (excluding FIN) are owned by Russia or an ally
@@ -2445,12 +2413,7 @@ UKR_hot_heart_of_the_ukrainian_people_achievement = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			tag = UKR #Disable for RSA or any tag switch
 			# 2WK has come and gone, player is not at war (i.e. they lived)
-			has_global_flag = second_weltkrieg_has_started
-			has_war = no
-			custom_trigger_tooltip = {
-				tooltip = second_weltkrieg_is_over_tooltip
-				second_weltkrieg_is_over = yes
-			}
+			second_weltkrieg_is_over_in_europe = yes
 		}
 		else = { custom_trigger_tooltip = { tooltip = achievements_disabled	always = no } }
 	}
@@ -2504,7 +2467,7 @@ UKR_war_against_the_world_achievement = {
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
 			has_government = syndicalist
-			has_global_flag = second_weltkrieg_has_started
+			has_global_flag = second_weltkrieg_has_ended
 			UKR = {
 				NOT = { has_war_with = GER }
 				NOT = { has_war_with = RUS }
@@ -2613,11 +2576,13 @@ USA_guns_of_the_patriots_achievement = {
 	happened = {
 		if = {
 			limit = { NOT = { has_global_flag = disallow_achievements_flag } }
+			has_completed_focus = NEE_Underground_Railroad
 			custom_trigger_tooltip = {
 				tooltip = guns_of_the_patriots_achievement_tooltip
-				tag = NEE
 				all_of_scopes = {
-					array = global.american_states
+					array = global.nee_safehouse_states
+					has_state_flag = stricter_security
+					has_state_flag = scouted_alternate_routes
 					NOT = { has_state_flag = blocked_route }
 				}
 			}

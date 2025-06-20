@@ -44,6 +44,7 @@ SER_focus_on_imro = {
 	enable = {
 		has_idea = SER_IMRO_rebellion
 		NOT = { has_global_flag = SER_imro_dont_attack }
+		NOT = { BUL = { focus_progress = { focus = BUL_macedonia_intervention progress > 0 } } } #Abort strategy if BUL is about to attack
 	}
 
 	abort_when_not_enabled = yes
@@ -66,6 +67,11 @@ SER_focus_on_imro = {
 		value = 30000
 	}
 
+	ai_strategy = { #Cant attack from ALB anyway no point in putting units there
+		type = dont_defend_ally_borders
+		id = ALB
+		value = 1000
+	}
 	ai_strategy = { #Cant attack from GRE anyway no point in putting units there
 		type = dont_defend_ally_borders
 		id = GRE
@@ -86,6 +92,7 @@ SER_dont_attack_during_lull_phase = {
 
 	enable = {
 		has_global_flag = SER_imro_dont_attack
+		NOT = { BUL = { focus_progress = { focus = BUL_macedonia_intervention progress > 0 } } } #Abort strategy if BUL is about to attack
 		if = {
 			limit = {
 				NOT = { original_tag = SER }
@@ -117,6 +124,7 @@ SER_garrison_kosovo_during_lull_phase = {
 	enable = {
 		has_global_flag = SER_imro_dont_attack
 		owns_state = 765
+		NOT = { BUL = { focus_progress = { focus = BUL_macedonia_intervention progress > 0 } } } #Abort strategy if BUL is about to attack
 	}
 
 	abort_when_not_enabled = yes
@@ -137,7 +145,12 @@ SER_rush_imro_in_action_phase = {
 	}
 
 	enable = {
+		has_completed_focus = SER_macedonian_rebellion
 		NOT = { has_global_flag = SER_imro_dont_attack }
+		NOT = { owns_state = 106 } #Macedonia
+		has_war_with = MAC
+		NOT = { BUL = { focus_progress = { focus = BUL_macedonia_intervention progress > 0 } } } #Abort strategy if BUL is about to attack
+		MAC = { has_cosmetic_tag = MAC_IMRO } #MAC has not declared open warfare, seperate ai strategy for that
 	}
 
 	abort_when_not_enabled = yes
@@ -152,10 +165,70 @@ SER_rush_imro_in_action_phase = {
 		manual_attack = yes
 	}
 
+	ai_strategy = { #Cant attack from ALB anyway no point in putting units there
+		type = dont_defend_ally_borders
+		id = ALB
+		value = 1000
+	}
 	ai_strategy = { #Cant attack from GRE anyway no point in putting units there
 		type = dont_defend_ally_borders
 		id = GRE
 		value = 1000
+	}
+}
+
+SER_imro_open_warfare = {
+	allowed = {
+		OR = {
+			original_tag = ALB
+			original_tag = BUL
+			original_tag = GRE
+			original_tag = ROM
+			original_tag = SER
+		}
+	}
+
+	enable = {
+		has_war_with = MAC
+		NOT = { MAC = { has_cosmetic_tag = MAC_IMRO } } #MAC has declared open warfare
+		check_variable = { enemies^num = 1 } #Only at war with MAC
+		NOT = { BUL = { focus_progress = { focus = BUL_macedonia_intervention progress > 0 } } } #Abort strategy if BUL is about to attack
+		if = {
+			limit = {
+				NOT = { original_tag = SER }
+			}
+			is_ally_with = BPL
+		}
+	}
+
+	abort_when_not_enabled = yes
+
+	ai_strategy = {
+		type = front_unit_request
+		country_trigger = { NOT = { original_tag = MAC } }
+		value = -300
+	}
+
+	ai_strategy = {
+		type = front_unit_request
+		tag = MAC
+		value = 300
+	}
+
+	ai_strategy = {
+		type = front_control
+		tag = MAC
+		priority = 100
+		ordertype = front
+		execution_type = rush
+		execute_order = yes
+		manual_attack = yes
+	}
+
+	ai_strategy = {
+		type = strategic_air_importance
+		id = 26 #Bulgaria
+		value = 30000
 	}
 }
 
@@ -165,7 +238,10 @@ MAC_dont_attack_serbia_during_lull_phase = {
 	}
 
 	enable = {
-		has_global_flag = SER_imro_dont_attack
+		OR = {
+			has_global_flag = SER_imro_dont_attack
+			has_country_flag = MAC_dont_attack_grace_period
+		}
 	}
 
 	abort_when_not_enabled = yes
@@ -176,6 +252,18 @@ MAC_dont_attack_serbia_during_lull_phase = {
 		execute_order = no
 		manual_attack = no
 	}
+
+	ai_strategy = { #Put all units against SER
+		type = front_unit_request
+		tag = BUL
+		value = -100
+	}
+
+	ai_strategy = { #Put all units against SER
+		type = front_unit_request
+		tag = GRE
+		value = -100
+	}
 }
 
 MAC_move_forward_in_action_phase = {
@@ -185,6 +273,7 @@ MAC_move_forward_in_action_phase = {
 
 	enable = {
 		NOT = { has_global_flag = SER_imro_dont_attack }
+		NOT = { has_country_flag = MAC_dont_attack_grace_period }
 	}
 
 	abort_when_not_enabled = yes
@@ -195,6 +284,18 @@ MAC_move_forward_in_action_phase = {
 		ordertype = front
 		execution_type = rush_weak
 		execute_order = yes
+	}
+
+	ai_strategy = { #Put all units against SER
+		type = front_unit_request
+		tag = BUL
+		value = -100
+	}
+
+	ai_strategy = { #Put all units against SER
+		type = front_unit_request
+		tag = GRE
+		value = -100
 	}
 }
 

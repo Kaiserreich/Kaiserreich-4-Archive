@@ -622,6 +622,15 @@ copy_government_of_ROOT = {
 			national_populist = ROOT.party_popularity_100@national_populist
 		}
 	}
+	create_coalitions_array_if_missing = yes
+	for_each_loop = {
+		array = ROOT.coalitions_array
+		set_variable = { coalitions_array^i = v }
+	}
+	for_each_loop = {
+		array = ROOT.coalition_stability_array
+		set_variable = { coalition_stability_array^i = v }
+	}
 }
 
 # changes the government of the country in scope to that of PREV
@@ -640,6 +649,15 @@ copy_government_of_PREV = {
 			paternal_autocrat = PREV.party_popularity_100@paternal_autocrat
 			national_populist = PREV.party_popularity_100@national_populist
 		}
+	}
+	create_coalitions_array_if_missing = yes
+	for_each_loop = {
+		array = PREV.coalitions_array
+		set_variable = { coalitions_array^i = v }
+	}
+	for_each_loop = {
+		array = PREV.coalition_stability_array
+		set_variable = { coalition_stability_array^i = v }
 	}
 }
 
@@ -782,9 +800,15 @@ get_current_government_type = {
 
 	if = {
 		limit = { has_coalition = yes }
+		resize_array = { original_coalitions = global.ideology_groups^num }
+		resize_array = { original_coalitions_stability = global.ideology_groups^num }
 		for_each_loop = {
-			array = coalition_partners
-			add_to_array = { original_coalitions = v }
+			array = coalitions_array
+			set_variable = { original_coalitions^i = v }
+		}
+		for_each_loop = {
+			array = coalition_stability_array
+			set_variable = { original_coalitions_stability^i = v }
 		}
 	}
 
@@ -876,10 +900,18 @@ restore_previous_government_type = {
 			limit = { check_variable = { original_coalitions^num > 0 } }
 			for_each_loop = {
 				array = original_coalitions
-				set_temp_variable = { coalition_partner_var = v }
-				add_to_coalition = yes
+				if = {
+					limit = { check_variable = { v = 1 } }
+					set_temp_variable = { coalition_partner_var = i }
+					add_to_coalition = yes
+				}
+			}
+			for_each_loop = {
+				array = original_coalitions_stability
+				set_variable = { coalition_stability_array^i = original_coalitions_stability^i }
 			}
 			clear_array = original_coalitions
+			clear_array = original_coalitions_stability
 		}
 
 		clr_country_flag = colonial_government

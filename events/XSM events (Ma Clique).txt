@@ -1802,7 +1802,7 @@ news_event = {# Northwest war
 #	}
 #}
 
-country_event = { #FROM offers terms
+country_event = { #XSM (FROM) surrenders to MON/TIB
 	id = mac.226
 	title = mac.226.t
 
@@ -1823,22 +1823,22 @@ country_event = { #FROM offers terms
 		log = "[GetLogInfo]: event mac.226 option mac.226.a"
 		name = mac.226.a #Yes, let's end this
 		add_political_power = 50
+		set_global_flag = northwest_conflict_ended
 		FROM = {
 			white_peace = MON
 			white_peace = TIB
 			hidden_effect = {
-				if = {
-					limit = {
-						OR = {
-							NOT = { has_war_with = MON }
-							NOT = { has_war_with = TIB }
-						}
-					}
-					remove_ideas = has_scripted_peace
-				}
+				remove_ideas = has_scripted_peace
 			}
 			if = {
 				limit = { ROOT = { original_tag = TIB } }
+				#If MON lost but TIB won clear MONs defeated flag
+				if = {
+					limit = {
+						MON = { has_country_flag = MON_defeated_in_northwest_war_flag }
+					}
+					MON = { clr_country_flag = MON_defeated_in_northwest_war_flag }
+				}
 				### free MON if it was puppeted or annexed
 				if = {
 					limit = { has_subject = MON }
@@ -1908,6 +1908,22 @@ country_event = { #FROM offers terms
 					}
 					transfer_state_to = ROOT
 				}
+
+				### Teleport armies home in case they are stuck in each others land
+				every_state = {
+					teleport_armies = {
+						limit = {
+							OR = {
+								original_tag = MON
+								original_tag = TIB
+								original_tag = XSM
+							}
+						}
+						to_state_array = owned_controlled_states
+					}
+				}
+
+				### Annex XSM into SHX if they exist
 				hidden_effect = {
 					SHX = { country_event = { id = shx_suiyuan_campaign.22 days = 1 } }
 				}
@@ -1977,10 +1993,30 @@ country_event = { #FROM offers terms
 					}
 					transfer_state_to = ROOT
 				}
+
+				### Teleport armies home in case they are stuck in each others land
+				every_state = {
+					teleport_armies = {
+						limit = {
+							OR = {
+								original_tag = MON
+								original_tag = TIB
+								original_tag = XSM
+							}
+						}
+						to_state_array = owned_controlled_states
+					}
+				}
+
+				### Annex XSM into SHX if they exist
 				hidden_effect = {
 					SHX = { country_event = { id = shx_suiyuan_campaign.22 days = 1 } }
 				}
 			}
+		}
+		hidden_effect = {
+			TIB = { country_event = { id = tib.2 days = 370 } }
+			XSM = { country_event = { id = mac.208 days = 3 } }
 		}
 	}
 
@@ -2018,6 +2054,7 @@ country_event = { #FROM refuses peace
 	option = {
 		log = "[GetLogInfo]: event mac.227 option mac.227.a"
 		name = mac.227.a
+		remove_ideas = has_scripted_peace
 		add_stability = 0.10
 		add_war_support = 0.10
 	}
@@ -2108,7 +2145,7 @@ country_event = { #FROM refuses peace
 #	}
 #}
 
-country_event = { #FROM offers terms
+country_event = { #MON/TIB (FROM) surrender to XSM
 	id = mac.230
 	title = mac.230.t
 	desc = mac.230.d
@@ -2120,7 +2157,38 @@ country_event = { #FROM offers terms
 	option = {
 		log = "[GetLogInfo]: event mac.230 option mac.230.a"
 		name = mac.230.a #Yes, let's end this
-		add_political_power = -50
+		add_political_power = 50
+		if = {
+			limit = {
+				OR = {
+					AND = {
+						FROM = { tag = TIB }
+						OR = {
+							MON = { has_country_flag = MON_defeated_in_northwest_war_flag }
+							NOT = { country_exists = MON }
+						}
+					}
+					AND = {
+						FROM = { tag = MON }
+						NOT = { XSM = { has_war_with = TIB } }
+					}
+				}
+			}
+			set_global_flag = northwest_conflict_ended
+			### Teleport armies home in case they are stuck in each others land
+			every_state = {
+				teleport_armies = {
+					limit = {
+						OR = {
+							original_tag = MON
+							original_tag = TIB
+							original_tag = XSM
+						}
+					}
+					to_state_array = owned_controlled_states
+				}
+			}
+		}
 		FROM = {
 			hidden_effect = { remove_ideas = has_scripted_peace }
 			if = { #If MON loses set MONs defeated flag
@@ -2128,13 +2196,6 @@ country_event = { #FROM offers terms
 					original_tag = MON
 				}
 				set_country_flag = MON_defeated_in_northwest_war_flag
-			}
-			else_if = { #If MON lost but TIB won clear MONs defeated flag
-				limit = {
-					original_tag = XSM
-					MON = { has_country_flag = MON_defeated_in_northwest_war_flag }
-				}
-				MON = { clr_country_flag = MON_defeated_in_northwest_war_flag }
 			}
 			every_owned_state = {
 				limit = {
@@ -2152,6 +2213,20 @@ country_event = { #FROM offers terms
 				country = ROOT
 				relation = non_aggression_pact
 				active = yes
+			}
+		}
+		hidden_effect = {
+			if = {
+				limit = {
+					FROM = { tag = TIB }
+				}
+				TIB = { country_event = { id = tib.2 days = 370 } }
+			}
+			if = {
+				limit = {
+					has_global_flag = northwest_conflict_ended
+				}
+				XSM = { country_event = { id = mac.208 days = 3 } }
 			}
 		}
 	}

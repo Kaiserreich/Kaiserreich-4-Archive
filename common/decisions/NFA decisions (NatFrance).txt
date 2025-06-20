@@ -1121,7 +1121,7 @@ NFA_reclaim_metropole_cat = {
 						FROM = { surrender_progress < 0.5 }
 						is_ally_with = NEE
 						OR = {
-							CAN = { has_country_flag = CAN_supports_NEE }
+							has_global_flag = CAN_supports_NEE
 							NEE = { has_country_flag = NEE_claimed_america }
 						}
 						NOT = { CAN = { has_country_flag = CAN_white_peaced_ACW } }
@@ -1129,21 +1129,21 @@ NFA_reclaim_metropole_cat = {
 					}
 					#help USA unite America first
 					AND = {
-						CAN = { has_country_flag = CAN_supports_USA }
+						has_global_flag = CAN_supports_USA
 						country_exists = USA
 						NOT = { CAN = { has_country_flag = CAN_white_peaced_ACW } }
 						NOT = { has_global_flag = USA_civil_war_over_flag }
 					}
 					#help PSA unite America first
 					AND = {
-						CAN = { has_country_flag = CAN_supports_PSA }
+						has_global_flag = CAN_supports_PSA
 						country_exists = PSA
 						NOT = { CAN = { has_country_flag = CAN_white_peaced_ACW } }
 						NOT = { has_global_flag = USA_civil_war_over_flag }
 					}
 					#help TEX unite America first
 					AND = {
-						CAN = { has_country_flag = CAN_supports_TEX }
+						has_global_flag = CAN_supports_TEX
 						country_exists = TEX
 						NOT = { CAN = { has_country_flag = CAN_white_peaced_ACW } }
 						NOT = { has_global_flag = USA_civil_war_over_flag }
@@ -2499,7 +2499,7 @@ NFA_rebuild_legitimacy_cat = {
 			log = "[GetLogRoot]: Decision complete NFA_Small_Propaganda"
 			every_owned_state = { #Check all states of NFA
 				limit = {
-					is_mainland_france_state = yes #Only grab the states in Mainland France
+					is_france = yes
 					has_resistance = yes
 				}
 				add_dynamic_modifier = { modifier = NFA_small_propaganda_effort days = 60 }
@@ -2511,7 +2511,7 @@ NFA_rebuild_legitimacy_cat = {
 			effect_tooltip = {
 				every_owned_state = { #Check all states of NFA
 					limit = {
-						is_mainland_france_state = yes #Only grab the states in Mainland France
+						is_france = yes
 						has_resistance = yes
 					}
 					remove_dynamic_modifier = { modifier = NFA_small_propaganda_effort }
@@ -2553,7 +2553,7 @@ NFA_rebuild_legitimacy_cat = {
 			log = "[GetLogRoot]: Decision complete NFA_Large_Scale_Effort"
 			every_owned_state = { #Check all states of NFA
 				limit = {
-					is_mainland_france_state = yes #Only grab the states in Mainland France
+					is_france = yes
 					has_resistance = yes
 				}
 				add_dynamic_modifier = { modifier = NFA_large_propaganda_effort days = 60 }
@@ -2565,7 +2565,7 @@ NFA_rebuild_legitimacy_cat = {
 			effect_tooltip = {
 				every_owned_state = { #Check all states of NFA
 					limit = {
-						is_mainland_france_state = yes #Only grab the states in Mainland France
+						is_france = yes
 						has_resistance = yes
 					}
 					remove_dynamic_modifier = { modifier = NFA_large_propaganda_effort }
@@ -2737,17 +2737,15 @@ NFA_rebuild_legitimacy_cat = {
 
 	NFA_Bring_Brittany_Home = {
 		icon = generic_nationalism
+
 		available = {
-			BRI = { exists = yes }
-			NOT = {
-				GER = { exists = yes }
-			}
+			is_neighbor_of = BRI
+			NOT = { country_exists = GER }
 		}
 
 		visible = {
-			BRI = {
-				is_neighbor_of = NFA
-			}
+			country_exists = BRI
+			NOT = { has_war_with = BRI }
 		}
 
 		highlight_states = {
@@ -2761,41 +2759,43 @@ NFA_rebuild_legitimacy_cat = {
 		complete_effect = {
 			log = "[GetLogRoot]: Decision complete NFA_Bring_Brittany_Home"
 			BRI = { country_event = nfa.629 }
-			NFA = { country_event = nfa.629 }
 		}
 	}
 
 	NFA_Bring_Belgian_Land_Home = {
 		icon = generic_nationalism
+
 		available = {
-			NOT = {
-				GER = { exists = yes }
-			}
+			NOT = { country_exists = GER }
 		}
 
 		visible = {
 			OR = {
-				BEL = {
-					is_neighbor_of = NFA
-					OR = {
-						# Lyon Territories
-						owns_state = 17
-						owns_state = 980
-					}
+				var:17.owner = { #Pas-de-Calais
+					is_belgian_tag = yes
+					is_neighbor_of = ROOT
+					NOT = { has_war_with = ROOT }
 				}
-				WAL = {
-					is_neighbor_of = NFA
-					OR = {
-						# Lyon Territories
-						owns_state = 17
-						owns_state = 980
-					}
+				var:980.owner = { #Lille
+					is_belgian_tag = yes
+					is_neighbor_of = ROOT
+					NOT = { has_war_with = ROOT }
 				}
 			}
 		}
 
 		highlight_states = {
-			highlight_state_targets = { state = 29 }
+			highlight_states_trigger = {
+				OR = {
+					state = 17
+					state = 980
+				}
+				owner = {
+					is_belgian_tag = yes
+					is_neighbor_of = ROOT
+					NOT = { has_war_with = ROOT }
+				}
+			}
 		}
 
 		cost = 25
@@ -2804,17 +2804,16 @@ NFA_rebuild_legitimacy_cat = {
 
 		complete_effect = {
 			log = "[GetLogRoot]: Decision complete NFA_Bring_Belgian_Land_Home"
-			if = {
+			every_other_country = {
 				limit = {
-					BEL = { any_owned_state = { is_mainland_france_state = yes } }
+					is_belgian_tag = yes
+					NOT = { has_war_with = ROOT }
+					owns_any_state_of = {
+						17 #Pas-de-Calais
+						980 #Lille
+					}
 				}
-				BEL = { country_event = nfa.630 }
-			}
-			if = {
-				limit = {
-					WAL = { any_owned_state = { is_mainland_france_state = yes } }
-				}
-				WAL = { country_event = nfa.630 }
+				country_event = nfa.630
 			}
 		}
 	}
@@ -4790,7 +4789,7 @@ NFA_transahara_cat = {
 
 		days_remove = 125
 
-		ai_will_do = { factor = 100 }
+		ai_will_do = { factor = 100000 }
 
 		remove_effect = {
 			log = "[GetLogRoot]: Decision remove Transahara_Phase_One"
@@ -4834,7 +4833,7 @@ NFA_transahara_cat = {
 
 		days_remove = 125
 
-		ai_will_do = { factor = 100 }
+		ai_will_do = { factor = 100000 }
 
 		remove_effect = {
 			log = "[GetLogRoot]: Decision remove Transahara_Phase_Two"
@@ -4879,7 +4878,7 @@ NFA_transahara_cat = {
 
 		days_remove = 125
 
-		ai_will_do = { factor = 100 }
+		ai_will_do = { factor = 100000 }
 
 		remove_effect = {
 			log = "[GetLogRoot]: Decision remove Transahara_Phase_Three"
@@ -4932,7 +4931,7 @@ NFA_transahara_cat = {
 
 		days_remove = 125
 
-		ai_will_do = { factor = 100 }
+		ai_will_do = { factor = 100000 }
 
 		remove_effect = {
 			log = "[GetLogRoot]: Decision remove Transahara_Phase_Four"
@@ -5011,7 +5010,7 @@ NFA_transahara_cat = {
 		}
 		cost = NFA_Invite_Investors_cost?15
 		fire_only_once = yes
-		ai_will_do = { factor = 150 }
+		ai_will_do = { base = 0 }
 		complete_effect = {
 			log = "[GetLogRoot]: Decision complete NFA_Invite_Investors"
 			clear_variable = NFA_Invite_Investors_cost
@@ -5040,7 +5039,7 @@ NFA_transahara_cat = {
 		}
 		cost = 20
 		fire_only_once = yes
-		ai_will_do = { factor = 75 }
+		ai_will_do = { base = 0 }
 
 		complete_effect = {
 			log = "[GetLogRoot]: Decision complete NFA_Cheap_Work_1"

@@ -820,8 +820,8 @@ country_event = { # Democracy back on track
 			}
 			set_party_name = {
 				ideology = authoritarian_democrat
-				long_name = BUL_royal_authoritarian_democrat_party_long
-				name = BUL_royal_authoritarian_democrat_party
+				long_name = BUL_national_liberal_party_long
+				name = BUL_national_liberal_party
 			}
 		}
 		end_coalition = yes
@@ -865,8 +865,8 @@ country_event = { # Democracy back on track
 			}
 			set_party_name = {
 				ideology = authoritarian_democrat
-				long_name = BUL_royal_authoritarian_democrat_party_long
-				name = BUL_royal_authoritarian_democrat_party
+				long_name = BUL_national_liberal_party_long
+				name = BUL_national_liberal_party
 			}
 		}
 		end_coalition = yes
@@ -1424,8 +1424,8 @@ country_event = { # Abdication of Ferdinand
 				volunteer_only
 			}
 			disband_twenty_percent_units = yes
-			send_equipment_fraction = { target = XXA value = 0.2 }
-			XXA = {
+			send_equipment_fraction = { target = event_target:system value = 0.2 }
+			event_target:system = {
 				send_equipment_fraction = { target = ROM value = 0.5 }
 				send_equipment_fraction = { target = SER value = 1 }
 			}
@@ -2004,8 +2004,8 @@ country_event = { # Restored Tarnovo Constitution
 			}
 			set_party_name = {
 				ideology = authoritarian_democrat
-				long_name = BUL_royal_authoritarian_democrat_party_long
-				name = BUL_royal_authoritarian_democrat_party
+				long_name = BUL_national_liberal_party_long
+				name = BUL_national_liberal_party
 			}
 		}
 		end_coalition = yes
@@ -2406,7 +2406,7 @@ country_event = { # Chetniks getting ready
 		is_subject = no
 		OR = {
 			has_subject = SER
-			any_owned_state = { is_core_of = SER }
+			owns_state = 107 #Belgrade
 		}
 	}
 
@@ -2429,7 +2429,7 @@ country_event = { #hidden event to check whether to bypass the mechanic due to B
 		is_subject = no
 		OR = {
 			has_subject = SER
-			any_owned_state = { is_core_of = SER }
+			owns_state = 107 #Belgrade
 		}
 	}
 
@@ -2949,7 +2949,7 @@ country_event = {
 	trigger = {
 		NOT = {
 			has_country_flag = BUL_no_cancelling_now
-			has_completed_focus = BUL_konstantiniyye_diplomacy
+			has_completed_focus = BUL_kostantiniye_diplomacy
 		}
 	}
 	is_triggered_only = yes
@@ -3237,8 +3237,8 @@ country_event = {
 		name = bulfor.10.a
 		add_stability = 0.1
 		if = {
-			limit = { NOT = { BUL = { has_completed_focus = BUL_konstantiniyye_diplomacy } } }
-			BUL = { complete_national_focus = BUL_konstantiniyye_diplomacy }
+			limit = { NOT = { BUL = { has_completed_focus = BUL_kostantiniye_diplomacy } } }
+			BUL = { complete_national_focus = BUL_kostantiniye_diplomacy }
 			every_other_country = {
 				limit = {
 					OR = {
@@ -3737,6 +3737,14 @@ country_event = { #Join the Balkan Defense Cooperation?
 			}
 			81 = { set_demilitarized_zone = no }
 		}
+		else_if = {
+			limit = {
+				original_tag = SER
+				owns_state = 765
+				765 = { is_demilitarized_zone = yes }
+			}
+			765 = { set_demilitarized_zone = no }
+		}
 		add_ideas = BUL_defender_of_balkans_oth
 		BUL = {
 			country_event = bulfor.34
@@ -3796,9 +3804,9 @@ country_event = { #White peace for Bulgaria vs. Ottomans
 				surrender_progress > 0.50
 			}
 		}
-		OR = {
-			owns_state = 341
-			owns_state = 773
+		owns_any_state_of = {
+			341 #Adrianople
+			773 #Constantinople
 		}
 		if = {
 			limit = { owns_state = 341 }
@@ -3811,11 +3819,12 @@ country_event = { #White peace for Bulgaria vs. Ottomans
 		BUL = {
 			surrender_progress < 0.20
 			is_valid_peace_target = yes
+			NOT = { has_country_flag = BUL_second_war_for_thrace }
 		}
 	}
 
 	mean_time_to_happen = {
-		days = 10
+		days = 2
 	}
 
 	fire_only_once = yes
@@ -3861,7 +3870,10 @@ country_event = { #Bulgaria decides on the peace offer
 		every_state = {
 			limit = {
 				is_owned_by = FROM
-				is_claim_or_core_of_ROOT = yes
+				OR = {
+					is_claim_or_core_of_ROOT = yes
+					state = 341 #Adrianople
+				}
 			}
 			transfer_state_to = BUL
 		}
@@ -3873,7 +3885,10 @@ country_event = { #Bulgaria decides on the peace offer
 			every_state = {
 				limit = {
 					is_owned_by = FROM
-					is_claim_or_core_of_PREV = yes
+					OR = {
+						is_claim_or_core_of_PREV = yes
+						state = 341 #Adrianople
+					}
 				}
 				transfer_state_to = PREV
 			}
@@ -3927,6 +3942,197 @@ country_event = { # Bulgaria gets to declare war on GRR if it spawns
 		name = bulfor.38.b
 		ai_chance = { base = 0 }
 		add_war_support = -0.10
+	}
+}
+
+country_event = { #The Second War for Thrace, Bulgaria/Greece declares war on the other over conflicting claims on Thrace while already at war with the Ottomans
+	id = bulfor.39
+	title = bulfor.39.t
+	desc = bulfor.39.d
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event bulfor.39 option bulfor.39.a"
+		name = bulfor.39.a
+		GRE = { set_country_flag = GRE_second_war_for_thrace }
+		BUL = { set_country_flag = BUL_second_war_for_thrace }
+		declare_war_on = {
+			target = FROM
+			type = annex_everything
+		}
+	}
+}
+
+country_event = { #We are losing the war for Thrace, sue for peace?
+	id = bulfor.40
+	title = bulfor.40.t
+	desc = bulfor.40.d
+
+	trigger = {
+		OR = {
+			original_tag = BUL
+			original_tag = GRE
+		}
+		BUL = {
+			is_valid_peace_target = yes
+			has_country_flag = BUL_second_war_for_thrace
+		}
+		GRE = {
+			is_valid_peace_target = yes
+			has_country_flag = GRE_second_war_for_thrace
+		}
+		if = {
+			limit = {
+				original_tag = GRE
+			}
+			GRE = {
+				any_owned_state = {
+					is_controlled_by = BUL
+				}
+			}
+		}
+		else = {
+			BUL = {
+				any_owned_state = {
+					is_controlled_by = GRE
+				}
+			}
+		}
+		surrender_progress > 0.1
+	}
+
+	mean_time_to_happen = {
+		days = 2
+	}
+
+	option = {
+		log = "[GetLogInfo]: event bulfor.40 option bulfor.40.a"
+		name = bulfor.40.a
+		if = {
+			limit = {
+				original_tag = GRE
+			}
+			BUL = { country_event = bulfor.41 }
+		}
+		else = {
+			GRE = { country_event = bulfor.41 }
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event bulfor.40 option bulfor.40.b"
+		ai_chance = { base = 0 }
+		name = bulfor.40.b
+	}
+}
+
+country_event = { #FROM surrenders, do we accept?
+	id = bulfor.41
+	title = bulfor.41.t
+	desc = bulfor.41.d
+
+	is_triggered_only = yes
+
+	option = { #Yes
+		log = "[GetLogInfo]: event bulfor.41 option bulfor.41.a"
+		name = bulfor.41.a
+
+		if = {
+			limit = {
+				original_tag = GRE
+			}
+			FROM = {
+				every_owned_state = {
+					limit = {
+						OR = {
+							is_core_of = GRE
+							is_claimed_by = GRE
+							state = 1089 #Kardzhali
+							state = 341 #Adrianople
+						}
+					}
+					transfer_state_to = ROOT
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				owns_state = 106 #Macedonia
+			}
+			FROM = {
+				every_owned_state = {
+					limit = {
+						OR = {
+							is_core_of = BUL
+							is_claimed_by = BUL
+							state = 1089 #Kardzhali
+							state = 341 #Adrianople
+							state = 731 #Florina
+							state = 989 #Chalcidice
+						}
+					}
+					transfer_state_to = ROOT
+				}
+			}
+		}
+		else = {
+			FROM = {
+				every_owned_state = {
+					limit = {
+						OR = {
+							is_core_of = BUL
+							is_claimed_by = BUL
+							state = 1089 #Kardzhali
+							state = 341 #Adrianople
+						}
+					}
+					transfer_state_to = ROOT
+				}
+			}
+		}
+
+		FROM = { white_peace_with_ROOT = yes }
+
+		if = {
+			limit = {
+				FROM = { has_war_with = TUR }
+			}
+			TUR = {
+				country_event = bulfor.42
+			}
+		}
+		BUL = { clr_country_flag = BUL_second_war_for_thrace }
+		GRE = { clr_country_flag = GRE_second_war_for_thrace }
+		add_war_support = 0.1
+	}
+
+	option = { #How about I kill you instead how about that
+		log = "[GetLogInfo]: event bulfor.41 option bulfor.41.b"
+		ai_chance = { base = 0 }
+		name = bulfor.41.b
+		add_war_support = -0.1
+	}
+}
+
+country_event = { #TUR: FROM.FROM surrenders, do we peace out with them?
+	id = bulfor.42
+	title = bulfor.42.t
+	desc = bulfor.42.d
+
+	is_triggered_only = yes
+
+	option = { #Yes
+		log = "[GetLogInfo]: event bulfor.42 option bulfor.42.a"
+		name = bulfor.42.a
+		FROM.FROM = { white_peace_with_ROOT = yes }
+	}
+
+	option = { #Nah mate time to die
+		log = "[GetLogInfo]: event bulfor.42 option bulfor.42.b"
+		ai_chance = { base = 0 }
+		name = bulfor.42.b
+		add_war_support = -0.1
 	}
 }
 

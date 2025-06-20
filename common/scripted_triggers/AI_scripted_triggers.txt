@@ -82,17 +82,15 @@ spanish_civil_war_volunteers = {
 		AND = {
 			PREV = { tag = SPK }
 			OR = {
-				is_ally_with = GER
+				AND = {
+					is_ally_with = GER
+					NOT = { is_subject_of = GER }
+				}
 				is_ally_with = AUS
 				AND = {
 					original_tag = IRE
 					NOT = { has_country_flag = IRE_forpolpath_ent }
 				}
-				AND = {
-					original_tag = UKR
-					is_monarchy = yes
-				}
-				original_tag = BRA
 			}
 			has_socialist_government = no
 		}
@@ -856,13 +854,6 @@ ai_is_naval_invader_trigger = {
 ### WAR-RELATED AI TRIGGERS ###
 ###############################
 
-#combine with check_variable = { fielded_manpower_compare > x } afterwards
-compare_fielded_manpower = {
-	check_variable = { ROOT.deployed_total_manpower_k > 0 }
-	set_temp_variable = { fielded_manpower_compare = deployed_total_manpower_k }
-	divide_temp_variable = { fielded_manpower_compare = ROOT.deployed_total_manpower_k }
-}
-
 country_has_any_active_threat = {
 	OR = {
 		has_war = yes
@@ -884,18 +875,19 @@ country_is_in_dangerous_war = {
 #on the target's scope
 dont_start_major_faction_wars = {
 	ROOT = {
-		is_in_faction = yes
+		num_faction_members > 1
 		is_faction_leader = no
 		is_major = no
 	}
 	OR = {
-		is_in_faction = yes
+		is_major = yes
+		num_faction_members > 1
 		AND = {
 			is_subject = yes
 			overlord = {
 				OR = {
 					is_major = yes
-					is_in_faction = yes
+					num_faction_members > 1
 				}
 			}
 		}
@@ -906,7 +898,7 @@ dont_start_major_faction_wars = {
 				has_guaranteed = PREV
 				OR = {
 					is_major = yes
-					is_in_faction = yes
+					num_faction_members > 1
 				}
 			}
 		}
@@ -915,39 +907,15 @@ dont_start_major_faction_wars = {
 
 #on the target's scope
 is_stronger_than_ROOT_and_not_vulnerable = {
-	#compare fielded manpower
-	compare_fielded_manpower = yes
-	if = {
-		limit = {
-			is_in_faction = yes
-			num_faction_members > 1
-		}
-		check_variable = { fielded_manpower_compare > 1.15 }
-	}
-	else = {
-		check_variable = { fielded_manpower_compare > 1 }
-	}
-	enemies_strength_ratio < 1
+	strength_ratio = { tag = ROOT ratio > 1 }
+	alliance_strength_ratio > 1
 	surrender_progress < 0.1
 }
 
 #on the target's scope
 is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = {
 	OR = {
-		#compare fielded manpower
-		AND = {
-			compare_fielded_manpower = yes
-			if = {
-				limit = {
-					is_in_faction = yes
-					num_faction_members > 1
-				}
-				check_variable = { fielded_manpower_compare > 1.15 }
-			}
-			else = {
-				check_variable = { fielded_manpower_compare > 1 }
-			}
-		}
+		strength_ratio = { tag = ROOT ratio > 1 }
 		AND = {
 			naval_strength_comparison = {
 				other = ROOT
@@ -962,136 +930,29 @@ is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = {
 					carrier = 1
 				}
 			}
-			enemies_naval_strength_ratio < 0.8
+			alliance_naval_strength_ratio > 1.25
 		}
 	}
-	enemies_strength_ratio < 1
+	alliance_strength_ratio > 1
 	surrender_progress < 0.1
 }
 
 #on the target's scope
 faction_leader_is_stronger_than_ROOT_and_not_vulnerable = {
-	if = {
-		limit = { ROOT = { has_war = yes } }
-		is_in_faction = yes
-		is_faction_leader = no
-		faction_leader = {
-			OR = {
-				#compare fielded manpower
-				AND = {
-					compare_fielded_manpower = yes
-					check_variable = { fielded_manpower_compare > 0.7 }
-				}
-				is_actual_major = yes
-			}
-			enemies_strength_ratio < 1.5
-			surrender_progress < 0.2
-		}
-	}
-	else = {
-		is_in_faction = yes
-		is_faction_leader = no
-		faction_leader = {
-			#compare fielded manpower
-			AND = {
-				compare_fielded_manpower = yes
-				check_variable = { fielded_manpower_compare > 0.7 }
-			}
-			enemies_strength_ratio < 1
-			surrender_progress < 0.2
-		}
-	}
-}
-
-#on the target's scope
-faction_leader_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = {
-	if = {
-		limit = { ROOT = { has_war = yes } }
-		is_in_faction = yes
-		is_faction_leader = no
-		faction_leader = {
-			OR = {
-				#compare fielded manpower
-				AND = {
-					compare_fielded_manpower = yes
-					check_variable = { fielded_manpower_compare > 0.7 }
-				}
-				naval_strength_comparison = {
-					other = ROOT
-					ratio > 0.8
-					sub_unit_def_weights = {
-						submarine = 0.75
-						destroyer = 0.75
-						light_cruiser = 0.75
-						heavy_cruiser = 1
-						battle_cruiser = 1
-						battleship = 1
-						carrier = 1
-					}
-				}
-				is_actual_major = yes
-			}
-			enemies_strength_ratio < 1.5
-			surrender_progress < 0.2
-		}
-	}
-	else = {
-		is_in_faction = yes
-		is_faction_leader = no
-		faction_leader = {
-			OR = {
-				#compare fielded manpower
-				AND = {
-					compare_fielded_manpower = yes
-					check_variable = { fielded_manpower_compare > 0.8 }
-				}
-				AND = {
-					naval_strength_comparison = {
-						other = ROOT
-						ratio > 1
-						sub_unit_def_weights = {
-							submarine = 0.75
-							destroyer = 0.75
-							light_cruiser = 0.75
-							heavy_cruiser = 1
-							battle_cruiser = 1
-							battleship = 1
-							carrier = 1
-						}
-					}
-					enemies_naval_strength_ratio < 0.8
-				}
-			}
-			enemies_strength_ratio < 1
-			surrender_progress < 0.1
-		}
-	}
-}
-
-#on the target's scope
-overlord_is_stronger_than_ROOT_and_not_vulnerable = {
-	is_subject = yes
-	overlord = {
-		#compare fielded manpower
-		AND = {
-			compare_fielded_manpower = yes
-			check_variable = { fielded_manpower_compare > 0.8 }
-		}
-		enemies_strength_ratio < 1
+	num_faction_members > 1
+	faction_leader = {
+		strength_ratio = { tag = ROOT ratio > 1 }
+		alliance_strength_ratio > 1
 		surrender_progress < 0.1
 	}
 }
 
 #on the target's scope
-overlord_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = {
-	is_subject = yes
-	overlord = {
+faction_leader_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = {
+	num_faction_members > 1
+	faction_leader = {
 		OR = {
-			#compare fielded manpower
-			AND = {
-				compare_fielded_manpower = yes
-				check_variable = { fielded_manpower_compare > 0.8 }
-			}
+			strength_ratio = { tag = ROOT ratio > 1 }
 			AND = {
 				naval_strength_comparison = {
 					other = ROOT
@@ -1106,10 +967,48 @@ overlord_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = {
 						carrier = 1
 					}
 				}
-				enemies_naval_strength_ratio < 0.8
+				alliance_naval_strength_ratio > 1
 			}
 		}
-		enemies_strength_ratio < 1
+		alliance_strength_ratio > 1
+		surrender_progress < 0.1
+	}
+}
+
+#on the target's scope
+overlord_is_stronger_than_ROOT_and_not_vulnerable = {
+	is_subject = yes
+	overlord = {
+		strength_ratio = { tag = ROOT ratio > 0.8 }
+		alliance_strength_ratio > 1
+		surrender_progress < 0.1
+	}
+}
+
+#on the target's scope
+overlord_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = {
+	is_subject = yes
+	overlord = {
+		OR = {
+			strength_ratio = { tag = ROOT ratio > 0.8 }
+			AND = {
+				naval_strength_comparison = {
+					other = ROOT
+					ratio > 1
+					sub_unit_def_weights = {
+						submarine = 0.75
+						destroyer = 0.75
+						light_cruiser = 0.75
+						heavy_cruiser = 1
+						battle_cruiser = 1
+						battleship = 1
+						carrier = 1
+					}
+				}
+				alliance_naval_strength_ratio > 1.25
+			}
+		}
+		alliance_strength_ratio > 1
 		surrender_progress < 0.1
 	}
 }
@@ -1121,29 +1020,30 @@ guarantor_is_stronger_than_ROOT_and_not_vulnerable = {
 		array = guarantor_array
 		has_guaranteed = PREV
 		NOT = { tag = ROOT }
+		alliance_strength_ratio > 1
 		OR = {
 			AND = {
-				#compare fielded manpower
-				compare_fielded_manpower = yes
-				check_variable = { fielded_manpower_compare > 0.7 }
-
-				enemies_strength_ratio < 1
+				strength_ratio = { tag = ROOT ratio > 0.7 }
+				surrender_progress < 0.1
 			}
 			AND = {
-				is_in_faction = yes
-				is_faction_leader = no
-				faction_leader = { enemies_strength_ratio < 1 }
+				num_faction_members > 1
+				faction_leader = { surrender_progress < 0.2 }
 			}
 		}
-		surrender_progress < 0.1
 	}
 }
 
 default_attack_AI_trigger = {
 	OR = {
 		is_stronger_than_ROOT_and_not_vulnerable = yes
-		overlord_is_stronger_than_ROOT_and_not_vulnerable = yes
-		faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes
+		if = {
+			limit = { num_faction_members > 1 }
+			faction_leader_is_stronger_than_ROOT_and_not_vulnerable = yes
+		}
+		else = {
+			overlord_is_stronger_than_ROOT_and_not_vulnerable = yes
+		}
 		guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes
 	}
 }
@@ -1151,8 +1051,13 @@ default_attack_AI_trigger = {
 default_attack_AI_trigger_consider_naval_strength = {
 	OR = {
 		is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = yes
-		overlord_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = yes
-		faction_leader_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = yes
+		if = {
+			limit = { num_faction_members > 1 }
+			faction_leader_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = yes
+		}
+		else = {
+			overlord_is_stronger_than_ROOT_and_not_vulnerable_consider_naval_strength = yes
+		}
 		guarantor_is_stronger_than_ROOT_and_not_vulnerable = yes
 	}
 }
@@ -1408,4 +1313,11 @@ is_pacific_focused_tag = {
 AI_trigger_dont_hire_high_command_too_early = {
 	has_war = no
 	has_political_power < 200
+}
+AI_trigger_dont_hire_navy_chief_too_early = {
+	has_war = no
+	amount_taken_ideas = {
+		amount < 3
+		slots = { political_advisor }
+	}
 }

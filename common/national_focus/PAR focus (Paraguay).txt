@@ -2551,16 +2551,18 @@ focus_tree = {
 
 		available = {
 			is_subject = no
-			ARG = { has_war_with = FOP }
-			OR = {
-				1074 = { is_owned_by = ARG }
-				901 = { is_owned_by = ARG }
+			ARG = {
+				has_war_with = FOP
+				owns_any_state_of = {
+					901 #Southern Chaco
+					1074 #Misiones
+				}
 			}
 		}
 
 		bypass = {
-			1074 = { is_owned_by = PAR }
-			901 = { is_owned_by = PAR }
+			owns_state = 901 #Southern Chaco
+			owns_state = 1074 #Misiones
 		}
 
 		will_lead_to_war_with = ARG
@@ -2613,23 +2615,30 @@ focus_tree = {
 
 		available = {
 			is_subject = no
-			NOT = {
-				AND = {
-					1027 = { is_owned_by = ROOT }
-					688 = { is_owned_by = ROOT }
-				}
-			}
 			if = {
-				limit = {
-					PRU = {
-						has_cosmetic_tag = PBC
-					}
-				}
-				NOT = { has_non_aggression_pact_with = PRU }
+				limit = { var:688.owner = { owns_state = 1027 } }
+				can_declare_war_on = 688.owner
+				NOT = { has_non_aggression_pact_with = 688.owner }
+				NOT = { has_guaranteed = 688.owner }
 			}
 			else = {
-				NOT = { has_non_aggression_pact_with = BOL }
+				OR = {
+					AND = {
+						can_declare_war_on = 688.owner
+						NOT = { has_non_aggression_pact_with = 688.owner }
+						NOT = { has_guaranteed = 688.owner }
+					}
+					AND = {
+						can_declare_war_on = 1027.owner
+						NOT = { has_non_aggression_pact_with = 1027.owner }
+						NOT = { has_guaranteed = 1027.owner }
+					}
+				}
 			}
+		}
+		bypass = {
+			owns_state = 688
+			owns_state = 1027
 		}
 
 		will_lead_to_war_with = BOL
@@ -2653,14 +2662,27 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed PAR_retake_chaco"
-			declare_war_on = {
-				target = 1027.owner
-				type = take_state
-				generator = { 1027 }
+			clr_country_flag = PAR_handed_chaco_after_war
+			if = {
+				limit = { can_declare_war_on = 688.owner }
+				declare_war_on = {
+					target = 688.owner
+					type = take_state
+					generator = { 688 }
+				}
+				var:688.owner = { PAR_generic_buff_enemy = yes }
 			}
-			var:1027.owner = { PAR_generic_buff_enemy = yes }
-			hidden_effect = {
-				clr_country_flag = PAR_handed_chaco_after_war
+			if = {
+				limit = {
+					can_declare_war_on = 1027.owner
+					NOT = { var:1027.owner = { owns_state = 688 } }
+				}
+				declare_war_on = {
+					target = 1027.owner
+					type = take_state
+					generator = { 1027 }
+				}
+				var:1027.owner = { PAR_generic_buff_enemy = yes }
 			}
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION }
@@ -2682,9 +2704,9 @@ focus_tree = {
 
 		available = {
 			has_war = no
-			1027 = { is_owned_by = PAR }
-			1074 = { is_owned_by = PAR }
-			901 = { is_owned_by = PAR }
+			owns_state = 901
+			owns_state = 1074
+			owns_state = 1027
 			OR = {
 				has_completed_focus = PAR_industrial_self_sufficiency
 				has_completed_focus = PAR_democracy_has_been_saved
@@ -3039,8 +3061,8 @@ focus_tree = {
 		}
 
 		available = {
-			1074 = { is_owned_by = ROOT }
-			901 = { is_owned_by = ROOT }
+			owns_state = 901
+			owns_state = 1074
 		}
 
 		ai_will_do = { factor = 25 }
@@ -3092,7 +3114,7 @@ focus_tree = {
 				NOT = { country_exists = INT }
 			}
 			else = {
-				GER = { exists = no }
+				NOT = { country_exists = GER }
 			}
 		}
 
@@ -3589,18 +3611,11 @@ focus_tree = {
 		available = {
 			is_subject = no
 			has_war = no
-			NOT = {
-				1041 = { is_owned_by = ROOT }
-				1043 = { is_owned_by = ROOT }
-			}
-			OR = {
-				ARG = { is_subject_of = ROOT }
-				FOP = { is_subject_of = ROOT }
-			}
+			278 = { owner = { is_subject_of = ROOT } }
 		}
 		bypass = {
-			1041 = { is_owned_by = ROOT }
-			1043 = { is_owned_by = ROOT }
+			owns_state = 1041
+			owns_state = 1043
 		}
 
 		will_lead_to_war_with = BRA
@@ -3610,7 +3625,17 @@ focus_tree = {
 		select_effect = {
 			log = "[GetLogRoot]: Select Focus PAR_secure_north"
 			hidden_effect = {
-				var:1041.owner = { PAR_generic_buff_enemy = yes }
+				if = {
+					limit = { can_declare_war_on = 1041.owner }
+					var:1041.owner = { PAR_generic_buff_enemy = yes }
+				}
+				if = {
+					limit = {
+						can_declare_war_on = 1043.owner
+						NOT = { var:1043.owner = { owns_state = 1041 } }
+					}
+					var:1043.owner = { PAR_generic_buff_enemy = yes }
+				}
 			}
 		}
 
@@ -3618,17 +3643,21 @@ focus_tree = {
 			log = "[GetLogRoot]: Focus Completed PAR_secure_north"
 			add_state_claim = 1041
 			add_state_claim = 1043
-			declare_war_on = {
-				target = 1041.owner
-				type = annex_everything
+			if = {
+				limit = { can_declare_war_on = 1041.owner }
+				declare_war_on = {
+					target = 1041.owner
+					type = annex_everything
+				}
 			}
-			hidden_effect = {
-				if = {
-					limit = { NOT = { has_war_with = var:1043.owner } }
-					declare_war_on = {
-						target = 1043.owner
-						type = annex_everything
-					}
+			if = {
+				limit = {
+					can_declare_war_on = 1043.owner
+					NOT = { var:1043.owner = { owns_state = 1041 } }
+				}
+				declare_war_on = {
+					target = 1043.owner
+					type = annex_everything
 				}
 			}
 		}
@@ -3649,8 +3678,8 @@ focus_tree = {
 		}
 
 		available = {
-			1041 = { is_owned_by = ROOT }
-			1043 = { is_owned_by = ROOT }
+			owns_state = 1041
+			owns_state = 1043
 		}
 
 		ai_will_do = { factor = 25 }

@@ -807,18 +807,95 @@ character_becomes_leader_of_ruling_party_effect_tooltip = {
 add_country_leader_role_to_all_non_socialist_ideologies = {
 	remove_all_country_leader_roles = yes
 	for_each_loop = {
-		array = global.ideologies_non_socialist
+		array = global.ideology_groups
+		if = {
+			limit = { ideology_group_is_socialist = no }
+			meta_effect = {
+				text = {
+					add_country_leader_role = {
+						country_leader = {
+							# Tooltip only, doesn't need desc
+							ideology = [IDEOLOGY]
+						}
+						promote_leader = yes
+					}
+				}
+				IDEOLOGY = "[?v.GetTokenKey]_subtype"
+			}
+		}
+	}
+}
+
+#requires a temp variable trait_token
+add_trait_to_all_country_leader_roles = {
+	for_each_loop = {
+		array = global.ideology_groups
 		meta_effect = {
 			text = {
-				add_country_leader_role = {
-					country_leader = {
-						# Tooltip only, doesn't need desc
-						ideology = [IDEOLOGY]
-					}
-					promote_leader = yes
+				if = {
+					limit = { has_ideology = [IDEOLOGY] }
+					add_trait = { trait = [TRAIT] ideology = [IDEOLOGY] }
 				}
 			}
-			IDEOLOGY = "[?v.GetTokenKey]"
+			TRAIT = "[?trait_token.GetTokenKey]"
+			IDEOLOGY = "[?v.GetTokenKey]_subtype"
 		}
+	}
+}
+
+#requires a temp variable trait_token
+remove_trait_from_all_country_leader_roles = {
+	for_each_loop = {
+		array = global.ideology_groups
+		meta_effect = {
+			text = {
+				if = {
+					limit = { has_ideology = [IDEOLOGY] }
+					remove_trait = { trait = [TRAIT] ideology = [IDEOLOGY] }
+				}
+			}
+			TRAIT = "[?trait_token.GetTokenKey]"
+			IDEOLOGY = "[?v.GetTokenKey]_subtype"
+		}
+	}
+}
+
+#requires temp variable remove_trait_token and add_trait_token
+swap_traits_in_all_country_leader_roles = {
+	for_each_loop = {
+		array = global.ideology_groups
+		meta_effect = {
+			text = {
+				if = {
+					limit = { has_ideology = [IDEOLOGY] }
+					swap_country_leader_traits = {
+						remove = [REMOVE_TRAIT]
+						add = [ADD_TRAIT]
+						ideology = [IDEOLOGY]
+					}
+				}
+			}
+			REMOVE_TRAIT = "[?remove_trait_token.GetTokenKey]"
+			ADD_TRAIT = "[?add_trait_token.GetTokenKey]"
+			IDEOLOGY = "[?v.GetTokenKey]_subtype"
+		}
+	}
+}
+
+temp_unretire_character = {
+	if = {
+		limit = { is_retired = yes }
+		set_temp_variable = { was_retired = 1 }
+		set_nationality = PREV
+	}
+	else = {
+		set_temp_variable = { was_retired = 0 }
+	}
+}
+
+revert_temp_unretire_character = {
+	if = {
+		limit = { NOT = { check_variable = { was_retired = 0 } } }
+		retire = yes
 	}
 }

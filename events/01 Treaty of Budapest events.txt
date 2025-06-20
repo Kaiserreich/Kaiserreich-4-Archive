@@ -148,7 +148,7 @@ country_event = { #We're losing, sue for peace? (AUS)
 
 	immediate = {
 		hidden_effect = {
-			add_ideas = AUS_cannot_capitulate
+			add_ideas = has_scripted_peace
 			if = {
 				limit = {
 					has_war_with = BPL
@@ -207,6 +207,7 @@ country_event = { #We're losing, sue for peace? (AUS)
 			}
 		}
 		hidden_effect = { AUS_fire_next_budapest_treaty_event = yes }
+		set_country_flag = { flag = austria_war_loss_temp_flag days = 10 value = 1 }
 	}
 
 	option = {
@@ -219,7 +220,7 @@ country_event = { #We're losing, sue for peace? (AUS)
 		add_stability = -0.1
 		add_war_support = -0.1
 		hidden_effect = {
-			remove_ideas = AUS_cannot_capitulate
+			remove_ideas = has_scripted_peace
 		}
 	}
 
@@ -258,7 +259,7 @@ country_event = { #We're losing, sue for peace? (AUS)
 		add_stability = -0.1
 		add_war_support = -0.1
 		hidden_effect = {
-			remove_ideas = AUS_cannot_capitulate
+			remove_ideas = has_scripted_peace
 		}
 	}
 }
@@ -731,28 +732,33 @@ country_event = { #Treaty of Budapest
 						}
 					}
 				}
-				every_state = {
+				if = {
 					limit = {
-						OR = {
-							region = 24 #Central Balkans
-							region = 143 #Illyria
-							state = 488 #Trieste
-							state = 683 #Gorizia
-							state = 736 #Istria
-							state = 875 #West Banat
-							state = 1107 #Karavanks
-							state = 1109 #Mura
-						}
-						is_owned_by_ROOT_or_subject = yes
-						NOT = { has_state_flag = AUS_german_intervention }
-						NOT = {
-							controller = {
-								has_war_with = ROOT
-								NOT = { has_country_flag = AUS_accepts_peace }
+						event_target:AUS_yugoslav_enemy = { NOT = { has_country_flag = balkan_war_loss_temp_flag } } #skip Yugoslav claims if they lost to BUL
+					}
+					every_state = {
+						limit = {
+							OR = {
+								region = 24 #Central Balkans
+								region = 143 #Illyria
+								state = 488 #Trieste
+								state = 683 #Gorizia
+								state = 736 #Istria
+								state = 875 #West Banat
+								state = 1107 #Karavanks
+								state = 1109 #Mura
+							}
+							is_owned_by_ROOT_or_subject = yes
+							NOT = { has_state_flag = AUS_german_intervention }
+							NOT = {
+								controller = {
+									has_war_with = ROOT
+									NOT = { has_country_flag = AUS_accepts_peace }
+								}
 							}
 						}
+						transfer_state_to = event_target:AUS_yugoslav_enemy
 					}
-					transfer_state_to = event_target:AUS_yugoslav_enemy
 				}
 				if = {
 					limit = {
@@ -796,18 +802,25 @@ country_event = { #Treaty of Budapest
 						drop_cosmetic_tag = yes
 					}
 				}
-				every_state = {
+				if = {
 					limit = {
-						region = 144 #Transylvania
-						is_owned_by_ROOT_or_subject = yes
-						NOT = {
-							controller = {
-								has_war_with = ROOT
-								NOT = { has_country_flag = AUS_accepts_peace }
-							}
+						ROM = {
+							NOT = { has_country_flag = balkan_war_loss_temp_flag } #skip Romanian claims if they lost to BUL
 						}
 					}
-					transfer_state_to = ROM
+					every_state = {
+						limit = {
+							region = 144 #Transylvania
+							is_owned_by_ROOT_or_subject = yes
+							NOT = {
+								controller = {
+									has_war_with = ROOT
+									NOT = { has_country_flag = AUS_accepts_peace }
+								}
+							}
+						}
+						transfer_state_to = ROM
+					}
 				}
 				if = {
 					limit = {
@@ -829,6 +842,7 @@ country_event = { #Treaty of Budapest
 					GRE = {
 						has_war_with = ROOT
 						has_country_flag = AUS_accepts_peace
+						NOT = { has_country_flag = balkan_war_loss_temp_flag } #skip Greek claims if they lost to BUL
 					}
 					776 = { #Northern Epirus
 						is_owned_by_ROOT_or_ally = yes
@@ -893,19 +907,15 @@ country_event = { #Treaty of Budapest
 				every_owned_state = {
 					limit = {
 						is_bulgaria = yes
+						NOT = { state = 106 } #Macedonia
 					}
 					transfer_state_to = BUL
 				}
 				every_owned_state = {
 					limit = {
-						OR = {
-							AND = {
-								is_serbia = yes
-								NOT = { state = 45 } #Vojvodina
-								NOT = { state = 875 } #West Banat
-							}
-							state = 106 #Macedonia
-						}
+						is_serbia = yes
+						NOT = { state = 45 } #Vojvodina
+						NOT = { state = 875 } #West Banat
 					}
 					transfer_state_to = SER
 				}
@@ -943,9 +953,34 @@ country_event = { #Treaty of Budapest
 					limit = { owns_state = 1109 } #Mura
 					1109 = { transfer_state_to = 43.owner } #Mura -> Central Hungary
 				}
-				if = {
-					limit = { owns_state = 488 } #Trieste
-					488 = { transfer_state_to = 759.owner } #Trieste -> Friuli
+				every_owned_state = {
+					limit = {
+						is_italy = yes
+					}
+					if = {
+						limit = {
+							NOT = { AUS = { owns_state = 759 } } #Friuli
+						}
+						transfer_state_to = 759.owner
+					}
+					else_if = {
+						limit = {
+							NOT = { AUS = { owns_state = 160 } } #Venetia
+						}
+						transfer_state_to = 160.owner
+					}
+					else_if = {
+						limit = {
+							NOT = { AUS = { owns_state = 159 } } #Lombardy
+						}
+						transfer_state_to = 159.owner
+					}
+					else_if = {
+						limit = {
+							NOT = { AUS = { owns_state = 158 } } #Piedmont
+						}
+						transfer_state_to = 158.owner
+					}
 				}
 				#clear military accesses that are no longer needed
 				if = {
@@ -1118,7 +1153,7 @@ country_event = { #Treaty of Budapest
 			dismantle_faction = yes
 		}
 		hidden_effect = {
-			remove_ideas = AUS_cannot_capitulate
+			remove_ideas = has_scripted_peace
 			recheck_annexations = yes
 			every_subject_country = { recheck_annexations = yes }
 			country_event = { id = ausgleich.new.915 days = 7 }
@@ -1205,7 +1240,7 @@ country_event = { #FROM refuses peace (AUS)
 			}
 			hidden_effect = {
 				every_subject_country = { country_event = treaty_of_budapest_events.24 }
-				remove_ideas = AUS_cannot_capitulate
+				remove_ideas = has_scripted_peace
 			}
 			GER = { add_to_faction = ROOT }
 		}
@@ -1540,7 +1575,7 @@ country_event = { #Germany has refused to intervene
 		ai_chance = { base = 0 }
 		add_stability = -0.1
 		add_war_support = -0.1
-		hidden_effect = { remove_ideas = AUS_cannot_capitulate }
+		hidden_effect = { remove_ideas = has_scripted_peace }
 	}
 }
 

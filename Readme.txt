@@ -1,9 +1,9 @@
 #################################
-### Kaiserreich version 1.4.4 ###
+### Kaiserreich version 1.4.5 ###
 #################################
 
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This version is designed for Hearts of Iron IV version 1.16.4.
+This version is designed for Hearts of Iron IV version 1.16.5.
 It should be compatible with all hotfixes, but it isn't guaranteed.
 
 Manual Installation Instructions
@@ -15,15 +15,15 @@ Manual Installation Instructions
 5) Enable the mod in the Launcher mod menu and enjoy!
 
 FAQ:
-https://kaiserreich.fandom.com/wiki/FAQ
+https://kaiserreich.wiki/FAQ
 
 Changelog:
-https://kaiserreich.fandom.com/wiki/KR4_Changelog
+https://kaiserreich.wiki/KR4_Changelog
 
 Progress reports:
-https://kaiserreich.fandom.com/wiki/Progress_Reports
+https://kaiserreich.wiki/Progress_Reports
 
-Please note the only legitimate places to get Kaiserreich from are listed here: https://kaiserreich.fandom.com/wiki/Kaiserreich_Download_Locations
+Please note the only legitimate places to get Kaiserreich from are listed here: https://kaiserreich.wiki/Kaiserreich_Download_Locations
 If you acquired the mod from any other source, please bring it to the team's attention.
 
 - The KR4 Team, full credits list found in \interface\credits.txt

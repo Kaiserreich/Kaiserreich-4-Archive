@@ -612,6 +612,66 @@ GRE_join_faction_decisions = {
 			FROM = { country_event = gre.14 }
 		}
 	}
+
+	GRE_rejoin_belgrade_pact = {
+		icon = generic_prepare_civil_war
+
+		available = {
+			OR = {
+				FROM = { at_peace_or_same_enemies_as_ROOT = yes } #Belgrade Pact is at peace or already at war with Bulgaria
+				AND = {
+					FROM = { #Belgrade Pact is in a defensive war with ONLY Bulgaria and Greece is at peace
+						has_defensive_war_with = BUL
+						check_variable = { enemies^num < 2 }
+					}
+					has_war = no
+				}
+			}
+		}
+
+		visible = {
+			OR = {
+				has_defensive_war_with = BUL #Greece is in a defensive war with Bulgaria
+				AND = {
+					FROM = { has_defensive_war_with = BUL } #Belgrade Pact is in a defensive war with Bulgaria and Greece is at peace
+					has_war = no
+				}
+			}
+			is_in_faction = no
+			is_subject = no
+			FROM = {
+				is_faction_leader = yes
+				NOT = { has_war_with = ROOT }
+			}
+			NOT = { has_country_flag = GRE_second_war_for_thrace }
+			NOT = { BUL = { has_country_flag = BUL_second_war_for_thrace } }
+		}
+
+		targets = { BPL }
+
+		target_root_trigger = {
+			is_in_faction = no
+			is_subject = no
+			NOT = { has_war_with = FROM }
+			NOT = { has_country_flag = GRE_second_war_for_thrace }
+		}
+		target_trigger = {
+			FROM = {
+				is_faction_leader = yes
+				NOT = { has_war_with = ROOT }
+			}
+		}
+
+		cost = 0
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete GRE_rejoin_belgrade_pact"
+			FROM = { country_event = gre.14 }
+		}
+	}
 }
 
 political_actions = {
@@ -925,7 +985,22 @@ GRE_regaining_greece = {
 					is_in_faction = yes
 					faction_leader = { is_actual_major = yes }
 				}
-				has_global_flag = second_weltkrieg_has_started
+				has_global_flag = second_weltkrieg_has_ended
+			}
+			if = {
+				limit = {
+					FROM = { tag = TUR }
+				}
+				OR = {
+					TUR = { has_war_with = EGY }
+					custom_trigger_tooltip = {
+						tooltip = TUR_ottomans_have_lost_desert_war
+						OTT = { exists = no }
+					}
+					TUR = { is_subject = yes }
+					NOT = { country_exists = EGY }
+					EGY = { is_subject = yes }
+				}
 			}
 		}
 
@@ -970,6 +1045,12 @@ GRE_regaining_greece = {
 			add_war_support = 0.10
 			setup_decision_attack_AI = yes
 			FROM = { incoming_war_notification_effect = yes }
+			if = {
+				limit = {
+					FROM = { tag = TUR }
+				}
+				set_country_flag = { flag = GRE_about_to_attack_TUR days = 30 value = 1 }
+			}
 		}
 
 		remove_effect = {
@@ -979,6 +1060,18 @@ GRE_regaining_greece = {
 			declare_war_on = {
 				target = FROM
 				type = annex_everything
+			}
+			if = {
+				limit = {
+					FROM = { tag = TUR }
+					BUL = { has_war_with = TUR }
+					NOT = { has_war_with = BUL }
+					BUL = { is_valid_peace_target = yes }
+				}
+				custom_effect_tooltip = GRE_BUL_will_declare_war
+				hidden_effect = {
+					BUL = { country_event = { id = bulfor.39 days = 1 } }
+				}
 			}
 		}
 
@@ -1006,6 +1099,7 @@ GRE_regaining_greece = {
 
 		available = {
 			surrender_progress < 0.05
+			NOT = { has_country_flag = GRE_second_war_for_thrace }
 			OR = {
 				if = {
 					limit = { FROM = { original_tag = TUR } }
