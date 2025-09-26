@@ -1,70 +1,158 @@
-political_actions = {
+foreign_politics = {
+	#PHI is able to join any faction USA Splinters lead, CPS, RP, ENT, and INT via the below decisions. There are also decisions to join CHI and HND's factions that are covered on their side of code.
+
 	PHI_join_faction = {
 		name = join_faction
 		icon = generic_prepare_civil_war
 
-		allowed = { always = no }						# Activated by phil.17
+		allowed = { always = no } #Activated by Events PHI.political.070, PHI.political.131
 
 		available = {
 			surrender_progress < 0.05
 			at_peace_or_same_enemies_as_FROM = yes
+			if = {
+				limit = { FROM = { tag = GER } }
+				GEA = { exists = yes } #Needs GEA to exist to have any chance of influence.
+			}
+			else_if = {
+				limit = { FROM = { tag = JAP } }
+				FROM = { controls_state = 524 } #Taiwan
+			}
+			else_if = {
+				limit = { FROM = { is_american_tag = yes } }
+				OR = {
+					FROM = { controls_state = 629 } #Hawaii
+					PHI = { has_country_flag = PHI_USA_won_fight_for_philippines_flag }
+				}
+			}
+			else_if = {
+				limit = { FROM = { tag = ENT } }
+				FROM = {
+					OR = {
+						#Having the gamerule for PHI to join the Entente will bypass all these restrictions because tbh PHI wouldn't join otherwise.
+						tag = AST
+						is_ally_with = AST #Needs Australia to have any chance of influence
+						hidden_trigger = {
+							has_game_rule = { rule = PHI_FORPOL option = PHI_FORPOL_ENT }
+						}
+					}
+				}
+			}
+			OR = {
+				has_war_support > 0.75
+				has_war_with = JAP
+				has_war_with = GEA
+				has_war_with = ENT
+				has_war_with = var:361.owner #Owner of Washington DC
+				AND = {
+					#PHI will join American splinter if USA won the mini-game.
+					FROM = { is_american_tag = yes }
+					PHI = { has_country_flag = PHI_USA_won_fight_for_philippines_flag }
+				}
+				count_triggers = {
+					#Emergency Oh Fuck New Hegemon in Asia Button
+					amount = 3
+					GEA = { exists = no }
+					JAP = { is_subject = yes }
+					ENT = { NOT = { is_ally_with = AST } }
+					var:361.owner = { NOT = { controls_state = 629 } } #Hawaii
+				}
+				hidden_trigger = {
+					AND = {
+						#Having the gamerule for PHI to join the Entente will bypass all these restrictions because tbh PHI wouldn't join otherwise.
+						FROM = { tag = ENT }
+						has_game_rule = { rule = PHI_FORPOL option = PHI_FORPOL_ENT }
+					}
+				}
+			}
 		}
-
+		target_non_existing = yes #In case they die and come back.
 		visible = {
 			is_subject = no
 			is_in_faction = no
-			has_socialist_government = no
 			FROM = {
 				is_faction_leader = yes
-				has_socialist_government = no
 				NOT = { has_war_with = ROOT }
+				OR = {
+					is_american_tag = no
+					AND = {
+						has_global_flag = USA_civil_war_over_flag
+						owns_state = 361
+					}
+				}
 			}
-		}
-
-		target_trigger = {
-			is_subject = no
-			is_in_faction = no
-			has_socialist_government = no
-			FROM = {
-				is_faction_leader = yes
-				has_socialist_government = no
-				NOT = { has_war_with = ROOT }
+			OR = {
+				AND = {
+					has_socialist_government = no
+					FROM = { has_socialist_government = no }
+				}
+				AND = {
+					has_socialist_government = yes
+					FROM = { tag = WCA }
+				}
 			}
 		}
 
 		cost = 0
 		fire_only_once = yes
-		cancel_if_not_visible = yes
+		#cancel_if_not_visible = yes
 
 		ai_will_do = {
 			base = 0
+			#The way it should work is AI PHI will only join a faction using this decision if it is being invaded or Japan/GEA/USA/ENT has killed the other three. Otherwise it will remain neutral.
+
 			modifier = {
 				factor = 0
 				FROM = { surrender_progress > 0.3 }
 			}
+
 			modifier = {
-				add = 1
-				FROM = { tag = INT }
+				add = 10
 				OR = {
-					has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_INT }
-					HND = { exists = no }
-					HND = { has_country_flag = HND_went_isolationist }
+					has_war_with = JAP
+					has_war_with = var:361.owner
+					has_war_with = GEA
+					has_war_with = ENT
 				}
 			}
+
 			modifier = {
-				add = 1
-				FROM = { tag = GER }
-				has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_GER }
+				add = 10
+				#PHI will join American splinter if USA won the mini-game.
+				FROM = { is_american_tag = yes }
+				PHI = { has_country_flag = PHI_USA_won_fight_for_philippines_flag }
 			}
+
 			modifier = {
-				add = 1
+				add = 10
+				#PHI will join the only faction remaining as an "Oh Shit" if there is a new hegemon in Asia.
+				count_triggers = {
+					#Emergency Oh Fuck New Hegemon in Asia Button
+					amount = 3
+					GEA = { exists = no }
+					JAP = { is_subject = yes }
+					ENT = { NOT = { is_ally_with = AST } }
+					var:361.owner = { NOT = { controls_state = 629 } } #Hawaii
+				}
+			}
+
+			modifier = {
+				factor = 10
+				#PHI will prefer USA and will try to choose them as long as they meet the requirements
+				FROM = { is_american_tag = yes }
+			}
+
+			modifier = {
+				factor = 0.1
+				#PHi will try to avoid joining the Entente unless they have literally no other options
 				FROM = { tag = ENT }
-				has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_ENT }
 			}
+
 			modifier = {
-				add = 1
-				FROM = { tag = JAP }
-				has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_JAP }
+				add = 100
+				#PHI Will Join ENT ASAP If Has Gamerule On
+				FROM = { tag = ENT }
+				has_game_rule = { rule = PHI_FORPOL option = PHI_FORPOL_ENT }
 			}
 		}
 
@@ -73,8 +161,8 @@ political_actions = {
 			FROM = { faction_leader = { ask_to_join_faction = yes } }
 		}
 	}
+
 	PHI_join_internationale = {
-		name = join_faction
 		icon = generic_prepare_civil_war
 
 		allowed = { original_tag = PHI }
@@ -82,6 +170,27 @@ political_actions = {
 		available = {
 			surrender_progress < 0.05
 			at_peace_or_same_enemies_as_FROM = yes
+			OR = {
+				NOT = { country_exists = GER } #The Internationale has beaten Germany, that way they're free to intervene in Asia without screwing the ai over
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = PHI_join_internationale_led_by_HND
+					}
+					INT = { tag = HND } #The Internationale is led by India
+				}
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = PHI_join_internationale_led_by_WCA
+					}
+					INT = { tag = WCA } #The Internationale is led by America (and has a Pacific Presence)
+				}
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = PHI_join_internationale_led_by_LKT
+					}
+					INT = { is_chinese_tag = yes } #The Internationale is led by China
+				}
+			}
 		}
 
 		visible = {
@@ -92,6 +201,18 @@ political_actions = {
 				is_faction_leader = yes
 				has_socialist_government = yes
 				NOT = { has_war_with = ROOT }
+			}
+			OR = {
+				NOT = {
+					PHI = { has_country_flag = PHI_USA_won_fight_for_philippines_flag }
+				}
+				AND = {
+					PHI = { has_country_flag = PHI_USA_won_fight_for_philippines_flag }
+					OR = {
+						INT = { is_in_faction_with = WCA }
+						INT = { tag = WCA }
+					}
+				}
 			}
 		}
 
@@ -110,7 +231,7 @@ political_actions = {
 
 		cost = 0
 		fire_only_once = yes
-		cancel_if_not_visible = yes
+		#cancel_if_not_visible = yes
 
 		ai_will_do = {
 			base = 0
@@ -119,11 +240,38 @@ political_actions = {
 				FROM = { surrender_progress > 0.3 }
 			}
 			modifier = {
-				add = 1
+				add = 100
 				OR = {
 					has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_INT }
-					NOT = { country_exists = HND }
-					HND = { has_country_flag = HND_went_isolationist }
+					#PHI will join if any hope of an Asian Socialist Power is Gone - consider adding INS one day
+					NOT = {
+						country_exists = HND
+						country_exists = CHI
+					}
+					#PHI will join 3I if an Asian Power is in it
+					OR = {
+						INT = { is_in_faction_with = HND }
+						INT = { tag = HND }
+					}
+					OR = {
+						INT = { is_in_faction_with = LKT }
+						INT = { tag = LKT }
+					}
+					#PHI will join 3I if WCA is in it and WCA won the minigame
+					AND = {
+						PHI = { has_country_flag = PHI_USA_won_fight_for_philippines_flag }
+						OR = {
+							INT = { is_in_faction_with = WCA }
+							INT = { tag = WCA }
+						}
+					}
+				}
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					has_game_rule = { rule = PHI_FORPOL option = PHI_FORPOL_HND }
+					has_game_rule = { rule = PHI_FORPOL option = PHI_FORPOL_CHI }
 				}
 			}
 		}
@@ -131,6 +279,1702 @@ political_actions = {
 		complete_effect = {
 			log = "[GetLogRoot][GetLogFrom]: Decision complete PHI_join_internationale"
 			FROM = { faction_leader = { ask_to_join_faction = yes } }
+		}
+	}
+}
+
+PHI_fight_for_the_philippines_decision_cat = {
+	PHI_election_in_180_days_mission_timer = {
+		icon = GFX_decision_generic_political_rally
+
+		allowed = { always = no }
+
+		available = {
+			always = no
+		}
+
+		is_good = no
+		days_mission_timeout = 180
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_election_in_180_days_mission_timer"
+		}
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout PHI_election_in_180_days_mission_timer"
+			PHI_1939_election_outcome_effect = yes
+		}
+	}
+	PHI_election_in_180_days_dummy_mission_timer = {
+		icon = GFX_decision_generic_political_rally
+
+		allowed = { always = no }
+
+		available = {
+			always = no
+		}
+
+		is_good = no
+		days_mission_timeout = 0
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_election_in_180_days_dummy_mission_timer"
+		}
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout PHI_election_in_180_days_dummy_mission_timer"
+			effect_tooltip = { PHI_1939_election_outcome_effect = yes }
+		}
+	}
+	GEA_military_coordination_with_the_philippines = {
+		allowed = {
+			tag = GEA
+		}
+		icon = GFX_decision_generic_military
+		ai_will_do = {
+			base = 0
+			#Ai will do if they have some Command power to spare. Lower threshold than Japan though
+
+			modifier = {
+				add = 50
+				command_power > 49
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		custom_cost_trigger = {
+			command_power > 34
+		}
+		custom_cost_text = CP_35
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GEA_military_coordination_with_the_philippines"
+			hidden_effect = {
+				add_command_power = -35
+			}
+			PHI_add_GEA_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove GEA_military_coordination_with_the_philippines"
+		}
+	}
+	GEA_political_negotiations_with_the_philippines = {
+		allowed = {
+			tag = GEA
+		}
+		icon = GFX_decision_generic_political_discourse
+		ai_will_do = {
+			base = 0
+
+			#Ai will do if they have some political power to spare.
+			modifier = {
+				add = 50
+				has_political_power > 99
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		cost = 35
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GEA_political_negotiations_with_the_philippines"
+			PHI_add_GEA_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove GEA_political_negotiations_with_the_philippines"
+		}
+	}
+	GEA_sabotage_japanese_influence = {
+		allowed = {
+			tag = GEA
+		}
+		icon = GFX_decision_government_down
+		ai_will_do = {
+			base = 0
+
+			#Ai will do if they have some Command power to spare and Japan's winning the minigame
+			modifier = {
+				add = 50
+				command_power > 29
+				check_variable = { PHI.PHI_GEA_alignment_var < PHI.PHI_IND_alignment_var }
+				check_variable = { PHI.PHI_CPS_alignment_var > PHI.PHI_IND_alignment_var }
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 90
+		custom_cost_trigger = {
+			command_power > 9
+		}
+		custom_cost_text = CP_10
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GEA_sabotage_japanese_influence"
+			hidden_effect = {
+				add_command_power = -10
+			}
+			PHI_sub_GEA_alignment_medium_effect = yes
+			PHI_sub_CPS_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove GEA_sabotage_japanese_influence"
+		}
+	}
+	GEA_encourage_an_open_door_in_the_philippines = {
+		allowed = {
+			tag = GEA
+		}
+		icon = GFX_decision_global_trade
+		ai_will_do = {
+			base = 0
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+
+			#Ai will basically never do this - GEA would rather risk PHI being neutral than CPS aligned.
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 90
+		cost = 10
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GEA_encourage_an_open_door_in_the_philippines"
+			PHI_sub_IND_alignment_medium_effect = yes
+			PHI_add_CPS_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove GEA_encourage_an_open_door_in_the_philippines"
+		}
+	}
+	GEA_economic_aid_package_to_the_philippines = {
+		icon = GFX_decision_generic_construction
+		allowed = {
+			tag = GEA
+		}
+		visible = {
+			AND = {
+				PHI = {
+					NOT = {
+						has_country_flag = PHI_reject_german_economic_aid
+					}
+				}
+			}
+		}
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+		}
+		cancel_trigger = {
+			PHI = { has_country_flag = PHI_reject_german_economic_aid }
+		}
+		fire_only_once = yes
+		ai_will_do = {
+			base = 0
+
+			modifier = {
+				add = 50
+				num_of_civilian_factories_available_for_projects > 4
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		days_remove = 100
+		modifier = {
+			civilian_factory_use = 3
+		}
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GEA_economic_aid_package_to_the_philippines"
+			PHI = {
+				country_event = { id = PHI.political.050 days = 1 } #The Germans Offer Economic Aid!
+			}
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		cancel_effect = {
+			log = "[GetLogRoot]: Decision cancel GEA_economic_aid_package_to_the_philippines"
+		}
+	}
+	GEA_arms_shipments_to_the_philippines = {
+		icon = GFX_decision_generic_prepare_civil_war
+		allowed = {
+			tag = GEA
+		}
+		visible = {
+			AND = {
+				PHI = {
+					NOT = {
+						has_country_flag = PHI_reject_german_military_aid
+					}
+				}
+			}
+		}
+		available = {
+			has_equipment = {
+				infantry_equipment > 999
+			}
+			has_equipment = {
+				artillery_equipment > 49
+			}
+			has_equipment = {
+				support_equipment > 49
+			}
+		}
+		cancel_trigger = {
+			PHI = { has_country_flag = PHI_reject_german_military_aid }
+		}
+		fire_only_once = yes
+		ai_will_do = {
+			base = 0
+
+			modifier = {
+				add = 50 #Has a health surplus of equipment
+				has_equipment = {
+					infantry_equipment > 1999
+				}
+				has_equipment = {
+					artillery_equipment > 99
+				}
+				has_equipment = {
+					support_equipment > 99
+				}
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		days_remove = 100
+		custom_cost_trigger = {
+			command_power > 9
+		}
+		custom_cost_text = CP_10
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete GEA_arms_shipments_to_the_philippines"
+			hidden_effect = {
+				add_command_power = -10
+				add_equipment_to_stockpile = {
+					type = infantry_equipment
+					amount = -1000
+				}
+				add_equipment_to_stockpile = {
+					type = artillery_equipment
+					amount = -50
+				}
+				add_equipment_to_stockpile = {
+					type = support_equipment
+					amount = -50
+				}
+			}
+			custom_effect_tooltip = PHI_arms_invested_tt
+			custom_effect_tooltip = tooltip_white_line
+			PHI = {
+				country_event = { id = PHI.military.060 days = 3 } #The Germans Offer Military Aid
+			}
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove GEA_arms_shipments_to_the_philippines"
+			PHI = { country_event = PHI.military.065 } #Foreign-Equipped Divisions
+			custom_effect_tooltip = tooltip_white_line
+			custom_effect_tooltip = PHI_arms_shipments_tt
+			custom_effect_tooltip = tooltip_white_line
+		}
+		cancel_effect = {
+			log = "[GetLogRoot]: Decision cancel GEA_arms_shipments_to_the_philippines"
+			add_command_power = 10
+			hidden_effect = {
+				add_equipment_to_stockpile = {
+					type = infantry_equipment
+					amount = 1000
+				}
+				add_equipment_to_stockpile = {
+					type = artillery_equipment
+					amount = 50
+				}
+				add_equipment_to_stockpile = {
+					type = support_equipment
+					amount = 50
+				}
+			}
+			custom_effect_tooltip = PHI_arms_refunded_tt
+		}
+	}
+	JAP_military_coordination_with_the_philippines = {
+		allowed = {
+			tag = JAP
+		}
+		icon = GFX_decision_generic_military
+		ai_will_do = {
+			base = 0
+
+			#Ai will do if they have some Command power to spare.
+			modifier = {
+				add = 50
+				command_power > 49
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		custom_cost_trigger = {
+			command_power > 34
+		}
+		custom_cost_text = CP_35
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete JAP_military_coordination_with_the_philippines"
+			hidden_effect = {
+				add_command_power = -35
+			}
+			PHI_add_CPS_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove JAP_military_coordination_with_the_philippines"
+		}
+	}
+	JAP_political_negotiations_with_the_philippines = {
+		allowed = {
+			tag = JAP
+		}
+		icon = GFX_decision_generic_political_discourse
+		ai_will_do = {
+			base = 0
+
+			#Ai will do if they have some political power to spare.
+			modifier = {
+				add = 50
+				has_political_power > 99
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		cost = 35
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete JAP_political_negotiations_with_the_philippines"
+			PHI_add_CPS_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove JAP_political_negotiations_with_the_philippines"
+		}
+	}
+	JAP_sabotage_german_influence = {
+		allowed = {
+			tag = JAP
+		}
+		icon = GFX_decision_government_down
+		ai_will_do = {
+			base = 0
+
+			#Ai will do if they have some Command power to spare and Germany's winning the minigame
+			modifier = {
+				add = 50
+				command_power > 29
+				check_variable = { PHI.PHI_IND_alignment_var < PHI.PHI_GEA_alignment_var }
+				check_variable = { PHI.PHI_IND_alignment_var > PHI.PHI_CPS_alignment_var }
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 90
+		custom_cost_trigger = {
+			command_power > 9
+		}
+		custom_cost_text = CP_10
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete JAP_sabotage_german_influence"
+			hidden_effect = {
+				add_command_power = -10
+			}
+			PHI_sub_CPS_alignment_medium_effect = yes
+			PHI_sub_GEA_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove JAP_sabotage_german_influence"
+		}
+	}
+	JAP_encourage_an_open_door_in_the_philippines = {
+		allowed = {
+			tag = JAP
+		}
+		icon = GFX_decision_global_trade
+		ai_will_do = {
+			base = 0
+
+			#We want JAP ai to be a little bit of a gambler if they have excess PP since they know they can always just invade PHI
+
+			modifier = {
+				add = 50
+				has_political_power > 99
+				check_variable = { PHI.PHI_IND_alignment_var > PHI.PHI_CPS_alignment_var }
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 90
+		cost = 10
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete JAP_encourage_an_open_door_in_the_philippines"
+			PHI_sub_IND_alignment_medium_effect = yes
+			PHI_add_GEA_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove JAP_encourage_an_open_door_in_the_philippines"
+		}
+	}
+	JAP_economic_aid_package_to_the_philippines = {
+		icon = GFX_decision_generic_construction
+		allowed = {
+			tag = JAP
+		}
+		visible = {
+			AND = {
+				PHI = {
+					NOT = {
+						has_country_flag = PHI_reject_japanese_economic_aid
+					}
+				}
+			}
+		}
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+		}
+		cancel_trigger = {
+			PHI = { has_country_flag = PHI_reject_japanese_economic_aid }
+		}
+		fire_only_once = yes
+		ai_will_do = {
+			base = 0
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+			modifier = {
+				factor = 0
+				date < 1938.01.01 #JAP and GEA like to spam this decision first for some reason. Make it so GEA does it first, JAP will eventually do it too.
+			}
+			modifier = {
+				add = 50
+				num_of_civilian_factories_available_for_projects > 4
+			}
+		}
+		days_remove = 100
+		modifier = {
+			civilian_factory_use = 3
+		}
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete JAP_economic_aid_package_to_the_philippines"
+			PHI = {
+				country_event = { id = PHI.political.052 days = 1 } #The Japanese Offer Economic Aid!
+			}
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		cancel_effect = {
+			log = "[GetLogRoot]: Decision cancel JAP_economic_aid_package_to_the_philippines"
+		}
+	}
+	JAP_arms_shipments_to_the_philippines = {
+		icon = GFX_decision_generic_prepare_civil_war
+		allowed = {
+			tag = JAP
+		}
+		visible = {
+			AND = {
+				PHI = {
+					NOT = {
+						has_country_flag = PHI_reject_japanese_military_aid
+					}
+				}
+			}
+		}
+		available = {
+			has_equipment = {
+				infantry_equipment > 999
+			}
+			has_equipment = {
+				artillery_equipment > 49
+			}
+			has_equipment = {
+				support_equipment > 49
+			}
+		}
+		cancel_trigger = {
+			PHI = { has_country_flag = PHI_reject_japanese_military_aid }
+		}
+		fire_only_once = yes
+		ai_will_do = {
+			base = 0
+
+			modifier = {
+				add = 50 #Has a health surplus of equipment
+				has_equipment = {
+					infantry_equipment > 1999
+				}
+				has_equipment = {
+					artillery_equipment > 99
+				}
+				has_equipment = {
+					support_equipment > 99
+				}
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		days_remove = 100
+		custom_cost_trigger = {
+			command_power > 9
+		}
+		custom_cost_text = CP_10
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete JAP_arms_shipments_to_the_philippines"
+			hidden_effect = {
+				add_command_power = -10
+				add_equipment_to_stockpile = {
+					type = infantry_equipment
+					amount = -1000
+				}
+				add_equipment_to_stockpile = {
+					type = artillery_equipment
+					amount = -50
+				}
+				add_equipment_to_stockpile = {
+					type = support_equipment
+					amount = -50
+				}
+			}
+			custom_effect_tooltip = PHI_arms_invested_tt
+			custom_effect_tooltip = tooltip_white_line
+			PHI = {
+				country_event = { id = PHI.military.062 days = 3 } #The Japanese Offer Military Aid
+			}
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove JAP_arms_shipments_to_the_philippines"
+			PHI = { country_event = PHI.military.065 } #Foreign-Equipped Divisions
+			custom_effect_tooltip = tooltip_white_line
+			custom_effect_tooltip = PHI_arms_shipments_tt
+			custom_effect_tooltip = tooltip_white_line
+		}
+		cancel_effect = {
+			log = "[GetLogRoot]: Decision cancel JAP_arms_shipments_to_the_philippines"
+			add_command_power = 10
+			hidden_effect = {
+				add_equipment_to_stockpile = {
+					type = infantry_equipment
+					amount = 1000
+				}
+				add_equipment_to_stockpile = {
+					type = artillery_equipment
+					amount = 50
+				}
+				add_equipment_to_stockpile = {
+					type = support_equipment
+					amount = 50
+				}
+			}
+			custom_effect_tooltip = PHI_arms_refunded_tt
+		}
+	}
+	USA_military_coordination_with_the_philippines = {
+		allowed = {
+			is_american_tag = yes
+		}
+		icon = GFX_decision_generic_military
+		ai_will_do = {
+			base = 0
+
+			#The ai will do if they have some command power to spare
+			modifier = {
+				add = 50
+				command_power > 49
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		custom_cost_trigger = {
+			command_power > 34
+		}
+		custom_cost_text = CP_35
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete USA_military_coordination_with_the_philippines"
+			hidden_effect = {
+				add_command_power = -35
+			}
+			PHI_add_USA_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove USA_military_coordination_with_the_philippines"
+		}
+	}
+	USA_political_negotiations_with_the_philippines = {
+		allowed = {
+			is_american_tag = yes
+		}
+		icon = GFX_decision_generic_political_discourse
+		ai_will_do = {
+			base = 0
+
+			#Ai will do if they have some political power to spare.
+
+			modifier = {
+				add = 50
+				has_political_power > 99
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		cost = 35
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete USA_political_negotiations_with_the_philippines"
+			PHI_add_USA_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove USA_political_negotiations_with_the_philippines"
+		}
+	}
+	USA_encourage_philippine_neutrality = {
+		allowed = {
+			is_american_tag = yes
+		}
+
+		icon = GFX_decision_peace_dove
+		ai_will_do = {
+			base = 0
+
+			#Ai will do if they have some Command power to spare since the US would prefer independent PHI over RP or CPS PHI
+
+			modifier = {
+				add = 50
+				command_power > 29
+				check_variable = { PHI.PHI_IND_alignment_var > PHI.PHI_USA_alignment_var }
+				OR = {
+					check_variable = { PHI.PHI_IND_alignment_var < PHI.PHI_GEA_alignment_var }
+					check_variable = { PHI.PHI_IND_alignment_var < PHI.PHI_CPS_alignment_var }
+				}
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 90
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete USA_encourage_philippine_neutrality"
+			PHI_sub_USA_alignment_medium_effect = yes
+			PHI_sub_CPS_alignment_small_effect = yes
+			PHI_sub_GEA_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove USA_encourage_philippine_neutrality"
+		}
+	}
+	USA_economic_aid_package_to_the_philippines = {
+		icon = GFX_decision_generic_construction
+		allowed = {
+			is_american_tag = yes
+		}
+		visible = {
+			AND = {
+				PHI = {
+					NOT = {
+						has_country_flag = PHI_reject_american_economic_aid
+					}
+				}
+			}
+		}
+		available = {
+			num_of_civilian_factories_available_for_projects > 2
+		}
+		cancel_trigger = {
+			PHI = { has_country_flag = PHI_reject_american_economic_aid }
+		}
+		fire_only_once = yes
+		ai_will_do = {
+			base = 0
+
+			modifier = {
+				add = 50
+				num_of_civilian_factories_available_for_projects > 4
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		days_remove = 100
+		modifier = {
+			civilian_factory_use = 3
+		}
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete USA_economic_aid_package_to_the_philippines"
+			PHI = {
+				country_event = { id = PHI.political.051 days = 1 } #The Americans Offer Economic Aid!
+			}
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		cancel_effect = {
+			log = "[GetLogRoot]: Decision cancel USA_economic_aid_package_to_the_philippines"
+		}
+	}
+	USA_arms_shipments_to_the_philippines = {
+		icon = GFX_decision_generic_prepare_civil_war
+		allowed = {
+			is_american_tag = yes
+		}
+		visible = {
+			AND = {
+				PHI = {
+					NOT = {
+						has_country_flag = PHI_reject_american_military_aid
+					}
+				}
+			}
+		}
+		available = {
+			has_equipment = {
+				infantry_equipment > 999
+			}
+			has_equipment = {
+				artillery_equipment > 49
+			}
+			has_equipment = {
+				support_equipment > 49
+			}
+		}
+		cancel_trigger = {
+			PHI = { has_country_flag = PHI_reject_american_military_aid }
+		}
+		fire_only_once = yes
+		ai_will_do = {
+			base = 0
+
+			modifier = {
+				add = 50 #Has a health surplus of equipment
+				has_equipment = {
+					infantry_equipment > 1999
+				}
+				has_equipment = {
+					artillery_equipment > 99
+				}
+				has_equipment = {
+					support_equipment > 99
+				}
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		days_remove = 100
+		custom_cost_trigger = {
+			command_power > 9
+		}
+		custom_cost_text = CP_10
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete USA_arms_shipments_to_the_philippines"
+			hidden_effect = {
+				add_command_power = -10
+				add_equipment_to_stockpile = {
+					type = infantry_equipment
+					amount = -1000
+				}
+				add_equipment_to_stockpile = {
+					type = artillery_equipment
+					amount = -50
+				}
+				add_equipment_to_stockpile = {
+					type = support_equipment
+					amount = -50
+				}
+			}
+			custom_effect_tooltip = PHI_arms_invested_tt
+			custom_effect_tooltip = tooltip_white_line
+			PHI = {
+				country_event = { id = PHI.military.061 days = 3 } #The Americans Offer Military Aid
+			}
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove USA_arms_shipments_to_the_philippines"
+			PHI = { country_event = PHI.military.065 } #Foreign-Equipped Divisions
+			custom_effect_tooltip = tooltip_white_line
+			custom_effect_tooltip = PHI_arms_shipments_tt
+			custom_effect_tooltip = tooltip_white_line
+		}
+		cancel_effect = {
+			log = "[GetLogRoot]: Decision cancel USA_arms_shipments_to_the_philippines"
+			add_command_power = 10
+			hidden_effect = {
+				add_equipment_to_stockpile = {
+					type = infantry_equipment
+					amount = 1000
+				}
+				add_equipment_to_stockpile = {
+					type = artillery_equipment
+					amount = 50
+				}
+				add_equipment_to_stockpile = {
+					type = support_equipment
+					amount = 50
+				}
+			}
+			custom_effect_tooltip = PHI_arms_refunded_tt
+		}
+	}
+	PHI_shoring_up_our_own_defences = {
+		allowed = {
+			tag = PHI
+		}
+		icon = GFX_decision_generic_military
+		ai_will_do = {
+			base = 0
+
+			#PHI will generally be more reluctant to spend PP for independence since we want them to avoid getting trucked.
+			modifier = {
+				add = 50
+				command_power > 49
+			}
+
+			modifier = {
+				add = 100
+				PHI_forpol_gamerule_needs_IND_trigger = yes
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		custom_cost_trigger = {
+			command_power > 34
+		}
+		custom_cost_text = CP_35
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_shoring_up_our_own_defences"
+			hidden_effect = {
+				add_command_power = -35
+			}
+			PHI_add_IND_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_shoring_up_our_own_defences"
+		}
+	}
+	PHI_playing_off_our_competitors = {
+		allowed = {
+			tag = PHI
+		}
+		icon = GFX_decision_generic_political_discourse
+		ai_will_do = {
+			base = 0
+
+			#PHI will generally be more reluctant to spend PP for independence since we want them to avoid getting trucked.
+			modifier = {
+				add = 40
+				has_political_power > 99
+			}
+
+			modifier = {
+				add = 100
+				PHI_forpol_gamerule_needs_IND_trigger = yes
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		cost = 35
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_playing_off_our_competitors"
+			PHI_add_IND_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_playing_off_our_competitors"
+		}
+	}
+	PHI_peace_in_the_pacific = {
+		allowed = {
+			tag = PHI
+		}
+		icon = GFX_decision_peace_dove
+		ai_will_do = {
+			base = 0
+
+			#Ai will never do this unless desperate
+			modifier = {
+				add = 100
+				OR = {
+					check_variable = { PHI_USA_alignment_var > PHI_IND_alignment_var }
+					check_variable = { PHI_GEA_alignment_var > PHI_IND_alignment_var }
+					check_variable = { PHI_CPS_alignment_var > PHI_IND_alignment_var }
+				}
+				PHI_forpol_gamerule_needs_IND_trigger = yes
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 60
+		custom_cost_trigger = {
+			has_war_support > 0.05
+		}
+		custom_cost_text = war_support5
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_peace_in_the_pacific"
+			hidden_effect = {
+				add_war_support = -0.05
+			}
+			PHI_add_IND_alignment_medium_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_peace_in_the_pacific"
+		}
+	}
+	PHI_crackdown_on_foreign_agitators = {
+		allowed = {
+			tag = PHI
+		}
+		icon = GFX_decision_generic_prepare_civil_war
+		ai_will_do = {
+			base = 0
+
+			#Ai will never do this unless desperate
+			modifier = {
+				add = 100
+				OR = {
+					check_variable = { PHI_USA_alignment_var > PHI_IND_alignment_var }
+					check_variable = { PHI_GEA_alignment_var > PHI_IND_alignment_var }
+					check_variable = { PHI_CPS_alignment_var > PHI_IND_alignment_var }
+				}
+				PHI_forpol_gamerule_needs_IND_trigger = yes
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 90
+		custom_cost_trigger = {
+			has_stability > 0.05
+		}
+		custom_cost_text = stability5
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_crackdown_on_foreign_agitators"
+			hidden_effect = {
+				add_stability = -0.05
+			}
+			PHI_sub_GEA_alignment_small_effect = yes
+			PHI_sub_CPS_alignment_small_effect = yes
+			PHI_sub_USA_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_crackdown_on_foreign_agitators"
+		}
+	}
+	PHI_negotiate_with_the_americans = {
+		allowed = {
+			tag = PHI
+		}
+		available = {
+			has_completed_focus = PHI_friends_not_forgotten
+		}
+		icon = GFX_decision_us_flag
+		ai_will_do = {
+			base = 0
+
+			#PHI will sometimes spend PP strengthening a side if they have excess PP
+			modifier = {
+				add = 50
+				has_political_power > 99
+			}
+
+			#Ai will never do this unless game-ruled
+			modifier = {
+				add = 100
+				has_game_rule = { rule = PHI_FORPOL option = PHI_FORPOL_USA }
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		cost = 25
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_negotiate_with_the_americans"
+			PHI_add_USA_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_negotiate_with_the_americans"
+		}
+	}
+	PHI_negotiate_with_the_Germans = {
+		allowed = {
+			tag = PHI
+		}
+		available = {
+			has_completed_focus = PHI_patronise_the_deutsche_klub
+		}
+		icon = GFX_decision_CHL_nacista_coup_attempt
+		ai_will_do = {
+			base = 0
+
+			#PHI will sometimes spend PP strengthening a side if they have excess PP
+			modifier = {
+				add = 50
+				has_political_power > 99
+			}
+
+			#Ai will never do this unless game-ruled
+			modifier = {
+				add = 100
+				has_game_rule = { rule = PHI_FORPOL option = PHI_FORPOL_GER }
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		cost = 25
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_negotiate_with_the_Germans"
+			PHI_add_GEA_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_negotiate_with_the_Germans"
+		}
+	}
+	PHI_negotiate_with_the_Japanese = {
+		allowed = {
+			tag = PHI
+		}
+		available = {
+			has_completed_focus = PHI_visit_from_the_ijn
+		}
+		icon = GFX_decision_jap_pacific_guardian
+		ai_will_do = {
+			base = 0
+
+			#PHI will sometimes spend PP strengthening a side if they have excess PP
+			modifier = {
+				add = 50
+				has_political_power > 99
+			}
+
+			#Ai will never do this unless game-ruled
+			modifier = {
+				add = 100
+				has_game_rule = { rule = PHI_FORPOL option = PHI_FORPOL_JAP }
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		cost = 25
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_negotiate_with_the_Japanese"
+			PHI_add_CPS_alignment_small_effect = yes
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_negotiate_with_the_Japanese"
+		}
+	}
+	PHI_the_geopolitical_ballgame = {
+		allowed = {
+			tag = PHI
+		}
+		icon = GFX_decision_scales
+		ai_will_do = {
+			base = 0
+
+			#Increased the weight for this a little bit compared to other CP options just to keep the race close
+			modifier = {
+				add = 50
+				command_power > 49
+				#Dont do this if you're already winning
+				NOT = {
+					AND = {
+						check_variable = { PHI_IND_alignment_var > PHI_USA_alignment_var }
+						check_variable = { PHI_IND_alignment_var > PHI_CPS_alignment_var }
+						check_variable = { PHI_IND_alignment_var > PHI_GEA_alignment_var }
+					}
+				}
+			}
+
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_is_fighting_for_philippines_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		custom_cost_trigger = {
+			command_power > 19
+		}
+		custom_cost_text = CP_20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_the_geopolitical_ballgame"
+			hidden_effect = {
+				add_command_power = -20
+			}
+			if = {
+				limit = {
+					check_variable = {
+						PHI_USA_alignment_var < PHI_IND_alignment_var
+					}
+					check_variable = {
+						PHI_USA_alignment_var < PHI_GEA_alignment_var
+					}
+					check_variable = {
+						PHI_USA_alignment_var < PHI_CPS_alignment_var
+					}
+				}
+				PHI_add_USA_alignment_medium_effect = yes
+				PHI_add_IND_alignment_small_effect = yes
+			}
+			else_if = {
+				limit = {
+					check_variable = {
+						PHI_CPS_alignment_var < PHI_IND_alignment_var
+					}
+					check_variable = {
+						PHI_CPS_alignment_var < PHI_GEA_alignment_var
+					}
+				}
+				PHI_add_CPS_alignment_medium_effect = yes
+				PHI_add_IND_alignment_small_effect = yes
+			}
+			else_if = {
+				limit = {
+					check_variable = {
+						PHI_GEA_alignment_var < PHI_IND_alignment_var
+					}
+				}
+				PHI_add_GEA_alignment_medium_effect = yes
+				PHI_add_IND_alignment_small_effect = yes
+			}
+			else = {
+				PHI_add_IND_alignment_medium_effect = yes
+			}
+			set_country_flag = {
+				flag = PHI_is_fighting_for_philippines_flag
+				days = 60 #Ai will only do Philippines stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_the_geopolitical_ballgame"
+		}
+	}
+
+}
+PHI_balance_of_power_category = {
+	PHI_appease_the_masses_decision = {
+		icon = GFX_decision_POL_looming_peasants_strike
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 99 #Ai should prioritize hiring people first.
+				PHI_ai_should_anger_elitists_trigger = yes
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_just_did_a_BOP_decision_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		cost = 25
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_appease_the_masses_decision"
+			PHI_elitist_small_effect = yes
+			set_country_flag = {
+				flag = PHI_just_did_a_BOP_decision_flag
+				days = 60 #Ai will only do BOP stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_appease_the_masses_decision"
+		}
+	}
+	PHI_confront_the_caciques_decision = {
+		icon = GFX_decision_CHL_mapuche_liberate_isthmo_amerindia
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				command_power > 49
+				PHI_ai_should_anger_elitists_trigger = yes
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_just_did_a_BOP_decision_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		custom_cost_trigger = {
+			command_power > 25
+		}
+		custom_cost_text = CP_25
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_confront_the_caciques_decision"
+			hidden_effect = {
+				add_command_power = -25
+			}
+			PHI_elitist_small_effect = yes
+			set_country_flag = {
+				flag = PHI_just_did_a_BOP_decision_flag
+				days = 60 #Ai will only do BOP stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_confront_the_caciques_decision"
+		}
+	}
+	PHI_embrace_the_spirit_of_change_decision = {
+		icon = GFX_decision_bul_against_zveno
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_stability > 0.50
+				PHI_ai_should_anger_elitists_trigger = yes
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_just_did_a_BOP_decision_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		custom_cost_trigger = {
+			has_stability > 0.05
+		}
+		custom_cost_text = stability5
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_embrace_the_spirit_of_change_decision"
+			PHI_elitist_medium_effect = yes
+			hidden_effect = {
+				add_stability = -0.05
+			}
+			set_country_flag = {
+				flag = PHI_just_did_a_BOP_decision_flag
+				days = 60 #Ai will only do BOP stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_embrace_the_spirit_of_change_decision"
+		}
+	}
+	PHI_appeal_to_the_elites_decision = {
+		icon = GFX_decision_gre_investment_decisions
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 99 #Ai should prioritize hiring people first.
+				PHI_ai_should_anger_populists_trigger = yes
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_just_did_a_BOP_decision_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		cost = 25
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_appeal_to_the_elites_decision"
+			PHI_populist_small_effect = yes
+			set_country_flag = {
+				flag = PHI_just_did_a_BOP_decision_flag
+				days = 60 #Ai will only do BOP stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_appeal_to_the_elites_decision"
+		}
+	}
+	PHI_suppress_the_rabblerousers = {
+		icon = GFX_decision_generic_reorganize_irregulars
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				command_power > 49
+				PHI_ai_should_anger_populists_trigger = yes
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_just_did_a_BOP_decision_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		custom_cost_trigger = {
+			command_power > 25
+		}
+		custom_cost_text = CP_25
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_suppress_the_rabblerousers"
+			hidden_effect = {
+				add_command_power = -25
+			}
+			PHI_populist_small_effect = yes
+			set_country_flag = {
+				flag = PHI_just_did_a_BOP_decision_flag
+				days = 60 #Ai will only do BOP stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_suppress_the_rabblerousers"
+		}
+	}
+	PHI_champion_the_traditional_order_decision = {
+		icon = GFX_decision_scales
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_war_support > 0.50
+				PHI_ai_should_anger_populists_trigger = yes
+			}
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_just_did_a_BOP_decision_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		custom_cost_trigger = {
+			has_war_support > 0.05
+		}
+		custom_cost_text = war_support5
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_champion_the_traditional_order_decision"
+			hidden_effect = {
+				add_war_support = -0.05
+			}
+			PHI_populist_medium_effect = yes
+			set_country_flag = {
+				flag = PHI_just_did_a_BOP_decision_flag
+				days = 60 #Ai will only do BOP stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_champion_the_traditional_order_decision"
+		}
+	}
+	PHI_enforce_the_presidential_vision_decision = {
+		icon = GFX_decision_generic_political_address
+		ai_will_do = {
+			base = 0
+			#PHI Ai should never waste guns they could be using to get ready for war
+			modifier = {
+				factor = 0
+				has_country_flag = PHI_just_did_a_BOP_decision_flag
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 30
+		custom_cost_trigger = {
+			has_equipment = { infantry_equipment > 1000 }
+		}
+		custom_cost_text = 1000_guns
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete PHI_enforce_the_presidential_vision_decision"
+			hidden_effect = {
+				add_equipment_to_stockpile = {
+					type = infantry_equipment
+					amount = -1000
+				}
+			}
+			PHI_ctr_bop_large_effect = yes
+			set_country_flag = {
+				flag = PHI_just_did_a_BOP_decision_flag
+				days = 60 #Ai will only do BOP stuff every 60 days.
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove PHI_enforce_the_presidential_vision_decision"
+		}
+	}
+}
+
+economy_decisions = {
+	PHI_land_reform_decision = {
+		icon = GFX_decision_generic_agriculture
+
+		allowed = { always = no } #activated by effect
+
+		visible = {
+			FROM = {
+				is_owned_and_controlled_by = ROOT
+			}
+		}
+		available = {
+			num_of_civilian_factories_available_for_projects > 0
+		}
+
+		fire_only_once = yes
+		state_target = yes
+		cancel_if_not_visible = yes
+		cost = 100
+		days_remove = 365
+
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 100
+				has_political_power > 200
+				date > 1939.09.16
+				#Wait until initial game content is done
+			}
+		}
+
+		modifier = {
+			civilian_factory_use = 1
+		}
+
+		cancel_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision cancel PHI_land_reform_decision"
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete PHI_land_reform_decision"
+		}
+		remove_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision remove PHI_land_reform_decision"
+			if = {
+				limit = { has_completed_focus = PHI_import_farming_machinery }
+				FROM = {
+					increase_state_category_by_one_level = yes
+					add_building_construction = {
+						type = infrastructure
+						level = 1
+						instant_build = yes
+					}
+				}
+			}
+			else = {
+				FROM = {
+					increase_state_category_by_one_level = yes
+					add_extra_state_shared_building_slots = 1
+				}
+			}
 		}
 	}
 }

@@ -21,18 +21,41 @@ on_actions = {
 		}
 	}
 
-	#ROOT is winner #FROM is loser
-	on_peaceconference_started = {
+	# ROOT is capitulated country, FROM is winner
+	on_capitulation_immediate = {
+		effect = {
+			if = {
+				limit = {
+					tag = ZIM
+					is_subject_of = NAT
+					NAT = { has_capitulated = no }
+				}
+				ZIM = { become_exiled_in = { target = NAT legitimacy = 100 } }
+			}
+		}
+	}
+
+	#ROOT is winner, FROM is loser (called for all winners against all losers)
+	on_before_peace_conference_start = {
 		effect = {
 			FROM = {
 				if = {
 					limit = {
 						tag = NAT
 						has_civil_war = yes
-						is_in_faction_with = ENT
-						is_ai = yes
+						surrender_progress > 0.9
 					}
-					transfer_navy = { target = ENT }
+					if = {
+						limit = { country_exists = ENT }
+						transfer_navy = { target = ENT }
+					}
+					if = {
+						limit = { has_subject = ZIM }
+						set_autonomy = {
+							target = ZIM
+							autonomy_state = autonomy_free
+						}
+					}
 				}
 			}
 		}
@@ -43,10 +66,57 @@ on_actions = {
 		effect = {
 			if = {
 				limit = {
-					original_tag = SAF
-					FROM = { original_tag = SAF }
+					tag = NAT
+					FROM = { tag = ZAR }
 				}
 				country_event = natal.26
+			}
+			else_if = {
+				limit = {
+					tag = ZAR
+					FROM = { tag = NAT }
+				}
+				if = {
+					limit = { has_template = "Reserve Unit" }
+					set_division_template_lock = {
+						division_template = "Reserve Unit"
+						is_locked = no
+					}
+				}
+				if = {
+					limit = { has_template = "Commando Division" }
+					set_division_template_lock = {
+						division_template = "Commando Division"
+						is_locked = no
+					}
+				}
+				if = {
+					limit = { has_template = "Afrikaner Scouts" }
+					set_division_template_lock = {
+						division_template = "Afrikaner Scouts"
+						is_locked = no
+					}
+				}
+			}
+		}
+	}
+
+	#ROOT is winner #FROM gets annexed - This will also fire on_annex
+	on_civil_war_end = {
+		effect = {
+			if = {
+				limit = {
+					original_tag = SAF
+					FROM = {
+						original_tag = SAF
+						has_socialist_government = yes
+					}
+				}
+				FROM = { drop_cosmetic_tag = yes }
+				if = {
+					limit = { 275 = { is_owned_and_controlled_by = ROOT } } #Transvaal
+					set_capital = { state = 275 remember_old_capital = no }
+				}
 			}
 		}
 	}
@@ -127,10 +197,6 @@ on_actions = {
 				limit = { original_tag = SAF }
 				if = {
 					limit = { has_socialist_government = yes }
-					drop_cosmetic_tag = yes
-					SAF_remove_governor_general = yes
-					SAF_add_socialist_generals = yes
-					SAF_remove_entente_generals = yes
 					SAF_set_socialist_spymaster = yes
 					if = {
 						limit = {
@@ -263,20 +329,46 @@ on_actions = {
 				}
 				SAF = { country_event = { id = saf.107 days = 10 random_days = 10 } }
 			}
+			if = {
+				limit = {
+					OR = {
+						original_tag = ENG
+						FROM = { original_tag = ENG }
+					}
+					OR = {
+						tag = ENT
+						FROM = { tag = ENT }
+					}
+				}
+				SAF = { country_event = { id = saf.96 days = 5 random_days = 10 } }
+			}
 		}
 	}
 
 	on_peace = {
 		effect = {
 			if = {
-				limit = {
-					original_tag = SAF
-					has_country_flag = SAF_internal_resistance_enabled
+				limit = { original_tag = SAF }
+				if = {
+					limit = { has_country_flag = SAF_internal_resistance_enabled }
+					clr_country_flag = SAF_internal_resistance_enabled
+					remove_mission = SAF_control_the_icu
+					remove_mission = SAF_control_the_ob
+					SAF_teardown_internal_resistance_decisions = yes
 				}
-				clr_country_flag = SAF_internal_resistance_enabled
-				remove_mission = SAF_control_the_icu
-				remove_mission = SAF_control_the_ob
-				SAF_teardown_internal_resistance_decisions = yes
+				if = {
+					limit = {
+						is_monarchy = yes
+						is_in_faction = no
+						is_subject = no
+						NOT = { has_idea = SAF_neutral_dominion }
+						ENT = {
+							is_faction_leader = yes
+							at_war_with_or_justifying_wargoal_against_ROOT = no
+						}
+					}
+					ENT = { add_to_faction = ROOT }
+				}
 			}
 		}
 	}
@@ -284,102 +376,12 @@ on_actions = {
 	on_weekly_SAF = {
 		effect = {
 			if = {
-				limit = { SAF = { has_civil_war = yes } }
-				if = {
-					limit = {
-						ZAR = { has_war_with = NAT }
-						NAT = { has_capitulated = no }
-					}
-					ZAR = {
-						activate_mission = SAF_conquer_natal_mission
-						every_enemy_country = {
-							limit = { is_ally_with = NAT }
-							activate_mission = SAF_hold_natal_mission
-
-							#make sure the values are in sync
-							set_temp_variable = { difference = ZAR.days_mission_timeout@SAF_conquer_natal_mission }
-							subtract_from_temp_variable = { difference = days_mission_timeout@SAF_hold_natal_mission }
-							add_days_mission_timeout = {
-								mission = SAF_hold_natal_mission
-								days = difference
-							}
-						}
-					}
-				}
-				if = {
-					limit = {
-						ZAR = { has_war_with = ZIM }
-						ZIM = { has_capitulated = no }
-					}
-					ZAR = {
-						activate_mission = SAF_conquer_rhodesia_mission
-						every_enemy_country = {
-							limit = { is_ally_with = ZIM }
-							activate_mission = ZIM_hold_rhodesia_mission
-
-							#make sure the values are in sync
-							set_temp_variable = { difference = ZAR.days_mission_timeout@SAF_conquer_rhodesia_mission }
-							subtract_from_temp_variable = { difference = days_mission_timeout@ZIM_hold_rhodesia_mission }
-							add_days_mission_timeout = {
-								mission = ZIM_hold_rhodesia_mission
-								days = difference
-							}
-						}
-					}
-				}
-				if = {
-					limit = {
-						ZAR = {
-							has_war_with = ENT
-							surrender_progress < 0.1
-							OR = {
-								NOT = { has_war_with = ZIM }
-								ZIM = { has_capitulated = yes }
-							}
-							OR = {
-								NOT = { has_war_with = NAT }
-								NAT = { has_capitulated = yes }
-							}
-						}
-					}
-					ZAR = {
-						activate_mission = SAF_defend_south_africa_mission
-						every_enemy_country = {
-							limit = { is_ally_with = ENT }
-							activate_mission = ENT_invade_south_africa_mission
-
-							#make sure the values are in sync
-							set_temp_variable = { difference = ZAR.days_mission_timeout@SAF_defend_south_africa_mission }
-							subtract_from_temp_variable = { difference = days_mission_timeout@ENT_invade_south_africa_mission }
-							add_days_mission_timeout = {
-								mission = ENT_invade_south_africa_mission
-								days = difference
-							}
-						}
-					}
-				}
+				limit = { has_war_with = NAT }
+				NAT = { country_event = natal.12 }
 			}
-			else_if = {
-				limit = {
-					has_war_with = ENT
-					has_socialist_government = yes
-					surrender_progress < 0.2
-					is_valid_peace_target = yes
-					NOT = { has_completed_focus = SAF_johannesburg_convention } #just in case
-				}
-				activate_mission = SAF_defend_socialist_south_africa_mission
-				every_enemy_country = {
-					limit = { is_in_faction_with = ENT }
-					activate_mission = ENT_invade_socialist_south_africa_mission
-
-					#make sure the values are in sync
-					set_temp_variable = { difference = SAF.days_mission_timeout@SAF_defend_socialist_south_africa_mission }
-					subtract_from_temp_variable = { difference = days_mission_timeout@ENT_invade_socialist_south_africa_mission }
-					add_days_mission_timeout = {
-						mission = ENT_invade_socialist_south_africa_mission
-						days = difference
-					}
-				}
+			if = {
+				limit = { has_war_with = ZIM }
+				ZIM = { country_event = natal.12 }
 			}
 		}
 	}

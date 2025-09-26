@@ -2,7 +2,7 @@
 -- Commented out items are under re-evaluation
 
 -- Links
-NDefines.NWiki.BASE_URL = "https://kaiserreich.wiki/The_Kaiserreich_Wiki"
+NDefines.NWiki.BASE_URL = "https://kaiserreich.wiki"
 -- Vanilla is "http://www.hoi4wiki.com/"
 
 -- Career Profile
@@ -10,7 +10,7 @@ NDefines.NCareerProfile.MOD_STATISTICS_GROUP = "kaiserreich_career_profile"
 NDefines.NCareerProfile.MOD_STATISTICS_GROUP_NAME = "KAISERREICH_CAREER_PROFILE"
 
 -- Game
-NDefines.NGame.SAVE_VERSION = 144											-- Vanilla is 20
+NDefines.NGame.SAVE_VERSION = 150											-- Vanilla is 20
 NDefines.NGame.END_DATE = "1959.1.1.1"										-- Vanilla is 1949.1.1.1
 NDefines.NGame.HANDS_OFF_START_TAG = "BHU"									-- Vanilla is URG
 NDefines.NGame.DECISION_ALERT_TIMEOUT_DAYS = 60								-- Vanilla is 30
@@ -32,7 +32,7 @@ NDefines.NCountry.WAR_SUPPORT_OFFNSIVE_WAR = 0								-- Vanilla is -0.2
 NDefines.NCountry.WAR_SUPPORT_DEFENSIVE_WAR = 0								-- Vanilla is -0.2
 NDefines.NCountry.MAX_BOMBING_WAR_SUPPORT_IMPACT = -0.3						-- Vanilla is -0.3
 NDefines.NCountry.MAX_HEROES_BEING_KILLED_WAR_SUPPORT_IMPACT = -0.6			-- Vanilla is -0.3
-NDefines.NCountry.MAX_CONVOYS_BEING_RAIDED_WAR_SUPPORT_IMPACT = -1		-- Vanilla is -0.5
+NDefines.NCountry.MAX_CONVOYS_BEING_RAIDED_WAR_SUPPORT_IMPACT = -1		    -- Vanilla is -0.5
 
 -- Diplomacy
 NDefines.NDiplomacy.MAX_TRUST_VALUE = 200									-- Vanilla is 100
@@ -179,7 +179,7 @@ NDefines.NAI.DESIRE_USE_XP_TO_UPGRADE_AIR_EQUIPMENT = 1.5					-- Vanilla is 1 - 
 -- Supply AI
 NDefines.NSupply.AI_FRONT_MINIMUM_UNITS_PER_PROVINCE_FOR_SUPPLY_CALCULATIONS = 0	-- Vanilla is 1
 NDefines.NSupply.AI_FRONT_DIVISIONS_PER_SUPPLY_POINT = 0.7							-- Vanilla is 1.0
-NDefines.NAITheatre.AI_THEATRE_SUPPLY_CRISIS_LIMIT = 0.25								-- Vanilla is 0.1
+NDefines.NAITheatre.AI_THEATRE_SUPPLY_CRISIS_LIMIT = 0.25							-- Vanilla is 0.1
 
 -- Geography
 NDefines.NGeography.MEDITERRANEAN_SEA_REGIONS = { 29, 68, 69, 168, 169, 223, 271 }	-- KR map changes

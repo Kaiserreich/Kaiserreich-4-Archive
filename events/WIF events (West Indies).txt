@@ -1121,6 +1121,24 @@ country_event = { #red revolt
 		log = "[GetLogInfo]: event wifpol.31 option wifpol.31.a"
 		name = wifpol.31.a
 		if = {
+			limit = { is_in_faction = yes }
+			if = {
+				limit = { is_subject = yes }
+				overlord = {
+					set_autonomy = {
+						target = ROOT
+						autonomy_state = autonomy_free
+					}
+				}
+			}
+			if = {
+				limit = { is_in_faction_with = CAN }
+				CAN = { country_event = { id = wifpol.3100 days = 2 } }
+			}
+			leave_faction = yes
+			peace_out_non_neighbours_after_leaving_faction = yes
+		}
+		else_if = {
 			limit = { is_subject = yes }
 			overlord = {
 				set_autonomy = {
@@ -1128,34 +1146,7 @@ country_event = { #red revolt
 					autonomy_state = autonomy_free
 				}
 			}
-		}
-		CAN = {
-			if = {
-				limit = {
-					is_faction_leader = yes
-					is_in_faction_with = ROOT
-				}
-				country_event = { id = wifpol.3100 days = 2 }
-			}
-		}
-		if = {
-			limit = { is_in_faction = yes }
-			faction_leader = { save_event_target_as = white_peace_receiver }
-			leave_faction = yes
-			every_enemy_country = {
-				limit = {
-					is_owner_neighbor_of = ROOT
-					is_valid_peace_target = yes
-				}
-				white_peace_with_TARGET = yes
-			}
-		}
-		every_enemy_country = {
-			limit = {
-				NOT = { is_owner_neighbor_of = ROOT }
-				is_valid_peace_target = yes
-			}
-			white_peace_with_ROOT = yes
+			peace_out_non_neighbours_after_leaving_faction = yes
 		}
 
 		set_politics = {
@@ -1228,20 +1219,10 @@ country_event = { #Revolution in the Caribbean (CAN)
 		log = "[GetLogInfo]: event wifpol.3100 option wifpol.3100.a"
 		name = wifpol.3100.a
 		ai_chance = {
-			base = 80
+			base = 100
 			modifier = {
 				factor = 0
-				OR = {
-					has_war_with = USA
-					has_war_with = CSA
-					has_war_with = TEX
-					has_war_with = PSA
-					has_war_with = NEE
-					has_war_with = AST
-					has_war_with = FRA
-					has_war_with = ENG
-					has_war_with = GER
-				}
+				has_war_with_major = yes
 			}
 		}
 		declare_war_on = {
@@ -1260,7 +1241,13 @@ country_event = { #Revolution in the Caribbean (CAN)
 	option = { #don't
 		log = "[GetLogInfo]: event wifpol.3100 option wifpol.3100.b"
 		name = wifpol.3100.b
-		ai_chance = { base = 20 }
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 100
+				has_war_with_major = yes
+			}
+		}
 		add_political_power = -20
 		add_stability = -0.05
 		custom_effect_tooltip = tooltip_white_line
@@ -1559,13 +1546,16 @@ country_event = { #canada sees that socdem wif declared independence
 	id = wifpol.39
 	title = wifpol.39.t
 	desc = wifpol.39.d
-	fire_only_once = yes
+
+	trigger = {
+		is_in_faction_with = FROM
+	}
+
 	is_triggered_only = yes
 
 	option = {
 		log = "[GetLogInfo]: event wifpol.39 option wifpol.39.a"
 		name = wifpol.39.a
-		ai_chance = { base = 100 }
 		add_political_power = 25
 	}
 
@@ -1574,32 +1564,17 @@ country_event = { #canada sees that socdem wif declared independence
 		name = wifpol.39.b
 		add_political_power = -100
 		ai_chance = { base = 0 }
-		WIF = {
+		FROM = {
 			if = {
 				limit = { is_in_faction = yes }
-				faction_leader = { save_event_target_as = white_peace_receiver }
 				leave_faction = yes
-				every_enemy_country = {
-					limit = {
-						is_owner_neighbor_of = PREV
-						is_valid_peace_target = yes
-					}
-					white_peace_with_TARGET = yes
-				}
+				peace_out_non_neighbours_after_leaving_faction = yes
 			}
-			save_event_target_as = white_peace_receiver
-			every_enemy_country = {
-				limit = {
-					NOT = { is_owner_neighbor_of = PREV }
-					is_valid_peace_target = yes
-				}
-				white_peace_with_TARGET = yes
-			}
+			hidden_effect = { country_event = wifpol.40 }
 		}
-		hidden_effect = {
-			WIF = {
-				country_event = { id = wifpol.40 days = 2 }
-			}
+		declare_war_on = {
+			target = FROM
+			type = annex_everything
 		}
 	}
 }
@@ -1614,13 +1589,15 @@ country_event = { #we're getting cucked by canada
 	option = {
 		log = "[GetLogInfo]: event wifpol.40 option wifpol.40.a"
 		name = wifpol.40.a
-		FROM = {
-			declare_war_on = {
-				target = WIF
-				type = annex_everything
+		add_manpower = 100000
+		effect_tooltip = {
+			FROM = {
+				declare_war_on = {
+					target = ROOT
+					type = annex_everything
+				}
 			}
 		}
-		add_manpower = 100000
 	}
 }
 
@@ -2530,6 +2507,13 @@ country_event = { #Guyana trails end*
 	option = { #Harsh trails- local judge from Bahamas
 		log = "[GetLogInfo]: event wifpol.508 option wifpol.508.a"
 		name = wifpol.508.a
+		ai_chance = {
+			base = 40
+			modifier = {
+				factor = 0
+				has_completed_focus = WIF_completely_revoke
+			}
+		}
 		country_event = { id = wifpol.509 days = 10 }
 		custom_effect_tooltip = WIF_integration_harsh_trail
 	}
@@ -2537,6 +2521,7 @@ country_event = { #Guyana trails end*
 	option = { #Gentle trails- judge from Montreal
 		log = "[GetLogInfo]: event wifpol.508 option wifpol.508.b"
 		name = wifpol.508.b
+		ai_chance = { base = 60 }
 		country_event = { id = wifpol.510 days = 10 }
 		custom_effect_tooltip = WIF_integration_gentle_trail
 	}
@@ -2553,6 +2538,7 @@ country_event = { #Harsh trails
 	option = { #Execution
 		log = "[GetLogInfo]: event wifpol.509 option wifpol.509.a"
 		name = wifpol.509.a
+		ai_chance = { base = 30 }
 		WIF_wifint_sub_five = yes
 		add_war_support = 0.05
 	}
@@ -2560,6 +2546,7 @@ country_event = { #Harsh trails
 	option = { #Public execution
 		log = "[GetLogInfo]: event wifpol.509 option wifpol.509.b"
 		name = wifpol.509.b
+		ai_chance = { base = 20 }
 		WIF_wifint_sub_ten = yes
 		add_war_support = 0.1
 	}
@@ -2567,6 +2554,7 @@ country_event = { #Harsh trails
 	option = { #Life-time sentence
 		log = "[GetLogInfo]: event wifpol.509 option wifpol.509.c"
 		name = wifpol.509.c
+		ai_chance = { base = 50 }
 		add_stability = -0.05
 	}
 }
@@ -2582,6 +2570,7 @@ country_event = { #Gentle trails
 	option = { #Diverse sentences (from life-time to 10 years)
 		log = "[GetLogInfo]: event wifpol.510 option wifpol.510.a"
 		name = wifpol.510.a
+		ai_chance = { base = 70 }
 		WIF_wifint_add_five = yes
 		add_war_support = -0.05
 	}
@@ -2589,6 +2578,7 @@ country_event = { #Gentle trails
 	option = { #Parole
 		log = "[GetLogInfo]: event wifpol.510 option wifpol.510.b"
 		name = wifpol.510.b
+		ai_chance = { base = 30 }
 		WIF_wifint_add_ten = yes
 		add_war_support = -0.1
 	}
@@ -2613,6 +2603,7 @@ country_event = { #Governor of Guadelupe
 	option = { #Sangster (soc lib)
 		log = "[GetLogInfo]: event wifpol.511 option wifpol.511.a"
 		name = wifpol.511.a
+		ai_chance = { base = 60 }
 		add_popularity = {
 			ideology = social_liberal
 			popularity = 0.02
@@ -2624,6 +2615,13 @@ country_event = { #Governor of Guadelupe
 	option = { #Legitimus (soc dem)
 		log = "[GetLogInfo]: event wifpol.511 option wifpol.511.b"
 		name = wifpol.511.b
+		ai_chance = {
+			base = 40
+			modifier = {
+				factor = 0.5
+				has_completed_focus = WIF_completely_revoke
+			}
+		}
 		add_popularity = {
 			ideology = social_democrat
 			popularity = 0.02
@@ -4821,15 +4819,7 @@ country_event = { #hi france
 	option = { #Yes
 		log = "[GetLogInfo]: event wifpol.824 option wifpol.824.a"
 		name = wifpol.824.a
-		ai_chance = {
-			base = 50
-			modifier = {
-				factor = 2
-				WIF = {
-					is_ai = no
-				}
-			}
-		}
+		ai_chance = { base = 100 }
 		FRA = { add_to_faction = WIF }
 		WIF = {
 			country_event = { id = wifpol.825 days = 1 }
@@ -4839,15 +4829,7 @@ country_event = { #hi france
 	option = { #No
 		log = "[GetLogInfo]: event wifpol.824 option wifpol.824.b"
 		name = wifpol.824.b
-		ai_chance = {
-			base = 50
-			modifier = {
-				factor = 0
-				WIF = {
-					is_ai = no
-				}
-			}
-		}
+		ai_chance = { base = 0 }
 		WIF = {
 			country_event = { id = wifpol.826 days = 1 }
 		}

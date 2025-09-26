@@ -5,6 +5,8 @@
 ########################################################################################################
 # Second rework by Matoro, Katie, Frill Shark, Kano, Daru, Deliberus, Purple Jinjo, Gideones and DDago #
 ########################################################################################################
+# Optimisations of MIO code by SuperGreenBeans											   			   #
+########################################################################################################
 
 # Tank MIOs
   # Putilovets
@@ -31,16 +33,14 @@
   # Obukhov
   # BMZ
   # AMO
-  # AMO (non NSB)
   # NAZ
-  # NAZ (non LaR)
   # LAZ
 
-#########################
-### MIO Mini-Document ###
-#########################
+##################################################
+### MIO Mini-Document - Last Updated June 2025 ###
+##################################################
 # Looking around the Russian MIO content file are we? Perhaps you are looking to solve/report a bug? Maybe you want to learn from my work? Well whatever the case, considering how big this file is compared to other MIO country organisation files and how
-# complex the code can seem I deicded to write down a sort of "Mini-Document" that can be read to quickly and effeciently understand just how the Russian MIO system works instead of plowing through thousands of lines of code (though feel free to do so if you wish).
+# complex the code can seem I decided to write down a sort of "Mini-Document" that can be read to quickly and effeciently understand just how the Russian MIO system works instead of plowing through thousands of lines of code (though feel free to do so if you wish).
 # I would also reccomend for you to read chronologically as I might only explain a mechanic once and then just reference it in other sections later.
 #
 # One other thing to mention is that the scripted effect `RUS_setup_custom_russian_MIOs` is used to setup all the internal MIO variables for RUS, RSA and FER which will be used to display loc. Anywho on towards the MIOs...
@@ -76,18 +76,19 @@
 # As with the previous Putilovets MIO, the 2 traits "Additional Space for Fuel Drums" and "Improved Dozers" are only visible with the NSB DLC.
 #
 # Now onto the complex "Invite Allied Talent" trait. The 2 traits that you see when loading up the game (uztm_upgrade_1_2 and uztm_upgrade_1_3) only have a simple tooltip displaying the effects. The actual production traits are invisible.
-# When either `uztm_upgrade_1_2` or `uztm_upgrade_1_3` are unlocked, they are set to be invisible (using the uztm_production_bonus_selected flag) and the selection process begins using the `RUS_upgrade_uztm` scripted effect.
+# When either `uztm_upgrade_1_2` or `uztm_upgrade_1_3` are unlocked, they are set to be invisible (by setting the uztm_upgrade_level variable) and the selection process begins using the `RUS_upgrade_uztm` scripted effect.
 #
-# There, the number of allies and subjects of the receiving country is added up (using the `uztm_allies_number` and `uztm_subjects_number` variables) to a maximum of 10. Once it's summed up, the corresponding trait is unlocked back in the UZTM trait tree
-# depending on what initial trait the player/AI chose (to prioritise eff cap or eff gain) and makes it visible with the `uztm_allies_and_puppets_no` variable and `uztm_production_bonus_selected` flag.
+# There, the number of allies and subjects of the receiving country is added up (using the uztm_allies_and_puppets_no variable) to a maximum of 10. Once it's summed up, the corresponding trait is unlocked back in the UZTM trait tree
+# depending on what initial trait the player/AI chose (to prioritise eff cap or eff gain) and makes it visible with the `uztm_upgrade_level` variable.
 #
 ############
 ### TSTZ ###
 ############
 # Here TsTZ has 2 different sets of buffs for every production bonus at the bottom. The ones visible at the start being the `tstz_upgrade_2_x_reset_y` traits that grant normal bonuses and the `tstz_upgrade_2_x_reset_y_double` traits that grant double the bonus.
 #
-# The "resettable" traits simply have 10 coppies of the same trait that are made visible once the one before it is unlocked.
+# The "resettable" traits simply have 10 copies of the same trait that are made visible once the one before it is unlocked.
 # The "This trait can be reset X more times" is controlled by the `tstz_(bonus)_counter` variables that is set from the scripted effect `RUS_setup_custom_russian_MIOs`.
+# THe tooltip used for all the `tstz_(bonus)_counter` variable effects is the `RUS_tstz_trait_reset_num_times` variable tooltip that exploits the $LEFT$ property to display the value of the variable before the variable effect is executed.
 #
 ##########
 ### AV ###
@@ -170,10 +171,11 @@
 # with lvl4 being visible at game start and the other 3 being invisible. If the production trait is taken before the other ones then it will stay visible, while the other lvl 4 traits become invisible and their lvl 3 traits become visible instead
 # (presenting how the effects are halving even if it's smoke and mirrors).
 #
-#######################
-### AMO/AMO Non-LaR ###
-#######################
-# Just as with the trait exclusive DLCs, there are 2 copies of AMO based on whether the player has the DLC NSB or not (as the trait `amo_upgrade_1_3` gives the additonal effect of Fuel Capacity). With the CIC mechanic, some basic variables are used to
+###########
+### AMO ###
+###########
+# Note: AMO used to have two versions - one without the DLC NSB and one with it. These have since been combined into a single one.
+# With the NSB DLC, the traits `amo_upgrade_1_3` and `amo_upgrade_2_1` give the additonal effect of Fuel Capacity. With the CIC mechanic, some basic variables are used to
 # calculate the final CIC bonus:
 #
 # 1) `RUS_amo_cic_base` - Minimum CIC given
@@ -189,7 +191,7 @@
 # effect. The reason why NAZ fires an event to give the effect whilst, LAZ only has the effect is because, of the way that the game engine reads the files (bottom to top) so sometimes it will try to target the MIO that needs that effect however, will not
 # find it and not trigger the effect (firing an event gets around this problem).
 #
-# Additionally, just as with AMO before, NAZ has 2 copies visible to the player depending on whether they have the LaR DLC active (for the armoured cars)
+# NAZ used to have two copies for those without the LaR DLC. Only difference being that the LaR version allowed assigning armoured cars to production and research.
 #
 ################################################
 ### R&D MIOs (CHTZ, AS, TSAGI, VPOZ and BMZ) ###
@@ -233,11 +235,7 @@ RUS_putilovets_organisation = {
 	allowed = {
 		is_russian_tag = yes
 	}
-	available = {
-		FROM = {
-			owns_state = 195 #Petrograd
-		}
-	}
+	available = { FROM = { owns_state = 195 } } #Petrograd
 
 	equipment_type = {
 		armor
@@ -365,11 +363,7 @@ RUS_putilovets_organisation = {
 		icon = GFX_icon_putilovets_MIO
 
 		visible = {
-			FROM = {
-				NOT = {
-					has_country_flag = RUS_rename_industries
-				}
-			}
+			FROM = { NOT = { has_country_flag = RUS_rename_industries } }
 		}
 
 		special_trait_background = yes
@@ -383,8 +377,7 @@ RUS_putilovets_organisation = {
 				limit = { FROM = { original_tag = FER } }
 				FROM = { has_completed_focus = FER_return_to_kremlin }
 			}
-			else_if = {
-				limit = { FROM = { original_tag = RSA } }
+			else = {
 				FROM = { has_completed_focus = RUS_secret_weapons_development }
 			}
 		}
@@ -404,18 +397,13 @@ RUS_putilovets_organisation = {
 		icon = GFX_icon_kirov_works_MIO
 
 		visible = {
-			FROM = {
-				has_country_flag = RUS_rename_industries
-			}
+			FROM = { has_country_flag = RUS_rename_industries }
 		}
 
 		special_trait_background = yes
 
 		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_completed_focus = RUS_urban_housing_projects }
-			}
+			FROM = { has_completed_focus = RUS_urban_housing_projects }
 		}
 
 		all_parents = { putilovets_upgrade_1_1 putilovets_upgrade_1_2 putilovets_upgrade_3_1 }
@@ -493,8 +481,7 @@ RUS_okmo_kr_organisation = {
 				}
 			}
 		}
-		else_if = {
-			limit = { FROM = { original_tag = RSA } }
+		else = {
 			FROM = { has_completed_focus = RUS_secret_weapons_development }
 		}
 	}
@@ -698,17 +685,11 @@ RUS_okmo_kr_organisation = {
 
 		on_complete = {
 			custom_effect_tooltip = okmo_kr_stats_for_xp_on_traits_tt
-			FROM = { set_country_flag = okmo_kr_stats_for_xp }
-			FROM = { set_country_flag = okmo_kr_bonus_chosen }
 			FROM = {
-				set_variable = {
-					var = okmo_kr_xp_requirement
-					value = 10
-				}
-				set_variable = {
-					var = okmo_kr_xp_cost
-					value = -10
-				}
+				set_country_flag = okmo_kr_stats_for_xp
+				set_country_flag = okmo_kr_bonus_chosen
+				set_variable = { okmo_kr_xp_requirement = 10 }
+				set_variable = { okmo_kr_xp_cost = -10 }
 			}
 		}
 	}
@@ -788,14 +769,8 @@ RUS_okmo_kr_organisation = {
 		on_complete = {
 			FROM = {
 				army_experience = okmo_kr_xp_cost
-				add_to_variable = {
-					var = okmo_kr_xp_requirement
-					value = 5
-				}
-				subtract_from_variable = {
-					var = okmo_kr_xp_cost
-					value = 5
-				}
+				add_to_variable = { okmo_kr_xp_requirement = 5 }
+				subtract_from_variable = { okmo_kr_xp_cost = 5 }
 			}
 		}
 	}
@@ -822,14 +797,8 @@ RUS_okmo_kr_organisation = {
 		on_complete = {
 			FROM = {
 				army_experience = okmo_kr_xp_cost
-				add_to_variable = {
-					var = okmo_kr_xp_requirement
-					value = 5
-				}
-				subtract_from_variable = {
-					var = okmo_kr_xp_cost
-					value = 5
-				}
+				add_to_variable = { okmo_kr_xp_requirement = 5 }
+				subtract_from_variable = { okmo_kr_xp_cost = 5 }
 			}
 		}
 	}
@@ -856,14 +825,8 @@ RUS_okmo_kr_organisation = {
 		on_complete = {
 			FROM = {
 				army_experience = okmo_kr_xp_cost
-				add_to_variable = {
-					var = okmo_kr_xp_requirement
-					value = 5
-				}
-				subtract_from_variable = {
-					var = okmo_kr_xp_cost
-					value = 5
-				}
+				add_to_variable = { okmo_kr_xp_requirement = 5 }
+				subtract_from_variable = { okmo_kr_xp_cost = 5 }
 			}
 		}
 	}
@@ -890,14 +853,8 @@ RUS_okmo_kr_organisation = {
 		on_complete = {
 			FROM = {
 				army_experience = okmo_kr_xp_cost
-				add_to_variable = {
-					var = okmo_kr_xp_requirement
-					value = 5
-				}
-				subtract_from_variable = {
-					var = okmo_kr_xp_cost
-					value = 5
-				}
+				add_to_variable = { okmo_kr_xp_requirement = 5 }
+				subtract_from_variable = { okmo_kr_xp_cost = 5 }
 			}
 		}
 	}
@@ -924,14 +881,8 @@ RUS_okmo_kr_organisation = {
 		on_complete = {
 			FROM = {
 				army_experience = okmo_kr_xp_cost
-				add_to_variable = {
-					var = okmo_kr_xp_requirement
-					value = 5
-				}
-				subtract_from_variable = {
-					var = okmo_kr_xp_cost
-					value = 5
-				}
+				add_to_variable = { okmo_kr_xp_requirement = 5 }
+				subtract_from_variable = { okmo_kr_xp_cost = 5 }
 			}
 		}
 	}
@@ -958,14 +909,8 @@ RUS_okmo_kr_organisation = {
 		on_complete = {
 			FROM = {
 				army_experience = okmo_kr_xp_cost
-				add_to_variable = {
-					var = okmo_kr_xp_requirement
-					value = 5
-				}
-				subtract_from_variable = {
-					var = okmo_kr_xp_cost
-					value = 5
-				}
+				add_to_variable = { okmo_kr_xp_requirement = 5 }
+				subtract_from_variable = { okmo_kr_xp_cost = 5 }
 			}
 		}
 	}
@@ -1002,14 +947,8 @@ RUS_okmo_kr_organisation = {
 		on_complete = {
 			FROM = {
 				army_experience = okmo_kr_xp_cost
-				add_to_variable = {
-					var = okmo_kr_xp_requirement
-					value = 5
-				}
-				subtract_from_variable = {
-					var = okmo_kr_xp_cost
-					value = 5
-				}
+				add_to_variable = { okmo_kr_xp_requirement = 5 }
+				subtract_from_variable = { okmo_kr_xp_cost = 5 }
 			}
 		}
 	}
@@ -1046,14 +985,8 @@ RUS_okmo_kr_organisation = {
 		on_complete = {
 			FROM = {
 				army_experience = okmo_kr_xp_cost
-				add_to_variable = {
-					var = okmo_kr_xp_requirement
-					value = 5
-				}
-				subtract_from_variable = {
-					var = okmo_kr_xp_cost
-					value = 5
-				}
+				add_to_variable = { okmo_kr_xp_requirement = 5 }
+				subtract_from_variable = { okmo_kr_xp_cost = 5 }
 			}
 		}
 	}
@@ -1080,14 +1013,8 @@ RUS_okmo_kr_organisation = {
 		on_complete = {
 			FROM = {
 				army_experience = okmo_kr_xp_cost
-				add_to_variable = {
-					var = okmo_kr_xp_requirement
-					value = 5
-				}
-				subtract_from_variable = {
-					var = okmo_kr_xp_cost
-					value = 5
-				}
+				add_to_variable = { okmo_kr_xp_requirement = 5 }
+				subtract_from_variable = { okmo_kr_xp_cost = 5 }
 			}
 		}
 	}
@@ -1114,14 +1041,8 @@ RUS_okmo_kr_organisation = {
 		on_complete = {
 			FROM = {
 				army_experience = okmo_kr_xp_cost
-				add_to_variable = {
-					var = okmo_kr_xp_requirement
-					value = 5
-				}
-				subtract_from_variable = {
-					var = okmo_kr_xp_cost
-					value = 5
-				}
+				add_to_variable = { okmo_kr_xp_requirement = 5 }
+				subtract_from_variable = { okmo_kr_xp_cost = 5 }
 			}
 		}
 	}
@@ -1130,27 +1051,15 @@ RUS_uztm_organisation = {
 	name = uztm
 	icon = GFX_idea_uztm
 	available = {
-		if = {
-			limit = { FROM = { original_tag = RUS } }
-			FROM = {
-				owns_state = 653 #Ekaterinburg
+		FROM = {
+			owns_state = 653 #Ekaterinburg
+			custom_override_tooltip = {
+				tooltip = {
+					localization_key = has_completed_decision_in_focus
+					DECISION = RUS_uralmash
+					FOCUS = "[RUS_UnlockMIOFocusTrigger]"
+				}
 				has_country_flag = unlock_uztm
-			}
-		}
-		else_if = {
-			limit = { FROM = { original_tag = FER } }
-			FROM = {
-				owns_state = 653 #Ekaterinburg
-				custom_trigger_tooltip = { tooltip = unlock_uztm_FER }
-				hidden_trigger = { has_country_flag = unlock_uztm }
-			}
-		}
-		else_if = {
-			limit = { FROM = { original_tag = RSA } }
-			FROM = {
-				owns_state = 653 #Ekaterinburg
-				custom_trigger_tooltip = { tooltip = unlock_uztm_RSA }
-				hidden_trigger = { has_country_flag = unlock_uztm }
 			}
 		}
 	}
@@ -1190,11 +1099,8 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_cap
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_0
-				is_mio_trait_completed = uztm_upgrade_eff_gro_0
-			}
+			has_variable = uztm_upgrade_level
+			check_variable = { uztm_upgrade_level = 0 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_gro_0 }
@@ -1214,11 +1120,8 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_gain
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_0
-				is_mio_trait_completed = uztm_upgrade_eff_gro_0
-			}
+			has_variable = uztm_upgrade_level
+			check_variable = { uztm_upgrade_level = 0 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_cap_0 }
@@ -1238,11 +1141,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_cap
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_1
-				is_mio_trait_completed = uztm_upgrade_eff_gro_1
-			}
+			check_variable = { uztm_upgrade_level = 1 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_gro_1 }
@@ -1262,11 +1161,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_gain
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_1
-				is_mio_trait_completed = uztm_upgrade_eff_gro_1
-			}
+			check_variable = { uztm_upgrade_level = 1 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_cap_1 }
@@ -1286,11 +1181,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_cap
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_2
-				is_mio_trait_completed = uztm_upgrade_eff_gro_2
-			}
+			check_variable = { uztm_upgrade_level = 2 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_gro_2 }
@@ -1310,11 +1201,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_gain
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_2
-				is_mio_trait_completed = uztm_upgrade_eff_gro_2
-			}
+			check_variable = { uztm_upgrade_level = 2 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_cap_2 }
@@ -1334,11 +1221,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_cap
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_3
-				is_mio_trait_completed = uztm_upgrade_eff_gro_3
-			}
+			check_variable = { uztm_upgrade_level = 3 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_gro_3 }
@@ -1358,11 +1241,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_gain
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_3
-				is_mio_trait_completed = uztm_upgrade_eff_gro_3
-			}
+			check_variable = { uztm_upgrade_level = 3 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_cap_3 }
@@ -1382,11 +1261,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_cap
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_4
-				is_mio_trait_completed = uztm_upgrade_eff_gro_4
-			}
+			check_variable = { uztm_upgrade_level = 4 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_gro_4 }
@@ -1406,11 +1281,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_gain
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_4
-				is_mio_trait_completed = uztm_upgrade_eff_gro_4
-			}
+			check_variable = { uztm_upgrade_level = 4 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_cap_4 }
@@ -1430,11 +1301,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_cap
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_5
-				is_mio_trait_completed = uztm_upgrade_eff_gro_5
-			}
+			check_variable = { uztm_upgrade_level = 5 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_gro_5 }
@@ -1454,11 +1321,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_gain
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_5
-				is_mio_trait_completed = uztm_upgrade_eff_gro_5
-			}
+			check_variable = { uztm_upgrade_level = 5 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_cap_5 }
@@ -1478,11 +1341,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_cap
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_6
-				is_mio_trait_completed = uztm_upgrade_eff_gro_6
-			}
+			check_variable = { uztm_upgrade_level = 6 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_gro_6 }
@@ -1502,11 +1361,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_gain
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_6
-				is_mio_trait_completed = uztm_upgrade_eff_gro_6
-			}
+			check_variable = { uztm_upgrade_level = 6 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_cap_6 }
@@ -1526,11 +1381,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_cap
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_7
-				is_mio_trait_completed = uztm_upgrade_eff_gro_7
-			}
+			check_variable = { uztm_upgrade_level = 7 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_gro_7 }
@@ -1550,11 +1401,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_gain
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_7
-				is_mio_trait_completed = uztm_upgrade_eff_gro_7
-			}
+			check_variable = { uztm_upgrade_level = 7 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_cap_7 }
@@ -1574,11 +1421,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_cap
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_8
-				is_mio_trait_completed = uztm_upgrade_eff_gro_8
-			}
+			check_variable = { uztm_upgrade_level = 8 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_gro_8 }
@@ -1598,11 +1441,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_gain
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_8
-				is_mio_trait_completed = uztm_upgrade_eff_gro_8
-			}
+			check_variable = { uztm_upgrade_level = 8 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_cap_8 }
@@ -1622,11 +1461,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_cap
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_9
-				is_mio_trait_completed = uztm_upgrade_eff_gro_9
-			}
+			check_variable = { uztm_upgrade_level = 9 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_gro_9 }
@@ -1646,11 +1481,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_gain
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_9
-				is_mio_trait_completed = uztm_upgrade_eff_gro_9
-			}
+			check_variable = { uztm_upgrade_level = 9 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_cap_9 }
@@ -1670,11 +1501,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_cap
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_10
-				is_mio_trait_completed = uztm_upgrade_eff_gro_10
-			}
+			check_variable = { uztm_upgrade_level = 10 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_gro_10 }
@@ -1694,11 +1521,7 @@ RUS_uztm_organisation = {
 		icon = GFX_generic_mio_trait_icon_efficiency_gain
 
 		visible = {
-			FROM = { has_country_flag = uztm_production_bonus_selected }
-			OR = {
-				is_mio_trait_completed = uztm_upgrade_eff_cap_10
-				is_mio_trait_completed = uztm_upgrade_eff_gro_10
-			}
+			check_variable = { uztm_upgrade_level = 10 }
 		}
 
 		mutually_exclusive = { uztm_upgrade_eff_cap_10 }
@@ -1743,7 +1566,7 @@ RUS_uztm_organisation = {
 	trait = {
 		token = uztm_upgrade_3_nsb
 		name = uztm_upgrade_3_nsb
-		icon = GFX_generic_mio_trait_icon_fuel_consumption
+		icon = GFX_KR_generic_mio_trait_icon_fuel_drum
 
 		visible = {
 			has_dlc_nsb = yes
@@ -1860,7 +1683,7 @@ RUS_uztm_organisation = {
 		name = uztm_upgrade_1_2
 		icon = GFX_generic_mio_trait_icon_efficiency_cap
 
-		visible = { FROM = { NOT = { has_country_flag = uztm_production_bonus_selected } } }
+		visible = { NOT = { has_variable = uztm_upgrade_level } }
 
 		mutually_exclusive = { uztm_upgrade_1_3 }
 
@@ -1871,40 +1694,12 @@ RUS_uztm_organisation = {
 
 		on_complete = {
 			custom_effect_tooltip = uztm_upgrade_based_on_allies_and_puppets_eff_cap_tt
-			FROM = { set_country_flag = uztm_prio_eff_cap }
-			set_temp_variable = {
-				var = uztm_allies_number
-				value = 0
-			}
-			for_each_loop = {
-				array = FROM.allies
-				add_to_temp_variable = {
-					var = uztm_allies_number
-					value = 1
-				}
-			}
-			set_temp_variable = {
-				var = uztm_subjects_number
-				value = FROM.num_subjects
-			}
-			set_temp_variable = {
-				var = uztm_allies_and_puppets_no
-				value = 0
-			}
-			add_to_temp_variable = {
-				var = uztm_allies_and_puppets_no
-				value = uztm_subjects_number
-			}
-			add_to_temp_variable = {
-				var = uztm_allies_and_puppets_no
-				value = uztm_allies_number
-			}
-			clamp_temp_variable = {
-				var = uztm_allies_and_puppets_no
-				max = 10
-			}
-			RUS_upgrade_uztm = yes
-			FROM = { set_country_flag = uztm_production_bonus_selected }
+			set_temp_variable = { uztm_allies_and_puppets_no = FROM.allies }
+			add_to_temp_variable = { uztm_allies_and_puppets_no = FROM.num_subjects }
+			clamp_temp_variable = { var = uztm_allies_and_puppets_no min = 0 max = 10 }
+
+			set_temp_variable = { uztm_upgrade_eff_cap = 1 }
+			hidden_effect = { RUS_upgrade_uztm = yes }
 			set_temp_variable = { uztm_eff_cap = uztm_allies_and_puppets_no }
 			multiply_temp_variable = { uztm_eff_cap = 2 }
 			set_temp_variable = { uztm_eff_gain = uztm_allies_and_puppets_no }
@@ -1921,7 +1716,7 @@ RUS_uztm_organisation = {
 		name = uztm_upgrade_1_3
 		icon = GFX_generic_mio_trait_icon_efficiency_gain
 
-		visible = { FROM = { NOT = { has_country_flag = uztm_production_bonus_selected } } }
+		visible = { NOT = { has_variable = uztm_upgrade_level } }
 
 		mutually_exclusive = { uztm_upgrade_1_2 }
 
@@ -1932,40 +1727,12 @@ RUS_uztm_organisation = {
 
 		on_complete = {
 			custom_effect_tooltip = uztm_upgrade_based_on_allies_and_puppets_eff_gro_tt
-			FROM = { set_country_flag = uztm_prio_eff_gro }
-			set_temp_variable = {
-				var = uztm_allies_number
-				value = 0
-			}
-			for_each_loop = {
-				array = FROM.allies
-				add_to_temp_variable = {
-					var = uztm_allies_number
-					value = 1
-				}
-			}
-			set_temp_variable = {
-				var = uztm_subjects_number
-				value = FROM.num_subjects
-			}
-			set_temp_variable = {
-				var = uztm_allies_and_puppets_no
-				value = 0
-			}
-			add_to_temp_variable = {
-				var = uztm_allies_and_puppets_no
-				value = uztm_subjects_number
-			}
-			add_to_temp_variable = {
-				var = uztm_allies_and_puppets_no
-				value = uztm_allies_number
-			}
-			clamp_temp_variable = {
-				var = uztm_allies_and_puppets_no
-				max = 10
-			}
-			RUS_upgrade_uztm = yes
-			FROM = { set_country_flag = uztm_production_bonus_selected }
+			set_temp_variable = { uztm_allies_and_puppets_no = FROM.allies }
+			add_to_temp_variable = { uztm_allies_and_puppets_no = FROM.num_subjects }
+			clamp_temp_variable = { var = uztm_allies_and_puppets_no min = 0 max = 10 }
+
+			set_temp_variable = { uztm_upgrade_eff_gro = 1 }
+			hidden_effect = { RUS_upgrade_uztm = yes }
 			set_temp_variable = { uztm_eff_cap = uztm_allies_and_puppets_no }
 			set_temp_variable = { uztm_eff_gain = uztm_allies_and_puppets_no }
 			multiply_temp_variable = { uztm_eff_gain = 4 }
@@ -2068,27 +1835,15 @@ RUS_tstz_organisation = {
 		is_russian_tag = yes
 	}
 	available = {
-		if = {
-			limit = { FROM = { original_tag = RUS } }
-			FROM = {
+		FROM = {
+			owns_state = 217 #Tsaritsyn
+			custom_override_tooltip = {
+				tooltip = {
+					localization_key = has_completed_decision_in_focus
+					DECISION = RUS_tsaritsyn_tractor_plant
+					FOCUS = "[RUS_UnlockMIOFocusTrigger]"
+				}
 				has_country_flag = unlock_tstz
-				owns_state = 217 #Tsaritsyn
-			}
-		}
-		else_if = {
-			limit = { FROM = { original_tag = FER } }
-			FROM = {
-				hidden_trigger = { has_country_flag = unlock_tstz }
-				custom_trigger_tooltip = { tooltip = unlock_tstz_FER }
-				owns_state = 217 #Tsaritsyn
-			}
-		}
-		else_if = {
-			limit = { FROM = { original_tag = RSA } }
-			FROM = {
-				hidden_trigger = { has_country_flag = unlock_tstz }
-				custom_trigger_tooltip = { tooltip = unlock_tstz_RSA }
-				owns_state = 217 #Tsaritsyn
 			}
 		}
 	}
@@ -2125,7 +1880,10 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_cap_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_tstz_upgrade_double_effect
+				TRAIT = tstz_upgrade_2_1
+			}
 		}
 	}
 
@@ -2171,7 +1929,10 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_gro_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_tstz_upgrade_double_effect
+				TRAIT = tstz_upgrade_2_2
+			}
 		}
 	}
 
@@ -2191,7 +1952,10 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_con_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_tstz_upgrade_double_effect
+				TRAIT = tstz_upgrade_2_3
+			}
 		}
 	}
 
@@ -2243,7 +2007,10 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_res_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_tstz_upgrade_double_effect
+				TRAIT = tstz_upgrade_2_4
+			}
 		}
 	}
 
@@ -2297,8 +2064,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2330,8 +2096,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2363,8 +2128,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2396,8 +2160,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2429,8 +2192,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2462,8 +2224,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2495,8 +2256,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2528,8 +2288,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2561,8 +2320,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2627,8 +2385,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2660,8 +2417,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2693,8 +2449,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2726,8 +2481,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2759,8 +2513,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2792,8 +2545,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2825,8 +2577,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2858,8 +2609,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2891,8 +2641,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_cap_tt
-			subtract_from_variable = { tstz_eff_cap_counter = 1 }
+			subtract_from_variable = { tstz_eff_cap_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2957,8 +2706,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -2990,8 +2738,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3023,8 +2770,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3056,8 +2802,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3089,8 +2834,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3122,8 +2866,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3155,8 +2898,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3188,8 +2930,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3221,8 +2962,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3287,8 +3027,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3320,8 +3059,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3353,8 +3091,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3386,8 +3123,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3419,8 +3155,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3452,8 +3187,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3485,8 +3219,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3518,8 +3251,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3551,8 +3283,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_eff_gro_tt
-			subtract_from_variable = { tstz_eff_gro_counter = 1 }
+			subtract_from_variable = { tstz_eff_gro_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3617,8 +3348,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3650,8 +3380,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3683,8 +3412,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3716,8 +3444,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3749,8 +3476,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3782,8 +3508,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3815,8 +3540,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3848,8 +3572,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3881,8 +3604,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3947,8 +3669,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -3980,8 +3701,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4013,8 +3733,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4046,8 +3765,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4079,8 +3797,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4112,8 +3829,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4145,8 +3861,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4178,8 +3893,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4211,8 +3925,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_conversion_tt
-			subtract_from_variable = { tstz_conversion_counter = 1 }
+			subtract_from_variable = { tstz_conversion_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4277,8 +3990,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4310,8 +4022,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4343,8 +4054,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4376,8 +4086,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4409,8 +4118,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4442,8 +4150,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4475,8 +4182,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4508,8 +4214,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4541,8 +4246,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4607,8 +4311,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4640,8 +4343,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4673,8 +4375,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4706,8 +4407,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4739,8 +4439,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4772,8 +4471,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4805,8 +4503,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4838,8 +4535,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4871,8 +4567,7 @@ RUS_tstz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = tstz_upgrade_resetable_resources_tt
-			subtract_from_variable = { tstz_resources_counter = 1 }
+			subtract_from_variable = { tstz_resources_counter = 1 tooltip = RUS_tstz_trait_reset_num_times }
 		}
 	}
 
@@ -4911,27 +4606,15 @@ RUS_chtz_organisation = {
 		is_russian_tag = yes
 	}
 	available = {
-		if = {
-			limit = { FROM = { original_tag = RUS } }
-			FROM = {
+		FROM = {
+			owns_state = 572 #Chelyabinsk
+			custom_override_tooltip = {
+				tooltip = {
+					localization_key = has_completed_decision_in_focus
+					DECISION = RUS_chelyabinsk_tractor_plant
+					FOCUS = "[RUS_UnlockMIOFocusTrigger]"
+				}
 				has_country_flag = unlock_chtz
-				owns_state = 572 #Chelyabinsk
-			}
-		}
-		else_if = {
-			limit = { FROM = { original_tag = FER } }
-			FROM = {
-				hidden_trigger = { has_country_flag = unlock_chtz }
-				custom_trigger_tooltip = { tooltip = unlock_chtz_FER }
-				owns_state = 572 #Chelyabinsk
-			}
-		}
-		else_if = {
-			limit = { FROM = { original_tag = RSA } }
-			FROM = {
-				hidden_trigger = { has_country_flag = unlock_chtz }
-				custom_trigger_tooltip = { tooltip = unlock_chtz_RSA }
-				owns_state = 572 #Chelyabinsk
 			}
 		}
 	}
@@ -4945,26 +4628,14 @@ RUS_chtz_organisation = {
 	}
 
 	on_industrial_manufacturer_assigned = {
-		FROM = {
-			if = {
-				limit = { NOT = { has_variable = MIO_CHTZ_assigned_manufacturer_number } }
-				set_variable = {
-					var = MIO_CHTZ_assigned_manufacturer_number
-					value = 1
-				}
-			}
-			else = {
-				add_to_variable = { MIO_CHTZ_assigned_manufacturer_number = 1 }
-			}
-		}
+		FROM = { add_to_variable = { MIO_CHTZ_assigned_manufacturer_number = 1 } }
+		RUS_calculate_daily_funds_gain_and_requirement = yes
 		custom_effect_tooltip = RUS_MIO_Research_Gain_tt
 		custom_effect_tooltip = tooltip_white_line
 	}
 
 	on_industrial_manufacturer_unassigned = {
-		FROM = {
-			subtract_from_variable = { MIO_CHTZ_assigned_manufacturer_number = 1 }
-		}
+		FROM = { subtract_from_variable = { MIO_CHTZ_assigned_manufacturer_number = 1 } }
 	}
 
 	on_tech_research_completed = {
@@ -5032,9 +4703,7 @@ RUS_chtz_organisation = {
 		mutually_exclusive = { chtz_upgrade_1 chtz_upgrade_3 }
 
 		on_complete = {
-			custom_effect_tooltip = RUS_manufacturer_trait_research_cap_chtz_tt
-			add_to_variable = { max_research_speed = 0.25 }
-			add_to_variable = { max_research_speed_loc = 25 }
+			add_to_variable = { max_research_speed = 0.25 tooltip = RUS_manufacturer_trait_research_cap_tt }
 		}
 	}
 
@@ -5088,9 +4757,7 @@ RUS_chtz_organisation = {
 		mutually_exclusive = { chtz_upgrade_4 chtz_upgrade_6 }
 
 		on_complete = {
-			custom_effect_tooltip = RUS_manufacturer_trait_research_cap_chtz_tt
-			add_to_variable = { max_research_speed = 0.25 }
-			add_to_variable = { max_research_speed_loc = 25 }
+			add_to_variable = { max_research_speed = 0.25 tooltip = RUS_manufacturer_trait_research_cap_tt }
 		}
 	}
 
@@ -5171,14 +4838,14 @@ RUS_chtz_organisation = {
 	trait = {
 		token = chtz_upgrade_1_3
 		name = chtz_upgrade_1_3
-		icon = GFX_KR_generic_mio_trait_icon_design_cost
+		icon = GFX_KR_generic_mio_trait_icon_funds
 
 		position = { x = 5 y = 1 }
 
 		mutually_exclusive = { chtz_upgrade_1_2 }
 
 		organization_modifier = {
-			military_industrial_organization_design_team_change_cost = -1.0
+			military_industrial_organization_funds_gain = 0.1
 		}
 
 		on_complete = {
@@ -5255,31 +4922,19 @@ RUS_chtz_organisation = {
 		icon = GFX_icon_chtz_MIO
 
 		visible = {
-			FROM = {
-				NOT = {
-					has_country_flag = improve_chtz
-				}
-			}
+			FROM = { NOT = { has_country_flag = improve_chtz } }
 			NOT = { is_mio_trait_completed = chtz_upgrade_4_1 }
 		}
 
 		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_country_flag = improve_chtz }
-			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
-				FROM = {
-					hidden_trigger = { has_country_flag = improve_chtz }
-					custom_trigger_tooltip = { tooltip = improve_chtz_FER }
-				}
-			}
-			else_if = {
-				limit = { FROM = { original_tag = RSA } }
-				FROM = {
-					hidden_trigger = { has_country_flag = improve_chtz }
-					custom_trigger_tooltip = { tooltip = improve_chtz_RSA }
+			FROM = {
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = has_completed_decision_in_focus
+						DECISION = RUS_create_tankograd
+						FOCUS = "[RUS_ChtzUpgradeFocusTrigger]"
+					}
+					has_country_flag = improve_chtz
 				}
 			}
 		}
@@ -5409,29 +5064,19 @@ RUS_chtz_organisation = {
 		icon = GFX_icon_chtz_MIO
 
 		visible = {
-			FROM = {
-				has_country_flag = improve_chtz
-			}
+			FROM = { has_country_flag = improve_chtz }
 			NOT = { is_mio_trait_completed = chtz_upgrade_4_1_tankograd }
 		}
 
 		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_country_flag = improve_chtz }
-			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
-				FROM = {
-					hidden_trigger = { has_country_flag = improve_chtz }
-					custom_trigger_tooltip = { tooltip = improve_chtz_FER }
-				}
-			}
-			else_if = {
-				limit = { FROM = { original_tag = RSA } }
-				FROM = {
-					hidden_trigger = { has_country_flag = improve_chtz }
-					custom_trigger_tooltip = { tooltip = improve_chtz_RSA }
+			FROM = {
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = has_completed_decision_in_focus
+						DECISION = RUS_create_tankograd
+						FOCUS = "[RUS_ChtzUpgradeFocusTrigger]"
+					}
+					has_country_flag = improve_chtz
 				}
 			}
 		}
@@ -5561,9 +5206,7 @@ RUS_chtz_organisation = {
 		icon = GFX_icon_chtz_MIO
 
 		visible = {
-			FROM = {
-				has_country_flag = improve_chtz
-			}
+			FROM = { has_country_flag = improve_chtz }
 			is_mio_trait_completed = chtz_upgrade_4_1_tankograd_0
 		}
 
@@ -5878,45 +5521,22 @@ RUS_bz_organisation = {
 	}
 
 	on_design_team_assigned_to_tech = {
-		if = {
-			limit = { FROM = { NOT = { has_variable = BZ_Research_Number } } }
-			FROM = {
-				set_variable = {
-					var = BZ_Research_Number
-					value = 1
-				}
-			}
-		}
-		else = {
-			FROM = {
-				add_to_variable = {
-					var = BZ_Research_Number
-					value = 1
-				}
-			}
-		}
+		FROM = { add_to_variable = { BZ_Research_Number = 1 } }
 	}
 
 	on_tech_research_cancelled = {
-		FROM = {
-			subtract_from_variable = {
-				var = BZ_Research_Number
-				value = 1
-			}
-		}
+		FROM = { subtract_from_variable = { BZ_Research_Number = 1 } }
 	}
 
 	on_tech_research_completed = {
-		FROM = {
-			subtract_from_variable = {
-				var = BZ_Research_Number
-				value = 1
-			}
-		}
+		FROM = { subtract_from_variable = { BZ_Research_Number = 1 } }
 	}
 
 	on_industrial_manufacturer_assigned = {
-		custom_effect_tooltip = RUS_MIO_XP_Gain_tt
+		RUS_calculate_daily_funds_gain_and_requirement = yes
+		custom_effect_tooltip = {
+			localization_key = RUS_MIO_XP_Gain_tt XP_ICON = RUS_Navy_XP_icon
+		}
 	}
 
 	ai_will_do = { base = 1 }
@@ -5942,11 +5562,8 @@ RUS_bz_organisation = {
 
 		on_complete = {
 			multiply_variable = { weekly_funds_requirement = 0.33 }
-			multiply_variable = { weekly_funds_requirement_loc = 0.33 }
+			custom_effect_tooltip = RUS_manufacturer_trait_xp_min_funds_tt
 			FROM = {
-				custom_effect_tooltip = RUS_manufacturer_trait_navy_xp_min_funds_bz_tt
-				custom_effect_tooltip = tooltip_white_line
-				custom_effect_tooltip = tooltip_white_line
 				set_temp_variable = { RUS_dalzavod_upgrade_MIO = 1 }
 				RUS_upgrade_dalzavod_idea_check = yes
 			}
@@ -6042,10 +5659,11 @@ RUS_bz_organisation = {
 
 		on_complete = {
 			multiply_variable = { xp_gain_loc = 1.5 }
+			custom_effect_tooltip = {
+				localization_key = RUS_manufacturer_trait_xp_gained_tt
+				XP = RUS_Navy_XP_icon
+			}
 			FROM = {
-				custom_effect_tooltip = RUS_manufacturer_trait_navy_xp_bz_tt
-				custom_effect_tooltip = tooltip_white_line
-				custom_effect_tooltip = tooltip_white_line
 				set_temp_variable = { RUS_dalzavod_upgrade_MIO = 1 }
 				RUS_upgrade_dalzavod_idea_check = yes
 			}
@@ -6290,18 +5908,10 @@ RUS_bz_organisation = {
 
 		available = {
 			if = {
-				limit = {
-					FROM = {
-						OR = {
-							original_tag = RUS
-							original_tag = RSA
-						}
-					}
-				}
+				limit = { FROM = { NOT = { original_tag = FER } } }
 				FROM = { has_completed_focus = RUS_petrograd_dockyards }
 			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
+			else = {
 				FROM = { has_completed_focus = FER_return_to_kremlin }
 			}
 		}
@@ -6481,18 +6091,10 @@ RUS_av_organisation = {
 
 		available = {
 			if = {
-				limit = {
-					FROM = {
-						OR = {
-							original_tag = RUS
-							original_tag = RSA
-						}
-					}
-				}
+				limit = { FROM = { NOT = { original_tag = FER } } }
 				FROM = { has_completed_focus = RUS_petrograd_dockyards }
 			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
+			else = {
 				FROM = { has_completed_focus = FER_return_to_kremlin }
 			}
 		}
@@ -6685,26 +6287,14 @@ RUS_as_organisation = {
 	}
 
 	on_industrial_manufacturer_assigned = {
-		FROM = {
-			if = {
-				limit = { NOT = { has_variable = MIO_AS_assigned_manufacturer_number } }
-				set_variable = {
-					var = MIO_AS_assigned_manufacturer_number
-					value = 1
-				}
-			}
-			else = {
-				add_to_variable = { MIO_AS_assigned_manufacturer_number = 1 }
-			}
-		}
+		FROM = { add_to_variable = { MIO_AS_assigned_manufacturer_number = 1 } }
+		RUS_calculate_daily_funds_gain_and_requirement = yes
 		custom_effect_tooltip = RUS_MIO_Research_Gain_tt
 		custom_effect_tooltip = tooltip_white_line
 	}
 
 	on_industrial_manufacturer_unassigned = {
-		FROM = {
-			subtract_from_variable = { MIO_AS_assigned_manufacturer_number = 1 }
-		}
+		FROM = { subtract_from_variable = { MIO_AS_assigned_manufacturer_number = 1 } }
 	}
 
 	on_tech_research_completed = {
@@ -6826,10 +6416,9 @@ RUS_as_organisation = {
 		mutually_exclusive = { as_upgrade_3 }
 
 		on_complete = {
-			custom_effect_tooltip = RUS_manufacturer_trait_research_min_funds_as_tt
+			custom_effect_tooltip = RUS_manufacturer_trait_xp_min_funds_tt
 			custom_effect_tooltip = tooltip_white_line
 			multiply_variable = { weekly_funds_requirement = 0.33 }
-			multiply_variable = { weekly_funds_requirement_loc = 0.33 }
 			FROM = {
 				set_temp_variable = { RUS_dalzavod_upgrade_MIO = 3 }
 				RUS_upgrade_dalzavod_idea_check = yes
@@ -6870,9 +6459,7 @@ RUS_as_organisation = {
 		mutually_exclusive = { as_upgrade_1_1 }
 
 		on_complete = {
-			custom_effect_tooltip = RUS_manufacturer_trait_research_gain_as_tt
-			add_to_variable = { weekly_research_speed_gain = 0.03 }
-			add_to_variable = { weekly_research_speed_gain_loc = 3 }
+			add_to_variable = { weekly_research_speed_gain = 0.03 tooltip = RUS_manufacturer_trait_research_gain_tt }
 		}
 	}
 
@@ -6930,9 +6517,7 @@ RUS_as_organisation = {
 		mutually_exclusive = { as_upgrade_1_4 }
 
 		on_complete = {
-			custom_effect_tooltip = RUS_manufacturer_trait_research_cap_as_tt
-			add_to_variable = { max_research_speed = 0.5 }
-			add_to_variable = { max_research_speed_loc = 50 }
+			add_to_variable = { max_research_speed = 0.5 tooltip = RUS_manufacturer_trait_research_cap_tt }
 		}
 	}
 
@@ -7027,18 +6612,10 @@ RUS_as_organisation = {
 
 		available = {
 			if = {
-				limit = {
-					FROM = {
-						OR = {
-							original_tag = RUS
-							original_tag = RSA
-						}
-					}
-				}
+				limit = { FROM = { NOT = { original_tag = FER } } }
 				FROM = { has_completed_focus = RUS_yekaterinas_legacy }
 			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
+			else = {
 				FROM = { has_completed_focus = FER_return_to_kremlin }
 			}
 		}
@@ -7571,10 +7148,7 @@ RUS_dalzavod_organisation = {
 		on_complete = {
 			FROM = {
 				activate_targeted_decision = { decision = RUS_dalzavod_mining_baltic_sea target = FROM }
-				set_variable = {
-					var = RUS_dalzavod_mines_number
-					value = 100
-				}
+				set_variable = { RUS_dalzavod_mines_number = 100 }
 			}
 			custom_effect_tooltip = tooltip_white_line
 			FROM = {
@@ -7663,12 +7237,7 @@ RUS_dalzavod_organisation = {
 
 		on_complete = {
 			custom_effect_tooltip = RUS_dalzavod_increase_mines_tt
-			FROM = {
-				add_to_variable = {
-					var = RUS_dalzavod_mines_number
-					value = 50
-				}
-			}
+			FROM = { add_to_variable = { RUS_dalzavod_mines_number = 50 } }
 			custom_effect_tooltip = tooltip_white_line
 		}
 	}
@@ -7729,12 +7298,7 @@ RUS_dalzavod_organisation = {
 
 		on_complete = {
 			custom_effect_tooltip = RUS_dalzavod_increase_mines_tt
-			FROM = {
-				add_to_variable = {
-					var = RUS_dalzavod_mines_number
-					value = 50
-				}
-			}
+			FROM = { add_to_variable = { RUS_dalzavod_mines_number = 50 } }
 			custom_effect_tooltip = tooltip_white_line
 		}
 	}
@@ -7795,12 +7359,7 @@ RUS_dalzavod_organisation = {
 
 		on_complete = {
 			custom_effect_tooltip = RUS_dalzavod_increase_mines_tt
-			FROM = {
-				add_to_variable = {
-					var = RUS_dalzavod_mines_number
-					value = 50
-				}
-			}
+			FROM = { add_to_variable = { RUS_dalzavod_mines_number = 50 } }
 			custom_effect_tooltip = tooltip_white_line
 		}
 	}
@@ -7856,18 +7415,10 @@ RUS_dalzavod_organisation = {
 
 		available = {
 			if = {
-				limit = {
-					FROM = {
-						OR = {
-							original_tag = RUS
-							original_tag = RSA
-						}
-					}
-				}
+				limit = { FROM = { NOT = { original_tag = FER } } }
 				FROM = { has_completed_focus = RUS_eastern_shores }
 			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
+			else = {
 				FROM = {
 					OR = {
 						has_completed_focus = FER_masters_over_siberia
@@ -7931,7 +7482,9 @@ RUS_gamayun_organisation = {
 			custom_effect_tooltip = RUS_gamayun_random_factories_tt
 		}
 		else = {
-			custom_effect_tooltip = RUS_gamayun_random_factories_required_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_has_completed_trait_NOT TRAIT = gamayun_upgrade_3
+			}
 		}
 	}
 
@@ -8190,15 +7743,13 @@ RUS_gamayun_organisation = {
 			add_to_variable = { Civ_chance_loc = 27 }
 			subtract_from_variable = { Mil_chance_loc = 13 }
 			subtract_from_variable = { Dockyard_chance_loc = 13 }
-			FROM = {
-				add_to_variable = {
-					var = RUS_Gamayun_Civ_Chance
-					value = 66
-				}
-			}
+			FROM = { add_to_variable = { RUS_Gamayun_Civ_Chance = 66 } }
 			custom_effect_tooltip = gamayun_upgrade_2_3_tt
 			custom_effect_tooltip = tooltip_white_line
-			custom_effect_tooltip = gamayun_upgrade_2_3_exclusive_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = gamayun_upgrade_2_4 TRAIT_2 = gamayun_upgrade_2_5
+			}
 		}
 	}
 
@@ -8217,15 +7768,13 @@ RUS_gamayun_organisation = {
 			add_to_variable = { Mil_chance_loc = 27 }
 			subtract_from_variable = { Civ_chance_loc = 13 }
 			subtract_from_variable = { Dockyard_chance_loc = 13 }
-			FROM = {
-				add_to_variable = {
-					var = RUS_Gamayun_Mil_Chance
-					value = 66
-				}
-			}
+			FROM = { add_to_variable = { RUS_Gamayun_Civ_Chance = 66 } }
 			custom_effect_tooltip = gamayun_upgrade_2_4_tt
 			custom_effect_tooltip = tooltip_white_line
-			custom_effect_tooltip = gamayun_upgrade_2_4_exclusive_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = gamayun_upgrade_2_3 TRAIT_2 = gamayun_upgrade_2_5
+			}
 		}
 	}
 
@@ -8244,15 +7793,13 @@ RUS_gamayun_organisation = {
 			add_to_variable = { Dockyard_chance_loc = 27 }
 			subtract_from_variable = { Mil_chance_loc = 13 }
 			subtract_from_variable = { Civ_chance_loc = 13 }
-			FROM = {
-				add_to_variable = {
-					var = RUS_Gamayun_Dockyard_Chance
-					value = 66
-				}
-			}
+			FROM = { add_to_variable = { RUS_Gamayun_Civ_Chance = 66 } }
 			custom_effect_tooltip = gamayun_upgrade_2_5_tt
 			custom_effect_tooltip = tooltip_white_line
-			custom_effect_tooltip = gamayun_upgrade_2_5_exclusive_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = gamayun_upgrade_2_3 TRAIT_2 = gamayun_upgrade_2_4
+			}
 		}
 	}
 
@@ -8335,9 +7882,7 @@ RUS_gamayun_organisation = {
 		icon = GFX_icon_gamayun_MIO
 
 		visible = {
-			FROM = {
-				NOT = { has_country_flag = RUS_rename_industries }
-			}
+			FROM = { NOT = { has_country_flag = RUS_rename_industries } }
 		}
 
 		available = {
@@ -8366,16 +7911,11 @@ RUS_gamayun_organisation = {
 		icon = GFX_icon_gamayun_MIO
 
 		visible = {
-			FROM = {
-				has_country_flag = RUS_rename_industries
-			}
+			FROM = { has_country_flag = RUS_rename_industries }
 		}
 
 		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_completed_focus = RUS_enter_hundred }
-			}
+			FROM = { has_completed_focus = RUS_enter_hundred }
 		}
 
 		any_parent = { gamayun_upgrade_2_1 gamayun_upgrade_2_2 }
@@ -8567,18 +8107,10 @@ RUS_duks_organisation = {
 
 		available = {
 			if = {
-				limit = {
-					FROM = {
-						OR = {
-							original_tag = RUS
-							original_tag = RSA
-						}
-					}
-				}
+				limit = { FROM = { NOT = { original_tag = FER } } }
 				FROM = { has_completed_focus = RUS_polikarpov_fighters }
 			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
+			else = {
 				FROM = { has_completed_focus = FER_return_to_kremlin }
 			}
 		}
@@ -8744,26 +8276,14 @@ RUS_tsagi_organisation = {
 	}
 
 	on_industrial_manufacturer_assigned = {
-		FROM = {
-			if = {
-				limit = { NOT = { has_variable = MIO_TSAGI_assigned_manufacturer_number } }
-				set_variable = {
-					var = MIO_TSAGI_assigned_manufacturer_number
-					value = 1
-				}
-			}
-			else = {
-				add_to_variable = { MIO_TSAGI_assigned_manufacturer_number = 1 }
-			}
-		}
+		FROM = { add_to_variable = { MIO_TSAGI_assigned_manufacturer_number = 1 } }
+		RUS_calculate_daily_funds_gain_and_requirement = yes
 		custom_effect_tooltip = RUS_MIO_Research_Gain_tt
 		custom_effect_tooltip = tooltip_white_line
 	}
 
 	on_industrial_manufacturer_unassigned = {
-		FROM = {
-			subtract_from_variable = { MIO_TSAGI_assigned_manufacturer_number = 1 }
-		}
+		FROM = { subtract_from_variable = { MIO_TSAGI_assigned_manufacturer_number = 1 } }
 	}
 
 	on_tech_research_completed = {
@@ -8838,9 +8358,7 @@ RUS_tsagi_organisation = {
 		mutually_exclusive = { tsagi_upgrade_1 }
 
 		on_complete = {
-			custom_effect_tooltip = RUS_manufacturer_trait_research_gain_tsagi_tt
-			add_to_variable = { weekly_research_speed_gain = 0.01 }
-			add_to_variable = { weekly_research_speed_gain_loc = 1 }
+			add_to_variable = { weekly_research_speed_gain = 0.01 tooltip = RUS_manufacturer_trait_research_gain_tt }
 		}
 	}
 
@@ -8878,9 +8396,7 @@ RUS_tsagi_organisation = {
 		mutually_exclusive = { tsagi_upgrade_1_1 }
 
 		on_complete = {
-			custom_effect_tooltip = RUS_manufacturer_trait_research_gain_tsagi_tt
-			add_to_variable = { weekly_research_speed_gain = 0.01 }
-			add_to_variable = { weekly_research_speed_gain_loc = 1 }
+			add_to_variable = { weekly_research_speed_gain = 0.01 tooltip = RUS_manufacturer_trait_research_gain_tt }
 		}
 	}
 
@@ -8954,9 +8470,7 @@ RUS_tsagi_organisation = {
 		mutually_exclusive = { tsagi_upgrade_1_4 }
 
 		on_complete = {
-			custom_effect_tooltip = RUS_manufacturer_trait_research_gain_tsagi_tt
-			add_to_variable = { weekly_research_speed_gain = 0.01 }
-			add_to_variable = { weekly_research_speed_gain_loc = 1 }
+			add_to_variable = { weekly_research_speed_gain = 0.01 tooltip = RUS_manufacturer_trait_research_gain_tt }
 		}
 	}
 
@@ -9166,18 +8680,10 @@ RUS_tsagi_organisation = {
 
 		available = {
 			if = {
-				limit = {
-					FROM = {
-						OR = {
-							original_tag = RUS
-							original_tag = RSA
-						}
-					}
-				}
+				limit = { FROM = { NOT = { original_tag = FER } } }
 				FROM = { has_completed_focus = RUS_project_m }
 			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
+			else = {
 				FROM = { has_completed_focus = FER_return_to_kremlin }
 			}
 		}
@@ -9617,42 +9123,16 @@ RUS_osoavia_organisation = {
 	}
 
 	on_design_team_assigned_to_tech = {
-		if = {
-			limit = { FROM = { NOT = { has_variable = OSOAVIA_Research_Number } } }
-			FROM = {
-				set_variable = {
-					var = OSOAVIA_Research_Number
-					value = 1
-				}
-			}
-		}
-		else = {
-			FROM = {
-				add_to_variable = {
-					var = OSOAVIA_Research_Number
-					value = 1
-				}
-			}
-		}
+		FROM = { add_to_variable = { OSOAVIA_Research_Number = 1 } }
 	}
 
 	on_tech_research_cancelled = {
-		FROM = {
-			subtract_from_variable = {
-				var = OSOAVIA_Research_Number
-				value = 1
-			}
-		}
+		FROM = { subtract_from_variable = { OSOAVIA_Research_Number = 1 } }
 	}
 
 	on_tech_research_completed = {
 		FROM = {
-			subtract_from_variable = {
-				var = OSOAVIA_Research_Number
-				value = 1
-			}
-		}
-		FROM = {
+			subtract_from_variable = { OSOAVIA_Research_Number = 1 }
 			if = {
 				limit = { has_character = RUS_igor_sikorsky }
 				if = {
@@ -9665,7 +9145,10 @@ RUS_osoavia_organisation = {
 	}
 
 	on_industrial_manufacturer_assigned = {
-		custom_effect_tooltip = RUS_MIO_XP_Gain_tt
+		RUS_calculate_daily_funds_gain_and_requirement = yes
+		custom_effect_tooltip = {
+			localization_key = RUS_MIO_XP_Gain_tt XP_ICON = RUS_Air_XP_icon
+		}
 	}
 
 	ai_will_do = { base = 10 }
@@ -9685,7 +9168,10 @@ RUS_osoavia_organisation = {
 
 		on_complete = {
 			multiply_variable = { xp_gain_loc = 1.5 }
-			custom_effect_tooltip = RUS_manufacturer_trait_air_xp_osoavia_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_manufacturer_trait_xp_gained_tt
+				XP = RUS_Air_XP_icon
+			}
 		}
 	}
 
@@ -9704,9 +9190,7 @@ RUS_osoavia_organisation = {
 
 		on_complete = {
 			add_to_variable = { total_campaign_xp = 70 }
-			FROM = {
-				air_experience = 70
-			}
+			FROM = { air_experience = 70 }
 		}
 	}
 
@@ -9721,8 +9205,7 @@ RUS_osoavia_organisation = {
 
 		on_complete = {
 			multiply_variable = { weekly_funds_requirement = 0.33 }
-			multiply_variable = { weekly_funds_requirement_loc = 0.33 }
-			custom_effect_tooltip = RUS_manufacturer_trait_air_xp_min_funds_osoavia_tt
+			custom_effect_tooltip = RUS_manufacturer_trait_xp_min_funds_tt
 		}
 	}
 
@@ -9741,9 +9224,7 @@ RUS_osoavia_organisation = {
 
 		on_complete = {
 			add_to_variable = { total_campaign_xp = 25 }
-			FROM = {
-				air_experience = 25
-			}
+			FROM = { air_experience = 25 }
 		}
 	}
 
@@ -9874,18 +9355,10 @@ RUS_osoavia_organisation = {
 
 		available = {
 			if = {
-				limit = {
-					FROM = {
-						OR = {
-							original_tag = RUS
-							original_tag = RSA
-						}
-					}
-				}
+				limit = { FROM = { NOT = { original_tag = FER } } }
 				FROM = { has_completed_focus = RUS_the_flying_tank }
 			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
+			else = {
 				FROM = { has_completed_focus = FER_return_to_kremlin }
 			}
 		}
@@ -10071,27 +9544,15 @@ RUS_skorost_organisation = {
 		icon = GFX_icon_skorost_MIO
 
 		visible = {
-			FROM = {
-				NOT = {
-					has_country_flag = RUS_rename_industries
-				}
-			}
+			FROM = { NOT = { has_country_flag = RUS_rename_industries } }
 		}
 
 		available = {
 			if = {
-				limit = {
-					FROM = {
-						OR = {
-							original_tag = RUS
-							original_tag = RSA
-						}
-					}
-				}
+				limit = { FROM = { NOT = { original_tag = FER } } }
 				FROM = { has_completed_focus = RUS_over_the_northern_skies }
 			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
+			else = {
 				FROM = { has_completed_focus = FER_return_to_kremlin }
 			}
 		}
@@ -10120,18 +9581,11 @@ RUS_skorost_organisation = {
 		icon = GFX_icon_skorost_MIO
 
 		visible = {
-			FROM = {
-				has_country_flag = RUS_rename_industries
-			}
+			FROM = { has_country_flag = RUS_rename_industries }
 		}
 
 		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = {
-					has_completed_focus = RUS_over_the_northern_skies
-				}
-			}
+			FROM = { has_completed_focus = RUS_over_the_northern_skies }
 		}
 
 		special_trait_background = yes
@@ -10278,11 +9732,7 @@ RUS_sokol_organisation = {
 	}
 	available = { FROM = { owns_state = 252 } } #Nizhny Novgorod
 
-	visible = {
-		FROM = {
-			RUS_has_sokol_upgrade_1_or_2 = no
-		}
-	}
+	visible = { FROM = { RUS_has_sokol_upgrade_1_or_2 = no } }
 
 	equipment_type = {
 		small_plane_airframe
@@ -10305,7 +9755,10 @@ RUS_sokol_organisation = {
 	}
 
 	on_design_team_assigned_to_tech = {
-		custom_effect_tooltip = RUS_sokol_trait_req
+		custom_effect_tooltip = {
+			localization_key = RUS_has_completed_trait_2_NOT
+			TRAIT_1 = sokol_upgrade_1 TRAIT_2 = sokol_upgrade_2
+		}
 	}
 
 	on_tech_research_completed = {
@@ -10649,23 +10102,7 @@ RUS_sokol_construction_organisation = {
 			limit = { FROM = { NOT = { has_country_flag = Sokol_Research } } }
 			FROM = { set_country_flag = Sokol_Research }
 		}
-		if = {
-			limit = { FROM = { NOT = { has_variable = Sokol_Research_Number } } }
-			FROM = {
-				set_variable = {
-					var = Sokol_Research_Number
-					value = 1
-				}
-			}
-		}
-		else = {
-			FROM = {
-				add_to_variable = {
-					var = Sokol_Research_Number
-					value = 1
-				}
-			}
-		}
+		FROM = { add_to_variable = { Sokol_Research_Number = 1 } }
 	}
 
 	on_tech_research_cancelled = {
@@ -10673,12 +10110,7 @@ RUS_sokol_construction_organisation = {
 			limit = { FROM = { check_variable = { Sokol_Research_Number = 1 } } }
 			FROM = { clr_country_flag = Sokol_Research }
 		}
-		FROM = {
-			subtract_from_variable = {
-				var = Sokol_Research_Number
-				value = 1
-			}
-		}
+		FROM = { subtract_from_variable = { Sokol_Research_Number = 1 } }
 	}
 
 	on_tech_research_completed = {
@@ -10687,12 +10119,7 @@ RUS_sokol_construction_organisation = {
 			FROM = { clr_country_flag = Sokol_Research }
 		}
 		FROM = {
-			subtract_from_variable = {
-				var = Sokol_Research_Number
-				value = 1
-			}
-		}
-		FROM = {
+			subtract_from_variable = { Sokol_Research_Number = 1 }
 			if = {
 				limit = { has_character = RUS_igor_sikorsky }
 				if = {
@@ -11028,23 +10455,7 @@ RUS_sokol_production_organisation = {
 			limit = { FROM = { NOT = { has_country_flag = Sokol_Research } } }
 			FROM = { set_country_flag = Sokol_Research }
 		}
-		if = {
-			limit = { FROM = { NOT = { has_variable = Sokol_Research_Number } } }
-			FROM = {
-				set_variable = {
-					var = Sokol_Research_Number
-					value = 1
-				}
-			}
-		}
-		else = {
-			FROM = {
-				add_to_variable = {
-					var = Sokol_Research_Number
-					value = 1
-				}
-			}
-		}
+		FROM = { add_to_variable = { Sokol_Research_Number = 1 } }
 	}
 
 	on_tech_research_cancelled = {
@@ -11052,12 +10463,7 @@ RUS_sokol_production_organisation = {
 			limit = { FROM = { check_variable = { Sokol_Research_Number = 1 } } }
 			FROM = { clr_country_flag = Sokol_Research }
 		}
-		FROM = {
-			subtract_from_variable = {
-				var = Sokol_Research_Number
-				value = 1
-			}
-		}
+		FROM = { subtract_from_variable = { Sokol_Research_Number = 1 } }
 	}
 
 	on_tech_research_completed = {
@@ -11066,12 +10472,7 @@ RUS_sokol_production_organisation = {
 			FROM = { clr_country_flag = Sokol_Research }
 		}
 		FROM = {
-			subtract_from_variable = {
-				var = Sokol_Research_Number
-				value = 1
-			}
-		}
-		FROM = {
+			subtract_from_variable = { Sokol_Research_Number = 1 }
 			if = {
 				limit = { has_character = RUS_igor_sikorsky }
 				if = {
@@ -11577,11 +10978,11 @@ RUS_toz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = toz_upgrade_2_1_tt
+			set_variable = { FROM.TOZ_Required_Funds = 400 tooltip = RUS_toz_medals_decision_cost_tt }
 			custom_effect_tooltip = tooltip_white_line
-			custom_effect_tooltip = toz_upgrade_2_1_exclusive_tt
-			FROM = {
-				set_variable = { TOZ_Required_Funds = 400 }
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = toz_upgrade_2_2 TRAIT_2 = toz_upgrade_2_3
 			}
 		}
 	}
@@ -11604,11 +11005,11 @@ RUS_toz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = toz_upgrade_2_2_tt
+			set_variable = { FROM.TOZ_Required_Funds = 300 tooltip = RUS_toz_medals_decision_cost_tt }
 			custom_effect_tooltip = tooltip_white_line
-			custom_effect_tooltip = toz_upgrade_2_2_exclusive_tt
-			FROM = {
-				set_variable = { TOZ_Required_Funds = 300 }
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = toz_upgrade_2_1 TRAIT_2 = toz_upgrade_2_3
 			}
 		}
 	}
@@ -11631,11 +11032,11 @@ RUS_toz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = toz_upgrade_2_3_tt
+			set_variable = { FROM.TOZ_Required_Funds = 200 tooltip = RUS_toz_medals_decision_cost_tt }
 			custom_effect_tooltip = tooltip_white_line
-			custom_effect_tooltip = toz_upgrade_2_3_exclusive_tt
-			FROM = {
-				set_variable = { TOZ_Required_Funds = 200 }
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = toz_upgrade_2_1 TRAIT_2 = toz_upgrade_2_2
 			}
 		}
 	}
@@ -11671,14 +11072,11 @@ RUS_toz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = toz_upgrade_2_5_tt
+			add_to_variable = { FROM.TOZ_Divisions = 2 tooltip = RUS_toz_medals_division_num_tt }
 			custom_effect_tooltip = tooltip_white_line
-			custom_effect_tooltip = toz_upgrade_2_5_exclusive_tt
-			FROM = {
-				add_to_variable = {
-					var = TOZ_Divisions
-					value = 2
-				}
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = toz_upgrade_2_6 TRAIT_2 = toz_upgrade_2_7
 			}
 		}
 	}
@@ -11704,14 +11102,11 @@ RUS_toz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = toz_upgrade_2_6_tt
+			add_to_variable = { FROM.TOZ_Divisions = 4 tooltip = RUS_toz_medals_division_num_tt }
 			custom_effect_tooltip = tooltip_white_line
-			custom_effect_tooltip = toz_upgrade_2_6_exclusive_tt
-			FROM = {
-				add_to_variable = {
-					var = TOZ_Divisions
-					value = 4
-				}
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = toz_upgrade_2_5 TRAIT_2 = toz_upgrade_2_7
 			}
 		}
 	}
@@ -11737,14 +11132,11 @@ RUS_toz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = toz_upgrade_2_7_tt
+			add_to_variable = { FROM.TOZ_Divisions = 6 tooltip = RUS_toz_medals_division_num_tt }
 			custom_effect_tooltip = tooltip_white_line
-			custom_effect_tooltip = toz_upgrade_2_7_exclusive_tt
-			FROM = {
-				add_to_variable = {
-					var = TOZ_Divisions
-					value = 6
-				}
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = toz_upgrade_2_5 TRAIT_2 = toz_upgrade_2_6
 			}
 		}
 	}
@@ -11769,22 +11161,14 @@ RUS_toz_organisation = {
 		icon = GFX_icon_toz_MIO
 
 		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_country_flag = improve_toz }
-			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
-				FROM = {
-					hidden_trigger = { has_country_flag = improve_toz }
-					custom_trigger_tooltip = { tooltip = improve_toz_FER }
-				}
-			}
-			else_if = {
-				limit = { FROM = { original_tag = RSA } }
-				FROM = {
-					hidden_trigger = { has_country_flag = improve_toz }
-					custom_trigger_tooltip = { tooltip = improve_toz_RSA }
+			FROM = {
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = has_completed_decision_in_focus
+						DECISION = RUS_tula_arms_factory
+						FOCUS = "[RUS_TozUpgradeFocusTrigger]"
+					}
+					has_country_flag = improve_toz
 				}
 			}
 		}
@@ -11828,8 +11212,7 @@ RUS_vpoz_organisation = {
 				owns_state = 249 #Kazan
 			}
 		}
-		else_if = {
-			limit = { FROM = { original_tag = RSA } }
+		else = {
 			FROM = {
 				has_completed_focus = RUS_secret_weapons_development
 				owns_state = 249 #Kazan
@@ -11852,26 +11235,14 @@ RUS_vpoz_organisation = {
 	}
 
 	on_industrial_manufacturer_assigned = {
-		FROM = {
-			if = {
-				limit = { NOT = { has_variable = MIO_VPOZ_assigned_manufacturer_number } }
-				set_variable = {
-					var = MIO_VPOZ_assigned_manufacturer_number
-					value = 1
-				}
-			}
-			else = {
-				add_to_variable = { MIO_VPOZ_assigned_manufacturer_number = 1 }
-			}
-		}
+		FROM = { add_to_variable = { MIO_VPOZ_assigned_manufacturer_number = 1 } }
+		RUS_calculate_daily_funds_gain_and_requirement = yes
 		custom_effect_tooltip = RUS_MIO_Research_Gain_tt
 		custom_effect_tooltip = tooltip_white_line
 	}
 
 	on_industrial_manufacturer_unassigned = {
-		FROM = {
-			subtract_from_variable = { MIO_VPOZ_assigned_manufacturer_number = 1 }
-		}
+		FROM = { subtract_from_variable = { MIO_VPOZ_assigned_manufacturer_number = 1 } }
 	}
 
 	on_tech_research_completed = {
@@ -11921,7 +11292,7 @@ RUS_vpoz_organisation = {
 		limit_to_equipment_type = { infantry_equipment }
 
 		equipment_bonus = {
-			maximum_speed = 0.25
+			maximum_speed = 0.15
 		}
 	}
 
@@ -11993,7 +11364,7 @@ RUS_vpoz_organisation = {
 		limit_to_equipment_type = { infantry_equipment }
 
 		equipment_bonus = {
-			maximum_speed = 0.25
+			maximum_speed = 0.15
 		}
 	}
 
@@ -12032,10 +11403,7 @@ RUS_vpoz_organisation = {
 
 		on_complete = {
 			set_temp_variable = { max_research_speed_to_add = research_bonus }
-			multiply_temp_variable = { max_research_speed_to_add = 100 }
 			custom_effect_tooltip = RUS_manufacturer_trait_research_cap_vpoz_tt
-			add_to_variable = { max_research_speed_loc = max_research_speed_to_add }
-			divide_temp_variable = { max_research_speed_to_add = 100 }
 			add_to_variable = { max_research_speed = max_research_speed_to_add }
 		}
 	}
@@ -12305,22 +11673,14 @@ RUS_imz_organisation = {
 		all_parents = { imz_upgrade_2_1 imz_upgrade_2_2 }
 
 		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_country_flag = improve_imz }
-			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
-				FROM = {
-					hidden_trigger = { has_country_flag = improve_imz }
-					custom_trigger_tooltip = { tooltip = improve_imz_FER }
-				}
-			}
-			else_if = {
-				limit = { FROM = { original_tag = RSA } }
-				FROM = {
-					hidden_trigger = { has_country_flag = improve_imz }
-					custom_trigger_tooltip = { tooltip = improve_imz_RSA }
+			FROM = {
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = has_completed_decision_in_focus
+						DECISION = RUS_izhevsk_mechanical_plant
+						FOCUS = "[RUS_AmoImzUpgradeFocusTrigger]"
+					}
+					has_country_flag = improve_imz
 				}
 			}
 		}
@@ -12357,49 +11717,29 @@ RUS_obukhov_organisation = {
 	on_industrial_manufacturer_assigned = {
 		if = { #Check if the trait to give army xp is unlocked
 			limit = { RUS_has_obukhov_upgrade_5_or_6 = yes }
-			custom_effect_tooltip = RUS_MIO_XP_Gain_tt
+			RUS_calculate_daily_funds_gain_and_requirement = yes
+			custom_effect_tooltip = {
+				localization_key = RUS_MIO_XP_Gain_tt XP_ICON = RUS_Army_XP_icon
+			}
 		}
 		else = {
-			custom_effect_tooltip = RUS_obukhov_army_xp_trigger
+			custom_effect_tooltip = {
+				localization_key = RUS_has_completed_trait_2_NOT
+				TRAIT_1 = obukhov_upgrade_5 TRAIT_2 = obukhov_upgrade_6
+			}
 		}
 	}
 
 	on_design_team_assigned_to_tech = {
-		if = {
-			limit = { FROM = { NOT = { has_variable = Obukhov_Research_Number } } }
-			FROM = {
-				set_variable = {
-					var = Obukhov_Research_Number
-					value = 1
-				}
-			}
-		}
-		else = {
-			FROM = {
-				add_to_variable = {
-					var = Obukhov_Research_Number
-					value = 1
-				}
-			}
-		}
+		FROM = { add_to_variable = { Obukhov_Research_Number = 1 } }
 	}
 
 	on_tech_research_cancelled = {
-		FROM = {
-			subtract_from_variable = {
-				var = Obukhov_Research_Number
-				value = 1
-			}
-		}
+		FROM = { subtract_from_variable = { Obukhov_Research_Number = 1 } }
 	}
 
 	on_tech_research_completed = {
-		FROM = {
-			subtract_from_variable = {
-				var = Obukhov_Research_Number
-				value = 1
-			}
-		}
+		FROM = { subtract_from_variable = { Obukhov_Research_Number = 1 } }
 	}
 
 	ai_will_do = { base = 1000 }
@@ -12431,7 +11771,10 @@ RUS_obukhov_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = obukhov_upgrade_1_exclusive_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = obukhov_upgrade_2 TRAIT_2 = obukhov_upgrade_3
+			}
 		}
 	}
 
@@ -12452,7 +11795,10 @@ RUS_obukhov_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = obukhov_upgrade_2_exclusive_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = obukhov_upgrade_1 TRAIT_2 = obukhov_upgrade_3
+			}
 		}
 	}
 
@@ -12475,7 +11821,10 @@ RUS_obukhov_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = obukhov_upgrade_3_exclusive_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = obukhov_upgrade_1 TRAIT_2 = obukhov_upgrade_2
+			}
 		}
 	}
 
@@ -12503,7 +11852,10 @@ RUS_obukhov_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = RUS_MIO_XP_Gain_tt
+			RUS_calculate_daily_funds_gain_and_requirement = yes
+			custom_effect_tooltip = {
+				localization_key = RUS_MIO_XP_Gain_tt XP_ICON = RUS_Army_XP_icon
+			}
 			custom_effect_tooltip = tooltip_white_line
 			FROM = {
 				RUS_unlock_obukhov_policies = yes # `unlock_mio_policy_tooltip` doesn't work in the MIO scope for some reason
@@ -12547,7 +11899,10 @@ RUS_obukhov_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = RUS_MIO_XP_Gain_tt
+			RUS_calculate_daily_funds_gain_and_requirement = yes
+			custom_effect_tooltip = {
+				localization_key = RUS_MIO_XP_Gain_tt XP_ICON = RUS_Army_XP_icon
+			}
 			custom_effect_tooltip = tooltip_white_line
 			FROM = {
 				RUS_unlock_obukhov_policies = yes # `unlock_mio_policy_tooltip` doesn't work in the MIO scope for some reason
@@ -12586,7 +11941,10 @@ RUS_obukhov_organisation = {
 
 		on_complete = {
 			multiply_variable = { xp_gain_loc = 1.5 }
-			custom_effect_tooltip = RUS_manufacturer_trait_army_xp_obukhov_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_manufacturer_trait_xp_gained_tt
+				XP = RUS_Army_XP_icon
+			}
 		}
 	}
 
@@ -12608,8 +11966,7 @@ RUS_obukhov_organisation = {
 
 		on_complete = {
 			multiply_variable = { weekly_funds_requirement = 0.33 }
-			multiply_variable = { weekly_funds_requirement_loc = 0.33 }
-			custom_effect_tooltip = RUS_manufacturer_trait_army_xp_min_funds_obukhov_tt
+			custom_effect_tooltip = RUS_manufacturer_trait_xp_min_funds_tt
 			custom_effect_tooltip = tooltip_white_line
 			FROM = { army_experience = 50 }
 			add_to_variable = { total_campaign_xp = 50 }
@@ -13215,33 +12572,17 @@ RUS_bmz_organisation = {
 	allowed = {
 		is_russian_tag = yes
 	}
-	available = {
-		FROM = {
-			owns_state = 224 #Bryansk
-		}
-	}
+	available = { FROM = { owns_state = 224 } } #Bryansk
 
 	on_industrial_manufacturer_assigned = {
-		FROM = {
-			if = {
-				limit = { NOT = { has_variable = MIO_BMZ_assigned_manufacturer_number } }
-				set_variable = {
-					var = MIO_BMZ_assigned_manufacturer_number
-					value = 1
-				}
-			}
-			else = {
-				add_to_variable = { MIO_BMZ_assigned_manufacturer_number = 1 }
-			}
-		}
+		FROM = { add_to_variable = { MIO_BMZ_assigned_manufacturer_number = 1 } }
+		RUS_calculate_daily_funds_gain_and_requirement = yes
 		custom_effect_tooltip = RUS_MIO_Research_Gain_tt
 		custom_effect_tooltip = tooltip_white_line
 	}
 
 	on_industrial_manufacturer_unassigned = {
-		FROM = {
-			subtract_from_variable = { MIO_BMZ_assigned_manufacturer_number = 1 }
-		}
+		FROM = { subtract_from_variable = { MIO_BMZ_assigned_manufacturer_number = 1 } }
 	}
 
 	on_tech_research_completed = {
@@ -13359,13 +12700,9 @@ RUS_bmz_organisation = {
 		}
 
 		on_complete = {
-			set_temp_variable = { current_research_bonus = research_bonus }
-			multiply_temp_variable = { current_research_bonus = 100 }
-			set_temp_variable = { weekly_research_speed_to_add = current_research_bonus }
+			set_temp_variable = { weekly_research_speed_to_add = research_bonus }
 			multiply_temp_variable = { weekly_research_speed_to_add = 0.04 }
 			custom_effect_tooltip = RUS_manufacturer_trait_research_gain_bmz_tt
-			add_to_variable = { weekly_research_speed_gain_loc = weekly_research_speed_to_add }
-			divide_temp_variable = { weekly_research_speed_to_add = 100 }
 			add_to_variable = { weekly_research_speed_gain = weekly_research_speed_to_add }
 		}
 	}
@@ -13443,9 +12780,7 @@ RUS_bmz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = RUS_manufacturer_trait_research_cap_bmz_tt
-			add_to_variable = { max_research_speed = 0.25 }
-			add_to_variable = { max_research_speed_loc = 25 }
+			add_to_variable = { max_research_speed = 0.25 tooltip = RUS_manufacturer_trait_research_cap_tt }
 		}
 	}
 
@@ -13615,73 +12950,36 @@ RUS_bmz_organisation = {
 	}
 }
 
-RUS_amo_organisation = { ### For those with AAT and LaR ###
+RUS_amo_organisation = {
 	name = amo_non_socrus
 	icon = GFX_idea_amo
 	allowed = {
 		is_russian_tag = yes
 	}
-	available = {
-		FROM = {
-			owns_state = 219 #Moscow
-		}
-	}
+	available = { FROM = { owns_state = 219 } } #Moscow
 
 	on_tech_research_completed = {
-		set_temp_variable = {
-			var = RUS_amo_cic_base
-			value = 3000
-		}
-		set_temp_variable = {
-			var = RUS_amo_cic_trait_sum
-			value = 500
-		}
-		set_temp_variable = {
-			var = RUS_amo_cic_size_multiplier
-			value = size
+		set_temp_variable = { RUS_amo_cic_base = 3000 }
+		set_temp_variable = { RUS_amo_cic_trait_sum = 500 }
+		set_temp_variable = { RUS_amo_cic_size_multiplier = size }
+		if = {
+			limit = { RUS_has_amo_upgrade_1_2 = yes }
+			add_to_temp_variable = { RUS_amo_cic_trait_sum = 250 }
 		}
 		if = {
-			limit = {
-				RUS_has_amo_upgrade_1_2 = yes
-			}
-			add_to_temp_variable = {
-				var = RUS_amo_cic_trait_sum
-				value = 250
-			}
+			limit = { RUS_has_amo_upgrade_1_4 = yes }
+			add_to_temp_variable = { RUS_amo_cic_trait_sum = 250 }
 		}
 		if = {
-			limit = {
-				RUS_has_amo_upgrade_1_4 = yes
-			}
-			add_to_temp_variable = {
-				var = RUS_amo_cic_trait_sum
-				value = 250
-			}
+			limit = { RUS_has_amo_policy = yes }
+			add_to_temp_variable = { RUS_amo_cic_trait_sum = 250 }
 		}
-		if = {
-			limit = {
-				RUS_has_amo_policy = yes
-			}
-			add_to_temp_variable = {
-				var = RUS_amo_cic_trait_sum
-				value = 250
-			}
-		}
-		multiply_temp_variable = {
-			var = RUS_amo_cic_trait_sum
-			value = RUS_amo_cic_size_multiplier
-		}
-		add_to_temp_variable = {
-			var = RUS_amo_cic_trait_sum
-			value = RUS_amo_cic_base
-		}
+		multiply_temp_variable = { RUS_amo_cic_trait_sum = RUS_amo_cic_size_multiplier }
+		add_to_temp_variable = { RUS_amo_cic_trait_sum = RUS_amo_cic_base }
+
 		FROM = { add_cic = RUS_amo_cic_trait_sum }
 		add_to_variable = { total_campaign_CIC = RUS_amo_cic_trait_sum }
 		custom_effect_tooltip = RUS_amo_research_cic_tt
-	}
-
-	visible = {
-		has_dlc_nsb = yes
 	}
 
 	equipment_type = {
@@ -13800,7 +13098,7 @@ RUS_amo_organisation = { ### For those with AAT and LaR ###
 	trait = {
 		token = amo_upgrade_1_3
 		name = amo_upgrade_1_3
-		icon = GFX_generic_mio_trait_icon_maximum_speed
+		icon = GFX_KR_generic_mio_trait_icon_fuel_drum
 
 		all_parents = { amo_upgrade_2 }
 
@@ -13896,7 +13194,7 @@ RUS_amo_organisation = { ### For those with AAT and LaR ###
 	trait = {
 		token = amo_upgrade_2_1
 		name = amo_upgrade_2_1
-		icon = GFX_generic_mio_trait_icon_fuel_consumption
+		icon = GFX_KR_generic_mio_trait_icon_fuel_drum
 
 		position = { x = 0 y = 1 }
 		relative_position_id = amo_upgrade_1_3
@@ -13933,974 +13231,76 @@ RUS_amo_organisation = { ### For those with AAT and LaR ###
 		icon = GFX_icon_amo_MIO
 
 		visible = {
-			FROM = {
-				NOT = {
-					has_country_flag = RUS_rename_industries
-				}
-			}
+			FROM = { NOT = { has_country_flag = RUS_rename_industries } }
 		}
 
 		special_trait_background = yes
 
 		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_country_flag = improve_amo }
-			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
-				FROM = {
-					hidden_trigger = { has_country_flag = improve_amo }
-					custom_trigger_tooltip = { tooltip = improve_amo_FER }
-				}
-			}
-			else_if = {
-				limit = { FROM = { original_tag = RSA } }
-				FROM = {
-					hidden_trigger = { has_country_flag = improve_amo }
-					custom_trigger_tooltip = { tooltip = improve_amo_RSA }
-				}
-			}
-		}
-
-		position = { x = 1 y = 2 }
-		relative_position_id = amo_upgrade_1_3
-
-		all_parents = { amo_upgrade_2_1 amo_upgrade_2_2 }
-
-		equipment_bonus = {
-			reliability = 0.1
-			maximum_speed = 0.1
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_3_1_soc_rus
-		name = amo_upgrade_3_1_soc_rus
-		icon = GFX_icon_amo_MIO
-
-		visible = {
 			FROM = {
-				has_country_flag = RUS_rename_industries
-			}
-		}
-
-		special_trait_background = yes
-
-		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_country_flag = improve_amo }
-			}
-		}
-
-		position = { x = 1 y = 2 }
-		relative_position_id = amo_upgrade_1_3
-
-		all_parents = { amo_upgrade_2_1 amo_upgrade_2_2 }
-
-		equipment_bonus = {
-			reliability = 0.1
-			maximum_speed = 0.1
-		}
-	}
-}
-RUS_amo_organisation_non_nsb = { ### For those with AAT but not NSB ###
-	name = amo_non_socrus
-	icon = GFX_idea_amo
-	allowed = {
-		is_russian_tag = yes
-	}
-	available = { FROM = { owns_state = 219 } } #Moscow
-
-	visible = {
-		has_dlc_nsb = no
-	}
-
-	on_tech_research_completed = {
-		set_temp_variable = {
-			var = RUS_amo_cic_base
-			value = 3000
-		}
-		set_temp_variable = {
-			var = RUS_amo_cic_trait_sum
-			value = 500
-		}
-		set_temp_variable = {
-			var = RUS_amo_cic_size_multiplier
-			value = size
-		}
-		if = {
-			limit = {
-				RUS_has_amo_upgrade_1_2_non_nsb = yes
-			}
-			add_to_temp_variable = {
-				var = RUS_amo_cic_trait_sum
-				value = 250
-			}
-		}
-		if = {
-			limit = {
-				RUS_has_amo_upgrade_1_4_non_nsb = yes
-			}
-			add_to_temp_variable = {
-				var = RUS_amo_cic_trait_sum
-				value = 250
-			}
-		}
-		if = {
-			limit = {
-				RUS_has_amo_policy = yes
-			}
-			add_to_temp_variable = {
-				var = RUS_amo_cic_trait_sum
-				value = 250
-			}
-		}
-		multiply_temp_variable = {
-			var = RUS_amo_cic_trait_sum
-			value = RUS_amo_cic_size_multiplier
-		}
-		add_to_temp_variable = {
-			var = RUS_amo_cic_trait_sum
-			value = RUS_amo_cic_base
-		}
-		FROM = { add_cic = RUS_amo_cic_trait_sum }
-		add_to_variable = { total_campaign_CIC = RUS_amo_cic_trait_sum }
-		custom_effect_tooltip = RUS_amo_research_cic_tt
-	}
-
-	equipment_type = {
-		motorized_equipment
-		mechanized_equipment
-		armor
-	}
-
-	research_categories = {
-		mio_cat_tech_all_motorized_mechanized
-		mio_cat_tech_all_armor_and_modules
-	}
-
-	ai_will_do = { base = 1 }
-
-	initial_trait = {
-		name = RUS_amo_mio_desc
-	}
-
-	trait = {
-		token = amo_upgrade_1
-		name = amo_upgrade_1
-		icon = GFX_generic_mio_trait_icon_reliability
-
-		position = { x = 1 y = 0 }
-
-		limit_to_equipment_type = { motorized_equipment }
-
-		equipment_bonus = {
-			reliability = 0.05
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_2
-		name = amo_upgrade_2
-		icon = GFX_generic_mio_trait_icon_reliability
-
-		position = { x = 4 y = 0 }
-
-		limit_to_equipment_type = {
-			armor
-		}
-
-		equipment_bonus = {
-			reliability = 0.05
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_3
-		name = amo_upgrade_3
-		icon = GFX_generic_mio_trait_icon_reliability
-
-		position = { x = 7 y = 0 }
-
-		limit_to_equipment_type = { mechanized_equipment }
-
-		equipment_bonus = {
-			reliability = 0.05
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_1_1
-		name = amo_upgrade_1_1
-		icon = GFX_generic_mio_trait_icon_maximum_speed
-
-		position = { x = -1 y = 2 }
-		relative_position_id = amo_upgrade_1
-
-		limit_to_equipment_type = { motorized_equipment }
-
-		any_parent = { amo_upgrade_1 amo_upgrade_2 }
-
-		mutually_exclusive = { amo_upgrade_1_2 }
-
-		equipment_bonus = {
-			maximum_speed = 0.2
-			fuel_consumption = 0.2
-		}
-
-		production_bonus = {
-			production_resource_need_factor = 0.2
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_1_2
-		name = amo_upgrade_1_2
-		icon = GFX_KR_generic_mio_trait_icon_cic
-
-		position = { x = 0 y = 2 }
-		relative_position_id = amo_upgrade_1
-
-		any_parent = { amo_upgrade_1 amo_upgrade_2 }
-
-		mutually_exclusive = { amo_upgrade_1_1 }
-
-		limit_to_equipment_type = { motorized_equipment }
-
-		equipment_bonus = {
-			maximum_speed = 0.05
-		}
-
-		on_complete = {
-			custom_effect_tooltip = RUS_amo_trait_cic_tt
-			add_to_variable = { CIC_bonus = 250 }
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_1_3
-		name = amo_upgrade_1_3
-		icon = GFX_generic_mio_trait_icon_maximum_speed
-
-		all_parents = { amo_upgrade_2 }
-
-		position = { x = -1 y = 2 }
-		relative_position_id = amo_upgrade_2
-
-		mutually_exclusive = { amo_upgrade_1_3.5 }
-
-		limit_to_equipment_type = { armor }
-
-		equipment_bonus = {
-			maximum_speed = 0.05
-			fuel_capacity = 1.0
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_1_3.5
-		name = amo_upgrade_1_3.5
-		icon = GFX_generic_mio_trait_icon_maximum_speed
-
-		all_parents = { amo_upgrade_2 }
-
-		position = { x = 1 y = 2 }
-		relative_position_id = amo_upgrade_2
-
-		mutually_exclusive = { amo_upgrade_1_3 }
-
-		limit_to_equipment_type = { armor }
-
-		equipment_bonus = {
-			maximum_speed = 0.2
-			fuel_consumption = 0.2
-		}
-
-		production_bonus = {
-			production_resource_need_factor = 0.3
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_1_4
-		name = amo_upgrade_1_4
-		icon = GFX_KR_generic_mio_trait_icon_cic
-
-		position = { x = 0 y = 2 }
-		relative_position_id = amo_upgrade_3
-
-		any_parent = { amo_upgrade_2 amo_upgrade_3 }
-
-		mutually_exclusive = { amo_upgrade_1_5 }
-
-		limit_to_equipment_type = { mechanized_equipment }
-
-		equipment_bonus = {
-			maximum_speed = 0.05
-		}
-
-		on_complete = {
-			custom_effect_tooltip = RUS_amo_trait_cic_tt
-			add_to_variable = { CIC_bonus = 250 }
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_1_5
-		name = amo_upgrade_1_5
-		icon = GFX_generic_mio_trait_icon_maximum_speed
-
-		position = { x = 1 y = 2 }
-		relative_position_id = amo_upgrade_3
-
-		limit_to_equipment_type = { mechanized_equipment }
-
-		any_parent = { amo_upgrade_2 amo_upgrade_3 }
-
-		mutually_exclusive = { amo_upgrade_1_4 }
-
-		equipment_bonus = {
-			maximum_speed = 0.2
-			fuel_consumption = 0.2
-		}
-
-		production_bonus = {
-			production_resource_need_factor = 0.2
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_2_1
-		name = amo_upgrade_2_1
-		icon = GFX_generic_mio_trait_icon_fuel_consumption
-
-		position = { x = 0 y = 1 }
-		relative_position_id = amo_upgrade_1_3
-
-		any_parent = { amo_upgrade_1_1 amo_upgrade_1_2 }
-		any_parent = { amo_upgrade_1_3 amo_upgrade_1_3.5 }
-
-		limit_to_equipment_type = { armor }
-
-		equipment_bonus = {
-			fuel_capacity = 1.0
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_2_2
-		name = amo_upgrade_2_2
-		icon = GFX_generic_mio_trait_icon_reliability
-
-		position = { x = 2 y = 1 }
-		relative_position_id = amo_upgrade_1_3
-
-		any_parent = { amo_upgrade_1_3 amo_upgrade_1_3.5 }
-		any_parent = { amo_upgrade_1_4 amo_upgrade_1_5 }
-
-		equipment_bonus = {
-			reliability = 0.05
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_3_1
-		name = amo_upgrade_3_1
-		icon = GFX_icon_amo_MIO
-
-		visible = {
-			NOT = {
-				FROM = { has_country_flag = RUS_rename_industries }
-			}
-		}
-
-		special_trait_background = yes
-
-		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_country_flag = improve_amo }
-			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
-				FROM = {
-					hidden_trigger = { has_country_flag = improve_amo }
-					custom_trigger_tooltip = { tooltip = improve_amo_FER }
-				}
-			}
-			else_if = {
-				limit = { FROM = { original_tag = RSA } }
-				FROM = {
-					hidden_trigger = { has_country_flag = improve_amo }
-					custom_trigger_tooltip = { tooltip = improve_amo_RSA }
-				}
-			}
-		}
-
-		position = { x = 1 y = 2 }
-		relative_position_id = amo_upgrade_1_3
-
-		all_parents = { amo_upgrade_2_1 amo_upgrade_2_2 }
-
-		equipment_bonus = {
-			reliability = 0.1
-			maximum_speed = 0.1
-		}
-	}
-
-	trait = {
-		token = amo_upgrade_3_1_soc_rus
-		name = amo_upgrade_3_1_soc_rus
-		icon = GFX_icon_amo_MIO
-
-		visible = {
-			FROM = {
-				has_country_flag = RUS_rename_industries
-			}
-		}
-
-		special_trait_background = yes
-
-		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_country_flag = improve_amo }
-			}
-		}
-
-		position = { x = 1 y = 2 }
-		relative_position_id = amo_upgrade_1_3
-
-		all_parents = { amo_upgrade_2_1 amo_upgrade_2_2 }
-
-		equipment_bonus = {
-			reliability = 0.1
-			maximum_speed = 0.1
-		}
-	}
-}
-RUS_naz_organisation = { ### For those with AAT but, not LaR
-	name = naz_non_socrus
-	icon = GFX_idea_naz
-	allowed = {
-		is_russian_tag = yes
-	}
-	visible = {
-		has_dlc_lar = no
-	}
-	available = { FROM = { owns_state = 252 } } #Nizhny Novgorod
-
-	equipment_type = {
-		motorized_equipment
-		mechanized_equipment
-		motorized_rocket_equipment
-		light_tank_artillery_chassis
-		medium_tank_artillery_chassis
-		heavy_tank_artillery_chassis
-		light_tank_destroyer_chassis
-		medium_tank_destroyer_chassis
-		heavy_tank_destroyer_chassis
-		light_tank_aa_chassis
-		medium_tank_aa_chassis
-		heavy_tank_aa_chassis
-	}
-
-	research_categories = {
-		mio_cat_tech_all_motorized_mechanized
-		mio_cat_tech_all_armor_and_modules
-	}
-
-	on_tech_research_completed = {
-		if = {
-			limit = { FROM = { has_country_flag = naz_research_funds_gain } }
-			hidden_effect = {
-				FROM = {
-					country_event = { id = russia.1001 days = 1 }
-				}
-			}
-			custom_effect_tooltip = naz_research_funds_share_tt
-		}
-		else = {
-			custom_effect_tooltip = naz_research_funds_gain_trigger_tt
-		}
-	}
-
-	ai_will_do = { base = 1000 }
-
-	initial_trait = {
-		name = RUS_naz_mio_desc
-
-		organization_modifier = {
-			military_industrial_organization_size_up_requirement = -0.25
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_1
-		name = naz_upgrade_1
-		icon = GFX_generic_mio_trait_icon_build_cost_ic
-
-		position = { x = 0 y = 0 }
-
-		limit_to_equipment_type = {
-			motorized_equipment
-			mechanized_equipment
-			motorized_rocket_equipment
-		}
-
-		production_bonus = {
-			production_cost_factor = -0.025
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_2
-		name = naz_upgrade_2
-		icon = GFX_generic_mio_trait_icon_efficiency_cap
-
-		position = { x = 3 y = 0 }
-
-		mutually_exclusive = { naz_upgrade_3 }
-
-		limit_to_equipment_type = {
-			motorized_equipment
-			mechanized_equipment
-			motorized_rocket_equipment
-		}
-
-		production_bonus = {
-			production_efficiency_cap_factor = 0.025
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_3
-		name = naz_upgrade_3
-		icon = GFX_generic_mio_trait_icon_efficiency_cap
-
-		position = { x = 5 y = 0 }
-
-		mutually_exclusive = { naz_upgrade_2 }
-
-		limit_to_equipment_type = {
-			light_tank_artillery_chassis
-			medium_tank_artillery_chassis
-			heavy_tank_artillery_chassis
-			light_tank_destroyer_chassis
-			medium_tank_destroyer_chassis
-			heavy_tank_destroyer_chassis
-			light_tank_aa_chassis
-			medium_tank_aa_chassis
-			heavy_tank_aa_chassis
-		}
-
-		production_bonus = {
-			production_efficiency_cap_factor = 0.025
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_4
-		name = naz_upgrade_4
-		icon = GFX_generic_mio_trait_icon_build_cost_ic
-
-		position = { x = 8 y = 0 }
-
-		limit_to_equipment_type = {
-			light_tank_artillery_chassis
-			medium_tank_artillery_chassis
-			heavy_tank_artillery_chassis
-			light_tank_destroyer_chassis
-			medium_tank_destroyer_chassis
-			heavy_tank_destroyer_chassis
-			light_tank_aa_chassis
-			medium_tank_aa_chassis
-			heavy_tank_aa_chassis
-		}
-
-		production_bonus = {
-			production_cost_factor = -0.025
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_1_1
-		name = naz_upgrade_1_1
-		icon = GFX_generic_mio_trait_icon_resources
-
-		all_parents = { naz_upgrade_1 }
-		any_parent = { naz_upgrade_2 naz_upgrade_3 }
-
-		position = { x = 2 y = 1 }
-
-		mutually_exclusive = { naz_upgrade_1_2 }
-
-		limit_to_equipment_type = {
-			motorized_equipment
-			mechanized_equipment
-			motorized_rocket_equipment
-		}
-
-		production_bonus = {
-			production_resource_need_factor = -0.15
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_1_2
-		name = naz_upgrade_1_2
-		icon = GFX_KR_generic_mio_trait_icon_funds
-
-		any_parent = { naz_upgrade_2 naz_upgrade_3 }
-
-		available = {
-			FROM = {
-				owns_state = 248
-			}
-		}
-
-		position = { x = 4 y = 1 }
-
-		mutually_exclusive = { naz_upgrade_1_1 naz_upgrade_1_3 }
-
-		on_complete = {
-			custom_effect_tooltip = naz_research_funds_share_tt
-			FROM = { set_country_flag = naz_research_funds_gain }
-			FROM = {
-				248 = {
-					add_extra_state_shared_building_slots = 1
-					add_building_construction = {
-						type = arms_factory
-						level = 1
-						instant_build = yes
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = has_completed_decision_in_focus
+						DECISION = RUS_modernisation_of_AMO
+						FOCUS = "[RUS_AmoImzUpgradeFocusTrigger]"
 					}
-				}
-			}
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_1_3
-		name = naz_upgrade_1_3
-		icon = GFX_generic_mio_trait_icon_resources
-
-		all_parents = { naz_upgrade_4 }
-		any_parent = { naz_upgrade_2 naz_upgrade_3 }
-
-		position = { x = 6 y = 1 }
-
-		mutually_exclusive = { naz_upgrade_1_2 }
-
-		limit_to_equipment_type = {
-			light_tank_artillery_chassis
-			medium_tank_artillery_chassis
-			heavy_tank_artillery_chassis
-			light_tank_destroyer_chassis
-			medium_tank_destroyer_chassis
-			heavy_tank_destroyer_chassis
-			light_tank_aa_chassis
-			medium_tank_aa_chassis
-			heavy_tank_aa_chassis
-		}
-
-		production_bonus = {
-			production_resource_need_factor = -0.15
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_2_1
-		name = naz_upgrade_2_1
-		icon = GFX_generic_mio_trait_icon_efficiency_cap
-
-		all_parents = { naz_upgrade_1 }
-
-		position = { x = 0 y = 2 }
-
-		limit_to_equipment_type = {
-			motorized_equipment
-			mechanized_equipment
-			motorized_rocket_equipment
-		}
-
-		production_bonus = {
-			production_efficiency_cap_factor = 0.025
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_2_2
-		name = naz_upgrade_2_2
-		icon = GFX_generic_mio_trait_icon_efficiency_gain
-
-		any_parent = { naz_upgrade_1_1 naz_upgrade_1_2 naz_upgrade_1_3 }
-
-		position = { x = 3 y = 2 }
-
-		mutually_exclusive = { naz_upgrade_2_3 }
-
-		limit_to_equipment_type = {
-			motorized_equipment
-			mechanized_equipment
-			motorized_rocket_equipment
-		}
-
-		production_bonus = {
-			production_efficiency_gain_factor = 0.15
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_2_3
-		name = naz_upgrade_2_3
-		icon = GFX_generic_mio_trait_icon_efficiency_gain
-
-		any_parent = { naz_upgrade_1_1 naz_upgrade_1_2 naz_upgrade_1_3 }
-
-		position = { x = 5 y = 2 }
-
-		mutually_exclusive = { naz_upgrade_2_2 }
-
-		limit_to_equipment_type = {
-			light_tank_artillery_chassis
-			medium_tank_artillery_chassis
-			heavy_tank_artillery_chassis
-			light_tank_destroyer_chassis
-			medium_tank_destroyer_chassis
-			heavy_tank_destroyer_chassis
-			light_tank_aa_chassis
-			medium_tank_aa_chassis
-			heavy_tank_aa_chassis
-		}
-
-		production_bonus = {
-			production_efficiency_gain_factor = 0.15
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_2_4
-		name = naz_upgrade_2_4
-		icon = GFX_generic_mio_trait_icon_efficiency_cap
-
-		all_parents = { naz_upgrade_4 }
-
-		position = { x = 8 y = 2 }
-
-		limit_to_equipment_type = {
-			light_tank_artillery_chassis
-			medium_tank_artillery_chassis
-			heavy_tank_artillery_chassis
-			light_tank_destroyer_chassis
-			medium_tank_destroyer_chassis
-			heavy_tank_destroyer_chassis
-			light_tank_aa_chassis
-			medium_tank_aa_chassis
-			heavy_tank_aa_chassis
-		}
-
-		production_bonus = {
-			production_efficiency_cap_factor = 0.025
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_3_1
-		name = naz_upgrade_3_1
-		icon = GFX_generic_mio_trait_icon_production_capacity
-
-		all_parents = { naz_upgrade_2_1 }
-		any_parent = { naz_upgrade_2_2 naz_upgrade_2_3 }
-
-		position = { x = 2 y = 3 }
-
-		mutually_exclusive = { naz_upgrade_3_2 }
-
-		limit_to_equipment_type = {
-			motorized_equipment
-			mechanized_equipment
-			motorized_rocket_equipment
-		}
-
-		production_bonus = {
-			production_capacity_factor = 0.1
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_3_2
-		name = naz_upgrade_3_2
-		icon = GFX_generic_mio_trait_icon_conversion_speed
-
-		any_parent = { naz_upgrade_2_2 naz_upgrade_2_3 }
-
-		position = { x = 4 y = 3 }
-
-		mutually_exclusive = { naz_upgrade_3_1 naz_upgrade_3_3 }
-
-		production_bonus = {
-			production_conversion_speed_factor = 0.8
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_3_3
-		name = naz_upgrade_3_3
-		icon = GFX_generic_mio_trait_icon_production_capacity
-
-		all_parents = { naz_upgrade_2_4 }
-		any_parent = { naz_upgrade_2_2 naz_upgrade_2_3 }
-
-		position = { x = 6 y = 3 }
-
-		limit_to_equipment_type = {
-			light_tank_artillery_chassis
-			medium_tank_artillery_chassis
-			heavy_tank_artillery_chassis
-			light_tank_destroyer_chassis
-			medium_tank_destroyer_chassis
-			heavy_tank_destroyer_chassis
-			light_tank_aa_chassis
-			medium_tank_aa_chassis
-			heavy_tank_aa_chassis
-		}
-
-		mutually_exclusive = { naz_upgrade_3_2 }
-
-		production_bonus = {
-			production_capacity_factor = 0.1
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_4_1
-		name = naz_upgrade_4_1
-		icon = GFX_generic_mio_trait_icon_resources
-
-		all_parents = { naz_upgrade_2_1 }
-
-		position = { x = 0 y = 4 }
-
-		limit_to_equipment_type = {
-			motorized_equipment
-			mechanized_equipment
-			motorized_rocket_equipment
-		}
-
-		production_bonus = {
-			production_resource_need_factor = -0.15
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_4_2
-		name = naz_upgrade_4_2
-		icon = GFX_icon_naz_MIO
-
-		visible = {
-			FROM = {
-				NOT = {
-					has_country_flag = RUS_rename_industries
+					has_country_flag = improve_amo
 				}
 			}
 		}
 
-		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_completed_focus = RUS_nizhegorodsky_avtomobilny_focus }
-			}
-			else_if = {
-				limit = { FROM = { original_tag = FER } }
-				FROM = { has_completed_focus = FER_return_to_kremlin }
-			}
-			else_if = {
-				limit = { FROM = { original_tag = RSA } }
-				FROM = { has_completed_focus = RUS_secret_weapons_development }
-			}
-		}
+		position = { x = 1 y = 2 }
+		relative_position_id = amo_upgrade_1_3
 
-		any_parent = { naz_upgrade_3_1 naz_upgrade_3_2 naz_upgrade_3_3 }
+		all_parents = { amo_upgrade_2_1 amo_upgrade_2_2 }
 
-		special_trait_background = yes
-
-		position = { x = 4 y = 4 }
-
-		production_bonus = {
-			production_efficiency_cap_factor = 0.05
-			production_efficiency_gain_factor = 0.15
-			production_cost_factor = -0.05
+		equipment_bonus = {
+			reliability = 0.1
+			maximum_speed = 0.1
 		}
 	}
 
 	trait = {
-		token = naz_upgrade_4_2_soc_rus
-		name = naz_upgrade_4_2_soc_rus
-		icon = GFX_icon_naz_MIO
+		token = amo_upgrade_3_1_soc_rus
+		name = amo_upgrade_3_1_soc_rus
+		icon = GFX_icon_amo_MIO
 
 		visible = {
-			FROM = {
-				has_country_flag = RUS_rename_industries
-			}
+			FROM = { has_country_flag = RUS_rename_industries }
 		}
-
-		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_completed_focus = RUS_nizhegorodsky_avtomobilny_focus }
-			}
-		}
-
-		any_parent = { naz_upgrade_3_1 naz_upgrade_3_2 naz_upgrade_3_3 }
 
 		special_trait_background = yes
 
-		position = { x = 4 y = 4 }
-
-		production_bonus = {
-			production_efficiency_cap_factor = 0.05
-			production_efficiency_gain_factor = 0.15
-			production_cost_factor = -0.05
-		}
-	}
-
-	trait = {
-		token = naz_upgrade_4_3
-		name = naz_upgrade_4_3
-		icon = GFX_generic_mio_trait_icon_resources
-
-		any_parent = { naz_upgrade_2_4 }
-
-		position = { x = 8 y = 4 }
-
-		limit_to_equipment_type = {
-			light_tank_artillery_chassis
-			medium_tank_artillery_chassis
-			heavy_tank_artillery_chassis
-			light_tank_destroyer_chassis
-			medium_tank_destroyer_chassis
-			heavy_tank_destroyer_chassis
-			light_tank_aa_chassis
-			medium_tank_aa_chassis
-			heavy_tank_aa_chassis
+		available = {
+			FROM = {
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = has_completed_decision_in_focus
+						DECISION = RUS_modernisation_of_AMO
+						FOCUS = RUS_military_production
+					}
+					has_country_flag = improve_amo
+				}
+			}
 		}
 
-		production_bonus = {
-			production_resource_need_factor = -0.15
+		position = { x = 1 y = 2 }
+		relative_position_id = amo_upgrade_1_3
+
+		all_parents = { amo_upgrade_2_1 amo_upgrade_2_2 }
+
+		equipment_bonus = {
+			reliability = 0.1
+			maximum_speed = 0.1
 		}
 	}
 }
 
-RUS_naz_organisation_lar = { ### For those with AAT and LaR
+RUS_naz_organisation = {
 	name = naz
 	icon = GFX_idea_naz
 	allowed = {
 		is_russian_tag = yes
-	}
-	visible = {
-		has_dlc_lar = yes
 	}
 	available = { FROM = { owns_state = 252 } } #Nizhny Novgorod
 
@@ -14933,10 +13333,15 @@ RUS_naz_organisation_lar = { ### For those with AAT and LaR
 					country_event = { id = russia.1001 days = 1 }
 				}
 			}
-			custom_effect_tooltip = naz_research_funds_share_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_naz_laz_funds_share_tt
+				MIO_1 = naz MIO_2 = laz
+			}
 		}
 		else = {
-			custom_effect_tooltip = naz_research_funds_gain_trigger_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_has_completed_trait_NOT TRAIT = naz_upgrade_1_2
+			}
 		}
 	}
 
@@ -15082,8 +13487,10 @@ RUS_naz_organisation_lar = { ### For those with AAT and LaR
 		mutually_exclusive = { naz_upgrade_1_1 naz_upgrade_1_3 }
 
 		on_complete = {
-			custom_effect_tooltip = naz_research_funds_share_tt
-			FROM = { set_country_flag = naz_research_funds_gain }
+			custom_effect_tooltip = {
+				localization_key = RUS_naz_laz_funds_share_tt
+				MIO_1 = naz MIO_2 = laz
+			}
 			FROM = {
 				248 = {
 					add_extra_state_shared_building_slots = 1
@@ -15093,6 +13500,7 @@ RUS_naz_organisation_lar = { ### For those with AAT and LaR
 						instant_build = yes
 					}
 				}
+				set_country_flag = naz_research_funds_gain
 			}
 		}
 	}
@@ -15320,11 +13728,7 @@ RUS_naz_organisation_lar = { ### For those with AAT and LaR
 		icon = GFX_icon_naz_MIO
 
 		visible = {
-			FROM = {
-				NOT = {
-					has_country_flag = RUS_rename_industries
-				}
-			}
+			FROM = { NOT = { has_country_flag = RUS_rename_industries } }
 		}
 
 		available = {
@@ -15336,8 +13740,7 @@ RUS_naz_organisation_lar = { ### For those with AAT and LaR
 				limit = { FROM = { original_tag = FER } }
 				FROM = { has_completed_focus = FER_return_to_kremlin }
 			}
-			else_if = {
-				limit = { FROM = { original_tag = RSA } }
+			else = {
 				FROM = { has_completed_focus = RUS_secret_weapons_development }
 			}
 		}
@@ -15361,16 +13764,11 @@ RUS_naz_organisation_lar = { ### For those with AAT and LaR
 		icon = GFX_icon_naz_MIO
 
 		visible = {
-			FROM = {
-				has_country_flag = RUS_rename_industries
-			}
+			FROM = { has_country_flag = RUS_rename_industries }
 		}
 
 		available = {
-			if = {
-				limit = { FROM = { original_tag = RUS } }
-				FROM = { has_completed_focus = RUS_nizhegorodsky_avtomobilny_focus }
-			}
+			FROM = { has_completed_focus = RUS_nizhegorodsky_avtomobilny_focus }
 		}
 
 		any_parent = { naz_upgrade_3_1 naz_upgrade_3_2 naz_upgrade_3_3 }
@@ -15438,14 +13836,16 @@ RUS_laz_organisation = {
 				mio:RUS_naz_organisation = {
 					add_mio_funds = 1000
 				}
-				mio:RUS_naz_organisation_lar = {
-					add_mio_funds = 1000
-				}
 			}
-			custom_effect_tooltip = laz_research_funds_share_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_naz_laz_funds_share_tt
+				MIO_1 = laz MIO_2 = naz
+			}
 		}
 		else = {
-			custom_effect_tooltip = laz_research_funds_gain_trigger_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_has_completed_trait_NOT TRAIT = laz_upgrade_1
+			}
 		}
 	}
 
@@ -15479,7 +13879,10 @@ RUS_laz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = laz_research_funds_share_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_naz_laz_funds_share_tt
+				MIO_1 = laz MIO_2 = naz
+			}
 			FROM = { set_country_flag = laz_research_funds_gain }
 		}
 	}
@@ -15635,7 +14038,10 @@ RUS_laz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = RUS_laz_upgrade_2_1_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = laz_upgrade_2_2 TRAIT_2 = laz_upgrade_2_3
+			}
 		}
 	}
 
@@ -15665,7 +14071,10 @@ RUS_laz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = RUS_laz_upgrade_2_2_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = laz_upgrade_2_1 TRAIT_2 = laz_upgrade_2_3
+			}
 		}
 	}
 
@@ -15696,7 +14105,10 @@ RUS_laz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = RUS_laz_upgrade_2_3_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = laz_upgrade_2_1 TRAIT_2 = laz_upgrade_2_2
+			}
 		}
 	}
 
@@ -15723,7 +14135,7 @@ RUS_laz_organisation = {
 	trait = {
 		token = laz_upgrade_2_5
 		name = laz_upgrade_2_5
-		icon = GFX_KR_generic_mio_trait_icon_design_cost
+		icon = GFX_KR_generic_mio_trait_icon_funds
 
 		any_parent = { laz_upgrade_1_1 laz_upgrade_1_2 }
 
@@ -15736,7 +14148,7 @@ RUS_laz_organisation = {
 		}
 
 		organization_modifier = {
-			military_industrial_organization_design_team_change_cost = -0.5
+			military_industrial_organization_funds_gain = 0.1
 		}
 	}
 
@@ -15761,7 +14173,10 @@ RUS_laz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = RUS_laz_upgrade_2_6_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = laz_upgrade_2_7 TRAIT_2 = laz_upgrade_2_8
+			}
 		}
 	}
 
@@ -15790,7 +14205,10 @@ RUS_laz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = RUS_laz_upgrade_2_7_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = laz_upgrade_2_6 TRAIT_2 = laz_upgrade_2_8
+			}
 		}
 	}
 
@@ -15820,7 +14238,10 @@ RUS_laz_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = RUS_laz_upgrade_2_8_tt
+			custom_effect_tooltip = {
+				localization_key = RUS_mutually_exclusive_with
+				TRAIT_1 = laz_upgrade_2_6 TRAIT_2 = laz_upgrade_2_7
+			}
 		}
 	}
 

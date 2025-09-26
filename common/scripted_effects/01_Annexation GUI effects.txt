@@ -72,6 +72,10 @@ recheck_annexations_base = {
 }
 
 recheck_annexations = {
+	if = {
+		limit = { check_variable = { active_annexation_decisions < 1 } }
+		set_variable = { active_annexation_decisions = 1 }
+	}
 	recheck_annexations_base = yes
 	hidden_effect = {
 		country_event = { id = annex.1 days = 1 random_days = 3 }
@@ -123,7 +127,11 @@ refresh_occupation_penalties = {
 
 build_annexation_temp_arrays = {
 	if = {
-		limit = { has_variable = annexation_target:annexation_extra_states^num }
+		limit = {
+			has_variable = annexation_target:annexation_extra_states^num
+			check_variable = { priority_country_@var:annexation_target = 0 } #== already evaluated once through a different state, no need to redo it
+			check_variable = { priority_state_@var:annexation_target = 0 } #== already evaluated once through a different state, no need to redo it
+		}
 		if = {
 			limit = { var:annexation_target = { is_valid_annexation_state = yes } }
 			set_temp_variable = { priority_state_@var:annexation_target = annexation_target }
@@ -139,6 +147,7 @@ build_annexation_temp_arrays = {
 					if = {
 						limit = { NOT = { is_in_array = { owners_@PREV = owner } } }
 						add_to_temp_array = { owners_@PREV = owner }
+						set_temp_variable = { total_score_@var:owner = 0 }
 					}
 
 					### add up total owned strategic value
@@ -159,6 +168,7 @@ build_annexation_temp_arrays = {
 					if = {
 						limit = { NOT = { is_in_array = { owners_@PREV = owner } } }
 						add_to_temp_array = { owners_@PREV = owner }
+						set_temp_variable = { total_score_@var:owner = 0 }
 					}
 
 					### add up total owned strategic value
@@ -207,6 +217,9 @@ check_possible_annexations = {
 				STATE = "[?THIS.annexation_target.GetID]"
 			}
 		}
-		ROOT = { activate_targeted_decision = { decision = annexation_decision target = PREV } }
+		ROOT = {
+			add_to_variable = { active_annexation_decisions = 1 }
+			activate_targeted_decision = { decision = annexation_decision target = PREV }
+		}
 	}
 }

@@ -19,11 +19,13 @@ scripted_gui = {
 			### Martial Law
 			OTT_action_declare_martial_law_button_click = {
 				set_state_flag = { flag = OTT_martial_law_declared days = 250 value = 1 }
-				add_resistance_target = {
-					amount = -35
-					occupier = ROOT
-					days = 250
-					tooltip = OTT_resistance_garrisons
+				FROM = {
+					add_resistance_target = {
+						amount = -35
+						occupier = ROOT
+						days = 250
+						tooltip = OTT_resistance_garrisons
+					}
 				}
 				ROOT = {
 					add_manpower = -150
@@ -37,13 +39,21 @@ scripted_gui = {
 
 			### Bribe Officials
 			OTT_action_install_loyal_administrators_button_click = {
-				ott_decrease_revolt_risk = yes
+				# Decrease unrest level
+				FROM = { ott_decrease_revolt_risk = yes }
 				ROOT = { add_political_power = -20 }
+			}
+
+			### Focus Relief Efforts - Centralists
+			OTT_action_invest_lowest_strata_button_click = {
+				# Decrease unrest level
+				FROM = { ott_decrease_revolt_risk = yes }
+				ROOT = { add_political_power = -25 }
 			}
 
 			### Purge Disloyal Elements
 			OTT_action_purge_disloyal_elements_button_click = {
-				ott_decrease_revolt_risk = yes
+				FROM = { ott_decrease_revolt_risk = yes }
 				ROOT = { add_command_power = -25 }
 			}
 
@@ -78,144 +88,151 @@ scripted_gui = {
 
 			### Loosen Tax Burden
 			OTT_action_loosen_tax_burden_button_click = {
-				set_state_flag = OTT_corruption_applied
-				add_to_variable = {
-					var = corruption
-					value = 1
+				# Calculate amount of added deputies (done like this due to bug with round_temp_variable)
+				set_temp_variable = { OTT_deputy_change = 0 }
+				meta_effect = {
+					text = { set_temp_variable = { OTT_deputy_change = [DEPUTY_CHANGE] } }
+					DEPUTY_CHANGE = "[OTT_GetDeputyChange]"
 				}
-				add_state_modifier = {
-					modifier = {
-						local_building_slots_factor = -0.10
-						local_manpower = -0.25
-					}
-				}
-
-				# Decrease unrest level
-				ott_decrease_revolt_risk = yes
-
-				# Calculate amount of added deputies
-				set_variable = { deputy_calculator = state_population_k }
-				divide_variable = { deputy_calculator = 100 }
-				round_variable = deputy_calculator
-
 				# Add Conservative Deputies
 				if = {
 					limit = { OTT_is_conservative_state = yes }
-					add_to_variable = { ROOT.con_sup_deputies = deputy_calculator }
+					add_to_variable = { ROOT.con_sup_deputies = OTT_deputy_change tooltip = con_sup_tt }
 				}
 				# Add Turkish Nationalist Deputies
 				else_if = {
 					limit = { OTT_is_turkish_nationalist_state = yes }
-					add_to_variable = { ROOT.nat_tur_sup_deputies = deputy_calculator }
+					add_to_variable = { ROOT.nat_tur_sup_deputies = OTT_deputy_change tooltip = nat_tur_sup_tt }
 				}
 				# Add Arab Nationalist Deputies
 				else_if = {
 					limit = { OTT_is_arab_nationalist_state = yes }
-					add_to_variable = { ROOT.nat_ara_sup_deputies = deputy_calculator }
+					add_to_variable = { ROOT.nat_ara_sup_deputies = OTT_deputy_change tooltip = nat_ara_sup_tt }
 				}
 				# Add Independent Deputies
 				else = {
-					add_to_variable = { ROOT.ind_sup_deputies = deputy_calculator }
+					add_to_variable = { ROOT.ind_sup_deputies = OTT_deputy_change tooltip = ind_sup_tt }
 				}
+
+				# Decrease unrest level
+				FROM = { ott_decrease_revolt_risk = yes }
 
 				ROOT = {
 					add_political_power = -10
 					OTT_calc_coalition_strength = yes
 				}
+				custom_effect_tooltip = tooltip_white_line
+				# Add corruption
+				if = {
+					limit = { has_dynamic_modifier = { modifier = OTT_corruption_modifier } }
+					custom_effect_tooltip = {
+						localization_key = tooltip_modify_dynmod
+						DYNMOD = OTT_corruption_modifier
+					}
+				}
+				else = {
+					custom_override_tooltip = {
+						tooltip = {
+							localization_key = tooltip_add_dynmod
+							DYNMOD = OTT_corruption_modifier
+						}
+						add_dynamic_modifier = { modifier = OTT_corruption_modifier }
+					}
+				}
+				add_to_variable = { OTT_corruption_local_building_slots_factor = -0.10 tooltip = local_building_slots_factor_tooltip }
+				add_to_variable = { OTT_corruption_local_manpower = -0.25 tooltip = local_manpower_tooltip }
+				force_update_dynamic_modifier = yes
 			}
 
 			### Increase Tax Burden
 			OTT_action_increase_tax_burden_button_click = {
-				# Increase revolt risk
-				ott_increase_revolt_risk = yes
-				ott_increase_revolt_risk = yes
-
-				# Calculate amount of added deputies
-				set_variable = { deputy_calculator = state_population_k }
-				divide_variable = { deputy_calculator = 100 }
-				round_variable = deputy_calculator
-
+				# Calculate amount of removed deputies (done like this due to bug with round_temp_variable)
+				set_temp_variable = { OTT_deputy_change = 0 }
+				meta_effect = {
+					text = { set_temp_variable = { OTT_deputy_change = [DEPUTY_CHANGE] } }
+					DEPUTY_CHANGE = "[OTT_GetDeputyChange]"
+				}
 				# Remove Conservative Deputies
 				if = {
 					limit = { OTT_is_conservative_state = yes }
-					subtract_from_variable = { ROOT.con_sup_deputies = deputy_calculator }
+					subtract_from_variable = { ROOT.con_sup_deputies = OTT_deputy_change tooltip = con_opp_tt }
 				}
 				# Remove Turkish Nationalist Deputies
 				else_if = {
 					limit = { OTT_is_turkish_nationalist_state = yes }
-					subtract_from_variable = { ROOT.nat_tur_sup_deputies = deputy_calculator }
+					subtract_from_variable = { ROOT.nat_tur_sup_deputies = OTT_deputy_change tooltip = nat_tur_opp_tt }
 				}
 				# Remove Arab Nationalist Deputies
 				else_if = {
 					limit = { OTT_is_arab_nationalist_state = yes }
-					subtract_from_variable = { ROOT.nat_ara_sup_deputies = deputy_calculator }
+					subtract_from_variable = { ROOT.nat_ara_sup_deputies = OTT_deputy_change tooltip = nat_ara_opp_tt }
 				}
 				# Remove Independent Deputies
 				else = {
-					subtract_from_variable = { ROOT.ind_sup_deputies = deputy_calculator }
+					subtract_from_variable = { ROOT.ind_sup_deputies = OTT_deputy_change tooltip = ind_opp_tt }
 				}
-
+				# Increase revolt risk
+				FROM = {
+					custom_override_tooltip = {
+						tooltip = ott_increase_revolt_risk_large_tt
+						ott_increase_revolt_risk = yes
+						ott_increase_revolt_risk = yes
+					}
+				}
 				# Give reward
 				ROOT = {
-					add_political_power = PREV.deputy_calculator
+					meta_effect = {
+						text = { add_political_power = [DEPUTY_CHANGE] }
+						DEPUTY_CHANGE = "[PREV.OTT_GetDeputyChange]"
+					}
 					OTT_calc_coalition_strength = yes
 				}
 			}
 
 			### Crush Corruption
 			OTT_action_crush_corruption_button_click = {
+				remove_dynamic_modifier = { modifier = OTT_corruption_modifier }
 				if = {
-					limit = {
-						check_variable = { corruption > 1 }
-					}
-					add_state_modifier = {
-						modifier = {
-							local_building_slots_factor = 0.20
-							local_manpower = 0.50
-						}
-					}
+					limit = { check_variable = { OTT_corruption_local_building_slots_factor < -0.1 } }
+					ROOT = { add_political_power = -50 }
 				}
 				else = {
-					add_state_modifier = {
-						modifier = {
-							local_building_slots_factor = 0.10
-							local_manpower = 0.25
-						}
-					}
+					ROOT = { add_political_power = -25 }
 				}
-				clear_variable = corruption
-				ROOT = { add_political_power = -50 }
+				clear_variable = OTT_corruption_local_building_slots_factor
+				clear_variable = OTT_corruption_local_manpower
 			}
 
-			### Focus Relief Efforts
+			### Focus Relief Efforts - Federalists
 			OTT_action_focus_relief_efforts_button_click = {
-				# Decrease unrest level
-				ott_decrease_revolt_risk = yes
-
-				# Calculate amount of added deputies
-				set_variable = { deputy_calculator = state_population_k }
-				divide_variable = { deputy_calculator = 100 }
-				round_variable = deputy_calculator
-
+				# Calculate amount of added deputies (done like this due to bug with round_temp_variable)
+				set_temp_variable = { OTT_deputy_change = 0 }
+				meta_effect = {
+					text = { set_temp_variable = { OTT_deputy_change = [DEPUTY_CHANGE] } }
+					DEPUTY_CHANGE = "[OTT_GetDeputyChange]"
+				}
 				# Add Conservative Deputies
 				if = {
 					limit = { OTT_is_conservative_state = yes }
-					add_to_variable = { ROOT.con_sup_deputies = deputy_calculator }
+					add_to_variable = { ROOT.con_sup_deputies = OTT_deputy_change tooltip = con_sup_tt }
 				}
 				# Add Turkish Nationalist Deputies
 				else_if = {
 					limit = { OTT_is_turkish_nationalist_state = yes }
-					add_to_variable = { ROOT.nat_tur_sup_deputies = deputy_calculator }
+					add_to_variable = { ROOT.nat_tur_sup_deputies = OTT_deputy_change tooltip = nat_tur_sup_tt }
 				}
 				# Add Arab Nationalist Deputies
 				else_if = {
 					limit = { OTT_is_arab_nationalist_state = yes }
-					add_to_variable = { ROOT.nat_ara_sup_deputies = deputy_calculator }
+					add_to_variable = { ROOT.nat_ara_sup_deputies = OTT_deputy_change tooltip = nat_ara_sup_tt }
 				}
 				# Add Independent Deputies
 				else = {
-					add_to_variable = { ROOT.ind_sup_deputies = deputy_calculator }
+					add_to_variable = { ROOT.ind_sup_deputies = OTT_deputy_change tooltip = ind_sup_tt }
 				}
+
+				# Decrease unrest level
+				FROM = { ott_decrease_revolt_risk = yes }
 
 				ROOT = {
 					add_political_power = -15
@@ -224,10 +241,15 @@ scripted_gui = {
 			}
 
 			### Centralise
-			OTT_Action_Centralise_button_click = {
-				ott_increase_revolt_risk = yes
-				ott_increase_authority_vilayet = yes
+			OTT_action_centralise_button_click = {
 				ROOT = { add_political_power = -10 }
+				FROM = { ott_increase_revolt_risk = yes }
+				FROM = {
+					custom_override_tooltip = {
+						tooltip = OTT_ottoman_authority_will_increase
+						ott_increase_authority_vilayet = yes
+					}
+				}
 			}
 		}
 
@@ -267,13 +289,36 @@ scripted_gui = {
 				ROOT = {
 					OTT_has_centralist_government = yes
 					NOT = { has_government = national_populist }
+					NOT = { has_country_flag = ott_elected_governors }
 				}
 			}
 			OTT_action_install_loyal_administrators_button_click_enabled = {
 				OTT_revolt_risk_very_low = yes
+				ROOT = { has_completed_focus = OTT_OHF_Membership_Reward_Program }
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = OTT_action_political_power_cost
+						POLITICAL_POWER = 20
+					}
+					ROOT = { has_political_power > 19.99 }
+				}
+				is_controlled_by = ROOT
+			}
+
+			OTT_action_invest_lowest_strata_button_visible = {
 				ROOT = {
-					has_completed_focus = OTT_OHP_Membership_Reward_Program
-					has_political_power > 19.99
+					has_country_flag = ott_elected_governors
+				}
+			}
+			OTT_action_invest_lowest_strata_button_click_enabled = {
+				OTT_revolt_risk_very_low = yes
+				ROOT = { has_completed_focus = OTT_Reorganise_Vilayet_System }
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = OTT_action_political_power_cost
+						POLITICAL_POWER = 25
+					}
+					ROOT = { has_political_power > 24.99 }
 				}
 				is_controlled_by = ROOT
 			}
@@ -284,9 +329,13 @@ scripted_gui = {
 				ROOT = { NOT = { has_completed_focus = OTT_Reform_the_Conscription_System } }
 			}
 			OTT_action_recruit_local_troops_button_click_enabled = {
-				ROOT = {
-					has_war = yes
-					command_power > 29.99
+				ROOT = { has_war = yes }
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = OTT_action_command_power_cost
+						COMMAND_POWER = 30
+					}
+					ROOT = { command_power > 29.99 }
 				}
 				is_controlled_by = ROOT
 			}
@@ -294,23 +343,31 @@ scripted_gui = {
 			## Autonomists Pre-Reorganisation
 			OTT_action_loosen_tax_burden_button_visible = {
 				ROOT = {
-					NOT = { has_completed_focus = OTT_Reorganisation_Commision }
+					NOT = { has_completed_focus = OTT_Reorganisation_Commission }
 					OTT_has_centralist_government = no
 				}
 			}
 			OTT_action_loosen_tax_burden_button_click_enabled = {
 				OTT_is_autonomous_region = no
-				check_variable = {
-					tooltip = OTT_action_loosen_tax_burden_only_twice
-					corruption < 2
+				NOT = {
+					check_variable = {
+						tooltip = OTT_action_loosen_tax_burden_only_twice
+						OTT_corruption_local_building_slots_factor < -0.1
+					}
 				}
-				ROOT = { has_political_power > 9.99 }
 				is_controlled_by = ROOT
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = OTT_action_political_power_cost
+						POLITICAL_POWER = 10
+					}
+					ROOT = { has_political_power > 9.99 }
+				}
 			}
 
 			OTT_action_increase_tax_burden_button_visible = {
 				ROOT = {
-					NOT = { has_completed_focus = OTT_Reorganisation_Commision }
+					NOT = { has_completed_focus = OTT_Reorganisation_Commission }
 					OTT_has_centralist_government = no
 				}
 			}
@@ -323,27 +380,46 @@ scripted_gui = {
 			## Autonomists Post-Reorganisation
 			OTT_action_crush_corruption_button_visible = {
 				ROOT = {
-					has_completed_focus = OTT_Reorganisation_Commision
+					has_completed_focus = OTT_Reorganisation_Commission
 					OTT_has_centralist_government = no
 				}
+				check_variable = { OTT_corruption_local_building_slots_factor < 0 }
 			}
 			OTT_action_crush_corruption_button_click_enabled = {
-				OTT_is_autonomous_region = no
-				has_variable = corruption
-				ROOT = { has_political_power > 49.99 }
 				is_controlled_by = ROOT
+				if = {
+					limit = { check_variable = { OTT_corruption_local_building_slots_factor < -0.1 } }
+					set_temp_variable = { OTT_political_power_requirement = 50 }
+				}
+				else = {
+					set_temp_variable = { OTT_political_power_requirement = 25 }
+				}
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = OTT_action_political_power_cost
+						POLITICAL_POWER = "[?OTT_political_power_requirement]"
+					}
+					add_to_temp_variable = { OTT_political_power_requirement = -0.01 }
+					ROOT = { has_political_power > OTT_political_power_requirement }
+				}
 			}
 
 			OTT_action_focus_relief_efforts_button_visible = {
 				ROOT = {
-					has_completed_focus = OTT_Reorganisation_Commision
+					has_completed_focus = OTT_Reorganisation_Commission
 					OTT_has_centralist_government = no
 				}
 			}
 			OTT_action_focus_relief_efforts_button_click_enabled = {
 				OTT_revolt_risk_very_low = yes
-				ROOT = { has_political_power > 14.99 }
 				is_controlled_by = ROOT
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = OTT_action_political_power_cost
+						POLITICAL_POWER = 15
+					}
+					ROOT = { has_political_power > 14.99 }
+				}
 			}
 
 			## Natpops
@@ -352,22 +428,32 @@ scripted_gui = {
 			}
 			OTT_action_purge_disloyal_elements_button_click_enabled = {
 				OTT_revolt_risk_very_low = yes
-				ROOT = { command_power > 25 }
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = OTT_action_command_power_cost
+						COMMAND_POWER = 25
+					}
+					ROOT = { command_power > 24.99 }
+				}
 				is_controlled_by = ROOT
 			}
 
 		##################
 		# (DE)CENTRALISE #
 		##################
-			OTT_Action_Centralise_button_visible = {
+			OTT_action_centralise_button_visible = {
 				NOT = { state = 773 } #Constantinople
 				ROOT = { OTT_has_centralist_government = yes }
 			}
-			OTT_Action_Centralise_button_click_enabled = {
-				ROOT = {
-					has_political_power > 9.99
-					OTT_has_centralist_government = yes
+			OTT_action_centralise_button_click_enabled = {
+				custom_override_tooltip = {
+					tooltip = {
+						localization_key = OTT_action_political_power_cost
+						POLITICAL_POWER = 10
+					}
+					ROOT = { has_political_power > 9.99 }
 				}
+				ROOT = { OTT_has_centralist_government = yes }
 				OTT_can_centralise = yes
 				is_controlled_by = ROOT
 			}
@@ -384,7 +470,7 @@ scripted_gui = {
 		ai_max_weight_taken_per_test = 500
 
 		ai_weights = {
-			OTT_Action_Centralise_button_click = {
+			OTT_action_centralise_button_click = {
 				ai_will_do = {
 					base = 0
 					modifier = { add = 25	check_variable = { OTT_revolt_risk < 2 } }
@@ -393,7 +479,7 @@ scripted_gui = {
 						factor = 0
 						OR = {
 							OTT_cairo_pact_defeated = no
-							ROOT = { has_idea = ott_parliament_idea }
+							ROOT = { OTT_has_centralist_government = no }
 						}
 					}
 				}
@@ -405,6 +491,14 @@ scripted_gui = {
 				}
 			}
 			OTT_action_install_loyal_administrators_button_click = {
+				ai_will_do = {
+					base = 0
+					modifier = { add = 25	OTT_revolt_risk_medium = yes }
+					modifier = { add = 75	OTT_revolt_risk_high = yes }
+					modifier = { add = 150	OTT_revolt_risk_very_high = yes }
+				}
+			}
+			OTT_action_invest_lowest_strata_button_click = {
 				ai_will_do = {
 					base = 0
 					modifier = { add = 25	OTT_revolt_risk_medium = yes }

@@ -52,6 +52,7 @@ foreign_politics = {
 				OR = {
 					has_completed_focus = CHI_convene_the_peoples_congress
 					has_completed_focus = CHI_empowering_the_presidential_camarilla
+					has_completed_focus = CHI_the_great_premier
 				}
 			}
 			else_if = {
@@ -80,6 +81,16 @@ foreign_politics = {
 					}
 				}
 			}
+			modifier = {
+				factor = 0
+				has_game_rule = { rule = HND_forpol option = HND_FORPOL_CHI }
+				tag = CHI
+				HND = {
+					exists = yes
+					is_subject = no
+					has_socialist_government = yes
+				}
+			}
 		}
 
 		complete_effect = {
@@ -88,6 +99,18 @@ foreign_politics = {
 			if = {
 				limit = { tag = CHI }
 				custom_effect_tooltip = CHI_join_int_decision_warning_tt
+			}
+			if = {
+				limit = {
+					OR = {
+						has_completed_focus = CHI_empowering_the_presidential_camarilla
+						has_completed_focus = CHI_the_great_premier
+					}
+				}
+				CHI_zeng_zhongming = {
+					add_temp_unit_leader_role = yes
+					unit_leader_event = CHI.endgame.047
+				}
 			}
 		}
 	}
@@ -491,11 +514,11 @@ political_actions = {
 		}
 
 		available = {
-			custom_trigger_tooltip = {
+			custom_override_tooltip = {
 				tooltip = LEC_at_war_for_six_months_tooltip
 				has_country_flag = { flag = LEC_war days > 180 }
 			}
-			custom_trigger_tooltip = {
+			custom_override_tooltip = {
 				tooltip = LEC_controlled_by_council_backer_tooltip
 				NOT = {
 					any_owned_state = {
@@ -616,6 +639,7 @@ chinese_unification = {
 					}
 					bypass_recruitment = no
 					available_to_spy_master = yes
+					female = yes
 					nationalities = { JAP LEC QIE FNG CHI LEP ANQ HNN GXC YUN SZC SHX SHD XSM SIK KUM }
 				}
 				set_global_flag = CHN_zheng_pingru_recruited_flag
@@ -624,7 +648,7 @@ chinese_unification = {
 				every_other_country = {
 					limit = {
 						is_chinese_tag = yes
-						is_ai = no
+						#is_ai = no - this event now does something.
 					}
 					country_event = china_events.25
 				}
@@ -721,6 +745,179 @@ chinese_unification = {
 					country_event = china_events.25
 				}
 				news_event = { id = china_events.26 days = 5 }
+				SHX = { country_event = { id = shx_zhifeng.106 days = 30 } } #A War of Resistance - give it some time so the player has a chance to join the CUF
+			}
+		}
+	}
+	china_northeastern_gambit = { #This basically forms the United Front while at peace with Japan once Japan goes to war with GEA.
+		icon = GFX_decision_fengtian
+		priority = 100
+
+		allowed = {
+			NOT = { original_tag = FNG }
+			NOT = { original_tag = KUM } #manually activated by KUM_set_as_chinese_tag
+		}
+
+		available = {
+			JAP = {
+				has_war_with = GEA
+			}
+		}
+
+		visible = {
+			JAP = {
+				is_major = yes
+				is_subject = no
+				var:716.owner = {
+					#owns_state = 524 #Taiwan - on second thought for the sake of lore consistency lets leave this only open if Japan has influence in Manchuria. If you have Dongbei but not Taiwan, invade Japan the normal way.
+					OR = {
+						is_working_with_JAP = yes #Covers pro-JAP FNG
+						is_ally_with = JAP #Covers MAN
+					}
+				}
+			}
+			NOT = { has_war_with = JAP } #This is for if you're at peace with them only
+			has_civil_war = no
+			NOT = { has_event_target = china_united_front_leader }
+			NOT = { has_global_flag = china_united }
+			NOT = { has_global_flag = china_united_front_defeated }
+			is_subject = no
+			is_in_faction = no
+			is_working_with_JAP = no
+			if = {
+				limit = { original_tag = KUM }
+				OR = {
+					has_country_leader = { character = SIK_fan_yaonan }
+					has_country_leader = { character = XSM_ma_zhongying }
+				}
+			}
+			if = {
+				#Prioritise largest Chinese tag as long as it isn't pro-Japanese
+				limit = { CHN = { is_working_with_JAP = no } }
+				tag = CHN
+			}
+			else_if = {
+				#Next is owner of Beijing
+				limit = {
+					608.owner = {
+						is_chinese_tag = yes
+						is_working_with_JAP = no
+					}
+				}
+				owns_state = 608 #Beijing
+			}
+			else_if = {
+				#Next is owner of Nanjing
+				limit = {
+					613.owner = {
+						is_chinese_tag = yes
+						is_working_with_JAP = no
+					}
+				}
+				owns_state = 613 #Beijing
+			}
+			else_if = {
+				#Next is owner of Wuhan
+				limit = {
+					1048.owner = {
+						is_chinese_tag = yes
+						is_working_with_JAP = no
+					}
+				}
+				owns_state = 1048 #Wuhan
+			}
+			else_if = {
+				#Next is owner of Guangzhou
+				limit = {
+					592.owner = {
+						is_chinese_tag = yes
+						is_working_with_JAP = no
+					}
+				}
+				owns_state = 592 #Guangzhou
+			}
+			else_if = {
+				#Last is owner of Chongqing
+				limit = {
+					650.owner = {
+						is_chinese_tag = yes
+						is_working_with_JAP = no
+					}
+				}
+				owns_state = 650 #Chongqing
+			}
+		}
+
+		cost = 0
+		fire_only_once = yes
+
+		ai_will_do = { factor = 1000 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete china_northeastern_gambit"
+			declare_war_on = {
+				target = JAP
+				type = annex_everything
+			}
+			if = {
+				limit = {
+					var:716.owner = { #Liaoning/Shenyang - covers FNG and MAN
+						OR = {
+							is_ally_with = JAP
+							is_working_with_JAP = yes
+						}
+						NOT = { tag = JAP }
+					}
+				}
+				declare_war_on = {
+					target = 716.owner
+					type = annex_everything
+				}
+			}
+			save_global_event_target_as = china_united_front_leader
+			create_faction = chinese_united_front
+			set_country_flag = was_in_united_front
+			set_rule = {
+				can_not_declare_war = yes
+				desc = china_cannot_declare_war_while_in_united_front
+			}
+			every_other_country = {
+				limit = {
+					is_chinese_tag = yes
+					is_in_faction = no
+				}
+				set_country_flag = china_united_front_can_join_factions
+				set_rule = { can_join_factions = yes }
+			}
+			if = {
+				limit = {
+					has_dlc_lar = yes
+					NOT = { has_global_flag = CHN_zheng_pingru_recruited_flag }
+					has_war_with = JAP
+				}
+				create_operative_leader = {
+					name = CHN_zheng_pingru
+					GFX = GFX_portrait_CHN_zheng_pingru_operative
+					traits = {
+						operative_seducer
+						operative_well_groomed
+						operative_political_connections
+					}
+					bypass_recruitment = no
+					available_to_spy_master = yes
+					nationalities = { JAP LEC QIE FNG CHI LEP ANQ HNN GXC YUN SZC SHX SHD XSM SIK KUM }
+				}
+				set_global_flag = CHN_zheng_pingru_recruited_flag
+			}
+			hidden_effect = {
+				every_other_country = {
+					limit = {
+						is_chinese_tag = yes
+						#is_ai = no - this event now does something
+					}
+					country_event = china_events.30 #The Northeastern Gambit
+				}
+				news_event = { id = china_events.31 days = 5 } #China Enters the Great Seas War
 				SHX = { country_event = { id = shx_zhifeng.106 days = 30 } } #A War of Resistance - give it some time so the player has a chance to join the CUF
 			}
 		}
@@ -960,11 +1157,11 @@ chinese_unification = {
 		}
 
 		available = {
-			custom_trigger_tooltip = {
+			custom_override_tooltip = {
 				tooltip = china_no_rival_governments_left_tt
 				china_no_rival_governments_left = yes
 			}
-			custom_trigger_tooltip = {
+			custom_override_tooltip = {
 				tooltip = china_is_CHN_tt
 				tag = CHN
 			}
@@ -977,20 +1174,16 @@ chinese_unification = {
 					has_completed_focus = FNG_Restore_1923_Constitution
 				}
 				if = {
-					limit = {
-						FNG_JAP_hostile = no
-					}
-					AND = {
-						592 = { owner = { is_ally_with = ROOT } }
-						608 = { owner = { is_ally_with = ROOT } }
-						613 = { owner = { is_ally_with = ROOT } }
-						650 = { owner = { is_ally_with = ROOT } }
-						716 = { owner = { is_ally_with = ROOT } }
-						1048 = { owner = { is_ally_with = ROOT } }
-					}
+					limit = { FNG_JAP_hostile = no }
+					592 = { owner = { is_ally_with = ROOT } } #Guangzhou
+					608 = { owner = { is_ally_with = ROOT } } #Beijing
+					613 = { owner = { is_ally_with = ROOT } } #Nanjing
+					650 = { owner = { is_ally_with = ROOT } } #Chongqing
+					716 = { owner = { is_ally_with = ROOT } } #Shenyang
+					1048 = { owner = { is_ally_with = ROOT } } #Wuhan
 				}
 				else = {
-					custom_trigger_tooltip = {
+					custom_override_tooltip = {
 						tooltip = china_states_required_tt
 						592 = { is_owned_by_ROOT_or_subject = yes } #Guangzhou
 						608 = { is_owned_by_ROOT_or_subject = yes } #Beijing
@@ -1002,20 +1195,16 @@ chinese_unification = {
 				}
 			}
 			else_if = {
-				limit = {
-					is_subject = yes
-				}
-				AND = {
-					592 = { owner = { is_ally_with = ROOT } }
-					608 = { owner = { is_ally_with = ROOT } }
-					613 = { owner = { is_ally_with = ROOT } }
-					650 = { owner = { is_ally_with = ROOT } }
-					716 = { owner = { is_ally_with = ROOT } }
-					1048 = { owner = { is_ally_with = ROOT } }
-				}
+				limit = { is_subject = yes }
+				592 = { owner = { is_ally_with = ROOT } } #Guangzhou
+				608 = { owner = { is_ally_with = ROOT } } #Beijing
+				613 = { owner = { is_ally_with = ROOT } } #Nanjing
+				650 = { owner = { is_ally_with = ROOT } } #Chongqing
+				716 = { owner = { is_ally_with = ROOT } } #Shenyang
+				1048 = { owner = { is_ally_with = ROOT } } #Wuhan
 			}
 			else = {
-				custom_trigger_tooltip = {
+				custom_override_tooltip = {
 					tooltip = china_states_required_tt
 					592 = { is_owned_by_ROOT_or_subject = yes } #Guangzhou
 					608 = { is_owned_by_ROOT_or_subject = yes } #Beijing
@@ -1026,15 +1215,6 @@ chinese_unification = {
 				}
 			}
 			surrender_progress < 0.05
-			#if = {
-			#	limit = {
-			#		OR = {
-			#			tag = NPA
-			#			has_global_flag = NPA_revolt
-			#		}
-			#	}
-			#	has_global_flag = NPA_secured
-			#}
 			OR = {
 				NOT = { has_war_with = JAP }
 				JAP = { has_capitulated = yes }
@@ -1071,6 +1251,7 @@ chinese_unification = {
 		complete_effect = {
 			log = "[GetLogRoot]: Decision complete china_declare_unification"
 			set_global_flag = china_united
+			CHN_scientist_transfer_effect = yes
 			if = {
 				limit = { original_tag = QIE }
 				if = {
@@ -1102,7 +1283,7 @@ chinese_unification = {
 			else_if = {
 				limit = { original_tag = FNG }
 				if = {
-					limit = { has_government = market_liberal }
+					limit = { china_alignment_geacps = yes }
 					set_cosmetic_tag = FNG_JAP_united_china
 					log = "KR_Event_Logging;CHINA UNITED BY Japan (FNG is a puppet)"
 					hidden_effect = { news_event = china_events.304 }
@@ -1653,6 +1834,8 @@ chinese_unification = {
 	}
 
 	china_attack_decision = {
+		name = attack_country
+		desc = china_attack_decision_desc
 		icon = generic_prepare_civil_war
 
 		allowed = { always = no } #activated by effect
@@ -1660,6 +1843,7 @@ chinese_unification = {
 		available = {
 			NOT = { has_rule = can_not_declare_war } #united front
 			NOT = { has_non_aggression_pact_with = FROM }
+			NOT = { has_truce_with = FROM }
 			if = {
 				limit = { FROM = { is_subject = yes } }
 				NOT = { has_non_aggression_pact_with = FROM.overlord }
@@ -1769,19 +1953,16 @@ chinese_unification = {
 			}
 			modifier = {
 				factor = 0
-				country_exists = QIE #this shouldnt apply if QIE doesnt exist obviously
-				NOT = { FROM = { original_tag = QIE } } #This doesnt apply to QIE
+				country_exists = QIE #Follow this logic only if QIE still exists
+				NOT = { original_tag = QIE } #Ignore this logic if original tag is QIE
+				NOT = { FROM = { original_tag = QIE } } #Dont attack warlords that arent QIE
 				NOT = {
 					FROM = {
 						is_subject = yes
-						overlord = { original_tag = QIE } #same as above but checking for puppets
+						overlord = { original_tag = QIE } #Dont attack warlords that arent QIEs puppets
 					}
 				}
-				NOT = { has_war_with = QIE } #warlords will try to attack QIE over other warlords if any of the following are true
-				OR = {
-					QIE = { has_war = yes } #warlords will try to attack QIE if theyre already at war
-					QIE = { default_attack_AI_trigger = no } #warlords will try to attack QIE if theyre weaker than them
-				}
+				NOT = { has_war_with = QIE } #Follow this logic only if not already at war with QIE
 			}
 			modifier = {
 				factor = 0
@@ -1932,6 +2113,28 @@ chinese_unification = {
 			setup_decision_attack_AI = yes
 			FROM = { incoming_war_notification_effect = yes }
 			set_country_flag = { flag = china_attack_decision_one_month_cooldown days = 30 value = 1 }
+			if = {
+				limit = {
+					OR = {
+						has_military_access_to = FROM
+						FROM = { has_military_access_to = ROOT }
+					}
+				}
+				FROM = {
+					diplomatic_relation = {
+						country = ROOT
+						relation = military_access
+						active = no
+					}
+				}
+				ROOT = {
+					diplomatic_relation = {
+						country = FROM
+						relation = military_access
+						active = no
+					}
+				}
+			}
 		}
 
 		remove_effect = {
@@ -1962,7 +2165,7 @@ chinese_unification = {
 
 		available = {
 			NOT = { has_non_aggression_pact_with = GXC }
-			custom_trigger_tooltip = {
+			custom_override_tooltip = {
 				tooltip = china_joint_strike_tooltip
 				NOT = { has_country_flag = china_sent_strike_offer } #to prevent you from sending to more than one at the same time
 			}
@@ -2677,11 +2880,11 @@ chinese_unification = {
 
 		available = {
 			has_war = no
-			custom_trigger_tooltip = {
+			custom_override_tooltip = {
 				tooltip = china_half_strength_of_overlord_tt
 				var:overlord = { strength_ratio = { tag = ROOT ratio < 2 } }
 			}
-			custom_trigger_tooltip = {
+			custom_override_tooltip = {
 				tooltip = china_has_been_365_days_tt
 				NOT = { has_country_flag = china_submission_mandatory_loyalty_timer_flag }
 			}
@@ -3344,6 +3547,11 @@ chinese_unification = {
 				tag = HNN
 				has_country_leader = { character = HNN_cheng_qian }
 				OR = {
+					AND = { #Cheng Qian should wait for the GXC civil war to start to see if Li Zongren takes over
+						GXC = { china_is_aligned_with_federalists = yes }
+						GXC = { has_war = no }
+						NOT = { has_global_flag = GXC_civil_war_over }
+					}
 					any_country_with_original_tag = {
 						original_tag_to_check = GXC
 						exists = yes

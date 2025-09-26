@@ -1,25 +1,51 @@
 CAN_transfer_iedc_leadership = {
-	clr_country_flag = CAN_refused_iedc
 	if = {
-		limit = { has_event_target = iedc_leader }
-		event_target:iedc_leader = { remove_ideas = CAN_iedc_main }
+		limit = {
+			OR = {
+				is_in_economic_sphere = no
+				AND = {
+					has_event_target = iedc_leader
+					event_target:iedc_leader = { is_leader_of_economic_sphere_of_PREV = yes }
+				}
+			}
+		}
+		CAN_add_to_iedc = yes
+		if = {
+			limit = { has_event_target = iedc_leader }
+			event_target:iedc_leader = { remove_ideas = CAN_iedc_main }
+		}
+		add_ideas = CAN_iedc_main
+		set_economic_sphere_leader = yes
 	}
-	add_ideas = CAN_iedc_main
-	set_economic_sphere_leader = yes
+}
+
+CAN_add_to_iedc = {
+	if = {
+		limit = { ENT_is_in_iedc = no }
+		custom_effect_tooltip = CAN_joins_iedc
+		set_country_flag = CAN_joined_iedc
+		clr_country_flag = CAN_invited_to_iedc
+		clr_country_flag = CAN_refused_iedc
+		set_temp_variable = { sphere_target = THIS }
+		event_target:iedc_leader = {
+			add_to_economic_sphere = yes
+			reverse_add_opinion_modifier = { target = PREV modifier = CAN_iedc_member }
+		}
+	}
 }
 
 CAN_remove_from_iedc = {
 	if = {
-		limit = { has_country_flag = CAN_joined_iedc }
+		limit = { ENT_is_in_iedc = yes }
 		custom_effect_tooltip = CAN_leave_the_iedc
-		clr_country_flag = CAN_joined_iedc
+		CAN_remove_from_iedc_effect = yes
 		set_temp_variable = { sphere_target = THIS }
 		event_target:iedc_leader = { remove_from_economic_sphere = yes }
-		CAN_remove_from_iedc_effect = yes
 	}
 }
 
 CAN_remove_from_iedc_effect = {
+	clr_country_flag = CAN_joined_iedc
 	if = {
 		limit = { has_idea = CAN_iedc_econ1 }
 		remove_ideas = CAN_iedc_econ1
@@ -180,6 +206,10 @@ CAN_find_entente_leader = {
 CAN_transfer_entente_leader = {
 	if = {
 		limit = { NOT = { tag = ENT } }
+		if = {
+			limit = { ENT = { tag = event_target:iedc_leader } }
+			CAN_transfer_iedc_leadership = yes
+		}
 		set_faction_leader = yes
 		save_global_event_target_as = KR_entente_leader
 		if = {
@@ -208,10 +238,6 @@ CAN_transfer_entente_leader = {
 				}
 				add_ideas = CAN_darkest_hour
 			}
-		}
-		if = {
-			limit = { has_global_flag = CAN_iedc_created }
-			CAN_transfer_iedc_leadership = yes
 		}
 	}
 }
@@ -322,6 +348,10 @@ CAN_transfer_king_base = {
 				add_offsite_building = { type = arms_factory level = tempvar2 }
 				clear_variable = tempvar2
 			}
+		}
+		if = {
+			limit = { tag = CAN }
+			CAN_disable_returning_home_decisions = yes
 		}
 	}
 	set_variable = { king_civ_factories = 0 }
@@ -451,6 +481,10 @@ CAN_transfer_king_base = {
 	if = {
 		limit = { NOT = { tag = GBR } }
 		CAN_calc_exile_influence_effects = yes
+	}
+	if = {
+		limit = { tag = CAN }
+		CAN_enable_returning_home_decisions = yes
 	}
 	if = {
 		limit = {
@@ -708,76 +742,56 @@ CAN_improve_french_tensions_idea = {
 	}
 }
 
-CAN_reduce_french_resistance = {
-	hidden_effect = {
-		if = {
-			limit = { has_dynamic_modifier = { modifier = CAN_french_resistance_3 } }
-			remove_dynamic_modifier = { modifier = CAN_french_resistance_3 }
-			add_dynamic_modifier = { modifier = CAN_french_resistance_2 }
-		}
-		else_if = {
-			limit = { has_dynamic_modifier = { modifier = CAN_french_resistance_2 } }
-			remove_dynamic_modifier = { modifier = CAN_french_resistance_2 }
-			add_dynamic_modifier = { modifier = CAN_french_resistance_1 }
-		}
-		else_if = {
-			limit = { has_dynamic_modifier = { modifier = CAN_french_resistance_1 } }
-			remove_dynamic_modifier = { modifier = CAN_french_resistance_1 }
-		}
-	}
-}
-
-CAN_create_uk_cores = {
-	ENG = {
-		every_core_state = {
-			add_core_of = GBR
-			remove_claim_by = CAN
-		}
-	}
-	every_state = {
-		limit = {
-			is_canada = no
-			NOT = { is_core_of = CAN }
-			NOT = { is_claimed_by = CAN }
-		}
-		CAN = { clear_variable = PREV.ambition_area_@THIS } #tag alias
-	}
-}
-
-CAN_release_uk = {
-	GBR = {
-		every_core_state = {
-			limit = { is_owned_by_ROOT_or_subject = yes }
-			transfer_state_to = GBR
-			restore_previous_factory_count = yes
-		}
-	}
+CAN_reduce_quebecois_resistance = {
 	if = {
-		limit = {
-			original_tag = IMP
-			CAN_is_dominion = yes
-		}
-		every_owned_state = {
-			limit = {
-				is_british_colonial_claim = yes
-				NOT = { is_core_of = ROOT }
-				NOT = { has_variable = ambition_area_@ROOT }
+		limit = { has_dynamic_modifier = { modifier = CAN_quebecois_resistance_modifier } }
+		if = {
+			limit = { CAN_quebec_resistance_level_1 = yes }
+			remove_dynamic_modifier = { modifier = CAN_quebecois_resistance_modifier }
+			clear_variable = CAN_qr_state_resources_factor
+			clear_variable = CAN_qr_local_factory_sabotage
+			clear_variable = CAN_qr_local_manpower
+			hidden_effect = {
+				ROOT = { remove_targeted_decision = { decision = CAN_suppress_quebecois_state target = PREV } }
 			}
-			remove_claim_by = ROOT
-			save_current_factory_count = yes
-			transfer_state_to = GBR
-			restore_previous_factory_count = yes
+		}
+		else = {
+			custom_effect_tooltip = {
+				localization_key = tooltip_modify_dynmod
+				DYNMOD = CAN_quebecois_resistance_modifier
+			}
+			add_to_variable = {
+				CAN_qr_state_resources_factor = 0.2
+				tooltip = state_resources_factor_tooltip
+			}
+			add_to_variable = {
+				CAN_qr_local_manpower = 0.2
+				tooltip = local_manpower_tooltip
+			}
+			add_to_variable = {
+				CAN_qr_local_factory_sabotage = -0.1
+				tooltip = local_factory_sabotage_tooltip
+			}
 		}
 	}
 	else = {
-		every_owned_state = {
-			limit = {
-				is_british_colonial_claim = yes
-				is_claim_or_core_or_ambition_of_ROOT = no
+		effect_tooltip = {
+			custom_effect_tooltip = {
+				localization_key = tooltip_modify_dynmod
+				DYNMOD = CAN_quebecois_resistance_modifier
 			}
-			save_current_factory_count = yes
-			transfer_state_to = GBR
-			restore_previous_factory_count = yes
+			add_to_variable = {
+				CAN_qr_state_resources_factor = 0.2
+				tooltip = state_resources_factor_tooltip
+			}
+			add_to_variable = {
+				CAN_qr_local_manpower = 0.2
+				tooltip = local_manpower_tooltip
+			}
+			add_to_variable = {
+				CAN_qr_local_factory_sabotage = -0.1
+				tooltip = local_factory_sabotage_tooltip
+			}
 		}
 	}
 }
@@ -1355,17 +1369,6 @@ CAN_revert_british_pm_slots = {
 	}
 }
 
-CAN_setup_uk_government = {
-	CAN = {
-		every_character = {
-			limit = { has_character_flag = GBR_character }
-			set_nationality = GBR
-		}
-	}
-	CAN_convert_british_pm_slots = yes
-	CAN_add_british_pm = yes
-}
-
 CAN_add_british_pm = {
 	hidden_effect = { CAN_remove_current_british_pm = yes }
 	if = {
@@ -1487,25 +1490,18 @@ CAN_activate_resources_decisions = {		# Used for american tags in annex canada e
 }
 
 CAN_setup_NEE_suppression_decisions = {
-	activate_targeted_decision = { target = 357 decision = CAN_put_down_rebellion }
-	activate_targeted_decision = { target = 934 decision = CAN_put_down_rebellion }
-	activate_targeted_decision = { target = 933 decision = CAN_put_down_rebellion }
-	activate_targeted_decision = { target = 932 decision = CAN_put_down_rebellion }
-	activate_targeted_decision = { target = 935 decision = CAN_put_down_rebellion }
-	activate_targeted_decision = { target = 931 decision = CAN_put_down_rebellion }
-	activate_targeted_decision = { target = 796 decision = CAN_put_down_rebellion }
-	activate_targeted_decision = { target = 930 decision = CAN_put_down_rebellion }
+	every_state = {
+		limit = { is_new_england = yes }
+		PREV = { activate_targeted_decision = { decision = CAN_put_down_rebellion target = PREV } }
+		WCA = { activate_targeted_decision = { decision = CAN_extend_yankee_rebellion target = PREV } }
+	}
 }
 
 CAN_teardown_NEE_suppression_decisions = {
-	remove_targeted_decision = { target = 357 decision = CAN_put_down_rebellion }
-	remove_targeted_decision = { target = 934 decision = CAN_put_down_rebellion }
-	remove_targeted_decision = { target = 933 decision = CAN_put_down_rebellion }
-	remove_targeted_decision = { target = 932 decision = CAN_put_down_rebellion }
-	remove_targeted_decision = { target = 935 decision = CAN_put_down_rebellion }
-	remove_targeted_decision = { target = 931 decision = CAN_put_down_rebellion }
-	remove_targeted_decision = { target = 796 decision = CAN_put_down_rebellion }
-	remove_targeted_decision = { target = 930 decision = CAN_put_down_rebellion }
+	every_state = {
+		limit = { is_new_england = yes }
+		PREV = { remove_targeted_decision = { decision = CAN_put_down_rebellion target = PREV } }
+	}
 }
 
 entente_add_reclamation_wars_threat = {
@@ -1710,4 +1706,49 @@ CAN_add_starting_variants = {
 			}
 		}
 	}
+}
+
+CAN_enable_returning_home_decisions = {
+	activate_targeted_decision = { decision = CAN_attack_uob target = ENG }
+	activate_targeted_decision = { decision = CAN_attack_uob target = GBP }
+
+	activate_targeted_decision = { decision = CAN_all_hands_on_deck target = ENG }
+
+	if = {
+		limit = { has_completed_focus = CAN_contact_loyalists }
+		activate_targeted_decision = { decision = CAN_contact_british_loyalists target = ENG }
+		activate_targeted_decision = { decision = CAN_contact_northern_irish_loyalists target = IRE }
+		activate_targeted_decision = { decision = CAN_contact_northern_irish_loyalists target = ENG }
+	}
+
+	if = {
+		limit = { has_completed_focus = CAN_within_arms_reach }
+		activate_targeted_decision = { decision = CAN_bailout_iceland target = ICE }
+		activate_targeted_decision = { decision = CAN_fund_icelandic_resistance target = ICE }
+
+		activate_targeted_decision = { decision = CAN_approach_ireland target = IRE }
+		activate_targeted_decision = { decision = CAN_reconcile_with_ireland target = IRE }
+	}
+
+	activate_targeted_decision = { decision = CAN_seize_greenland target = DEN }
+	activate_targeted_decision = { decision = CAN_build_base_greenland target = 101 }
+}
+
+CAN_disable_returning_home_decisions = {
+	remove_targeted_decision = { decision = CAN_attack_uob target = ENG }
+	remove_targeted_decision = { decision = CAN_attack_uob target = GBP }
+
+	remove_targeted_decision = { decision = CAN_all_hands_on_deck target = ENG }
+
+	remove_targeted_decision = { decision = CAN_contact_british_loyalists target = ENG }
+	remove_targeted_decision = { decision = CAN_contact_northern_irish_loyalists target = IRE }
+	remove_targeted_decision = { decision = CAN_contact_northern_irish_loyalists target = ENG }
+
+	remove_targeted_decision = { decision = CAN_bailout_iceland target = ICE }
+	remove_targeted_decision = { decision = CAN_fund_icelandic_resistance target = ICE }
+
+	remove_targeted_decision = { decision = CAN_approach_ireland target = IRE }
+	remove_targeted_decision = { decision = CAN_reconcile_with_ireland target = IRE }
+
+	remove_targeted_decision = { decision = CAN_seize_greenland target = DEN }
 }

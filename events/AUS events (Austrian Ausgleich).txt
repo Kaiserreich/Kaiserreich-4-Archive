@@ -1806,8 +1806,8 @@ country_event = {
 		}
 	}
 	option = { # Great!
-		log = "[GetLogInfo]: event ausgleich.new.332 option ausgleich.new.332.a"
-		name = ausgleich.new.332.a
+		log = "[GetLogInfo]: event ausgleich.new.332 option ausgleich.new.332.b"
+		name = ausgleich.new.332.b
 		trigger = {
 			OR = {
 				AND = {
@@ -2424,20 +2424,35 @@ country_event = { #integrating the subjects
 				}
 				add_core_of = ROOT
 			}
-			if = {
-				limit = { tag = HUN }
-				AUS_remove_monarchy = yes
+			hidden_effect = {
+				if = {
+					limit = { tag = HUN }
+					AUS_remove_monarchy = yes
+				}
+				else_if = {
+					limit = { tag = GAL }
+					GAL_remove_karl_albrecht = yes
+				}
+				delete_unit = { disband = yes }
 			}
-			else_if = {
-				limit = { tag = GAL }
-				GAL_remove_karl_albrecht = yes
+			custom_effect_tooltip = tooltip_white_line
+			every_unit_leader = {
+				limit = { has_variable = nationality } #ignore AI-generated generics
+				demote_to_general = yes
+				set_nationality = ROOT
 			}
-			delete_unit = { disband = yes }
+			custom_effect_tooltip = tooltip_white_line
+			every_scientist = {
+				limit = { has_variable = nationality } #ignore AI-generated generics
+				set_nationality = ROOT
+			}
 		}
+		custom_effect_tooltip = tooltip_white_line
 		annex_country = {
 			target = FROM
 			transfer_troops = yes
 		}
+		custom_effect_tooltip = tooltip_white_line
 		if = {
 			limit = { has_idea = AUS_military_integration }
 			modify_timed_idea = {
@@ -2588,7 +2603,8 @@ country_event = { #MilOcc revolts
 				limit = { tag = CZE }
 				event_target:system = {
 					every_character = {
-						limit = { has_character_flag = CZE_character }
+						limit = { ROOT = { original_tag = var:PREV.nationality } }
+						set_character_flag = { flag = CZE_character value = 1 days = 16 }
 						set_nationality = CZE
 					}
 				}
@@ -2601,6 +2617,12 @@ country_event = { #MilOcc revolts
 		name = ausgleich.new.900.a
 		if = {
 			limit = { tag = CZE }
+			SLO = {
+				every_core_state = {
+					limit = { NOT = { is_core_of = ROOT } }
+					add_claim_by = ROOT
+				}
+			}
 			CZE_change_portraits = yes
 			custom_effect_tooltip = tooltip_white_line
 			custom_effect_tooltip = characters_will_be_recruited
@@ -2793,88 +2815,6 @@ country_event = { #MilOcc revolts (for AUS)
 	}
 }
 
-country_event = { #Vienna gone insane
-	id = ausgleich.new.90000
-	title = ausgleich.new.90000.t
-	desc = ausgleich.new.90000.d
-	picture = GFX_report_event_gre_diplomacy
-
-	is_triggered_only = yes
-
-	option = { #Inform Vienna of our decision.
-		log = "[GetLogInfo]: event ausgleich.new.90000 option ausgleich.new.90000.a"
-		name = ausgleich.new.90000.a
-
-		ai_chance = { base = 0 }
-
-		leave_faction = yes
-		if = {
-			limit = {
-				original_tag = POL
-			}
-			country_event = { id = poland.284 } #GER asks POL to join RP
-		}
-		else_if = {
-			limit = {
-				original_tag = UKR
-			}
-			UKR_update_military = yes
-			country_event = { id = ukraine_forpol.34 }
-		}
-	}
-
-	option = { #Ask if the Galicians wish to join us.
-		log = "[GetLogInfo]: event ausgleich.new.90000 option ausgleich.new.90000.b"
-		name = ausgleich.new.90000.b
-
-		trigger = {
-			OR = {
-				original_tag = POL
-				AND = {
-					original_tag = UKR
-					NOT = { has_country_flag = POL_galicia_ask_only }
-				}
-			}
-		}
-
-		leave_faction = yes
-		if = {
-			limit = {
-				original_tag = POL
-				NOT = { owns_state = 88 } #Krakow
-			}
-			country_event = { id = poland.284 } #GER asks POL to join RP
-			var:88.owner = {
-				if = {
-					limit = { is_subject = yes }
-					OVERLORD = { country_event = { id = poland.233 days = 1 } }
-				}
-				else = { country_event = { id = poland.233 days = 1 } }
-			}
-		}
-		else_if = {
-			limit = {
-				original_tag = UKR
-				NOT = { owns_state = 89 } #Stanislawow
-			}
-			country_event = { id = ukraine_forpol.34 } #GER asks UKR to join RP
-			var:89.owner = {
-				if = {
-					limit = { is_subject = yes }
-					overlord = { country_event = { id = ukraine_republican.100 days = 1 } }
-				}
-				else_if = {
-					limit = { owns_state = 88 }
-					country_event = { id = ukraine_republican.100 days = 1 }
-				}
-				else = {
-					country_event = { id = poland.246 days = 1 }
-				}
-			}
-		}
-	}
-}
-
 # CZE events
 country_event = { #Czechia pleads for support
 	id = ausgleich.new.901
@@ -3025,10 +2965,6 @@ country_event = { #Serbia accepts
 		log = "[GetLogInfo]: event ausgleich.new.902 option ausgleich.new.902.a"
 		name = ausgleich.new.902.a
 		trigger = { tag = CZE }
-		add_state_claim = 70
-		add_state_claim = 71
-		add_state_claim = 73
-		add_state_claim = 1090
 	}
 
 	option = {
@@ -3521,6 +3457,7 @@ country_event = { #Austria seeks union with Germany
 
 	option = {
 		log = "[GetLogInfo]: event ausgleich.new.916 option ausgleich.new.916.a"
+		log = "KR_Event_Logging;AUSTRIA ANNEXED INTO GERMANY"
 		name = ausgleich.new.916.a #Greater Germany has been achieved.
 		every_state = {
 			limit = { is_core_austria = yes }
@@ -3735,6 +3672,88 @@ country_event = { #Serbia Annexes Illyria
 		name = ausgleich.new.920.c
 		trigger = {
 			NOT = { can_declare_war_on = FROM }
+		}
+	}
+}
+
+country_event = { #Vienna gone insane
+	id = ausgleich.new.1000
+	title = ausgleich.new.1000.t
+	desc = ausgleich.new.1000.d
+	picture = GFX_report_event_gre_diplomacy
+
+	is_triggered_only = yes
+
+	option = { #Inform Vienna of our decision.
+		log = "[GetLogInfo]: event ausgleich.new.1000 option ausgleich.new.1000.a"
+		name = ausgleich.new.1000.a
+
+		ai_chance = { base = 0 }
+
+		leave_faction = yes
+		if = {
+			limit = {
+				original_tag = POL
+			}
+			country_event = { id = poland.284 } #GER asks POL to join RP
+		}
+		else_if = {
+			limit = {
+				original_tag = UKR
+			}
+			UKR_update_military = yes
+			country_event = { id = ukraine_forpol.34 }
+		}
+	}
+
+	option = { #Ask if the Galicians wish to join us.
+		log = "[GetLogInfo]: event ausgleich.new.1000 option ausgleich.new.1000.b"
+		name = ausgleich.new.1000.b
+
+		trigger = {
+			OR = {
+				original_tag = POL
+				AND = {
+					original_tag = UKR
+					NOT = { has_country_flag = POL_galicia_ask_only }
+				}
+			}
+		}
+
+		leave_faction = yes
+		if = {
+			limit = {
+				original_tag = POL
+				NOT = { owns_state = 88 } #Krakow
+			}
+			country_event = { id = poland.284 } #GER asks POL to join RP
+			var:88.owner = {
+				if = {
+					limit = { is_subject = yes }
+					OVERLORD = { country_event = { id = poland.233 days = 1 } }
+				}
+				else = { country_event = { id = poland.233 days = 1 } }
+			}
+		}
+		else_if = {
+			limit = {
+				original_tag = UKR
+				NOT = { owns_state = 89 } #Stanislawow
+			}
+			country_event = { id = ukraine_forpol.34 } #GER asks UKR to join RP
+			var:89.owner = {
+				if = {
+					limit = { is_subject = yes }
+					overlord = { country_event = { id = ukraine_republican.100 days = 1 } }
+				}
+				else_if = {
+					limit = { owns_state = 88 }
+					country_event = { id = ukraine_republican.100 days = 1 }
+				}
+				else = {
+					country_event = { id = poland.246 days = 1 }
+				}
+			}
 		}
 	}
 }

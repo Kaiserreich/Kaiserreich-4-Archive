@@ -628,7 +628,8 @@ country_event = {
 
 	immediate = {
 		hidden_effect = {
-			random_other_country = {
+			random_country_with_original_tag = {
+				original_tag_to_check = ROOT
 				limit = { civilwar_target = ROOT }
 				save_event_target_as = GRE_civil_war_target
 			}
@@ -729,11 +730,7 @@ country_event = {
 		log = "[GetLogInfo]: event gre.18 option gre.18.c"
 		name = gre.18.c #The army takes control, promising free and democratic elections
 		trigger = {
-			OR = {
-				has_government = national_populist
-				has_government = paternal_autocrat
-				has_socialist_government = yes
-			}
+			has_democratic_government = no
 			NOT = { has_cosmetic_tag = GRE_kingdom }
 			has_civil_war = no
 		}
@@ -941,8 +938,7 @@ country_event = {
 			}
 		}
 		else = {
-			random_other_country = {
-				limit = { civilwar_target = ROOT }
+			event_target:GRE_civil_war_target = {
 				start_peace_conference = {
 					tag = ROOT
 					score_factor = 1
@@ -1052,8 +1048,8 @@ country_event = {
 	is_triggered_only = yes
 
 	option = {
-		log = "[GetLogInfo]: event gre.21 option gre.20.a"
-		name = gre.20.a
+		log = "[GetLogInfo]: event gre.21 option gre.21.a"
+		name = gre.21.a
 		add_country_leader_role = {
 			character = GRE_nikos_ploumpidis
 			country_leader = {
@@ -1144,8 +1140,8 @@ country_event = {
 	is_triggered_only = yes
 
 	option = {
-		log = "[GetLogInfo]: event gre.23 option gre.20.a"
-		name = gre.20.a
+		log = "[GetLogInfo]: event gre.23 option gre.23.a"
+		name = gre.23.a
 		if = {
 			limit = { has_cosmetic_tag = GRE_kingdom }
 			add_country_leader_role = {
@@ -3877,6 +3873,7 @@ country_event = {
 					clear_variable = GRE_previous_faction_leader
 				}
 			}
+			country_event = { id = gre.159 days = 7 }
 		}
 		if = {
 			limit = { has_war_with = BUL }
@@ -4332,6 +4329,7 @@ country_event = {
 					clear_variable = GRE_previous_faction_leader
 				}
 			}
+			country_event = { id = gre.159 days = 7 }
 		}
 		if = {
 			limit = { has_war_with = BUL }
@@ -4340,16 +4338,71 @@ country_event = {
 	}
 }
 
+# hidden event to collapse the rebels if they've been exiled to Thessalonica or Crete
+country_event = {
+	id = gre.159
+
+	trigger = {
+		has_civil_war = yes
+	}
+
+	hidden = yes
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event gre.159 option 1"
+		random_country_with_original_tag = {
+			original_tag_to_check = ROOT
+			limit = {
+				civilwar_target = ROOT
+				is_ai = yes
+			}
+			set_temp_variable = { GRE_civil_war_target = THIS }
+		}
+		if = {
+			limit = {
+				has_variable = GRE_civil_war_target
+				NOT = { is_neighbor_of = var:GRE_civil_war_target }
+				is_ai = yes
+			}
+			var:GRE_civil_war_target = {
+				if = {
+					limit = { check_variable = { num_controlled_states > ROOT.num_controlled_states } }
+					start_peace_conference = {
+						tag = ROOT
+						score_factor = 1
+						winner_scope = LIMITED
+						loser_scope = LIMITED
+					}
+				}
+			}
+			else = {
+				ROOT = {
+					start_peace_conference = {
+						tag = PREV
+						score_factor = 1
+						winner_scope = LIMITED
+						loser_scope = LIMITED
+					}
+				}
+			}
+		}
+		else = {
+			country_event = { id = gre.159 days = 7 }
+		}
+	}
+}
+
 ### DIPLOMATIC PATH EVENTS
 
-# Thawing relations with the Turks (fired by focus)
+# Greek Overtures to the Turks (fired by focus)
 country_event = {
 	id = gre.200
 	title = gre.200.t
 	desc = gre.200.d
 	picture = GFX_report_event_GRE_athens
 
-	is_triggered_only = yes
+	is_triggered_only = yes #fired by focus GRE_Turkish_Thaw
 
 	option = {
 		log = "[GetLogInfo]: event gre.200 option gre.200.a"
@@ -4358,32 +4411,28 @@ country_event = {
 			base = 70
 			modifier = {
 				factor = 0.5
-				has_government = national_populist
-			}
-			modifier = {
-				factor = 0.5
 				FROM = {
 					any_owned_state = { is_claim_or_core_of_ROOT = yes }
 				}
 			}
 		}
-		add_political_power = 50
+		add_political_power = 25
 		reverse_add_opinion_modifier = {
 			target = FROM
 			modifier = KR_diplomatic_mission
 		}
 		FROM = {
-			country_event = { id = gre.201 days = 3 }
+			country_event = { id = gre.202 days = 3 }
 		}
 	}
 	option = {
 		log = "[GetLogInfo]: event gre.200 option gre.200.b"
-		name = gre.200.b #No, we've no need for this
+		name = gre.200.b #Reject peaceful intent
 		ai_chance = {
 			base = 30
 			modifier = {
-				factor = 2
-				has_government = national_populist
+				factor = 0.5
+				is_neighbor_of = GRE
 			}
 			modifier = {
 				factor = 0
@@ -4391,17 +4440,18 @@ country_event = {
 				FROM = { has_elected_government = yes }
 			}
 		}
-		reverse_add_opinion_modifier = {
-			target = FROM
-			modifier = GRE_no_peace
+		add_war_support = 0.05
+		if = {
+			limit = { original_tag = TUR }
+			custom_effect_tooltip = ott_gre_dealing_hurdle
 		}
 		FROM = {
-			country_event = { id = gre.202 days = 3 }
+			country_event = { id = gre.201 days = 3 }
 		}
 	}
 }
 
-# The Turks agree to diplomacy
+# Talks Stall
 country_event = {
 	id = gre.201
 	title = gre.201.t
@@ -4420,16 +4470,17 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event gre.201 option gre.201.a"
 		name = gre.201.a
-		set_country_flag = GRE_has_thaw_with_turks
-		add_political_power = 50
+		GRE = { set_country_flag = greco_tur_deal_failed }
+		TUR = { set_country_flag = greco_tur_deal_failed }
+		add_war_support = 0.05
 		reverse_add_opinion_modifier = {
 			target = FROM
-			modifier = KR_diplomatic_mission
+			modifier = GRE_no_peace
 		}
 	}
 }
 
-# The Turks reject diplomacy
+# The Turks embrace further talks
 country_event = {
 	id = gre.202
 	title = gre.202.t
@@ -4439,19 +4490,17 @@ country_event = {
 	is_triggered_only = yes
 
 	trigger = {
-		FROM = {
-			exists = yes
-			NOT = { has_war_with = ROOT }
-		}
+		country_exists = GRE
+		NOT = { GRE = { has_war_with = TUR } }
 	}
 
 	option = {
 		log = "[GetLogInfo]: event gre.202 option gre.202.a"
 		name = gre.202.a
-		add_political_power = -50
+		add_political_power = 75
 		reverse_add_opinion_modifier = {
 			target = FROM
-			modifier = GRE_no_peace
+			modifier = KR_diplomatic_mission
 		}
 	}
 }
@@ -4467,17 +4516,76 @@ country_event = {
 
 	option = {
 		log = "[GetLogInfo]: event gre.203 option gre.203.a"
-		name = gre.203.a #We agree to their terms
+		name = gre.203.a #Full Alliance for the Aegean
+		trigger = {
+			has_country_flag = alliance_aus
+			OR = {
+				GRE = { is_in_faction = no }
+				AND = {
+					GRE = { is_in_faction_with = AUS }
+					AUS = { is_faction_leader = yes }
+				}
+			}
+		}
+		ai_chance = {
+			base = 500
+			modifier = {
+				factor = 0
+				has_government = national_populist
+			}
+		}
+		GRE = { country_event = { id = gre.205 days = 3 } }
+		custom_effect_tooltip = if_they_accept_tt
+		effect_tooltip = {
+			if = {
+				limit = { is_in_faction_with = AUS }
+				AUS = { add_to_faction = GRE }
+			}
+			else_if = {
+				limit = { GRE = { is_in_faction_with = AUS } }
+				GRE = { custom_effect_tooltip = OTT_country_will_be_amenable_tt }
+				custom_effect_tooltip = tooltip_white_line
+			}
+			else = {
+				custom_effect_tooltip = ott_gre_will_join_sarajevo
+			}
+			add_political_power = 100
+			if = {
+				limit = { TUR = { owns_state = 164 } } #Dodecanese
+				remove_state_core = 164
+				GRE = { transfer_state = 164 }
+			}
+			if = {
+				limit = { TUR = { owns_state = 187 } } #Aegean Islands
+				remove_state_core = 187
+				GRE = { transfer_state = 187 }
+			}
+			add_ideas = ott_greco_turkish_accord
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event gre.203 option gre.203.b"
+		name = gre.203.b #Dodecanese Deal
+		trigger = {
+			NOT = {
+				AND = {
+					has_country_flag = alliance_aus
+					GRE = { is_in_faction_with = AUS }
+					AUS = { is_faction_leader = yes }
+				}
+			}
+		}
 		ai_chance = {
 			base = 50
 			modifier = {
-				factor = 1.5
-				FROM = {
-					any_owned_state = { is_core_of = ROOT }
+				factor = 5
+				OR = {
+					GRE = { is_in_faction = yes }
+					TUR = { is_in_faction = no }
 				}
 			}
 			modifier = {
-				factor = 0.1
+				factor = 0
 				has_government = national_populist
 			}
 			modifier = {
@@ -4486,83 +4594,103 @@ country_event = {
 				surrender_progress < 0.10
 			}
 		}
-		add_political_power = 100
-		diplomatic_relation = {
-			country = FROM
-			relation = non_aggression_pact
-		}
-		if = {
-			limit = { FROM = { owns_state = 184 } } #Komotini
-			remove_state_core = 184
-		}
-		if = {
-			limit = { owns_state = 164 } #Dodecanese
-			remove_state_core = 164
-			FROM = { transfer_state = 164 }
-		}
-		if = {
-			limit = { owns_state = 187 } #Aegean Islands
-			remove_state_core = 187
-			FROM = { transfer_state = 187 }
-		}
-		custom_effect_tooltip = GRE_population_exchange_one_month
-		FROM = {
-			country_event = { id = gre.208 days = 3 }
-		}
-	}
-	option = {
-		log = "[GetLogInfo]: event gre.203 option gre.203.b"
-		name = gre.203.b #We agree to everything but surrendering land
-		trigger = {
-			any_owned_state = { is_core_of = FROM }
-		}
-		ai_chance = {
-			base = 40
-			modifier = {
-				factor = 0.5
-				FROM = {
-					any_owned_state = { is_core_of = ROOT }
-				}
-			}
-			modifier = {
-				factor = 0.5
-				tag = TUR
-				surrender_progress < 0.10
-			}
-		}
-		FROM = {
+		GRE = {
 			country_event = { id = gre.204 days = 3 }
+		}
+		custom_effect_tooltip = if_they_accept_tt
+		effect_tooltip = {
+			add_political_power = 100
+			diplomatic_relation = {
+				country = GRE
+				relation = non_aggression_pact
+			}
+			if = {
+				limit = { owns_state = 164 } #Dodecanese
+				remove_state_core = 164
+				GRE = { transfer_state = 164 }
+			}
+			add_ideas = ott_greco_turkish_accord
 		}
 	}
 	option = {
 		log = "[GetLogInfo]: event gre.203 option gre.203.c"
-		name = gre.203.c #No, they are asking for far too much
+		name = gre.203.c #We agree to everything but surrendering land
+		trigger = {
+			NOT = {
+				AND = {
+					has_country_flag = alliance_aus
+					GRE = { is_in_faction_with = AUS }
+					AUS = { is_faction_leader = yes }
+				}
+			}
+		}
+		ai_chance = {
+			base = 20
+			modifier = {
+				factor = 5
+				GRE = {
+					is_in_faction = no
+				}
+				TUR = {
+					is_in_faction = yes
+				}
+			}
+			modifier = {
+				factor = 0.5
+				tag = TUR
+				surrender_progress > 0.10
+			}
+			modifier = {
+				factor = 0
+				has_government = national_populist
+			}
+		}
+		GRE = { country_event = { id = gre.206 days = 3 } }
+		custom_effect_tooltip = if_they_accept_tt
+		effect_tooltip = {
+			add_political_power = 100
+			diplomatic_relation = {
+				country = GRE
+				relation = non_aggression_pact
+			}
+			add_ideas = ott_greco_turkish_accord
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event gre.203 option gre.203.e"
+		name = gre.203.e #No deals
+		trigger = {
+			GRE = {
+				NOT = {
+					is_subject_of = TUR
+					is_ally_of_ROOT = yes
+				}
+			}
+		}
 		ai_chance = {
 			base = 10
 			modifier = {
-				factor = 0.5
-				FROM = {
+				factor = 5
+				GRE = {
 					any_owned_state = { is_core_of = ROOT }
 				}
 			}
 			modifier = {
-				factor = 10
-				tag = TUR
-				surrender_progress < 0.10
+				factor = 0
+				TUR = {
+					surrender_progress > 0.10
+				}
 			}
 		}
-		add_political_power = -50
-		reverse_add_opinion_modifier = {
-			target = FROM
-			modifier = GRE_no_peace
-		}
-		FROM = {
-			country_event = { id = gre.207 days = 3 }
-		}
+		add_war_support = 0.1
+		GRE = { country_event = { id = gre.201 days = 3 } }
+		custom_effect_tooltip = tooltip_white_line
+		custom_effect_tooltip = ott_gre_dealing_hurdle
+		set_country_flag = ott_gre_dealing_hurdle
 	}
 }
 
-# The Turks refuse to exchange cores
+# The Dodecanese Deal
 country_event = {
 	id = gre.204
 	title = gre.204.t
@@ -4572,46 +4700,116 @@ country_event = {
 	is_triggered_only = yes
 
 	trigger = {
-		country_exists = FROM
-		NOT = { has_war_with = FROM }
+		country_exists = GRE
+		NOT = { GRE = { has_war_with = TUR } }
 	}
 
 	option = {
 		log = "[GetLogInfo]: event gre.204 option gre.204.a"
-		name = gre.204.a #Then there's no deal
-		ai_chance = { base = 75 }
-		add_political_power = -50
-		reverse_add_opinion_modifier = {
-			target = FROM
-			modifier = GRE_no_peace
+		name = gre.204.a #We accept this deal
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0.25
+				TUR = { has_country_flag = ott_gre_dealing_hurdle }
+			}
+			modifier = {
+				factor = 2
+				has_opinion = {
+					target = TUR
+					value > 124
+				}
+			}
+			modifier = {
+				factor = 2
+				has_opinion = {
+					target = TUR
+					value > 149
+				}
+			}
+			modifier = {
+				factor = 2
+				has_opinion = {
+					target = TUR
+					value > 174
+				}
+			}
 		}
-		FROM = {
-			country_event = { id = gre.205 days = 3 }
-		}
-	}
-	option = {
-		log = "[GetLogInfo]: event gre.204 option gre.204.b"
-		name = gre.204.b #Very well, we'll work with that
-		ai_chance = { base = 25 }
+		country_event = { id = gre.208 }
+		TUR = { set_country_flag = tur_gives_rhodes }
+		custom_effect_tooltip = tooltip_white_line
 		effect_tooltip = {
 			diplomatic_relation = {
 				country = FROM
 				relation = non_aggression_pact
 			}
+			if = {
+				limit = { TUR = { owns_state = 164 } } #Dodecanese
+				TUR = { remove_state_core = 164 }
+				GRE = { transfer_state = 164 }
+			}
 		}
-		custom_effect_tooltip = GRE_population_exchange_one_month
 		hidden_effect = {
-			set_country_flag = GRE_no_surrender_claims
-			country_event = { id = gre.209 days = 30 }
+			add_ideas = ott_greco_turkish_accord
+			FROM = {
+				add_ideas = ott_greco_turkish_accord
+				country_event = { id = gre.208 }
+			}
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event gre.204 option gre.204.b"
+		name = gre.204.b #Demand the Entire Aegean
+		trigger = {
+			original_tag = GRE
+		}
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 100
+				TUR = { has_country_flag = ott_gre_dealing_hurdle }
+			}
 		}
 		FROM = {
-			country_event = { id = gre.206 days = 3 }
+			country_event = { id = gre.207 days = 3 }
 		}
+		custom_effect_tooltip = if_they_accept_tt
+		effect_tooltip = {
+			diplomatic_relation = {
+				country = FROM
+				relation = non_aggression_pact
+			}
+			add_political_power = 100
+			if = {
+				limit = { TUR = { owns_state = 164 } } #Dodecanese
+				TUR = { remove_state_core = 164 }
+				GRE = { transfer_state = 164 }
+			}
+			if = {
+				limit = { TUR = { owns_state = 187 } } #Aegean Islands
+				TUR = { remove_state_core = 187 }
+				GRE = { transfer_state = 187 }
+			}
+			add_ideas = ott_greco_turkish_accord
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event gre.204 option gre.204.c"
+		name = gre.204.c #They consider these concessions?
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 100
+				has_completed_focus = GRE_new_expansionism
+			}
+		}
+		add_war_support = 0.1
+		FROM = { country_event = { id = gre.201 days = 3 } }
 	}
 }
 
-# The Greeks refuse to agree to the modified deal
-country_event = {
+# The Aegean Alliance
+country_event = { #activated by gre.203.a
 	id = gre.205
 	title = gre.205.t
 	desc = gre.205.d
@@ -4620,22 +4818,143 @@ country_event = {
 	is_triggered_only = yes
 
 	trigger = {
-		country_exists = FROM
-		NOT = { has_war_with = FROM }
+		country_exists = GRE
+		NOT = { GRE = { has_war_with = TUR } }
 	}
 
-	option = {
+	option = { #Accept the Alliance and the Aegean transfer
 		log = "[GetLogInfo]: event gre.205 option gre.205.a"
 		name = gre.205.a
+		ai_chance = { base = 1000 }
+		country_event = { id = gre.208 }
+		if = {
+			limit = { FROM = { is_in_faction_with = AUS } }
+			effect_tooltip = { AUS = { add_to_faction = GRE } }
+		}
+		else = {
+			custom_effect_tooltip = ott_gre_will_join_sarajevo
+		}
+		if = {
+			limit = { TUR = { owns_state = 164 } } #Dodecanese
+			effect_tooltip = {
+				TUR = { remove_state_core = 164 }
+				GRE = { transfer_state = 164 }
+			}
+		}
+		if = {
+			limit = { TUR = { owns_state = 187 } } #Aegean Islands
+			effect_tooltip = {
+				TUR = { remove_state_core = 187 }
+				GRE = { transfer_state = 187 }
+			}
+		}
+		hidden_effect = {
+			add_ideas = ott_greco_turkish_accord
+			set_country_flag = alliance_aus_accepted
+			FROM = {
+				country_event = { id = gre.208 }
+				add_ideas = ott_greco_turkish_accord
+				set_country_flag = tur_gives_all_aegean
+			}
+		}
+	}
+	option = { #We need the Aegean for just neutrality
+		log = "[GetLogInfo]: event gre.205 option gre.205.b"
+		name = gre.205.b
+		trigger = {
+			TUR = {
+				OR = {
+					has_war = yes
+					is_in_faction = no
+				}
+			}
+		}
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 100
+				OR = {
+					TUR = {
+						surrender_progress > 0.3
+					}
+					AND = {
+						RUS = { is_faction_leader = yes }
+						GER = {
+							surrender_progress > 0.2
+						}
+					}
+				}
+			}
+			modifier = {
+				add = 100
+				TUR = { has_country_flag = ott_gre_dealing_hurdle }
+			}
+		}
+		FROM = {
+			country_event = { id = gre.207 }
+		}
+		custom_effect_tooltip = if_they_accept_tt
+		effect_tooltip = {
+			diplomatic_relation = {
+				country = FROM
+				relation = non_aggression_pact
+			}
+			add_political_power = 100
+			if = {
+				limit = { TUR = { owns_state = 164 } } #Dodecanese
+				TUR = { remove_state_core = 164 }
+				GRE = { transfer_state = 164 }
+			}
+			if = {
+				limit = { TUR = { owns_state = 187 } } #Aegean Islands
+				TUR = { remove_state_core = 187 }
+				GRE = { transfer_state = 187 }
+			}
+			add_ideas = ott_greco_turkish_accord
+		}
+	}
+	option = { #the Dodecanese for neutrality is all we need
+		log = "[GetLogInfo]: event gre.205 option gre.205.c"
+		name = gre.205.c
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 100
+				OR = {
+					AND = {
+						is_in_faction = yes
+						NOT = { is_in_faction_with = TUR }
+					}
+					AND = {
+						TUR = { is_in_faction_with = GER }
+						TUR = { is_in_faction_with = AUS }
+					}
+					AND = {
+						RUS = { is_faction_leader = yes }
+						RUS = {
+							surrender_progress < 0.3
+						}
+					}
+				}
+			}
+		}
+		FROM = { country_event = { id = gre.204 } }
 		add_political_power = -50
 		reverse_add_opinion_modifier = {
 			target = FROM
-			modifier = GRE_no_peace
+			modifier = KR_diplomatic_mission
 		}
+	}
+	option = {
+		log = "[GetLogInfo]: event gre.205 option gre.205.e"
+		name = gre.205.e
+		ai_chance = { base = 0 }
+		add_war_support = 0.1
+		FROM = { country_event = { id = gre.201 } }
 	}
 }
 
-# The Greeks agree to the modified deal
+# The No Land Deal
 country_event = {
 	id = gre.206
 	title = gre.206.t
@@ -4645,26 +4964,73 @@ country_event = {
 	is_triggered_only = yes
 
 	trigger = {
-		FROM = {
-			exists = yes
-			NOT = { has_war_with = ROOT }
-		}
+		country_exists = GRE
+		NOT = { GRE = { has_war_with = TUR } }
 	}
 
-	option = {
+	option = { #Reluctant Yes
 		log = "[GetLogInfo]: event gre.206 option gre.206.a"
 		name = gre.206.a
-		add_political_power = 100
-		set_country_flag = GRE_no_surrender_claims
-		diplomatic_relation = {
-			country = FROM
-			relation = non_aggression_pact
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 100
+				OR = {
+					is_in_faction = no
+					RUS = { is_faction_leader = no }
+					AND = {
+						TUR = { is_in_faction_with = GER }
+						TUR = { is_in_faction_with = AUS }
+					}
+					AND = {
+						RUS = {
+							surrender_progress > 0.4
+						}
+						TUR = { is_in_faction = yes }
+					}
+				}
+			}
 		}
-		custom_effect_tooltip = GRE_population_exchange_one_month
+		country_event = { id = gre.208 }
+		effect_tooltip = {
+			diplomatic_relation = {
+				country = TUR
+				relation = non_aggression_pact
+			}
+		}
+		hidden_effect = {
+			add_ideas = ott_greco_turkish_accord
+			FROM = {
+				country_event = { id = gre.208 }
+				add_ideas = ott_greco_turkish_accord
+			}
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event gre.206 option gre.206.b"
+		name = gre.206.b
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0.1
+				is_in_faction = no
+				TUR = { has_completed_focus = OTT_Abolish_Full_Neutrality }
+			}
+			modifier = {
+				factor = 10
+				TUR = { has_country_flag = ott_gre_dealing_hurdle }
+			}
+		}
+		add_war_support = 0.1
+		FROM = { country_event = { id = gre.201 } }
+		reverse_add_opinion_modifier = {
+			target = FROM
+			modifier = GRE_no_peace
+		}
 	}
 }
 
-# The Turks refuse the deal
+# The Greeks Demand the Aegean just for neutrality!
 country_event = {
 	id = gre.207
 	title = gre.207.t
@@ -4674,14 +5040,65 @@ country_event = {
 	is_triggered_only = yes
 
 	trigger = {
-		country_exists = FROM
-		NOT = { has_war_with = FROM }
+		country_exists = GRE
+		NOT = { GRE = { has_war_with = TUR } }
 	}
 
-	option = {
+	option = { #We will give the whole Aegean for Neutrality
 		log = "[GetLogInfo]: event gre.207 option gre.207.a"
 		name = gre.207.a
-		add_political_power = -50
+		ai_chance = {
+			base = 0
+			modifier = {
+				add = 100
+				NOT = { is_in_faction_with = 361.owner }
+				NOT = { is_in_faction_with = AUS }
+				GER = { is_faction_leader = no }
+			}
+		}
+		country_event = { id = gre.208 }
+		set_country_flag = tur_gives_all_aegean
+		effect_tooltip = {
+			diplomatic_relation = {
+				country = FROM
+				relation = non_aggression_pact
+			}
+			add_political_power = 100
+			if = {
+				limit = { TUR = { owns_state = 164 } } #Dodecanese
+				TUR = { remove_state_core = 164 }
+				GRE = { transfer_state = 164 }
+			}
+			if = {
+				limit = { TUR = { owns_state = 187 } } #Aegean Islands
+				TUR = { remove_state_core = 187 }
+				GRE = { transfer_state = 187 }
+			}
+			add_ideas = ott_greco_turkish_accord
+		}
+		hidden_effect = {
+			add_ideas = ott_greco_turkish_accord
+			FROM = {
+				country_event = { id = gre.208 }
+				add_ideas = ott_greco_turkish_accord
+			}
+		}
+	}
+	option = { #we will not cede the whole aegean
+		log = "[GetLogInfo]: event gre.207 option gre.207.b"
+		name = gre.207.b
+		ai_chance = {
+			base = 100
+			modifier = {
+				factor = 0.5
+				is_in_faction = no
+			}
+			modifier = {
+				factor = 0.5
+				GER = { is_faction_leader = no }
+			}
+		}
+		add_war_support = 0.15
 		reverse_add_opinion_modifier = {
 			target = FROM
 			modifier = GRE_no_peace
@@ -4689,7 +5106,7 @@ country_event = {
 	}
 }
 
-# The Turks agree to the full deal
+# The Treaty of Smyrna is Signed
 country_event = {
 	id = gre.208
 	title = gre.208.t
@@ -4699,327 +5116,265 @@ country_event = {
 	is_triggered_only = yes
 
 	trigger = {
-		country_exists = FROM
-		NOT = { has_war_with = FROM }
+		country_exists = GRE
+		NOT = { GRE = { has_war_with = TUR } }
 	}
 
 	option = {
 		log = "[GetLogInfo]: event gre.208 option gre.208.a"
 		name = gre.208.a
+		trigger = {
+			original_tag = TUR
+		}
 		add_political_power = 100
-		every_owned_state = {
+		effect_tooltip = { add_ideas = ott_greco_turkish_accord }
+		if = {
 			limit = {
-				is_core_of = FROM
+				TUR = {
+					owns_state = 187
+					owns_state = 164
+					has_country_flag = tur_gives_all_aegean
+				}
+				GRE = { NOT = { has_country_flag = alliance_aus_accepted } }
 			}
-			FROM = {
-				transfer_state = PREV
+			TUR = {
+				remove_state_core = 187
+				remove_state_core = 164
+				if = {
+					limit = {
+						OR = {
+							owns_state = 184
+							owns_state = 1089
+						}
+					}
+					remove_state_claim = 989
+					if = {
+						limit = { GRE = { owns_state = 769 } }
+						remove_state_claim = 769
+					}
+				}
 			}
-		}
-		custom_effect_tooltip = GRE_population_exchange_one_month
-		hidden_effect = {
-			country_event = { id = gre.209 days = 30 }
-		}
-	}
-}
-
-# Population Exchange
-country_event = {
-	id = gre.209
-
-	hidden = yes
-	is_triggered_only = yes
-
-	trigger = {
-		country_exists = TUR
-		NOT = { has_war_with = TUR }
-	}
-
-	immediate = {
-		set_variable = { popmove = 0 }
-		set_variable = { TUR.popmove = 0 }
-		TUR = {
-			set_variable = {
-				var = popmove
-				value = 0
+			GRE = {
+				transfer_state = 187
+				transfer_state = 164
 			}
 		}
-
-		#Greek side
-		if = {
-			limit = { owns_state = 184 } #Komotini
-			set_temp_variable = { temp1 = 184.state_population_k }
-			multiply_temp_variable = { temp1 = 500 }
-			add_to_variable = { TUR.popmove = temp1 }
-			multiply_temp_variable = { temp1 = -1 }
-			184 = { add_manpower = temp1 }
+		else_if = {
+			limit = {
+				TUR = {
+					owns_state = 164
+					has_country_flag = tur_gives_rhodes
+				}
+			}
+			TUR = { remove_state_core = 164 }
+			GRE = { transfer_state = 164 }
 		}
 		if = {
-			limit = { owns_state = 769 } #Serres
-			set_temp_variable = { temp1 = 769.state_population_k }
-			multiply_temp_variable = { temp1 = 0.5 }
-			add_to_variable = { TUR.popmove = temp1 }
-			multiply_temp_variable = { temp1 = -1 }
-			769 = { add_manpower = temp1 }
+			limit = {
+				NOT = { TUR = { is_in_faction_with = AUS } }
+				GRE = { has_country_flag = alliance_aus_accepted }
+			}
+			custom_effect_tooltip = ott_gre_will_join_sarajevo
 		}
-		if = {
-			limit = { owns_state = 187 } #Aegean Islands
-			set_temp_variable = { temp1 = 187.state_population_k }
-			multiply_temp_variable = { temp1 = 300 }
-			add_to_variable = { TUR.popmove = temp1 }
-			multiply_temp_variable = { temp1 = -1 }
-			187 = { add_manpower = temp1 }
-		}
-		if = {
-			limit = { owns_state = 182 } #Crete
-			set_temp_variable = { temp1 = 182.state_population_k }
-			multiply_temp_variable = { temp1 = 200 }
-			add_to_variable = { TUR.popmove = temp1 }
-			multiply_temp_variable = { temp1 = -1 }
-			182 = { add_manpower = temp1 }
-		}
-
-		#Turkish side
-		TUR = {
-			if = {
-				limit = { owns_state = 773 } #Constantinople
-				773 = { add_manpower = -40000 }
-				add_to_variable = { ROOT.popmove = 40000 }
+		else_if = {
+			limit = {
+				TUR = { is_in_faction_with = AUS }
+				GRE = {
+					has_country_flag = alliance_aus_accepted
+					NOT = { is_in_faction_with = AUS }
+				}
 			}
-			if = {
-				limit = { owns_state = 341 } #Adrianople
-				set_temp_variable = { temp1 = 341.state_population_k }
-				multiply_temp_variable = { temp1 = 350 }
-				add_to_variable = { ROOT.popmove = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				341 = { add_manpower = temp1 }
-			}
-			if = {
-				limit = { owns_state = 340 } #Bursa
-				set_temp_variable = { temp1 = 340.state_population_k }
-				multiply_temp_variable = { temp1 = 230 }
-				add_to_variable = { ROOT.popmove = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				340 = { add_manpower = temp1 }
-			}
-			if = {
-				limit = { owns_state = 339 } #Smyrna
-				set_temp_variable = { temp1 = 339.state_population_k }
-				multiply_temp_variable = { temp1 = 230 }
-				add_to_variable = { ROOT.popmove = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				339 = { add_manpower = temp1 }
-			}
-			if = {
-				limit = { owns_state = 356 } #Sinop
-				set_temp_variable = { temp1 = 356.state_population_k }
-				multiply_temp_variable = { temp1 = 130 }
-				add_to_variable = { ROOT.popmove = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				356 = { add_manpower = temp1 }
-			}
-			if = {
-				limit = { owns_state = 355 } #Samsun
-				set_temp_variable = { temp1 = 355.state_population_k }
-				multiply_temp_variable = { temp1 = 130 }
-				add_to_variable = { ROOT.popmove = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				355 = { add_manpower = temp1 }
-			}
-			if = {
-				limit = { owns_state = 187 } #Aegean
-				set_temp_variable = { temp1 = 187.state_population_k }
-				multiply_temp_variable = { temp1 = 400 }
-				add_to_variable = { ROOT.popmove = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				187 = { add_manpower = temp1 }
-			}
-			if = {
-				limit = { owns_state = 182 } #Crete
-				set_temp_variable = { temp1 = 182.state_population_k }
-				multiply_temp_variable = { temp1 = 400 }
-				add_to_variable = { ROOT.popmove = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				182 = { add_manpower = temp1 }
-			}
-			if = {
-				limit = { owns_state = 184 } #Komotini
-				set_temp_variable = { temp1 = 184.state_population_k }
-				multiply_temp_variable = { temp1 = 400 }
-				add_to_variable = { ROOT.popmove = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				184 = { add_manpower = temp1 }
-			}
-		}
-
-		round_variable = ROOT.popmove
-		round_variable = TUR.popmove
-
-		# Now fire follow-up events
-		TUR = {
-			country_event = gre.210
-		}
-		country_event = gre.211
-	}
-}
-
-# Turkish part of population exchange
-country_event = {
-	id = gre.210
-	title = gre.210.t
-	desc = gre.210.d
-	picture = GFX_report_event_GRE_exchange
-
-	is_triggered_only = yes
-
-	option = {
-		log = "[GetLogInfo]: event gre.210 option gre.210.a"
-		name = gre.210.a
-		add_stability = -0.10
-		custom_effect_tooltip = GRE_total_pops_turkarrive
-		custom_effect_tooltip = GRE_total_pops_turkleave
-		if = {
-			limit = { has_country_flag = GRE_no_surrender_claims }
-			clr_country_flag = GRE_no_surrender_claims
+			AUS = { add_to_faction = GRE }
 		}
 		else = {
-			every_owned_state = {
-				limit = { is_claimed_by = FROM }
-				remove_claim_by = FROM
-			}
-		}
-
-		hidden_effect = {
-			country_event = { id = gre.212 days = 365 }
-			set_temp_variable = { leftover = ROOT.popmove }
-			if = {
-				limit = { owns_state = 341 } #Adrianople
-				set_temp_variable = { temp1 = ROOT.popmove }
-				multiply_temp_variable = { temp1 = 0.20 }
-				341 = { add_manpower = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				add_to_temp_variable = { leftover = temp1 }
-			}
-			if = {
-				limit = { owns_state = 340 } #Bursa
-				set_temp_variable = { temp1 = ROOT.popmove }
-				multiply_temp_variable = { temp1 = 0.35 }
-				340 = { add_manpower = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				add_to_temp_variable = { leftover = temp1 }
-			}
-			if = {
-				limit = { owns_state = 339 } #Smyrna
-				set_temp_variable = { temp1 = ROOT.popmove }
-				multiply_temp_variable = { temp1 = 0.25 }
-				339 = { add_manpower = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				add_to_temp_variable = { leftover = temp1 }
-			}
-			if = {
-				limit = { owns_state = 773 } #Constantinople
-				set_temp_variable = { temp1 = ROOT.popmove }
-				multiply_temp_variable = { temp1 = 0.08 }
-				773 = { add_manpower = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				add_to_temp_variable = { leftover = temp1 }
-			}
-			capital_scope = { add_manpower = leftover }
-		}
-	}
-}
-
-# Greek part of population exchange
-country_event = {
-	id = gre.211
-	title = gre.210.t
-	desc = gre.211.d
-	picture = GFX_report_event_GRE_exchange
-
-	is_triggered_only = yes
-
-	option = {
-		log = "[GetLogInfo]: event gre.211 option gre.210.a"
-		name = gre.210.a
-		add_stability = -0.15
-		custom_effect_tooltip = GRE_total_pops_greekarrive
-		custom_effect_tooltip = GRE_total_pops_greekleave
-		if = {
-			limit = {
-				has_country_flag = GRE_no_surrender_claims
-			}
-			clr_country_flag = GRE_no_surrender_claims
-			else = {
-				every_owned_state = {
-					limit = {
-						is_claimed_by = TUR
-					}
-					remove_claim_by = TUR
+			GRE = {
+				diplomatic_relation = {
+					country = TUR
+					relation = non_aggression_pact
 				}
 			}
 		}
-
-		hidden_effect = {
-			country_event = { id = gre.212 days = 365 }
-			set_temp_variable = { leftover = ROOT.popmove }
-			if = {
-				limit = { owns_state = 184 } #Komotini
-				set_temp_variable = { temp1 = ROOT.popmove }
-				multiply_temp_variable = { temp1 = 0.20 }
-				184 = { add_manpower = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				add_to_temp_variable = { leftover = temp1 }
+		340 = { #Bursa
+			ott_decrease_revolt_risk = yes
+		}
+		355 = { #Trebizond
+			ott_decrease_revolt_risk = yes
+		}
+		if = {
+			limit = {
+				GRE = {
+					owns_state = 769 #Serres
+					owns_state = 184 #Komotini
+				}
 			}
-			if = {
-				limit = { owns_state = 769 } #Serres
-				set_temp_variable = { temp1 = ROOT.popmove }
-				multiply_temp_variable = { temp1 = 0.12 }
-				769 = { add_manpower = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				add_to_temp_variable = { leftover = temp1 }
+			769 = { #Serres
+				add_manpower = -1000
 			}
-			if = {
-				limit = { owns_state = 989 } #Salonika
-				set_temp_variable = { temp1 = ROOT.popmove }
-				multiply_temp_variable = { temp1 = 0.10 }
-				989 = { add_manpower = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				add_to_temp_variable = { leftover = temp1 }
+			184 = { #Komotini
+				add_manpower = -1000
 			}
-			if = {
-				limit = { owns_state = 187 } #Aegean Islands
-				set_temp_variable = { temp1 = ROOT.popmove }
-				multiply_temp_variable = { temp1 = 0.03 }
-				187 = { add_manpower = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				add_to_temp_variable = { leftover = temp1 }
+			341 = { #Edirne
+				add_manpower = 2000
+				ott_decrease_revolt_risk = yes
 			}
-			if = {
-				limit = { owns_state = 182 } #Crete
-				set_temp_variable = { temp1 = ROOT.popmove }
-				multiply_temp_variable = { temp1 = 0.03 }
-				182 = { add_manpower = temp1 }
-				multiply_temp_variable = { temp1 = -1 }
-				add_to_temp_variable = { leftover = temp1 }
+		}
+		else_if = {
+			limit = { GRE = { owns_state = 769 } }
+			769 = { #Serres
+				add_manpower = -1000
 			}
-			capital_scope = { add_manpower = leftover }
+			341 = { #Edirne
+				add_manpower = 1000
+				ott_decrease_revolt_risk = yes
+			}
+		}
+		else = {
+			341 = { #Edirne
+				ott_decrease_revolt_risk = yes
+			}
+		}
+		if = {
+			limit = { GRE = { owns_state = 989 } }
+			989 = { #Salonica
+				add_manpower = -1000
+			}
+			773 = { #Constantinople
+				add_manpower = 1000
+				ott_decrease_revolt_risk = yes
+			}
+		}
+		else = {
+			773 = { #Constantinople
+				ott_decrease_revolt_risk = yes
+			}
+		}
+		183 = { #Cyprus
+			add_manpower = -2500
+			ott_decrease_revolt_risk = yes
+		}
+		339 = { #Smyrna
+			add_manpower = -5000
+			ott_decrease_revolt_risk = yes
+		}
+		47 = { #Athens
+			add_manpower = 7500
 		}
 	}
-}
-
-# Stability restored
-country_event = {
-	id = gre.212
-	title = gre.212.t
-	desc = gre.212.d
-	picture = GFX_report_event_GRE_exchange
-
-	is_triggered_only = yes
-
 	option = {
-		log = "[GetLogInfo]: event gre.212 option gre.212.a"
-		name = gre.212.a
-		add_stability = 0.10
+		log = "[GetLogInfo]: event gre.208 option gre.208.a"
+		name = gre.208.a
+		trigger = {
+			original_tag = GRE
+		}
 		add_political_power = 100
+		if = {
+			limit = {
+				TUR = {
+					owns_state = 187
+					owns_state = 164
+					has_country_flag = tur_gives_all_aegean
+				}
+				GRE = { NOT = { has_country_flag = alliance_aus_accepted } }
+			}
+			effect_tooltip = {
+				TUR = {
+					remove_state_core = 187
+					remove_state_core = 164
+					if = {
+						limit = {
+							OR = {
+								owns_state = 184
+								owns_state = 1089
+							}
+						}
+						remove_state_claim = 989
+						if = {
+							limit = { GRE = { owns_state = 769 } }
+							remove_state_claim = 769
+						}
+					}
+				}
+				GRE = {
+					transfer_state = 187
+					transfer_state = 164
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				TUR = {
+					owns_state = 164
+					has_country_flag = tur_gives_rhodes
+				}
+			}
+			effect_tooltip = {
+				TUR = { remove_state_core = 164 }
+				GRE = { transfer_state = 164 }
+			}
+		}
+		if = {
+			limit = {
+				GRE = {
+					has_country_flag = alliance_aus_accepted
+					NOT = { is_in_faction_with = AUS }
+				}
+			}
+			custom_effect_tooltip = ott_gre_will_join_sarajevo
+		}
+		else_if = {
+			limit = {
+				TUR = {
+					is_in_faction_with = AUS
+				}
+				GRE = {
+					has_country_flag = alliance_aus_accepted
+					NOT = { is_in_faction_with = AUS }
+				}
+			}
+			effect_tooltip = { AUS = { add_to_faction = GRE } }
+		}
+		else = {
+			effect_tooltip = {
+				GRE = {
+					diplomatic_relation = {
+						country = TUR
+						relation = non_aggression_pact
+					}
+				}
+			}
+		}
+		effect_tooltip = {
+			add_ideas = ott_greco_turkish_accord
+			if = {
+				limit = {
+					GRE = { owns_state = 184 } #Komotini
+				}
+				184 = { #Komotini
+					add_manpower = -1000
+				}
+				341 = { #Edirne
+					add_manpower = 1000
+				}
+			}
+			if = {
+				limit = { GRE = { owns_state = 769 } }
+				769 = { #Serres
+					add_manpower = -1000
+				}
+				341 = { #Edirne
+					add_manpower = 1000
+				}
+			}
+			183 = { #Cyprus
+				add_manpower = -2500
+			}
+			339 = { #Smyrna
+				add_manpower = -5000
+			}
+			47 = { #Athens
+				add_manpower = 7500
+			}
+		}
 	}
 }
 

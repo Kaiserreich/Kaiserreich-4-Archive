@@ -43,16 +43,8 @@ shared_focus = {
 			set_variable = { saf_var_inflation = 0 }
 			set_variable = { saf_var_unemployment = 0.3 }
 			set_variable = { saf_var_debt = 0 }
-			activate_targeted_decision = { target = THIS decision = SAF_print_extra_money }
-			activate_targeted_decision = { target = THIS decision = SAF_cut_abandonment_of_the_gold_standard }
-			activate_targeted_decision = { target = THIS decision = SAF_counter_inflation }
-			activate_targeted_decision = { target = THIS decision = SAF_take_a_loan }
-			activate_targeted_decision = { target = THIS decision = SAF_repay_a_loan }
-			activate_targeted_decision = { target = THIS decision = SAF_cut_funding_on_military }
-			activate_targeted_decision = { target = THIS decision = SAF_raise_taxes }
-			activate_targeted_decision = { target = THIS decision = SAF_subsidize_resource_exports }
-			activate_targeted_decision = { target = THIS decision = SAF_nationalize_company }
-			activate_targeted_decision = { target = THIS decision = SAF_implement_tariffs }
+			set_global_flag = SAF_take_a_loan_enabled
+			SAF_activate_black_monday_decisions = yes
 		}
 	}
 	search_filters = { FOCUS_FILTER_INDUSTRY }
@@ -80,11 +72,10 @@ shared_focus = {
 		}
 	}
 	available = {
-		NOT = {
-			has_country_flag = saf_flag_lack_majority_volksraad
-			has_country_flag = saf_flag_gave_in_to_strikers
-		}
 		has_elected_government = yes
+		NOT = { has_global_flag = SAF_flag_lack_majority_volksraad }
+		NOT = { has_global_flag = saf_flag_gave_in_to_strikers }
+		has_civil_war = no
 	}
 	bypass = {
 		SAF_has_black_monday = no
@@ -118,7 +109,12 @@ shared_focus = {
 	x = -1
 	y = 2
 
+	available = {
+		has_civil_war = no
+	}
+
 	bypass = {
+		has_civil_war = no
 		OR = {
 			SAF_has_black_monday = no
 			NOT = { is_in_faction_with = CAN }
@@ -154,6 +150,7 @@ shared_focus = {
 				tooltip = SAF_tt_unemployment_below_threshold
 			}
 		}
+		has_civil_war = no
 	}
 	bypass = {
 		SAF_has_black_monday = no
@@ -192,6 +189,7 @@ shared_focus = {
 				tooltip = SAF_tt_unemployment_below_threshold
 			}
 		}
+		has_civil_war = no
 	}
 	bypass = {
 		SAF_has_black_monday = no
@@ -223,7 +221,8 @@ shared_focus = {
 	y = 1
 
 	available = {
-		NOT = { has_country_flag = saf_flag_lack_majority_volksraad }
+		NOT = { has_global_flag = SAF_flag_lack_majority_volksraad }
+		has_civil_war = no
 	}
 	bypass = {
 		SAF_has_black_monday = no
@@ -296,6 +295,10 @@ shared_focus = {
 	x = 1
 	y = 2
 
+	available = {
+		has_civil_war = no
+	}
+
 	bypass = {
 		SAF_has_black_monday = no
 	}
@@ -326,21 +329,13 @@ shared_focus = {
 	y = 5
 
 	available = {
-		custom_trigger_tooltip = {
+		check_variable = {
+			saf_var_inflation < 0.08
 			tooltip = SWE_tt_no_extreme_inflation
-			check_variable = {
-				var = saf_var_inflation
-				value = 0.08
-				compare = less_than
-			}
 		}
-		custom_trigger_tooltip = {
+		check_variable = {
+			saf_var_debt < 10
 			tooltip = SAF_tt_no_extreme_debt
-			check_variable = {
-				var = saf_var_debt
-				value = 10
-				compare = less_than
-			}
 		}
 		NOT = {
 			check_variable = {
@@ -348,6 +343,7 @@ shared_focus = {
 				tooltip = SAF_tt_unemployment_below_threshold
 			}
 		}
+		has_civil_war = no
 	}
 	bypass = {
 		SAF_has_black_monday = no
@@ -362,9 +358,17 @@ shared_focus = {
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_complete_recovery"
 		custom_effect_tooltip = SWE_tt_decisions_will_be_removed
-		remove_ideas = SAF_black_monday_2
-		hidden_effect = {
-			SAF_teardown_black_monday_decisions = yes
+		custom_effect_tooltip = tooltip_white_line
+		if = {
+			limit = { has_idea = SAF_black_monday_0 }
+			remove_ideas = SAF_black_monday_0
+		}
+		else_if = {
+			limit = { has_idea = SAF_black_monday_1 }
+			remove_ideas = SAF_black_monday_1
+		}
+		else = {
+			remove_ideas = SAF_black_monday_2
 		}
 	}
 	search_filters = { FOCUS_FILTER_INDUSTRY }
@@ -393,13 +397,11 @@ shared_focus = {
 	}
 
 	available = {
+		has_civil_war = no
 		if = {
-			limit = { has_focus_tree = SAF_federation_focus }
-			has_civil_war = no
-		}
-		else = {
+			limit = { NOT = { has_focus_tree = SAF_federation_focus } }
 			OR = {
-				has_country_flag = saf_flag_elections_held
+				has_global_flag = SAF_elections_held
 				is_subject = yes
 			}
 		}
@@ -441,7 +443,7 @@ shared_focus = {
 	}
 
 	on_uncomplete = {
-		SAF_teardown_nuweveld_decisions = yes
+		SAF_disable_nuweveld_decisions = yes
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_establish_nuweveld"
@@ -672,15 +674,11 @@ shared_focus = {
 			set_state_name = STATE_542_BOER
 		}
 		if = {
-			limit = {
-				has_country_flag = saf_national_turned_pataut
-			}
+			limit = { has_global_flag = SAF_national_turned_pataut }
 			add_popularity = { ideology = paternal_autocrat popularity = 0.02 }
 		}
 		else_if = {
-			limit = {
-				has_completed_focus = SAF_reorganise_the_national_party
-			}
+			limit = { has_completed_focus = SAF_reorganise_the_national_party }
 			add_popularity = { ideology = national_populist popularity = 0.02 }
 		}
 		else = {
@@ -688,7 +686,7 @@ shared_focus = {
 		}
 		hidden_effect = {
 			country_event = { id = saf.316 days = 90 random_days = 30 }
-			SAF_teardown_nuweveld_decisions = yes
+			SAF_disable_nuweveld_decisions = yes
 		}
 	}
 	search_filters = { FOCUS_FILTER_POLITICAL FOCUS_FILTER_ANNEXATION }
@@ -1232,10 +1230,8 @@ shared_focus = {
 		if = {
 			limit = {
 				has_socialist_government = no
-				NOT = {
-					has_country_flag = saf_flag_elections_held
-					has_focus_tree = SAF_federation_focus
-				}
+				NOT = { has_global_flag = SAF_elections_held }
+				NOT = { has_focus_tree = SAF_federation_focus }
 			}
 			country_event = saf.321
 		}
@@ -1454,9 +1450,6 @@ shared_focus = {
 	prerequisite = {
 		focus = SAF_focus_on_manufacturing
 	}
-	bypass = {
-		NOT = { has_character = SAF_hendrik_johannes_van_der_bijl }
-	}
 
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_manufacturing_expansion_plan"
@@ -1467,9 +1460,24 @@ shared_focus = {
 			uses = 1
 			category = industry
 		}
-		custom_effect_tooltip = tooltip_white_line
-		custom_effect_tooltip = available_political_advisor
-		show_ideas_tooltip = SAF_hendrik_johannes_van_der_bijl_advisor
+		if = {
+			limit = {
+				NOT = {
+					any_country_with_original_tag = {
+						original_tag_to_check = ROOT
+						NOT = { tag = ROOT }
+						has_completed_focus = SAF_manufacturing_expansion_plan
+						is_ai = no
+					}
+				}
+			}
+			custom_effect_tooltip = tooltip_white_line
+			custom_effect_tooltip = available_political_advisor
+			event_target:original_south_africa = {
+				SAF_hendrik_johannes_van_der_bijl = { hidden_effect = { set_nationality = ROOT } }
+				show_ideas_tooltip = SAF_hendrik_johannes_van_der_bijl_advisor
+			}
+		}
 	}
 	search_filters = { FOCUS_FILTER_INDUSTRY }
 }
@@ -1814,6 +1822,7 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_new_destroyer_designs"
+		navy_experience = 15
 		add_tech_bonus = {
 			name = SAF_new_destroyer_designs
 			bonus = 1
@@ -1821,6 +1830,8 @@ shared_focus = {
 			category = dd_tech
 			category = ss_tech
 		}
+		custom_effect_tooltip = tooltip_white_line
+		add_one_random_dockyard = yes
 	}
 }
 
@@ -1845,6 +1856,7 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_new_cruiser_designs"
+		navy_experience = 15
 		add_tech_bonus = {
 			name = SAF_new_cruiser_designs
 			bonus = 1
@@ -1852,6 +1864,8 @@ shared_focus = {
 			category = cl_tech
 			category = ca_tech
 		}
+		custom_effect_tooltip = tooltip_white_line
+		add_one_random_dockyard = yes
 	}
 }
 
@@ -1930,10 +1944,12 @@ shared_focus = {
 		log = "[GetLogRoot]: Focus Completed SAF_new_fighter_designs"
 		add_tech_bonus = {
 			name = SAF_new_fighter_designs
-			bonus = 1
-			uses = 1
+			bonus = 0.75
+			uses = 2
 			category = light_fighter
 		}
+		custom_effect_tooltip = tooltip_white_line
+		add_one_random_military_factory = yes
 	}
 }
 
@@ -1960,10 +1976,12 @@ shared_focus = {
 		log = "[GetLogRoot]: Focus Completed SAF_modern_cas"
 		add_tech_bonus = {
 			name = SAF_modern_cas
-			bonus = 1
-			uses = 1
+			bonus = 0.75
+			uses = 2
 			category = cas_bomber
 		}
+		custom_effect_tooltip = tooltip_white_line
+		add_one_random_military_factory = yes
 	}
 }
 
@@ -1990,10 +2008,12 @@ shared_focus = {
 		log = "[GetLogRoot]: Focus Completed SAF_new_bomber_designs"
 		add_tech_bonus = {
 			name = SAF_new_bomber_designs
-			bonus = 1
-			uses = 1
+			bonus = 0.75
+			uses = 2
 			category = medium_air
 		}
+		custom_effect_tooltip = tooltip_white_line
+		add_one_random_military_factory = yes
 	}
 }
 
@@ -2043,6 +2063,7 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_south_african_military_college"
+		army_experience = 10
 		add_doctrine_cost_reduction = {
 			name = SAF_south_african_military_college
 			cost_reduction = 0.5
@@ -2073,7 +2094,7 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_recruitment_drive"
-		add_manpower = 45000
+		add_manpower = 50000
 	}
 }
 
@@ -2102,6 +2123,8 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_continue_britains_legacy"
+		army_experience = 20
+		navy_experience = 20
 		add_doctrine_cost_reduction = {
 			name = SAF_continue_britains_legacy
 			cost_reduction = 0.5
@@ -2133,6 +2156,15 @@ shared_focus = {
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_troop_specialistion"
 		add_ideas = SAF_troop_specialisation_idea
+		custom_effect_tooltip = tooltip_white_line
+		add_tech_bonus = {
+			name = SAF_troop_specialistion
+			bonus = 1
+			uses = 1
+			category = marine_tech
+		}
+		custom_effect_tooltip = tooltip_white_line
+		add_one_random_military_factory = yes
 	}
 }
 
@@ -2159,10 +2191,12 @@ shared_focus = {
 		log = "[GetLogRoot]: Focus Completed SAF_artillery_integration"
 		add_tech_bonus = {
 			name = SAF_artillery_integration
-			bonus = 1
+			bonus = 0.75
 			uses = 2
 			category = artillery
 		}
+		custom_effect_tooltip = tooltip_white_line
+		add_one_random_military_factory = yes
 	}
 }
 
@@ -2187,7 +2221,15 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_casualty_minimisation"
+		add_manpower = 30000
 		enable_tech_improved_field_hospitals = yes
+		custom_effect_tooltip = tooltip_white_line
+		add_tech_bonus = {
+			name = SAF_casualty_minimisation
+			bonus = 0.75
+			uses = 2
+			category = hospital_tech
+		}
 	}
 }
 
@@ -2212,6 +2254,7 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_strengthen_the_navy"
+		navy_experience = 30
 		add_doctrine_cost_reduction = {
 			name = SAF_strengthen_the_navy
 			cost_reduction = 0.5
@@ -2245,6 +2288,7 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_trade_route_protection"
+		navy_experience = 15
 		add_ideas = SAF_trade_protection_idea
 	}
 }
@@ -2273,6 +2317,7 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_retrofitting_scheme"
+		navy_experience = 15
 		add_ideas = SAF_improved_retrofitting
 	}
 }
@@ -2304,9 +2349,16 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_greater_reach"
+		navy_experience = 30
 		swap_ideas = {
 			remove_idea = SAF_trade_protection_idea
 			add_idea = SAF_trade_protection_idea_2
+		}
+		add_tech_bonus = {
+			name = SAF_greater_reach
+			bonus = 1
+			uses = 1
+			category = tp_tech
 		}
 	}
 }
@@ -2335,6 +2387,8 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_special_boat_service"
+		army_experience = 15
+		navy_experience = 15
 		swap_ideas = {
 			remove_idea = SAF_troop_specialisation_idea
 			add_idea = SAF_special_boat_service_idea
@@ -2367,6 +2421,8 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_doctrine_of_our_own"
+		army_experience = 20
+		air_experience = 20
 		add_doctrine_cost_reduction = {
 			name = SAF_doctrine_of_our_own
 			cost_reduction = 0.5
@@ -2397,6 +2453,7 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_develop_air_force"
+		air_experience = 25
 		add_doctrine_cost_reduction = {
 			name = SAF_develop_air_force
 			cost_reduction = 0.5
@@ -2430,6 +2487,7 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_local_aviation_industry"
+		air_experience = 15
 		add_ideas = SAF_domestic_aircraft_production
 	}
 }
@@ -2455,6 +2513,7 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_integrated_air_recon"
+		air_experience = 15
 		add_ideas = SAF_integrated_air_recon_idea
 	}
 }
@@ -2484,6 +2543,13 @@ shared_focus = {
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_heavy_armour_focus"
 		add_ideas = SAF_heavy_armour_focus_1
+		custom_effect_tooltip = tooltip_white_line
+		add_tech_bonus = {
+			name = SAF_heavy_armour_focus
+			bonus = 1
+			uses = 1
+			category = armor
+		}
 	}
 }
 
@@ -2512,6 +2578,13 @@ shared_focus = {
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_mechanised_warfare"
 		add_ideas = SAF_mechanised_focus_1
+		custom_effect_tooltip = tooltip_white_line
+		add_tech_bonus = {
+			name = SAF_mechanised_warfare
+			bonus = 1
+			uses = 1
+			category = cat_mechanized_equipment
+		}
 	}
 }
 
@@ -2574,6 +2647,7 @@ shared_focus = {
 				}
 			}
 		}
+		add_one_random_military_factory = yes
 	}
 }
 
@@ -2601,6 +2675,7 @@ shared_focus = {
 	}
 	completion_reward = {
 		log = "[GetLogRoot]: Focus Completed SAF_armoured_corps"
+		army_experience = 15
 		add_tech_bonus = {
 			name = SAF_armoured_corps
 			bonus = 1
@@ -2674,6 +2749,13 @@ shared_focus = {
 				}
 			}
 		}
+		custom_effect_tooltip = tooltip_white_line
+		add_tech_bonus = {
+			name = SAF_sturdy_designs
+			bonus = 1
+			uses = 1
+			category = artillery
+		}
 	}
 }
 
@@ -2703,8 +2785,9 @@ shared_focus = {
 			bonus = 1
 			uses = 1
 			category = infantry_weapons
-			category = artillery
 		}
+		custom_effect_tooltip = tooltip_white_line
+		add_one_random_military_factory = yes
 	}
 }
 

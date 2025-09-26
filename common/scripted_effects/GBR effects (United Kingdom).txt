@@ -1,59 +1,170 @@
+GBR_initialise_starting_ideas = {
+	set_variable = { GBR_pwd_consumer_goods_factor = 0.8 }
+	set_variable = { GBR_pwd_negative_modifier = -0.6 }
+
+	set_variable = { GBR_lr_political_power_cost = 0.5 }
+	set_variable = { GBR_lr_conscription_factor = -0.6 }
+
+	add_dynamic_modifier = { modifier = GBR_postwar_devastation }
+	add_dynamic_modifier = { modifier = GBR_legacy_revolution }
+	add_ideas = GBR_military_chaos_1
+}
+
+GBR_create_starting_divisions = {
+	GBR_add_infantry_templates = yes
+	GBR_add_cavalry_templates = yes
+	every_core_state = {
+		random_select_amount = 10
+		limit = {
+			is_owned_and_controlled_by = PREV
+			valid_state_for_spawning_friendly_unit = yes
+		}
+		GBR_spawn_royal_guard_infantry_division = yes
+	}
+	every_core_state = {
+		random_select_amount = 2
+		limit = {
+			is_owned_and_controlled_by = PREV
+			valid_state_for_spawning_friendly_unit = yes
+		}
+		GBR_spawn_royal_guard_cavalry_division = yes
+	}
+	every_core_state = {
+		random_select_amount = 8
+		limit = {
+			is_owned_and_controlled_by = PREV
+			valid_state_for_spawning_friendly_unit = yes
+		}
+		GBR_spawn_home_guard_division = yes
+	}
+}
+
 GBR_recalculate_postwar_devastation = {
-	GBR = {
+	if = {
+		limit = { has_dynamic_modifier = { modifier = GBR_postwar_devastation } }
+
+		set_temp_variable = { GBR_pwd_consumer_goods_temp = 0.04 }
+		multiply_temp_variable = { GBR_pwd_consumer_goods_temp = GBR_pwd_multiplier?1 }
+
+		set_temp_variable = { GBR_pwd_negative_temp = -0.03 }
+		multiply_temp_variable = { GBR_pwd_negative_temp = GBR_pwd_multiplier?1 }
+
 		if = {
-			limit = { check_variable = { GBR_pw_dev < 1 } }
+			limit = { NOT = { check_variable = { GBR_pwd_consumer_goods_factor > GBR_pwd_consumer_goods_temp } } }
 			remove_dynamic_modifier = { modifier = GBR_postwar_devastation }
-			clear_variable = GBR_pw_dev
-			clear_variable = GBR_consumer_goods_adj
-			clear_variable = GBR_factory_adj
-			clear_variable = GBR_dockyards_adj
-			clear_variable = GBR_resources_adj
-			clear_variable = GBR_construction_adj
+			clear_variable = GBR_pwd_consumer_goods_factor
+			clear_variable = GBR_pwd_negative_modifier
+			hidden_effect = {
+				remove_targeted_decision = { decision = GBR_land_settlement_act target = ROOT }
+				remove_targeted_decision = { decision = GBR_abercrombie_plan target = ROOT }
+				remove_targeted_decision = { decision = GBR_create_relief_council target = ROOT }
+				remove_targeted_decision = { decision = GBR_expand_power_system target = ROOT }
+				remove_targeted_decision = { decision = GBR_reduce_taxation target = ROOT }
+				remove_targeted_decision = { decision = GBR_new_towns_act target = ROOT }
+				remove_targeted_decision = { decision = GBR_national_housing_project target = ROOT }
+				remove_targeted_decision = { decision = GBR_farming_subsidies target = ROOT }
+				remove_targeted_decision = { decision = GBR_business_subsidies target = ROOT }
+				remove_targeted_decision = { decision = GBR_new_employment_act target = ROOT }
+			}
 		}
 		else = {
-			set_variable = { GBR_consumer_goods_adj = 0.04 }
-			multiply_variable = { GBR_consumer_goods_adj = GBR_pw_dev }
-			set_variable = { GBR_factory_adj = -0.03 }
-			multiply_variable = { GBR_factory_adj = GBR_pw_dev }
-			set_variable = { GBR_dockyards_adj = -0.03 }
-			multiply_variable = { GBR_dockyards_adj = GBR_pw_dev }
-			set_variable = { GBR_resources_adj = -0.03 }
-			multiply_variable = { GBR_resources_adj = GBR_pw_dev }
-			set_variable = { GBR_construction_adj = -0.03 }
-			multiply_variable = { GBR_construction_adj = GBR_pw_dev }
+			multiply_temp_variable = { GBR_pwd_consumer_goods_temp = -1 }
+			multiply_temp_variable = { GBR_pwd_negative_temp = -1 }
+			custom_effect_tooltip = {
+				localization_key = tooltip_modify_dynmod
+				DYNMOD = GBR_postwar_devastation
+			}
+			add_to_variable = {
+				GBR_pwd_consumer_goods_factor = GBR_pwd_consumer_goods_temp
+				tooltip = consumer_goods_factor_tooltip
+			}
+			clamp_variable = { var = GBR_pwd_consumer_goods_factor min = 0 }
+			add_to_variable = {
+				GBR_pwd_negative_modifier = GBR_pwd_negative_temp
+				tooltip = industrial_capacity_factory_tooltip
+			}
+			clamp_variable = { var = GBR_pwd_negative_temp max = 0 }
+			effect_tooltip = {
+				set_temp_variable = {
+					GBR_pwd_negative_temp = GBR_pwd_negative_temp
+					tooltip = industrial_capacity_dockyard_tooltip
+				}
+				set_temp_variable = {
+					GBR_pwd_negative_temp = GBR_pwd_negative_temp
+					tooltip = local_resources_factor_tooltip
+				}
+				set_temp_variable = {
+					GBR_pwd_negative_temp = GBR_pwd_negative_temp
+					tooltip = production_speed_buildings_factor_tooltip
+				}
+			}
 		}
 	}
 }
 
-GBR_recalculate_legacy_revolution = {
-	GBR = {
+GBR_reduce_legacy_revolution = {
+	if = {
+		limit = { has_dynamic_modifier = { modifier = GBR_legacy_revolution } }
 		if = {
-			limit = { check_variable = { GBR_legacy_rev < 1 } }
+			limit = { NOT = { check_variable = { GBR_lr_political_power_cost > 0.05 } } }
 			remove_dynamic_modifier = { modifier = GBR_legacy_revolution }
-			clear_variable = GBR_legacy_rev
-			clear_variable = GBR_pp_cost_adj
+			clear_variable = GBR_lr_political_power_cost
+			clear_variable = GBR_lr_conscription_factor
+			hidden_effect = {
+				remove_targeted_decision = { decision = GBR_beveridge_report target = ROOT }
+				remove_targeted_decision = { decision = GBR_pigou_report target = ROOT }
+				remove_targeted_decision = { decision = GBR_desyndicalisation target = ROOT }
+				remove_targeted_decision = { decision = GBR_pass_insurance_act target = ROOT }
+				remove_targeted_decision = { decision = GBR_central_banking_act target = ROOT }
+				remove_targeted_decision = { decision = GBR_national_health_service target = ROOT }
+				remove_targeted_decision = { decision = GBR_privatisation_act target = ROOT }
+				remove_targeted_decision = { decision = GBR_legacy_revolution_generic target = ROOT }
+				remove_targeted_decision = { decision = GBR_female_equality target = ROOT }
+			}
 		}
 		else = {
-			set_variable = { GBR_pp_cost_adj = 0.05 }
-			multiply_variable = { GBR_pp_cost_adj = GBR_legacy_rev }
-			set_variable = { GBR_consc_adj = -0.06 }
-			multiply_variable = { GBR_consc_adj = GBR_legacy_rev }
+			custom_effect_tooltip = {
+				localization_key = tooltip_modify_dynmod
+				DYNMOD = GBR_legacy_revolution
+			}
+			add_to_variable = {
+				GBR_lr_political_power_cost = -0.1
+				tooltip = political_power_cost_tooltip
+			}
+			clamp_variable = { var = GBR_lr_political_power_cost min = 0 }
+			add_to_variable = {
+				GBR_lr_conscription_factor = 0.12
+				tooltip = conscription_factor_tooltip
+			}
+			clamp_variable = { var = GBR_lr_conscription_factor max = 0 }
 		}
 	}
 }
 
 GBR_recalculate_syndicalist_resistance = {
-	GBR = {
+	if = {
+		limit = { has_dynamic_modifier = { modifier = GBR_syndicalist_resistance } }
 		if = {
-			limit = { check_variable = { GBR_synd_unrest < 1 } }
-			custom_effect_tooltip = GBR_resistance_effect_removed
+			limit = {
+				set_temp_variable = { temp = GBR_sr_stability_factor }
+				subtract_from_temp_variable = { temp = GBR_resistance_temp?0.01 }
+				check_variable = { temp = 0 }
+			}
 			remove_dynamic_modifier = { modifier = GBR_syndicalist_resistance }
-			clear_variable = GBR_synd_unrest
-			clear_variable = GBR_stab_factor_adj
+			clear_variable = GBR_sr_stability_factor
+			hidden_effect = {
+				remove_targeted_decision = { decision = GBR_fight_syndicalists target = ENG }
+			}
 		}
 		else = {
-			set_variable = { GBR_stab_factor_adj = -0.01 }
-			multiply_variable = { GBR_stab_factor_adj = GBR_synd_unrest }
+			custom_effect_tooltip = {
+				localization_key = tooltip_modify_dynmod
+				DYNMOD = GBR_syndicalist_resistance
+			}
+			add_to_variable = {
+				GBR_sr_stability_factor = GBR_resistance_temp?0.01
+				tooltip = stability_factor_tooltip
+			}
 		}
 	}
 }
@@ -690,20 +801,63 @@ GBR_add_traits_if_appropriate = {
 	}
 }
 
-GBR_spawn_uk = {
+GBR_spawn_npc_uk = {
 	add_political_power = 200
 	if = {
 		limit = { has_idea = CAN_bastion_of_the_old_order }
 		remove_ideas = CAN_bastion_of_the_old_order
 	}
 	custom_effect_tooltip = CAN_release_GBR
-
 	hidden_effect = {
-		random_other_country = { news_event = worldnews.185 }
-		IRE = { country_event = { id = irelandflavour.6 days = 1 } }
-		GBR = { transfer_technology = yes }
-		CAN_create_uk_cores = yes
-		CAN_release_uk = yes
+		ENG = { every_core_state = { add_core_of = GBR } }
+		every_owned_state = {
+			limit = {
+				OR = {
+					is_great_britain = yes
+					is_ireland = yes
+				}
+			}
+			remove_claim_by = CAN
+			save_current_factory_count = yes
+			transfer_state_to = GBR
+			restore_previous_factory_count = yes
+		}
+		every_state = {
+			limit = {
+				is_canada = no
+				NOT = { is_core_of = CAN }
+				NOT = { is_claimed_by = CAN }
+			}
+			CAN = { clear_variable = PREV.ambition_area_@THIS } #tag alias
+		}
+		if = {
+			limit = {
+				original_tag = IMP
+				CAN_is_dominion = yes
+			}
+			every_owned_state = {
+				limit = {
+					is_british_colonial_claim = yes
+					NOT = { is_core_of = ROOT }
+					NOT = { has_variable = ambition_area_@ROOT }
+				}
+				remove_claim_by = ROOT
+				save_current_factory_count = yes
+				transfer_state_to = GBR
+				restore_previous_factory_count = yes
+			}
+		}
+		else = {
+			every_owned_state = {
+				limit = {
+					is_british_colonial_claim = yes
+					is_claim_or_core_or_ambition_of_ROOT = no
+				}
+				save_current_factory_count = yes
+				transfer_state_to = GBR
+				restore_previous_factory_count = yes
+			}
+		}
 	}
 
 	if = {
@@ -722,16 +876,35 @@ GBR_spawn_uk = {
 	}
 
 	hidden_effect = {
+		CAN = {
+			every_character = {
+				limit = { has_character_flag = GBR_character }
+				set_nationality = GBR
+			}
+		}
 		GBR = {
 			set_capital = { state = 126 remember_old_capital = no }
-			set_major = yes
+			transfer_technology = yes
 			load_oob = "GBR_naval"
-			country_event = { id = uk.3 days = 1 }
-			country_event = { id = uk.6 days = 1 }
-			CAN_setup_uk_government = yes
+			CAN_convert_british_pm_slots = yes
+			CAN_add_british_pm = yes
 			CAN_create_monarchy = yes
 			CAN_transfer_king_base = yes
 			CAN_add_returning_king = yes
+			GBR_initialise_starting_ideas = yes
+			GBR_create_starting_divisions = yes
+			if = {
+				limit = { is_in_faction_with = CAN }
+				add_manpower = 200000
+				CAN = {
+					add_manpower = -100000
+					send_equipment = {
+						target = GBR
+						type = infantry_equipment
+						amount = 2500
+					}
+				}
+			}
 			if = {
 				limit = { is_in_faction_with = ENT }
 				add_to_tech_sharing_group = entente_research
@@ -740,9 +913,14 @@ GBR_spawn_uk = {
 			### Models/icons check - update GBRs icon and model pools if changed
 			### gfx\interface\equipmentdesigner\graphic_db\00_Commonwealth_tank_icons.txt
 			if = {
-				limit = { NOT = { tag = D01 } }
+				limit = {
+					NOT = { tag = IMP }
+					NOT = { tag = D01 }
+				}
 				log = "KR_Event_Logging;WARNING GBR spawned without tag D01 - need to update GBR icon pools"
 			}
+
+			country_event = { id = uk.3 days = 1 }
 		}
 		if = {
 			limit = {
@@ -779,6 +957,830 @@ GBR_spawn_uk = {
 			}
 			restore_previous_government_type = yes
 		}
+	}
+
+	hidden_effect = {
+		news_event = uk.144
+		IRE = { country_event = { id = irelandflavour.6 days = 1 } }
+	}
+}
+
+GBR_spawn_player_uk_tt = {
+	effect_tooltip = {
+		custom_effect_tooltip = CAN_release_GBR
+		custom_effect_tooltip = tooltip_white_line
+		ENG = {
+			every_core_state = {
+				remove_claim_by = ROOT
+				add_core_of = GBR
+			}
+		}
+		set_capital = { state = 126 remember_old_capital = no }
+		custom_effect_tooltip = tooltip_white_line
+		if = {
+			limit = { has_idea = CAN_bastion_of_the_old_order }
+			remove_ideas = CAN_bastion_of_the_old_order
+			custom_effect_tooltip = tooltip_white_line
+		}
+		add_country_leader_trait = GBR_returning_king
+		CAN_convert_british_pm_slots = yes
+		custom_effect_tooltip = tooltip_white_line
+		load_focus_tree = united_kingdom_focus
+		custom_effect_tooltip = tooltip_white_line
+		add_timed_idea = {
+			idea = CAN_british_arrivals
+			days = 365
+		}
+		custom_effect_tooltip = tooltip_white_line
+		GBR = {
+			clr_country_flag = IMP_is_britain
+			set_temp_variable = { britain = THIS }
+		}
+		set_country_flag = IMP_is_britain
+		var:britain = { ROOT = { copy_government_of_PREV = yes } } #must happen AFTER the alias is remapped so on actions fire correctly
+		custom_effect_tooltip = tooltip_white_line
+		every_subject_country = {
+			limit = { is_in_north_america = yes }
+			CAN = {
+				set_autonomy = {
+					target = PREV
+					autonomy_state = default_puppet
+					end_wars = no
+				}
+			}
+		}
+	}
+}
+
+GBR_spawn_player_uk = {
+	#########################
+	### spawn copy of CAN ###
+	#########################
+
+	create_dynamic_country = {
+		original_tag = IMP
+		set_temp_variable = { canada = THIS }
+
+		set_cosmetic_tag = CAN_entente
+		set_major = yes
+		set_research_slots = var:ROOT.amount_research_slots
+		set_stability = var:ROOT.stability
+		set_war_support = var:ROOT.has_war_support
+
+		CAN = {
+			every_character = {
+				limit = { has_character_flag = CAN_character }
+				set_nationality = PREV.PREV
+			}
+		}
+		if = {
+			limit = { has_character = CAN_andrew_mccaughton } #prevents error log flood
+			CAN_andrew_mccaughton = {
+				set_character_as_regent = yes
+				remove_all_country_leader_roles = yes
+				for_each_loop = {
+					array = global.ideology_groups
+					if = {
+						limit = { ideology_group_is_socialist = no }
+						meta_effect = {
+							text = {
+								add_country_leader_role = {
+									country_leader = {
+										desc = CAN_andrew_mccaughton_leader_desc
+										ideology = [IDEOLOGY]
+									}
+									promote_leader = yes
+								}
+							}
+							IDEOLOGY = "[?v.GetTokenKey]_subtype"
+						}
+					}
+				}
+			}
+		}
+
+		load_focus_tree = {
+			tree = canada_focus
+			copy_completed_from = CAN
+		}
+
+		every_core_state = {
+			save_current_factory_count = yes
+			transfer_state_to = PREV
+			restore_previous_factory_count = yes
+			remove_core_of = ROOT
+		}
+		ROOT = {
+			every_owned_state = {
+				limit = { is_on_continent = north_america }
+				save_current_factory_count = yes
+				transfer_state_to = PREV
+				restore_previous_factory_count = yes
+				remove_claim_by = ROOT
+			}
+		}
+	}
+	var:canada = {
+		set_capital = { state = 739 remember_old_capital = no }
+		every_character = {
+			limit = {
+				can_be_country_leader = yes
+				NOT = { has_character_flag = CAN_character } #== generico
+				NOT = { has_character_flag = GBR_character }
+			}
+			retire = yes
+		}
+	}
+	transfer_units_fraction = {
+		target = var:canada
+		target_organization = 1
+		source_organization = 1
+		size = 1
+		stockpile_ratio = 1
+		army_ratio = 1
+		navy_ratio = 1
+		air_ratio = 1
+		keep_unit_leaders_trigger = { always = yes }
+	}
+
+	if = {
+		limit = { is_in_faction = yes }
+		set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
+		faction_leader = { add_to_faction = var:canada }
+	}
+	if = {
+		limit = { ENT_is_in_iedc = yes }
+		var:canada = { CAN_add_to_iedc = yes }
+	}
+	else_if = {
+		limit = { is_in_economic_sphere = yes }
+		set_temp_variable = { sphere_target = var:canada }
+		add_to_economic_sphere = yes
+	}
+
+	if = {
+		limit = { tag = ENT }
+		var:canada = { CAN_transfer_entente_leader = yes }
+	}
+	if = {
+		limit = { is_in_tech_sharing_group = entente_research }
+		var:canada = { add_to_tech_sharing_group = entente_research }
+	}
+	if = {
+		limit = { has_idea = CAN_iedc_main }
+		var:canada = { CAN_transfer_iedc_leadership = yes }
+	}
+	every_country = {
+		limit = {
+			OR = {
+				has_country_flag = embargoed_@ROOT
+				ROOT = { has_country_flag = embargoed_@PREV }
+			}
+		}
+		var:canada = { embargo_PREV = yes }
+	}
+
+	##########################
+	### transfer CAN ideas ###
+	##########################
+
+	if = {
+		limit = { has_idea = CAN_bastion_of_the_old_order }
+		remove_ideas = CAN_bastion_of_the_old_order
+	}
+	GBR_check_canadian_ideas = yes
+	for_each_loop = {
+		array = GBR_canadian_ideas
+		remove_ideas = var:v
+		var:canada = { add_ideas = var:v }
+	}
+
+	##############################
+	### transfer CAN decisions ###
+	##############################
+
+	CAN_disable_returning_home_decisions = yes
+	if = {
+		limit = { check_variable = { CAN_disable_conscription_decision = 1 } }
+		remove_targeted_decision = { decision = CAN_enact_full_conscription target = THIS }
+		var:canada = { activate_targeted_decision = { decision = CAN_enact_full_conscription target = THIS } }
+	}
+	if = {
+		limit = {
+			OR = {
+				has_completed_focus = CAN_suppress_quebecois
+				has_completed_focus = CAN_war_measures_act
+			}
+		}
+		every_state = {
+			limit = { has_dynamic_modifier = { modifier = CAN_quebecois_resistance_modifier } }
+			ROOT = { remove_targeted_decision = { decision = CAN_suppress_quebecois_state target = PREV } }
+			var:canada = { activate_targeted_decision = { decision = CAN_suppress_quebecois_state target = PREV } }
+		}
+	}
+	if = {
+		limit = {
+			has_completed_focus = CAN_americans_at_war
+			NOT = { has_global_flag = USA_civil_war_over_flag }
+			NOT = { has_country_flag = CAN_white_peaced_ACW }
+			NOT = { has_country_flag = CAN_joined_the_ACW }
+		}
+		activate_targeted_decision = { decision = CAN_intervene_in_ACW target = USA }
+		activate_targeted_decision = { decision = CAN_intervene_in_ACW target = ACC }
+		activate_targeted_decision = { decision = CAN_intervene_in_ACW target = APG }
+		activate_targeted_decision = { decision = CAN_declare_war_on_WCA target = WCA }
+		activate_targeted_decision = { decision = CAN_invite_ACC_ceasefire target = ACC }
+	}
+	if = {
+		limit = {
+			has_completed_focus = CAN_eyes_to_the_south
+			NOT = { has_global_flag = USA_civil_war_over_flag }
+		}
+		if = {
+			limit = { 739 = { has_state_flag = CAN_reinforce_state } }
+			activate_targeted_decision = { decision = CAN_reinforce_ottawa target = 739 }
+		}
+		if = {
+			limit = { 832 = { has_state_flag = CAN_reinforce_state } }
+			activate_targeted_decision = { decision = CAN_reinforce_montreal target = 832 }
+		}
+		if = {
+			limit = { 473 = { has_state_flag = CAN_reinforce_state } }
+			activate_targeted_decision = { decision = CAN_reinforce_vancouver target = 473 }
+		}
+		if = {
+			limit = { 467 = { has_state_flag = CAN_reinforce_state } }
+			activate_targeted_decision = { decision = CAN_reinforce_winnipeg target = 467 }
+		}
+		if = {
+			limit = { 464 = { has_state_flag = CAN_reinforce_state } }
+			activate_targeted_decision = { decision = CAN_reinforce_halifax target = 464 }
+		}
+	}
+	if = {
+		limit = { has_global_flag = CAN_yankee_rebellion }
+		clr_country_flag = CAN_is_suppressing_NEE
+		CAN_teardown_NEE_suppression_decisions = yes
+		var:canada = { CAN_setup_NEE_suppression_decisions = yes }
+	}
+	if = {
+		limit = { has_completed_focus = CAN_american_recruitment }
+		remove_targeted_decision = { target = 932 decision = CAN_nee_recruitment1 }
+		remove_targeted_decision = { target = 932 decision = CAN_develop_boston_synth }
+		remove_targeted_decision = { target = 357 decision = CAN_develop_maine_steel }
+		var:canada = {
+			if = {
+				limit = { check_variable = { global.CAN_neerec_local_non_core_manpower < 0.1 } }
+				activate_targeted_decision = { target = 932 decision = CAN_nee_recruitment1 }
+			}
+			else_if = {
+				limit = { check_variable = { global.CAN_neerec_local_non_core_manpower < 0.2 } }
+				activate_targeted_decision = { target = 932 decision = CAN_nee_recruitment2 }
+			}
+			else_if = {
+				limit = { check_variable = { global.CAN_neerec_local_non_core_manpower < 0.3 } }
+				activate_targeted_decision = { target = 932 decision = CAN_nee_recruitment3 }
+			}
+			if = {
+				limit = { NOT = { 932 = { has_state_flag = CAN_synth_developed } } }
+				activate_targeted_decision = { target = 932 decision = CAN_develop_boston_synth }
+			}
+			if = {
+				limit = { NOT = { 357 = { has_state_flag = CAN_steel_developed } } }
+				activate_targeted_decision = { target = 357 decision = CAN_develop_maine_steel }
+			}
+		}
+	}
+	every_state = {
+		if = {
+			limit = { has_state_flag = CAN_construct_1_civ_decision }
+			ROOT = { remove_targeted_decision = { decision = CAN_construct_1_civ_decision target = PREV } }
+			var:canada = { activate_targeted_decision = { decision = CAN_construct_1_civ_decision target = PREV } }
+		}
+		if = {
+			limit = { has_state_flag = CAN_construct_2_civ_decision }
+			ROOT = { remove_targeted_decision = { decision = CAN_construct_2_civ_decision target = PREV } }
+			var:canada = { activate_targeted_decision = { decision = CAN_construct_2_civ_decision target = PREV } }
+		}
+		if = {
+			limit = { has_state_flag = CAN_construct_1_mil_decision }
+			ROOT = { remove_targeted_decision = { decision = CAN_construct_1_mil_decision target = PREV } }
+			var:canada = { activate_targeted_decision = { decision = CAN_construct_1_mil_decision target = PREV } }
+		}
+		if = {
+			limit = { has_state_flag = CAN_construct_2_mil_decision }
+			ROOT = { remove_targeted_decision = { decision = CAN_construct_2_mil_decision target = PREV } }
+			var:canada = { activate_targeted_decision = { decision = CAN_construct_2_mil_decision target = PREV } }
+		}
+		if = {
+			limit = { has_state_flag = CAN_construct_dockyard_decision }
+			ROOT = { remove_targeted_decision = { decision = CAN_construct_dockyard_decision target = PREV } }
+			var:canada = { activate_targeted_decision = { decision = CAN_construct_dockyard_decision target = PREV } }
+		}
+	}
+	if = {
+		limit = { has_completed_focus = CAN_invest_resources }
+		if = {
+			limit = { 276 = { NOT = { has_state_flag = CAN_coal_mines_developed } } }
+			remove_targeted_decision = { decision = CAN_develop_ontario_coal_mines target = 276 }
+			var:canada = { activate_targeted_decision = { decision = CAN_develop_ontario_coal_mines target = 276 } }
+		}
+		if = {
+			limit = { 470 = { NOT = { has_state_flag = CAN_oil_wells_developed } } }
+			remove_targeted_decision = { decision = CAN_develop_alberta_oil_wells target = 470 }
+			var:canada = { activate_targeted_decision = { decision = CAN_develop_alberta_oil_wells target = 470 } }
+		}
+		if = {
+			limit = { 332 = { NOT = { has_state_flag = CAN_tungsten_mines_developed } } }
+			remove_targeted_decision = { decision = CAN_develop_quebec_tungsten_mines target = 332 }
+			var:canada = { activate_targeted_decision = { decision = CAN_develop_quebec_tungsten_mines target = 332 } }
+		}
+		if = {
+			limit = { 465 = { NOT = { has_state_flag = CAN_tungsten_mines_developed } } }
+			remove_targeted_decision = { decision = CAN_develop_newbrun_tungsten_mines target = 465 }
+			var:canada = { activate_targeted_decision = { decision = CAN_develop_newbrun_tungsten_mines target = 465 } }
+		}
+		if = {
+			limit = { 682 = { NOT = { has_state_flag = CAN_aluminium_mines_developed } } }
+			remove_targeted_decision = { decision = CAN_develop_ontario_aluminium_mines target = 682 }
+			var:canada = { activate_targeted_decision = { decision = CAN_develop_ontario_aluminium_mines target = 682 } }
+		}
+		if = {
+			limit = { 682 = { NOT = { has_state_flag = CAN_chromium_mines_developed } } }
+			remove_targeted_decision = { decision = CAN_develop_ontario_chromium_mines target = 682 }
+			var:canada = { activate_targeted_decision = { decision = CAN_develop_ontario_chromium_mines target = 682 } }
+		}
+	}
+	if = {
+		limit = { has_completed_focus = CAN_prairie_oil }
+		if = {
+			limit = { 470 = { NOT = { has_state_flag = CAN_oil_wells_developed2 } } }
+			remove_targeted_decision = { decision = CAN_develop_alberta_oil_wells2 target = 470 }
+			var:canada = { activate_targeted_decision = { decision = CAN_develop_alberta_oil_wells2 target = 470 } }
+		}
+		if = {
+			limit = { 469 = { NOT = { has_state_flag = CAN_oil_wells_developed } } }
+			remove_targeted_decision = { decision = CAN_develop_sask_oil_wells target = 469 }
+			var:canada = { activate_targeted_decision = { decision = CAN_develop_sask_oil_wells target = 469 } }
+		}
+	}
+	if = {
+		limit = { has_completed_focus = CAN_explore_the_north }
+		if = {
+			limit = { 471 = { NOT = { has_state_flag = CAN_oil_wells_developed } } }
+			remove_targeted_decision = { decision = CAN_develop_yukon_oil_wells target = 471 }
+			var:canada = { activate_targeted_decision = { decision = CAN_develop_yukon_oil_wells target = 471 } }
+		}
+		if = {
+			limit = { 332 = { NOT = { has_state_flag = CAN_iron_mines_developed } } }
+			remove_targeted_decision = { decision = CAN_develop_labrador_iron_mines target = 332 }
+			var:canada = { activate_targeted_decision = { decision = CAN_develop_labrador_iron_mines target = 332 } }
+		}
+		if = {
+			limit = { 466 = { NOT = { has_state_flag = CAN_aluminium_mines_developed } } }
+			remove_targeted_decision = { decision = CAN_develop_quebec_aluminium_mines target = 466 }
+			var:canada = { activate_targeted_decision = { decision = CAN_develop_quebec_aluminium_mines target = 466 } }
+		}
+		if = {
+			limit = { 332 = { NOT = { has_state_flag = CAN_chromium_mines_developed } } }
+			remove_targeted_decision = { decision = CAN_develop_quebec_chromium_mines target = 332 }
+			var:canada = { activate_targeted_decision = { decision = CAN_develop_quebec_chromium_mines target = 332 } }
+		}
+	}
+
+	###########################
+	### switch IMP into GBR ###
+	###########################
+
+	set_cosmetic_tag = GBR
+	add_stability = -0.1
+	add_war_support = -0.3
+	ENG = {
+		every_core_state = {
+			remove_claim_by = ROOT
+			add_core_of = ROOT
+		}
+	}
+	set_capital = { state = 126 remember_old_capital = no }
+	GBR = {
+		every_character = {
+			limit = { has_character_flag = GBR_character }
+			set_nationality = ROOT
+		}
+	}
+	every_unit_leader = {
+		limit = { has_trait = GBR_british_exile_trait }
+		remove_unit_leader_trait = GBR_british_exile_trait
+	}
+	for_each_loop = {
+		array = global.ideology_groups
+		meta_effect = {
+			text = {
+				set_party_name = {
+					ideology = [IDEOLOGY]
+					name = GBR_[IDEOLOGY]_party
+					long_name = GBR_[IDEOLOGY]_party_long
+				}
+			}
+			IDEOLOGY = "[?v.GetTokenKey]"
+		}
+	}
+	CAN_convert_british_pm_slots = yes
+	CAN_add_returning_king = yes
+	load_focus_tree = united_kingdom_focus
+	GBR_initialise_starting_ideas = yes
+	GBR_create_starting_divisions = yes
+	add_timed_idea = {
+		idea = CAN_british_arrivals
+		days = 365
+	}
+
+	#########################
+	### remap tag aliases ###
+	#########################
+
+	clr_country_flag = IMP_is_canada
+	var:canada = {
+		set_country_flag = IMP_is_canada
+		copy_government_of_ROOT = yes #must happen AFTER the alias is remapped so on actions fire correctly
+	}
+	GBR = {
+		clr_country_flag = IMP_is_britain
+		set_temp_variable = { britain = THIS }
+	}
+	set_country_flag = IMP_is_britain
+	var:britain = { ROOT = { copy_government_of_PREV = yes } } #must happen AFTER the alias is remapped so on actions fire correctly
+
+	#transfer North American subjects to the new CAN
+	every_subject_country = {
+		limit = { is_in_north_america = yes }
+		get_current_government_type = yes
+		var:canada = {
+			set_autonomy = {
+				target = PREV
+				autonomy_state = default_puppet
+				end_wars = no
+			}
+		}
+		restore_previous_government_type = yes
+	}
+
+	###################
+	### fire events ###
+	###################
+
+	news_event = uk.144
+	country_event = { id = uk.3 days = 1 }
+	country_event = { id = canada.302 days = 6 }
+	var:canada = {
+		country_event = { id = canada.300 days = 1 }
+		country_event = { id = assyria_events.30 days = 7 random_days = 21 }
+
+		set_temp_variable = { days_to_event = 1096 }
+		calculate_days_since_game_start = yes
+		country_event = { id = canada.72 days = days_to_event random_days = 180 } #J.S. Woodsworth loses CCF leadership to Coldwell
+
+		set_temp_variable = { days_to_event = 2929 }
+		calculate_days_since_game_start = yes
+		country_event = { id = canada.70 days = days_to_event } #Mackenzie King Retires
+
+		set_temp_variable = { days_to_event = 3290 }
+		calculate_days_since_game_start = yes
+		country_event = { id = canada.71 days = days_to_event } #R.B. Bennett Retires
+	}
+	IRE = { country_event = { id = irelandflavour.6 days = 1 } }
+}
+
+GBR_check_canadian_ideas = {
+	if = {
+		limit = { has_idea = CAN_divided_nation }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_divided_nation }
+	}
+	if = {
+		limit = { has_idea = CAN_anglo_french_tensions_1 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_anglo_french_tensions_1 }
+	}
+	if = {
+		limit = { has_idea = CAN_anglo_french_tensions_2 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_anglo_french_tensions_2 }
+	}
+	if = {
+		limit = { has_idea = CAN_anglo_french_tensions_3 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_anglo_french_tensions_3 }
+	}
+	if = {
+		limit = { has_idea = CAN_anglo_french_friendship }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_anglo_french_friendship }
+	}
+	if = {
+		limit = { has_idea = CAN_great_depression_1 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_great_depression_1 }
+	}
+	if = {
+		limit = { has_idea = CAN_great_depression_2 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_great_depression_2 }
+	}
+	if = {
+		limit = { has_idea = CAN_great_depression_3 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_great_depression_3 }
+	}
+	if = {
+		limit = { has_idea = CAN_resistance_to_conscription }
+		set_temp_variable = { CAN_disable_conscription_decision = 1 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_resistance_to_conscription }
+	}
+	if = {
+		limit = { has_idea = CAN_professional_army }
+		set_temp_variable = { CAN_disable_conscription_decision = 1 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_professional_army }
+	}
+	if = {
+		limit = { has_idea = CAN_mounties_1 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_mounties_1 }
+	}
+	if = {
+		limit = { has_idea = CAN_mounties_2 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_mounties_2 }
+	}
+	if = {
+		limit = { has_idea = CAN_billc7_tory }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_billc7_tory }
+	}
+	if = {
+		limit = { has_idea = CAN_billc7_liberal }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_billc7_liberal }
+	}
+	if = {
+		limit = { has_idea = CAN_billc7_mix }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_billc7_mix }
+	}
+	if = {
+		limit = { has_idea = CAN_quebec_in_flames_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_quebec_in_flames_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_expanded_conscription_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_expanded_conscription_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_exiles_active_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_exiles_active_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_work_camps }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_work_camps }
+	}
+	if = {
+		limit = { has_idea = CAN_work_camps_2 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_work_camps_2 }
+	}
+	if = {
+		limit = { has_idea = CAN_unemployment_insurance_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_unemployment_insurance_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_cbc_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_cbc_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_cbc_propaganda_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_cbc_propaganda_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_uoftoronto_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_uoftoronto_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_aircanada_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_aircanada_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_air_training_plan_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_air_training_plan_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_air_focus }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_air_focus }
+	}
+	if = {
+		limit = { has_idea = CAN_davie_contract }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_davie_contract }
+	}
+	if = {
+		limit = { has_idea = CAN_shipbuilding_plan_1 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_shipbuilding_plan_1 }
+	}
+	if = {
+		limit = { has_idea = CAN_shipbuilding_plan_2 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_shipbuilding_plan_2 }
+	}
+	if = {
+		limit = { has_idea = CAN_exile_admiralty_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_exile_admiralty_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_navy_games_won }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_navy_games_won }
+	}
+	if = {
+		limit = { has_idea = CAN_navy_games_lost }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_navy_games_lost }
+	}
+	if = {
+		limit = { has_idea = CAN_navy_focus }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_navy_focus }
+	}
+	if = {
+		limit = { has_idea = CAN_invasion_plans_1 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_invasion_plans_1 }
+	}
+	if = {
+		limit = { has_idea = CAN_invasion_plans_2 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_invasion_plans_2 }
+	}
+	if = {
+		limit = { has_idea = CAN_loyalist_uprising }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_loyalist_uprising }
+	}
+	if = {
+		limit = { has_idea = CAN_special_branch_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_special_branch_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_special_branch_idea_lar }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_special_branch_idea_lar }
+	}
+	if = {
+		limit = { has_idea = CAN_motor_industry_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_motor_industry_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_adv_training_idea_1 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_adv_training_idea_1 }
+	}
+	if = {
+		limit = { has_idea = CAN_adv_training_idea_2 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_adv_training_idea_2 }
+	}
+	if = {
+		limit = { has_idea = CAN_munitions_idea_1 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_munitions_idea_1 }
+	}
+	if = {
+		limit = { has_idea = CAN_munitions_idea_2 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_munitions_idea_2 }
+	}
+	if = {
+		limit = { has_idea = CAN_army_focus }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_army_focus }
+	}
+	if = {
+		limit = { has_idea = CAN_all_hands_on_deck_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_all_hands_on_deck_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_rally_the_country }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_rally_the_country }
+	}
+	if = {
+		limit = { has_idea = CAN_darkest_hour }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_darkest_hour }
+	}
+	if = {
+		limit = { has_idea = CAN_war_of_1812_idea }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_war_of_1812_idea }
+	}
+	if = {
+		limit = { has_idea = CAN_refugee_crisis_1 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_refugee_crisis_1 }
+	}
+	if = {
+		limit = { has_idea = CAN_refugee_crisis_2 }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_refugee_crisis_2 }
+	}
+	if = {
+		limit = { has_idea = CAN_refugee_crisis_sec }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_refugee_crisis_sec }
+	}
+	if = {
+		limit = { has_idea = CAN_refugee_crisis_help }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_refugee_crisis_help }
+	}
+	if = {
+		limit = { has_idea = CAN_refugee_crisis_sam }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_refugee_crisis_sam }
+	}
+	if = {
+		limit = { has_idea = CAN_impacted_us_trade }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_impacted_us_trade }
+	}
+	if = {
+		limit = { has_idea = CAN_crippling_strikes }
+		add_to_temp_array = { GBR_canadian_ideas = token:CAN_crippling_strikes }
+	}
+	if = {
+		limit = { has_idea = dominion_steel_and_coal }
+		add_to_temp_array = { GBR_canadian_ideas = token:dominion_steel_and_coal }
+	}
+	if = {
+		limit = { has_idea = bell_canada }
+		add_to_temp_array = { GBR_canadian_ideas = token:bell_canada }
+	}
+	if = {
+		limit = { has_idea = canadian_marconi_company }
+		add_to_temp_array = { GBR_canadian_ideas = token:canadian_marconi_company }
+	}
+	if = {
+		limit = { has_idea = imperial_oil }
+		add_to_temp_array = { GBR_canadian_ideas = token:imperial_oil }
+	}
+	if = {
+		limit = { has_idea = canadian_arsenals }
+		add_to_temp_array = { GBR_canadian_ideas = token:canadian_arsenals }
+	}
+	if = {
+		limit = { has_idea = dominion_cartridge }
+		add_to_temp_array = { GBR_canadian_ideas = token:dominion_cartridge }
+	}
+	if = {
+		limit = { has_idea = canadian_industries_limited }
+		add_to_temp_array = { GBR_canadian_ideas = token:canadian_industries_limited }
+	}
+	if = {
+		limit = { has_idea = royal_canadian_ordnance_corps }
+		add_to_temp_array = { GBR_canadian_ideas = token:royal_canadian_ordnance_corps }
+	}
+	if = {
+		limit = { has_idea = general_motors_canada }
+		add_to_temp_array = { GBR_canadian_ideas = token:general_motors_canada }
+	}
+	if = {
+		limit = { has_idea = massey_harris }
+		add_to_temp_array = { GBR_canadian_ideas = token:massey_harris }
+	}
+	if = {
+		limit = { has_idea = leyland }
+		add_to_temp_array = { GBR_canadian_ideas = token:leyland }
+	}
+	if = {
+		limit = { has_idea = canadian_pacific }
+		add_to_temp_array = { GBR_canadian_ideas = token:canadian_pacific }
+	}
+	if = {
+		limit = { has_idea = canadian_car }
+		add_to_temp_array = { GBR_canadian_ideas = token:canadian_car }
+	}
+	if = {
+		limit = { has_idea = montreal_locomotive_works }
+		add_to_temp_array = { GBR_canadian_ideas = token:montreal_locomotive_works }
+	}
+	if = {
+		limit = { has_idea = canadian_vickers }
+		add_to_temp_array = { GBR_canadian_ideas = token:canadian_vickers }
+	}
+	if = {
+		limit = { has_idea = halifax_shipyard }
+		add_to_temp_array = { GBR_canadian_ideas = token:halifax_shipyard }
+	}
+	if = {
+		limit = { has_idea = davie_shipbuilding }
+		add_to_temp_array = { GBR_canadian_ideas = token:davie_shipbuilding }
+	}
+	if = {
+		limit = { has_idea = yarrow_shipbuilders }
+		add_to_temp_array = { GBR_canadian_ideas = token:yarrow_shipbuilders }
+	}
+	if = {
+		limit = { has_idea = gloster }
+		add_to_temp_array = { GBR_canadian_ideas = token:gloster }
+	}
+	if = {
+		limit = { has_idea = canadair }
+		add_to_temp_array = { GBR_canadian_ideas = token:canadair }
+	}
+	if = {
+		limit = { has_idea = de_havilland_canada }
+		add_to_temp_array = { GBR_canadian_ideas = token:de_havilland_canada }
+	}
+	if = {
+		limit = { has_idea = avro_canada }
+		add_to_temp_array = { GBR_canadian_ideas = token:avro_canada }
+	}
+	if = {
+		limit = { has_idea = bristol }
+		add_to_temp_array = { GBR_canadian_ideas = token:bristol }
+	}
+	if = {
+		limit = { has_idea = fairey_aviation_canada }
+		add_to_temp_array = { GBR_canadian_ideas = token:fairey_aviation_canada }
+	}
+	if = {
+		limit = { has_idea = orenda_engines }
+		add_to_temp_array = { GBR_canadian_ideas = token:orenda_engines }
+	}
+	if = {
+		limit = { has_idea = raac_canada }
+		add_to_temp_array = { GBR_canadian_ideas = token:raac_canada }
 	}
 }
 
