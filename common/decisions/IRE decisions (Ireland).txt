@@ -2527,7 +2527,7 @@ IRE_foreign_policy_decisions = {
 			log = "[GetLogRoot][GetLogFrom]: Decision remove IRE_join_entente"
 			FROM = { country_event = ireland.2000 }
 			custom_effect_tooltip = if_they_accept_tt
-			custom_effect_tooltip = IRE_join_ENT_tt
+			custom_effect_tooltip = IRE_join_entente_tt
 			effect_tooltip = {
 				FROM = { add_to_faction = ROOT }
 			}
@@ -2689,18 +2689,6 @@ IRE_foreign_policy_decisions = {
 				FROM = { has_authoritarian_government = yes }
 				ROOT = { has_dictatorship_government = yes }
 			}
-			if = {
-				limit = { has_democratic_government = yes }
-				OR = {
-					FRA = { has_government = totalist }
-					ENG = { has_government = totalist }
-					64 = { owner = { is_in_faction_with = INT } }
-					AND = {
-						INT = { has_war_with = FROM }
-						INT = { has_war_with = ROOT }
-					}
-				}
-			}
 			# AUS = { is_faction_leader = no }	### IRE eventual TO-DO
 			INT = { is_faction_leader = yes }
 			if = {
@@ -2760,6 +2748,19 @@ IRE_foreign_policy_decisions = {
 						}
 					}
 					has_game_rule = { rule = IRE_path option = IRE_PATH_RADSOC }
+				}
+			}
+			modifier = {
+				factor = 0
+				has_democratic_government = yes
+				NOT = {
+					FRA = { has_government = totalist }
+					ENG = { has_government = totalist }
+					64 = { owner = { is_in_faction_with = INT } }
+					AND = {
+						INT = { has_war_with = FROM }
+						INT = { has_war_with = ROOT }
+					}
 				}
 			}
 		}
@@ -2935,7 +2936,7 @@ IRE_foreign_policy_decisions = {
 	IRE_seek_guarantee_america = {
 		icon = GFX_decision_generic_protection
 
-		allowed = { always = no }		# this should be activated by the forpol_start trigger.  Decision should still be available if IRE is in the ENT though.  or loses the influence mechanic
+		allowed = { always = no }		# this should be activated by the forpol_start trigger. Decision should still be available if IRE is in the ENT though, or loses the Gateway to the Atlantic
 
 		available = {
 			threat > 0.5
@@ -5740,7 +5741,10 @@ IRE_reactionary_decisions = {
 					var = IRE_ulster_resistance
 					max = 1
 				}
-				custom_effect_tooltip = IRE_reluctant_countrymen_modified
+				custom_effect_tooltip = {
+					localization_key = tooltip_modify_dynmod
+					DYNMOD = IRE_reluctant_countrymen
+				}
 				custom_effect_tooltip = IRE_ulster_resistance_target_change_tt
 			}
 			else = { 119 = { add_resistance = 10 } }
@@ -5908,7 +5912,12 @@ IRE_reactionary_decisions = {
 		}
 		remove_effect = {
 			log = "[GetLogRoot]: Decision remove IRE_improve_discontent_mission"
-			119 = { add_compliance = 3 }
+			119 = {
+				if = {
+					limit = { is_owned_by = ROOT }
+					add_compliance = 3
+				}
+			}
 			activate_mission = IRE_improve_discontent_mission
 			clr_country_flag = IRE_has_improved_discontent
 		}
@@ -5942,7 +5951,12 @@ IRE_reactionary_decisions = {
 		}
 		remove_effect = {
 			log = "[GetLogRoot]: Decision remove IRE_improve_anger_mission"
-			119 = { add_resistance = -5 }
+			119 = {
+				if = {
+					limit = { is_owned_by = ROOT }
+					add_resistance = -5
+				}
+			}
 			activate_mission = IRE_improve_anger_mission
 			clr_country_flag = IRE_has_improved_anger
 		}
@@ -5959,12 +5973,21 @@ IRE_reactionary_decisions = {
 			log = "[GetLogRoot]: Decision complete IRE_counter_protestant_influence"
 			set_temp_variable = { ideology_change_var = 0.05 }
 			change_ruling_party_popularity = yes
-			119 = { add_compliance = 7.5 }
+			119 = {
+				if = {
+					limit = { is_owned_by = ROOT }
+					add_resistance = -5
+					add_compliance = 7.5
+				}
+			}
 			set_variable = { IRE_ulster_resistance_delta = 0.075 }
 			add_to_variable = { IRE_ulster_resistance = IRE_ulster_resistance_delta }
 			force_update_dynamic_modifier = yes
 			custom_effect_tooltip = tooltip_white_line
-			custom_effect_tooltip = IRE_reluctant_countrymen_modified
+			custom_effect_tooltip = {
+				localization_key = tooltip_modify_dynmod
+				DYNMOD = IRE_reluctant_countrymen
+			}
 			custom_effect_tooltip = IRE_ulster_resistance_target_change_tt
 			IRE_update_resistance = yes
 		}
@@ -5976,7 +5999,12 @@ IRE_reactionary_decisions = {
 			IRE_loyalist_anger_decrease = yes
 			set_temp_variable = { ideology_change_var = -0.1 }
 			change_ruling_party_popularity = yes
-			119 = { add_compliance = -10 }
+			119 = {
+				if = {
+					limit = { is_owned_by = ROOT }
+					add_compliance = -5
+				}
+			}
 			IRE_update_resistance = yes
 		}
 	}
@@ -6216,7 +6244,10 @@ IRE_reactionary_decisions = {
 				custom_effect_tooltip = tooltip_white_line
 				119 = { add_compliance = 15 }
 			}
-			else = { 119 = { add_compliance = 10 } }
+			else_if = {
+				limit = { owns_state = 119 }
+				119 = { add_compliance = 10 }
+			}
 			custom_effect_tooltip = tooltip_white_line
 			custom_effect_tooltip = IRE_60_days_tt
 			IRE_update_resistance = yes
@@ -6354,20 +6385,42 @@ IRE_reactionary_decisions = {
 			log = "[GetLogRoot][GetLogFrom]: Decision remove IRE_arm_gardai_decision"
 			if = {
 				limit = { has_completed_focus = IRE_partisan_divide }
-				119 = { add_resistance = -10 }
-				set_variable = { IRE_ulster_resistance_delta = -0.1 }
-				add_to_variable = { IRE_ulster_resistance = IRE_ulster_resistance_delta }
-				force_update_dynamic_modifier = yes
+				119 = {
+					if = {
+						limit = { is_owned_by = ROOT }
+						add_resistance = -10
+					}
+				}
 				custom_effect_tooltip = tooltip_white_line
-				custom_effect_tooltip = IRE_upgraded_arm_gardai_tt
+				custom_effect_tooltip = {
+					localization_key = tooltip_modify_dynmod
+					DYNMOD = IRE_reluctant_countrymen
+				}
+				set_variable = { IRE_ulster_resistance_delta = -0.1 }
+				add_to_variable = {
+					IRE_ulster_resistance = IRE_ulster_resistance_delta
+					tooltip = resistance_target_tooltip
+				}
+				force_update_dynamic_modifier = yes
 			}
 			else = {
-				119 = { add_resistance = -5 }
-				set_variable = { IRE_ulster_resistance_delta = -0.05 }
-				add_to_variable = { IRE_ulster_resistance = IRE_ulster_resistance_delta }
-				force_update_dynamic_modifier = yes
+				119 = {
+					if = {
+						limit = { is_owned_by = ROOT }
+						add_resistance = -5
+					}
+				}
 				custom_effect_tooltip = tooltip_white_line
-				custom_effect_tooltip = IRE_arm_gardai_tt
+				custom_effect_tooltip = {
+					localization_key = tooltip_modify_dynmod
+					DYNMOD = IRE_reluctant_countrymen
+				}
+				set_variable = { IRE_ulster_resistance_delta = -0.05 }
+				add_to_variable = {
+					IRE_ulster_resistance = IRE_ulster_resistance_delta
+					tooltip = resistance_target_tooltip
+				}
+				force_update_dynamic_modifier = yes
 				if = {
 					limit = { IRE_has_pataut_govt = yes }
 					custom_effect_tooltip = {
@@ -7196,10 +7249,16 @@ IRE_socialist_decisions = {
 					var = IRE_ulster_resistance
 					max = 1
 				}
-				custom_effect_tooltip = IRE_reluctant_countrymen_modified
+				custom_effect_tooltip = {
+					localization_key = tooltip_modify_dynmod
+					DYNMOD = IRE_reluctant_countrymen
+				}
 				custom_effect_tooltip = IRE_ulster_resistance_target_change_tt
 			}
-			else = { 119 = { add_resistance = 10 } }
+			else_if = {
+				limit = { owns_state = 119 }
+				119 = { add_resistance = 10 }
+			}
 			force_update_dynamic_modifier = yes
 			activate_mission = IRE_soc_NIR_mission
 			custom_effect_tooltip = tooltip_white_line
@@ -7730,20 +7789,41 @@ IRE_socialist_decisions = {
 			log = "[GetLogRoot][GetLogFrom]: Decision remove IRE_soc_gardai_decision"
 			if = {
 				limit = { has_completed_focus = IRE_old_oppressor }
-				119 = { add_resistance = -10 }
-				set_variable = { IRE_ulster_resistance_delta = -0.1 }
-				add_to_variable = { IRE_ulster_resistance = IRE_ulster_resistance_delta }
-				force_update_dynamic_modifier = yes
+				119 = {
+					if = {
+						limit = { is_owned_by = ROOT }
+						add_resistance = -10
+					}
+				}
 				custom_effect_tooltip = tooltip_white_line
-				custom_effect_tooltip = IRE_upgraded_arm_gardai_tt
+				custom_effect_tooltip = {
+					localization_key = tooltip_modify_dynmod
+					DYNMOD = IRE_reluctant_countrymen
+				}
+				set_variable = { IRE_ulster_resistance_delta = -0.1 }
+				add_to_variable = {
+					IRE_ulster_resistance = IRE_ulster_resistance_delta
+					tooltip = resistance_target_tooltip
+				}
 			}
 			else = {
-				119 = { add_resistance = -5 }
-				set_variable = { IRE_ulster_resistance_delta = -0.05 }
-				add_to_variable = { IRE_ulster_resistance = IRE_ulster_resistance_delta }
-				force_update_dynamic_modifier = yes
+				119 = {
+					if = {
+						limit = { is_owned_by = ROOT }
+						add_resistance = -5
+					}
+				}
 				custom_effect_tooltip = tooltip_white_line
-				custom_effect_tooltip = IRE_arm_gardai_tt
+				custom_effect_tooltip = {
+					localization_key = tooltip_modify_dynmod
+					DYNMOD = IRE_reluctant_countrymen
+				}
+				set_variable = { IRE_ulster_resistance_delta = -0.05 }
+				add_to_variable = {
+					IRE_ulster_resistance = IRE_ulster_resistance_delta
+					tooltip = resistance_target_tooltip
+				}
+				force_update_dynamic_modifier = yes
 				if = {
 					limit = { NOT = { has_government = radical_socialist } }
 					custom_effect_tooltip = {

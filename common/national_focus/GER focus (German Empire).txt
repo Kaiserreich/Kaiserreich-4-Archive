@@ -693,7 +693,33 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed GER_slash_welfare"
 			add_stability = -0.05
-			# Some bad things, like events or bad ideas
+			if = {
+				limit = {
+					GER_is_du_path = yes
+				}
+				subtract_from_variable = {
+					var = GER_Left_SPD_loyalty
+					value = 20
+					tooltip = GER_Left_SPD_loyalty_loss
+				}
+				clamp_variable = { var = GER_Left_SPD_loyalty min = 0 max = 100 }
+				if = {
+					limit = {
+						check_variable = { GER_Left_SPD_loyalty < 1 }
+						has_country_flag = GER_left_spd_in_coalition
+					}
+					activate_mission = GER_SPD_Left_rift
+				}
+				if = {
+					limit = { is_in_coalition_with_social_liberal = yes }
+					add_to_variable = {
+						var = GER_LVP_loyalty
+						value = 10
+						tooltip = GER_LVP_loyalty_gain
+					}
+					clamp_variable = { var = GER_LVP_loyalty max = 100 min = 0 }
+				}
+			}
 			add_to_variable = { GER_debt = -4 tooltip = GER_debt_decrease_focus_tt }
 			hidden_effect = { activate_targeted_decision = { target = THIS decision = GER_bm_cardgame_fiscal_austerity_decision } }
 			set_temp_variable = { GER_card_added = GER_bm_cardgame_fiscal_austerity_object }
@@ -9004,6 +9030,17 @@ focus_tree = {
 			hidden_effect = {
 				country_event = { id = newgerfor.28 days = 90 }
 			}
+			if = {
+				limit = {
+					check_variable = { GER_Z_loyalty > 0 }
+				}
+				add_to_variable = {
+					var = GER_Z_loyalty
+					value = 10
+					tooltip = GER_Z_loyalty_gain
+				}
+				clamp_variable = { var = GER_Z_loyalty max = 100 min = 0 }
+			}
 		}
 		search_filters = { FOCUS_FILTER_INTERNAL_AFFAIRS }
 	}
@@ -10292,8 +10329,9 @@ focus_tree = {
 		icon = GFX_goal_GER_Operation_Scharnhorst
 		cost = 6
 
-		x = 13
-		y = 11
+		relative_position_id = GER_france_invaded
+		x = 2
+		y = 0
 
 		mutually_exclusive = {
 			focus = GER_france_invaded
@@ -10314,17 +10352,20 @@ focus_tree = {
 		will_lead_to_war_with = FRA
 
 		ai_will_do = {
-			factor = 1000
+			factor = 0
 			modifier = {
-				factor = 0 #Don't attack if doesn't have at least 150% of France's forces
-				strength_ratio = {
-					tag = FRA
-					ratio < 2
+				add = 1000
+				date > 1941.1.1
+				FRA = { is_ai = yes }
+				var:global.russia = {
+					NOT = { focus_progress = { focus = RUS_preemptive_war progress > 0 } }
+					NOT = { focus_progress = { focus = RUS_anti_capitalist_warfare progress > 0 } }
+					OR = {
+						is_ai = no
+						exists = no
+						is_subject = yes
+					}
 				}
-			}
-			modifier = {
-				factor = 0
-				NOT = { has_country_flag = GER_war_preparedness_act_passed }
 			}
 		}
 
@@ -10333,6 +10374,49 @@ focus_tree = {
 			declare_war_on = {
 				type = topple_government
 				target = FRA
+			}
+		}
+		search_filters = { FOCUS_FILTER_ANNEXATION }
+	}
+	focus = {
+		id = GER_cross_the_ostwall
+		icon = GFX_focus_ger_strike_at_the_source
+		cost = 6
+
+		relative_position_id = GER_france_invaded
+		x = 1
+		y = 1
+
+		prerequisite = {
+			focus = GER_france_invaded
+			focus = GER_invade_france
+		}
+		available = {
+			can_declare_war_on = RUS
+			is_faction_leader = yes
+		}
+
+		will_lead_to_war_with = RUS
+
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 1000
+				NOT = { country_exists = FRA }
+				NOT = { has_war_with = INT }
+				OR = {
+					has_global_flag = INT_treaty_of_london
+					INT = { is_faction_leader = no }
+					INT = { is_in_europe = no } #== 4th Internationale
+				}
+			}
+		}
+
+		completion_reward = {
+			log = "[GetLogRoot]: Focus Completed GER_cross_the_ostwall"
+			declare_war_on = {
+				type = topple_government
+				target = RUS
 			}
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION }
@@ -20925,7 +21009,7 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed GER_bauer_putsch_claims"
-			custom_effect_tooltip = GER_bauer_putsch_claims_tt
+			custom_effect_tooltip = GER_bauer_putsch_claims_tt #
 			hidden_effect = {
 				every_state = {
 					limit = {
@@ -20946,6 +21030,17 @@ focus_tree = {
 						}
 					}
 					add_claim_by = GER
+				}
+				every_other_country = {
+					limit = {
+						is_ally_with = ROOT
+						is_in_europe = yes
+						has_capitulated = yes
+						any_owned_state = {
+							is_claim_or_core_of_ROOT = yes
+						}
+					}
+					remove_puppet_and_leave_faction = yes
 				}
 			}
 		}
