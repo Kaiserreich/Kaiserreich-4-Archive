@@ -112,14 +112,22 @@ SER_recalculate_konspiracija = {
 	force_update_dynamic_modifier = yes
 }
 SER_setup_imro_headquarters = {
-	SER_IMRO_teleport_effect = yes
 	106 = {
 		if = {
 			limit = { SER = { has_war = no } }
+			SER_IMRO_teleport_effect = yes
 			SER_IMRO_move_to_lull_phase = yes
 			set_variable = { 106.SER_IMRO_compliance_disabled = 1 }
 			set_variable = { 106.SER_IMRO_redeployment_disabled = 1 }
 			add_dynamic_modifier = { modifier = SER_macedonia_lull_phase }
+			SER = {
+				country_event = { id = serbia_events.24 days = 2 }
+				country_event = { id = serbia_events.230 hours = 24 }
+			}
+			MAC = {
+				set_country_flag = { flag = MAC_dont_attack_grace_period days = 94 value = 1 } #Gives SER a chance to move in and defend Skopje
+				country_event = { id = serbia_events.24 days = 2 }
+			}
 		}
 	}
 	if = {
@@ -224,25 +232,15 @@ SER_setup_imro_headquarters = {
 		}
 		MAC = { set_province_controller = 3526 }
 	}
-	if = {
-		limit = { check_variable = { enemies^num = 1 } } #only at war with MAC
-		add_ideas = SER_IMRO_rebellion
-		set_variable = { IMRO_round_system = 1 }
-		set_variable = { SER_won_rounds = 0 }
-		set_variable = { IMRO_won_rounds = 0 }
-		set_global_flag = SER_imro_dont_attack
-		activate_mission = SER_IMRO_reb_lull_phase
-		activate_mission = SER_IMRO_lull_phase_rounds
-		country_event = { id = serbia.230 hours = 24 }
-		country_event = { id = serbia.24 days = 2 }
-		MAC = {
-			set_country_flag = { flag = MAC_dont_attack_grace_period days = 94 value = 1 } #Gives SER a chance to move in and defend Skopje
-			country_event = { id = serbia.24 days = 2 }
-			activate_targeted_decision = { decision = SER_IMRO_open_conflict target = SER }
-		}
-	}
-	else = {
-		MAC = { drop_cosmetic_tag = yes }
+	add_ideas = SER_IMRO_rebellion
+	set_variable = { IMRO_round_system = 1 }
+	set_variable = { SER_won_rounds = 0 }
+	set_variable = { IMRO_won_rounds = 0 }
+	set_global_flag = SER_imro_dont_attack
+	activate_mission = SER_IMRO_reb_lull_phase
+	activate_mission = SER_IMRO_lull_phase_rounds
+	MAC = {
+		activate_targeted_decision = { decision = SER_IMRO_open_conflict target = SER }
 	}
 }
 
@@ -271,13 +269,8 @@ SER_IMRO_move_to_action_phase = {
 }
 
 SER_IMRO_move_to_lull_phase = {
-	if = {
-		limit = {
-			BUL = { focus_progress = { focus = BUL_macedonia_intervention progress < 0 } } #Dont teleport armies if natpop BUL is about to attack
-		}
-		SER_IMRO_teleport_effect = yes
-		country_event = { id = serbia.230 hours = 24 }
-	}
+	SER_IMRO_teleport_effect = yes
+	country_event = { id = serbia_events.230 hours = 24 }
 	set_variable = { 106.SER_IMRO_air_efficiency = -2 }
 	set_variable = { 106.SER_IMRO_attrition = 0.1 }
 	set_variable = { 106.SER_IMRO_army_speed = -0.75 }
@@ -287,30 +280,36 @@ SER_IMRO_move_to_lull_phase = {
 }
 
 SER_IMRO_teleport_effect = {
-	every_state = {
+	if = {
 		limit = {
-			OR = {
-				is_owned_by = SER
-				is_owned_by = MAC
+			SER = { check_variable = { enemies^num = 1 } } #Dont teleport armies if SER is at war with more than just MAC
+			BUL = { focus_progress = { focus = BUL_macedonia_intervention progress < 0 } } #Dont teleport armies if natpop BUL is about to attack
+		}
+		every_state = {
+			limit = {
+				OR = {
+					is_owned_by = SER
+					is_owned_by = MAC
+				}
+				OR = {
+					state = 106 #Macedonia
+					state = 48 #Sofia
+					state = 212 #Plovdiv
+					state = 769 #Serres
+					state = 989 #Chalcidice
+					state = 731 #Florina
+				}
 			}
-			OR = {
-				state = 106 #Macedonia
-				state = 48 #Sofia
-				state = 212 #Plovdiv
-				state = 769 #Serres
-				state = 989 #Chalcidice
-				state = 731 #Florina
+			teleport_armies = {
+				limit = { tag = SER }
+				to_state = 765
 			}
 		}
-		teleport_armies = {
-			limit = { tag = SER }
-			to_state = 765
-		}
-	}
-	106 = { #Macedonia
-		teleport_armies = {
-			limit = { is_ally_with = SER }
-			to_state_array = owned_controlled_states
+		106 = { #Macedonia
+			teleport_armies = {
+				limit = { is_ally_with = SER }
+				to_state_array = owned_controlled_states
+			}
 		}
 	}
 }
@@ -617,7 +616,7 @@ YUG_set_up_yugoslavia_minigame = {
 		activate_targeted_decision = { decision = YUG_other_expenditure_0 target = ALB }
 	}
 
-	country_event = yugmechanics.6
+	country_event = yugoslavia_mechanics_events.6
 }
 YUG_refresh_yugoslavia_minigame = {
 	# Check situation in Serbia
@@ -664,15 +663,15 @@ YUG_refresh_yugoslavia_minigame = {
 	hidden_effect = {
 		if = {
 			limit = { check_variable = { YUG_croatia_relations_level = 1 } }
-			country_event = { id = yugmechanics.1 hours = 8 }
+			country_event = { id = yugoslavia_mechanics_events.1 hours = 8 }
 		}
 		if = {
 			limit = { check_variable = { YUG_bosnia_relations_level = 1 } }
-			country_event = { id = yugmechanics.2 hours = 12 }
+			country_event = { id = yugoslavia_mechanics_events.2 hours = 12 }
 		}
 		if = {
 			limit = { check_variable = { YUG_slovenia_relations_level = 1 } }
-			country_event = { id = yugmechanics.3 hours = 16 }
+			country_event = { id = yugoslavia_mechanics_events.3 hours = 16 }
 		}
 	}
 	YUG_reset_yugoslavia_missions = yes
@@ -686,7 +685,7 @@ YUG_refresh_yugoslavia_minigame = {
 	YUG_randomise_pp_requirements = yes
 
 	activate_mission = YUG_rounds_system_mission
-	hidden_effect = { country_event = yugmechanics.7 }
+	hidden_effect = { country_event = yugoslavia_mechanics_events.7 }
 }
 
 YUG_reset_yugoslavia_missions = {
@@ -2121,34 +2120,23 @@ SER_spawn_drina_divisions = {
 		}
 		add_dynamic_modifier = { modifier = SER_drina_plan_modifier }
 		if = {
-			limit = {
-				check_variable = { SER.SER_drina_plan_divisions > 0 }
-			}
-			SER = {
-				if = {
-					limit = {
-						NOT = { has_template = "Srpska četa" }
-					}
-					division_template = {
-						name = "Srpska četa"
-						division_names_group = SER_MTN_01
-						regiments = {
-							mountaineers = { x = 0 y = 0 }
-							mountaineers = { x = 0 y = 1 }
-							mountaineers = { x = 0 y = 2 }
-							infantry = { x = 1 y = 0 }
-							infantry = { x = 1 y = 1 }
-							infantry = { x = 1 y = 2 }
-						}
-						priority = 0
-					}
+			limit = { check_variable = { SER.SER_drina_plan_divisions > 0 } }
+			if = {
+				limit = { SER = { has_socialist_government = yes } }
+				create_unit = {
+					division = "division_template = \"Srpski partizani\" start_experience_factor = 0.15 start_equipment_factor = 0.9"
+					owner = SER
+					allow_spawning_on_enemy_provs = yes
+					count = SER.SER_drina_plan_divisions
 				}
 			}
-			create_unit = {
-				division = "division_template = \"Srpska četa\" start_experience_factor = 0.15 start_equipment_factor = 0.9"
-				owner = SER
-				allow_spawning_on_enemy_provs = yes
-				count = SER.SER_drina_plan_divisions
+			else = {
+				create_unit = {
+					division = "division_template = \"Srpska četa\" start_experience_factor = 0.15 start_equipment_factor = 0.9"
+					owner = SER
+					allow_spawning_on_enemy_provs = yes
+					count = SER.SER_drina_plan_divisions
+				}
 			}
 		}
 		clr_state_flag = SER_drina_flagged_state

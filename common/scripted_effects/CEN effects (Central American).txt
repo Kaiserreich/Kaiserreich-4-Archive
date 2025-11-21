@@ -1,17 +1,26 @@
 #	Scripted triggers for Central America in general and the CEN tag
 #
 #	By Beelzebub and Ropa
-
-CA_SET_UFC_VAR = {
+update_GUA_UFC = {
 	clamp_variable = { var = UFC_power min = 0 max = 100 }
-	set_variable = { UFC_effect11 = UFC_power }
-	multiply_variable = { var = UFC_effect11 value = -0.004 }
-	set_variable = { UFC_effect12 = UFC_power }
-	multiply_variable = { var = UFC_effect12 value = 0.003 }
-	set_variable = { UFC_effect13 = UFC_power }
-	multiply_variable = { var = UFC_effect13 value = -0.003 }
-	set_variable = { UFC_effect14 = UFC_power }
-	multiply_variable = { var = UFC_effect14 value = -0.004 }
+	set_variable = { GUA_UFC_modifier = UFC_power } #political_power_gain and war_support_factor
+	multiply_variable = { var = GUA_UFC_modifier value = -0.004 }
+	set_variable = { GUA_UFC_construction_speed = UFC_power }
+	multiply_variable = { var = GUA_UFC_construction_speed value = 0.003 }
+	set_variable = { GUA_UFC_consumer_goods = UFC_power }
+	multiply_variable = { var = GUA_UFC_consumer_goods value = -0.003 }
+}
+
+update_CENmil_UFC = {
+	clamp_variable = { var = UFC_power min = 0 max = 100 }
+	set_variable = { CENmil_UFC_pol_power_gain = UFC_power }
+	multiply_variable = { var = CENmil_UFC_pol_power_gain value = -0.006 }
+	set_variable = { CENmil_UFC_construction_speed = UFC_power }
+	multiply_variable = { var = CENmil_UFC_construction_speed value = 0.003 }
+	set_variable = { CENmil_UFC_consumer_goods = UFC_power }
+	multiply_variable = { var = CENmil_UFC_consumer_goods value = -0.003 }
+	set_variable = { CENmil_UFC_modifier = UFC_power } #party_popularity_stability_factor and war_support_factor
+	multiply_variable = { var = CENmil_UFC_modifier value = -0.004 }
 }
 
 CEN_move_characters = {
@@ -357,6 +366,7 @@ CEN_conflict_escalates = {
 				}
 				activate_mission = CEN_conflict_escalates_mission
 			}
+			CEN = { set_variable = { CEN_lose_manpower_var = 0 } }
 		}
 	}
 }
@@ -599,6 +609,33 @@ CENdem_increase_radical_land_reform_idea = {
 	}
 }
 
+CEN_transfer_manpower = {
+	## Give CEN manpower based on the difference between recruitable and max population upon unification
+	CEN = {
+		set_temp_variable = { CEN_maximum_manpower = max_available_manpower_k }
+
+		# Calculate the amount to subtract based on free and deployed manpower
+		add_to_temp_variable = { CEN_free_manpower = manpower_k }
+		add_to_temp_variable = { CEN_free_manpower = deployed_army_manpower_k }
+		add_to_temp_variable = { CEN_free_manpower = deployed_navy_manpower_k }
+		add_to_temp_variable = { CEN_free_manpower = deployed_airforce_manpower_k }
+
+		# Calculate difference
+		subtract_from_temp_variable = { CEN_maximum_manpower = CEN_free_manpower }
+
+		# Get manpower value in thousands
+		multiply_temp_variable = { CEN_maximum_manpower = 1000 }
+		clamp_temp_variable = { var = CEN_maximum_manpower min = 0 max = 100000 }
+
+		# Add final result to manpower pool
+		add_manpower = CEN_maximum_manpower
+
+		# Add extra manpower
+		add_manpower = CEN_lose_manpower_var
+		clear_variable = CEN_lose_manpower_var
+	}
+}
+
 CEN_reset_ideas = {
 	load_focus_tree = generic_focus
 	drop_cosmetic_tag = yes
@@ -623,6 +660,7 @@ CEN_reset_ideas = {
 		CENmil_economic_control_idea
 		CENmil_european_doctrine
 		CENmil_chain_command_idea
+		CENmil_chain_command_idea_2
 		CENmil_better_equipment
 		CENmil_better_equipment_2
 		CENmil_better_equipment_3
@@ -634,7 +672,7 @@ CEN_reset_ideas = {
 		CENmil_small_units_idea
 		CENmil_extended_recruitment
 		CENmil_guerilla_tactics_idea
-		CENmil_military_awesome_idea
+		CENmil_powerful_military
 		CENmil_air_officers
 		CENmil_air_officers2
 		CENmil_naval_air_coord_idea
@@ -1074,7 +1112,7 @@ GUA_puppet_setup = {
 		}
 	}
 	else_if = {
-		limit = { has_right_democratic_government = yes }
+		limit = { has_soccon_or_marlib_government = yes }
 		GUA = {
 			set_politics = {
 				ruling_party = social_conservative
@@ -1689,7 +1727,7 @@ HON_puppet_setup = {
 	if = {
 		limit = {
 			has_completed_focus = HON_callejas
-			has_right_democratic_government = no
+			has_soccon_or_marlib_government = no
 		}
 		uncomplete_national_focus = {
 			focus = HON_callejas
@@ -1699,14 +1737,13 @@ HON_puppet_setup = {
 			HON_coffee_cash
 			HON_free_market_idea
 			HON_free_press
-			HON_urban_growth
 			HON_agricultural_school
 		}
 	}
 	if = {
 		limit = {
 			has_completed_focus = HON_morales
-			has_left_democratic_government = no
+			has_soclib_or_socdem_government = no
 		}
 		uncomplete_national_focus = {
 			focus = HON_morales
@@ -1915,6 +1952,10 @@ NIC_add_liberal_generals = {
 		NIC_abelardo_cuadra = { set_nationality = PREV }
 	}
 	if = {
+		limit = { NOT = { has_character = NIC_francisco_parajon_montealegre } }
+		NIC_francisco_parajon_montealegre = { set_nationality = PREV }
+	}
+	if = {
 		limit = { NOT = { has_character = NIC_juan_escamilla } }
 		NIC_juan_escamilla = { set_nationality = PREV }
 	}
@@ -1948,6 +1989,10 @@ NIC_remove_liberal_generals = {
 	if = {
 		limit = { has_character = NIC_abelardo_cuadra }
 		retire_character = NIC_abelardo_cuadra
+	}
+	if = {
+		limit = { has_character = NIC_francisco_parajon_montealegre }
+		retire_character = NIC_francisco_parajon_montealegre
 	}
 }
 
@@ -2068,7 +2113,7 @@ NIC_puppet_setup = {
 				limit = { NOT = { has_country_flag = NIC_sandino_bacc } }
 				add_ideas = NIC_sandino_resistance_base
 				set_country_flag = NIC_sandino_attack_flag
-				country_event = { id = nic.107 days = 14 }
+				country_event = { id = nicaragua_events.107 days = 14 }
 			}
 			else = {
 				add_popularity = { ideology = authoritarian_democrat popularity = -0.15 }
@@ -2135,7 +2180,7 @@ COS_puppet_setup = {
 		}
 	}
 	else_if = {
-		limit = { PREV = { has_left_democratic_government = yes } }
+		limit = { PREV = { has_soclib_or_socdem_government = yes } }
 		set_politics = {
 			ruling_party = social_democrat
 			elections_allowed = no
@@ -2146,7 +2191,7 @@ COS_puppet_setup = {
 		}
 	}
 	else_if = {
-		limit = { PREV = { has_right_democratic_government = yes } }
+		limit = { PREV = { has_soccon_or_marlib_government = yes } }
 		set_politics = {
 			ruling_party = social_conservative
 			elections_allowed = no
@@ -2194,7 +2239,7 @@ PAN_puppet_setup = {
 		if = {
 			limit = {
 				has_completed_focus = PAN_conservative_government
-				NOT = { has_right_democratic_government = yes }
+				has_soccon_or_marlib_government = no
 			}
 			uncomplete_national_focus = {
 				focus = PAN_conservative_government
@@ -2227,7 +2272,7 @@ PAN_puppet_setup = {
 			complete_national_focus = PAN_liberal_victory
 		}
 		else_if = {
-			limit = { has_right_democratic_government = yes }
+			limit = { has_soccon_or_marlib_government = yes }
 			complete_national_focus = PAN_conservative_government
 		}
 		else_if = {

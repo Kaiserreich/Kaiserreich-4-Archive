@@ -946,319 +946,188 @@ restore_previous_government_type = {
 	}
 }
 
-embargo_ROOT = {
+#requires a temp variable target
+embargo_TARGET = {
 	if = {
 		limit = {
-			NOT = { has_country_flag = embargoed_@ROOT }
-			is_in_same_economic_sphere_as_ROOT = no
-			NOT = { tag = ROOT } #sanity check
-		}
-		set_country_flag = embargoed_@ROOT
-		ROOT = { set_country_flag = embargoed_@PREV }
-		if = {
-			limit = { has_dlc_bba = yes }
-			if = {
-				limit = { NOT = { is_embargoing = ROOT } }
-				diplomatic_relation = {
-					country = ROOT
-					relation = embargo
-				}
+			var:target = {
+				NOT = { has_country_flag = embargoed_@PREV }
+				is_in_same_economic_sphere_as_PREV = no
+				NOT = { tag = PREV } #sanity check
 			}
-			if = {
-				limit = { NOT = { is_embargoed_by = ROOT } }
-				ROOT = {
-					diplomatic_relation = {
-						country = PREV
-						relation = embargo
+		}
+		hidden_effect = {
+			var:target = {
+				set_country_flag = embargoed_@PREV
+				PREV = { set_country_flag = embargoed_@PREV }
+				if = {
+					limit = { has_dlc_bba = yes }
+					if = {
+						limit = { NOT = { is_embargoing = PREV } }
+						diplomatic_relation = {
+							country = PREV
+							relation = embargo
+						}
+					}
+					if = {
+						limit = { NOT = { is_embargoed_by = PREV } }
+						PREV = {
+							diplomatic_relation = {
+								country = PREV
+								relation = embargo
+							}
+						}
+					}
+				}
+				else = {
+					add_opinion_modifier = {
+						modifier = embargo
+						target = PREV
+					}
+					reverse_add_opinion_modifier = {
+						modifier = embargo
+						target = PREV
 					}
 				}
 			}
 		}
-		else = {
-			add_opinion_modifier = {
-				modifier = embargo
-				target = ROOT
-			}
-			reverse_add_opinion_modifier = {
-				modifier = embargo
-				target = ROOT
+		effect_tooltip = {
+			meta_effect = {
+				text = {
+					if = {
+						limit = { has_dlc_bba = yes }
+						if = {
+							limit = { NOT = { is_embargoing = [TARGET] } }
+							diplomatic_relation = {
+								country = [TARGET]
+								relation = embargo
+							}
+						}
+						if = {
+							limit = { NOT = { is_embargoed_by = [TARGET] } }
+							[TARGET] = {
+								diplomatic_relation = {
+									country = PREV
+									relation = embargo
+								}
+							}
+						}
+					}
+					else = {
+						add_opinion_modifier = {
+							modifier = embargo
+							target = [TARGET]
+						}
+						reverse_add_opinion_modifier = {
+							modifier = embargo
+							target = [TARGET]
+						}
+					}
+				}
+				TARGET = "[?target.GetTag]"
 			}
 		}
 	}
+}
+
+#requires a temp variable target
+clear_embargo_TARGET = {
+	if = {
+		limit = { var:target = { PREV = { has_country_flag = embargoed_@PREV } } }
+		hidden_effect = {
+			var:target = {
+				clr_country_flag = embargoed_@PREV
+				diplomatic_relation = {
+					country = PREV
+					relation = embargo
+					active = no
+				}
+				remove_opinion_modifier = {
+					modifier = embargo
+					target = PREV
+				}
+				PREV = {
+					clr_country_flag = embargoed_@PREV
+					diplomatic_relation = {
+						country = PREV
+						relation = embargo
+						active = no
+					}
+					remove_opinion_modifier = {
+						modifier = embargo
+						target = PREV
+					}
+				}
+			}
+		}
+		effect_tooltip = {
+			meta_effect = {
+				text = {
+					if = {
+						limit = { has_dlc_bba = yes }
+						diplomatic_relation = {
+							country = [TARGET]
+							relation = embargo
+							active = no
+						}
+					}
+					else = {
+						remove_opinion_modifier = {
+							modifier = embargo
+							target = [TARGET]
+						}
+					}
+					[TARGET] = {
+						if = {
+							limit = { has_dlc_bba = yes }
+							diplomatic_relation = {
+								country = PREV
+								relation = embargo
+								active = no
+							}
+						}
+						else = {
+							remove_opinion_modifier = {
+								modifier = embargo
+								target = PREV
+							}
+						}
+					}
+				}
+				TARGET = "[?target.GetTag]"
+			}
+		}
+	}
+}
+
+embargo_ROOT = {
+	set_temp_variable = { target = ROOT }
+	embargo_TARGET = yes
 }
 
 clear_embargo_ROOT = {
-	if = {
-		limit = { has_country_flag = embargoed_@ROOT }
-		clr_country_flag = embargoed_@ROOT
-		effect_tooltip = {
-			if = {
-				limit = { has_dlc_bba = yes }
-				diplomatic_relation = {
-					country = ROOT
-					relation = embargo
-					active = no
-				}
-			}
-			else = {
-				remove_opinion_modifier = {
-					modifier = embargo
-					target = ROOT
-				}
-			}
-		}
-		hidden_effect = {
-			diplomatic_relation = {
-				country = ROOT
-				relation = embargo
-				active = no
-			}
-			remove_opinion_modifier = {
-				modifier = embargo
-				target = ROOT
-			}
-		}
-		ROOT = {
-			clr_country_flag = embargoed_@PREV
-			effect_tooltip = {
-				if = {
-					limit = { has_dlc_bba = yes }
-					diplomatic_relation = {
-						country = PREV
-						relation = embargo
-						active = no
-					}
-				}
-				else = {
-					remove_opinion_modifier = {
-						modifier = embargo
-						target = PREV
-					}
-				}
-			}
-			hidden_effect = {
-				diplomatic_relation = {
-					country = PREV
-					relation = embargo
-					active = no
-				}
-				remove_opinion_modifier = {
-					modifier = embargo
-					target = PREV
-				}
-			}
-		}
-	}
+	set_temp_variable = { target = ROOT }
+	clear_embargo_TARGET = yes
 }
 
 embargo_PREV = {
-	if = {
-		limit = {
-			NOT = { has_country_flag = embargoed_@PREV }
-			is_in_same_economic_sphere_as_PREV = no
-			NOT = { tag = PREV } #sanity check
-		}
-		set_country_flag = embargoed_@PREV
-		PREV = { set_country_flag = embargoed_@PREV }
-		if = {
-			limit = { has_dlc_bba = yes }
-			if = {
-				limit = { NOT = { is_embargoing = PREV } }
-				diplomatic_relation = {
-					country = PREV
-					relation = embargo
-				}
-			}
-			if = {
-				limit = { NOT = { is_embargoed_by = PREV } }
-				PREV = {
-					diplomatic_relation = {
-						country = PREV
-						relation = embargo
-					}
-				}
-			}
-		}
-		else = {
-			add_opinion_modifier = {
-				modifier = embargo
-				target = PREV
-			}
-			reverse_add_opinion_modifier = {
-				modifier = embargo
-				target = PREV
-			}
-		}
-	}
+	set_temp_variable = { target = PREV }
+	embargo_TARGET = yes
 }
 
 clear_embargo_PREV = {
-	if = {
-		limit = { has_country_flag = embargoed_@PREV }
-		clr_country_flag = embargoed_@PREV
-		effect_tooltip = {
-			if = {
-				limit = { has_dlc_bba = yes }
-				diplomatic_relation = {
-					country = PREV
-					relation = embargo
-					active = no
-				}
-			}
-			else = {
-				remove_opinion_modifier = {
-					modifier = embargo
-					target = PREV
-				}
-			}
-		}
-		hidden_effect = {
-			diplomatic_relation = {
-				country = PREV
-				relation = embargo
-				active = no
-			}
-			remove_opinion_modifier = {
-				modifier = embargo
-				target = PREV
-			}
-		}
-		PREV = {
-			clr_country_flag = embargoed_@PREV
-			effect_tooltip = {
-				if = {
-					limit = { has_dlc_bba = yes }
-					diplomatic_relation = {
-						country = PREV
-						relation = embargo
-						active = no
-					}
-				}
-				else = {
-					remove_opinion_modifier = {
-						modifier = embargo
-						target = PREV
-					}
-				}
-			}
-			hidden_effect = {
-				diplomatic_relation = {
-					country = PREV
-					relation = embargo
-					active = no
-				}
-				remove_opinion_modifier = {
-					modifier = embargo
-					target = PREV
-				}
-			}
-		}
-	}
+	set_temp_variable = { target = PREV }
+	clear_embargo_TARGET = yes
 }
 
 embargo_FROM = {
-	if = {
-		limit = {
-			NOT = { has_country_flag = embargoed_@FROM }
-			is_in_same_economic_sphere_as_FROM = no
-			NOT = { tag = FROM } #sanity check
-		}
-		set_country_flag = embargoed_@FROM
-		FROM = { set_country_flag = embargoed_@PREV }
-		if = {
-			limit = { has_dlc_bba = yes }
-			if = {
-				limit = { NOT = { is_embargoing = FROM } }
-				diplomatic_relation = {
-					country = FROM
-					relation = embargo
-				}
-			}
-			if = {
-				limit = { NOT = { is_embargoed_by = FROM } }
-				FROM = {
-					diplomatic_relation = {
-						country = PREV
-						relation = embargo
-					}
-				}
-			}
-		}
-		else = {
-			add_opinion_modifier = {
-				modifier = embargo
-				target = FROM
-			}
-			reverse_add_opinion_modifier = {
-				modifier = embargo
-				target = FROM
-			}
-		}
-	}
+	set_temp_variable = { target = FROM }
+	embargo_TARGET = yes
 }
 
 clear_embargo_FROM = {
-	if = {
-		limit = { has_country_flag = embargoed_@FROM }
-		clr_country_flag = embargoed_@FROM
-		effect_tooltip = {
-			if = {
-				limit = { has_dlc_bba = yes }
-				diplomatic_relation = {
-					country = FROM
-					relation = embargo
-					active = no
-				}
-			}
-			else = {
-				remove_opinion_modifier = {
-					modifier = embargo
-					target = FROM
-				}
-			}
-		}
-		hidden_effect = {
-			diplomatic_relation = {
-				country = FROM
-				relation = embargo
-				active = no
-			}
-			remove_opinion_modifier = {
-				modifier = embargo
-				target = FROM
-			}
-		}
-		FROM = {
-			clr_country_flag = embargoed_@PREV
-			effect_tooltip = {
-				if = {
-					limit = { has_dlc_bba = yes }
-					diplomatic_relation = {
-						country = PREV
-						relation = embargo
-						active = no
-					}
-				}
-				else = {
-					remove_opinion_modifier = {
-						modifier = embargo
-						target = PREV
-					}
-				}
-			}
-			hidden_effect = {
-				diplomatic_relation = {
-					country = PREV
-					relation = embargo
-					active = no
-				}
-				remove_opinion_modifier = {
-					modifier = embargo
-					target = PREV
-				}
-			}
-		}
-	}
+	set_temp_variable = { target = FROM }
+	clear_embargo_TARGET = yes
 }
 
 remove_all_AI_templates = {
@@ -2056,7 +1925,7 @@ get_day_of_week = {
 ask_to_join_faction = {
 	country_event = generic_events.10
 	custom_effect_tooltip = if_they_accept_tt
-	effect_tooltip = { add_to_faction = ROOT }
+	effect_tooltip = { faction_leader = { add_to_faction = ROOT } }
 }
 
 invite_country_to_faction = {
@@ -2127,5 +1996,28 @@ set_up_non_faction_ally_relations = {
 				relation = military_access
 			}
 		}
+	}
+}
+
+remove_all_volunteer_relation_modifiers_from_PREV = {
+	if = {
+		limit = { has_relation_modifier = { modifier = volunteer_limit_plus_one target = PREV } }
+		remove_relation_modifier = { modifier = volunteer_limit_plus_one target = PREV }
+	}
+	if = {
+		limit = { has_relation_modifier = { modifier = volunteer_limit_plus_two target = PREV } }
+		remove_relation_modifier = { modifier = volunteer_limit_plus_two target = PREV }
+	}
+	if = {
+		limit = { has_relation_modifier = { modifier = volunteer_limit_plus_three target = PREV } }
+		remove_relation_modifier = { modifier = volunteer_limit_plus_three target = PREV }
+	}
+	if = {
+		limit = { has_relation_modifier = { modifier = volunteer_limit_plus_fifty_percent target = PREV } }
+		remove_relation_modifier = { modifier = volunteer_limit_plus_fifty_percent target = PREV }
+	}
+	if = {
+		limit = { has_relation_modifier = { modifier = volunteer_limit_plus_hundred_percent target = PREV } }
+		remove_relation_modifier = { modifier = volunteer_limit_plus_hundred_percent target = PREV }
 	}
 }

@@ -1,9 +1,9 @@
 #################################
-### Kaiserreich version 1.5.1 ###
+### Kaiserreich version 1.5.2 ###
 #################################
 
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
-This version is designed for Hearts of Iron IV version 1.16.9.
+This version is designed for Hearts of Iron IV version 1.16.10.
 It should be compatible with all hotfixes, but it isn't guaranteed.
 
 Manual Installation Instructions

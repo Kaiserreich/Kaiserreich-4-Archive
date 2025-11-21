@@ -223,12 +223,9 @@ IRE_has_one_party_govt = {
 IRE_plp_electable = {
 	if = {
 		limit = { is_ai = no }
-		NOT = {
-			has_variable = IRE_nationalist_discontent
-			has_variable = IRE_loyalist_anger
-		}
+		IRE_ulster_privileges_gone = yes
+		has_completed_focus = IRE_repeal_civil_restrictions
 	}
-	has_completed_focus = IRE_repeal_civil_restrictions
 	has_country_flag = IRE_gateway_IRE_victory
 	NOT = { has_country_flag = IRE_govt_cursed_coalition }
 	IRE_has_radsoc_in_coalition = no
@@ -245,11 +242,7 @@ IRE_plp_electable = {
 	NOT = { is_guaranteed_by = APG }
 	NOT = { is_guaranteed_by = ACC }
 	NOT = { is_guaranteed_by = NEE }
-	NOT = { has_country_flag = IRE_got_guarantee_GER }
-	NOT = { has_country_flag = IRE_got_guarantee_USA }
-	NOT = { has_country_flag = IRE_got_guarantee_APG }
-	NOT = { has_country_flag = IRE_got_guarantee_ACC }
-	NOT = { has_country_flag = IRE_got_guarantee_NEE }
+	IRE_has_american_guarantor = no
 	OR = {
 		AND = {
 			has_global_flag = USA_civil_war_over_flag
@@ -258,11 +251,6 @@ IRE_plp_electable = {
 				NOT = { country_exists = USA }
 				USA = { same_government_type_as_ROOT = no }
 				USA = { is_subject = yes }
-			}
-			OR = {
-				has_country_flag = IRE_rejected_guarantee_APG
-				NOT = { country_exists = APG }
-				APG = { same_government_type_as_ROOT = no }
 			}
 			OR = {
 				has_country_flag = IRE_rejected_guarantee_ACC
@@ -276,14 +264,13 @@ IRE_plp_electable = {
 			}
 		}
 		AND = {
-			NOT = {
-				has_global_flag = USA_civil_war_over_flag
-				CAN = { has_war_with = WCA }
-				country_exists = USA
-				country_exists = APG
-				country_exists = ACC
-				country_exists = NEE
-			}
+			has_global_flag = USA_civil_war_begun_flag
+			NOT = { has_global_flag = USA_civil_war_over_flag }
+			NOT = { CAN = { has_war_with = WCA } }
+			NOT = { country_exists = USA }
+			NOT = { country_exists = APG }
+			NOT = { country_exists = ACC }
+			NOT = { country_exists = NEE }
 		}
 	}
 }
@@ -371,10 +358,25 @@ IRE_check_guarantor_ideology = {
 	}
 	else_if = {
 		limit = { has_dictatorship_government = yes }
-		FROM = { has_dictatorship_government = yes }
+		if = {
+			limit = { FROM = { tag = APG } }
+			custom_override_tooltip = {
+				tooltip = { localization_key = IRE_APG_guarantee_requisite }
+				FROM = { APG_long_in_power = no }
+			}
+		}
+		else = {
+			FROM = { has_government = paternal_autocrat }
+		}
 	}
 	else = {
-		FROM = { has_democratic_government = yes }
+		if = {
+			limit = { FROM = { tag = APG } }
+			FROM = { has_elected_government = yes }
+		}
+		else = {
+			FROM = { has_democratic_government = yes }
+		}
 	}
 }
 
@@ -382,15 +384,30 @@ IRE_check_guarantor_ideology = {
 
 IRE_check_postacw_mismatch_ideology = {
 	if = {
-		limit = { has_socialist_government = yes }
-		FROM = { has_socialist_government = no }
+		limit = {
+			IRE = { has_socialist_government = yes }
+		}
+		has_socialist_government = no
 	}
 	else_if = {
-		limit = { has_dictatorship_government = yes }
-		FROM = { has_dictatorship_government = no }
+		limit = {
+			IRE = { has_dictatorship_government = yes }
+		}
+		if = {
+			limit = { tag = APG }
+			custom_override_tooltip = {
+				tooltip = { localization_key = IRE_APG_alliance_exclusion }
+				APG_long_in_power = yes
+			}
+		}
+		else = { has_dictatorship_government = no }
 	}
 	else = {
-		FROM = { has_democratic_government = no }
+		if = {
+			limit = { tag = APG }
+			has_elected_government = no
+		}
+		else = { has_democratic_government = no }
 	}
 }
 
@@ -399,71 +416,101 @@ IRE_check_postacw_faction = {
 		limit = { country_exists = USA }
 		OR = {
 			if = {
+				limit = { has_country_flag = IRE_alliance_refused_USA }
+				has_country_flag = IRE_alliance_refused_USA
+			}
+			else_if = {
 				limit = { has_country_flag = IRE_got_guarantee_USA }
 				NOT = { has_country_flag = IRE_got_guarantee_USA }
 			}
 			else = {
 				has_country_flag = IRE_rejected_guarantee_USA
 			}
-			USA = { IRE_check_postacw_mismatch_ideology = yes }
 			USA = { is_subject = yes }
+			USA = { IRE_check_postacw_mismatch_ideology = yes }
 		}
 	}
 	else_if = {
 		limit = { country_exists = WCA }
 		OR = {
 			if = {
+				limit = { has_country_flag = IRE_alliance_refused_WCA }
+				has_country_flag = IRE_alliance_refused_WCA
+			}
+			else_if = {
 				limit = { has_country_flag = IRE_got_guarantee_WCA }
 				NOT = { has_country_flag = IRE_got_guarantee_WCA }
 			}
 			else = {
 				has_country_flag = IRE_rejected_guarantee_WCA
 			}
-			WCA = { IRE_check_postacw_mismatch_ideology = yes }
 			WCA = { is_subject = yes }
+			WCA = { IRE_check_postacw_mismatch_ideology = yes }
 		}
 	}
 	else_if = {
 		limit = { country_exists = APG }
 		OR = {
 			if = {
+				limit = { has_country_flag = IRE_alliance_refused_APG }
+				has_country_flag = IRE_alliance_refused_APG
+			}
+			else_if = {
 				limit = { has_country_flag = IRE_got_guarantee_APG }
 				NOT = { has_country_flag = IRE_got_guarantee_APG }
 			}
 			else = {
 				has_country_flag = IRE_rejected_guarantee_APG
 			}
-			APG = { IRE_check_postacw_mismatch_ideology = yes }
 			APG = { is_subject = yes }
+			APG = { IRE_check_postacw_mismatch_ideology = yes }
 		}
 	}
 	else_if = {
 		limit = { country_exists = ACC }
 		OR = {
 			if = {
+				limit = { has_country_flag = IRE_alliance_refused_ACC }
+				has_country_flag = IRE_alliance_refused_ACC
+			}
+			else_if = {
 				limit = { has_country_flag = IRE_got_guarantee_ACC }
 				NOT = { has_country_flag = IRE_got_guarantee_ACC }
 			}
 			else = {
 				has_country_flag = IRE_rejected_guarantee_ACC
 			}
-			ACC = { IRE_check_postacw_mismatch_ideology = yes }
 			ACC = { is_subject = yes }
+			ACC = { IRE_check_postacw_mismatch_ideology = yes }
 		}
 	}
 	else_if = {
 		limit = { country_exists = NEE }
 		OR = {
 			if = {
+				limit = { has_country_flag = IRE_alliance_refused_NEE }
+				has_country_flag = IRE_alliance_refused_NEE
+			}
+			else_if = {
 				limit = { has_country_flag = IRE_got_guarantee_NEE }
 				NOT = { has_country_flag = IRE_got_guarantee_NEE }
 			}
 			else = {
 				has_country_flag = IRE_rejected_guarantee_NEE
 			}
-			NEE = { IRE_check_postacw_mismatch_ideology = yes }
 			NEE = { is_subject = yes }
+			NEE = { IRE_check_postacw_mismatch_ideology = yes }
 		}
+	}
+}
+
+IRE_has_american_guarantor = {
+	OR = {
+		has_country_flag = IRE_got_guarantee_USA
+		has_country_flag = IRE_got_guarantee_WCA
+		has_country_flag = IRE_got_guarantee_APG
+		has_country_flag = IRE_got_guarantee_ACC
+		has_country_flag = IRE_got_guarantee_NEE
 	}
 }
 

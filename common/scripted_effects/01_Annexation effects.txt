@@ -16,7 +16,7 @@ state_given_notification_effect = {
 		if = {
 			limit = { owner = { is_ai = no } }
 			save_event_target_as = granted_land
-			state_event = { id = annex.2 trigger_for = owner }
+			state_event = { id = annexation_events.2 trigger_for = owner }
 		}
 	}
 }
@@ -110,7 +110,7 @@ save_to_offered_states = {
 
 # country scope
 offer_states_to_target = {
-	country_event = annex.5
+	country_event = annexation_events.5
 	custom_effect_tooltip = if_they_accept_tt
 	effect_tooltip = {
 		ROOT = {
@@ -643,10 +643,7 @@ determine_chinese_ally = {
 			else_if = {
 				limit = {
 					tag = INC
-					OR = {
-						has_government = authoritarian_democrat
-						has_government = paternal_autocrat
-					}
+					has_authdem_or_pataut_government = yes
 				}
 				if = {
 					limit = {
@@ -753,6 +750,14 @@ release_canada = {
 				ruling_party = var:current_party_ideology_group
 				elections_allowed = no
 			}
+			promote_character = {
+				character = CAN_thomas_alexander_mcewen
+				ideology = totalist_subtype
+			}
+			promote_character = {
+				character = CAN_annie_buller
+				ideology = syndicalist_subtype
+			}
 		}
 	}
 	if = {
@@ -811,6 +816,17 @@ release_canada = {
 					}
 					CAN_revert_british_pm_slots = yes
 					CAN_add_british_pm = yes
+				}
+			}
+		}
+	}
+	else_if = {
+		limit = { has_country_leader = { character = WCA_earl_browder } }
+		hidden_effect = {
+			CAN = {
+				promote_character = {
+					character = CAN_timothy_buck
+					ideology = totalist_subtype
 				}
 			}
 		}
@@ -1598,26 +1614,36 @@ annexations_reset_indian_tags = {
 
 annexations_india_retain_special_states = {
 	hidden_effect = {
-		every_state = {
-			limit = {
-				OR = {
-					region = 245 #Indus Valley
-					region = 261 #Rajasthan
-					AND = {
-						region = 141 #Bengal
-						NOT = { state = 435 } #Bihar
-					}
-					AND = {
-						region = 270 #Kashmir
-						NOT = { state = 814 } #Uttaranchal
-					}
-					is_ceylon = yes
-				}
+		if = {
+			limit = { var:tag_to_release = { original_tag = RAJ } }
+			every_state = {
+				limit = { is_ceylon = yes }
+				retain_state = yes
 			}
-			retain_state = yes
 		}
-		440 = { retain_state = yes } #East Punjab
-		815 = { retain_state = yes } #Patiala
+		else = {
+			every_state = {
+				limit = {
+					OR = {
+						region = 245 #Indus Valley
+						region = 261 #Rajasthan
+						AND = {
+							region = 141 #Bengal
+							NOT = { state = 435 } #Bihar
+						}
+						AND = {
+							region = 270 #Kashmir
+							NOT = { state = 814 } #Uttaranchal
+						}
+						is_ceylon = yes
+					}
+				}
+				retain_state = yes
+			}
+			440 = { retain_state = yes } #East Punjab
+			815 = { retain_state = yes } #Patiala
+		}
+		858 = { retain_state = yes } #Tawang
 		888 = { retain_state = yes } #Sikkim
 		897 = { retain_state = yes } #Aksai Chin
 		if = {
@@ -1641,15 +1667,29 @@ annexations_release_india = {
 		}
 	}
 	release_targeted_tag_nocosmetic = yes
-	every_subject_country = {
-		limit = {
-			is_indian_tag = yes
-			is_indian_unifier_tag = no
-			NOT = { original_tag = PJB }
-			NOT = { has_cosmetic_tag = MDR_DRAV }
-			is_ai = yes
+	if = {
+		limit = { var:tag_to_release = { original_tag = RAJ } }
+		every_subject_country = {
+			limit = {
+				is_indian_tag = yes
+				is_indian_unifier_tag = no
+				NOT = { has_cosmetic_tag = MDR_DRAV }
+				is_ai = yes
+			}
+			annex_splinter_tag = yes
 		}
-		annex_splinter_tag = yes
+	}
+	else = {
+		every_subject_country = {
+			limit = {
+				is_indian_tag = yes
+				is_indian_unifier_tag = no
+				NOT = { original_tag = PJB }
+				NOT = { has_cosmetic_tag = MDR_DRAV }
+				is_ai = yes
+			}
+			annex_splinter_tag = yes
+		}
 	}
 	var:tag_to_release = {
 		if = {
@@ -1695,22 +1735,20 @@ annexations_create_indian_event_targets = {
 		if = {
 			limit = { NOT = { has_event_target = india } }
 			if = {
-				limit = { tag = event_target:KR_king_base }
+				limit = { is_ally_with = event_target:KR_king_base }
 				if = {
 					limit = { NOT = { country_exists = RAJ } }
 					save_event_target_as = british_india_available
 				}
-			}
-			else_if = {
-				limit = {
-					event_target:KR_king_base = {
-						is_ally_with = ROOT
-						is_subject = no
+				if = {
+					limit = {
+						NOT = { tag = event_target:KR_king_base }
+						event_target:KR_king_base = { is_subject = no }
 					}
-				}
-				event_target:KR_king_base = {
-					save_event_target_as = britain
-					add_to_array = { ROOT.potential_grant_targets = THIS }
+					event_target:KR_king_base = {
+						save_event_target_as = britain
+						add_to_array = { ROOT.potential_grant_targets = THIS }
+					}
 				}
 			}
 			else = {
@@ -2087,7 +2125,7 @@ annexations_give_italy_to_target = {
 				save_to_offered_states = yes
 			}
 		}
-		country_event = annex.200
+		country_event = annexation_events.200
 	}
 }
 
@@ -2103,7 +2141,7 @@ annexations_offer_italy_to_target = {
 	LOM = { save_to_offered_states = yes }
 	if = {
 		limit = { check_variable = { valid_italian_targets_offer^num > 1 } }
-		country_event = annex.201
+		country_event = annexation_events.201
 	}
 	else = {
 		var:valid_italian_targets_offer^0 = {

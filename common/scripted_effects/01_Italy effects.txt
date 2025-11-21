@@ -371,7 +371,13 @@ Italy_general_transfer_effect = {
 			}
 		}
 	}
-	every_unit_leader = { set_nationality = ROOT }
+	if = {
+		limit = { has_variable = ITA_general_transfer_target }
+		every_unit_leader = { set_nationality = ITA_general_transfer_target }
+	}
+	else = {
+		every_unit_leader = { set_nationality = ROOT }
+	}
 }
 
 ITA_join_with_empire = {
@@ -382,11 +388,21 @@ ITA_join_with_empire = {
 			ROOT = { puppet_country_without_changing_government = yes }
 		}
 		every_subject_country = {
-			limit = { is_ai = yes }
+			limit = { is_ai = yes } #All italian AI puppet tags always have no say in negotiations
+			every_core_state = {
+				add_core_of = ROOT
+				remove_claim_by = ROOT
+			}
+			Italy_general_transfer_effect = yes
+			ROOT = { annex_country = { target = PREV transfer_troops = yes } }
+		}
+		every_subject_country = {
+			limit = { is_ai = no } #Give an Italian puppet tag player the option to fight the war against negotiator on its own
 			overlord = {
+				save_event_target_as = ITA_former_overlord
 				set_autonomy = { target = PREV autonomy_state = autonomy_free }
 			}
-			ITA_notitaly_join_with_confed = yes
+			country_event = two_sicilies_events.131
 		}
 	}
 
@@ -457,12 +473,12 @@ SRI_improve_anticlerical_offensive = {
 
 ITA_ANI_events = {
 	hidden_effect = {
-		country_event = { id = ita.62 days = 5 random_days = 15 }
-		country_event = { id = ita.63 days = 120 random_days = 150 }
-		country_event = { id = ita.64 days = 120 random_days = 150 }
-		country_event = { id = ita.65 days = 120 random_days = 150 }
-		country_event = { id = ita.66 days = 120 random_days = 150 }
-		country_event = { id = ita.67 days = 120 random_days = 150 }
+		country_event = { id = italy_events.62 days = 5 random_days = 15 }
+		country_event = { id = italy_events.63 days = 120 random_days = 150 }
+		country_event = { id = italy_events.64 days = 120 random_days = 150 }
+		country_event = { id = italy_events.65 days = 120 random_days = 150 }
+		country_event = { id = italy_events.66 days = 120 random_days = 150 }
+		country_event = { id = italy_events.67 days = 120 random_days = 150 }
 	}
 }
 
@@ -500,7 +516,7 @@ italy_add_reunification_wars_threat = {
 			threat = 6
 			name = italian_wars_threat
 		}
-		hidden_effect = { news_event = socitaly.202 }
+		hidden_effect = { news_event = socialist_italy_events.202 }
 	}
 }
 
@@ -513,7 +529,7 @@ italy_add_claim_and_transfer_if_owned_by_subject = {
 	}
 	if = {
 		limit = { owner = { is_subject_of = ROOT } }
-		owner = { country_event = ita.170 }
+		owner = { country_event = italy_events.170 }
 		transfer_state_during_war = yes
 	}
 }
@@ -557,7 +573,7 @@ italy_claim_irredentist_state_effect = {
 				NOT = { has_autonomy_state = federated_state }
 			}
 		}
-		hidden_effect = { owner = { country_event = ita.170 } }
+		hidden_effect = { owner = { country_event = italy_events.170 } }
 		if = {
 			limit = { is_fully_controlled_by = owner }
 			transfer_state_to = var:italy_transfer_target
@@ -584,7 +600,7 @@ italy_claim_irredentist_state_effect = {
 					}
 				}
 			}
-			owner = { country_event = ita.170 }
+			owner = { country_event = italy_events.170 }
 		}
 
 		#if owned by ally, notify all members and leave faction
@@ -607,7 +623,7 @@ italy_claim_irredentist_state_effect = {
 							is_faction_leader = yes
 						}
 					}
-					country_event = ita.171
+					country_event = italy_events.171
 				}
 				if = {
 					limit = { original_tag = SRI }
@@ -623,7 +639,7 @@ italy_break_balance = {
 	if = {
 		limit = { italy_balance_has_broken = no }
 		custom_effect_tooltip = SRI_balance_will_be_broken
-		hidden_effect = { country_event = socitaly.1270 }
+		hidden_effect = { country_event = socialist_italy_events.1270 }
 		if = {
 			limit = { has_idea = ITA_italy_balance_idea }
 			remove_ideas = ITA_italy_balance_idea
@@ -800,29 +816,35 @@ TUS_create_pietro_ferdinando = {
 	}
 }
 
-ITA_create_early_armor_variants = {
+ITA_create_basic_armor_variants = {
 	if = {
 		limit = { has_dlc_nsb = yes }
 		create_equipment_variant = {
-			name = "Fiat 3000"
-			type = light_tank_chassis_0
+			name = "L3/34"		# L3/35
+			type = light_tank_chassis_1
 			show_position = no
 			parent_version = 0
 			modules = {
 				main_armament_slot = tank_heavy_machine_gun
-				turret_type_slot = tank_light_one_man_tank_turret
+				turret_type_slot = tank_light_fixed_superstructure_turret
 				suspension_type_slot = tank_bogie_suspension
 				armor_type_slot = tank_riveted_armor
 				engine_type_slot = tank_gasoline_engine
+				special_type_slot_1 = secondary_turret_hmg		# Both HMGs were twinned but hoi4 can't portray that
 			}
 			upgrades = {
 				tank_nsb_engine_upgrade = 1
-				tank_nsb_armor_upgrade = 2
+				tank_nsb_armor_upgrade = 1
 			}
-			obsolete = yes
 		}
+	}
+}
+
+ITA_create_early_armor_variants = {
+	if = {
+		limit = { has_dlc_nsb = yes }
 		create_equipment_variant = {
-			name = "Fiat 3000B"
+			name = "L5/21"		# Fiat 3000 mod.30
 			type = light_tank_chassis_0
 			show_position = no
 			parent_version = 0
@@ -835,30 +857,23 @@ ITA_create_early_armor_variants = {
 			}
 			upgrades = {
 				tank_nsb_engine_upgrade = 1
-				tank_nsb_armor_upgrade = 2
 			}
 		}
-	}
-}
-
-ITA_create_basic_armor_variants = {
-	if = {
-		limit = { has_dlc_nsb = yes }
 		create_equipment_variant = {
-			name = "L3/35"
-			type = light_tank_chassis_1
+			name = "M10/33"		# Ansaldo 10t
+			type = medium_tank_chassis_0
 			show_position = no
 			parent_version = 0
 			modules = {
-				main_armament_slot = tank_heavy_machine_gun
-				turret_type_slot = tank_light_fixed_superstructure_turret
+				main_armament_slot = tank_small_cannon
+				turret_type_slot = tank_light_one_man_tank_turret
 				suspension_type_slot = tank_bogie_suspension
 				armor_type_slot = tank_riveted_armor
 				engine_type_slot = tank_gasoline_engine
+				special_type_slot_1 = secondary_turret_hmg
 			}
 			upgrades = {
 				tank_nsb_engine_upgrade = 1
-				tank_nsb_armor_upgrade = 1
 			}
 		}
 	}
@@ -1342,8 +1357,8 @@ ITA_spawn_venetian_revolt = {
 		unit_limit_calculation_effect = yes
 		SIC = { activate_targeted_decision = { decision = SRD_attack_italy target = VNC } }
 		SRD = { activate_targeted_decision = { decision = SRD_attack_italy target = VNC } }
-		AUS = { country_event = ita.57 }
-		news_event = { id = ita.204 days = 2 }
+		AUS = { country_event = italy_events.57 }
+		news_event = { id = italy_events.204 days = 2 }
 	}
 }
 
