@@ -1,5 +1,5 @@
 #################################
-### Kaiserreich version 1.5.2 ###
+### Kaiserreich version 1.5.3 ###
 #################################
 
 Thank you for downloading Kaiserreich for Hearts of Iron 4!
