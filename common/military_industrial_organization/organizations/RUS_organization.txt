@@ -1,12 +1,12 @@
-########################################################################################################
-# Russia MIOs   																					   #
-########################################################################################################
-# First attempted rework by Rylock and Alpinia														   #
-########################################################################################################
-# Second rework by Matoro, Katie, Frill Shark, Kano, Daru, Deliberus, Purple Jinjo, Gideones and DDago #
-########################################################################################################
-# Optimisations of MIO code by SuperGreenBeans											   			   #
-########################################################################################################
+####################################################################################################
+# Russia MIOs   																				   #
+####################################################################################################
+# First attempted rework by Rylock and Alpinia													   #
+####################################################################################################
+# Second rework by Matoro, Katie, Frill Shark, Kano, Daru, Deliberus, marimari, Gideones and DDago #
+####################################################################################################
+# Optimisations of MIO code by SuperGreenBeans										   			   #
+####################################################################################################
 
 # Tank MIOs
   # Putilovets
@@ -122,8 +122,8 @@
 ### Gamayun ###
 ###############
 # Another very complex MIO to conver. The display tooltip works similar to AV with the variables set from `RUS_setup_custom_russian_MIOs`
-# alongside the recursive scripted localisation `RUS_Show_Gamayun_Notification_List` and the scripted effect `RUS_Gamayun_Shift_Notification_List`
-# shifting that list depending on the variable `notification_list_maximum`.
+# alongside the recursive scripted localisation `RUS_Show_Gamayun_Notification_List`
+# The three arrays used for the recursive localisation have oldest factory construction erased (if present) and the latest gets added to the first index 0
 #
 # There are 2 things that controls how the building effects work: event russia_events.1002 and scripted effect `RUS_Gamayun_Factories`.
 #
@@ -179,12 +179,12 @@
 # Note: AMO used to have two versions - one without the DLC NSB and one with it. These have since been combined into a single one.
 # With the NSB DLC, the traits `amo_upgrade_1_3` and `amo_upgrade_2_1` give the additonal effect of Fuel Capacity. With the CIC mechanic, some basic variables are used to
 # calculate the final CIC bonus:
+# Add_cic formula: (RUS_amo_cic_bonus * size) + @RUS_amo_cic_base
+# 1) `@RUS_amo_cic_base` - Minimum CIC given (this is a constant not a var)
+# 2) `RUS_amo_cic_bonus`- Bonus CIC given based on traits unlocked and policy. Starts at 500, can be increased by affected by trait amo_upgrade_1_2, trait amo_upgrade_1_4, and policy RUS_mio_policy_expand_weapon_deals
+# 3) `size` - Multiplier for CIC based on MIO size
 #
-# 1) `RUS_amo_cic_base` - Minimum CIC given
-# 2) `RUS_amo_cic_trait_sum`- Bonus CIC given based on traits unlocked and policy
-# 3) `RUS_amo_cic_size_multiplier` - Multiplier for CIC based on MIO size
-#
-# Finally the `CIC_bonus` and `total_campaign_CIC` variables control the loc and are increased/decreased depending on which traits/policies are applied to the AMO MIO.
+# Finally the `RUS_amo_cic_bonus` and `RUS_amo_total_campaign_cic` variables control the loc and are increased/decreased depending on which traits/policies are applied to the AMO MIO.
 #
 ###############
 ### NAZ/LAZ ###
@@ -6911,11 +6911,9 @@ RUS_gamayun_organisation = {
 
 	on_industrial_manufacturer_assigned = {
 		if = {
-			limit = {
-				RUS_has_gamayun_upgrade_3 = yes
-			}
+			limit = { RUS_has_gamayun_upgrade_3 = yes }
 			custom_effect_tooltip = RUS_gamayun_random_factories_tt
-			RUS_Show_Gamayun_Notification_List = yes
+			effect_tooltip = { RUS_Show_Gamayun_Notification_List = yes }
 		}
 		else = {
 			custom_effect_tooltip = {
@@ -6980,18 +6978,13 @@ RUS_gamayun_organisation = {
 		}
 
 		on_complete = {
-			hidden_effect = {
-				FROM = { set_variable = { RUS_Gamayun_Civ_Chance = 33 } }
-				FROM = { set_variable = { RUS_Gamayun_Mil_Chance = 33 } }
-				FROM = { set_variable = { RUS_Gamayun_Dockyard_Chance = 33 } }
-				FROM = {
-					country_event = { id = russia_events.1002 days = 4 }
-				}
-			}
-			custom_effect_tooltip = RUS_gamayun_upgrade_3_tt
-			RUS_Show_Gamayun_Notification_List = yes
+			custom_effect_tooltip = RUS_gamayun_random_factories_tt
+			effect_tooltip = { RUS_Show_Gamayun_Notification_List = yes }
 			custom_effect_tooltip = tooltip_white_line
-			FROM = { RUS_unlock_gamayun_policies = yes } # `unlock_mio_policy_tooltip` doesn't work in the MIO scope for some reason
+			FROM = {
+				RUS_unlock_gamayun_policies = yes # `unlock_mio_policy_tooltip` doesn't work in the MIO scope for some reason
+				hidden_effect = { country_event = { id = russia_events.1002 days = 4 } }
+			}
 		}
 	}
 
@@ -7073,8 +7066,8 @@ RUS_gamayun_organisation = {
 		mutually_exclusive = { gamayun_upgrade_1_4 }
 
 		on_complete = {
-			add_to_variable = { Min_Progress_loc = 20 }
-			add_to_variable = { Max_Progress_loc = 20 }
+			add_to_variable = { RUS_starting_construction_progress_min = 0.20 }
+			add_to_variable = { RUS_starting_construction_progress_max = 0.20 }
 			custom_effect_tooltip = gamayun_upgrade_1_3_tt
 		}
 	}
@@ -7091,8 +7084,8 @@ RUS_gamayun_organisation = {
 		mutually_exclusive = { gamayun_upgrade_1_3 }
 
 		on_complete = {
-			subtract_from_variable = { Min_Days_loc = 50 }
-			subtract_from_variable = { Max_Days_loc = 50 }
+			subtract_from_variable = { RUS_factory_interval_min = 50 }
+			subtract_from_variable = { RUS_factory_interval_max = 50 }
 			custom_effect_tooltip = gamayun_upgrade_1_4_tt
 		}
 	}
@@ -7177,10 +7170,9 @@ RUS_gamayun_organisation = {
 		mutually_exclusive = { gamayun_upgrade_2_4 gamayun_upgrade_2_5 }
 
 		on_complete = {
-			add_to_variable = { Civ_chance_loc = 27 }
-			subtract_from_variable = { Mil_chance_loc = 13 }
-			subtract_from_variable = { Dockyard_chance_loc = 13 }
-			FROM = { add_to_variable = { RUS_Gamayun_Civ_Chance = 66 } }
+			add_to_variable = { RUS_gamayun_civilian_factory_chance = 27 }
+			subtract_from_variable = { RUS_gamayun_military_factory_chance = 13 }
+			subtract_from_variable = { RUS_gamayun_dockyard_chance = 13 }
 			custom_effect_tooltip = gamayun_upgrade_2_3_tt
 			custom_effect_tooltip = tooltip_white_line
 			custom_effect_tooltip = {
@@ -7202,10 +7194,9 @@ RUS_gamayun_organisation = {
 		mutually_exclusive = { gamayun_upgrade_2_3 gamayun_upgrade_2_5 }
 
 		on_complete = {
-			add_to_variable = { Mil_chance_loc = 27 }
-			subtract_from_variable = { Civ_chance_loc = 13 }
-			subtract_from_variable = { Dockyard_chance_loc = 13 }
-			FROM = { add_to_variable = { RUS_Gamayun_Civ_Chance = 66 } }
+			add_to_variable = { RUS_gamayun_military_factory_chance = 27 }
+			subtract_from_variable = { RUS_gamayun_civilian_factory_chance = 13 }
+			subtract_from_variable = { RUS_gamayun_dockyard_chance = 13 }
 			custom_effect_tooltip = gamayun_upgrade_2_4_tt
 			custom_effect_tooltip = tooltip_white_line
 			custom_effect_tooltip = {
@@ -7227,10 +7218,9 @@ RUS_gamayun_organisation = {
 		mutually_exclusive = { gamayun_upgrade_2_3 gamayun_upgrade_2_4 }
 
 		on_complete = {
-			add_to_variable = { Dockyard_chance_loc = 27 }
-			subtract_from_variable = { Mil_chance_loc = 13 }
-			subtract_from_variable = { Civ_chance_loc = 13 }
-			FROM = { add_to_variable = { RUS_Gamayun_Civ_Chance = 66 } }
+			add_to_variable = { RUS_gamayun_dockyard_chance = 27 }
+			subtract_from_variable = { RUS_gamayun_military_factory_chance = 13 }
+			subtract_from_variable = { RUS_gamayun_civilian_factory_chance = 13 }
 			custom_effect_tooltip = gamayun_upgrade_2_5_tt
 			custom_effect_tooltip = tooltip_white_line
 			custom_effect_tooltip = {
@@ -7278,11 +7268,6 @@ RUS_gamayun_organisation = {
 		name = KR_MIO_Trait_additional_minelaying_storage
 		icon = GFX_generic_mio_trait_icon_mines
 
-		visible = {
-			has_dlc_mtg = yes
-			has_dlc_bba = yes
-		}
-
 		position = { x = 3 y = 3 }
 
 		mutually_exclusive = { gamayun_upgrade_3_2 }
@@ -7297,11 +7282,6 @@ RUS_gamayun_organisation = {
 		token = gamayun_upgrade_3_2
 		name = KR_MIO_Trait_stronger_magnetic_demining_coil
 		icon = GFX_generic_mio_trait_icon_mines
-
-		visible = {
-			has_dlc_mtg = yes
-			has_dlc_bba = yes
-		}
 
 		position = { x = 5 y = 3 }
 
@@ -9664,7 +9644,7 @@ RUS_toz_organisation = {
 			}
 			else = {
 				custom_effect_tooltip = toz_medal_upgrade_tt
-				set_temp_variable = { RUS_medal_modifier_tt = 0.1 tooltip = army_defence_tooltip }
+				set_temp_variable = { RUS_medal_modifier_tt = 0.1 tooltip = army_defence_factor_tooltip }
 			}
 		}
 	}
@@ -10022,8 +10002,6 @@ RUS_vpoz_organisation = {
 	research_categories = {
 		infantry_weapons
 		support_tech
-		battlefield_support_tree
-		cat_battlefield_support
 		night_vision
 		cat_special_forces_generic
 	}
@@ -10253,8 +10231,6 @@ RUS_imz_organisation = {
 	research_categories = {
 		infantry_weapons
 		support_tech
-		battlefield_support_tree
-		cat_battlefield_support
 		night_vision
 		cat_special_forces_generic
 	}
@@ -11744,7 +11720,7 @@ RUS_bmz_organisation = {
 		}
 	}
 }
-
+@RUS_amo_cic_base = 3000
 RUS_amo_organisation = {
 	name = amo_non_socrus
 	icon = GFX_idea_amo
@@ -11754,26 +11730,14 @@ RUS_amo_organisation = {
 	available = { FROM = { owns_state = 219 } } #Moscow
 
 	on_tech_research_completed = {
-		set_temp_variable = { RUS_amo_cic_base = 3000 }
-		set_temp_variable = { RUS_amo_cic_trait_sum = 500 }
-		set_temp_variable = { RUS_amo_cic_size_multiplier = size }
-		if = {
-			limit = { RUS_has_amo_upgrade_1_2 = yes }
-			add_to_temp_variable = { RUS_amo_cic_trait_sum = 250 }
-		}
-		if = {
-			limit = { RUS_has_amo_upgrade_1_4 = yes }
-			add_to_temp_variable = { RUS_amo_cic_trait_sum = 250 }
-		}
-		if = {
-			limit = { RUS_has_amo_policy = yes }
-			add_to_temp_variable = { RUS_amo_cic_trait_sum = 250 }
-		}
-		multiply_temp_variable = { RUS_amo_cic_trait_sum = RUS_amo_cic_size_multiplier }
-		add_to_temp_variable = { RUS_amo_cic_trait_sum = RUS_amo_cic_base }
+		# Add_cic formula: (RUS_amo_cic_bonus * size) + @RUS_amo_cic_base
+		#RUS_amo_cic_bonus further affected by trait amo_upgrade_1_2, trait amo_upgrade_1_4, and policy RUS_mio_policy_expand_weapon_deals
+		set_temp_variable = { RUS_amo_cic_trait_sum = RUS_amo_cic_bonus }
+		multiply_temp_variable = { RUS_amo_cic_trait_sum = size }
+		add_to_temp_variable = { RUS_amo_cic_trait_sum = @RUS_amo_cic_base }
 
 		FROM = { add_cic = RUS_amo_cic_trait_sum }
-		add_to_variable = { total_campaign_CIC = RUS_amo_cic_trait_sum }
+		add_to_variable = { RUS_amo_total_campaign_cic = RUS_amo_cic_trait_sum }
 		custom_effect_tooltip = RUS_amo_research_cic_tt
 	}
 
@@ -11885,8 +11849,7 @@ RUS_amo_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = RUS_amo_trait_cic_tt
-			add_to_variable = { CIC_bonus = 250 }
+			add_to_variable = { RUS_amo_cic_bonus = 250 tooltip = RUS_amo_trait_cic_tt }
 		}
 	}
 
@@ -11953,8 +11916,7 @@ RUS_amo_organisation = {
 		}
 
 		on_complete = {
-			custom_effect_tooltip = RUS_amo_trait_cic_tt
-			add_to_variable = { CIC_bonus = 250 }
+			add_to_variable = { RUS_amo_cic_bonus = 250 tooltip = RUS_amo_trait_cic_tt }
 		}
 	}
 

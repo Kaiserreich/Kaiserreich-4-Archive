@@ -736,14 +736,11 @@ country_event = { # The Non-Partisan Regime
 	is_triggered_only = yes
 
 	trigger = {
-		if = {
-			limit = { is_ai = yes }
-			OR = {
-				has_game_rule = { rule = BUL_path option = DEFAULT }
-				has_game_rule = { rule = BUL_path option = BUL_PATH_AUTDEM }
-			}
+		OR = {
+			is_ai = no
+			has_game_rule = { rule = BUL_path option = DEFAULT }
+			has_game_rule = { rule = BUL_path option = BUL_PATH_AUTDEM }
 		}
-		else = { always = yes }
 	}
 
 	option = {
@@ -984,6 +981,7 @@ country_event = { # Questioning patriotism
 	trigger = {
 		has_active_mission = BUL_operation_nishava_fallout
 	}
+	timeout_days = 5
 
 	option = {
 		log = "[GetLogInfo]: event bulgaria_events.23 option bulgaria_events.23.a"
@@ -1023,6 +1021,7 @@ country_event = { # Georgiev's ultimatum
 	trigger = {
 		has_active_mission = BUL_operation_nishava_fallout
 	}
+	timeout_days = 5
 
 	option = {
 		log = "[GetLogInfo]: event bulgaria_events.24 option bulgaria_events.24.a"
@@ -1076,6 +1075,7 @@ country_event = { # Protest from the bureaucracy
 	trigger = {
 		has_active_mission = BUL_operation_nishava_fallout
 	}
+	timeout_days = 5
 
 	option = {
 		log = "[GetLogInfo]: event bulgaria_events.25 option bulgaria_events.25.a"
@@ -1112,6 +1112,7 @@ country_event = { # The Crown Prince wishes to speak
 	trigger = {
 		has_active_mission = BUL_operation_nishava_fallout
 	}
+	timeout_days = 5
 
 	option = {
 		log = "[GetLogInfo]: event bulgaria_events.26 option bulgaria_events.26.a"
@@ -2460,11 +2461,8 @@ country_event = { #hidden event to check whether to bypass the mechanic due to B
 					owner = { is_ally_with = ROOT }
 					is_controlled_by = owner
 				}
-				set_state_flag = BUL_chetnik_headquarters
 				save_global_event_target_as = BUL_chetnik_headquarters
-				add_dynamic_modifier = { modifier = BUL_chetnik_base_modifier }
 			}
-			set_country_flag = BUL_chetnik_uprising
 			set_variable = { BUL_chetnik_strength = 5 }
 			country_event = bulgaria_events.57
 		}
@@ -2486,11 +2484,9 @@ country_event = { # First Uprising
 	option = {
 		log = "[GetLogInfo]: event bulgaria_events.55 option bulgaria_events.55.a"
 		name = bulgaria_events.55.a
-		set_country_flag = BUL_chetnik_uprising # move to next event
 		set_variable = { BUL_chetnik_strength = 5 }
 		activate_mission = BUL_chetnik_movement
 		106 = {
-			set_state_flag = BUL_chetnik_headquarters
 			save_global_event_target_as = BUL_chetnik_headquarters
 			add_dynamic_modifier = { modifier = BUL_chetnik_base_modifier }
 		}
@@ -2539,7 +2535,7 @@ country_event = { # Chetnik Rebellion: Defeat
 	picture = GFX_report_event_BUL_oldguard
 
 	trigger = {
-		has_country_flag = BUL_chetnik_uprising
+		has_variable = BUL.BUL_chetnik_strength
 		is_subject = no
 		event_target:BUL_chetnik_headquarters = {
 			owner = { is_ally_with = ROOT }
@@ -2550,6 +2546,7 @@ country_event = { # Chetnik Rebellion: Defeat
 
 	immediate = {
 		hidden_effect = {
+			remove_mission = BUL_chetnik_movement
 			BUL_spawn_chetnik_revolt = yes
 		}
 	}
@@ -2565,6 +2562,20 @@ country_event = { # Chetnik Rebellion: Defeat
 				}
 			}
 		}
+		if = {
+			limit = {
+				OR = {
+					event_target:BUL_chetnik_headquarters = {
+						NOT = {
+							state = 107 #Belgrade
+							state = 108 #Kraljevo
+						}
+					}
+					NOT = { has_subject = event_target:original_serbia }
+				}
+			}
+			clear_global_event_target = BUL_chetnik_headquarters
+		}
 	}
 }
 country_event = { # Chetnik Rebellion: Victory
@@ -2576,7 +2587,10 @@ country_event = { # Chetnik Rebellion: Victory
 	fire_only_once = yes
 	is_triggered_only = yes
 	immediate = {
-		clr_country_flag = BUL_chetnik_uprising
+		hidden_effect = {
+			remove_mission = BUL_chetnik_movement
+			clear_variable = BUL.BUL_chetnik_strength
+		}
 	}
 
 	option = {
@@ -2584,15 +2598,15 @@ country_event = { # Chetnik Rebellion: Victory
 		name = bulgaria_events.58.a
 		add_stability = 0.1
 		add_political_power = 75
+		event_target:BUL_chetnik_headquarters = {
+			remove_dynamic_modifier = { modifier = BUL_chetnik_base_modifier }
+		}
+		clear_global_event_target = BUL_chetnik_headquarters
 		hidden_effect = {
-			event_target:BUL_chetnik_headquarters = {
-				remove_dynamic_modifier = { modifier = BUL_chetnik_base_modifier }
-				clr_state_flag = BUL_chetnik_headquarters
-			}
 			SER = {
 				if = {
 					limit = { has_character = SER_dragoljub_mihailovic }
-					retire_character = SER_dragoljub_mihailovic
+					SER_dragoljub_mihailovic = { kill_character = yes }
 				}
 			}
 		}
@@ -3622,18 +3636,11 @@ news_event = {
 	desc = bulgaria_foreign_events.27.d
 	picture = GFX_news_event_ITA_big_crowd
 
-	major = yes
+	trigger = { wants_world_news = yes } #Global news event
 
 	is_triggered_only = yes
-
-	trigger = {
-		wants_world_news = yes
-	}
-
-	show_major = {
-		NOT = { tag = FROM }
-		regional_europe_news = yes
-	}
+	fire_for_sender = no
+	major = yes
 
 	option = {
 		name = bulgaria_foreign_events.27.a
@@ -5141,7 +5148,8 @@ country_event = { #The hunt for Madzharov is very successful
 	}
 }
 
-news_event = { #Zveno clique coups Bulgaria
+#Zveno clique coups Bulgaria
+news_event = {
 	id = bulgaria_flavour_events.29
 	immediate = { log = "[GetLogInfo]: event bulgaria_flavour_events.29" }
 	immediate = {
@@ -5153,14 +5161,12 @@ news_event = { #Zveno clique coups Bulgaria
 
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes }
 
 	major = yes
 	show_major = {
-		NOT = { tag = FROM }
 		regional_europe_news = yes
+		NOT = { tag = FROM }
 	}
 
 	option = {
@@ -5168,7 +5174,8 @@ news_event = { #Zveno clique coups Bulgaria
 	}
 }
 
-news_event = { #Tsar Ferdinand establishes a Royal Dictatorship
+#Tsar Ferdinand establishes a Royal Dictatorship
+news_event = {
 	id = bulgaria_flavour_events.30
 	immediate = { log = "[GetLogInfo]: event bulgaria_flavour_events.30" }
 	immediate = {
@@ -5180,14 +5187,12 @@ news_event = { #Tsar Ferdinand establishes a Royal Dictatorship
 
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes }
 
 	major = yes
 	show_major = {
-		NOT = { tag = FROM }
 		regional_europe_news = yes
+		NOT = { tag = FROM }
 	}
 
 	option = {
@@ -5195,7 +5200,8 @@ news_event = { #Tsar Ferdinand establishes a Royal Dictatorship
 	}
 }
 
-news_event = { #Constitutionalists win in Bulgaria and abolish the State Protection Act
+#Constitutionalists win in Bulgaria and abolish the State Protection Act
+news_event = {
 	id = bulgaria_flavour_events.31
 	immediate = { log = "[GetLogInfo]: event bulgaria_flavour_events.31" }
 	immediate = {
@@ -5207,14 +5213,12 @@ news_event = { #Constitutionalists win in Bulgaria and abolish the State Protect
 
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes }
 
 	major = yes
 	show_major = {
-		NOT = { tag = FROM }
 		regional_europe_news = yes
+		NOT = { tag = FROM }
 	}
 
 	option = {
@@ -5222,7 +5226,8 @@ news_event = { #Constitutionalists win in Bulgaria and abolish the State Protect
 	}
 }
 
-news_event = { #The Union of National Legions takes over Bulgaria
+#The Union of National Legions takes over Bulgaria
+news_event = {
 	id = bulgaria_flavour_events.32
 	immediate = { log = "[GetLogInfo]: event bulgaria_flavour_events.32" }
 	title = bulgaria_flavour_events.32.t
@@ -5231,14 +5236,12 @@ news_event = { #The Union of National Legions takes over Bulgaria
 
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes }
 
 	major = yes
 	show_major = {
-		NOT = { tag = FROM }
 		regional_europe_news = yes
+		NOT = { tag = FROM }
 	}
 
 	option = {
@@ -5246,7 +5249,8 @@ news_event = { #The Union of National Legions takes over Bulgaria
 	}
 }
 
-news_event = { #The Fatherland Front overthrows the monarchy
+#The Fatherland Front overthrows the monarchy
+news_event = {
 	id = bulgaria_flavour_events.33
 	immediate = { log = "[GetLogInfo]: event bulgaria_flavour_events.33" }
 	title = bulgaria_flavour_events.33.t
@@ -5255,14 +5259,12 @@ news_event = { #The Fatherland Front overthrows the monarchy
 
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes }
 
 	major = yes
 	show_major = {
-		NOT = { tag = FROM }
 		regional_europe_news = yes
+		NOT = { tag = FROM }
 	}
 
 	option = {

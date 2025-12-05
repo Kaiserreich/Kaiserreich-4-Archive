@@ -1574,6 +1574,8 @@ country_event = {	#Military launches Coup
 			ideology = paternal_autocrat
 			popularity = 0.15
 		}
+		set_temp_variable = { coalition_partner_var = token:authoritarian_democrat }
+		add_to_coalition = yes
 		hidden_effect = {
 			country_event = { id = ottomans_fevzi_events.1 days = 3 }
 			country_event = { id = ottomans_fevzi_events.6 days = 14 }
@@ -2775,10 +2777,9 @@ country_event = {	#Sheikh Seyid Riza declares Jihad
 
 	trigger = {
 		OTT_ottomans_have_post_defeat_content = no
-		OR = {
-			352 = { is_owned_and_controlled_by = ROOT } #Van
-			354 = { is_owned_and_controlled_by = ROOT } #Erzurum
-			1000 = { is_owned_and_controlled_by = ROOT } #Kars
+		any_state_of = {
+			target = { 352 354 1000 } #Van, Erzurum, Kars
+			is_owned_and_controlled_by = ROOT
 		}
 	}
 
@@ -7048,15 +7049,15 @@ country_event = {	#Sarajevo Accords
 #			limit = { tag = OTT }
 #			if = {
 #				limit = { is_faction_leader = yes }
-#				set_faction_name = sarajevo_accords
+#				set_faction_name = faction_sarajevo_accords
 #			}
 #			else_if = {
 #				limit = { is_in_faction = yes }
 #				leave_faction = yes
-#				create_faction = sarajevo_accords
+#				create_faction_from_template = { template = faction_template_donau_adriabund name = sarajevo_accords }
 #			}
 #			else = {
-#				create_faction = sarajevo_accords
+#				create_faction_from_template = { template = faction_template_donau_adriabund name = sarajevo_accords }
 #			}
 #			every_other_country = {
 #				limit = {
@@ -7072,7 +7073,7 @@ country_event = {	#Sarajevo Accords
 #		else = {
 #			effect_tooltip = {
 #				OTT = {
-#					create_faction = sarajevo_accords
+#					create_faction_from_template = { template = faction_template_donau_adriabund name = sarajevo_accords }
 #					custom_effect_tooltip = OTT_add_austria_to_faction
 #				}
 #			}
@@ -7188,15 +7189,15 @@ country_event = {	#Meeting on Ada Kaleh
 				limit = { tag = AUS }
 				if = {
 					limit = { is_faction_leader = yes }
-					set_faction_name = sarajevo_accords
+					set_faction_name = faction_sarajevo_accords
 				}
 				else_if = {
 					limit = { is_in_faction = yes }
 					leave_faction = yes
-					create_faction = sarajevo_accords
+					create_faction_from_template = { template = faction_template_donau_adriabund name = faction_sarajevo_accords }
 				}
 				else = {
-					create_faction = sarajevo_accords
+					create_faction_from_template = { template = faction_template_donau_adriabund name = faction_sarajevo_accords }
 				}
 				every_other_country = {
 					display_individual_scopes = yes
@@ -8577,7 +8578,6 @@ country_event = {	#The Baku Conference
 			limit = { #if Georgia is invalid, skip to Afghanistan
 				OR = {
 					NOT = { country_exists = GEO }
-					RUS = { is_ally_with = GEO }
 					RUS = { has_war_with = GEO }
 				}
 			}
@@ -8608,6 +8608,23 @@ country_event = {	#The Baku Conference
 					effect_tooltip = {
 						RUS = { country_event = { id = ottomans_foreign_policy_events.63 days = 2 } }
 					}
+				}
+			}
+		}
+		else_if = {
+			limit = { #if Georgia in alliance with Russia, skip to Batumi
+				OR = {
+					RUS = { is_ally_with = GEO }
+					RUS = { has_guaranteed = GEO }
+				}
+			}
+			if = {
+				limit = { tag = RUS }
+				country_event = { id = ottomans_foreign_policy_events.61 days = 2 }
+			}
+			else = {
+				effect_tooltip = {
+					RUS = { country_event = { id = ottomans_foreign_policy_events.61 days = 2 } }
 				}
 			}
 		}
@@ -8987,10 +9004,7 @@ country_event = {	#The Future of Persia
 			base = 50
 			modifier = {
 				factor = 0
-				OR = {
-					has_authoritarian_government = yes
-					has_country_flag = ott_centralist_DF
-				}
+				OTT_has_centralist_government = yes
 			}
 		}
 		RUS = { country_event = { id = ottomans_foreign_policy_events.67 days = 1 } }
@@ -9002,8 +9016,7 @@ country_event = {	#The Future of Persia
 			base = 50
 			modifier = {
 				factor = 0
-				has_democratic_government = yes
-				NOT = { has_country_flag = ott_centralist_DF }
+				OTT_has_centralist_government = no
 			}
 		}
 		RUS = { country_event = { id = ottomans_foreign_policy_events.68 days = 1 } }
@@ -9615,7 +9628,10 @@ country_event = {	#Russia Demands Our Submission
 		RUS = { puppet_country_without_changing_government = yes }
 		hidden_effect = {
 			if = {
-				limit = { tag = GEO }
+				limit = {
+					tag = GEO
+					has_country_leader = { character = GEO_ioachim_von_hohenzollern }
+				}
 				GEO_remove_monarchy = yes
 			}
 			remove_ideas = {
@@ -9736,6 +9752,16 @@ country_event = {	#The Russo-Ottoman Convention
 		add_ideas = OTT_russo_ottoman_convention
 		add_ideas = generic_neutral_foreign_policy
 		if = {
+			limit = { is_subject = yes }
+			overlord = {
+				set_autonomy = {
+					target = PREV
+					autonomy_state = autonomy_free
+				}
+			}
+		}
+		MIE_remove_from_intermarium = yes
+		if = {
 			limit = { is_in_faction = yes }
 			leave_faction = yes
 		}
@@ -9790,7 +9816,10 @@ country_event = {	#The Russo-Ottoman Convention
 			limit = {
 				GER = {
 					is_faction_leader = yes
-					NOT = { has_war_with = ROOT }
+					NOT = {
+						is_in_faction_with = ROOT
+						has_war_with = ROOT
+					}
 				}
 			}
 			GER = { add_to_faction = ROOT }
@@ -10302,24 +10331,23 @@ country_event = {	#White peace with the Ottomans?
 		has_war_with = OTT
 		is_valid_peace_target = yes
 		OTT = { is_valid_peace_target = yes }
-		OR = {
-			229 = { is_owned_by_ROOT_or_ally = yes }
-			230 = { is_owned_by_ROOT_or_ally = yes }
-			231 = { is_owned_by_ROOT_or_ally = yes }
+		any_state_of = {
+			target = { 229 230 231 }
+			is_owned_by_ROOT_or_ally = yes
 		}
 		OR = {
 			AND = {
 				surrender_progress > 0.30
-				OR = {
-					var:229.controller = { is_ally_with = ROOT }
-					var:230.controller = { is_ally_with = ROOT }
-					var:231.controller = { is_ally_with = ROOT }
+				any_state_of = {
+					target = { 229 230 231 }
+					controller = { is_ally_with = ROOT }
 				}
 			}
-			AND = {
-				234 = { is_controlled_by_ROOT_or_ally = no }
-				235 = { is_controlled_by_ROOT_or_ally = no }
-				787 = { is_controlled_by_ROOT_or_ally = no }
+			NOT = {
+				any_state_of = {
+					target = { 229 230 231 }
+					is_controlled_by_ROOT_or_ally = yes
+				}
 			}
 		}
 	}
@@ -13957,13 +13985,7 @@ news_event = {
 	fire_for_sender = no
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
-
-	show_major = {
-		regional_middle_east_news = yes
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = {
 		name = ottomans_news_events.1.a
@@ -13982,13 +14004,7 @@ news_event = {
 	fire_for_sender = no
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
-
-	show_major = {
-		regional_middle_east_news = yes
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = {
 		name = ottomans_news_events.2.a
@@ -14007,13 +14023,7 @@ news_event = {
 	fire_for_sender = no
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
-
-	show_major = {
-		regional_middle_east_news = yes
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = {
 		name = ottomans_news_events.3.a
@@ -14045,13 +14055,7 @@ news_event = {
 	fire_for_sender = no
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
-
-	show_major = {
-		regional_middle_east_news = yes
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = {
 		name = ottomans_news_events.4.a
@@ -14070,13 +14074,7 @@ news_event = {
 	fire_for_sender = no
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
-
-	show_major = {
-		regional_middle_east_news = yes
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = {
 		name = ottomans_news_events.5.a

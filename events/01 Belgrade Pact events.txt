@@ -22,7 +22,8 @@ country_event = {
 		name = belgrade_pact_events.1.a # Open the Congress
 		add_war_support = 0.05
 		set_country_flag = SER_founded_belgradepact
-		create_faction = belgrade_pact
+		create_faction_from_template = faction_template_belgrade_pact
+		scope:faction = { set_variable = { non_ideological_faction = 1 } }
 		add_named_threat = {
 			threat = 4
 			name = SER_belgrade_pact_threat
@@ -235,7 +236,7 @@ country_event = {
 		ai_chance = { base = 100 }
 		every_country = {
 			limit = {
-				is_in_belgrade_pact = yes
+				is_in_faction_with = BPL
 			}
 			add_ideas = belgrade_part_arms_embargo
 			add_opinion_modifier = { target = ROOT modifier = KR_supported_our_enemies }
@@ -305,7 +306,7 @@ country_event = {
 		}
 		every_country = {
 			limit = {
-				is_in_belgrade_pact = yes
+				is_in_faction_with = BPL
 			}
 			add_opinion_modifier = { target = ROOT modifier = KR_supported_our_enemies }
 			country_event = belgrade_pact_events.7
@@ -756,6 +757,10 @@ country_event = {
 
 	is_triggered_only = yes
 
+	trigger = {
+		NOT = { has_country_flag = GRE_staying_in_BPL } #GRE shouldn't get this event multiple times if they choose to stay in the Belgrade Pact
+	}
+
 	option = {
 		log = "[GetLogInfo]: event belgrade_pact_events.38 option belgrade_pact_events.38.a"
 		name = belgrade_pact_events.38.a # The Belgrade Pact stands triumphant!
@@ -785,6 +790,12 @@ country_event = {
 				NOT = { has_game_rule = { rule = BPL_dissolution option = BPL_DISSOLUTION_GRE_AUS_BEATEN } }
 				NOT = { has_game_rule = { rule = BPL_dissolution option = BPL_DISSOLUTION_GRE_INT_BEATEN } }
 			}
+		}
+		if = {
+			limit = {
+				original_tag = GRE
+			}
+			set_country_flag = GRE_staying_in_BPL
 		}
 	}
 
@@ -856,6 +867,20 @@ country_event = {
 				leave_faction = yes
 			}
 			peace_out_non_neighbours_after_leaving_faction = yes
+			# Move armies home
+			every_state = {
+				limit = {
+					owner = {
+						is_ally_with = BPL
+					}
+				}
+				teleport_armies = {
+					limit = {
+						original_tag = GRE
+					}
+					to_state_array = owned_controlled_states
+				}
+			}
 			if = {
 				limit = {
 					has_war_with = ALB
@@ -2377,9 +2402,8 @@ country_event = {
 		BPL = { is_valid_peace_target = yes }
 		BPL = {
 			NOT = {
-				any_of_scopes = {
-					array = guarantor_array
-					has_guaranteed = PREV
+				any_collection_element = {
+					collection = collection:guarantors
 					is_major = yes
 				}
 			}
@@ -2408,9 +2432,8 @@ country_event = {
 			NOT = { has_guaranteed = TUR }
 			NOT = { has_non_aggression_pact_with = TUR }
 			NOT = {
-				any_of_scopes = {
-					array = guarantor_array
-					has_guaranteed = PREV
+				any_collection_element = {
+					collection = collection:guarantors
 					is_major = yes
 				}
 			}
@@ -2623,7 +2646,7 @@ country_event = {
 			limit = {
 				is_faction_leader = no
 			}
-			create_faction = bulgarian_albanian_alliance
+			create_faction_from_template = { template = faction_template_generic name = bulgarian_albanian_alliance }
 		}
 		add_to_faction = ALB
 		ALB = {
@@ -2888,17 +2911,16 @@ country_event = {
 	trigger = {
 		tag = BPL
 		has_war_with = ALB
-		SER = { has_country_flag = SER_founded_belgradepact }
 		SER = { has_capitulated = yes }
 		BUL = {
 			OR = {
 				exists = no
-				is_subject_of = SER
-				has_capitulated = yes
+				is_subject = yes
 				has_country_flag = BUL_balkan_peace_loss
 			}
 		}
 		ALB = {
+			is_valid_peace_target = yes
 			controls_state = 765 #Kosovo
 			controls_all_owned_states = yes
 			has_country_flag = ALB_joined_BUL_war
@@ -3077,7 +3099,7 @@ country_event = {
 			set_faction_name = anti_belgrade_pact
 		}
 		else = {
-			create_faction = anti_belgrade_pact
+			create_faction_from_template = { template = faction_template_generic name = anti_belgrade_pact }
 			add_to_faction = CRO
 		}
 	}

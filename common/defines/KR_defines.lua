@@ -10,7 +10,8 @@ NDefines.NCareerProfile.MOD_STATISTICS_GROUP = "kaiserreich_career_profile"
 NDefines.NCareerProfile.MOD_STATISTICS_GROUP_NAME = "KAISERREICH_CAREER_PROFILE"
 
 -- Game
-NDefines.NGame.SAVE_VERSION = 152											-- Vanilla is 20
+NDefines.NGame.SAVE_VERSION = 154											-- Vanilla is 30
+NDefines.NGame.MINOR_SAVE_VERSION = 154										-- Vanilla is 1
 NDefines.NGame.END_DATE = "1959.1.1.1"										-- Vanilla is 1949.1.1.1
 NDefines.NGame.HANDS_OFF_START_TAG = "BHU"									-- Vanilla is URG
 NDefines.NGame.DECISION_ALERT_TIMEOUT_DAYS = 60								-- Vanilla is 30
@@ -57,6 +58,8 @@ NDefines.NDiplomacy.TENSION_PUPPET = 0										-- Vanilla is 1.25
 NDefines.NDiplomacy.TENSION_FORCE_GOVERNMENT = 0							-- Vanilla is 0.75
 NDefines.NDiplomacy.TENSION_GUARANTEE = 0									-- Vanilla is -5
 NDefines.NDiplomacy.TENSION_FACTION_JOIN = 0								-- Vanilla is 4
+NDefines.NDiplomacy.TENSION_PEACE_FACTOR = 0								-- Vanilla is 0.8
+NDefines.NDiplomacy.TENSION_PEACE_FACTOR_THREAT_FACTOR = 0					-- Vanilla is 0.6
 NDefines.NDiplomacy.TENSION_JOIN_ATTACKER = 0								-- Vanilla is 2
 NDefines.NDiplomacy.TENSION_LIBERATE = 0									-- Vanilla is -1
 NDefines.NDiplomacy.TENSION_TAKE_ONE_CAPITAL_SHIP = 0						-- Vanilla is 0.25
@@ -184,3 +187,13 @@ NDefines.NAITheatre.AI_THEATRE_SUPPLY_CRISIS_LIMIT = 0.25							-- Vanilla is 0.
 
 -- Geography
 NDefines.NGeography.MEDITERRANEAN_SEA_REGIONS = { 29, 68, 69, 168, 169, 223, 271 }	-- KR map changes
+
+-- Factions
+NDefines.NFactions.FACTION_INTELLIGENCE_ALLOWED_ADVISOR_TRAIT  = {
+	"KR_head_of_intelligence",
+	"KR_genius_cryptologist",
+	"KR_legendary_rogue",
+	"KR_the_commissionaire",
+	"KR_tsingtao_spymaster",
+	"KR_master_diplomat"
+}

@@ -1625,9 +1625,8 @@ country_event = { #Germany returns
 			is_in_faction = no
 			NOT = {
 				has_country_flag = bel_benesam_collapse_event_chain_flag #Benesam collapsing has its own unique event chain belgium_independent_events.30 - belgium_independent_events.38
-				any_of_scopes = {
-					array = guarantor_array
-					has_guaranteed = PREV
+				any_collection_element = {
+					collection = collection:guarantors
 					is_major = yes
 				}
 			}
@@ -1686,9 +1685,8 @@ country_event = { #Belgium answers German demands
 		is_subject = no
 		is_in_faction = no
 		NOT = {
-			any_of_scopes = {
-				array = guarantor_array
-				has_guaranteed = PREV
+			any_collection_element = {
+				collection = collection:guarantors
 				is_major = yes
 			}
 		}
@@ -3860,7 +3858,7 @@ country_event = { #Create the Belgian-Dutch Treaty Organisation
 		}
 		FROM = {
 			effect_tooltip = {
-				create_faction = benesam
+				BEL_create_benesam_faction = yes
 				add_to_faction = ROOT
 			}
 			country_event = belgium_events.103
@@ -3908,7 +3906,7 @@ country_event = {
 			modifier = {
 				factor = 0
 				is_in_faction_with = FRA
-				FROM = { owns_state = 29 }
+				FROM = { any_owned_state = { is_core_of = FRA } }
 			}
 		}
 		effect_tooltip = { add_to_faction = FROM }
@@ -3920,7 +3918,7 @@ country_event = {
 		name = belgium_events.102.b
 		trigger = {
 			is_in_faction_with = FRA
-			FROM = { owns_state = 29 }
+			FROM = { any_owned_state = { is_core_of = FRA } }
 		}
 		ai_chance = { base = 80 }
 		FROM = { country_event = belgium_events.104 }
@@ -3956,7 +3954,7 @@ country_event = { #An Alliance with FROM
 		name = belgium_events.103.a
 		if = {
 			limit = { FROM = { tag = HOL } }
-			create_faction = benesam
+			BEL_create_benesam_faction = yes
 			add_ideas = generic_neutral_foreign_policy
 			add_to_faction = FROM
 			FROM = { add_ideas = generic_neutral_foreign_policy }
@@ -3967,23 +3965,22 @@ country_event = { #An Alliance with FROM
 		}
 		if = {
 			limit = {
-				FROM = { is_ally_with = NFA }
 				OR = {
-					980 = { is_claimed_by = BEL } #Lille
-					17 = { is_claimed_by = BEL } #Pas-de-Calais
+					FRA = { is_ally_with = FROM }
+					NFA = { is_ally_with = FROM }
+				}
+				any_state_of = {
+					target = { 17 980 } #Pas-de-Calais, Lille
+					is_claimed_by = ROOT
 				}
 			}
-			BEL = {
-				every_state = {
-					limit = {
-						OR = {
-							state = 980 #Lille
-							state = 17 #Pas-de-Calais
-						}
-					}
-					disable_state_integration = yes
-					remove_claim_by = BEL
-				}
+			17 = { #Pas-de-Calais
+				disable_state_integration = yes
+				remove_claim_by = ROOT
+			}
+			980 = { #Lille
+				disable_state_integration = yes
+				remove_claim_by = ROOT
 			}
 		}
 	}
@@ -4002,27 +3999,15 @@ country_event = { #FROM Demands the Return of Dunkirk
 		log = "[GetLogInfo]: event belgium_events.104 option belgium_events.104.a"
 		name = belgium_events.104.a
 		ai_chance = { base = 70 }
-		if = {
-			limit = { FROM = { tag = FRA } }
-			FROM = {
-				effect_tooltip = {
-					transfer_state = 29
-					add_to_faction = ROOT
-				}
-				country_event = belgium_events.105
+		effect_tooltip = {
+			FRA = {
+				event_option_tooltip = belgium_events.109.a
+				country_event = belgium_events.109
 			}
 		}
-		else = {
-			effect_tooltip = {
-				FRA = {
-					transfer_state = 29
-					country_event = belgium_events.109
-				}
-			}
-			FROM = {
-				effect_tooltip = { add_to_faction = ROOT }
-				country_event = belgium_events.105
-			}
+		FROM = {
+			effect_tooltip = { add_to_faction = ROOT }
+			country_event = belgium_events.105
 		}
 	}
 
@@ -4047,15 +4032,20 @@ country_event = { #Belgium Returns Dunkirk
 		name = belgium_events.105.a
 		if = {
 			limit = { tag = FRA }
-			transfer_state = 29
+			FROM = {
+				every_owned_state = {
+					limit = { is_core_of = ROOT }
+					remove_core_of = FROM
+					transfer_state_to = ROOT
+				}
+			}
 		}
 		else = {
 			FRA = {
-				effect_tooltip = { transfer_state = 29 }
+				event_option_tooltip = belgium_events.109.a
 				country_event = belgium_events.109
 			}
 		}
-		29 = { remove_core_of = FROM }
 		add_to_faction = FROM
 	}
 }
@@ -4124,7 +4114,13 @@ country_event = { #The Return of Dunquerque (FRA)
 	option = {
 		log = "[GetLogInfo]: event belgium_events.109 option belgium_events.109.a"
 		name = belgium_events.109.a
-		transfer_state = 29
+		BEL = {
+			every_owned_state = {
+				limit = { is_core_of = ROOT }
+				remove_core_of = BEL
+				transfer_state_to = ROOT
+			}
+		}
 	}
 }
 
@@ -4179,16 +4175,16 @@ country_event = { #11 July - SETUP
 	id = belgium_events.118
 	hidden = yes
 
-	trigger = {
-		tag = BEL
-		has_country_flag = BEL_revolution_quelled
-	}
-
 	is_triggered_only = yes
 
-	immediate = {
-		hidden_effect = {
+	option = {
+		log = "[GetLogInfo]: event belgium_events.118 option 1"
+		if = {
+			limit = { has_country_flag = BEL_revolution_quelled }
 			country_event = belgium_events.117
+		}
+		else = {
+			country_event = { id = belgium_events.118 days = 365 }
 		}
 	}
 }
@@ -4203,7 +4199,7 @@ country_event = { #11 July
 
 	immediate = {
 		hidden_effect = {
-			country_event = { id = belgium_events.117 months = 12 }
+			country_event = { id = belgium_events.117 days = 365 }
 		}
 	}
 
@@ -4229,16 +4225,16 @@ country_event = { #21 July - SETUP
 	id = belgium_events.218
 	hidden = yes
 
-	trigger = {
-		tag = BEL
-		has_country_flag = BEL_revolution_quelled
-	}
-
 	is_triggered_only = yes
 
-	immediate = {
-		hidden_effect = {
+	option = {
+		log = "[GetLogInfo]: event belgium_events.218 option 1"
+		if = {
+			limit = { has_country_flag = BEL_revolution_quelled }
 			country_event = belgium_events.217
+		}
+		else = {
+			country_event = { id = belgium_events.218 days = 365 }
 		}
 	}
 }
@@ -4253,7 +4249,7 @@ country_event = { #21 July
 
 	immediate = {
 		hidden_effect = {
-			country_event = { id = belgium_events.217 months = 12 }
+			country_event = { id = belgium_events.217 days = 365 }
 		}
 	}
 
@@ -5852,7 +5848,7 @@ country_event = { #Council declares the Duchy of Flanders!
 			FLA = {
 				FLA_move_unit_leaders = yes
 				transfer_technology = yes
-				load_oob = FLA
+				FLA_create_starting_units = yes
 				set_variable = { transfer_navy_to = ROOT }
 				unlock_national_focus = FLA_Regency_By_The_Flemish_Council
 			}
@@ -6317,57 +6313,89 @@ country_event = { #The Commune of Belgium declares its independence
 	option = { #The Fires of Revolution burn throughout the nation
 		log = "[GetLogInfo]: event flanders_wallonia_events.45 option flanders_wallonia_events.45.a"
 		name = flanders_wallonia_events.45.a
-
-		news_event = belgium_news.2
+		if = {
+			limit = {
+				set_temp_variable = { base_stability = stability }
+				subtract_from_temp_variable = { base_stability = modifier@stability_factor }
+				check_variable = { base_stability < 0.5 }
+			}
+			set_stability = 0.5
+		}
+		if = {
+			limit = {
+				set_temp_variable = { base_war_support = has_war_support }
+				subtract_from_temp_variable = { base_war_support = modifier@war_support_factor }
+				check_variable = { base_war_support < 0.35 }
+			}
+			set_war_support = 0.35
+		}
+		BEL_becomes_independent = yes
+		if = {
+			limit = { has_idea = BEL_King_Exile2 }
+			remove_ideas = BEL_King_Exile2
+		}
+		else_if = {
+			limit = { has_idea = BEL_King_Exile }
+			remove_ideas = BEL_King_Exile
+		}
+		set_politics = {
+			ruling_party = totalist
+			elections_allowed = no
+		}
+		set_political_party = {
+			ideology = authoritarian_democrat
+			popularity = 0
+		}
+		add_popularity = {
+			ideology = totalist
+			popularity = 0.3
+		}
+		add_popularity = {
+			ideology = syndicalist
+			popularity = 0.2
+		}
+		add_popularity = {
+			ideology = radical_socialist
+			popularity = 0.2
+		}
+		load_focus_tree = BEL_Independent_focus
+		hidden_effect = {
+			set_party_name = {
+				ideology = authoritarian_democrat
+				long_name = BEL_interim_government
+				name = BEL_interim_government
+			}
+			unlock_national_focus = BEL_Elections
+			unlock_national_focus = BEL_Republic
+			complete_national_focus = BEL_BWP
+			every_state = {
+				teleport_armies = {
+					limit = { is_ally_with = ROOT }
+					to_state_array = owned_controlled_states
+				}
+			}
+			every_controlled_state = {
+				teleport_armies = {
+					limit = {
+						NOT = { is_ally_with = ROOT }
+						NOT = { is_ally_with = INT }
+					}
+					to_state_array = owned_controlled_states
+				}
+			}
+			news_event = belgium_news.2
+		}
+		declare_war_on = {
+			target = GER
+			type = annex_everything
+		}
+		if = {
+			limit = { INT = { is_faction_leader = yes } }
+			INT = { country_event = belgium_events.102 }
+		}
 		add_named_threat = {
 			threat = 2
 			name = BEL_revolution_threat
-		}
-
-		WAL = {
-			add_state_core = 6 #Flanders
-			add_state_core = 29 #Dunkirk
-			add_state_core = 34 #Hainaut
-			add_state_core = 741 #Verviers
-			add_state_core = 925 #Brabant
-			add_state_core = 948 #Liège
-		}
-
-		every_owned_state = {
-			limit = { is_core_of = WAL }
-			transfer_state_to = WAL
-		}
-
-		WAL = {
-			annex_country = {
-				target = BEL
-				transfer_troops = yes
-			}
-			transfer_technology = yes
-			increase_conscription = yes
-		}
-
-		WAL = {
-			change_tag_from = BEL
-		}
-		WAL = {
-			set_politics = {
-				ruling_party = totalist
-				elections_allowed = no
-			}
-			unlock_national_focus = WAL_Syndicalist_Revolution
-
-			declare_war_on = {
-				target = GER
-				type = annex_everything
-			}
-			hidden_effect = {
-				load_oob = WAL_Uprising
-			}
-		}
-
-		FRA = {
-			add_to_faction = WAL
 		}
 	}
 }
@@ -7757,7 +7785,7 @@ country_event = { #For INT - attack BEL now?
 	is_triggered_only = yes
 
 	trigger = {
-		has_global_flag = second_weltkrieg_has_started
+		second_weltkrieg_has_begun = yes
 		NOT = {
 			has_war_with = BEL
 		}
@@ -7848,7 +7876,7 @@ country_event = { #GER - try to force Belgium into faction, or die
 	desc = belgium_independent_events.55.d
 	is_triggered_only = yes
 	trigger = {
-		has_global_flag = second_weltkrieg_has_started
+		second_weltkrieg_has_begun = yes
 	}
 
 	option = {
@@ -8141,7 +8169,7 @@ country_event = { #The Blue Lotus (others)
 	}
 }
 
-# Belgium Declares it's Independence
+# Belgium Declares its Independence
 news_event = {
 	id = belgium_news.1
 	immediate = { log = "[GetLogInfo]: event belgium_news.1" }
@@ -8153,13 +8181,9 @@ news_event = {
 	fire_for_sender = no
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes }
 
-	show_major = {
-		regional_europe_news = yes
-	}
+	show_major = { regional_europe_news = yes }
 
 	option = {
 		name = belgium_news.1.a
@@ -8197,12 +8221,13 @@ news_event = {
 	fire_for_sender = no
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes }
 
 	show_major = {
-		regional_europe_news = yes
+		OR = {
+			regional_europe_news = yes
+			has_socialist_government = yes
+		}
 	}
 
 	option = {
@@ -8245,13 +8270,9 @@ news_event = {
 	fire_for_sender = no
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes }
 
-	show_major = {
-		regional_europe_news = yes
-	}
+	show_major = { regional_europe_news = yes }
 
 	option = {
 		name = belgium_news.3.a
@@ -8289,12 +8310,13 @@ news_event = {
 	fire_for_sender = no
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes }
 
 	show_major = {
-		regional_europe_news = yes
+		OR = {
+			regional_europe_news = yes
+			has_socialist_government = yes
+		}
 	}
 
 	option = {

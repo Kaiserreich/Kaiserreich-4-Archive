@@ -1731,11 +1731,11 @@ country_event = { # THE WAR BEGINS
 
 	option = {
 		log = "[GetLogInfo]: event germany_events.49 option germany_events.49.a"
+		name = germany_events.49.a
 		swap_ideas = {
 			remove_idea = GER_imperial_pride
 			add_idea = GER_imperial_pride_2
 		}
-		name = germany_events.49.a
 		if = {
 			limit = {
 				has_active_mission = GER_SPD_demand_action
@@ -1767,7 +1767,6 @@ country_event = { # THE WAR BEGINS
 				}
 				country_event = { id = germany_events.52 days = 14 }
 			}
-			unlock_national_focus = GER_france_invaded
 			set_variable = { GER_lacking_preparedness_modifier = -0.1 }
 			if = {
 				limit = {
@@ -2393,7 +2392,7 @@ country_event = { # End of the Second Weltkrieg
 
 	trigger = {
 		original_tag = GER
-		has_global_flag = second_weltkrieg_has_started
+		second_weltkrieg_has_begun = yes
 		is_faction_leader = yes
 		NOT = { has_war_with = INT }
 		NOT = { has_war_with = RUS }
@@ -2498,7 +2497,7 @@ country_event = { # Lettow-VorBACK
 
 ## Black Monday Setup
 
-country_event = { #BM trigger event (MTTH to avoid the timeout bug, donotlog)
+country_event = { #BM trigger event #1 (MTTH to avoid the timeout bug, donotlog)
 	id = germany_events.0
 	hidden = yes
 
@@ -2511,9 +2510,28 @@ country_event = { #BM trigger event (MTTH to avoid the timeout bug, donotlog)
 	option = {
 		set_temp_variable = { days_to_event = 34 }
 		calculate_days_since_game_start = yes
-		news_event = { id = germany_black_monday_events.0 days = days_to_event }
+		country_event = { id = germany_events.99 days = days_to_event }
 	}
 }
+country_event = { #BM trigger event #2
+	id = germany_events.99
+	hidden = yes
+
+	fire_only_once = yes
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event germany_events.99 option 1"
+		trigger = { wants_world_news = yes }	# For when news events are turned on, news event fires for all tags
+		news_event = germany_black_monday_events.0
+	}
+	option = {
+		log = "[GetLogInfo]: event germany_events.99 option 2"
+		trigger = { wants_world_news = no }		# For when news events are turned off, normal event fires just for GER
+		country_event = germany_black_monday_events.99
+	}
+}
+# Black Monday News Event
 news_event = {
 	id = germany_black_monday_events.0
 	immediate = { log = "[GetLogInfo]: event germany_black_monday_events.0" }
@@ -2522,88 +2540,28 @@ news_event = {
 	picture = GFX_news_event_GER_blackmonday1
 
 	major = yes
-	show_major = {
-		NOT = {
-			tag = GEA
-			tag = MAF
-		}
+
+	show_major = { #Global news event
+		NOT = { tag = GEA }
+		NOT = { tag = MAF }
 	}
+
+	trigger = { wants_world_news = yes }
 
 	is_triggered_only = yes
 
-	immediate = {
-		GER = {
-			hidden_effect = {
-				add_named_threat = {
-					threat = 4
-					name = GER_black_monday_threat
-				}
-				add_stability = -0.40
-				swap_ideas = {
-					remove_idea = GER_pre_black_monday
-					add_idea = GER_black_monday_5
-				}
-				activate_mission = GER_black_monday_escalation
-			}
-		}
-		hidden_effect = {
-			fire_black_monday_events = yes
-		}
-	}
+	immediate = { GER_black_monday_immediate_effect = yes }
 
 	option = {
 		name = germany_black_monday_events.0.a
-		trigger = {
-			tag = GER
-		}
-		effect_tooltip = {
-			add_stability = -0.40
-			swap_ideas = {
-				remove_idea = GER_pre_black_monday
-				add_idea = GER_black_monday_5
-			}
-		}
-
-		subtract_from_variable = { GER_LVP_seats = 3 }
-		subtract_from_variable = { GER_Zentrum_seats = 5 }
-		if = {
-			limit = {
-				check_variable = { GER_liberal_seats > 1 }
-			}
-			subtract_from_variable = { GER_liberal_seats = 2 }
-		}
-		else = {
-			subtract_from_variable = { GER_LVP_seats = 2 }
-		}
-		add_to_variable = {
-			var = GER_SPD_seats
-			value = 10
-			tooltip = GER_SPD_gain
-		}
-		subtract_from_variable = { GER_Zentrum_seats = 3 }
-		subtract_from_variable = { GER_DkP_seats = 5 }
-		if = {
-			limit = {
-				check_variable = { GER_agrarian_seats > 1 }
-			}
-			subtract_from_variable = { GER_agrarian_seats = 2 }
-		}
-		else = {
-			subtract_from_variable = { GER_Zentrum_seats = 2 }
-		}
-		add_to_variable = {
-			var = GER_DVLP_seats
-			value = 10
-			tooltip = GER_DVLP_gain
-		}
+		trigger = { tag = GER }
+		GER_black_monday_GER_effect = yes
 	}
 	option = {
 		name = germany_black_monday_events.0.b
 		trigger = {
 			has_socialist_government = no
-			NOT = {
-				tag = GER
-			}
+			NOT = { tag = GER }
 		}
 	}
 	option = {
@@ -2612,6 +2570,29 @@ news_event = {
 	}
 
 	after = {
+		effect_tooltip = {
+			add_named_threat = {
+				threat = 4
+				name = GER_black_monday_threat
+			}
+		}
+	}
+}
+country_event = { # Black Monday News Event for when news events are turned off
+	id = germany_black_monday_events.99
+	immediate = { log = "[GetLogInfo]: event germany_black_monday_events.99" }
+	title = germany_black_monday_events.0.t
+	desc = germany_black_monday_events.0.d
+	picture = GFX_report_event_GER_black_monday
+
+	is_triggered_only = yes
+
+	immediate = { GER_black_monday_immediate_effect = yes }
+
+	option = {
+		log = "[GetLogInfo]: event germany_black_monday_events.99 option germany_black_monday_events.0.a"
+		name = germany_black_monday_events.0.a
+		GER_black_monday_GER_effect = yes
 		effect_tooltip = {
 			add_named_threat = {
 				threat = 4
@@ -3243,7 +3224,7 @@ country_event = {
 }
 country_event = {
 	id = germany_schleicher_events.4
-	title = germany_schleicher_events.4.t
+	title = germany_schleicher_events.4.title
 	desc = germany_schleicher_events.4.d
 	picture = GFX_report_event_GER_roedern
 
@@ -3311,7 +3292,33 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event germany_schleicher_events.6 option germany_schleicher_events.6.a"
 		name = germany_schleicher_events.6.a
-		# Alters Roedern's trait to make Prussia do negatives to you
+		# Alters Roedern's/Batocki's trait to make Prussia do negatives to you
+		if = {
+			limit = { GER_siegfried_von_roedern = { is_political_advisor = yes } }
+			GER_siegfried_von_roedern = {
+				custom_effect_tooltip = {
+					localization_key = tooltip_modify_character_trait
+					ROLE = political_advisor TRAIT = KR_prussian_silent_nonpartisan
+				}
+				effect_tooltip = {
+					set_temp_variable = { modifier_change_tt = -0.10 tooltip = conscription_factor_tooltip }
+					set_temp_variable = { modifier_change_tt = -0.10 tooltip = production_speed_buildings_factor_tooltip }
+				}
+			}
+		}
+		else_if = {
+			limit = { GER_adolf_von_batocki = { is_political_advisor = yes } }
+			GER_adolf_von_batocki = {
+				custom_effect_tooltip = {
+					localization_key = tooltip_modify_character_trait
+					ROLE = political_advisor TRAIT = KR_father_of_the_land
+				}
+				effect_tooltip = {
+					set_temp_variable = { modifier_change_tt = -0.10 tooltip = conscription_factor_tooltip }
+					set_temp_variable = { modifier_change_tt = -0.20 tooltip = monthly_population_tooltip }
+				}
+			}
+		}
 		hidden_effect = {
 			remove_trait = {
 				character = GER_siegfried_von_roedern
@@ -3332,12 +3339,6 @@ country_event = {
 				character = GER_adolf_von_batocki
 				slot = political_advisor
 				trait = KR_father_of_the_land_angry
-			}
-		}
-		effect_tooltip = {
-			swap_ideas = {
-				remove_idea = KR_prussian_1
-				add_idea = KR_prussian_2
 			}
 		}
 		# Has negative consequences in the Nullification event chain down the line
@@ -11929,6 +11930,7 @@ country_event = { # Ambassador Crisis
 		}
 	}
 }
+# The Ambassador Crisis
 news_event = {
 	id = germany_swr_events.60
 	immediate = { log = "[GetLogInfo]: event germany_swr_events.60" }
@@ -11941,9 +11943,7 @@ news_event = {
 	major = yes
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = {
 		name = germany_swr_events.60.a
@@ -18357,6 +18357,7 @@ country_event = { # Marlene Dietrich
 		add_war_support = 0.02
 	}
 }
+# Schleicher Appointed
 news_event = {
 	id = germany_flavour_events.35
 	immediate = { log = "[GetLogInfo]: event germany_flavour_events.35" }
@@ -18369,9 +18370,7 @@ news_event = {
 	major = yes
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = {
 		name = germany_flavour_events.35.a
@@ -18397,6 +18396,7 @@ news_event = {
 		}
 	}
 }
+# DU in govt
 news_event = {
 	id = germany_flavour_events.36
 	immediate = { log = "[GetLogInfo]: event germany_flavour_events.36" }
@@ -18409,9 +18409,7 @@ news_event = {
 	major = yes
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = {
 		name = germany_flavour_events.36.a
@@ -18455,6 +18453,7 @@ news_event = {
 		}
 	}
 }
+# S-W-R in government
 news_event = {
 	id = germany_flavour_events.37
 	immediate = { log = "[GetLogInfo]: event germany_flavour_events.37" }
@@ -18467,9 +18466,7 @@ news_event = {
 	major = yes
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = {
 		name = germany_flavour_events.37.a
@@ -18507,6 +18504,7 @@ news_event = {
 		}
 	}
 }
+# Schleicher Passes Enabling Act
 news_event = {
 	id = germany_flavour_events.38
 	immediate = { log = "[GetLogInfo]: event germany_flavour_events.38" }
@@ -18519,9 +18517,7 @@ news_event = {
 	major = yes
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = {
 		name = germany_flavour_events.38.a
@@ -19744,14 +19740,6 @@ country_event = { # Restore the monarchy?
 		log = "[GetLogInfo]: event germany_flavour_events.67 option germany_flavour_events.67.a"
 		name = germany_flavour_events.67.a
 		drop_cosmetic_tag = yes
-		set_portraits = {
-			character = GER_wilhelm_iv
-			civilian = { large = GFX_portrait_GER_wilhelm_iv_civilian_large }
-		}
-		GER_wilhelm_iv = {
-			set_character_name = GER_wilhelm_iv
-			set_character_as_monarch = yes
-		}
 		GER_create_wilhelm_iv = yes
 		add_popularity = {
 			ideology = market_liberal
@@ -19792,7 +19780,8 @@ country_event = { # Restore the monarchy?
 	}
 }
 
-news_event = { #End of the Second Weltkrieg news event
+#End of the Second Weltkrieg news event
+news_event = {
 	id = germany_flavour_events.68
 	immediate = { log = "[GetLogInfo]: event germany_flavour_events.68" }
 	title = germany_flavour_events.68.t
@@ -19842,9 +19831,7 @@ news_event = { #End of the Second Weltkrieg news event
 	major = yes
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = { #SWR
 		name = germany_flavour_events.68.a1
@@ -20420,7 +20407,8 @@ country_event = { # Wilhelm III event - S-W-R
 	}
 }
 
-news_event = { #Japan Signs Peace with Germany
+#Japan Signs Peace with Germany
+news_event = {
 	id = germany_flavour_events.84
 	immediate = { log = "[GetLogInfo]: event germany_flavour_events.84" }
 	title = {
@@ -20449,9 +20437,7 @@ news_event = { #Japan Signs Peace with Germany
 	major = yes
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = { #Germany
 		name = germany_flavour_events.84.a
@@ -21980,7 +21966,8 @@ country_event = { # Russian atrocities
 	}
 }
 
-news_event = { #Wilhelm II is Dead
+#Wilhelm II is Dead
+news_event = {
 	id = germany_flavour_events.118
 	immediate = { log = "[GetLogInfo]: event germany_flavour_events.118" }
 	title = germany_flavour_events.118.t
@@ -21991,17 +21978,7 @@ news_event = { #Wilhelm II is Dead
 	fire_for_sender = no
 	is_triggered_only = yes
 
-	trigger = {
-		wants_world_news = yes
-	}
-
-	show_major = {
-		OR = {
-			regional_europe_news = yes
-			regional_north_america_news = yes
-			regional_south_america_news = yes
-		}
-	}
+	trigger = { wants_world_news = yes } #Global news event
 
 	option = {
 		name = germany_flavour_events.118.a
