@@ -229,7 +229,7 @@ my_quick_unoriginal_MIO = {
         # All parameters are eligible
         delete_included_values = { equipment_bonus relative_position_id ...  }
     }
-    # !Warning! if included and including MIO are in 2 seperate files, you will need to "save" the 2 files to hot-reload the result.
+    # !Warning! if included and including MIO are in 2 separate files, you will need to "save" the 2 files to hot-reload the result.
 }
 ```
 NB: there are no load order constriction when using include. The included MIO just needs to exists somewhere in the organizations directory.
