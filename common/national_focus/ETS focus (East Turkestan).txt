@@ -40,6 +40,14 @@ focus_tree = {
 			custom_effect_tooltip = unlock_focuses
 			hidden_effect = {
 				set_variable = { ETS_gold_amount = 0 }
+				# Economy Decisions
+				activate_targeted_decision = { decision = ETS_convert_gold_to_currency target = ROOT }
+				activate_targeted_decision = { decision = ETS_complete_hotan_conversion target = ROOT }
+
+				# Military Decisions
+				activate_targeted_decision = { decision = ETS_bughra_raise_militia target = 287 }
+				activate_targeted_decision = { decision = ETS_timur_raise_militia target = 619 }
+				activate_targeted_decision = { decision = ETS_war_with_KUM target = KUM }
 			}
 		}
 	}
@@ -67,7 +75,7 @@ focus_tree = {
 			log = "[GetLogRoot]: Focus Completed ETS_seek_foreign_support"
 			add_stability = 0.05
 			add_war_support = 0.05
-			custom_effect_tooltip = ETS_foreign_diplomacy_tt
+			unlock_decision_category_tooltip = ETS_foreign_diplomacy
 			hidden_effect = {
 				country_event = east_turkestan_events.1
 			}
@@ -154,6 +162,9 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed ETS_emergency_factory_conversion"
 			custom_effect_tooltip = ETS_convert_hotan_factory_tt
+			activate_targeted_decision = { decision = ETS_hire_firearm_expert_local target = ROOT }
+			activate_targeted_decision = { decision = ETS_learn_gunpowder_local target = ROOT }
+			activate_targeted_decision = { decision = ETS_learn_mineral_processing_local target = ROOT }
 		}
 	}
 
@@ -208,6 +219,8 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed ETS_army_training"
 			custom_effect_tooltip = ETS_army_training_tt
+			activate_targeted_decision = { decision = ETS_army_training_adopt_formation_local target = ROOT }
+			activate_targeted_decision = { decision = ETS_army_training_combat_techniques_local target = ROOT }
 			random_owned_controlled_state = {
 				limit = { valid_state_for_spawning_friendly_unit = yes }
 				prioritize = { 619 }
@@ -279,8 +292,7 @@ focus_tree = {
 				amount = 1000
 				producer = SIK
 			}
-			custom_effect_tooltip = ETS_gold_seized_tt
-			add_to_variable = { ETS_gold_amount = 1.5 }
+			add_to_variable = { ETS_gold_amount = 1.5 tooltip = ETS_gold_increase }
 		}
 	}
 
@@ -305,10 +317,10 @@ focus_tree = {
 
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed ETS_hotan_gold"
-			custom_effect_tooltip = ETS_gold_hotan_tt
+			add_to_variable = { ETS_gold_amount = 5.0 tooltip = ETS_gold_increase }
+			activate_mission = ETS_weekly_hotan_gold
 			add_stability = 0.1
 			add_political_power = 100
-			add_to_variable = { ETS_gold_amount = 5.0 }
 			set_temp_variable = { ETS_change = 5 }
 			ETS_change_popularities = yes
 		}
@@ -318,7 +330,7 @@ focus_tree = {
 	focus = {
 		id = ETS_uyghur_independence
 		icon = GFX_goal_OTT_caliph
-		cost = 2
+		cost = 1
 
 		relative_position_id = ETS_uyghur_revolution
 		x = 0
@@ -338,8 +350,11 @@ focus_tree = {
 		}
 
 		available = {
-			NOT = { country_exists = SIK }
-			NOT = { country_exists = KUM }
+			custom_override_tooltip = {
+				tooltip = ETS_has_won_in_xinjiang
+				NOT = { country_exists = SIK }
+				NOT = { country_exists = KUM }
+			}
 		}
 
 		ai_will_do = { factor = 100 }
@@ -357,6 +372,70 @@ focus_tree = {
 				SIK_yibulayin = { set_nationality = ROOT }
 			}
 			hidden_effect = {
+				#Disable all decisions
+				add_to_temp_array = { ETS_targets_to_remove_major = RUS }
+				add_to_temp_array = { ETS_targets_to_remove_major = RAJ }
+				add_to_temp_array = { ETS_targets_to_remove_major = TUR }
+				add_to_temp_array = { ETS_targets_to_remove_minor = AFG }
+				add_to_temp_array = { ETS_targets_to_remove_minor = BUK }
+				add_to_temp_array = { ETS_targets_to_remove_minor = TRK }
+
+				#Diplomatic Decisions
+				for_each_scope_loop = {
+					array = ETS_targets_to_remove_major
+					PREV = {
+						remove_targeted_decision = { decision = ETS_foreign_support_send_delegations_major target = PREV }
+						remove_targeted_decision = { decision = ETS_foreign_support_more_equipment_full_support target = PREV }
+						remove_targeted_decision = { decision = ETS_foreign_support_more_equipment_partial_support target = PREV }
+					}
+				}
+				for_each_scope_loop = {
+					array = ETS_targets_to_remove_minor
+					PREV = {
+						remove_targeted_decision = { decision = ETS_foreign_support_send_delegations_minor target = PREV }
+						remove_targeted_decision = { decision = ETS_foreign_support_more_equipment_full_support target = PREV }
+						remove_targeted_decision = { decision = ETS_foreign_support_more_equipment_partial_support target = PREV }
+					}
+				}
+
+				# Economic Decisions
+				if = { #These decisions should stay after the war if not a puppet
+					limit = { is_subject = yes }
+					remove_targeted_decision = { decision = ETS_convert_gold_to_currency target = ROOT }
+					remove_mission = ETS_weekly_hotan_gold
+					clear_variable = ETS_gold_amount
+				}
+				remove_targeted_decision = { decision = ETS_complete_hotan_conversion target = ROOT }
+				remove_targeted_decision = { decision = ETS_hire_firearm_expert_local target = ROOT }
+				remove_targeted_decision = { decision = ETS_learn_gunpowder_local target = ROOT }
+				remove_targeted_decision = { decision = ETS_learn_mineral_processing_local target = ROOT }
+				for_each_scope_loop = {
+					array = ETS_targets_to_remove_major
+					PREV = {
+						remove_targeted_decision = { decision = ETS_hire_firearm_expert_foreign target = PREV }
+						remove_targeted_decision = { decision = ETS_learn_gunpowder_foreign target = PREV }
+						remove_targeted_decision = { decision = ETS_learn_mineral_processing_foreign target = PREV }
+					}
+				}
+				clr_country_flag = ETS_firearm_expert_hired
+				clr_country_flag = ETS_gunpowder_learned
+				clr_country_flag = ETS_mineral_processing_learned
+				clr_country_flag = ETS_hotan_conversion_completed
+
+				# Military Decisions
+				remove_targeted_decision = { decision = ETS_bughra_raise_militia target = 287 }
+				remove_targeted_decision = { decision = ETS_timur_raise_militia target = 619 }
+				remove_targeted_decision = { decision = ETS_army_training_adopt_formation_local target = ROOT }
+				remove_targeted_decision = { decision = ETS_army_training_combat_techniques_local target = ROOT }
+				for_each_scope_loop = {
+					array = ETS_targets_to_remove_major
+					PREV = {
+						remove_targeted_decision = { decision = ETS_army_training_adopt_formation_foreign target = PREV }
+						remove_targeted_decision = { decision = ETS_army_training_combat_techniques_foreign target = PREV }
+					}
+				}
+				remove_targeted_decision = { decision = ETS_war_with_KUM target = KUM }
+
 				#Power Projection event for RUS
 				RUS = { country_event = { id = russia_foreign_policy_events.260 days = 5 random_days = 5 } }
 			}
@@ -484,6 +563,10 @@ focus_tree = {
 						}
 					}
 					YEAR = "[?ETS_election_year]"
+				}
+				if = {
+					limit = { is_subject = no }
+					ETS_activate_turkic_diplo_decisions = yes
 				}
 			}
 		}
@@ -645,6 +728,12 @@ focus_tree = {
 			add_popularity = {
 				ideology = authoritarian_democrat
 				popularity = 0.03
+			}
+			hidden_effect = {
+				if = {
+					limit = { is_subject = no }
+					ETS_activate_turkic_diplo_decisions = yes
+				}
 			}
 		}
 	}
@@ -830,6 +919,12 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed ETS_islam_in_one_country"
 			add_stability = 0.03
+			hidden_effect = {
+				if = {
+					limit = { is_subject = no }
+					ETS_activate_turkic_diplo_decisions = yes
+				}
+			}
 		}
 		search_filters = { FOCUS_FILTER_STABILITY }
 	}
@@ -1036,6 +1131,12 @@ focus_tree = {
 				ideology = national_populist
 				popularity = 0.03
 			}
+			hidden_effect = {
+				if = {
+					limit = { is_subject = no }
+					ETS_activate_turkic_diplo_decisions = yes
+				}
+			}
 		}
 	}
 
@@ -1208,6 +1309,10 @@ focus_tree = {
 			custom_effect_tooltip = ETS_demelect_tt
 			hidden_effect = {
 				country_event = east_turkestan_events.101
+				if = {
+					limit = { is_subject = no }
+					ETS_activate_turkic_diplo_decisions = yes
+				}
 			}
 			meta_effect = {
 				text = {
@@ -1418,6 +1523,12 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed ETS_maintain_rule"
 			add_stability = 0.03
+			hidden_effect = {
+				if = {
+					limit = { is_subject = no }
+					ETS_activate_turkic_diplo_decisions = yes
+				}
+			}
 		}
 		search_filters = { FOCUS_FILTER_STABILITY }
 	}
@@ -1523,6 +1634,13 @@ focus_tree = {
 			if = {
 				limit = { has_dynamic_modifier = { modifier = ETS_fledgling_military } }
 				remove_dynamic_modifier = { modifier = ETS_fledgling_military }
+				clear_variable = ETS_fledgling_military_army_morale_factor
+				clear_variable = ETS_fledgling_military_army_org_factor
+				clear_variable = ETS_fledgling_military_planning_speed
+				clear_variable = ETS_fledgling_military_max_planning
+				clear_variable = ETS_fledgling_military_army_attack_factor
+				clear_variable = ETS_fledgling_military_army_defence_factor
+				clear_variable = ETS_fledgling_military_recon_factor
 			}
 			hidden_effect = {
 				KUM = {

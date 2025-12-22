@@ -1,4 +1,4 @@
-#	Scripted triggers for Central America in general and the CEN tag
+#	Scripted effects for Central America in general and the CEN tag
 #
 #	By Beelzebub and Ropa
 update_GUA_UFC = {
@@ -21,6 +21,377 @@ update_CENmil_UFC = {
 	multiply_variable = { var = CENmil_UFC_consumer_goods value = -0.003 }
 	set_variable = { CENmil_UFC_modifier = UFC_power } #party_popularity_stability_factor and war_support_factor
 	multiply_variable = { var = CENmil_UFC_modifier value = -0.004 }
+}
+
+CEN_initiate_unification = {
+	# First part of independent CEN formation effect; fired in the unifier tag scope, initiated by decision CEN_unite_central_america
+	# This makes CEN exist by transferring a state to it, refreshes and sets up its content, then transfers anything relevant from the tags involved
+	# Effects must be processed in a specific order; shuffling code around can cause these effects to break
+	# Needs to be split in order to avoid CTD from COS faction transfer which requires buffering different effect blocks
+
+	# Check if Costa Rica and Panama are involved before anything is processed
+	if = {
+		limit = { var:316.owner = { is_ally_with = ROOT } } # Costa Rica
+		save_event_target_as = costa_rica_will_join
+		hidden_effect = {
+			316 = { remove_claim_by = NIC }
+		}
+	}
+	if = {
+		limit = { var:304.owner = { is_ally_with = ROOT } } # Panama
+		save_event_target_as = panama_will_join
+	}
+
+	# Set up spawning CEN tag
+	hidden_effect = {
+		CEN = {
+			### Basically makes sure it exists while all this goes down
+			transfer_state = 1071
+			CEN_reset_ideas = yes
+			CEN_remove_targeted_decisions = yes
+			every_state = {
+				remove_core_of = CEN
+				remove_claim_by = CEN
+			}
+		}
+
+		## Set up politics and content based on unifier ideology
+		if = {
+			limit = { has_socialist_government = yes }
+			CEN = {
+				load_focus_tree = Centroamerica_focus
+				set_politics = {
+					ruling_party = radical_socialist
+					elections_allowed = no
+				}
+				set_popularities = {
+					totalist = 18
+					syndicalist = 23
+					radical_socialist = 30
+					social_democrat = 16
+					social_liberal = 4
+					market_liberal = 1
+					social_conservative = 7
+					authoritarian_democrat = 1
+					paternal_autocrat = 0
+					national_populist = 0
+				}
+			}
+			if = {
+				limit = { has_country_leader = { character = NIC_augusto_cesar_sandino } }
+				CEN = { set_cosmetic_tag = CEN_sandino }
+			}
+		}
+		else_if = {
+			limit = { has_authoritarian_government = yes }
+			CEN = {
+				set_politics = {
+					ruling_party = authoritarian_democrat
+					elections_allowed = no
+				}
+				set_popularities = {
+					totalist = 2
+					syndicalist = 4
+					radical_socialist = 5
+					social_democrat = 6
+					social_liberal = 5
+					market_liberal = 8
+					social_conservative = 9
+					authoritarian_democrat = 22
+					paternal_autocrat = 20
+					national_populist = 19
+				}
+				load_focus_tree = CA_military_focus
+				add_ideas = {
+					CENmil_political_instability_idea
+					CENmil_economic_instability_idea
+					CENmil_chaotic_army_idea
+				}
+				country_event = { id = central_america_dictatorship_events.1 days = 1 }
+				set_variable = { UFC_power = 35 }
+				update_CENmil_UFC = yes
+				add_dynamic_modifier = { modifier = CENmil_united_fruit }
+			}
+		}
+		else = {
+			CEN = {
+				set_politics = {
+					ruling_party = social_conservative
+					elections_allowed = no
+				}
+				set_popularities = {
+					totalist = 1
+					syndicalist = 2
+					radical_socialist = 6
+					social_democrat = 18
+					social_liberal = 19
+					market_liberal = 18
+					social_conservative = 25
+					authoritarian_democrat = 6
+					paternal_autocrat = 3
+					national_populist = 2
+				}
+				load_focus_tree = CA_DEM_focus
+				add_ideas = {
+					CENdem_an_unstable_union
+					CENdem_Incompetent_Army
+				}
+				set_party_name = {
+					ideology = social_democrat
+					name = CEN_social_democrat_liberal
+					long_name = CEN_social_democrat_liberal_long
+				}
+			}
+		}
+
+		## Clear temporary faction event targets
+		if = {
+			limit = { has_event_target = CEN_socialist_leader }
+			clear_global_event_target = CEN_socialist_leader
+		}
+		if = {
+			limit = { has_event_target = CEN_liberal_leader }
+			clear_global_event_target = CEN_liberal_leader
+		}
+		if = {
+			limit = { has_event_target = CEN_military_leader }
+			clear_global_event_target = CEN_military_leader
+		}
+
+		## Transfer characters, laws and technologies to CEN
+		CEN_move_characters = yes
+		CEN = {
+			copy_laws_of_PREV = yes
+			transfer_technology = yes
+			transfer_int_upgrade = yes
+		}
+
+		## Failsafe to clear volunteers and transfer subject countries
+		every_country = {
+			limit = {
+				OR = {
+					tag = NIC
+					tag = HON
+					tag = ELS
+					tag = GUA
+					AND = {
+						tag = COS
+						has_event_target = costa_rica_will_join
+					}
+					AND = {
+						tag = PAN
+						has_event_target = panama_will_join
+					}
+				}
+			}
+			clear_all_sent_volunteers = yes
+		}
+		random_country = {
+			limit = {
+				OR = {
+					is_central_american_tag = yes
+					tag = PAN
+				}
+				is_ai = no
+				if = {
+					limit = {
+						OR = {
+							tag = COS
+							tag = PAN
+						}
+					}
+					is_ally_with = ROOT
+				}
+			}
+			save_event_target_as = player
+		}
+
+		## Refresh MEX invasion decisions
+		MEX = {
+			if = {
+				limit = {
+					is_subject = no
+					NOT = { is_ally_with = PREV }
+				}
+				if = {
+					limit = {
+						has_government = national_populist
+						313 = { is_claimed_by = PREV } #Guatemala
+					}
+					activate_targeted_decision = { target = CEN decision = MEX_fight_central_america }
+				}
+				else_if = {
+					limit = {
+						has_socialist_government = yes
+						PREV = { has_socialist_government = no }
+					}
+					activate_targeted_decision = { target = CEN decision = MEX_fight_reactionary_central_america }
+				}
+				remove_targeted_decision = { target = GUA decision = MEX_fight_central_america }
+				remove_targeted_decision = { target = ELS decision = MEX_fight_central_america }
+				remove_targeted_decision = { target = HON decision = MEX_fight_central_america }
+				remove_targeted_decision = { target = NIC decision = MEX_fight_central_america }
+				if = {
+					limit = { has_event_target = costa_rica_will_join }
+					remove_targeted_decision = { target = COS decision = MEX_fight_central_america }
+				}
+				if = {
+					limit = { has_event_target = panama_will_join }
+					remove_targeted_decision = { target = PAN decision = MEX_fight_central_america }
+				}
+			}
+		}
+	}
+}
+
+CEN_complete_unification = {
+	# Second part of independent CEN formation effect; fired in the unifier tag scope, initiated by decision CEN_unite_central_america
+	# This is fired after any effect to transfer or disband the unifier's faction
+	# Adds CEN claims and cores, annexes all relevant countries, then switches tags
+	# Effects must be processed in a specific order; shuffling code around can cause these effects to break
+	# Needs to be split in order to avoid CTD from COS faction transfer which requires buffering different effect blocks
+
+	# Add CEN claims and cores and disable the decision for everyone else
+	hidden_effect = {
+		CEN = {
+			311 = { #Belize
+				if = {
+					limit = { is_claim_or_core_of_PREV = no }
+					add_claim_by = PREV
+				}
+			}
+		}
+		GUA = {
+			remove_targeted_decision = { decision = CEN_unite_central_america target = THIS }
+			set_variable = { country_guide_page_count = 0 }
+			every_core_state = { add_core_of = CEN }
+			every_subject_country = {
+				set_temp_variable = { target = THIS }
+				CEN = { puppet_country_without_changing_government = yes }
+			}
+		}
+		HON = {
+			remove_targeted_decision = { decision = CEN_unite_central_america target = THIS }
+			set_variable = { country_guide_page_count = 0 }
+			every_core_state = { add_core_of = CEN }
+			every_subject_country = {
+				set_temp_variable = { target = THIS }
+				CEN = { puppet_country_without_changing_government = yes }
+			}
+		}
+		ELS = {
+			remove_targeted_decision = { decision = CEN_unite_central_america target = THIS }
+			set_variable = { country_guide_page_count = 0 }
+			every_core_state = { add_core_of = CEN }
+			every_subject_country = {
+				set_temp_variable = { target = THIS }
+				CEN = { puppet_country_without_changing_government = yes }
+			}
+		}
+		NIC = {
+			remove_targeted_decision = { decision = CEN_unite_central_america target = THIS }
+			set_variable = { country_guide_page_count = 0 }
+			every_core_state = { add_core_of = CEN }
+			every_subject_country = {
+				set_temp_variable = { target = THIS }
+				CEN = { puppet_country_without_changing_government = yes }
+			}
+		}
+		COS = {
+			remove_targeted_decision = { decision = CEN_unite_central_america target = THIS }
+			set_variable = { country_guide_page_count = 0 }
+			if = {
+				limit = { has_event_target = costa_rica_will_join }
+				COS_rafael_angel_calderon_guardia = { set_nationality = CEN }
+				COS_arturo_quiros_carranza = { set_nationality = CEN }
+				COS_rafael_castro_quesada = { set_nationality = CEN }
+				if = {
+					limit = { has_character = COS_jose_figueres_ferrer }
+					COS_jose_figueres_ferrer = { set_nationality = CEN }
+				}
+				every_core_state = { add_core_of = CEN }
+				every_subject_country = {
+					set_temp_variable = { target = THIS }
+					CEN = { puppet_country_without_changing_government = yes }
+				}
+			}
+		}
+		PAN = {
+			remove_targeted_decision = { decision = CEN_unite_central_america target = THIS }
+			set_variable = { country_guide_page_count = 0 }
+			if = {
+				limit = { has_event_target = panama_will_join }
+				PAN_manuel_pino = { set_nationality = CEN }
+				PAN_saturnino_florez = { set_nationality = CEN }
+				PAN_jose_antonio_remon_cantera = { set_nationality = CEN }
+				every_core_state = { add_core_of = CEN }
+				every_subject_country = {
+					set_temp_variable = { target = THIS }
+					CEN = { puppet_country_without_changing_government = yes }
+				}
+			}
+		}
+	}
+
+	# Annex all countries, visible effect
+	CEN = {
+		annex_country = {
+			target = GUA
+			transfer_troops = yes
+		}
+		annex_country = {
+			target = ELS
+			transfer_troops = yes
+		}
+		annex_country = {
+			target = HON
+			transfer_troops = yes
+		}
+		annex_country = {
+			target = NIC
+			transfer_troops = yes
+		}
+		if = {
+			limit = { has_event_target = costa_rica_will_join }
+			annex_country = {
+				target = COS
+				transfer_troops = yes
+			}
+		}
+		if = {
+			limit = { has_event_target = panama_will_join }
+			annex_country = {
+				target = PAN
+				transfer_troops = yes
+			}
+		}
+		## Set capital to San Salvador if CENDem
+		if = {
+			limit = { has_government = social_conservative }
+			set_capital = { state = 314 remember_old_capital = no } # El Salvador
+		}
+		## Formation of [CEN.GetNameDef]
+		news_event = central_america_flavour_events.21
+		## Tag switch
+		change_tag_from = event_target:player
+	}
+
+	hidden_effect = {
+		## Reset and give extra manpower to unified CEN
+		CEN_transfer_manpower = yes
+		## Activate Ferrer's Legion decisions
+		COS = {
+			if = {
+				limit = {
+					exists = yes
+					is_subject = no
+					has_country_leader = { character = COS_jose_figueres_ferrer }
+					has_country_flag = COS_legion_faction
+				}
+				COS_enable_legion_del_caribe_decisions = yes
+			}
+		}
+	}
 }
 
 CEN_move_characters = {
@@ -77,7 +448,7 @@ CEN_move_characters = {
 				}
 			}
 			ELS = {
-				ELS_add_democratic_generals = yes
+				ELS_add_socialist_generals = yes
 				every_character = {
 					limit = {
 						CEN_character_should_transfer_socialist = yes
@@ -118,6 +489,8 @@ CEN_move_characters = {
 						NOT = {
 							is_character = NIC_gustavo_abaunza
 							is_character = NIC_carlos_castro_wassmer
+							is_character = NIC_celestino_zeledon
+							is_character = NIC_juan_gregorio_colindres
 						}
 					}
 					set_character_flag = NIC_character
@@ -195,6 +568,8 @@ CEN_move_characters = {
 						NOT = {
 							is_character = NIC_gustavo_abaunza
 							is_character = NIC_carlos_castro_wassmer
+							is_character = NIC_celestino_zeledon
+							is_character = NIC_juan_gregorio_colindres
 						}
 					}
 					set_character_flag = NIC_character
@@ -267,6 +642,8 @@ CEN_move_characters = {
 						NOT = {
 							is_character = NIC_gustavo_abaunza
 							is_character = NIC_carlos_castro_wassmer
+							is_character = NIC_celestino_zeledon
+							is_character = NIC_juan_gregorio_colindres
 						}
 					}
 					set_character_flag = NIC_character
@@ -1070,13 +1447,6 @@ CEN_puppet_setup = {
 ### Guatemala ###
 #################
 GUA_restore_missing_characters = {
-	CEN = {
-		every_character = {
-			limit = { has_character_flag = GUA_character }
-			clr_character_flag = GUA_character
-			set_nationality = GUA
-		}
-	}
 	GUA = {
 		if = {
 			limit = { NOT = { has_character = GUA_silverio_ortiz } }
@@ -1128,9 +1498,17 @@ GUA_restore_missing_characters = {
 			}
 		}
 	}
+	CEN = {
+		every_character = {
+			limit = { has_character_flag = GUA_character }
+			clr_character_flag = GUA_character
+			set_nationality = GUA
+		}
+	}
 }
 
 GUA_puppet_setup = {
+	GUA_restore_missing_characters = yes
 	if = {
 		limit = { has_socialist_government = yes }
 		GUA = {
@@ -1142,6 +1520,7 @@ GUA_puppet_setup = {
 				ideology = radical_socialist
 				popularity = 60
 			}
+			activate_advisor = GUA_jose_manuel_fortuny_sic
 		}
 	}
 	else_if = {
@@ -1151,10 +1530,11 @@ GUA_puppet_setup = {
 				ruling_party = paternal_autocrat
 				elections_allowed = no
 			}
-			add_popularity = {
+			set_political_party = {
 				ideology = paternal_autocrat
 				popularity = 60
 			}
+			activate_advisor = GUA_roderico_anzueto_valencia_sic
 		}
 	}
 	else_if = {
@@ -1164,10 +1544,11 @@ GUA_puppet_setup = {
 				ruling_party = social_conservative
 				elections_allowed = yes
 			}
-			add_popularity = {
+			set_political_party = {
 				ideology = social_conservative
 				popularity = 60
 			}
+			activate_advisor = GUA_jose_azmitia_gonzalez_sic
 		}
 	}
 	else = {
@@ -1176,10 +1557,11 @@ GUA_puppet_setup = {
 				ruling_party = social_democrat
 				elections_allowed = yes
 			}
-			add_popularity = {
+			set_political_party = {
 				ideology = social_democrat
 				popularity = 60
 			}
+			activate_advisor = GUA_jose_manuel_fortuny_sic
 		}
 	}
 	GUA = {
@@ -1368,52 +1750,10 @@ GUA_recover_civil_war = {
 	}
 }
 
-GUA_puppet_setup = {
-	if = {
-		limit = { PREV = { has_socialist_government = yes } }
-		set_politics = {
-			ruling_party = radical_socialist
-			elections_allowed = no
-		}
-		set_political_party = {
-			ideology = radical_socialist
-			popularity = 60
-		}
-	}
-	else_if = {
-		limit = { PREV = { has_authoritarian_government = yes } }
-		set_politics = {
-			ruling_party = paternal_autocrat
-			elections_allowed = no
-		}
-		set_political_party = {
-			ideology = paternal_autocrat
-			popularity = 60
-		}
-	}
-	else = {
-		set_politics = {
-			ruling_party = social_conservative
-			elections_allowed = no
-		}
-		set_political_party = {
-			ideology = social_conservative
-			popularity = 60
-		}
-	}
-}
-
 ###################
 ### El Salvador ###
 ###################
 ELS_restore_missing_characters = {
-	CEN = {
-		every_character = {
-			limit = { has_character_flag = ELS_character }
-			clr_character_flag = ELS_character
-			set_nationality = ELS
-		}
-	}
 	ELS = {
 		if = {
 			limit = { NOT = { has_character = ELS_agustin_farabundo_marti } }
@@ -1465,9 +1805,16 @@ ELS_restore_missing_characters = {
 			}
 		}
 	}
+	CEN = {
+		every_character = {
+			limit = { has_character_flag = ELS_character }
+			clr_character_flag = ELS_character
+			set_nationality = ELS
+		}
+	}
 }
 
-ELS_add_democratic_generals = {
+ELS_add_socialist_generals = {
 	if = {
 		limit = { NOT = { has_character = ELS_agustin_farabundo_marti } }
 		ELS_agustin_farabundo_marti = {
@@ -1482,17 +1829,10 @@ ELS_add_democratic_generals = {
 			promote_character = radical_socialist_subtype
 		}
 	}
-	if = {
-		limit = { NOT = { has_character = ELS_salvador_castaneda_castro } }
-		ELS_salvador_castaneda_castro = {
-			set_nationality = PREV
-			promote_character = authoritarian_democrat_subtype
-		}
-	}
 	ELS_remove_reactionary_generals = yes
 }
 
-ELS_remove_democratic_generals = {
+ELS_remove_socialist_generals = {
 	if = {
 		limit = { has_character = ELS_agustin_farabundo_marti }
 		retire_character = ELS_agustin_farabundo_marti
@@ -1501,12 +1841,30 @@ ELS_remove_democratic_generals = {
 		limit = { has_character = ELS_feliciano_ama }
 		retire_character = ELS_feliciano_ama
 	}
+}
+
+ELS_add_democratic_generals = {
+	ELS_add_socialist_generals = yes
+	if = {
+		limit = { NOT = { has_character = ELS_salvador_castaneda_castro } }
+		ELS_salvador_castaneda_castro = {
+			set_nationality = PREV
+			promote_character = authoritarian_democrat_subtype
+		}
+	}
 	if = {
 		limit = {
-			has_character = ELS_salvador_castaneda_castro
-			has_completed_focus = ELS_37_revolution
-			NOT = { has_government = authoritarian_democrat }
+			NOT = { has_character = ELS_andres_ignacio_menendez }
+			has_country_flag = ELS_keep_menendez_as_democracy
 		}
+		ELS_andres_ignacio_menendez = { set_nationality = PREV }
+	}
+}
+
+ELS_remove_democratic_generals = {
+	ELS_remove_socialist_generals = yes
+	if = {
+		limit = { has_character = ELS_salvador_castaneda_castro }
 		retire_character = ELS_salvador_castaneda_castro
 	}
 }
@@ -1520,13 +1878,13 @@ ELS_add_liberal_generals = {
 		}
 	}
 	if = {
-		limit = { has_character = ELS_agustin_farabundo_marti }
-		retire_character = ELS_agustin_farabundo_marti
+		limit = {
+			NOT = { has_character = ELS_andres_ignacio_menendez }
+			has_government = authoritarian_democrat
+		}
+		ELS_andres_ignacio_menendez = { set_nationality = PREV }
 	}
-	if = {
-		limit = { has_character = ELS_feliciano_ama }
-		retire_character = ELS_feliciano_ama
-	}
+	ELS_remove_socialist_generals = yes
 	ELS_remove_reactionary_generals = yes
 }
 
@@ -1563,14 +1921,28 @@ ELS_remove_reactionary_generals = {
 	}
 	if = {
 		limit = {
+			has_character = ELS_salvador_castaneda_castro
+			has_democratic_government = no
+		}
+		retire_character = ELS_salvador_castaneda_castro
+	}
+	if = {
+		limit = {
 			has_character = ELS_andres_ignacio_menendez
-			NOT = { has_government = authoritarian_democrat }
+			NOT = {
+				has_government = authoritarian_democrat
+				AND = {
+					has_elected_government = yes
+					NOT = { has_country_flag = ELS_keep_menendez_as_democracy }
+				}
+			}
 		}
 		retire_character = ELS_andres_ignacio_menendez
 	}
 }
 
 ELS_puppet_setup = {
+	ELS_restore_missing_characters = yes
 	if = {
 		limit = { PREV = { has_socialist_government = yes } }
 		set_politics = {
@@ -1612,13 +1984,6 @@ ELS_puppet_setup = {
 ### Honduras ###
 ################
 HON_restore_missing_characters = {
-	CEN = {
-		every_character = {
-			limit = { has_character_flag = HON_character }
-			clr_character_flag = HON_character
-			set_nationality = HON
-		}
-	}
 	HON = {
 		if = {
 			limit = { NOT = { has_character = HON_juan_pablo_wainwright } }
@@ -1670,6 +2035,13 @@ HON_restore_missing_characters = {
 			HON_rufino_solis_juarez = {
 				set_nationality = PREV
 			}
+		}
+	}
+	CEN = {
+		every_character = {
+			limit = { has_character_flag = HON_character }
+			clr_character_flag = HON_character
+			set_nationality = HON
 		}
 	}
 }
@@ -1751,6 +2123,7 @@ HON_add_autdem_PNH = {
 }
 
 HON_puppet_setup = {
+	HON_restore_missing_characters = yes
 	if = {
 		limit = {
 			has_completed_focus = HON_castro
@@ -1846,13 +2219,6 @@ HON_puppet_setup = {
 ### Nicaragua ###
 #################
 NIC_restore_missing_characters = {
-	CEN = {
-		every_character = {
-			limit = { has_character_flag = NIC_character }
-			clr_character_flag = NIC_character
-			set_nationality = NIC
-		}
-	}
 	NIC = {
 		if = {
 			limit = { NOT = { has_character = NIC_augusto_cesar_sandino } }
@@ -1892,6 +2258,13 @@ NIC_restore_missing_characters = {
 			}
 		}
 	}
+	CEN = {
+		every_character = {
+			limit = { has_character_flag = NIC_character }
+			clr_character_flag = NIC_character
+			set_nationality = NIC
+		}
+	}
 }
 
 NIC_add_socialist_generals = {
@@ -1918,12 +2291,24 @@ NIC_add_socialist_generals = {
 		NIC_pedro_altamirano = { set_nationality = PREV }
 	}
 	if = {
-		limit = { NOT = { has_character = NIC_pedro_antonio_irias } }
-		NIC_pedro_antonio_irias = { set_nationality = PREV }
+		limit = { NOT = { has_character = NIC_carlos_manuel_salgado } }
+		NIC_carlos_manuel_salgado = { set_nationality = PREV }
+	}
+	if = {
+		limit = { NOT = { has_character = NIC_jose_leon_diaz } }
+		NIC_jose_leon_diaz = { set_nationality = PREV }
 	}
 	if = {
 		limit = { NOT = { has_character = NIC_juan_pablo_umanzor } }
 		NIC_juan_pablo_umanzor = { set_nationality = PREV }
+	}
+	if = {
+		limit = { NOT = { has_character = NIC_juan_gregorio_colindres } }
+		NIC_juan_gregorio_colindres = { set_nationality = PREV }
+	}
+	if = {
+		limit = { NOT = { has_character = NIC_coronado_maradiaga } }
+		NIC_coronado_maradiaga = { set_nationality = PREV }
 	}
 
 	#remove non-socialist advisors
@@ -1961,12 +2346,24 @@ NIC_remove_socialist_generals = {
 		retire_character = NIC_pedro_altamirano
 	}
 	if = {
-		limit = { has_character = NIC_pedro_antonio_irias }
-		retire_character = NIC_pedro_antonio_irias
+		limit = { has_character = NIC_carlos_manuel_salgado }
+		retire_character = NIC_carlos_manuel_salgado
+	}
+	if = {
+		limit = { has_character = NIC_jose_leon_diaz }
+		retire_character = NIC_jose_leon_diaz
 	}
 	if = {
 		limit = { has_character = NIC_juan_pablo_umanzor }
 		retire_character = NIC_juan_pablo_umanzor
+	}
+	if = {
+		limit = { has_character = NIC_juan_gregorio_colindres }
+		retire_character = NIC_juan_gregorio_colindres
+	}
+	if = {
+		limit = { has_character = NIC_coronado_maradiaga }
+		retire_character = NIC_coronado_maradiaga
 	}
 }
 
@@ -2091,6 +2488,7 @@ NIC_remove_reactionary_generals = {
 }
 
 NIC_puppet_setup = {
+	NIC_restore_missing_characters = yes
 	if = {
 		limit = { PREV = { has_socialist_government = yes } }
 		NIC_remove_democratic_ideas = yes

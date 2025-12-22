@@ -10,8 +10,8 @@ NDefines.NCareerProfile.MOD_STATISTICS_GROUP = "kaiserreich_career_profile"
 NDefines.NCareerProfile.MOD_STATISTICS_GROUP_NAME = "KAISERREICH_CAREER_PROFILE"
 
 -- Game
-NDefines.NGame.SAVE_VERSION = 154											-- Vanilla is 30
-NDefines.NGame.MINOR_SAVE_VERSION = 154										-- Vanilla is 1
+NDefines.NGame.SAVE_VERSION = 155											-- Vanilla is 30
+NDefines.NGame.MINOR_SAVE_VERSION = 155										-- Vanilla is 1
 NDefines.NGame.END_DATE = "1959.1.1.1"										-- Vanilla is 1949.1.1.1
 NDefines.NGame.HANDS_OFF_START_TAG = "BHU"									-- Vanilla is URG
 NDefines.NGame.DECISION_ALERT_TIMEOUT_DAYS = 60								-- Vanilla is 30
