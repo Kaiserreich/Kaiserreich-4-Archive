@@ -8,8 +8,11 @@ JAP_capitulation_effect = {
 	every_other_country = {
 		limit = {
 			is_in_faction_with = PREV
-			is_subject = no
 			has_capitulated = no
+			OR = {
+				is_subject = no
+				overlord = { has_capitulated = yes }
+			}
 		}
 		faction_collapse_member_peace_effect = yes
 		country_event = japan_foreign_events.251
@@ -132,19 +135,16 @@ JAP_fading_sun = {
 
 			# end the economic sphere
 			JAP = {
-				if = {
-					limit = { has_dynamic_modifier = { modifier = JAP_asian_economic_sphere } }
-					remove_dynamic_modifier = { modifier = JAP_asian_economic_sphere }
-				}
 				clear_variable = global.sphere_industry_boost
 				clear_variable = global.sphere_goods_boost
 				clear_variable = global.sphere_resources_boost_member
 				clear_variable = global.sphere_goods_boost_member
 				if = {
-					limit = { is_economic_sphere_leader = yes }
-					every_country = {
+					limit = { has_dynamic_modifier = { modifier = JAP_asian_economic_sphere } }
+					remove_dynamic_modifier = { modifier = JAP_asian_economic_sphere }
+					every_other_country = {
 						limit = { is_in_same_economic_sphere_as_PREV = yes }
-						country_event = japan_foreign_events.404
+						JAP_remove_from_economic_sphere = yes
 					}
 					dismantle_economic_sphere = yes
 				}
@@ -223,10 +223,13 @@ JAP_add_to_economic_sphere = {
 
 JAP_remove_from_economic_sphere = {
 	if = {
+		limit = { has_war_with = JAP }
+		set_country_flag = JAP_refused_sphere_invitation
+	}
+	if = {
 		limit = { JAP = { is_leader_of_economic_sphere_of_PREV = yes } }
 		custom_effect_tooltip = JAP_withdraws_from_sphere
-		set_temp_variable = { sphere_target = THIS }
-		JAP = { remove_from_economic_sphere = yes }
+		leave_economic_sphere = yes
 		if = {
 			limit = { tag = ROOT }
 			if = {
@@ -1242,6 +1245,8 @@ JAP_puppet_setup = {
 			JAP_disarmed_nation_idea
 		}
 		set_country_flag = JAP_defeated_nation
+		clr_country_flag = JAP_RKMT_puppet_flag
+		clr_country_flag = JAP_nonKMT_chinese_puppet_flag
 		clr_country_flag = JAP_authoritarian_puppet_flag
 		clr_country_flag = JAP_liberal_puppet_flag
 		custom_effect_tooltip = tooltip_white_line
@@ -1371,7 +1376,28 @@ JAP_socialist_government = {
 ### Democratic Puppet Content Set Up
 JAP_democratic_government = {
 	if = {
-		limit = { ROOT = { has_authoritarian_government = yes } }
+		limit = {
+			ROOT = {
+				OR = {
+					china_alignment_right_kuomintang = yes
+					china_alignment_left_kuomintang = yes
+				}
+			}
+		}
+		set_country_flag = JAP_RKMT_puppet_flag
+	}
+	else_if = {
+		limit = {
+			ROOT = {
+				is_chinese_tag = yes
+			}
+		}
+		set_country_flag = JAP_nonKMT_chinese_puppet_flag
+	}
+	else_if = {
+		limit = {
+			ROOT = { has_authoritarian_government = yes }
+		}
 		set_country_flag = JAP_authoritarian_puppet_flag
 	}
 	else = {
@@ -1613,27 +1639,102 @@ JAP_republic_effect = {
 	hidden_effect = {
 		JAP = {
 			set_cosmetic_tag = JAP_republic
-			promote_character = JAP_katayama_tetsu
-			promote_character = JAP_ishibashi_tanzan
-			promote_character = {
-				character = JAP_yoshida_shigeru
-				ideology = market_liberal_subtype
+			if = {
+				limit = {
+					has_country_flag = JAP_RKMT_puppet_flag
+				}
+				#Socialist KMTs won't get this event, but the Soc Dem LKMTs might
+				promote_character = {
+					character = JAP_miyazaki_ryusuke
+					ideology = social_democrat_subtype
+				}
+				promote_character = JAP_ishibashi_tanzan
+				promote_character = {
+					character = JAP_yoshida_shigeru
+					ideology = market_liberal_subtype
+				}
+				promote_character = {
+					character = JAP_yoshida_shigeru
+					ideology = social_conservative_subtype
+				}
+				promote_character = {
+					character = JAP_miyazaki_ryusuke
+					ideology = authoritarian_democrat_subtype
+				}
+				promote_character = {
+					character = JAP_miyazaki_ryusuke
+					ideology = paternal_autocrat_subtype
+				}
+				promote_character = {
+					character = JAP_miyazaki_ryusuke
+					ideology = national_populist_subtype
+				}
+				#These parties would be renamed via the JAP_puppet_setup if Japan is re-puppeted.
+				set_party_name = {
+					ideology = authoritarian_democrat
+					long_name = JAP_nihon_shakaito_long
+					name = JAP_nihon_shakaito
+				}
+				set_party_name = {
+					ideology = paternal_autocrat
+					long_name = JAP_nihon_shakaito_long
+					name = JAP_nihon_shakaito
+				}
+				set_party_name = {
+					ideology = national_populist
+					long_name = JAP_nihon_shakaito_long
+					name = JAP_nihon_shakaito
+				}
 			}
-			promote_character = {
-				character = JAP_yoshida_shigeru
-				ideology = social_conservative_subtype
+			else_if = {
+				limit = { has_country_flag = JAP_nonKMT_chinese_puppet_flag }
+				#Aka all the Beiyang tags
+				promote_character = JAP_katayama_tetsu
+				promote_character = JAP_ishibashi_tanzan
+				promote_character = {
+					character = JAP_yoshida_shigeru
+					ideology = market_liberal_subtype
+				}
+				promote_character = {
+					character = JAP_yoshida_shigeru
+					ideology = social_conservative_subtype
+				}
+				promote_character = {
+					character = JAP_okamura_yasuji
+					ideology = authoritarian_democrat_subtype
+				}
+				promote_character = {
+					character = JAP_okamura_yasuji
+					ideology = paternal_autocrat_subtype
+				}
+				promote_character = {
+					character = JAP_okamura_yasuji
+					ideology = national_populist_subtype
+				}
 			}
-			promote_character = {
-				character = JAP_kishi_nobusuke
-				ideology = authoritarian_democrat_subtype
-			}
-			promote_character = {
-				character = JAP_kishi_nobusuke
-				ideology = paternal_autocrat_subtype
-			}
-			promote_character = {
-				character = JAP_kishi_nobusuke
-				ideology = national_populist_subtype
+			else = {
+				promote_character = JAP_katayama_tetsu
+				promote_character = JAP_ishibashi_tanzan
+				promote_character = {
+					character = JAP_yoshida_shigeru
+					ideology = market_liberal_subtype
+				}
+				promote_character = {
+					character = JAP_yoshida_shigeru
+					ideology = social_conservative_subtype
+				}
+				promote_character = {
+					character = JAP_kishi_nobusuke
+					ideology = authoritarian_democrat_subtype
+				}
+				promote_character = {
+					character = JAP_kishi_nobusuke
+					ideology = paternal_autocrat_subtype
+				}
+				promote_character = {
+					character = JAP_kishi_nobusuke
+					ideology = national_populist_subtype
+				}
 			}
 		}
 	}
@@ -1868,4 +1969,57 @@ JAP_war_planning_decision_remove = {
 	}
 	custom_effect_tooltip = tooltip_white_line
 	custom_effect_tooltip = JAP_decision_unlocked_during_war
+}
+
+JAP_LEC_crisis_warning_effect = {
+	if = {
+		limit = {
+			country_exists = LEC
+			LEC = {
+				NOT = {
+					is_in_faction_with = GER #Aka Entente or Neutral LEC
+					has_war_with = JAP
+				}
+			}
+		}
+		LEC = { country_event = { id = JAP_LEC_crisis.000 days = 1 } } #Crisis Brews in the Legations
+	}
+}
+
+JAP_LEC_crisis_start_effect = {
+	if = {
+		limit = {
+			country_exists = LEC
+			LEC = { is_in_faction_with = JAP }
+		}
+		CHN = {
+			set_global_flag = {
+				flag = CHN_delay_northeastern_gambit_by_one_month_flag
+				days = 30
+				value = 1
+			}
+		}
+		LEC = { country_event = { id = JAP_LEC_crisis.030 days = 1 } } #Japan Moves on the Legations
+		custom_effect_tooltip = JAP_LEC_crisis_start_effect_CPS_tt
+	}
+	else_if = {
+		limit = {
+			country_exists = LEC
+			LEC = {
+				NOT = {
+					is_in_faction_with = GER #Aka Entente or Neutral LEC
+					has_war_with = JAP
+				}
+			}
+		}
+		CHN = {
+			set_global_flag = {
+				flag = CHN_delay_northeastern_gambit_by_one_month_flag
+				days = 30
+				value = 1
+			}
+		}
+		LEC = { country_event = { id = JAP_LEC_crisis.001 days = 1 } } #The Japanese Make their Demands
+		custom_effect_tooltip = JAP_LEC_crisis_start_effect_not_CPS_tt
+	}
 }

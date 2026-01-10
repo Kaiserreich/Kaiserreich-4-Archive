@@ -1,12 +1,16 @@
 NEP_remove_monarchy = {
 	if = {
 		limit = { has_character = NEP_tribhuvan }
-		set_party_name = {
-			ideology = national_populist
-			name = NEP_national_populist_party
-			long_name = NEP_national_populist_party
-		}
 		NEP_tribhuvan = {
+			remove_all_country_leader_roles = yes
+			retire = yes
+		}
+	}
+	if = {
+		limit = { has_character = NEP_samrajya_shumsher_jang_bahadur_rana }
+		NEP_samrajya_shumsher_jang_bahadur_rana = {
+			set_country_leader_as_republican = yes
+			set_character_name = NEP_samrajya_shumsher_jang_bahadur_rana
 			remove_all_country_leader_roles = yes
 			retire = yes
 		}
@@ -16,11 +20,6 @@ NEP_remove_monarchy = {
 NEP_create_tribhuvan = {
 	if = {
 		limit = { NEP = { NEP_tribhuvan = { is_dead = no } } }
-		set_party_name = {
-			ideology = national_populist
-			name = NEP_paternal_autocrat_party
-			long_name = NEP_paternal_autocrat_party
-		}
 		NEP = {
 			NEP_tribhuvan = {
 				character_becomes_leader_of_ruling_party_effect_tooltip = yes
@@ -57,6 +56,312 @@ NEP_create_tribhuvan = {
 						add_trait = { trait = NEP_defiant_hostage ideology = paternal_autocrat_subtype }
 					}
 				}
+			}
+		}
+	}
+}
+NEP_create_samrajya = {
+	if = {
+		limit = { NEP = { NEP_samrajya_shumsher_jang_bahadur_rana = { is_dead = no } } }
+		NEP = {
+			NEP_samrajya_shumsher_jang_bahadur_rana = {
+				set_character_as_monarch = yes
+				set_character_name = NEP_samrajya_shumsher_jang_bahadur_rana_regnal
+				character_becomes_leader_of_ruling_party_effect_tooltip = yes
+				hidden_effect = {
+					set_nationality = PREV.PREV
+					remove_all_country_leader_roles = yes
+					for_each_loop = {
+						array = global.ideology_groups
+						if = {
+							limit = { ideology_group_is_socialist = no }
+							meta_effect = {
+								text = {
+									add_country_leader_role = {
+										country_leader = {
+											desc = NEP_samrajya_shumsher_jang_bahadur_rana_leader_desc
+											ideology = [IDEOLOGY]
+										}
+										promote_leader = yes
+									}
+								}
+								IDEOLOGY = "[?v.GetTokenKey]_subtype"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+NEP_puppet_setup = {
+	hidden_effect = {
+		### disable conspiracy minigame if active ###
+		if = {
+			limit = { has_country_flag = NEP_conspiracy_ongoing_flag }
+			clr_country_flag = NEP_conspiracy_ongoing_flag
+			remove_ideas = {
+				NEP_crushing_the_conspirators_1
+				NEP_crushing_the_conspirators_2
+				NEP_covert_support_for_the_mukti_sena_1
+				NEP_covert_support_for_the_mukti_sena_2_socialist
+				NEP_covert_support_for_the_mukti_sena_2_democratic
+				NEP_crushing_the_conspirators_monarchy
+				NEP_covert_support_for_the_mukti_sena_monarchy
+			}
+			remove_mission = NEP_conspiracy_mission
+			remove_targeted_decision = { target = HND decision = NEP_weaken_HND_influence_decision }
+			remove_targeted_decision = { target = RAJ decision = NEP_weaken_RAJ_influence_decision }
+			remove_targeted_decision = { target = HND decision = NEP_increase_HND_influence_decision }
+			remove_targeted_decision = { target = RAJ decision = NEP_increase_RAJ_influence_decision }
+			HND = {
+				remove_mission = NEP_conspiracy_mission
+				remove_targeted_decision = { target = NEP decision = NEP_increase_HND_influence_decision }
+				remove_targeted_decision = { target = NEP decision = NEP_india_send_guns_decision }
+				remove_targeted_decision = { target = NEP decision = NEP_india_command_power_decision }
+				clear_variable = PREV.NEP_conspiracy_influence_var_@THIS
+				clear_variable = PREV.NEP_conspiracy_increase_cost_@THIS
+				clear_variable = PREV.NEP_conspiracy_lower_cost_@THIS
+			}
+			RAJ = {
+				remove_mission = NEP_conspiracy_mission
+				remove_targeted_decision = { target = NEP decision = NEP_increase_RAJ_influence_decision }
+				remove_targeted_decision = { target = NEP decision = NEP_india_send_guns_decision }
+				remove_targeted_decision = { target = NEP decision = NEP_india_command_power_decision }
+				clear_variable = PREV.NEP_conspiracy_influence_var_@THIS
+				clear_variable = PREV.NEP_conspiracy_increase_cost_@THIS
+				clear_variable = PREV.NEP_conspiracy_lower_cost_@THIS
+			}
+		}
+
+		### if NatPop, rename the slot to Rana Dynasty ###
+		if = {
+			limit = { has_government = national_populist }
+			set_party_name = {
+				ideology = national_populist
+				name = NEP_paternal_autocrat_party
+				long_name = NEP_paternal_autocrat_party
+			}
+		}
+		else = {
+			set_party_name = {
+				ideology = national_populist
+				name = NEP_national_populist_party
+				long_name = NEP_national_populist_party
+			}
+		}
+
+		### update political tree ###
+		if = {
+			limit = { has_government = authoritarian_democrat }
+			if = {
+				limit = { NOT = { has_completed_focus = NEP_our_ruler_glorious } }
+				unlock_national_focus = NEP_our_ruler_glorious
+			}
+			if = {
+				limit = { has_completed_focus = NEP_regency_of_the_ranas }
+				uncomplete_national_focus = {
+					focus = NEP_regency_of_the_ranas
+					uncomplete_children = yes
+				}
+			}
+			if = {
+				limit = { has_completed_focus = NEP_the_unshackling_of_nepal }
+				uncomplete_national_focus = {
+					focus = NEP_the_unshackling_of_nepal
+					uncomplete_children = yes
+				}
+			}
+		}
+		else_if = {
+			limit = { has_dictatorship_government = yes }
+			if = {
+				limit = { NOT = { has_completed_focus = NEP_regency_of_the_ranas } }
+				unlock_national_focus = NEP_regency_of_the_ranas
+			}
+			if = {
+				limit = { has_completed_focus = NEP_our_ruler_glorious }
+				uncomplete_national_focus = {
+					focus = NEP_our_ruler_glorious
+					uncomplete_children = yes
+				}
+			}
+			if = {
+				limit = { has_completed_focus = NEP_the_unshackling_of_nepal }
+				uncomplete_national_focus = {
+					focus = NEP_the_unshackling_of_nepal
+					uncomplete_children = yes
+				}
+			}
+		}
+		else = {
+			if = {
+				limit = { NOT = { has_completed_focus = NEP_the_unshackling_of_nepal } }
+				unlock_national_focus = NEP_the_unshackling_of_nepal
+			}
+			if = {
+				limit = { has_socialist_government = yes }
+				if = {
+					limit = { has_completed_focus = NEP_formation_of_the_interim_government }
+					complete_national_focus = NEP_loyalty_to_the_liberators
+					uncomplete_national_focus = {
+						focus = NEP_formation_of_the_interim_government
+						uncomplete_children = yes
+					}
+				}
+			}
+			else = {
+				if = {
+					limit = { has_completed_focus = NEP_loyalty_to_the_liberators }
+					complete_national_focus = NEP_formation_of_the_interim_government
+					uncomplete_national_focus = {
+						focus = NEP_loyalty_to_the_liberators
+						uncomplete_children = yes
+					}
+				}
+			}
+			if = {
+				limit = { has_completed_focus = NEP_our_ruler_glorious }
+				uncomplete_national_focus = {
+					focus = NEP_our_ruler_glorious
+					uncomplete_children = yes
+				}
+			}
+			if = {
+				limit = { has_completed_focus = NEP_the_unshackling_of_nepal }
+				uncomplete_national_focus = {
+					focus = NEP_the_unshackling_of_nepal
+					uncomplete_children = yes
+				}
+			}
+		}
+
+		### update foreign policy tree ###
+		if = {
+			limit = { has_completed_focus = NEP_protection_of_nepalese_independence }
+			uncomplete_national_focus = {
+				focus = ARM_safeguard_our_independence
+				uncomplete_children = yes
+			}
+		}
+		if = {
+			limit = {
+				has_completed_focus = NEP_reaffirm_the_friendship_treaty
+				NOT = { is_subject_of = RAJ }
+			}
+			uncomplete_national_focus = {
+				focus = NEP_reaffirm_the_friendship_treaty
+				uncomplete_children = yes
+			}
+		}
+		if = {
+			limit = {
+				has_completed_focus = NEP_under_the_wings_of_the_republic
+				NOT = { is_subject_of = HND }
+			}
+			uncomplete_national_focus = {
+				focus = NEP_under_the_wings_of_the_republic
+				uncomplete_children = yes
+			}
+		}
+	}
+}
+
+NEP_join_overlord_faction_effect = {
+	if = {
+		limit = {
+			NEP = { has_country_flag = NEP_join_overlord_faction_flag }
+		}
+		NEP = { set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP }
+		add_to_faction = NEP
+	}
+}
+
+NEP_check_influence = {
+	NEP = {
+		set_variable = { var = NEP_relative_HND_influence value = NEP.NEP_conspiracy_influence_var_HND }
+		subtract_from_variable = { var = NEP_relative_HND_influence value = NEP_conspiracy_influence_var_RAJ }
+		clamp_variable = { var = NEP_relative_HND_influence min = 0 }
+		set_variable = { var = NEP_relative_RAJ_influence value = NEP.NEP_conspiracy_influence_var_RAJ }
+		subtract_from_variable = { var = NEP_relative_RAJ_influence value = NEP_conspiracy_influence_var_HND }
+		clamp_variable = { var = NEP_relative_RAJ_influence min = 0 }
+	}
+}
+
+NEP_change_influence_FROM = {
+	custom_override_tooltip = {
+		tooltip = {
+			localization_key = NEP_conspiracy_influence_change_tooltip
+			COUNTRY = "[FROM.GetTag]"
+		}
+		NEP = {
+			add_to_variable = { NEP.NEP_conspiracy_influence_var_@FROM = NEP_conspiracy_influence_change }
+			clamp_variable = { var = NEP.NEP_conspiracy_influence_var_@FROM min = 0 }
+		}
+	}
+	NEP_check_influence = yes
+}
+
+NEP_change_influence_ROOT = {
+	custom_override_tooltip = {
+		tooltip = {
+			localization_key = NEP_conspiracy_influence_change_tooltip
+			COUNTRY = "[ROOT.GetTag]"
+		}
+		NEP = {
+			add_to_variable = { NEP.NEP_conspiracy_influence_var_@ROOT = NEP_conspiracy_influence_change }
+			clamp_variable = { var = NEP.NEP_conspiracy_influence_var_@ROOT min = 0 }
+		}
+	}
+	NEP_check_influence = yes
+}
+
+NEP_change_influence_HND = {
+	custom_override_tooltip = {
+		tooltip = {
+			localization_key = NEP_conspiracy_influence_change_tooltip
+			COUNTRY = "[HND.GetTag]"
+		}
+		NEP = {
+			add_to_variable = { NEP.NEP_conspiracy_influence_var_@HND = NEP_conspiracy_influence_change }
+			clamp_variable = { var = NEP.NEP_conspiracy_influence_var_@HND min = 0 }
+		}
+	}
+	NEP_check_influence = yes
+}
+
+NEP_change_influence_RAJ = {
+	custom_override_tooltip = {
+		tooltip = {
+			localization_key = NEP_conspiracy_influence_change_tooltip
+			COUNTRY = "[RAJ.GetTag]"
+		}
+		NEP = {
+			add_to_variable = { NEP.NEP_conspiracy_influence_var_@RAJ = NEP_conspiracy_influence_change }
+			clamp_variable = { var = NEP.NEP_conspiracy_influence_var_@RAJ min = 0 }
+		}
+	}
+	NEP_check_influence = yes
+}
+
+NEP_conspiracy_rng_effect = {
+	hidden_effect = {
+		random_list = {
+			20 = {
+				set_country_flag = { flag = NEP_conspiracy_ai_flag days = 10 value = 1 }
+			}
+			20 = {
+				set_country_flag = { flag = NEP_conspiracy_ai_flag days = 13 value = 1 }
+			}
+			20 = {
+				set_country_flag = { flag = NEP_conspiracy_ai_flag days = 15 value = 1 }
+			}
+			20 = {
+				set_country_flag = { flag = NEP_conspiracy_ai_flag days = 18 value = 1 }
+			}
+			20 = {
+				set_country_flag = { flag = NEP_conspiracy_ai_flag days = 20 value = 1 }
 			}
 		}
 	}

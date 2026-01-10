@@ -1,5 +1,4 @@
 characters = {
-
 ########################################
 ########- Table of Contents - ##########
 ########################################
@@ -29,9 +28,20 @@ characters = {
 			ideology = radical_socialist_subtype
 			traits = { CHN_left_kuomintang_aligned CHI_exiled_chairman }
 		}
+		country_leader = {
+			desc = CHI_wang_jingwei_leader_desc #Used for RKMT content
+			ideology = social_democrat_subtype
+			traits = { CHN_left_kuomintang_aligned }
+		}
 		advisor = {
 			slot = second_in_command
 			idea_token = CHI_wang_jingwei_sic
+			visible = {
+				if = {
+					limit = { tag = UPC }
+					NOT = { has_country_flag = UPC_election_ban_KMT_flag }
+				}
+			}
 			traits = { KR_heir_to_the_revolution_sic }
 			cost = 0
 			can_be_fired = no
@@ -48,9 +58,25 @@ characters = {
 					limit = { tag = SHX }
 					has_completed_focus = SHX_kindle_the_mass_movement_focus
 				}
+				else_if = {
+					limit = { tag = UPC }
+					NOT = { has_country_flag = UPC_election_ban_KMT_flag }
+				}
+				else_if = {
+					limit = {
+						tag = GXC
+						NOT = { tag = UPC }
+					}
+					china_is_aligned_with_kmt = yes
+				}
 			}
 			traits = { KR_heir_to_the_revolution }
 			cost = 150
+			on_add = {
+				ROOT = {
+					add_popularity = { ideology = radical_socialist popularity = 0.05 }
+				}
+			}
 		}
 	}
 
@@ -189,6 +215,12 @@ characters = {
 				}
 			}
 		}
+		advisor = {
+			slot = political_advisor
+			idea_token = CHI_chen_gongbo_advisor
+			visible = { has_completed_focus = GXC_establish_the_civic_forums }
+			traits = { KR_socialism_proponent }
+		}
 	}
 
 	CHI_sun_fo = {
@@ -226,7 +258,11 @@ characters = {
 			desc = CHI_sun_fo_sic_desc
 			available = {
 				not_already_hired_except_as = political_advisor
-				NOT = { has_completed_focus = CHI_abolish_the_legislative_yuan }
+				is_country_leader = no
+				if = {
+					limit = { tag = CHI }
+					NOT = { has_completed_focus = CHI_abolish_the_legislative_yuan }
+				}
 			}
 			visible = {
 				if = {
@@ -270,6 +306,12 @@ characters = {
 		advisor = {
 			slot = second_in_command
 			idea_token = CHI_chen_duxiu_sic
+			visible = {
+				if = {
+					limit = { tag = GXC }
+					china_is_aligned_with_kmt = yes
+				}
+			}
 			traits = { KR_proponent_of_the_united_front_sic }
 			cost = 0
 			can_be_fired = no
@@ -390,7 +432,9 @@ characters = {
 	CHI_four_elders = {
 		name = CHI_four_elders
 		country_leader = {
-			# Placeholder leader, doesn't need desc
+			ideology = syndicalist_subtype
+		}
+		country_leader = {
 			ideology = social_conservative_subtype
 			traits = { CHN_left_kuomintang_aligned }
 		}
@@ -681,6 +725,19 @@ characters = {
 						limit = { original_tag = CHI }
 						custom_effect_tooltip = CHI_add_non_part_advisor_tt
 						hidden_effect = { CHI_sub_rad_large_effect = yes }
+					}
+					else_if = {
+						limit = {
+							tag = GXC
+							china_is_aligned_with_kmt = no
+						}
+						custom_effect_tooltip = GXC_add_radical_aligned_advisor_tt
+						hidden_effect = {
+							add_popularity = {
+								ideology = radical_socialist
+								popularity = 0.03
+							}
+						}
 					}
 				}
 			}
@@ -1406,7 +1463,10 @@ characters = {
 			idea_token = CHI_su_yu_theorist
 			ledger = army
 			available = {
-				has_completed_focus = CHI_legacy_of_jiangfu
+				if = {
+					limit = { tag = CHI }
+					has_completed_focus = CHI_legacy_of_jiangfu
+				}
 			}
 			traits = { KR_mass_assault_expert }
 			cost = 150
@@ -1508,7 +1568,10 @@ characters = {
 			idea_token = CHI_du_yuming_theorist
 			ledger = army
 			available = {
-				has_completed_focus = CHI_look_to_the_west
+				if = {
+					limit = { tag = CHI }
+					has_completed_focus = CHI_look_to_the_west
+				}
 			}
 			traits = { KR_grand_battle_plan_expert }
 			cost = 150
@@ -1623,22 +1686,21 @@ characters = {
 			on_add = {
 				ROOT = {
 					if = {
-						limit = {
-							original_tag = CHI
-							has_completed_focus = CHI_revolution_for_all_peoples
-						}
-						hidden_effect = {
-							add_popularity = {
-								ideology = social_conservative
-								popularity = 0.03
-							}
-						}
-						custom_effect_tooltip = CHI_add_wrd_aligned_advisor_tt
-					}
-					else_if = {
 						limit = { original_tag = CHI }
-						CHI_WRD_SOC_effect = yes
-						hidden_effect = { country_event = { id = CHI.midgame.611 days = 5 random_days = 15 } } #The National Labour University
+						if = {
+							limit = { has_completed_focus = CHI_revolution_for_all_peoples }
+							hidden_effect = {
+								add_popularity = {
+									ideology = social_conservative
+									popularity = 0.03
+								}
+							}
+							custom_effect_tooltip = CHI_add_wrd_aligned_advisor_tt
+						}
+						else = {
+							CHI_WRD_SOC_effect = yes
+							hidden_effect = { country_event = { id = CHI.midgame.611 days = 5 random_days = 15 } } #The National Labour University
+						}
 					}
 				}
 			}
@@ -1733,9 +1795,12 @@ characters = {
 			slot = political_advisor
 			idea_token = CHI_chu_minyi_advisor
 			available = {
-				OR = {
-					has_country_leader = { character = CHI_wang_jingwei }
-					has_completed_focus = CHI_the_party_above_all
+				if = {
+					limit = { original_tag = CHI }
+					OR = {
+						has_country_leader = { character = CHI_wang_jingwei }
+						has_completed_focus = CHI_the_party_above_all
+					}
 				}
 			}
 			traits = { KR_health_and_safety_adherent }
@@ -1790,10 +1855,10 @@ characters = {
 						hidden_effect = { CHI_PAC_small_effect = yes }
 						custom_effect_tooltip = CHI_add_pac_aligned_advisor_tt
 						hidden_effect = { country_event = { id = CHI.midgame.609 days = 5 random_days = 15 } } #Wheeling and Dealing in Shanghai
+						unlock_decision_tooltip = CHI_KOR_liberation_army_decision
+						unlock_decision_tooltip = CHI_MAL_liberation_army_decision
+						unlock_decision_tooltip = CHI_INC_liberation_army_decision
 					}
-					unlock_decision_tooltip = CHI_KOR_liberation_army_decision
-					unlock_decision_tooltip = CHI_MAL_liberation_army_decision
-					unlock_decision_tooltip = CHI_INC_liberation_army_decision
 				}
 			}
 		}
@@ -1805,6 +1870,11 @@ characters = {
 				large = GFX_portrait_CHI_zhang_bojun_civilian_large
 				small = GFX_portrait_CHI_zhang_bojun_civilian_small
 			}
+		}
+		country_leader = {
+			desc = CHI_zhang_bojun_leader_desc
+			ideology = radical_socialist_subtype
+			traits = { CHN_left_kuomintang_aligned }
 		}
 		advisor = {
 			slot = political_advisor
@@ -2267,7 +2337,12 @@ characters = {
 		advisor = {
 			slot = political_advisor
 			idea_token = CHI_mao_renfeng_advisor
-			available = { has_completed_focus = CHI_reinforce_the_tewu }
+			available = {
+				if = {
+					limit = { original_tag = CHI }
+					has_completed_focus = CHI_reinforce_the_tewu
+				}
+			}
 			traits = { KR_secret_police_chief }
 			on_add = {
 				ROOT = {
@@ -2291,7 +2366,12 @@ characters = {
 		advisor = {
 			slot = political_advisor
 			idea_token = CHI_xiao_zanyu_advisor
-			available = { has_completed_focus = CHI_the_nationalisation_of_education }
+			available = {
+				if = {
+					limit = { original_tag = CHI }
+					has_completed_focus = CHI_the_nationalisation_of_education
+				}
+			}
 			traits = { KR_ultranationalist_agitator }
 			on_add = {
 				ROOT = {
@@ -2315,7 +2395,12 @@ characters = {
 		advisor = {
 			slot = political_advisor
 			idea_token = CHI_chiang_ching_kuo_advisor
-			available = { has_completed_focus = CHI_a_new_order_in_gannan }
+			available = {
+				if = {
+					limit = { original_tag = CHI }
+					has_completed_focus = CHI_a_new_order_in_gannan
+				}
+			}
 			traits = { KR_economic_reformer }
 			on_add = {
 				ROOT = {
@@ -2350,9 +2435,12 @@ characters = {
 			idea_token = CHI_li_lisan_advisor
 			desc = CHI_li_lisan_sic_desc
 			available = {
-				OR = {
-					has_completed_focus = CHI_strengthen_the_unions
-					has_country_flag = CHI_li_lisan_flag
+				if = {
+					limit = { tag = CHI }
+					OR = {
+						has_completed_focus = CHI_strengthen_the_unions
+						has_country_flag = CHI_li_lisan_flag
+					}
 				}
 				not_already_hired_except_as = political_advisor
 			}
@@ -2379,7 +2467,10 @@ characters = {
 			slot = political_advisor
 			idea_token = CHI_liu_shaoqi_advisor
 			available = {
-				has_completed_focus = CHI_li_lisan_line
+				if = {
+					limit = { tag = CHI }
+					has_completed_focus = CHI_li_lisan_line
+				}
 			}
 			traits = { KR_patriotic_socialist }
 		}
@@ -2514,7 +2605,7 @@ characters = {
 			idea_token = CHI_mission_militaire_exiles_theorist
 			ledger = military
 			available = {
-				has_completed_focus = CHI_extend_the_mmic
+				has_completed_focus = KMT_extend_the_mmic
 			}
 			traits = { KR_mmic_exiles }
 			cost = 100
@@ -2526,20 +2617,6 @@ characters = {
 ########################################
 
 ###- Juntong Flavour Leaders Across China -###
-	#GXC
-	CHI_zheng_jiemin = {
-		name = CHI_zheng_jiemin
-		portraits = {
-			civilian = {
-				large = GFX_Portrait_Asia_Generic_land_new_4
-			}
-		}
-		country_leader = {
-			desc = CHI_zheng_jiemin_leader_desc
-			ideology = totalist_subtype
-			traits = { CHN_left_kuomintang_aligned }
-		}
-	}
 
 	#HNN
 	CHI_tang_zong = {

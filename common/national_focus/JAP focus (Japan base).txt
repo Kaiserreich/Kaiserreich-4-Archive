@@ -11,7 +11,6 @@
  # Army and Navy Trees redone by Story
 
 focus_tree = {
-
 	id = japan_focus
 
 	country = {
@@ -1393,10 +1392,7 @@ focus_tree = {
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed JAP_develop_manchurian_resources"
 			FNG = {
-				add_popularity = {
-					ideology = market_liberal
-					popularity = 0.05
-				}
+				FNG_JAP_investment_large = yes
 				add_ideas = JAP_japanese_investments
 			}
 		}
@@ -5907,6 +5903,7 @@ focus_tree = {
 			create_economic_sphere = yes
 			var:economic_sphere = {
 				set_character_name = JAP_asian_economic_sphere
+				set_character_flag = has_custom_script_handle
 				var:icon = { set_character_name = "GFX_goal_JAP_co_prosperity_sphere" }
 				var:desc = { set_character_name = KR_co_prosperity_sphere_desc }
 				set_variable = { red = 0.790 }
@@ -6808,7 +6805,7 @@ focus_tree = {
 			all_country_of = {
 				target = constant:country_groups.indochina
 				OR = {
-					can_declare_war_on = ROOT
+					NOT = { can_declare_war_on = ROOT }
 					is_in_same_economic_sphere_as_ROOT = yes
 				}
 			}
@@ -6946,6 +6943,7 @@ focus_tree = {
 		}
 		will_lead_to_war_with = GEA
 		will_lead_to_war_with = GER
+		will_lead_to_war_with = LEC
 		available = {
 			threat > 0.75
 			is_faction_leader = yes
@@ -7000,6 +6998,13 @@ focus_tree = {
 				}
 			}
 		}
+		select_effect = {
+			log = "[GetLogRoot]: Select Focus JAP_ultimatum"
+			if = {
+				limit = { focus_progress = { focus = JAP_continental_warfare progress < 0 } }
+				JAP_LEC_crisis_warning_effect = yes
+			}
+		}
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed JAP_ultimatum"
 			if = {
@@ -7013,8 +7018,22 @@ focus_tree = {
 				custom_effect_tooltip = tooltip_white_line
 				custom_effect_tooltip = JAP_ultimatum_2_tt
 			}
-			custom_effect_tooltip = tooltip_white_line
-			custom_effect_tooltip = JAP_CHN_may_attack_FNG_tt
+			if = {
+				limit = {
+					NOT = {
+						any_enemy_country = {
+							is_chinese_tag = yes
+						}
+					}
+				}
+				custom_effect_tooltip = tooltip_white_line
+				custom_effect_tooltip = JAP_CHN_may_attack_FNG_tt
+			}
+			if = {
+				limit = { focus_progress = { focus = JAP_continental_warfare progress < 0 } }
+				custom_effect_tooltip = tooltip_white_line
+				JAP_LEC_crisis_start_effect = yes
+			}
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION }
 	}
@@ -7167,8 +7186,6 @@ focus_tree = {
 		}
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed JAP_mantetsu_projects"
-			unlock_decision_category_tooltip = JAP_mantetsu_projects
-			custom_effect_tooltip = tooltip_white_line
 			custom_effect_tooltip = JAP_mantetsu_projects_tt
 			hidden_effect = { JAP_open_JAP_mantetsu_projects = yes }
 		}
@@ -7251,10 +7268,7 @@ focus_tree = {
 			effect_tooltip = {
 				FNG = {
 					effect_tooltip = {
-						add_popularity = {
-							ideology = market_liberal
-							popularity = -0.05
-						}
+						FNG_JAP_spend_large = yes
 						add_popularity = {
 							ideology = paternal_autocrat
 							popularity = 0.05
@@ -7334,10 +7348,7 @@ focus_tree = {
 			custom_effect_tooltip = tooltip_white_line
 			FNG = {
 				effect_tooltip = {
-					add_popularity = {
-						ideology = market_liberal
-						popularity = 0.1
-					}
+					FNG_JAP_investment_mega = yes
 					add_popularity = {
 						ideology = paternal_autocrat
 						popularity = -0.1
@@ -7380,10 +7391,7 @@ focus_tree = {
 			custom_effect_tooltip = tooltip_white_line
 			FNG = {
 				effect_tooltip = {
-					add_popularity = {
-						ideology = market_liberal
-						popularity = -0.05
-					}
+					FNG_JAP_spend_large = yes
 					add_popularity = {
 						ideology = paternal_autocrat
 						popularity = 0.05
@@ -7408,20 +7416,9 @@ focus_tree = {
 			is_faction_leader = yes
 			JAP_owns_korea = yes
 			OR = {
-				has_war_with = CHN
-				AND = {
-					can_declare_war_on = CHN
-					threat > 0.40
-				}
-			}
-			OR = {
-				FNG = { has_completed_focus = FNG_The_Question_of_the_Presidency }
-				FNG = {
-					focus_progress = {
-						focus = FNG_The_Question_of_the_Presidency
-						progress < 0
-					}
-				}
+				has_war_with = CHN #The Mechanism for Japan to enter the war with China is now attached to the FNG_JAP mechanic
+				NOT = { country_exists = FNG }
+				FNG_JAP_hostile = yes
 			}
 		}
 		bypass = {
@@ -7446,122 +7443,120 @@ focus_tree = {
 					country_exists = CUF
 					FNG = { is_subject = yes }
 					is_in_faction_with = FNG
-					AND = {
-						FNG = { is_ai = yes }
-						FNG = { has_completed_focus = FNG_Begin_the_War_of_National_Reclamation }
-						NOT = { FNG = { has_country_flag = FNG_war_began_one_year } }
-						NOT = { has_global_flag = FNG_conference_success }
-						FNG_JAP_hostile = no
-						OR = {
-							NOT = { FNG = { controls_state = 608 } } #Beijing
-							FNG = {
-								has_war = yes
-								alliance_strength_ratio < 0.5 #Japan should join if Fengtian are outnumbered 2:1
-							}
-							FNG = {
-								has_war = no
-								NOT = { tag = CHN }
-								strength_ratio = { tag = CHN ratio < 0.5 } #Japan should join if Fengtian are outnumbered 2:1
-							}
-						}
-					}
-					AND = {
-						FNG = { is_ai = yes }
-						FNG = { has_completed_focus = FNG_Continue_the_Reclamation_War }
-						NOT = { FNG = { has_country_flag = FNG_war_continued_one_year } }
-						NOT = { has_global_flag = FNG_conference_success }
-						FNG_JAP_hostile = no
-						OR = {
-							NOT = { 608 = { is_owned_and_controlled_by = FNG } } #Beijing
-							AND = {
-								NOT = { 1048 = { is_controlled_by = FNG } } #Wuhan
-								NOT = { var:1048.controller = { is_subject_of = FNG } } #Wuhan
-							}
-							AND = {
-								NOT = { 613 = { is_controlled_by = FNG } } #Nanjing
-								NOT = { var:613.controller = { is_subject_of = FNG } } #Nanjing
-							}
-						}
-					}
-					AND = {
-						FNG = { is_ai = yes }
-						NOT = { 608 = { is_owned_and_controlled_by = FNG } } #If Fengtian owns Beijing Japan should let Fengtian handle the war
-						NOT = { has_global_flag = FNG_conference_success }
-						FNG_JAP_hostile = no
-						AND = {
-							NOT = {
-								ANQ = {
-									exists = yes
-									NOT = { owns_state = 608 }
-									NOT = { is_subject_of = 608.owner }
-									has_capitulated = no
-									NOT = { has_war_with = FNG }
-								}
-								CHI = {
-									exists = yes
-									NOT = { owns_state = 608 }
-									has_capitulated = no
-									NOT = { has_war_with = FNG }
-								}
-								GXC = {
-									exists = yes
-									NOT = { owns_state = 608 }
-									NOT = { is_subject_of = 608.owner }
-									has_capitulated = no
-									NOT = { has_war_with = FNG }
-								}
-								HNN = {
-									exists = yes
-									NOT = { owns_state = 608 }
-									NOT = { is_subject_of = 608.owner }
-									has_capitulated = no
-									NOT = { has_war_with = FNG }
-								}
-								LEP = {
-									exists = yes
-									NOT = { owns_state = 608 }
-									NOT = { is_subject_of = 608.owner }
-									has_capitulated = no
-									NOT = { has_war_with = FNG }
-								}
-								QIE = {
-									exists = yes
-									NOT = { owns_state = 608 }
-									NOT = { is_subject_of = 608.owner }
-									has_capitulated = no
-									NOT = { has_war_with = FNG }
-								}
-								SHX = {
-									exists = yes
-									NOT = { owns_state = 608 }
-									NOT = { is_subject_of = 608.owner }
-									has_capitulated = no
-									NOT = { has_war_with = FNG }
-								}
-								SHD = {
-									exists = yes
-									NOT = { owns_state = 608 }
-									NOT = { is_subject_of = 608.owner }
-									has_capitulated = no
-									NOT = { has_war_with = FNG }
-								}
-								SZC = {
-									exists = yes
-									NOT = { owns_state = 608 }
-									NOT = { is_subject_of = 608.owner }
-									has_capitulated = no
-									NOT = { has_war_with = FNG }
-								}
-								YUN = {
-									exists = yes
-									NOT = { owns_state = 608 }
-									NOT = { is_subject_of = 608.owner }
-									has_capitulated = no
-									NOT = { has_war_with = FNG }
-								}
-							}
-						}
-					}
+					#Commenting this out now for now
+					#AND = {
+					#	FNG = { is_ai = yes }
+					#	FNG = { has_completed_focus = FNG_Begin_the_War_of_National_Reclamation }
+					#	NOT = { FNG = { has_country_flag = FNG_war_began_one_year } }
+					#	FNG_JAP_hostile = no
+					#	OR = {
+					#		NOT = { FNG = { controls_state = 608 } } #Beijing
+					#		FNG = {
+					#			has_war = yes
+					#			alliance_strength_ratio < 0.5 #Japan should join if Fengtian are outnumbered 2:1
+					#		}
+					#		FNG = {
+					#			has_war = no
+					#			NOT = { tag = CHN }
+					#			strength_ratio = { tag = CHN ratio < 0.5 } #Japan should join if Fengtian are outnumbered 2:1
+					#		}
+					#	}
+					#}
+					#AND = {
+					#	FNG = { is_ai = yes }
+					#	FNG = { has_completed_focus = FNG_Continue_the_Reclamation_War }
+					#	NOT = { FNG = { has_country_flag = FNG_war_continued_one_year } }
+					#	FNG_JAP_hostile = no
+					#	OR = {
+					#		NOT = { 608 = { is_owned_and_controlled_by = FNG } } #Beijing
+					#		AND = {
+					#			NOT = { 1048 = { is_controlled_by = FNG } } #Wuhan
+					#			NOT = { var:1048.controller = { is_subject_of = FNG } } #Wuhan
+					#		}
+					#		AND = {
+					#			NOT = { 613 = { is_controlled_by = FNG } } #Nanjing
+					#			NOT = { var:613.controller = { is_subject_of = FNG } } #Nanjing
+					#		}
+					#	}
+					#}
+					#AND = {
+					#	FNG = { is_ai = yes }
+					#	NOT = { 608 = { is_owned_and_controlled_by = FNG } } #If Fengtian owns Beijing Japan should let Fengtian handle the war
+					#	FNG_JAP_hostile = no
+					#	AND = {
+					#		NOT = {
+					#			ANQ = {
+					#				exists = yes
+					#				NOT = { owns_state = 608 }
+					#				NOT = { is_subject_of = 608.owner }
+					#				has_capitulated = no
+					#				NOT = { has_war_with = FNG }
+					#			}
+					#			CHI = {
+					#				exists = yes
+					#				NOT = { owns_state = 608 }
+					#				has_capitulated = no
+					#				NOT = { has_war_with = FNG }
+					#			}
+					#			GXC = {
+					#				exists = yes
+					#				NOT = { owns_state = 608 }
+					#				NOT = { is_subject_of = 608.owner }
+					#				has_capitulated = no
+					#				NOT = { has_war_with = FNG }
+					#			}
+					#			HNN = {
+					#				exists = yes
+					#				NOT = { owns_state = 608 }
+					#				NOT = { is_subject_of = 608.owner }
+					#				has_capitulated = no
+					#				NOT = { has_war_with = FNG }
+					#			}
+					#			LEP = {
+					#				exists = yes
+					#				NOT = { owns_state = 608 }
+					#				NOT = { is_subject_of = 608.owner }
+					#				has_capitulated = no
+					#				NOT = { has_war_with = FNG }
+					#			}
+					#			QIE = {
+					#				exists = yes
+					#				NOT = { owns_state = 608 }
+					#				NOT = { is_subject_of = 608.owner }
+					#				has_capitulated = no
+					#				NOT = { has_war_with = FNG }
+					#			}
+					#			SHX = {
+					#				exists = yes
+					#				NOT = { owns_state = 608 }
+					#				NOT = { is_subject_of = 608.owner }
+					#				has_capitulated = no
+					#				NOT = { has_war_with = FNG }
+					#			}
+					#			SHD = {
+					#				exists = yes
+					#				NOT = { owns_state = 608 }
+					#				NOT = { is_subject_of = 608.owner }
+					#				has_capitulated = no
+					#				NOT = { has_war_with = FNG }
+					#			}
+					#			SZC = {
+					#				exists = yes
+					#				NOT = { owns_state = 608 }
+					#				NOT = { is_subject_of = 608.owner }
+					#				has_capitulated = no
+					#				NOT = { has_war_with = FNG }
+					#			}
+					#			YUN = {
+					#				exists = yes
+					#				NOT = { owns_state = 608 }
+					#				NOT = { is_subject_of = 608.owner }
+					#				has_capitulated = no
+					#				NOT = { has_war_with = FNG }
+					#			}
+					#		}
+					#	}
+					#}
 				}
 			}
 			modifier = {
@@ -7591,6 +7586,15 @@ focus_tree = {
 		will_lead_to_war_with = YUN
 		will_lead_to_war_with = SZC
 		will_lead_to_war_with = SHX
+		will_lead_to_war_with = LEC
+
+		select_effect = {
+			log = "[GetLogRoot]: Select Focus JAP_continental_warfare"
+			if = {
+				limit = { focus_progress = { focus = JAP_ultimatum progress < 0 } }
+				JAP_LEC_crisis_warning_effect = yes
+			}
+		}
 
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed JAP_continental_warfare"
@@ -7669,33 +7673,38 @@ focus_tree = {
 				ROOT = { activate_targeted_decision = { target = PREV decision = JAP_finish_off_stragglers } }
 			}
 			#Adds Fengtian into Japan's faction
+			#Gonna comment out the following so we can restore it if need be.
+			#if = {
+			#	limit = {
+			#		FNG_JAP_hostile = no
+			#		FNG = {
+			#			exists = yes
+			#			is_subject = no
+			#			is_in_faction = no
+			#			at_war_with_or_justifying_wargoal_against_PREV = no
+			#		}
+			#		NOT = {
+			#			any_allied_country = { FNG = { at_war_with_or_justifying_wargoal_against_PREV = yes } }
+			#		}
+			#	}
+			#	custom_effect_tooltip = tooltip_white_line
+			#	effect_tooltip = { add_to_faction = FNG }
+			#	FNG = {
+			#		set_country_flag = FNG_collaborated_with_japan
+			#		country_event = japan_fengtian_events.4
+			#	}
+			#	every_other_country = {
+			#		limit = {
+			#			is_subject_of = FNG
+			#			is_chinese_tag = yes
+			#		}
+			#		set_country_flag = FNG_collaborated_with_japan
+			#	}
+			#}
 			if = {
-				limit = {
-					FNG_JAP_hostile = no
-					FNG = {
-						exists = yes
-						is_subject = no
-						is_in_faction = no
-						at_war_with_or_justifying_wargoal_against_PREV = no
-					}
-					NOT = { has_global_flag = FNG_conference_success }
-					NOT = {
-						any_allied_country = { FNG = { at_war_with_or_justifying_wargoal_against_PREV = yes } }
-					}
-				}
+				limit = { focus_progress = { focus = JAP_ultimatum progress < 0 } }
 				custom_effect_tooltip = tooltip_white_line
-				effect_tooltip = { add_to_faction = FNG }
-				FNG = {
-					set_country_flag = FNG_collaborated_with_japan
-					country_event = japan_fengtian_events.4
-				}
-				every_other_country = {
-					limit = {
-						is_subject_of = FNG
-						is_chinese_tag = yes
-					}
-					set_country_flag = FNG_collaborated_with_japan
-				}
+				JAP_LEC_crisis_start_effect = yes
 			}
 		}
 		search_filters = { FOCUS_FILTER_ANNEXATION FOCUS_FILTER_ARMY_BONUS }
@@ -7777,10 +7786,7 @@ focus_tree = {
 			FNG = {
 				add_opinion_modifier = { target = ROOT modifier = KR_close_allies }
 				effect_tooltip = {
-					add_popularity = {
-						ideology = market_liberal
-						popularity = 0.1
-					}
+					FNG_JAP_investment_mega = yes
 					add_popularity = {
 						ideology = paternal_autocrat
 						popularity = -0.1

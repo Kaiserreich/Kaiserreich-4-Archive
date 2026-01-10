@@ -1,660 +1,1709 @@
-###############################
-# Yunnan Decisions			  #
-# By Drozdovite and Angry Bird#
-###############################
+##################################
+#      Yunnan Decisions      #
+##################################
+# Initial YUN rework by Drozdovite and Angry Bird
+##################################
+# Second South China Rework by Chiang Kai-Shrek, Suzuha, Hazo, Toaster, Clawedash, Festive, and the rest of the Second South China Rework Team
+##################################
 
-### (pre)-civil war missions/decisions
+########################################
+#########- Table of Contents - #########
+########################################
 
-YUN_SAVE_YOURSELF_TANG = {
-	YUN_TANG_REACT_mission = {
-		icon = generic_prepare_civil_war
-		allowed = { always = no } #manually activated
+#Section 1: Introgame Decisions
+#Section 2: Early game Decisions
+#Section 3: Mid Game Decisions
+#Section 4: Late Game Decisions
+#Section 5: End Game Decisions
+
+########################################
+######- Section 01: Introgame - ########
+########################################
+
+YUN_introgame_minigame_decision_category = {
+	YUN_introminigame_war_preparation_mission_timer = {
+		allowed = {
+			always = no
+		}
 		available = {
-			has_country_flag = YUN_crisis_averted
+			hidden_trigger = { always = no }
 		}
-		cancel_trigger = {
-			OR = {
-				has_completed_focus = YUN_purge_high_command
-				NOT = { has_country_leader = { character = YUN_tang_jiyao } }
-			}
-		}
-		fire_only_once = yes
-		is_good = no
-		days_mission_timeout = 150
-		timeout_effect = {
-			log = "[GetLogRoot]: Decision timeout YUN_TANG_REACT_mission"
-			if = {
-				limit = {
-					NOT = {
-						AND = {
-							is_ai = yes
-							has_game_rule = { rule = YUN_path option = YUN_PATH_AUTDEM }
-						}
-					}
-				}
-				add_stability = -0.15
-				add_war_support = -0.10
-				add_political_power = -100
-				country_event = yun.58
-				set_country_flag = YUN_TT_time_has_run_out
-			}
-		}
-
+		icon = GFX_decision_soldierly_discipline
+		is_good = yes
+		priority = 100 #Should be at the top
+		days_mission_timeout = 120
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete YUN_TANG_REACT_mission"
-			add_stability = 0.05
-			add_political_power = 100
+			log = "[GetLogRoot]: Decision complete YUN_introminigame_war_preparation_mission_timer"
+		}
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout YUN_introminigame_war_preparation_mission_timer"
+			country_event = { id = YUN.introgame.010 days = 1 } #Long Yun's Report // Should Fire Around July 02/03 1936. Goal is to limit YUN's decision window to between July 1st-ish and November 1st.
+			custom_effect_tooltip = YUN_introminigame_war_preparation_complete_tt
+			set_country_flag = YUN_introminigame_war_preparation_complete_flag
 		}
 		fixed_random_seed = no
 	}
-	YUN_TANG_gather_support_mission = {
-		icon = generic_prepare_civil_war
-		allowed = { always = no } #manually activated
+	YUN_troops_flood_to_the_border_monthly_timer = {
+		allowed = {
+			always = no
+		}
 		available = {
-			custom_override_tooltip = {
-				tooltip = YUN_republican_support_CTT
-				has_country_flag = {
-					flag = YUN_republican_support
-					value > 5
-				}
-			}
+			hidden_trigger = { always = no }
 		}
-		cancel_trigger = {
-			NOT = { has_country_leader = { character = YUN_tang_jiyao } }
+		icon = GFX_decision_generic_prepare_civil_war
+		is_good = yes
+		priority = 90 #Should be at the top
+		days_mission_timeout = 30
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_troops_flood_to_the_border_monthly_timer"
 		}
-		fire_only_once = yes
-		is_good = no
-		days_mission_timeout = 150
 		timeout_effect = {
-			log = "[GetLogRoot]: Decision timeout YUN_TANG_gather_support_mission"
+			log = "[GetLogRoot]: Decision timeout YUN_troops_flood_to_the_border_monthly_timer"
+			#NOTE: REMEMBER SINCE THE COUNTER IS ADDED LAST, REFLECTS CURRENT MONTH STARTING WITH 1 (SET BY YUN.INTROGAME.006)
+			#Boost the Losing Side
+			custom_effect_tooltip = YUN_troops_flood_to_the_border_monthly_timer_tt
 			if = {
-				limit = {
-					is_ai = yes
-					has_game_rule = { rule = YUN_path option = YUN_PATH_AUTDEM }
-				}
-				add_stability = 0.05
-				add_political_power = 100
-				hidden_effect = {
-					set_country_flag = YUN_position_secured
-				}
+				limit = { check_variable = { YUN_introminigame_KMT_soldiers_var > YUN_introminigame_UPC_soldiers_var } }
+				YUN_introminigame_add_UPC_small_effect = yes
+			}
+			else_if = {
+				limit = { check_variable = { YUN_introminigame_UPC_soldiers_var > YUN_introminigame_KMT_soldiers_var } }
+				YUN_introminigame_add_KMT_small_effect = yes
 			}
 			else = {
-				add_stability = -0.15
-				add_war_support = -0.10
-				add_political_power = -100
-				country_event = yun.70
+				random_list = {
+					50 = {
+						YUN_introminigame_add_KMT_small_effect = yes
+					}
+					50 = {
+						YUN_introminigame_add_UPC_small_effect = yes
+					}
+				}
+			}
+
+			#Now add to the month counter variable
+			if = {
+				limit = { check_variable = { YUN.YUN_introminigame_month_counter_var < 8 } }
+				#Keep repeating this until November 1st.
+				activate_mission = YUN_troops_flood_to_the_border_monthly_timer
+				add_to_variable = { YUN.YUN_introminigame_month_counter_var = 1 }
+			}
+			else = {
+				custom_effect_tooltip = YUN_introminigame_winter_offensive_tt
+				country_event = YUN.introgame.100 #The November Offensive - Basically the latest possible time you can delay choosing a path.
 			}
 		}
-
-		complete_effect = {
-			log = "[GetLogRoot]: Decision complete YUN_TANG_gather_support_mission"
-			add_stability = 0.05
-			add_political_power = 100
-			hidden_effect = {
-				set_country_flag = YUN_position_secured
+		fixed_random_seed = no
+	}
+	YUN_introminigame_switch_sides_decision = {
+		allowed = { always = no }
+		visible = {
+			if = {
+				limit = { has_country_flag = YUN_introminigame_playing_as_KMT_flag }
+				check_variable = { YUN_introminigame_UPC_soldiers_var > YUN_introminigame_KMT_soldiers_var }
 			}
+			else = {
+				check_variable = { YUN_introminigame_UPC_soldiers_var < YUN_introminigame_KMT_soldiers_var }
+			}
+		}
+		icon = {
+			key = lkmt_flag
+			trigger = {
+				NOT = { has_country_flag = YUN_introminigame_playing_as_KMT_flag }
+			}
+		}
+		icon = {
+			key = UPC_PIP_flag
+			trigger = {
+				has_country_flag = YUN_introminigame_playing_as_KMT_flag
+			}
+		}
+		priority = 85 #Should be at the top
+		ai_will_do = { base = 100 }
+		fire_only_once = no
+		days_re_enable = 30 #Prevent the AI from spamming this.
+		cost = 0 #You can do this as soon as the requirements are met.
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_introminigame_switch_sides_decision"
+			if = {
+				limit = { has_country_flag = YUN_introminigame_playing_as_KMT_flag }
+				custom_effect_tooltip = YUN_introminigame_switch_sides_to_UPC_tt
+				clr_country_flag = YUN_introminigame_playing_as_KMT_flag
+			}
+			else = {
+				custom_effect_tooltip = YUN_introminigame_switch_sides_to_KMT_tt
+				set_country_flag = YUN_introminigame_playing_as_KMT_flag
+			}
+		}
+		fixed_random_seed = no
+	}
+	YUN_introminigame_commence_the_assault_decision = {
+		allowed = { always = no }
+		available = {
+			has_country_flag = YUN_introminigame_war_preparation_complete_flag
+			if = {
+				limit = { has_country_flag = YUN_introminigame_playing_as_KMT_flag }
+				YUN_introgame_KMT_overwhelmingly_winning_trigger = yes
+			}
+			else = {
+				YUN_introgame_UPC_overwhelmingly_winning_trigger = yes
+			}
+		}
+		icon = GFX_decision_trumpet
+		ai_will_do = { base = 0 } #We want the AI to wait until the last minute so they shouldn't take this
+		fire_only_once = yes
+		days_remove = 14
+		cost = 0 #You can do this as soon as the requirements are met.
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_introminigame_commence_the_assault_decision"
+			if = {
+				limit = { has_country_flag = YUN_introminigame_playing_as_KMT_flag }
+				country_event = YUN.introgame.102 #The Zhaotong Incident
+			}
+			else = {
+				country_event = YUN.introgame.101 #The Yunnan Army Overruns Guizhou
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_introminigame_commence_the_assault_decision"
+		}
+		fixed_random_seed = no
+	}
+	YUN_introminigame_accelerate_our_buildup_decision = {
+		allowed = { always = no }
+		icon = GFX_decision_eng_trade_unions_support
+		ai_will_do = { base = 0 }
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 14
+		cost = 25
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_introminigame_accelerate_our_buildup_decision"
+			if = {
+				limit = { has_country_flag = YUN_introminigame_playing_as_KMT_flag }
+				YUN_introminigame_add_KMT_small_effect = yes
+			}
+			else = {
+				YUN_introminigame_add_UPC_small_effect = yes
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_introminigame_accelerate_our_buildup_decision"
+		}
+		fixed_random_seed = no
+	}
+	YUN_introminigame_develop_our_battleplan_decision = {
+		allowed = { always = no }
+		icon = GFX_decision_binoculars
+		ai_will_do = { base = 0 }
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 14
+		custom_cost_trigger = {
+			NOT = { command_power < 25 }
+		}
+		custom_cost_text = CP_25
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_introminigame_develop_our_battleplan_decision"
+			hidden_effect = {
+				add_command_power = -25
+			}
+			if = {
+				limit = { has_country_flag = YUN_introminigame_playing_as_KMT_flag }
+				YUN_introminigame_add_KMT_small_effect = yes
+			}
+			else = {
+				YUN_introminigame_add_UPC_small_effect = yes
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_introminigame_develop_our_battleplan_decision"
+		}
+		fixed_random_seed = no
+	}
+	YUN_introminigame_win_the_war_of_wills_decision = {
+		allowed = { always = no }
+		icon = GFX_decision_eng_propaganda_campaigns
+		ai_will_do = { base = 0 }
+		fire_only_once = no
+		days_re_enable = 0
+		days_remove = 14
+		custom_cost_trigger = {
+			has_war_support > 0.03
+		}
+		custom_cost_text = war_support3
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_introminigame_win_the_war_of_wills_decision"
+			hidden_effect = {
+				add_war_support = -0.03
+			}
+			if = {
+				limit = { has_country_flag = YUN_introminigame_playing_as_KMT_flag }
+				YUN_introminigame_add_KMT_small_effect = yes
+			}
+			else = {
+				YUN_introminigame_add_UPC_small_effect = yes
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_introminigame_win_the_war_of_wills_decision"
 		}
 		fixed_random_seed = no
 	}
 }
 
-### decisions to buy equipment
-
-YUN_Buying_artillery_decisions = {
-	YUN_buying_arty = {
-		icon = GFX_decision_ger_military_buildup
-
-		allowed = { always = no } #activated by YUN_Purchase_Artillery
-
-		available = {
-			num_of_military_factories < 11
+RKT_zeal_decision_category = {
+	RKT_embrace_human_elan = {
+		allowed = { tag = YUN }
+		available = { has_completed_focus = YUN_the_way_of_the_youth }
+		visible = {
+			OR = {
+				tag = RKT
+				is_subject_of = RKT
+			}
 		}
-
-		cost = 50
-		days_remove = 30
-		days_re_enable = 60
-
+		icon = GFX_decision_trumpet
 		ai_will_do = {
 			base = 0
 			modifier = {
-				add = 100
-				has_equipment = { artillery_equipment < 0 }
+				add = 50
+				has_political_power > 150
 			}
 		}
-
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 25
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete RKT_embrace_human_elan"
+			YUN_WPC_medium_effect = yes
+			if = {
+				limit = { tag = RKT }
+				RKT_ctr_zeal_medium_effect = yes
+			}
+		}
+		days_remove = 180
+		modifier = {
+			army_attack_factor = 0.10
+		}
 		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_buying_arty"
-			add_equipment_to_stockpile = {
-				type = artillery_equipment
-				amount = 100
+			log = "[GetLogRoot]: Decision remove RKT_embrace_human_elan"
+			add_war_support = -0.05
+		}
+		fixed_random_seed = no
+	}
+	RKT_political_terror = {
+		allowed = { tag = YUN }
+		available = { has_completed_focus = YUN_our_nation_supreme_and_sacred }
+		visible = {
+			OR = {
+				tag = RKT
+				is_subject_of = RKT
 			}
-			hidden_effect = {
-				if = {
-					limit = { num_of_military_factories > 10 }
-					remove_targeted_decision = { decision = YUN_buying_arty target = FROM }
+		}
+		icon = GFX_decision_spr_political_assassination
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 10
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete RKT_political_terror"
+			YUN_BSS_medium_effect = yes
+			if = {
+				limit = { tag = RKT }
+				RKT_sub_zeal_medium_effect = yes
+			}
+		}
+		days_remove = 180
+
+		modifier = {
+			party_popularity_stability_factor = 0.10
+			operative_death_on_capture_chance = 1
+			agency_upgrade_time = -0.25
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove RKT_political_terror"
+		}
+		fixed_random_seed = no
+	}
+	RKT_mobilising_the_youth = {
+		allowed = { tag = YUN }
+		available = { has_completed_focus = YUN_concern_for_the_rural_masses }
+		visible = {
+			OR = {
+				tag = RKT
+				is_subject_of = RKT
+			}
+		}
+		icon = GFX_decision_lkmt_flag
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete RKT_mobilising_the_youth"
+			YUN_CEC_medium_effect = yes
+			if = {
+				limit = { tag = RKT }
+				RKT_add_zeal_medium_effect = yes
+			}
+		}
+		days_remove = 180
+		modifier = {
+			monthly_population = 0.50
+			weekly_manpower = 1500
+			war_support_weekly = 0.005
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove RKT_mobilising_the_youth"
+		}
+		fixed_random_seed = no
+	}
+	RKT_reform_the_administration = {
+		allowed = { tag = YUN }
+		available = { has_completed_focus = YUN_attract_nationalist_technocrats }
+		visible = {
+			OR = {
+				tag = RKT
+				is_subject_of = RKT
+			}
+		}
+		icon = GFX_decision_hand_out
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete RKT_reform_the_administration"
+			YUN_PSC_medium_effect = yes
+			if = {
+				limit = { tag = RKT }
+				RKT_sub_zeal_medium_effect = yes
+			}
+			every_owned_state = {
+				limit = {
+					has_resistance = yes
+					is_controlled_by = ROOT
 				}
+				add_resistance = -5
+				add_compliance = 10
 			}
+		}
+		days_remove = 180
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove RKT_reform_the_administration"
+			every_owned_state = {
+				limit = {
+					has_resistance = yes
+					is_controlled_by = ROOT
+				}
+				add_compliance = -10
+			}
+		}
+		fixed_random_seed = no
+	}
+	RKT_shanghai_connections = {
+		allowed = { tag = YUN }
+		available = { has_completed_focus = YUN_enacting_tutelage_of_the_masses }
+		visible = {
+			OR = {
+				tag = RKT
+				is_subject_of = RKT
+			}
+		}
+		icon = GFX_decision_cash_flow
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete RKT_shanghai_connections"
+			add_offsite_building = {
+				type = arms_factory
+				level = 1
+			}
+			YUN_CCC_medium_effect = yes
+			if = {
+				limit = { tag = RKT }
+				RKT_add_zeal_medium_effect = yes
+			}
+		}
+		days_remove = 180
+		modifier = {
+			political_power_cost = 0.25
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove RKT_shanghai_connections"
+			add_offsite_building = {
+				type = arms_factory
+				level = -1
+			}
+		}
+		fixed_random_seed = no
+	}
+	RKT_spiritual_warfare = {
+		allowed = { tag = YUN }
+		available = { has_completed_focus = YUN_a_cultural_revival }
+		visible = {
+			OR = {
+				tag = RKT
+				is_subject_of = RKT
+			}
+		}
+		icon = GFX_decision_eng_blackshirt_march
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete RKT_spiritual_warfare"
+			YUN_CCC_small_effect = yes
+			if = {
+				limit = { tag = RKT }
+				RKT_add_zeal_small_effect = yes
+			}
+		}
+		days_remove = 180
+		modifier = {
+			research_speed_factor = 0.10
+			army_org_factor = 0.10
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove RKT_spiritual_warfare"
+		}
+		fixed_random_seed = no
+	}
+	YUN_embrace_sanminism = {
+		allowed = { tag = YUN }
+		available = { has_completed_focus = YUN_our_part_in_the_national_revolution }
+		visible = {
+			OR = {
+				tag = RKT
+				is_subject_of = RKT
+			}
+		}
+		icon = GFX_decision_CHI_focus
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 25
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_embrace_sanminism"
+			YUN_3AR_large_effect = yes
+		}
+		days_remove = 180
+		modifier = {
+			production_speed_industrial_complex_factor = 0.10
+			research_speed_factor = 0.07
+			political_power_cost = 0.15
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_embrace_sanminism"
+		}
+		fixed_random_seed = no
+	}
+	YUN_publicise_landlord_transgressions = {
+		allowed = { tag = YUN }
+		available = { has_completed_focus = YUN_humbling_the_kingmakers }
+		visible = {
+			OR = {
+				tag = RKT
+				is_subject_of = RKT
+			}
+		}
+		icon = GFX_decision_eng_trade_unions_support
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_publicise_landlord_transgressions"
+			YUN_3AL_medium_effect = yes
+		}
+		days_remove = 180
+		modifier = {
+			political_power_gain = 0.15
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_publicise_landlord_transgressions"
+			add_stability = -0.05
+		}
+		fixed_random_seed = no
+	}
+	YUN_rally_the_whampoa_cliques = {
+		allowed = { tag = YUN }
+		available = { has_completed_focus = YUN_a_combined_political_military_offensive }
+		visible = {
+			OR = {
+				tag = RKT
+				is_subject_of = RKT
+			}
+		}
+		icon = GFX_decision_lkmt_flag
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_rally_the_whampoa_cliques"
+			YUN_CEC_medium_effect = yes
+		}
+		days_remove = 180
+		modifier = {
+			army_attack_factor = 0.10
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_rally_the_whampoa_cliques"
+			add_war_support = -0.05
+		}
+		fixed_random_seed = no
+	}
+	YUN_cultivate_business_ties = {
+		allowed = { tag = YUN }
+		available = { has_completed_focus = YUN_cleaning_out_the_rot_and_decadence }
+		visible = {
+			OR = {
+				tag = RKT
+				is_subject_of = RKT
+			}
+		}
+		icon = GFX_decision_cash_flow
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_cultivate_business_ties"
+			add_offsite_building = {
+				type = arms_factory
+				level = 1
+			}
+			YUN_HRY_medium_effect = yes
+		}
+		days_remove = 180
+		modifier = {
+			political_power_cost = 0.20
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_cultivate_business_ties"
+			add_offsite_building = {
+				type = arms_factory
+				level = -1
+			}
+		}
+		fixed_random_seed = no
+	}
+	YUN_rallying_the_veterans_of_revolution = {
+		allowed = { tag = YUN }
+		available = { has_completed_focus = YUN_rallying_the_legacy_of_the_southwest }
+		visible = {
+			OR = {
+				tag = RKT
+				is_subject_of = RKT
+			}
+		}
+		icon = GFX_decision_eng_propaganda_campaigns
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 25
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_rallying_the_veterans_of_revolution"
+			YUN_PSC_large_effect = yes
+		}
+		days_remove = 180
+		modifier = {
+			consumer_goods_factor = 0.15
+			skill_bonus_factor = 0.15
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_rallying_the_veterans_of_revolution"
+			army_experience = 50
 		}
 		fixed_random_seed = no
 	}
 }
 
-YUN_Buying_fighters_decisions = {
-	YUN_buying_fighters = {
-		icon = GFX_decision_generic_air
+LKT_decision_category = {
+	YUN_appease_the_radicals = {
+		allowed = { always = no }
+		available = {
+			has_completed_focus = YUN_two_model_zhus
+		}
+		icon = GFX_decision_peace_dove
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
 
-		allowed = { always = no } #activated by YUN_acquire_new_fighters
+		target_trigger = {
+			is_subject_of = CHI
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_appease_the_radicals"
+			add_stability = 0.10
+			YUN_3AR_medium_effect = yes
+		}
+		days_remove = 180
+		modifier = {
+			political_power_cost = 0.15
+		}
+		remove_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_appease_the_radicals"
+			YUN_3AL_small_effect = yes
+			YUN_CEC_small_effect = yes
+		}
+		fixed_random_seed = no
+	}
+	YUN_hold_mass_rallies = {
+		allowed = { always = no }
+		available = {
+			has_completed_focus = YUN_two_model_zhus
+		}
+		icon = GFX_decision_POL_organize_strike_two
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+
+		target_trigger = {
+			is_subject_of = CHI
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_hold_mass_rallies"
+			YUN_3AL_large_effect = yes
+			add_war_support = 0.05
+		}
+		days_remove = 180
+		modifier = {
+			political_power_cost = 0.15
+			weekly_manpower = 9000
+		}
+		remove_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_hold_mass_rallies"
+			add_stability = -0.05
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_invigorate_the_youth_leagues = {
+		allowed = { always = no }
+		available = {
+			has_completed_focus = YUN_relief_to_the_laobaixing
+		}
+		icon = GFX_decision_generic_military
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+
+		target_trigger = {
+			is_subject_of = CHI
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_invigorate_the_youth_leagues"
+			YUN_CEC_large_effect = yes
+		}
+		days_remove = 180
+		modifier = {
+			experience_gain_army = 0.15
+			war_support_weekly = 0.005
+		}
+		remove_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_invigorate_the_youth_leagues"
+		}
+		fixed_random_seed = no
+	}
+	YUN_promoting_reformist_continuity = {
+		allowed = { always = no }
+		available = {
+			has_completed_focus = YUN_a_combined_political_military_offensive
+		}
+		icon = GFX_decision_generic_speech
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+
+		target_trigger = {
+			is_subject_of = CHI
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_promoting_reformist_continuity"
+			YUN_HRY_medium_effect = yes
+			add_stability = 0.05
+		}
+		days_remove = 180
+		modifier = {
+			political_power_cost = 0.10
+		}
+		remove_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_promoting_reformist_continuity"
+		}
+		fixed_random_seed = no
+	}
+	YUN_harkening_back_to_our_legacy = {
+		allowed = { always = no }
+		available = {
+			has_completed_focus = YUN_rallying_the_legacy_of_the_southwest
+		}
+		icon = GFX_decision_eng_propaganda_campaigns
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+
+		target_trigger = {
+			is_subject_of = CHI
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 25
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_harkening_back_to_our_legacy"
+			YUN_PSC_medium_effect = yes
+		}
+		days_remove = 180
+		modifier = {
+			army_org_regain = 0.05
+			army_morale_factor = 0.05
+		}
+		remove_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_harkening_back_to_our_legacy"
+		}
+		fixed_random_seed = no
+	}
+}
+
+UPC_enthusiasm_decision_category = {
+	YUN_expand_rural_education_programmes_decision = {
+		allowed = { tag = YUN }
+		icon = GFX_decision_generic_agriculture
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_expand_rural_education_programmes_decision"
+			YUN_YCD_medium_effect = yes
+			if = {
+				limit = { tag = UPC }
+				UPC_add_enthusiasm_medium_effect = yes
+			}
+		}
+		days_remove = 180
+		modifier = {
+			consumer_goods_factor = -0.05
+			research_speed_factor = 0.05
+			political_power_cost = 0.15
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_expand_rural_education_programmes_decision"
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_forging_the_minds_of_tomorrow_decision = {
+		allowed = { tag = YUN }
+		icon = GFX_decision_generic_research
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_forging_the_minds_of_tomorrow_decision"
+			YUN_CMS_medium_effect = yes
+			if = {
+				limit = { tag = UPC }
+				UPC_add_enthusiasm_medium_effect = yes
+			}
+		}
+		days_remove = 180
+		modifier = {
+			research_speed_factor = 0.15
+			political_power_cost = 0.20
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_forging_the_minds_of_tomorrow_decision"
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_businesses_with_the_gentry_decision = {
+		allowed = { tag = YUN }
+		icon = GFX_decision_hand_out
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_businesses_with_the_gentry_decision"
+			YUN_YCC_medium_effect = yes
+			if = {
+				limit = { tag = UPC }
+				UPC_ctr_enthusiasm_medium_effect = yes
+			}
+		}
+		days_remove = 180
+		modifier = {
+			production_speed_industrial_complex_factor = 0.1
+			production_speed_arms_factory_factor = 0.1
+			political_power_cost = 0.20
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_businesses_with_the_gentry_decision"
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_tutelage_for_local_self_governance_decision = {
+		allowed = { tag = YUN }
+		icon = GFX_decision_scales
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_tutelage_for_local_self_governance_decision"
+			YUN_PGP_medium_effect = yes
+			add_stability = 0.03
+			if = {
+				limit = { tag = UPC }
+				UPC_ctr_enthusiasm_medium_effect = yes
+			}
+		}
+		days_remove = 180
+		modifier = {
+			political_power_cost = 0.05
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_tutelage_for_local_self_governance_decision"
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_the_stewards_of_efficiency_decision = {
+		allowed = { tag = YUN }
+		icon = GFX_decision_generic_political_discourse
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_the_stewards_of_efficiency_decision"
+			YUN_TJY_medium_effect = yes
+			every_owned_state = {
+				limit = {
+					has_resistance = yes
+					is_controlled_by = ROOT
+				}
+				add_resistance = -5
+				add_compliance = 5
+			}
+			if = {
+				limit = { tag = UPC }
+				UPC_sub_enthusiasm_medium_effect = yes
+			}
+		}
+		days_remove = 180
+		modifier = {
+			party_popularity_stability_factor = 0.05
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_the_stewards_of_efficiency_decision"
+			every_owned_state = {
+				limit = {
+					has_resistance = yes
+					is_controlled_by = ROOT
+				}
+				add_compliance = -5
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_blank_cheque_for_the_mines_decision = {
+		allowed = { tag = YUN }
+		icon = GFX_decision_ger_mefo_bills
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_blank_cheque_for_the_mines_decision"
+			YUN_HRY_medium_effect = yes
+			add_offsite_building = {
+				type = industrial_complex
+				level = 1
+			}
+			if = {
+				limit = { tag = UPC }
+				UPC_sub_enthusiasm_medium_effect = yes
+			}
+		}
+		days_remove = 180
+		modifier = {
+			political_power_cost = 0.20
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_blank_cheque_for_the_mines_decision"
+			add_offsite_building = {
+				type = industrial_complex
+				level = -1
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_embrace_our_militarist_reputation_decision = {
+		allowed = { tag = YUN }
+		icon = GFX_decision_generic_military
+		ai_will_do = {
+			base = 0
+			modifier = {
+				add = 50
+				has_political_power > 150
+			}
+		}
+		fire_only_once = no
+		days_re_enable = 0
+		cost = 20
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_embrace_our_militarist_reputation_decision"
+			YUN_LYC_medium_effect = yes
+			if = {
+				limit = { tag = UPC }
+				UPC_sub_enthusiasm_medium_effect = yes
+			}
+		}
+		days_remove = 180
+		modifier = {
+			experience_gain_army = 0.15
+			war_support_weekly = 0.001
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_embrace_our_militarist_reputation_decision"
+		}
+		fixed_random_seed = no
+	}
+}
+
+########################################
+######- Section 02: Early game - #######
+########################################
+
+political_actions = {
+	YUN_support_inc = {
+		icon = GFX_decision_trumpet
+
+		allowed = { always = no } #activated by effect
 
 		available = {
-			has_design_based_on = small_plane_airframe
-			num_of_military_factories < 11
-		}
-
-		cost = 50
-		days_remove = 30
-		days_re_enable = 60
-
-		ai_will_do = {
-			base = 50
-			modifier = {
-				factor = 2
-				has_equipment = { small_plane_airframe < 1 }
+			INC = {
+				has_war_with = GEA
+				owns_state = 286
+				is_in_faction = no
 			}
 		}
 
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_buying_fighters"
-			add_equipment_to_stockpile = { type = small_plane_airframe amount = 25 }
-			hidden_effect = {
-				if = {
-					limit = { num_of_military_factories > 10 }
-					remove_targeted_decision = { decision = YUN_buying_fighters target = FROM }
-				}
-			}
-		}
-		fixed_random_seed = no
-	}
-}
-
-### Sending guns to Indochina
-
-YUN_helping_indochinese_revolt = {
-	YUN_Help_Indochina_with_guns = {
-		icon = GFX_decision_generic_air
-		allowed = {
-			tag = YUN
-		}
 		visible = {
-			country_exists = INC
 			has_global_flag = GEA_Indochina_Uprising_Fired
 		}
-		custom_cost_trigger = {
-			NOT = { has_equipment = { infantry_equipment < 2000 } }
+
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_support_inc"
+			add_ideas = YUN_support_inc_idea
+			add_war_support = 0.02
+			GEA = {
+				country_event = { id = YUN.earlygame.009 days = 7 }
+			}
 		}
-		custom_cost_text = 2000_guns
-		days_remove = 15
-		days_re_enable = 180
+		fixed_random_seed = no
+	}
+}
+
+YUN_GXC_war_decision_category = {
+	YUN_the_course_of_the_yunnan_guangxi_war_mission = {
+		allowed = { always = no }
+		available = {
+			controls_state = 592 #Guangzhou
+		}
+		cancel_trigger = {
+			OR = {
+				has_war = no
+				has_war_with = JAP
+			}
+		}
+		icon = GFX_decision_trumpet
+		is_good = no
+		days_mission_timeout = 60
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_the_course_of_the_yunnan_guangxi_war_mission"
+			country_event = YUN.earlygame.802 #The Fall of Guangzhou
+		}
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout YUN_the_course_of_the_yunnan_guangxi_war_mission"
+			if = {
+				limit = {
+					controls_state = 594 #Nanning
+				}
+				YUN_GXC_increase_morale_effect = yes
+				add_war_support = 0.05 #Much harder to gain war support than it is to lose it. This is ordered so the tooltip will always be accurate - WS is added after the spirit changes.
+				if = {
+					limit = { has_stability < 0.60 }
+					add_stability = 0.05
+				}
+			}
+			else = {
+				YUN_GXC_decrease_morale_effect = yes
+				add_war_support = -0.10
+				if = {
+					limit = { has_war_support < 0.40 }
+					add_stability = -0.10
+				}
+			}
+			activate_mission = YUN_the_course_of_the_yunnan_guangxi_war_mission
+		}
+		cancel_effect = {
+			log = "[GetLogRoot]: Decision cancel YUN_the_course_of_the_yunnan_guangxi_war_mission"
+			hidden_effect = {
+				YUN_GXC_clear_mechanic_effect = yes
+			}
+		}
+		fixed_random_seed = no
+	}
+	YUN_begin_secret_surrender_negotiations_decision = {
+		allowed = { tag = YUN }
+		visible = {
+			is_subject = no
+			has_active_mission = YUN_the_course_of_the_yunnan_guangxi_war_mission
+			all_enemy_country = {
+				is_chinese_or_potential_chinese_tag = yes
+				OR = {
+					owns_state = 594
+					is_ally_with = var:594.owner
+				}
+			}
+		}
+		available = {
+			OR = {
+				has_idea = YUN_GXC_war_morale_idea_1
+				has_idea = YUN_GXC_war_morale_idea_2
+				has_idea = YUN_GXC_war_morale_idea_3
+				NOT = {
+					OR = {
+						controls_province = 1114 #Mengzi
+						controls_province = 1319 #Kunming
+						controls_province = 5072 #Zhaotong
+						controls_province = 7965 #Dali
+						controls_province = 10413 #Jinghong
+					}
+				}
+			}
+		}
+
+		fire_only_once = yes
 		ai_will_do = {
-			factor = 1
+			factor = 100 #AI will always begin negotiations as soon as it becomes available unless they are still at level 3
+
 			modifier = {
 				factor = 0
-				has_equipment = { infantry_equipment < 2000 }
-			}
-			modifier = {
-				factor = 0
-				has_war = yes
+				has_idea = YUN_GXC_war_morale_idea_3
+				AND = {
+					controls_province = 1114 #Mengzi
+					controls_province = 1319 #Kunming
+					controls_province = 5072 #Zhaotong
+					controls_province = 7965 #Dali
+					controls_province = 10413 #Jinghong
+				}
 			}
 		}
-		remove_effect = {
-			log = "[GetLogRoot]: Decision remove YUN_Help_Indochina_with_guns"
-			send_equipment = { target = INC type = infantry_equipment amount = 2000 }
-			INC = {
-				country_event = yun.101
-			}
-			army_experience = 10
-		}
+
+		icon = GFX_decision_generic_political_discourse
 		complete_effect = {
-			log = "[GetLogRoot]: Decision complete YUN_Help_Indochina_with_guns"
-			add_opinion_modifier = {
-				target = INC modifier = KR_supported_us
+			log = "[GetLogRoot]: Decision complete YUN_begin_secret_surrender_negotiations_decision"
+			if = {
+				limit = { var:594.owner = { is_subject = no } }
+				var:594.owner = { country_event = { id = YUN.earlygame.810 days = 1 } } #Plotters in Kunming?
 			}
-			reverse_add_opinion_modifier = {
-				target = INC modifier = KR_supported_us
+			else = {
+				var:594.owner = { overlord = { country_event = { id = YUN.earlygame.810 days = 1 } } } #Plotters in Kunming?
 			}
+		}
+		fixed_random_seed = no
+	}
+	YUN_accept_yunnans_surrender_decision = {
+		allowed = { always = no } #Targeted decision
+		visible = {
+			YUN = {
+				is_subject = no
+				has_country_flag = YUN_kunming_conspiracy_flag
+				has_active_mission = YUN_the_course_of_the_yunnan_guangxi_war_mission
+				all_enemy_country = {
+					is_chinese_or_potential_chinese_tag = yes
+					OR = {
+						owns_state = 594
+						is_ally_with = var:594.owner
+					}
+				}
+			}
+		}
+
+		fire_only_once = yes
+		ai_will_do = { factor = 100 } #AI will always accept the moment it becomes available.
+
+		icon = GFX_decision_generic_political_discourse
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_accept_yunnans_surrender_decision"
+			YUN = { country_event = { id = YUN.earlygame.811 days = 1 } } #[FROM.Capital.GetCapitalVictoryPointName] Presents its Terms
 		}
 		fixed_random_seed = no
 	}
 }
 
-### decisions to integrate non-chinese states
-YUN_integrating_areas = {
-	YUN_begin_integrating_kachin = {
-		icon = GFX_decision_generic_flags
+########################################
+######- Section 03: Mid game - #########
+########################################
 
-		allowed = { always = no } #activated by YUN_the_Society_of_Bamboo_King
+YUN_grand_southern_reconstruction_decision_category = {
+	YUN_expand_gejiu_mining = {
+		icon = GFX_decision_aluminium
+
+		allowed = { always = no } #manually activated
 
 		available = {
-			controls_state = FROM
+			controls_state = 325
+			num_of_civilian_factories_available_for_projects > 0
 		}
 
-		visible = {
-			owns_state = FROM
-		}
+		visible = { owns_state = 325 }
 
 		cost = 30
-		days_remove = 15
+		days_remove = 90
 		fire_only_once = yes
-		state_target = yes
 
-		ai_will_do = { factor = 10000 }
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
 
 		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_begin_integrating_kachin"
-			FROM = { YUN_add_thirty_percent_integration = yes }
-			1111 = { YUN_add_thirty_percent_integration = yes }
-			country_event = { id = yun.300 days = 3 }
-			activate_targeted_decision = { decision = YUN_status_of_the_kachin_people target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_status_of_the_kachin_people = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 15
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_status_of_the_kachin_people"
-			FROM = { YUN_add_thirty_percent_integration = yes }
-			1111 = { YUN_add_thirty_percent_integration = yes }
-			country_event = { id = yun.301 days = 3 }
-			activate_targeted_decision = { decision = YUN_legislative_measures_to_appease_the_kachin target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_legislative_measures_to_appease_the_kachin = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 15
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_legislative_measures_to_appease_the_kachin"
-			FROM = { YUN_add_thirty_percent_integration = yes }
-			1111 = { YUN_add_thirty_percent_integration = yes }
-			country_event = { id = yun.302 days = 3 }
-			activate_targeted_decision = { decision = YUN_investments_in_kachin target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_investments_in_kachin = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			num_of_civilian_factories_available_for_projects > 2
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 15
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		modifier = {
-			civilian_factory_use = 3
-		}
-
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_investments_in_kachin"
-			hidden_effect = {
-				if = {
-					limit = { check_variable = { yun_kachin_angry > 1 } }
-					set_country_flag = YUN_Kachin_revolt
+			log = "[GetLogRoot]: Decision remove YUN_expand_gejiu_mining"
+			325 = {
+				add_resource = {
+					type = aluminium
+					amount = 8
 				}
-				clear_variable = yun_kachin_angry
 			}
 		}
+		fixed_random_seed = no
+	}
+
+	YUN_kunming_cement_factory = {
+		icon = GFX_decision_cement_mixer
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			controls_state = 325
+			num_of_civilian_factories_available_for_projects > 0
+		}
+
+		visible = { owns_state = 325 }
+
+		cost = 30
+		days_remove = 90
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
 
 		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_investments_in_kachin"
-			add_state_core = FROM
-			add_state_core = 1111
-			FROM = {
+			log = "[GetLogRoot]: Decision remove YUN_kunming_cement_factory"
+			325 = {
 				add_extra_state_shared_building_slots = 1
 				add_building_construction = {
-					type = infrastructure
+					type = industrial_complex
 					level = 1
 					instant_build = yes
 				}
-				YUN_remove_integration = yes
 			}
-			1111 = {
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_modernised_smelting = {
+		icon = GFX_decision_steel
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			controls_state = 325
+			num_of_civilian_factories_available_for_projects > 0
+		}
+
+		visible = { owns_state = 325 }
+
+		cost = 30
+		days_remove = 90
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_modernised_smelting"
+			325 = {
+				add_resource = {
+					type = steel
+					amount = 14
+				}
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_purchasing_american_machinery = {
+		icon = GFX_decision_give_cash
+
+		allowed = { always = no } #manually activated
+
+		cost = 30
+		days_remove = 90
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_purchasing_american_machinery"
+			add_tech_bonus = {
+				name = YUN_purchasing_american_machinery
+				bonus = 1
+				uses = 2
+				category = construction_tech
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_yaolong_electric_station = {
+		icon = GFX_decision_electrify
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			controls_state = 816
+			num_of_civilian_factories_available_for_projects > 0
+		}
+
+		visible = { owns_state = 816 }
+
+		cost = 30
+		days_remove = 90
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_yaolong_electric_station"
+			816 = {
 				add_extra_state_shared_building_slots = 1
 				add_building_construction = {
-					type = infrastructure
+					type = industrial_complex
 					level = 1
 					instant_build = yes
 				}
-				YUN_remove_integration = yes
-			}
-			hidden_effect = {
-				remove_targeted_decision = { decision = YUN_begin_integrating_kachin target = FROM }
-				remove_targeted_decision = { decision = YUN_status_of_the_kachin_people target = FROM }
-				remove_targeted_decision = { decision = YUN_legislative_measures_to_appease_the_kachin target = FROM }
-				remove_targeted_decision = { decision = YUN_investments_in_kachin target = FROM }
 			}
 		}
 		fixed_random_seed = no
 	}
-	YUN_integrating_wa_states_and_kokang = {
-		icon = GFX_decision_generic_flags
 
-		allowed = { always = no } #activated by YUN_the_Society_of_Bamboo_King
+	YUN_charcoal_kiln = {
+		icon = GFX_decision_generic_factory
+
+		allowed = { always = no } #manually activated
 
 		available = {
-			controls_state = FROM
+			controls_state = 325
+			num_of_civilian_factories_available_for_projects > 0
 		}
 
-		visible = {
-			owns_state = FROM
-		}
+		visible = { owns_state = 325 }
 
 		cost = 30
-		days_remove = 15
+		days_remove = 90
 		fire_only_once = yes
-		state_target = yes
 
-		ai_will_do = { factor = 10000 }
+		ai_will_do = { factor = 100 }
 
 		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_integrating_wa_states_and_kokang"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			country_event = { id = yun.304 days = 3 }
-			activate_targeted_decision = { decision = YUN_integrating_hsenwi target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_integrating_hsenwi = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 25
-		days_remove = 15
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_integrating_hsenwi"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			country_event = { id = yun.305 days = 3 }
-			activate_targeted_decision = { decision = YUN_integrating_mongmit_taupeng target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_integrating_mongmit_taupeng = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 25
-		days_remove = 15
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_integrating_mongmit_taupeng"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			country_event = { id = yun.306 days = 3 }
-			activate_targeted_decision = { decision = YUN_integrating_hsipaw target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_integrating_hsipaw = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 25
-		days_remove = 15
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_integrating_hsipaw"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			country_event = { id = yun.307 days = 3 }
-			activate_targeted_decision = { decision = YUN_integrating_mongpan_and_mawkmai target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_integrating_mongpan_and_mawkmai = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 25
-		days_remove = 15
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_integrating_mongpan_and_mawkmai"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			country_event = { id = yun.308 days = 3 }
-			activate_targeted_decision = { decision = YUN_integrating_pinlaung_and_the_southwest target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_integrating_pinlaung_and_the_southwest = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 25
-		days_remove = 15
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_integrating_pinlaung_and_the_southwest"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			country_event = { id = yun.309 days = 3 }
-			activate_targeted_decision = { decision = YUN_integrate_hsatung_and_the_south target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_integrate_hsatung_and_the_south = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 25
-		days_remove = 15
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_integrate_hsatung_and_the_south"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			country_event = { id = yun.310 days = 3 }
-			activate_targeted_decision = { decision = YUN_integrate_Mongmau_and_mehsakun target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_integrate_Mongmau_and_mehsakun = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 25
-		days_remove = 15
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_integrate_Mongmau_and_mehsakun"
-			hidden_effect = {
-				if = {
-					limit = { check_variable = { yun_shan_angry > 3 } }
-					set_country_flag = YUN_Shan_revolt_set
+			log = "[GetLogRoot]: Decision remove YUN_charcoal_kiln"
+			325 = {
+				add_extra_state_shared_building_slots = 1
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
 				}
-				clear_variable = yun_shan_angry
-			}
-		}
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_integrate_Mongmau_and_mehsakun"
-			add_state_core = FROM
-			FROM = { YUN_remove_integration = yes }
-			country_event = { id = yun.311 days = 3 }
-			activate_targeted_decision = { decision = YUN_invest_in_the_northern_shan_states target = FROM }
-			hidden_effect = {
-				remove_targeted_decision = { decision = YUN_integrating_wa_states_and_kokang target = FROM }
-				remove_targeted_decision = { decision = YUN_integrating_hsenwi target = FROM }
-				remove_targeted_decision = { decision = YUN_integrating_mongmit_taupeng target = FROM }
-				remove_targeted_decision = { decision = YUN_integrating_hsipaw target = FROM }
-				remove_targeted_decision = { decision = YUN_integrating_mongpan_and_mawkmai target = FROM }
-				remove_targeted_decision = { decision = YUN_integrating_pinlaung_and_the_southwest target = FROM }
-				remove_targeted_decision = { decision = YUN_integrate_hsatung_and_the_south target = FROM }
-				remove_targeted_decision = { decision = YUN_integrate_Mongmau_and_mehsakun target = FROM }
 			}
 		}
 		fixed_random_seed = no
 	}
-	YUN_invest_in_the_northern_shan_states = {
-		icon = GFX_decision_POL_looming_peasants_strike
-		allowed = { always = no } #activated by the previous decision
+
+	YUN_arsenal_subsidies = {
+		icon = GFX_decision_generic_industry
+
+		allowed = { always = no } #manually activated
 
 		available = {
-			num_of_civilian_factories_available_for_projects > 2
-			controls_state = FROM
+			controls_state = 325
+			num_of_civilian_factories_available_for_projects > 0
 		}
 
-		visible = {
-			owns_state = FROM
-		}
+		visible = { owns_state = 325 }
 
-		modifier = {
-			civilian_factory_use = 3
-		}
-
-		cost = 25
-		days_remove = 15
+		cost = 30
+		days_remove = 90
 		fire_only_once = yes
-		state_target = yes
 
-		ai_will_do = { factor = 10000 }
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
 
 		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_invest_in_the_northern_shan_states"
-			FROM = {
+			log = "[GetLogRoot]: Decision remove YUN_arsenal_subsidies"
+			325 = {
+				add_extra_state_shared_building_slots = 1
+				add_building_construction = {
+					type = arms_factory
+					level = 1
+					instant_build = yes
+				}
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_guizhou_brewing_factory = {
+		icon = GFX_decision_generic_factory
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			controls_state = 1051
+			num_of_civilian_factories_available_for_projects > 0
+		}
+
+		visible = { owns_state = 1051 }
+
+		cost = 30
+		days_remove = 90
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_guizhou_brewing_factory"
+			1051 = {
+				add_extra_state_shared_building_slots = 1
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
+				}
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_guangzhou_cement_factory = {
+		icon = GFX_decision_cement_mixer
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			controls_state = 592
+			num_of_civilian_factories_available_for_projects > 0
+		}
+
+		visible = { owns_state = 592 }
+
+		cost = 30
+		days_remove = 90
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_guangzhou_cement_factory"
+			592 = {
+				add_extra_state_shared_building_slots = 1
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
+				}
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_qingyuan_chemical_and_fertiliser_factory = {
+		icon = GFX_decision_generic_factory
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			controls_state = 593
+			num_of_civilian_factories_available_for_projects > 0
+		}
+
+		visible = { owns_state = 593 }
+
+		cost = 30
+		days_remove = 90
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_qingyuan_chemical_and_fertiliser_factory"
+			593 = {
+				add_extra_state_shared_building_slots = 1
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
+				}
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_wengjiang_hydroelectric_plant = {
+		icon = GFX_decision_electrify
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			controls_state = 800
+			num_of_civilian_factories_available_for_projects > 0
+		}
+
+		visible = { owns_state = 800 }
+
+		cost = 30
+		days_remove = 90
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_wengjiang_hydroelectric_plant"
+			800 = {
+				add_extra_state_shared_building_slots = 1
+				add_building_construction = {
+					type = industrial_complex
+					level = 1
+					instant_build = yes
+				}
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_qiongya_rubber = {
+		icon = GFX_decision_rubber
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			controls_state = 591
+			num_of_civilian_factories_available_for_projects > 0
+		}
+
+		visible = { owns_state = 591 }
+
+		cost = 30
+		days_remove = 90
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_qiongya_rubber"
+			591 = {
+				add_resource = {
+					type = rubber
+					amount = 8
+				}
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_guangxi_infrastructure_development_scheme = {
+		icon = GFX_decision_road
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			controls_state = 594
+			num_of_civilian_factories_available_for_projects > 0
+		}
+
+		visible = { owns_state = 594 }
+
+		cost = 30
+		days_remove = 90
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_guangxi_infrastructure_development_scheme"
+			594 = {
 				add_extra_state_shared_building_slots = 1
 				add_building_construction = {
 					type = infrastructure
@@ -662,732 +1711,2261 @@ YUN_integrating_areas = {
 					instant_build = yes
 				}
 			}
-			hidden_effect = {
-				remove_targeted_decision = { decision = YUN_invest_in_the_northern_shan_states target = FROM }
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_guangxi_farmers_bank = {
+		icon = GFX_decision_generic_agriculture
+
+		allowed = { always = no } #manually activated
+
+		available = {
+			controls_state = 1054
+			num_of_civilian_factories_available_for_projects > 0
+		}
+
+		visible = { owns_state = 1054 }
+
+		cost = 30
+		days_remove = 90
+		fire_only_once = yes
+
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_guangxi_farmers_bank"
+			1054 = {
+				increase_state_category_by_one_level = yes
 			}
 		}
 		fixed_random_seed = no
 	}
-	YUN_integrate_all_the_states_starting_with_mo = {
-		icon = GFX_decision_generic_flags
 
-		allowed = { always = no } #activated by YUN_the_Society_of_Bamboo_King
+	YUN_arable_land_development = {
+		icon = GFX_decision_generic_agriculture
 
-		available = {
-			72 = { is_core_of = ROOT }
-			controls_state = FROM
-		}
+		allowed = { always = no } #manually activated
 
-		visible = {
-			owns_state = FROM
-		}
+		available = { controls_state = 325 }
 
-		cost = 25
-		days_remove = 15
+		visible = { owns_state = 325 }
+
+		cost = 30
+		days_remove = 90
 		fire_only_once = yes
-		state_target = yes
 
-		ai_will_do = { factor = 10000 }
+		ai_will_do = { factor = 100 }
 
 		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_integrate_all_the_states_starting_with_mo"
-			FROM = { YUN_add_fifty_percent_integration = yes }
-			activate_targeted_decision = { decision = YUN_invest_in_the_southern_shan_states target = FROM }
+			log = "[GetLogRoot]: Decision remove YUN_arable_land_development"
+			325 = {
+				add_extra_state_shared_building_slots = 2
+			}
 		}
 		fixed_random_seed = no
 	}
-	YUN_invest_in_the_southern_shan_states = {
-		icon = GFX_decision_generic_flags
 
-		allowed = { always = no } #activated by the previous decision
+	YUN_yunnan_cotton_spinning_and_weaving = {
+		icon = GFX_decision_generic_factory
+
+		allowed = { always = no } #manually activated
 
 		available = {
-			num_of_civilian_factories_available_for_projects > 2
-			controls_state = FROM
+			controls_state = 816
+			num_of_civilian_factories_available_for_projects > 0
 		}
 
-		visible = {
-			owns_state = FROM
-		}
-
-		modifier = {
-			civilian_factory_use = 3
-		}
+		visible = { owns_state = 816 }
 
 		cost = 30
-		days_remove = 15
+		days_remove = 90
 		fire_only_once = yes
-		state_target = yes
 
-		ai_will_do = { factor = 10000 }
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
 
 		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_invest_in_the_southern_shan_states"
-			add_state_core = FROM
-			FROM = {
-				YUN_remove_integration = yes
+			log = "[GetLogRoot]: Decision remove YUN_yunnan_cotton_spinning_and_weaving"
+			816 = {
 				add_extra_state_shared_building_slots = 1
 				add_building_construction = {
-					type = infrastructure
+					type = industrial_complex
 					level = 1
 					instant_build = yes
 				}
 			}
-			hidden_effect = {
-				remove_targeted_decision = { decision = YUN_integrate_all_the_states_starting_with_mo target = FROM }
-				remove_targeted_decision = { decision = YUN_invest_in_the_southern_shan_states target = FROM }
-			}
-		}
-		fixed_random_seed = no
-	}
-}
-
-###decisions to colonize Kachin
-YUN_colonizing_areas = {
-	#Kachin
-	YUN_begin_colonize_kachin = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by YUN_Sinitic_Dominance or YUN_align_with_federalists
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 50
-		days_remove = 60
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_begin_colonize_kachin"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			activate_targeted_decision = { decision = YUN_status_of_the_kachin_people_colonisation target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_status_of_the_kachin_people_colonisation = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 50
-		days_remove = 60
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_status_of_the_kachin_people_colonisation"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			activate_targeted_decision = { decision = YUN_legislative_measures_to_sideline_the_kachin target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_legislative_measures_to_sideline_the_kachin = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 15
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_legislative_measures_to_sideline_the_kachin"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			activate_targeted_decision = { decision = YUN_finalize_colonize_in_kachin target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_finalize_colonize_in_kachin = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 50
-		days_remove = 60
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_finalize_colonize_in_kachin"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			set_country_flag = YUN_Kachin_revolt
-			hidden_effect = {
-				remove_targeted_decision = { decision = YUN_begin_colonize_kachin target = FROM }
-				remove_targeted_decision = { decision = YUN_status_of_the_kachin_people_colonisation target = FROM }
-				remove_targeted_decision = { decision = YUN_legislative_measures_to_sideline_the_kachin target = FROM }
-				remove_targeted_decision = { decision = YUN_finalize_colonize_in_kachin target = FROM }
-			}
-		}
-		fixed_random_seed = no
-	}
-	#Shan States
-	YUN_colonize_wa_states_and_kokang = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by YUN_Sinitic_Dominance or YUN_align_with_federalists
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 45
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_colonize_wa_states_and_kokang"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			activate_targeted_decision = { decision = YUN_colonize_hsenwi target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_colonize_hsenwi = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 45
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_colonize_hsenwi"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			activate_targeted_decision = { decision = YUN_colonize_mongmit_taupeng target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_colonize_mongmit_taupeng = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 45
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_colonize_mongmit_taupeng"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			activate_targeted_decision = { decision = YUN_colonize_hsipaw target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_colonize_hsipaw = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 45
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_colonize_hsipaw"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			activate_targeted_decision = { decision = YUN_colonize_mongpan_and_mawkmai target = FROM }
 		}
 		fixed_random_seed = no
 	}
 
-	YUN_colonize_mongpan_and_mawkmai = {
-		icon = GFX_decision_generic_flags
+	YUN_yunnan_water_control = {
+		icon = GFX_decision_hol_drain_water_lines
 
-		allowed = { always = no } #activated by the previous decision
+		allowed = { always = no } #manually activated
 
 		available = {
-			controls_state = FROM
+			controls_state = 325
+			controls_state = 816
+			num_of_civilian_factories_available_for_projects > 0
 		}
 
 		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 45
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_colonize_mongpan_and_mawkmai"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			activate_targeted_decision = { decision = YUN_colonize_pinlaung_and_the_southwest target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_colonize_pinlaung_and_the_southwest = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 45
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_colonize_pinlaung_and_the_southwest"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			activate_targeted_decision = { decision = YUN_colonize_hsatung_and_the_south target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_colonize_hsatung_and_the_south = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 45
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_colonize_hsatung_and_the_south"
-			FROM = { YUN_add_ten_percent_integration = yes }
-			activate_targeted_decision = { decision = YUN_colonize_Mongmau_and_mehsakun target = FROM }
-		}
-		fixed_random_seed = no
-	}
-	YUN_colonize_Mongmau_and_mehsakun = {
-		icon = GFX_decision_generic_flags
-
-		allowed = { always = no } #activated by the previous decision
-
-		available = {
-			controls_state = FROM
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 45
-		fire_only_once = yes
-		state_target = yes
-
-		ai_will_do = { factor = 10000 }
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove YUN_colonize_Mongmau_and_mehsakun"
-			add_state_core = FROM
-			FROM = { YUN_remove_integration = yes }
-			set_country_flag = YUN_Shan_revolt_set
-		}
-		fixed_random_seed = no
-	}
-}
-
-### repetitive resource decisions
-### activated via YUN_Frontier_Mining
-YUN_expansion_of_the_mining_industries = {
-	YUN_dali_aluminium_expansion = {
-		icon = steel
-
-		allowed = { always = no } #activated by YUN_Frontier_Mining
-
-		available = {
-			controls_state = FROM #Dali
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 50
-		days_remove = 60
-		days_re_enable = 120
-		state_target = yes
-		ai_will_do = { base = 0 }
-
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_dali_aluminium_expansion"
-			add_resource = {
-				type = steel
-				amount = 3
-				state = FROM
-			}
-		}
-		fixed_random_seed = no
-	}
-
-	YUN_kunming_bauxite_refining = {
-		icon = aluminium
-
-		allowed = { always = no } #activated by YUN_Frontier_Mining
-
-		available = {
-			controls_state = FROM #Kunming
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		cost = 30
-		days_remove = 60
-		days_re_enable = 240
-		state_target = yes
-		ai_will_do = { base = 0 }
-
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_kunming_bauxite_refining"
-			add_resource = {
-				type = aluminium
-				amount = 1
-				state = FROM
-			}
-		}
-		fixed_random_seed = no
-	}
-
-	YUN_kunming_tungsten_prospecting = {
-		icon = tungsten
-
-		allowed = { always = no } #activated by YUN_Frontier_Mining
-
-		available = {
-			controls_state = FROM #Kunming
-		}
-
-		visible = {
-			owns_state = FROM
-		}
-
-		fire_only_once = no
-		days_remove = 60
-		days_re_enable = 180
-		state_target = yes
-		cost = 30
-		ai_will_do = { base = 0 }
-
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_kunming_tungsten_prospecting"
-			add_resource = {
-				type = tungsten
-				amount = 2
-				state = FROM
-			}
-		}
-		fixed_random_seed = no
-	}
-
-	YUN_guixi_chromimum_deposits = {
-		icon = chromium
-
-		allowed = { always = no } #activated by YUN_Frontier_Mining
-
-		available = {
-			controls_state = FROM #Guixi
-		}
-
-		visible = {
-			owns_state = FROM
+			owns_state = 325
+			owns_state = 816
 		}
 
 		cost = 30
 		days_remove = 90
-		days_re_enable = 240
-		state_target = yes
-		ai_will_do = { base = 0 }
+		fire_only_once = yes
 
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_guixi_chromimum_deposits"
-			add_resource = {
-				type = chromium
-				amount = 1
-				state = FROM
+		ai_will_do = { factor = 100 }
+
+		modifier = { civilian_factory_use = 1 }
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_yunnan_water_control"
+			325 = {
+				add_building_construction = {
+					type = infrastructure
+					level = 1
+					instant_build = yes
+				}
+			}
+			816 = {
+				add_building_construction = {
+					type = infrastructure
+					level = 1
+					instant_build = yes
+				}
 			}
 		}
 		fixed_random_seed = no
 	}
 }
 
-### Faction joining as Tang or Long
-YUN_faction_joining_stuff = {
-	YUN_align_with_zhili = {
-		icon = generic_agreement
-
-		allowed = { always = no } #activated by YUN_toe_the_line
-
-		available = {
-			at_peace_or_same_enemies_as_FROM = yes
-		}
-
+YUN_dian_dragon_domain_decision_category = {
+	YUN_acknowledge_zhili_authority_decision = {
+		allowed = { tag = YUN }
 		visible = {
-			has_country_leader = { character = YUN_long_yun }
-			FROM = {
-				china_is_potential_government = yes
-				china_is_valid_government_to_join = yes
-			}
-			NOT = { tag = NPA }
+			has_completed_focus = YUN_handling_external_affairs
+			YUN = { is_subject = no }
 		}
-
-		cost = 25
-		fire_only_once = yes
-
-		ai_will_do = {
-			base = 10000
-			modifier = { #Will not join a losing faction
-				factor = 0
-				FROM = { surrender_progress > 0.3 }
-				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_QIE } }	#Bypass for if YUN has a pro QIE or SZC gamerule
-				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_ZHL } }
-			}
-			modifier = { #Will not align with factions unless they border YUN
-				factor = 0
-				NOT = {
-					is_neighbor_of = FROM
-					FROM = { any_subject_country = { is_neighbor_of = ROOT } }
+		available = {
+			has_war = no
+			paternal_autocrat > 0.2
+			OR = {
+				592 = { #Guangzhou
+					owner = {
+						china_is_aligned_with_zhili = yes
+						china_is_potential_government = yes
+						OR = {
+							any_subject_country = { is_neighbor_of = ROOT }
+							is_neighbor_of = ROOT
+						}
+						is_monarchy = no
+					}
+				}
+				650 = { #Chongqing
+					owner = {
+						china_is_aligned_with_zhili = yes
+						china_is_potential_government = yes
+						OR = {
+							any_subject_country = { is_neighbor_of = ROOT }
+							is_neighbor_of = ROOT
+						}
+						is_monarchy = no
+					}
+				}
+				613 = { #Nanjing
+					owner = {
+						china_is_aligned_with_zhili = yes
+						china_is_potential_government = yes
+						OR = {
+							any_subject_country = { is_neighbor_of = ROOT }
+							is_neighbor_of = ROOT
+						}
+						is_monarchy = no
+					}
+				}
+				608 = { #Beijing
+					owner = {
+						china_is_aligned_with_zhili = yes
+						china_is_potential_government = yes
+						OR = {
+							any_subject_country = { is_neighbor_of = ROOT }
+							is_neighbor_of = ROOT
+						}
+						is_monarchy = no
+					}
 				}
 			}
-			modifier = { #Will never do if they have a non QIE or SZC gamerule set
-				factor = 0
-				NOT = { has_game_rule = { rule = YUN_forpol option = DEFAULT } }
-				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_QIE } }
-				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_ZHL } }
+		}
+		icon = GFX_decision_eng_trade_unions_support
+		priority = 100
+		ai_will_do = { factor = 0 } #This is mainly for the player's benefit.
+		fire_only_once = yes
+		cost = 0
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_acknowledge_zhili_authority_decision"
+			custom_effect_tooltip = YUN_acknowledge_zhili_authority_decision_tt
+			if = {
+				limit = {
+					var:592.owner = { #Guangzhou
+						china_is_aligned_with_zhili = yes
+						china_is_potential_government = yes
+						OR = {
+							any_subject_country = { is_neighbor_of = ROOT }
+							is_neighbor_of = ROOT
+						}
+						is_monarchy = no
+					}
+				}
+				var:592.owner = {
+					country_event = china_events.4
+					custom_effect_tooltip = if_they_accept_tt
+					effect_tooltip = { china_puppet_ROOT_effect = yes }
+				}
 			}
-			modifier = { #Add a bunch of reasons to join if they have a pro QIE or SZC gamerule
-				factor = 10
+			else_if = {
+				limit = {
+					var:650.owner = { #Chongqing
+						china_is_aligned_with_zhili = yes
+						china_is_potential_government = yes
+						OR = {
+							any_subject_country = { is_neighbor_of = ROOT }
+							is_neighbor_of = ROOT
+						}
+						is_monarchy = no
+					}
+				}
+				var:650.owner = {
+					country_event = china_events.4
+					custom_effect_tooltip = if_they_accept_tt
+					effect_tooltip = { china_puppet_ROOT_effect = yes }
+				}
+			}
+			else_if = {
+				limit = {
+					var:613.owner = { #Nanjing
+						china_is_aligned_with_zhili = yes
+						china_is_potential_government = yes
+						OR = {
+							any_subject_country = { is_neighbor_of = ROOT }
+							is_neighbor_of = ROOT
+						}
+						is_monarchy = no
+					}
+				}
+				var:613.owner = {
+					country_event = china_events.4
+					custom_effect_tooltip = if_they_accept_tt
+					effect_tooltip = { china_puppet_ROOT_effect = yes }
+				}
+			}
+			else_if = {
+				limit = {
+					var:608.owner = { #Beijing
+						china_is_aligned_with_zhili = yes
+						china_is_potential_government = yes
+						OR = {
+							any_subject_country = { is_neighbor_of = ROOT }
+							is_neighbor_of = ROOT
+						}
+						is_monarchy = no
+					}
+				}
+				var:608.owner = {
+					country_event = china_events.4
+					custom_effect_tooltip = if_they_accept_tt
+					effect_tooltip = { china_puppet_ROOT_effect = yes }
+				}
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_building_a_democratic_base_decision = {
+		allowed = { tag = YUN }
+		visible = {
+			#Same as category
+		}
+		available = {
+		}
+		days_re_enable = 180
+		icon = GFX_decision_SWI_swiss_democratic_tradition_campaign
+		priority = 100
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 100
+				has_stability < 0.50
+				has_political_power > 149
+
+				NOT = { has_country_flag = YUN_interacting_with_dian_dragons_domain_flag }
+			}
+		}
+		cost = 20
+		days_remove = 100
+		modifier = {
+			political_power_cost = 0.25
+			party_popularity_stability_factor = 0.05
+		}
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_building_a_democratic_base_decision"
+			YUN_YCD_medium_effect = yes
+			YUN_CMS_medium_effect = yes
+			add_stability = 0.05
+			set_country_flag = {
+				flag = YUN_interacting_with_dian_dragons_domain_flag
+				days = 180 #AI will generally refrain from playing this game so its easier for the player
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_building_a_democratic_base_decision"
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_entrust_our_finances_to_commerce_decision = {
+		allowed = { tag = YUN }
+		visible = {
+			#Same as category
+		}
+		available = {
+		}
+		days_re_enable = 180
+		icon = GFX_decision_give_cash
+		priority = 100
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 100
+				has_political_power > 149
+				num_of_civilian_factories > 10
+
+				NOT = { has_country_flag = YUN_interacting_with_dian_dragons_domain_flag }
+			}
+		}
+		cost = 20
+		days_remove = 100
+		modifier = {
+			production_speed_industrial_complex_factor = 0.1
+			consumer_goods_factor = -0.05
+			political_power_cost = 0.25
+		}
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_entrust_our_finances_to_commerce_decision"
+			YUN_YCC_medium_effect = yes
+			set_country_flag = {
+				flag = YUN_interacting_with_dian_dragons_domain_flag
+				days = 180 #AI will generally refrain from playing this game so its easier for the player
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_entrust_our_finances_to_commerce_decision"
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_continue_modernisation_efforts_decision = {
+		allowed = { tag = YUN }
+		visible = {
+			#Same as category
+		}
+		available = {
+		}
+		days_re_enable = 180
+		icon = GFX_decision_generic_research
+		priority = 100
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 100
+				has_political_power > 149
+
+				NOT = { has_country_flag = YUN_interacting_with_dian_dragons_domain_flag }
+			}
+		}
+		cost = 20
+		days_remove = 100
+		modifier = {
+			political_power_cost = 0.25
+			research_speed_factor = 0.10
+		}
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_continue_modernisation_efforts_decision"
+			YUN_PGP_medium_effect = yes
+			set_country_flag = {
+				flag = YUN_interacting_with_dian_dragons_domain_flag
+				days = 180 #AI will generally refrain from playing this game so its easier for the player
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_continue_modernisation_efforts_decision"
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_repurpose_the_bureaucracy_decision = {
+		allowed = { tag = YUN }
+		visible = {
+			any_owned_state = { has_resistance = yes }
+		}
+		available = {
+		}
+		days_re_enable = 180
+		icon = GFX_decision_generic_political_discourse
+		priority = 100
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 100
+				has_political_power > 149
+
+				NOT = { has_country_flag = YUN_interacting_with_dian_dragons_domain_flag }
+			}
+		}
+		cost = 20
+		days_remove = 100
+		modifier = {
+			political_power_cost = 0.25
+		}
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_repurpose_the_bureaucracy_decision"
+			YUN_LYC_medium_effect = yes
+			every_owned_state = {
+				limit = {
+					has_resistance = yes
+					is_controlled_by = ROOT
+				}
+				add_resistance = -5
+				add_compliance = 10
+			}
+			set_country_flag = {
+				flag = YUN_interacting_with_dian_dragons_domain_flag
+				days = 180 #AI will generally refrain from playing this game so its easier for the player
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_repurpose_the_bureaucracy_decision"
+			every_owned_state = {
+				limit = {
+					has_resistance = yes
+					is_controlled_by = ROOT
+				}
+				add_compliance = -10
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_tolerate_mengzis_monopoly_decision = {
+		allowed = { tag = YUN }
+		visible = {
+			#Same as category
+		}
+		available = {
+		}
+		days_re_enable = 180
+		icon = hand_out
+		priority = 100
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 100
+				has_political_power > 149
+
+				NOT = { has_country_flag = YUN_interacting_with_dian_dragons_domain_flag }
+			}
+		}
+		cost = 20
+		days_remove = 100
+		modifier = {
+			political_power_cost = 0.25
+		}
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_tolerate_mengzis_monopoly_decision"
+			YUN_HRY_medium_effect = yes
+			add_offsite_building = {
+				type = industrial_complex
+				level = 1
+			}
+			set_country_flag = {
+				flag = YUN_interacting_with_dian_dragons_domain_flag
+				days = 180 #AI will generally refrain from playing this game so its easier for the player
+				value = 1
+			}
+		}
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_tolerate_mengzis_monopoly_decision"
+			add_offsite_building = {
+				type = industrial_complex
+				level = -1
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_pressure_yunnan_into_alignment_decision = {
+		allowed = {
+			OR = {
+				tag = LEP
+				tag = SHD
+				tag = QIE
+				tag = SZC
+			}
+		}
+		visible = {
+			china_is_aligned_with_zhili = yes
+			china_is_potential_government = yes
+			YUN = { is_subject = no }
+		}
+		available = {
+			is_subject = no
+			is_monarchy = no
+			YUN = {
+				has_war = no
+				paternal_autocrat > 0.2
+			}
+			OR = {
+				is_neighbor_of = YUN
+				any_subject_country = { is_neighbor_of = YUN }
+			}
+		}
+		icon = chinese_flag
+		priority = 100
+		ai_will_do = {
+			base = 100
+
+			modifier = {
+				factor = 0
+				NOT = {
+					has_game_rule = { rule = GXC_forpol option = DEFAULT }
+					has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_ZHL }
+				}
+			}
+		}
+		fire_only_once = yes
+		cost = 20
+
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_pressure_yunnan_into_alignment_decision"
+			YUN = { country_event = YUN.midgame.796 }
+			custom_effect_tooltip = if_they_accept_tt
+			YUN = { effect_tooltip = { china_puppet_FROM_effect = yes } }
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_allure_of_money_and_flattery = {
+		allowed = {
+			OR = {
+				tag = LEP
+				tag = SHD
+				tag = QIE
+				tag = SZC
+			}
+		}
+		visible = {
+			china_is_aligned_with_zhili = yes
+			china_is_potential_government = yes
+			OR = {
+				592 = { is_owned_by_ROOT_or_subject = yes } #Guangzhou
+				650 = { is_owned_by_ROOT_or_subject = yes } #Chongqing
+				608 = { is_owned_by_ROOT_or_subject = yes } #Beijing
+				AND = {
+					has_global_flag = LEP_league_war_over
+					613 = { is_owned_by_ROOT_or_subject = yes } #Nanjing
+				}
+			}
+		}
+		available = {
+			YUN = { NOT = { has_war_with = ROOT } }
+		}
+		days_re_enable = 60
+		icon = generic_fundraising
+		priority = 100
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 100
+				has_political_power > 149
+
+				NOT = { has_country_flag = YUN_interacting_with_dian_dragons_domain_flag }
+			}
+		}
+		cost = 25
+		days_remove = 100
+		modifier = {
+			political_power_gain = -0.25
+		}
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_allure_of_money_and_flattery"
+			YUN = { country_event = YUN.midgame.790 }
+			custom_effect_tooltip = if_they_accept_tt
+			effect_tooltip = { YUN = { event_option_tooltip = YUN.midgame.790.a } }
+			custom_effect_tooltip = if_they_refuse_tt
+			effect_tooltip = { YUN = { event_option_tooltip = YUN.midgame.790.b } }
+			set_country_flag = {
+				flag = YUN_interacting_with_dian_dragons_domain_flag
+				days = 180 #AI will generally refrain from playing this game so its easier for the player
+				value = 1
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_bribing_the_disaffected = {
+		allowed = {
+			OR = {
+				tag = LEP
+				tag = SHD
+				tag = QIE
+				tag = SZC
+			}
+		}
+		visible = {
+			china_is_aligned_with_zhili = yes
+			china_is_potential_government = yes
+			OR = {
+				592 = { is_owned_by_ROOT_or_subject = yes } #Guangzhou
+				650 = { is_owned_by_ROOT_or_subject = yes } #Chongqing
+				608 = { is_owned_by_ROOT_or_subject = yes } #Beijing
+				AND = {
+					has_global_flag = LEP_league_war_over
+					613 = { is_owned_by_ROOT_or_subject = yes } #Nanjing
+				}
+			}
+		}
+		available = {
+			YUN = { NOT = { has_war_with = ROOT } }
+		}
+		days_re_enable = 60
+		icon = hand_out
+		priority = 100
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 100
+				has_equipment = { infantry_equipment > 5000 }
+
+				NOT = { has_country_flag = YUN_interacting_with_dian_dragons_domain_flag }
+			}
+		}
+		custom_cost_trigger = {
+			NOT = { has_equipment = { infantry_equipment < 500 } }
+		}
+		custom_cost_text = 500_guns
+		days_remove = 60
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_bribing_the_disaffected"
+			hidden_effect = {
+				add_equipment_to_stockpile = {
+					type = infantry_equipment
+					amount = -500
+				}
+			}
+			YUN = { country_event = YUN.midgame.791 }
+			custom_effect_tooltip = if_they_accept_tt
+			effect_tooltip = { YUN = { event_option_tooltip = YUN.midgame.791.a } }
+			custom_effect_tooltip = if_they_refuse_tt
+			effect_tooltip = { YUN = { event_option_tooltip = YUN.midgame.791.b } }
+			set_country_flag = {
+				flag = YUN_interacting_with_dian_dragons_domain_flag
+				days = 180 #AI will generally refrain from playing this game so its easier for the player
+				value = 1
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_issue_threats_to_yunnan = {
+		allowed = {
+			OR = {
+				tag = LEP
+				tag = SHD
+				tag = QIE
+				tag = SZC
+			}
+		}
+		visible = {
+			china_is_aligned_with_zhili = yes
+			china_is_potential_government = yes
+			OR = {
+				592 = { is_owned_by_ROOT_or_subject = yes } #Guangzhou
+				650 = { is_owned_by_ROOT_or_subject = yes } #Chongqing
+			}
+		}
+		available = {
+			YUN = { NOT = { has_war_with = ROOT } }
+		}
+		days_re_enable = 60
+		icon = generic_prepare_civil_war
+		priority = 100
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 100
+				command_power > 99.99
+
+				NOT = { has_country_flag = YUN_interacting_with_dian_dragons_domain_flag }
+			}
+		}
+		custom_cost_trigger = {
+			NOT = { command_power < 50 }
+		}
+		custom_cost_text = CP_50
+		days_remove = 60
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_issue_threats_to_yunnan"
+			hidden_effect = {
+				add_command_power = -50
+			}
+			YUN = { country_event = YUN.midgame.792 }
+			custom_effect_tooltip = if_they_accept_tt
+			effect_tooltip = { YUN = { event_option_tooltip = YUN.midgame.792.a } }
+			custom_effect_tooltip = if_they_refuse_tt
+			effect_tooltip = { YUN = { event_option_tooltip = YUN.midgame.792.b } }
+			set_country_flag = {
+				flag = YUN_interacting_with_dian_dragons_domain_flag
+				days = 180 #AI will generally refrain from playing this game so its easier for the player
+				value = 1
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_deal_with_the_mengzi_junta = {
+		allowed = {
+			OR = {
+				tag = LEP
+				tag = SHD
+				tag = QIE
+				tag = SZC
+			}
+		}
+		visible = {
+			china_is_aligned_with_zhili = yes
+			china_is_potential_government = yes
+			OR = {
+				592 = { is_owned_by_ROOT_or_subject = yes } #Guangzhou
+				650 = { is_owned_by_ROOT_or_subject = yes } #Chongqing
+			}
+		}
+		available = {
+			YUN = { NOT = { has_war_with = ROOT } }
+		}
+		days_re_enable = 60
+		icon = generic_army_support
+		priority = 100
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 100
+				has_stability > 0.50
+
+				NOT = { has_country_flag = YUN_interacting_with_dian_dragons_domain_flag }
+			}
+		}
+		custom_cost_trigger = {
+			has_stability > 0.05
+		}
+		custom_cost_text = stability5
+		days_remove = 60
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_deal_with_the_mengzi_junta"
+			hidden_effect = {
+				add_stability = -0.05
+			}
+			YUN = { country_event = YUN.midgame.793 }
+			custom_effect_tooltip = if_they_accept_tt
+			effect_tooltip = { YUN = { event_option_tooltip = YUN.midgame.793.a } }
+			custom_effect_tooltip = if_they_refuse_tt
+			effect_tooltip = { YUN = { event_option_tooltip = YUN.midgame.793.b } }
+			set_country_flag = {
+				flag = YUN_interacting_with_dian_dragons_domain_flag
+				days = 180 #AI will generally refrain from playing this game so its easier for the player
+				value = 1
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_send_out_peace_feelers = {
+		allowed = {
+			OR = {
+				tag = LEP
+				tag = SHD
+				tag = QIE
+				tag = SZC
+			}
+		}
+		visible = {
+			china_is_aligned_with_zhili = yes
+			china_is_potential_government = yes
+			OR = {
+				592 = { is_owned_by_ROOT_or_subject = yes } #Guangzhou
+				650 = { is_owned_by_ROOT_or_subject = yes } #Chongqing
+			}
+		}
+		available = {
+			YUN = { NOT = { has_war_with = ROOT } }
+		}
+		days_re_enable = 60
+		icon = peace_dove
+		priority = 100
+		ai_will_do = {
+			factor = 0
+			modifier = {
+				add = 100
+				has_war_support > 0.50
+
+				NOT = { has_country_flag = YUN_interacting_with_dian_dragons_domain_flag }
+			}
+		}
+		custom_cost_trigger = {
+			has_war_support > 0.05
+		}
+		custom_cost_text = war_support5
+		days_remove = 60
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_send_out_peace_feelers"
+			hidden_effect = {
+				add_war_support = -0.05
+			}
+			YUN = { country_event = YUN.midgame.794 }
+			custom_effect_tooltip = if_they_accept_tt
+			effect_tooltip = { YUN = { event_option_tooltip = YUN.midgame.794.a } }
+			custom_effect_tooltip = if_they_refuse_tt
+			effect_tooltip = { YUN = { event_option_tooltip = YUN.midgame.794.b } }
+			set_country_flag = {
+				flag = YUN_interacting_with_dian_dragons_domain_flag
+				days = 180 #AI will generally refrain from playing this game so its easier for the player
+				value = 1
+			}
+		}
+		fixed_random_seed = no
+	}
+}
+
+########################################
+######- Section 04: Late game - ########
+########################################
+
+YUN_provisional_constitution_crisis_decisions = {
+	YUN_he_yingqin_autocoup_mission = {
+		allowed = { always = no }
+		available = {
+			hidden_trigger = { always = no }
+		}
+		fire_only_once = yes
+		icon = GFX_decision_jap_conquer_china
+		is_good = yes
+		priority = 100 #Should be top of the category
+		days_mission_timeout = 60
+		selectable_mission = no
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_he_yingqin_autocoup_mission"
+		}
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout YUN_he_yingqin_autocoup_mission"
+			#Rig it if you have game rules active
+			if = {
+				limit = {
+					OR = {
+						has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_YINGQIN_PEOPLES_PATAUT }
+						has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_YINGQIN_REVOLUTIONARY_PATAUT }
+						has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_YINGQIN_LUCKY_PATAUT }
+						has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_YINGQIN_LIBERAL_PATAUT }
+						has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_YINGQIN_BLUE_SHIRT_PATAUT }
+					}
+				}
+				custom_effect_tooltip = YUN_he_yingqin_autocoup_mission_success_tt
+				country_event = { id = YUN.lategame.406 days = 1 } #He Yingqin Ploughs Forward!
+				custom_effect_tooltip = CHN_game_rule_rigged_warning_tt
+			}
+			else_if = {
+				limit = {
+					OR = {
+						has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+						has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+						has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+						has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+						has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+					}
+				}
+				custom_effect_tooltip = YUN_he_yingqin_autocoup_mission_success_tt
+				country_event = { id = YUN.lategame.410 days = 1 } #Hu Hanmin Arrested!
+				custom_effect_tooltip = CHN_game_rule_rigged_warning_tt
+			}
+			#Normal Code
+			else_if = {
+				limit = {
+					OR = {
+						is_power_balance_in_range = {
+							id = RKT_power_balance
+							range = RKT_bop_unrelenting_cynicism
+						}
+						is_power_balance_in_range = {
+							id = RKT_power_balance
+							range = RKT_bop_unbridled_conviction
+						}
+					}
+				}
+				custom_effect_tooltip = YUN_he_yingqin_autocoup_mission_fail_tt
+				country_event = { id = YUN.lategame.410 days = 1 } #Hu Hanmin Arrested!
+			}
+			else = {
+				custom_effect_tooltip = YUN_he_yingqin_autocoup_mission_success_tt
+				country_event = { id = YUN.lategame.406 days = 1 } #He Yingqin Ploughs Forward!
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_hu_hanmins_outrage_mission = {
+		allowed = { always = no }
+		available = {
+			NOT = { has_country_leader = { character = YUN_he_yingqin } }
+		}
+		icon = GFX_decision_revolt
+		is_good = no
+		priority = 100 #Should be top of the category
+		days_mission_timeout = 7
+		selectable_mission = no
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_hu_hanmins_outrage_mission"
+		}
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout YUN_hu_hanmins_outrage_mission"
+			YUN_KMT_hu_hanmin_crisis_MCC_zeal_effect = yes
+			activate_mission = YUN_hu_hanmins_outrage_mission
+			add_days_mission_timeout = {
+				mission = YUN_hu_hanmins_outrage_mission
+				days = 7
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_position_forces_near_liangguang_mission = {
+		icon = GFX_decision_oppression
+
+		allowed = { always = no }
+
+		highlight_states = {
+			highlight_state_targets = { state = 592 state = 593 state = 1012 state = 800 state = 599 state = 1055 state = 1054 state = 594 state = 1056 state = 591 state = 801 state = 326 state = 729 state = 728 }
+		}
+
+		available = {
+			num_divisions_in_states = {
+				count > 9
+				states = { 592 593 1012 800 599 1055 1054 594 1056 591 801 326 729 728 }
+			}
+		}
+
+		is_good = no
+		days_mission_timeout = 30
+		priority = 90
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_position_forces_near_liangguang_mission"
+			activate_mission = YUN_liangguang_troop_stationing_mission
+		}
+
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout YUN_position_forces_near_liangguang_mission"
+			#If you fail to do this within 30 days, He Yingqin loses
+			RKT_ext_zeal_mega_effect = yes
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_liangguang_troop_stationing_mission = {
+		icon = GFX_decision_soldierly_discipline
+
+		allowed = { always = no }
+
+		highlight_states = {
+			highlight_state_targets = { state = 592 state = 593 state = 1012 state = 800 state = 599 state = 1055 state = 1054 state = 594 state = 1056 state = 591 state = 801 state = 326 state = 729 state = 728 }
+		}
+
+		available = {
+			num_divisions_in_states = {
+				count < 10
+				states = { 592 593 1012 800 599 1055 1054 594 1056 591 801 326 729 728 }
+			}
+		}
+
+		is_good = yes
+		days_mission_timeout = 30
+		priority = 90
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_liangguang_troop_stationing_mission"
+			activate_mission = YUN_position_forces_near_liangguang_mission
+		}
+
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout YUN_liangguang_troop_stationing_mission"
+			#If you successfully hold for 30 days, you get an added bonus to He Yingqin
+			RKT_ctr_zeal_mega_effect = yes
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_divide_and_conquer_in_hunan_mission = {
+		icon = GFX_decision_oppression
+
+		allowed = { always = no }
+
+		highlight_states = {
+			highlight_state_targets = { state = 602 state = 1013 }
+		}
+
+		available = {
+			if = {
+				limit = { has_country_flag = YUN_KMT_favourable_governor_hunan }
+				custom_trigger_tooltip = { tooltip = YUN_KMT_favourable_governor_tt }
+				num_divisions_in_states = {
+					count > 2
+					states = { 602 1013 }
+				}
+			}
+			else = {
+				num_divisions_in_states = {
+					count > 4
+					states = { 602 1013 }
+				}
+			}
+		}
+
+		is_good = no
+		days_mission_timeout = 30
+		priority = 90
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_divide_and_conquer_in_hunan_mission"
+			activate_mission = YUN_Hunan_Divided_and_Conquered_mission
+		}
+
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout YUN_divide_and_conquer_in_hunan_mission"
+			#If you fail to do this within 30 days, He Yingqin loses
+			if = {
+				limit = { has_country_flag = YUN_KMT_favourable_governor_hunan }
+				custom_effect_tooltip = YUN_KMT_favourable_governor_tt
+				RKT_ext_zeal_medium_effect = yes
+			}
+			else = {
+				RKT_ext_zeal_large_effect = yes
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Hunan_Divided_and_Conquered_mission = {
+		icon = GFX_decision_soldierly_discipline
+
+		allowed = { always = no }
+
+		highlight_states = {
+			highlight_state_targets = { state = 602 state = 1013 }
+		}
+
+		available = {
+			if = {
+				limit = { has_country_flag = YUN_KMT_favourable_governor_hunan }
+				custom_trigger_tooltip = { tooltip = YUN_KMT_favourable_governor_tt }
+				num_divisions_in_states = {
+					count < 3
+					states = { 602 1013 }
+				}
+			}
+			else = {
+				num_divisions_in_states = {
+					count < 5
+					states = { 602 1013 }
+				}
+			}
+		}
+
+		is_good = yes
+		days_mission_timeout = 30
+		priority = 90
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Hunan_Divided_and_Conquered_mission"
+			activate_mission = YUN_divide_and_conquer_in_hunan_mission
+		}
+
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout YUN_Hunan_Divided_and_Conquered_mission"
+			#If you successfully hold for 30 days, you get an added bonus to He Yingqin
+			if = {
+				limit = { has_country_flag = YUN_KMT_favourable_governor_hunan }
+				custom_effect_tooltip = YUN_KMT_favourable_governor_tt
+				RKT_ctr_zeal_medium_effect = yes
+			}
+			else = {
+				RKT_ctr_zeal_large_effect = yes
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Secure_the_Southwest_mission = {
+		icon = GFX_decision_oppression
+
+		allowed = { always = no }
+
+		highlight_states = {
+			highlight_state_targets = { state = 816 state = 325 state = 1051 state = 603 state = 1052 state = 1111 }
+		}
+
+		available = {
+			if = {
+				limit = {
+					AND = {
+						has_country_flag = YUN_KMT_favourable_governor_guizhou
+						has_country_flag = YUN_KMT_favourable_governor_yunnan
+					}
+				}
+				custom_trigger_tooltip = { tooltip = YUN_KMT_favourable_governor_tt }
+				num_divisions_in_states = {
+					count > 2
+					states = { 816 325 1051 603 1052 1111 }
+				}
+			}
+			else_if = {
+				limit = {
+					OR = {
+						has_country_flag = YUN_KMT_favourable_governor_guizhou
+						has_country_flag = YUN_KMT_favourable_governor_yunnan
+					}
+				}
+				custom_trigger_tooltip = { tooltip = YUN_KMT_favourable_governor_tt }
+				num_divisions_in_states = {
+					count > 4
+					states = { 816 325 1051 603 1052 1111 }
+				}
+			}
+			else = {
+				num_divisions_in_states = {
+					count > 9
+					states = { 816 325 1051 603 1052 1111 }
+				}
+			}
+		}
+
+		is_good = no
+		days_mission_timeout = 30
+		priority = 90
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Secure_the_Southwest_mission"
+			activate_mission = YUN_The_Southwest_Submits_mission
+		}
+
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout YUN_Secure_the_Southwest_mission"
+			#If you fail to do this within 30 days, He Yingqin loses
+			if = {
+				limit = {
+					has_country_flag = YUN_KMT_favourable_governor_guizhou
+					has_country_flag = YUN_KMT_favourable_governor_yunnan
+				}
+				custom_effect_tooltip = YUN_KMT_favourable_governor_tt
+				RKT_ext_zeal_medium_effect = yes
+			}
+			else_if = {
+				limit = {
+					OR = {
+						has_country_flag = YUN_KMT_favourable_governor_guizhou
+						has_country_flag = YUN_KMT_favourable_governor_yunnan
+					}
+				}
+				custom_effect_tooltip = YUN_KMT_favourable_governor_tt
+				RKT_ext_zeal_large_effect = yes
+			}
+			else = {
+				RKT_ext_zeal_mega_effect = yes
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_The_Southwest_Submits_mission = {
+		icon = GFX_decision_soldierly_discipline
+
+		allowed = { always = no }
+
+		highlight_states = {
+			highlight_state_targets = { state = 816 state = 325 state = 1051 state = 603 state = 1052 state = 1111 }
+		}
+
+		available = {
+			if = {
+				limit = {
+					AND = {
+						has_country_flag = YUN_KMT_favourable_governor_guizhou
+						has_country_flag = YUN_KMT_favourable_governor_yunnan
+					}
+				}
+				custom_trigger_tooltip = { tooltip = YUN_KMT_favourable_governor_tt }
+				num_divisions_in_states = {
+					count < 3
+					states = { 816 325 1051 603 1052 1111 }
+				}
+			}
+			else_if = {
+				limit = {
+					OR = {
+						has_country_flag = YUN_KMT_favourable_governor_guizhou
+						has_country_flag = YUN_KMT_favourable_governor_yunnan
+					}
+				}
+				custom_trigger_tooltip = { tooltip = YUN_KMT_favourable_governor_tt }
+				num_divisions_in_states = {
+					count < 5
+					states = { 816 325 1051 603 1052 1111 }
+				}
+			}
+			else = {
+				num_divisions_in_states = {
+					count < 10
+					states = { 816 325 1051 603 1052 1111 }
+				}
+			}
+		}
+
+		is_good = yes
+		days_mission_timeout = 30
+		priority = 90
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_The_Southwest_Submits_mission"
+			activate_mission = YUN_Secure_the_Southwest_mission
+		}
+
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout YUN_The_Southwest_Submits_mission"
+			#If you successfully hold for 30 days, you get an added bonus to He Yingqin
+			if = {
+				limit = {
+					has_country_flag = YUN_KMT_favourable_governor_guizhou
+					has_country_flag = YUN_KMT_favourable_governor_yunnan
+				}
+				custom_effect_tooltip = YUN_KMT_favourable_governor_tt
+				RKT_ctr_zeal_mega_effect = yes
+			}
+			else_if = {
+				limit = {
+					OR = {
+						has_country_flag = YUN_KMT_favourable_governor_guizhou
+						has_country_flag = YUN_KMT_favourable_governor_yunnan
+					}
+				}
+				custom_effect_tooltip = YUN_KMT_favourable_governor_tt
+				RKT_ctr_zeal_large_effect = yes
+			}
+			else = {
+				RKT_ctr_zeal_medium_effect = yes
+			}
+		}
+		fixed_random_seed = no
+	}
+
+	#PSC Decisions
+	YUN_Pass_the_Provisional_Constitution_decision = {
+		icon = GFX_decision_eng_trade_unions_support
+		allowed = { always = no } #manually activated
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = YUN_zhang_qun_gambit_tt
+				check_variable = { YUN_PSC_aligned_delegates_variable > 334 }
+			}
+			has_active_mission = YUN_The_Whampoa_Coup_mission
+		}
+
+		cost = 0
+		priority = 85
+		fire_only_once = yes
+		ai_will_do = {
+			base = 500 #Take as soon as available
+			modifier = {
+				factor = 0
+				OR = {
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Pass_the_Provisional_Constitution_decision"
+			country_event = YUN.lategame.422 #The PSC Constitution Passes
+			YUN_KMT_hu_hanmin_crisis_PP_penalty_effect = yes
+			YUN_KMT_hu_hanmin_crisis_WS_penalty_effect = yes
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Loyalty_Tests_in_the_Bureaucracy_decision = {
+		icon = GFX_decision_generic_political_discourse
+		allowed = { always = no } #manually activated
+
+		cost = 30
+		priority = 80
+		fire_only_once = no
+		days_remove = 14
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					authoritarian_democrat > party_popularity@market_liberal
+					social_democrat > party_popularity@market_liberal
+					national_populist > party_popularity@market_liberal
+				}
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Loyalty_Tests_in_the_Bureaucracy_decision"
+			if = {
+				limit = { has_country_leader = { character = YUN_he_yingqin } }
+				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_PSC_zeal_tt
+				if = {
+					limit = { market_liberal < 0.10 }
+					RKT_sub_zeal_small_effect = yes
+				}
+				else_if = {
+					limit = { market_liberal < 0.15 }
+					RKT_sub_zeal_medium_effect = yes
+				}
+				else_if = {
+					limit = { market_liberal < 0.25 }
+					RKT_sub_zeal_large_effect = yes
+				}
+				else_if = {
+					limit = { market_liberal < 0.35 }
+					RKT_sub_zeal_mega_effect = yes
+				}
+				else = {
+					RKT_sub_zeal_giga_effect = yes
+				}
+			}
+			else = {
+				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_PSC_phase_2_tt
+				set_temp_variable = { YUN_PSC_delegate_change_temp_var = ROOT.party_popularity@market_liberal }
+				multiply_temp_variable = { YUN_PSC_delegate_change_temp_var = 0.20 } #1/5 of party popularity, so 20% = 4% (or 20 delegates).
+				YUN_KMT_hu_hanmin_crisis_PSC_delegates_effect = yes
+			}
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_Loyalty_Tests_in_the_Bureaucracy_decision"
+			#Mainly just have this so the player can more easily see when they can retake this decision.
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Promise_a_Constitutional_government_decision = {
+		icon = GFX_decision_scales
+		allowed = { always = no } #manually activated
+
+		custom_cost_text = war_support3
+		custom_cost_trigger = {
+			has_war_support > 0.03
+		}
+		priority = 80
+		fire_only_once = no
+		days_remove = 7
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					authoritarian_democrat > party_popularity@market_liberal
+					social_democrat > party_popularity@market_liberal
+					national_populist > party_popularity@market_liberal
+				}
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Promise_a_Constitutional_government_decision"
+			hidden_effect = {
+				add_war_support = -0.03
+			}
+			set_temp_variable = { YUN_PSC_delegate_change_temp_var = 0.01 }
+			YUN_KMT_hu_hanmin_crisis_PSC_delegates_effect = yes
+			set_temp_variable = { YUN_CCC_delegate_change_temp_var = -0.03 }
+			YUN_KMT_hu_hanmin_crisis_CCC_delegates_effect = yes
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_Promise_a_Constitutional_government_decision"
+			#Mainly just have this so the player can more easily see when they can retake this decision.
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Release_Political_Prisoners_decision = {
+		icon = GFX_decision_freedom
+		allowed = { always = no } #manually activated
+
+		cost = 100
+		priority = 80
+		fire_only_once = yes
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					authoritarian_democrat > party_popularity@market_liberal
+					social_democrat > party_popularity@market_liberal
+					national_populist > party_popularity@market_liberal
+				}
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Release_Political_Prisoners_decision"
+			add_command_power = 50
+			set_temp_variable = { YUN_PSC_delegate_change_temp_var = 0.20 }
+			YUN_KMT_hu_hanmin_crisis_PSC_delegates_effect = yes
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Bribe_Miliitary_Officers_decision = {
+		icon = GFX_decision_give_cash
+		allowed = { always = no } #manually activated
+
+		cost = 35
+		priority = 80
+		fire_only_once = no
+		days_remove = 7
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					authoritarian_democrat > party_popularity@market_liberal
+					social_democrat > party_popularity@market_liberal
+					national_populist > party_popularity@market_liberal
+				}
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Bribe_Miliitary_Officers_decision"
+			add_days_mission_timeout = {
+				mission = YUN_The_Whampoa_Coup_mission
+				days = 30
+			}
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_Bribe_Miliitary_Officers_decision"
+			#Mainly just have this so the player can more easily see when they can retake this decision.
+		}
+		fixed_random_seed = no
+	}
+
+	#CCC Decisions
+	YUN_Call_a_Vote_of_No_Confidence_decision = {
+		icon = GFX_decision_generic_speech
+		allowed = { always = no } #manually activated
+		available = {
+			custom_trigger_tooltip = {
+				tooltip = YUN_dai_jitao_and_the_CC_clique_plot_tt
+				check_variable = { YUN_CCC_aligned_delegates_variable > 251 }
+			}
+			has_active_mission = YUN_The_Whampoa_Coup_mission
+		}
+
+		cost = 0
+		priority = 75
+		fire_only_once = yes
+		ai_will_do = {
+			base = 500 #Take this ASAP
+			modifier = {
+				factor = 0
+				OR = {
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Call_a_Vote_of_No_Confidence_decision"
+			country_event = YUN.lategame.423 #The CC Clique Collapses the Government!
+			YUN_KMT_hu_hanmin_crisis_STB_penalty_effect = yes
+			YUN_KMT_hu_hanmin_crisis_WS_penalty_effect = yes
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Increase_Propaganda_Output_decision = {
+		icon = GFX_decision_radar
+		allowed = { always = no } #manually activated
+
+		cost = 30
+		priority = 70
+		fire_only_once = no
+		days_remove = 14
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					market_liberal > party_popularity@authoritarian_democrat
+					social_democrat > party_popularity@authoritarian_democrat
+					national_populist > party_popularity@authoritarian_democrat
+				}
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Increase_Propaganda_Output_decision"
+			if = {
+				limit = { has_country_leader = { character = YUN_he_yingqin } }
+				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_CCC_zeal_tt
+				if = {
+					limit = { authoritarian_democrat < 0.10 }
+					RKT_add_zeal_small_effect = yes
+				}
+				else_if = {
+					limit = { authoritarian_democrat < 0.15 }
+					RKT_add_zeal_medium_effect = yes
+				}
+				else_if = {
+					limit = { authoritarian_democrat < 0.25 }
+					RKT_add_zeal_large_effect = yes
+				}
+				else_if = {
+					limit = { authoritarian_democrat < 0.35 }
+					RKT_add_zeal_mega_effect = yes
+				}
+				else = {
+					RKT_add_zeal_giga_effect = yes
+				}
+			}
+			else = {
+				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_CCC_phase_2_tt
+				set_temp_variable = { YUN_CCC_delegate_change_temp_var = ROOT.party_popularity@authoritarian_democrat }
+				multiply_temp_variable = { YUN_CCC_delegate_change_temp_var = 0.20 } #1/5 of party popularity, so 20% = 4% (or 20 delegates).
+				YUN_KMT_hu_hanmin_crisis_CCC_delegates_effect = yes
+			}
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_Increase_Propaganda_Output_decision"
+			#Mainly just have this so the player can more easily see when they can retake this decision.
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Stoke_Xenophobic_Hysteria_decision = {
+		icon = GFX_decision_generic_police_action
+		allowed = { always = no } #manually activated
+
+		custom_cost_text = stability3
+		custom_cost_trigger = {
+			has_stability > 0.03
+		}
+		priority = 70
+		fire_only_once = no
+		days_remove = 7
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					market_liberal > party_popularity@authoritarian_democrat
+					social_democrat > party_popularity@authoritarian_democrat
+					national_populist > party_popularity@authoritarian_democrat
+				}
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Stoke_Xenophobic_Hysteria_decision"
+			hidden_effect = {
+				add_stability = -0.03
+			}
+			set_temp_variable = { YUN_CCC_delegate_change_temp_var = 0.01 }
+			YUN_KMT_hu_hanmin_crisis_CCC_delegates_effect = yes
+			set_temp_variable = { YUN_PSC_delegate_change_temp_var = -0.03 }
+			YUN_KMT_hu_hanmin_crisis_PSC_delegates_effect = yes
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_Stoke_Xenophobic_Hysteria_decision"
+			#Mainly just have this so the player can more easily see when they can retake this decision.
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Orchestrate_a_Walkout_of_the_Bureaucracy_decision = {
+		icon = GFX_decision_generic_political_rally
+		allowed = { always = no } #manually activated
+
+		cost = 100
+		priority = 70
+		fire_only_once = yes
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					market_liberal > party_popularity@authoritarian_democrat
+					social_democrat > party_popularity@authoritarian_democrat
+					national_populist > party_popularity@authoritarian_democrat
+				}
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Orchestrate_a_Walkout_of_the_Bureaucracy_decision"
+			add_command_power = 50
+			set_temp_variable = { YUN_CCC_delegate_change_temp_var = 0.20 }
+			YUN_KMT_hu_hanmin_crisis_CCC_delegates_effect = yes
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Mobilise_the_Political_Commissars_decision = {
+		icon = GFX_decision_generic_military
+		allowed = { always = no } #manually activated
+
+		custom_cost_text = war_support3
+		custom_cost_trigger = {
+			has_war_support > 0.03
+		}
+		priority = 70
+		fire_only_once = no
+		days_remove = 7
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					market_liberal > party_popularity@authoritarian_democrat
+					social_democrat > party_popularity@authoritarian_democrat
+					national_populist > party_popularity@authoritarian_democrat
+				}
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Mobilise_the_Political_Commissars_decision"
+			hidden_effect = {
+				add_war_support = -0.03
+			}
+			add_days_mission_timeout = {
+				mission = YUN_The_Whampoa_Coup_mission
+				days = 30
+			}
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_Mobilise_the_Political_Commissars_decision"
+			#Mainly just have this so the player can more easily see when they can retake this decision.
+		}
+		fixed_random_seed = no
+	}
+
+	#BSS/WPC Decisions
+	YUN_The_Whampoa_Coup_mission = {
+		icon = GFX_decision_gre_faction_management
+
+		allowed = { always = no }
+
+		available = {
+			has_country_leader = { character = YUN_he_yingqin }
+		}
+
+		is_good = no
+		days_mission_timeout = 100
+		priority = 65
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_The_Whampoa_Coup_mission"
+			#Nothing
+		}
+
+		timeout_effect = {
+			log = "[GetLogRoot]: Decision timeout YUN_The_Whampoa_Coup_mission"
+			country_event = YUN.lategame.424 #The Whampoa Coup d'Etat
+			YUN_KMT_hu_hanmin_crisis_STB_penalty_effect = yes
+			YUN_KMT_hu_hanmin_crisis_PP_penalty_effect = yes
+		}
+		fixed_random_seed = no
+	}
+	YUN_Leverage_Whampoa_Connections_decision = {
+		icon = GFX_decision_SWI_guisan_speech
+		allowed = { always = no } #manually activated
+
+		priority = 60
+		fire_only_once = no
+		days_remove = 14
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
 				OR = {
 					AND = {
-						FROM = { tag = QIE }
-						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_QIE }
+						market_liberal > party_popularity@social_democrat
+						market_liberal > party_popularity@national_populist
 					}
 					AND = {
-						FROM = { tag = SZC }
-						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_ZHL }
+						authoritarian_democrat > party_popularity@social_democrat
+						authoritarian_democrat > party_popularity@national_populist
 					}
 				}
 			}
+			modifier = {
+				factor = 0
+				OR = {
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
 		}
 
+		custom_cost_trigger = {
+			NOT = { command_power < 30 }
+		}
+		custom_cost_text = CP_30
+
 		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_align_with_zhili"
-			FROM = {
-				country_event = yun.506
-				custom_effect_tooltip = if_they_accept_tt
-				effect_tooltip = { china_puppet_ROOT_effect = yes }
+			log = "[GetLogRoot]: Decision complete YUN_Leverage_Whampoa_Connections_decision"
+			hidden_effect = {
+				add_command_power = -30
 			}
+			if = {
+				limit = { has_country_leader = { character = YUN_he_yingqin } }
+				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_WPC_zeal_tt
+				if = {
+					limit = { paternal_autocrat < 0.10 }
+					RKT_ctr_zeal_small_effect = yes
+				}
+				else_if = {
+					limit = { paternal_autocrat < 0.15 }
+					RKT_ctr_zeal_medium_effect = yes
+				}
+				else_if = {
+					limit = { paternal_autocrat < 0.25 }
+					RKT_ctr_zeal_large_effect = yes
+				}
+				else_if = {
+					limit = { paternal_autocrat < 0.35 }
+					RKT_ctr_zeal_mega_effect = yes
+				}
+				else = {
+					RKT_ctr_zeal_giga_effect = yes
+				}
+				add_war_support = -0.03
+			}
+			else = {
+				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_WPC_phase_2_tt
+				set_temp_variable = { YUN_PSC_delegate_change_temp_var = ROOT.party_popularity@paternal_autocrat }
+				multiply_temp_variable = { YUN_PSC_delegate_change_temp_var = -0.10 } #1/10 of party popularity, so 10% = 2% (or 10 delegates).
+				YUN_KMT_hu_hanmin_crisis_PSC_delegates_effect = yes
+				set_temp_variable = { YUN_CCC_delegate_change_temp_var = ROOT.party_popularity@paternal_autocrat }
+				multiply_temp_variable = { YUN_CCC_delegate_change_temp_var = -0.10 } #1/10 of party popularity, so 10% = 2% (or 10 delegates).
+				YUN_KMT_hu_hanmin_crisis_CCC_delegates_effect = yes
+			}
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_Leverage_Whampoa_Connections_decision"
+			#Mainly just have this so the player can more easily see when they can retake this decision.
 		}
 		fixed_random_seed = no
 	}
 
-	YUN_align_with_NPA = {
-		icon = generic_agreement
+	YUN_Campaign_of_Intimidation_decision = {
+		icon = GFX_decision_spr_political_assassination
+		allowed = { always = no } #manually activated
 
-		allowed = { always = no } #activated by YUN_toe_the_line
-
-		available = {
-			set_temp_variable = { target = NPA }
-			at_peace_or_same_enemies_as_TARGET = yes
-		}
-
-		visible = {
-			FROM = { tag = NPA }
-			country_exists = NPA
-			NPA = {
-				china_is_potential_government = yes
-				china_is_valid_government_to_join = yes
-				NOT = { has_war_with = ROOT }
-			}
-			NOT = { has_cosmetic_tag = national_protection_alliance }
-		}
-
-		cost = 25
-		fire_only_once = yes
-
+		priority = 60
+		fire_only_once = no
+		days_remove = 14
 		ai_will_do = {
-			base = 10000
-			modifier = { #Will not join a losing faction
+			base = 100
+			modifier = {
 				factor = 0
-				NPA = { surrender_progress > 0.3 }
-				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA } } #Bypass for if YUN has a pro NPA gamerule
-			}
-			modifier = { #Will not align with factions unless they border YUN
-				factor = 0
-				NOT = {
-					is_neighbor_of = FROM
-					FROM = { any_subject_country = { is_neighbor_of = ROOT } }
+				OR = {
+					AND = {
+						market_liberal > party_popularity@social_democrat
+						market_liberal > party_popularity@national_populist
+					}
+					AND = {
+						authoritarian_democrat > party_popularity@social_democrat
+						authoritarian_democrat > party_popularity@national_populist
+					}
 				}
 			}
-			modifier = { #Will never do if they have a non NPA gamerule set
+			modifier = {
 				factor = 0
-				NOT = { has_game_rule = { rule = YUN_forpol option = DEFAULT } }
-				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA } }
-			}
-			modifier = { #Add a bunch of reasons to join if they have a pro NPA gamerule
-				factor = 10
-				has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA }
+				OR = {
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
 			}
 		}
 
+		custom_cost_trigger = {
+			NOT = { command_power < 30 }
+		}
+		custom_cost_text = CP_30
+
 		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_align_with_NPA"
-			NPA = {
-				country_event = yun.506
-				custom_effect_tooltip = if_they_accept_tt
-				effect_tooltip = { china_puppet_ROOT_effect = yes }
+			log = "[GetLogRoot]: Decision complete YUN_Campaign_of_Intimidation_decision"
+			hidden_effect = {
+				add_command_power = -30
 			}
+			if = {
+				limit = { has_country_leader = { character = YUN_he_yingqin } }
+				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_BSS_zeal_tt
+				if = {
+					limit = { national_populist < 0.10 }
+					RKT_sub_zeal_small_effect = yes
+				}
+				else_if = {
+					limit = { national_populist < 0.15 }
+					RKT_sub_zeal_medium_effect = yes
+				}
+				else_if = {
+					limit = { national_populist < 0.25 }
+					RKT_sub_zeal_large_effect = yes
+				}
+				else_if = {
+					limit = { national_populist < 0.35 }
+					RKT_sub_zeal_mega_effect = yes
+				}
+				else = {
+					RKT_sub_zeal_giga_effect = yes
+				}
+				add_stability = -0.03
+			}
+			else = {
+				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_BSS_phase_2_tt
+				set_temp_variable = { YUN_whampoa_coup_mission_timer_change_temp_var = ROOT.party_popularity@national_populist } #Range from 0-1
+				multiply_temp_variable = { YUN_whampoa_coup_mission_timer_change_temp_var = -100 } #Range from 0-100
+				round_temp_variable = YUN_whampoa_coup_mission_timer_change_temp_var
+				clamp_temp_variable = {
+					var = YUN_whampoa_coup_mission_timer_change_temp_var
+					min = -50
+					max = -10
+				}
+				add_days_mission_timeout = {
+					mission = YUN_The_Whampoa_Coup_mission
+					days = YUN_whampoa_coup_mission_timer_change_temp_var
+				}
+				#Scared PSC and CCC people will try to vote against you
+				set_temp_variable = { YUN_PSC_delegate_change_temp_var = 0.01 }
+				YUN_KMT_hu_hanmin_crisis_PSC_delegates_effect = yes
+				set_temp_variable = { YUN_CCC_delegate_change_temp_var = 0.01 }
+				YUN_KMT_hu_hanmin_crisis_CCC_delegates_effect = yes
+			}
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_Campaign_of_Intimidation_decision"
+			#Mainly just have this so the player can more easily see when they can retake this decision.
 		}
 		fixed_random_seed = no
 	}
-	YUN_align_with_fengtian = {
-		icon = generic_agreement
 
-		allowed = { always = no } #activated by YUN_toe_the_line
+	YUN_Remind_about_Foreign_Threats_decision = {
+		icon = GFX_decision_jap_pacific_guardian
+		allowed = { always = no } #manually activated
 
-		available = {
-			at_peace_or_same_enemies_as_FROM = yes
-		}
-
-		visible = {
-			FROM = {
-				china_is_potential_government = yes
-				china_is_valid_government_to_join = yes
-				NOT = { has_war_with = ROOT }
-			}
-			NOT = { has_cosmetic_tag = national_protection_alliance }
-		}
-
-		cost = 25
-		fire_only_once = yes
-
+		cost = 35
+		priority = 60
+		fire_only_once = no
+		days_remove = 7
 		ai_will_do = {
-			base = 10000
-			modifier = {  #Will not join a losing faction
+			base = 100
+			modifier = {
 				factor = 0
-				FROM = { surrender_progress > 0.3 }
-				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FNG } } #Bypass for if YUN has a pro FNG gamerule
-			}
-			modifier = { #Will not align with factions unless they border YUN
-				factor = 0
-				NOT = {
-					is_neighbor_of = FROM
-					FROM = { any_subject_country = { is_neighbor_of = ROOT } }
+				OR = {
+					AND = {
+						market_liberal > party_popularity@social_democrat
+						market_liberal > party_popularity@national_populist
+					}
+					AND = {
+						authoritarian_democrat > party_popularity@social_democrat
+						authoritarian_democrat > party_popularity@national_populist
+					}
 				}
 			}
-			modifier = { #Will never do if they have a non FNG gamerule set
+			modifier = {
 				factor = 0
-				NOT = { has_game_rule = { rule = YUN_forpol option = DEFAULT } }
-				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FNG } }
-			}
-			modifier = { #Add a bunch of reasons to join if they have a pro FNG gamerule
-				factor = 10
-				has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FNG }
+				OR = {
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
 			}
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete YUN_align_with_fengtian"
-			FROM = {
-				country_event = yun.506
-				custom_effect_tooltip = if_they_accept_tt
-				effect_tooltip = { china_puppet_ROOT_effect = yes }
+			log = "[GetLogRoot]: Decision complete YUN_Remind_about_Foreign_Threats_decision"
+			set_temp_variable = { YUN_CCC_delegate_change_temp_var = -0.05 }
+			YUN_KMT_hu_hanmin_crisis_CCC_delegates_effect = yes
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_Remind_about_Foreign_Threats_decision"
+			#Mainly just have this so the player can more easily see when they can retake this decision.
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Encourage_Military_Disobedience_decision = {
+		icon = GFX_decision_eng_blackshirt_march
+		allowed = { always = no } #manually activated
+
+		custom_cost_text = stability3
+		custom_cost_trigger = {
+			has_stability > 0.03
+		}
+		priority = 60
+		fire_only_once = no
+		days_remove = 7
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					AND = {
+						market_liberal > party_popularity@social_democrat
+						market_liberal > party_popularity@national_populist
+					}
+					AND = {
+						authoritarian_democrat > party_popularity@social_democrat
+						authoritarian_democrat > party_popularity@national_populist
+					}
+				}
 			}
+			modifier = {
+				factor = 0
+				OR = {
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Encourage_Military_Disobedience_decision"
+			hidden_effect = {
+				add_stability = -0.03
+			}
+			set_temp_variable = { YUN_PSC_delegate_change_temp_var = -0.05 }
+			YUN_KMT_hu_hanmin_crisis_PSC_delegates_effect = yes
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_Encourage_Military_Disobedience_decision"
+			#Mainly just have this so the player can more easily see when they can retake this decision.
+		}
+		fixed_random_seed = no
+	}
+
+	#CEC & Others Decisions
+	YUN_Negotiate_with_the_SCPC_decision = {
+		icon = GFX_decision_eng_trade_unions_demand
+		allowed = { always = no } #manually activated
+
+		custom_cost_text = CP_50
+		custom_cost_trigger = {
+			NOT = { command_power < 50 }
+		}
+		priority = 50
+		fire_only_once = yes
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Negotiate_with_the_SCPC_decision"
+			hidden_effect = {
+				add_command_power = -50
+			}
+			custom_effect_tooltip = YUN_Negotiate_with_the_SCPC_tt
+			country_event = YUN.lategame.420 #Communications with the SCPC
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Handle_the_Leftist_Bloc_decision = {
+		icon = GFX_decision_generic_political_address
+		allowed = { always = no } #manually activated
+
+		custom_cost_text = CP_50
+		custom_cost_trigger = {
+			NOT = { command_power < 50 }
+		}
+		priority = 50
+		fire_only_once = yes
+		ai_will_do = { base = 100 }
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Handle_the_Leftist_Bloc_decision"
+			hidden_effect = {
+				add_command_power = -50
+			}
+			custom_effect_tooltip = YUN_Handle_the_Leftist_Bloc_tt
+			country_event = YUN.lategame.421 #Negotiations with the Left
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Negotiate_with_the_Dangwai_decision = {
+		icon = GFX_decision_generic_agreement
+		allowed = { always = no } #manually activated
+
+		cost = 50
+		priority = 50
+		fire_only_once = yes
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Negotiate_with_the_Dangwai_decision"
+			add_stability = 0.05
+			add_war_support = 0.05
+			set_temp_variable = { YUN_PSC_delegate_change_temp_var = 0.10 }
+			YUN_KMT_hu_hanmin_crisis_PSC_delegates_effect = yes
+		}
+		fixed_random_seed = no
+	}
+
+	YUN_Harness_the_Mass_Movement_decision = {
+		icon = GFX_decision_generic_agriculture
+		allowed = { always = no } #manually activated
+
+		priority = 50
+		fire_only_once = no
+		days_remove = 14
+		ai_will_do = {
+			base = 100
+			modifier = {
+				factor = 0
+				OR = {
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_QUN_MARLIB }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_LIFU_AUTDEM }
+					has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_JITAO_AUTDEM }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_CHENG_PATAUT }
+					#has_game_rule = { rule = YUN_KMT_path option = YUN_KMT_PATH_NATPOP }
+				}
+			}
+		}
+
+		custom_cost_trigger = {
+			NOT = { command_power < 15 }
+			NOT = { has_political_power < 15 }
+		}
+		custom_cost_text = PP_15_CP_15
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete YUN_Harness_the_Mass_Movement_decision"
+			hidden_effect = {
+				add_command_power = -15
+				add_political_power = -15
+			}
+			if = {
+				limit = { has_country_leader = { character = YUN_he_yingqin } }
+				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_CEC_zeal_tt
+				if = {
+					limit = { social_democrat < 0.10 }
+					RKT_add_zeal_small_effect = yes
+				}
+				else_if = {
+					limit = { social_democrat < 0.15 }
+					RKT_add_zeal_medium_effect = yes
+				}
+				else_if = {
+					limit = { social_democrat < 0.25 }
+					RKT_add_zeal_large_effect = yes
+				}
+				else_if = {
+					limit = { social_democrat < 0.35 }
+					RKT_add_zeal_mega_effect = yes
+				}
+				else = {
+					RKT_add_zeal_giga_effect = yes
+				}
+			}
+			else = {
+				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_CEC_phase_2_tt
+				#Stronger Bonus because it requires a prior decision to unlock.
+				set_temp_variable = { YUN_whampoa_coup_mission_timer_change_temp_var = ROOT.party_popularity@social_democrat } #Range from 0-1
+				multiply_temp_variable = { YUN_whampoa_coup_mission_timer_change_temp_var = -100 } #Range from 0-100
+				round_temp_variable = YUN_whampoa_coup_mission_timer_change_temp_var
+				clamp_temp_variable = {
+					var = YUN_whampoa_coup_mission_timer_change_temp_var
+					min = -50
+					max = -10
+				}
+				add_days_mission_timeout = {
+					mission = YUN_The_Whampoa_Coup_mission
+					days = YUN_whampoa_coup_mission_timer_change_temp_var
+				}
+				set_temp_variable = { YUN_PSC_delegate_change_temp_var = ROOT.party_popularity@social_democrat }
+				multiply_temp_variable = { YUN_PSC_delegate_change_temp_var = -0.20 } #1/10 of party popularity, so 10% = 2% (or 10 delegates).
+				YUN_KMT_hu_hanmin_crisis_PSC_delegates_effect = yes
+				set_temp_variable = { YUN_CCC_delegate_change_temp_var = ROOT.party_popularity@social_democrat }
+				multiply_temp_variable = { YUN_CCC_delegate_change_temp_var = -0.20 } #1/10 of party popularity, so 10% = 2% (or 10 delegates).
+				YUN_KMT_hu_hanmin_crisis_CCC_delegates_effect = yes
+			}
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot]: Decision remove YUN_Harness_the_Mass_Movement_decision"
+			#Mainly just have this so the player can more easily see when they can retake this decision.
 		}
 		fixed_random_seed = no
 	}
 }
+
+########################################
+######- Section 05: End game - #########
+########################################

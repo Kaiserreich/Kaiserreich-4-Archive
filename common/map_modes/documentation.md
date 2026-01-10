@@ -94,7 +94,6 @@ scripted_map_modes = {
 	# if yes, the game will update the map mode daily_update
 	# otherwise force_update_map_mode effect can be used
 	update_daily = yes
-
 	}
 }
 ```

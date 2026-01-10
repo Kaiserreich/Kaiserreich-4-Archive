@@ -32,11 +32,9 @@ peace_action_modifiers = {
 			ROOT.FROM = { tag = AUS }  # Checks if the taker is Austria
 
 			ROOT.FROM.FROM.FROM = { is_core_of = AUS }  # Checks if the state targeted by the peace action is a core of Austria
-
 		}
 
 		cost_multiplier = 0.65  # Multiply the action cost by 0.65, i.e. reduce cost by 35%. Must be > 0.
-
 	}
 }
 ```

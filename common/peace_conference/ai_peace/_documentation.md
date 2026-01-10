@@ -31,11 +31,9 @@ peace_ai_desires = {
 			ROOT.FROM = { tag = AUS }  # Checks if the taker is Austria
 
 			ROOT.FROM.FROM.FROM = { is_core_of = AUS }  # Checks if the state targeted by the peace action is a core of Austria
-
 		}
 
 		ai_desire = 100  # Increase the AI desire by 100 %. 0 means no change, -50 means reduce AI desire by 50 %, and so on.
-
 	}
 }
 ```

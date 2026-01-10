@@ -3,6 +3,8 @@
 ###########################
 
 add_namespace = china_events
+add_namespace = RKT.zealmechanic
+add_namespace = CHN.foreignpolicy
 
 ###########################
 ### ATTACK NOTIFICATION ###
@@ -75,15 +77,7 @@ country_event = { #FROM demands ROOT submit
 			china_is_potential_government = no
 			OR = {
 				china_is_unaligned = yes
-				AND = {
-					FROM = { tag = NPA }
-					OR = {
-						has_country_leader = { character = HNN_tang_shengzhi }
-						has_country_leader = { character = GXC_chen_lianbo }
-						has_country_leader = { character = GXC_ma_ji }
-					}
-				}
-				AND = {
+				AND = { #Exception so Tang Xiangming can align with Yan Xishan if Zhili are dead
 					FROM = {
 						tag = SHX
 						has_country_leader = { character = SHX_yan_xishan }
@@ -99,6 +93,21 @@ country_event = { #FROM demands ROOT submit
 						SZC = { exists = no }
 					}
 					LEP = { exists = no }
+				}
+				AND = { #Exception so Liu Wenhui can align with Beiyang if Federalists are dead
+					FROM = { china_alignment_beiyang = yes }
+					has_country_leader = { character = SZC_liu_wenhui }
+					NOT = { country_exists = UPC }
+				}
+				AND = { #Exception so Xiong Kewu can align with Kuomintang if Federalists are dead
+					FROM = {
+						OR = {
+							china_alignment_left_kuomintang = yes
+							china_alignment_right_kuomintang = yes
+						}
+					}
+					has_country_leader = { character = SZC_liu_wenhui }
+					NOT = { country_exists = UPC }
 				}
 			}
 			is_subject = no
@@ -132,7 +141,7 @@ country_event = { #FROM demands ROOT submit
 				tag = ANQ
 				OR = {
 					AND = { #check for Feds
-						has_game_rule = { rule = ANQ_forpol option = ANQ_FORPOL_FEDS }
+						has_game_rule = { rule = ANQ_forpol option = ANQ_FORPOL_UPC }
 						FROM = { china_is_aligned_with_federalists = no }
 					}
 					AND = { #check for FNG
@@ -171,16 +180,11 @@ country_event = { #FROM demands ROOT submit
 					}
 					AND = { #check for NPA
 						OR = {
-							has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_FORM_NPA }
 							has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_NPA }
 						}
 						FROM = { NOT = { tag = NPA } }
 					}
-					AND = { #check for QIE
-						has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_QIE }
-						FROM = { NOT = { tag = QIE } }
-					}
-					AND = { #check for Zhili Exiles
+					AND = { #check for Zhili
 						has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_ZHL }
 						FROM = { china_is_aligned_with_zhili = no }
 					}
@@ -213,7 +217,7 @@ country_event = { #FROM demands ROOT submit
 				NOT = { has_game_rule = { rule = SHX_forpol option = DEFAULT } }
 				OR = {
 					AND = { #check for Feds
-						has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_FEDS }
+						has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_UPC }
 						FROM = { china_is_aligned_with_federalists = no }
 					}
 					AND = { #check for FNG
@@ -263,11 +267,11 @@ country_event = { #FROM demands ROOT submit
 			}
 			modifier = {
 				factor = 0
-				###check if they are SZC and have a non-fitting forpol rule set
+				###check if they are SZC and have a non-fitting forpol rule/leader combination set
 				tag = SZC
 				OR = {
 					AND = { #check for Feds
-						has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_FEDS }
+						has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_UPC }
 						FROM = { china_is_aligned_with_federalists = no }
 					}
 					AND = { #check for FNG
@@ -296,6 +300,38 @@ country_event = { #FROM demands ROOT submit
 					#outright refuse if independent
 					has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_SZC }
 				}
+				OR = {
+					AND = { #Xiong Kewu/Li Jiayu will not join the KMT if UPC exists
+						OR = {
+							has_country_leader = { character = SZC_xiong_kewu }
+							has_country_leader = { character = SZC_li_jiayu }
+						}
+						FROM = { china_is_aligned_with_kmt = yes }
+						country_exists = UPC
+					}
+					AND = {
+						has_country_leader = { character = SZC_xiong_kewu } #Xiong Kewu will not join LKT if RKT exists and is lead by Hu Hanmin
+						FROM = { china_alignment_left_kuomintang = yes }
+						country_exists = RKT
+						RKT = { has_country_leader = { character = GXC_hu_hanmin } }
+					}
+					AND = { #Li Jiayu will not join the LKT
+						has_country_leader = { character = SZC_li_jiayu }
+						FROM = { china_alignment_left_kuomintang = yes }
+					}
+					AND = { #Liu Xiang/Liu Wenhui will not join the KMT
+						OR = {
+							has_country_leader = { character = SZC_liu_xiang }
+							has_country_leader = { character = SZC_liu_wenhui }
+						}
+						FROM = { china_is_aligned_with_kmt = yes }
+					}
+					AND = { #Liu Wenhui will not join Beiyang if UPC exists
+						has_country_leader = { character = SZC_liu_xiang }
+						FROM = { china_is_aligned_with_beiyang = yes }
+						country_exists = UPC
+					}
+				}
 			}
 			modifier = {
 				factor = 0
@@ -303,14 +339,7 @@ country_event = { #FROM demands ROOT submit
 				tag = YUN
 				NOT = { has_game_rule = { rule = YUN_forpol option = DEFAULT } }
 				OR = {
-					AND = { #check for Feds
-						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FEDS }
-						FROM = { china_is_aligned_with_federalists = no }
-					}
-					AND = { #check for FNG
-						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FNG }
-						FROM = { china_is_aligned_with_fengtian = no }
-					}
+					has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_YUN }
 					AND = { #check for RKMT
 						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_RKMT }
 						FROM = { china_is_aligned_with_right_kmt = no }
@@ -320,28 +349,14 @@ country_event = { #FROM demands ROOT submit
 						FROM = { china_is_aligned_with_left_kmt = no }
 					}
 					AND = { #check for NPA
-						OR = {
-							has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FORM_NPA }
-							has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA }
-						}
+						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA }
 						FROM = { NOT = { tag = NPA } }
 					}
-					AND = { #check for QIE
-						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_QIE }
-						FROM = { NOT = { tag = QIE } }
-					}
-					AND = { #check for Zhili Exiles
+					AND = { #check for Zhili
 						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_ZHL }
 						FROM = { china_is_aligned_with_zhili = no }
 					}
 				}
-			}
-			modifier = {
-				factor = 0
-				#Guominjun Shanxi never submits to QIE - traitors to Zhili and hates Monarchy
-				tag = SHX
-				has_country_flag = SHX_feng_victory_over_yan
-				FROM = { tag = QIE }
 			}
 			modifier = {
 				factor = 0
@@ -397,15 +412,7 @@ country_event = { #FROM demands ROOT submit
 			china_is_potential_government = no
 			OR = {
 				china_is_unaligned = yes
-				AND = {
-					FROM = { tag = NPA }
-					OR = {
-						has_country_leader = { character = HNN_tang_shengzhi }
-						has_country_leader = { character = GXC_chen_lianbo }
-						has_country_leader = { character = GXC_ma_ji }
-					}
-				}
-				AND = {
+				AND = { #Exception so Tang Xiangming can align with Yan Xishan if Zhili are dead
 					FROM = {
 						tag = SHX
 						has_country_leader = { character = SHX_yan_xishan }
@@ -422,6 +429,21 @@ country_event = { #FROM demands ROOT submit
 					}
 					LEP = { exists = no }
 				}
+				AND = { #Exception so Liu Wenhui can align with Beiyang if Federalists are dead
+					FROM = { china_alignment_beiyang = yes }
+					has_country_leader = { character = SZC_liu_wenhui }
+					NOT = { country_exists = UPC }
+				}
+				AND = { #Exception so Xiong Kewu can align with Kuomintang if Federalists are dead
+					FROM = {
+						OR = {
+							china_alignment_left_kuomintang = yes
+							china_alignment_right_kuomintang = yes
+						}
+					}
+					has_country_leader = { character = SZC_liu_wenhui }
+					NOT = { country_exists = UPC }
+				}
 			}
 		}
 		ai_chance = {
@@ -434,7 +456,7 @@ country_event = { #FROM demands ROOT submit
 				NOT = { has_game_rule = { rule = ANQ_forpol option = ANQ_FORPOL_ANQ } }
 				OR = {
 					AND = { #check for Feds
-						has_game_rule = { rule = ANQ_forpol option = ANQ_FORPOL_FEDS }
+						has_game_rule = { rule = ANQ_forpol option = ANQ_FORPOL_UPC }
 						FROM = { china_is_aligned_with_federalists = yes }
 					}
 					AND = { #check for FNG
@@ -480,7 +502,7 @@ country_event = { #FROM demands ROOT submit
 				NOT = { has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_SHX } }
 				OR = {
 					AND = { #check for Feds
-						has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_FEDS }
+						has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_UPC }
 						FROM = { china_is_aligned_with_federalists = yes }
 					}
 					AND = { #check for FNG
@@ -535,7 +557,7 @@ country_event = { #FROM demands ROOT submit
 				NOT = { has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_SZC } }
 				OR = {
 					AND = { #check for Feds
-						has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_FEDS }
+						has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_UPC }
 						FROM = { china_is_aligned_with_federalists = yes }
 					}
 					AND = { #check for FNG
@@ -570,14 +592,7 @@ country_event = { #FROM demands ROOT submit
 				tag = YUN
 				NOT = { has_game_rule = { rule = YUN_forpol option = DEFAULT } }
 				OR = {
-					AND = { #check for Feds
-						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FEDS }
-						FROM = { china_is_aligned_with_federalists = yes }
-					}
-					AND = { #check for FNG
-						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FNG }
-						FROM = { china_is_aligned_with_fengtian = yes }
-					}
+					has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_YUN }
 					AND = { #check for RKMT
 						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_RKMT }
 						FROM = { china_is_aligned_with_right_kmt = yes }
@@ -587,16 +602,8 @@ country_event = { #FROM demands ROOT submit
 						FROM = { china_is_aligned_with_left_kmt = yes }
 					}
 					AND = { #check for NPA
-						OR = {
-							has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FORM_NPA }
-							has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA }
-						}
+						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA }
 						FROM = { tag = NPA }
-					}
-					AND = { #check for QIE
-						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_QIE }
-						FROM = { tag = QIE }
-						FROM = { china_is_aligned_with_manchu = no }
 					}
 					AND = { #check for Zhili Exiles
 						has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_ZHL }
@@ -682,15 +689,7 @@ country_event = { #FROM demands ROOT submit
 				AND = {
 					china_is_unaligned = no
 					NOT = {
-						AND = {
-							FROM = { tag = NPA }
-							OR = {
-								has_country_leader = { character = HNN_tang_shengzhi }
-								has_country_leader = { character = GXC_chen_lianbo }
-								has_country_leader = { character = GXC_ma_ji }
-							}
-						}
-						AND = {
+						AND = { #Exception so Tang Xiangming can align with Yan Xishan if Zhili are dead
 							FROM = {
 								tag = SHX
 								has_country_leader = { character = SHX_yan_xishan }
@@ -706,6 +705,21 @@ country_event = { #FROM demands ROOT submit
 								SZC = { exists = no }
 							}
 							LEP = { exists = no }
+						}
+						AND = { #Exception so Liu Wenhui can align with Beiyang if Federalists are dead
+							FROM = { china_alignment_beiyang = yes }
+							has_country_leader = { character = SZC_liu_wenhui }
+							NOT = { country_exists = UPC }
+						}
+						AND = { #Exception so Xiong Kewu can align with Kuomintang if Federalists are dead
+							FROM = {
+								OR = {
+									china_alignment_left_kuomintang = yes
+									china_alignment_right_kuomintang = yes
+								}
+							}
+							has_country_leader = { character = SZC_liu_wenhui }
+							NOT = { country_exists = UPC }
 						}
 					}
 				}
@@ -753,7 +767,7 @@ country_event = { #FROM refuses to submit to ROOT
 	option = {
 		log = "[GetLogInfo]: event china_events.3 option china_events.3.a"
 		name = china_events.3.a #Later
-		ai_chance = { base = 0 }
+		ai_chance = { base = 1 } #AI will click this option if the below triggers turning 100 into 0 are met.
 		add_ai_strategy = {
 			type = antagonize
 			id = FROM
@@ -766,7 +780,7 @@ country_event = { #FROM refuses to submit to ROOT
 		log = "[GetLogInfo]: event china_events.3 option china_events.3.b"
 		name = china_events.3.b #Attack
 		ai_chance = {
-			base = 1
+			base = 100
 			modifier = {
 				factor = 0
 				country_is_in_dangerous_war = yes
@@ -1083,22 +1097,69 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 			}
 			modifier = {
 				factor = 0
+				###check if they are SZC and have a non-fitting forpol rule/leader combination set
 				tag = SZC
 				OR = {
-					FROM = { china_alignment_right_kuomintang = yes } #Will not join the Right Kuomintang
-					AND = { #Lu Chao will not join the Federalists if CHI exists
-						has_country_leader = { character = SZC_lu_chao }
-						FROM = { china_alignment_federalists = yes }
-						CHI = { exists = yes }
+					AND = { #check for Feds
+						has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_UPC }
+						FROM = { china_is_aligned_with_federalists = no }
+					}
+					AND = { #check for FNG
+						has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_FNG }
+						FROM = { china_is_aligned_with_fengtian = no }
+					}
+					AND = { #check for RKMT
+						has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_RKMT }
+						FROM = { china_is_aligned_with_right_kmt = no }
+					}
+					AND = { #check for LKMT
+						has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_LKMT }
+						FROM = { china_is_aligned_with_left_kmt = no }
+					}
+					AND = { #check for NPA
+						OR = {
+							has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_FORM_NPA }
+							has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_NPA }
+						}
+						FROM = { NOT = { tag = NPA } }
+					}
+					AND = { #check for QIE
+						has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_QIE }
+						FROM = { NOT = { tag = QIE } }
+					}
+					#outright refuse if independent
+					has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_SZC }
+				}
+				OR = {
+					AND = { #Xiong Kewu/Li Jiayu will not join the KMT if UPC exists
+						OR = {
+							has_country_leader = { character = SZC_xiong_kewu }
+							has_country_leader = { character = SZC_li_jiayu }
+						}
+						FROM = { china_is_aligned_with_kmt = yes }
+						country_exists = UPC
 					}
 					AND = {
-						OR = { #Xiong Kewu, Liu Wenhui, and Deng Xihou will not join the LKMT if Chen Jiongming is still around
-							has_country_leader = { character = SZC_xiong_kewu }
-							has_country_leader = { character = SZC_liu_wenhui }
-							has_country_leader = { character = SZC_deng_xihou }
-						}
+						has_country_leader = { character = SZC_xiong_kewu } #Xiong Kewu will not join LKT if RKT exists and is lead by Hu Hanmin
 						FROM = { china_alignment_left_kuomintang = yes }
-						event_target:original_liangguang = { GXC_chen_jiongming = { is_dead = no } }
+						country_exists = RKT
+						RKT = { has_country_leader = { character = GXC_hu_hanmin } }
+					}
+					AND = { #Li Jiayu will not join the LKT
+						has_country_leader = { character = SZC_li_jiayu }
+						FROM = { china_alignment_left_kuomintang = yes }
+					}
+					AND = { #Liu Xiang/Liu Wenhui will not join the KMT
+						OR = {
+							has_country_leader = { character = SZC_liu_xiang }
+							has_country_leader = { character = SZC_liu_wenhui }
+						}
+						FROM = { china_is_aligned_with_kmt = yes }
+					}
+					AND = { #Liu Wenhui will not join Beiyang if UPC exists
+						has_country_leader = { character = SZC_liu_xiang }
+						FROM = { china_is_aligned_with_beiyang = yes }
+						country_exists = UPC
 					}
 				}
 			}
@@ -1111,7 +1172,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 						tag = ANQ
 						OR = {
 							AND = { #check for Feds
-								has_game_rule = { rule = ANQ_forpol option = ANQ_FORPOL_FEDS }
+								has_game_rule = { rule = ANQ_forpol option = ANQ_FORPOL_UPC }
 								FROM = { china_is_aligned_with_federalists = no }
 							}
 							AND = { #check for FNG
@@ -1149,16 +1210,11 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 							}
 							AND = { #check for NPA
 								OR = {
-									has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_FORM_NPA }
 									has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_NPA }
 								}
 								FROM = { NOT = { tag = NPA } }
 							}
-							AND = { #check for QIE
-								has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_QIE }
-								FROM = { NOT = { tag = QIE } }
-							}
-							AND = { #check for Zhili Exiles
+							AND = { #check for Zhili
 								has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_ZHL }
 								FROM = { china_is_aligned_with_zhili = no }
 							}
@@ -1190,7 +1246,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 						NOT = { has_game_rule = { rule = SHX_forpol option = DEFAULT } }
 						OR = {
 							AND = { #check for Feds
-								has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_FEDS }
+								has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_UPC }
 								FROM = { china_is_aligned_with_federalists = no }
 							}
 							AND = { #check for FNG
@@ -1241,36 +1297,40 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 					AND = {
 						tag = SZC
 						NOT = { #Ignore forpol rules under the following conditions to prevent the player from doing stuff they're not supposed to
-							AND = { #Lu Chao is leader and LKMT are FROM
-								has_country_leader = { character = SZC_lu_chao }
+							AND = { #Xiong Kewu is leader, LKMT are FROM, and RKMT doesn't have Hu Hanmin
+								has_country_leader = { character = SZC_xiong_kewu }
 								FROM = { china_alignment_left_kuomintang = yes }
+								NOT = { RKT = { has_country_leader = { character = GXC_hu_hanmin } } }
 							}
-							AND = { #Lu Chao is leader, Feds are FROM, and LKMT are dead
-								has_country_leader = { character = SZC_lu_chao }
-								FROM = { china_alignment_federalists = yes }
-								CHI = { exists = no }
+							AND = { #Xiong Kewu is leader and RKMT are FROM, Hu Hanmin is leader
+								has_country_leader = { character = SZC_xiong_kewu }
+								FROM = { china_alignment_right_kuomintang = yes }
+								RKT = { has_country_leader = { character = GXC_hu_hanmin } }
 							}
-							AND = { #Xiong Kewu, Liu Wenhui, or Deng Xihou are leader and Feds are FROM
+							AND = { #Li Jiayu, Liu Wenhui, or Deng Xihou are leader and Feds are FROM
 								OR = {
-									has_country_leader = { character = SZC_xiong_kewu }
+									has_country_leader = { character = SZC_li_jiayu }
 									has_country_leader = { character = SZC_liu_wenhui }
 									has_country_leader = { character = SZC_deng_xihou }
 								}
 								FROM = { china_alignment_federalists = yes }
 							}
-							AND = { #Xiong Kewu, Liu Wenhui, or Deng Xihou are leader and LKMT are FROM AND Chen Jiongming is not around
+							AND = { #Li Jiayu, is leader and KMT are FROM AND UPC is not around
+								has_country_leader = { character = SZC_li_jiayu }
+								FROM = { china_is_aligned_with_kmt = yes }
+								NOT = { country_exists = UPC }
+							}
+							AND = { # Liu Wenhui or Deng Xihou are leader and Beiyang are FROM
 								OR = {
-									has_country_leader = { character = SZC_xiong_kewu }
 									has_country_leader = { character = SZC_liu_wenhui }
 									has_country_leader = { character = SZC_deng_xihou }
 								}
-								FROM = { china_alignment_left_kuomintang = yes }
-								event_target:original_liangguang = { GXC_chen_jiongming = { is_dead = yes } }
+								FROM = { china_alignment_beiyang = yes }
 							}
 						}
 						OR = {
 							AND = { #check for Feds
-								has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_FEDS }
+								has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_UPC }
 								FROM = { china_is_aligned_with_federalists = no }
 							}
 							AND = { #check for FNG
@@ -1305,14 +1365,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 						tag = YUN
 						NOT = { has_game_rule = { rule = YUN_forpol option = DEFAULT } }
 						OR = {
-							AND = { #check for Feds
-								has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FEDS }
-								FROM = { china_is_aligned_with_federalists = no }
-							}
-							AND = { #check for FNG
-								has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FNG }
-								FROM = { china_is_aligned_with_fengtian = no }
-							}
+							has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_YUN }
 							AND = { #check for RKMT
 								has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_RKMT }
 								FROM = { china_is_aligned_with_right_kmt = no }
@@ -1322,17 +1375,10 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 								FROM = { china_is_aligned_with_left_kmt = no }
 							}
 							AND = { #check for NPA
-								OR = {
-									has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FORM_NPA }
-									has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA }
-								}
+								has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA }
 								FROM = { NOT = { tag = NPA } }
 							}
-							AND = { #check for QIE
-								has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_QIE }
-								FROM = { NOT = { tag = QIE } }
-							}
-							AND = { #check for Zhili Exiles
+							AND = { #check for Zhili
 								has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_ZHL }
 								FROM = { china_is_aligned_with_zhili = no }
 							}
@@ -1388,9 +1434,9 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 							tag = QIE
 							china_alignment_northern_zhili = yes
 						}
-						NOT = { GXC = { has_country_leader = { character = GXC_chen_jiongming } } }
-						NOT = { SZC = { has_country_leader = { character = GXC_chen_jiongming } } }
-						NOT = { YUN = { has_country_leader = { character = YUN_tang_jiyao } } }
+						NOT = { GXC = { china_is_aligned_with_federalists = yes } }
+						NOT = { SZC = { china_is_aligned_with_federalists = yes } }
+						NOT = { YUN = { china_is_aligned_with_federalists = yes } }
 					}
 					AND = { #Tang Shengzhi is leader and
 						china_alignment_left_kuomintang = yes
@@ -1427,31 +1473,40 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 				factor = 0
 				tag = SZC
 				OR = {
-					AND = { #Lu Chao is leader and LKMT are FROM
-						has_country_leader = { character = SZC_lu_chao }
-						FROM = { china_alignment_left_kuomintang = yes }
-					}
-					AND = { #Lu Chao is leader, Feds are FROM, and LKMT are dead
-						has_country_leader = { character = SZC_lu_chao }
+					AND = { #Xiong Kewu is leader and UPC are FROM
+						has_country_leader = { character = SZC_xiong_kewu }
 						FROM = { china_alignment_federalists = yes }
+					}
+					AND = { #Xiong Kewu is leader and LKT are FROM, RKT does not have Hu Hanmin as leader
+						has_country_leader = { character = SZC_xiong_kewu }
+						FROM = { china_alignment_left_kuomintang = yes }
+						NOT = { RKT = { has_country_leader = { character = GXC_hu_hanmin } } }
+					}
+					AND = { #Xiong Kewu is leader, RKT are FROM, LKT is dead, and Hu Hanmin is leader
+						has_country_leader = { character = SZC_xiong_kewu }
+						FROM = { china_alignment_right_kuomintang = yes }
 						CHI = { exists = no }
+						RKT = { has_country_leader = { character = GXC_hu_hanmin } }
 					}
-					AND = { #Xiong Kewu, Liu Wenhui, or Deng Xihou are leader and Feds are FROM
+					AND = { #Li Jiayu, Liu Wenhui or Deng Xihou are leader and Feds are FROM
 						OR = {
-							has_country_leader = { character = SZC_xiong_kewu }
+							has_country_leader = { character = SZC_li_jiayu }
 							has_country_leader = { character = SZC_liu_wenhui }
 							has_country_leader = { character = SZC_deng_xihou }
 						}
 						FROM = { china_alignment_federalists = yes }
 					}
-					AND = { #Xiong Kewu, Liu Wenhui, or Deng Xihou are leader and LKMT are FROM AND Chen Jiongming is not around
+					AND = { #Li Jiayu is leader and KMT are FROM and UPC is not around
+						has_country_leader = { character = SZC_li_jiayu }
+						FROM = { china_is_aligned_with_kmt = yes }
+						NOT = { country_exists = UPC }
+					}
+					AND = { #Liu Wenhui or Deng Xihou are leader and Beiyang are FROM
 						OR = {
-							has_country_leader = { character = SZC_xiong_kewu }
 							has_country_leader = { character = SZC_liu_wenhui }
 							has_country_leader = { character = SZC_deng_xihou }
 						}
-						FROM = { china_alignment_left_kuomintang = yes }
-						event_target:original_liangguang = { GXC_chen_jiongming = { is_dead = yes } }
+						FROM = { china_alignment_beiyang = yes }
 					}
 				}
 			}
@@ -1466,7 +1521,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 						NOT = { has_game_rule = { rule = ANQ_forpol option = ANQ_FORPOL_ANQ } }
 						OR = {
 							AND = { #check for Feds
-								has_game_rule = { rule = ANQ_forpol option = ANQ_FORPOL_FEDS }
+								has_game_rule = { rule = ANQ_forpol option = ANQ_FORPOL_UPC }
 								FROM = { china_is_aligned_with_federalists = yes }
 							}
 							AND = { #check for FNG
@@ -1503,16 +1558,11 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 							}
 							AND = { #check for NPA
 								OR = {
-									has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_FORM_NPA }
 									has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_NPA }
 								}
 								FROM = { tag = NPA }
 							}
-							AND = { #check for QIE
-								has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_QIE }
-								FROM = { tag = QIE }
-							}
-							AND = { #check for Zhili Exiles
+							AND = { #check for Zhili
 								has_game_rule = { rule = GXC_forpol option = GXC_FORPOL_ZHL }
 								FROM = { china_is_aligned_with_zhili = yes }
 							}
@@ -1541,7 +1591,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 						NOT = { has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_SHX } }
 						OR = {
 							AND = { #check for Feds
-								has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_FEDS }
+								has_game_rule = { rule = SHX_forpol option = SHX_FORPOL_UPC }
 								FROM = { china_is_aligned_with_federalists = yes }
 							}
 							AND = { #check for FNG
@@ -1590,27 +1640,29 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 					AND = {
 						tag = SZC
 						NOT = {
-							FROM = { china_alignment_right_kuomintang = yes } #Will not join the Right Kuomintang no matter what rule is set
-							AND = { #Lu Chao will not join the Federalists if CHI exists no matter what rule is set
-								has_country_leader = { character = SZC_lu_chao }
-								FROM = { china_alignment_federalists = yes }
-								CHI = { exists = yes }
+							AND = { #Xiong Kewu/Li Jiayu will not join the KMT if UPC exists
+								OR = {
+									has_country_leader = { character = SZC_xiong_kewu }
+									has_country_leader = { character = SZC_li_jiayu }
+								}
+								FROM = { china_is_aligned_with_kmt = yes }
+								country_exists = UPC
 							}
 							AND = {
-								OR = { #Xiong Kewu, Liu Wenhui, and Deng Xihou will not join the LKMT if Chen Jiongming is still around no matter what rule is set
+								OR = { #Xiong Kewu, Liu Wenhui, and Li Jiayu will not join the LKMT if RKT exists
 									has_country_leader = { character = SZC_xiong_kewu }
+									has_country_leader = { character = SZC_li_jiayu }
 									has_country_leader = { character = SZC_liu_wenhui }
-									has_country_leader = { character = SZC_deng_xihou }
 								}
 								FROM = { china_alignment_left_kuomintang = yes }
-								event_target:original_liangguang = { GXC_chen_jiongming = { is_dead = no } }
+								country_exists = RKT
 							}
 						}
 						NOT = { has_game_rule = { rule = SZC_forpol option = DEFAULT } }
 						NOT = { has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_SZC } }
 						OR = {
 							AND = { #check for Feds
-								has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_FEDS }
+								has_game_rule = { rule = SZC_forpol option = SZC_FORPOL_UPC }
 								FROM = { china_is_aligned_with_federalists = yes }
 							}
 							AND = { #check for FNG
@@ -1643,14 +1695,7 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 						tag = YUN
 						NOT = { has_game_rule = { rule = YUN_forpol option = DEFAULT } }
 						OR = {
-							AND = { #check for Feds
-								has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FEDS }
-								FROM = { china_is_aligned_with_federalists = yes }
-							}
-							AND = { #check for FNG
-								has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FNG }
-								FROM = { china_is_aligned_with_fengtian = yes }
-							}
+							has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_YUN }
 							AND = { #check for RKMT
 								has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_RKMT }
 								FROM = { china_is_aligned_with_right_kmt = yes }
@@ -1660,17 +1705,10 @@ country_event = { #FROM invites ROOT to alliance - THIS IS FROM THE POV OF THE P
 								FROM = { china_is_aligned_with_left_kmt = yes }
 							}
 							AND = { #check for NPA
-								OR = {
-									has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_FORM_NPA }
-									has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA }
-								}
+								has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA }
 								FROM = { tag = NPA }
 							}
-							AND = { #check for QIE
-								has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_QIE }
-								FROM = { tag = QIE }
-							}
-							AND = { #check for Zhili Exiles
+							AND = { #check for Zhili
 								has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_ZHL }
 								FROM = { china_is_aligned_with_zhili = yes }
 							}
@@ -2216,6 +2254,267 @@ news_event = {
 	}
 }
 
+country_event = { #[FROM.Adjective] Nationalists Return to the Fold
+	id = china_events.18
+	title = china_events.18.t
+	desc = china_events.18.d
+	picture = GFX_report_event_YUN_KMT
+
+	is_triggered_only = yes #Event: GXC.lategame.444.a, GXC.lategame.515.a, GXC.lategame.516.a
+
+	option = {
+		log = "[GetLogInfo]: event china_events.18 option china_events.18.a"
+		name = china_events.18.a #We salute these faithful servants of the revolution.
+		trigger = { tag = RKT }
+		FROM = { save_event_target_as = target }
+		china_integrate_TARGET_effect = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.18 option china_events.18.b"
+		name = china_events.18.b #One nation, one party, one future...
+		trigger = { NOT = { tag = RKT } }
+	}
+}
+
+country_event = { #[FROM.GetAdjective] Leftists Submit to the Party-State
+	id = china_events.19
+	title = china_events.19.t
+	desc = china_events.19.d
+	picture = GFX_report_event_YUN_KMT
+
+	is_triggered_only = yes #Event: CHI.lategame.295.c
+
+	option = {
+		log = "[GetLogInfo]: event china_events.19 option china_events.19.a"
+		name = china_events.19.a #We will never forget the faithful comrades and their sacrifices.
+		trigger = { tag = LKT }
+		FROM = { save_event_target_as = target }
+		china_integrate_TARGET_effect = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.19 option china_events.19.b"
+		name = china_events.19.b #[FROM.FROM.GetLeader] has one fewer threat from within.
+		trigger = { NOT = { tag = LKT } }
+	}
+}
+
+country_event = { #[FROM.GetAdjective] Federalists Join Our Government
+	id = china_events.190
+	title = china_events.190.t
+	desc = china_events.190.d
+	picture = GFX_report_event_HNN_new_army_soldiers
+
+	is_triggered_only = yes #[EVENT] GXC.endgame.301
+
+	option = {
+		log = "[GetLogInfo]: event china_events.190 option china_events.190.a"
+		name = china_events.190.a #You will forever be in history as one of the better men.
+		trigger = { tag = UPC }
+		FROM = { save_event_target_as = target }
+		china_integrate_TARGET_effect = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.190 option china_events.190.b"
+		name = china_events.190.b #And so strengthens the Federalist Government.
+		trigger = { NOT = { tag = UPC } }
+	}
+}
+
+country_event = { #[FROM.GetAdjective] Joins Our Government
+	id = china_events.191
+	title = china_events.191.t
+	desc = china_events.191.d
+	picture = GFX_report_event_HNN_old_guizhou_clique
+
+	is_triggered_only = yes #[EVENT]  china_events.22 & generic integration event
+
+	option = {
+		log = "[GetLogInfo]: event china_events.191 option china_events.191.a"
+		name = china_events.191.a #
+		trigger = { tag = FROM.FROM }
+		FROM = { save_event_target_as = target }
+		china_integrate_TARGET_effect = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.191 option china_events.191.b"
+		name = china_events.191.b #
+		trigger = { NOT = { tag = FROM.FROM } }
+	}
+}
+
+country_event = { #National Unification and New Troubles
+	id = china_events.2145
+	title = china_events.2145.t
+	desc = china_events.2145.d
+	picture = GFX_report_event_CHN_china_five_colour_guard
+
+	is_triggered_only = yes #Triggered by [EFFECT] china_generic_unification_effect
+
+	option = {
+		log = "[GetLogInfo]: event china_events.2145 option china_events.2145.a"
+		name = china_events.2145.a #Let us begin to rebuild the pieces.
+	}
+}
+
+country_event = { #Unification On [FROM.GetAdjective]'s Terms
+	id = china_events.2200
+	title = china_events.2200.t
+	desc = china_events.2200.d
+	picture = GFX_report_event_CHN_five_colour_flag_gate_2
+
+	is_triggered_only = yes #[EVENT] china_events.2145
+
+	option = {
+		log = "[GetLogInfo]: event china_events.2200 option china_events.2200.a"
+		name = china_events.2200.a #We were hardly honest.
+		trigger = {
+			CHN_has_civil_war_prep_trigger = yes
+		}
+		ai_chance = {
+			base = 25
+			modifier = {
+				factor = 2
+				strength_ratio = {
+					tag = CHN
+					ratio > 0.80
+				}
+			}
+			modifier = {
+				factor = 2
+				ic_ratio = {
+					tag = CHN
+					ratio > 0.8
+				}
+			}
+			modifier = {
+				factor = 1.5
+				CHN = { has_war = yes }
+			}
+			modifier = {
+				factor = 0
+				is_chinese_tag = no
+				strength_ratio = {
+					tag = CHN
+					ratio < 0.75
+				}
+			}
+			modifier = {
+				factor = 3
+				check_variable = { CHN_civil_war_preparation_var > 0 }
+			}
+		}
+		#Penalty depending on your alignment - PP and Stab already deducted earlier.
+		if = {
+			limit = { china_same_alignment_as_FROM = yes }
+			add_command_power = -100
+			add_war_support = -0.10
+		}
+		else_if = {
+			limit = { china_compatible_alignment_to_FROM = yes }
+			add_command_power = -50
+			add_war_support = -0.05
+		}
+		else = {
+			#Everyone else
+			add_command_power = -30
+			add_war_support = -0.03
+		}
+
+		#Break the Puppetship
+		china_break_puppet_effect = yes
+		if = {
+			limit = { can_declare_war_on = FROM }
+			create_wargoal = {
+				target = FROM
+				type = topple_government
+			}
+		}
+
+		#Inform ROOT
+		hidden_effect = {
+			every_other_country = {
+				limit = { is_chinese_tag = yes }
+				country_event = { id = china_events.2300 days = 1 } #[FROM.GetAdjective] Rises in Revolt!
+			}
+			if = {
+				limit = { tag = GXC }
+				country_event = { id = GXC.lategame.960 days = 2 } #Civil War Breaks Out
+			}
+			else_if = {
+				limit = { tag = YUN }
+				country_event = { id = YUN.lategame.830 days = 2 } #The Yunnan Uprising!
+			}
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.2200 option china_events.2200.b"
+		name = china_events.2200.b #Send our overtures to [FROM.GetLeader]
+		trigger = { china_compatible_alignment_to_FROM = no }
+		ai_chance = { base = 75 }
+		add_political_power = 15
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.2200 option china_events.2200.c"
+		name = china_events.2200.c #Let us travel to the capital to congralute them. (Switch to [FROM.GetNameDef])
+		trigger = { china_compatible_alignment_to_FROM = yes }
+		ai_chance = {
+			base = 75
+			modifier = {
+				factor = 2
+				china_same_alignment_as_FROM = yes
+			}
+			modifier = {
+				factor = 0.25
+				OR = {
+					has_country_leader = { character = SHX_feng_yuxiang }
+				}
+			}
+		}
+		effect_tooltip = { china_integrate_ally_effect = yes }
+		CHN = { change_tag_from = ROOT }
+		custom_effect_tooltip = CHN_done_our_patriotic_duty_tt
+		hidden_effect = {
+			CHN = {
+				country_event = { id = china_events.191 days = 3 } #[FROM.Adjective] Joins Our Government
+			}
+		}
+	}
+}
+
+country_event = { #[FROM.GetLeader] Rises in Revolt!
+	id = china_events.2300
+	title = china_events.2300.t
+	desc = china_events.2300.d
+	picture = GFX_report_event_CHN_warlord_cavalry
+
+	is_triggered_only = yes #[EVENT] china_events.2200
+
+	option = {
+		log = "[GetLogInfo]: event china_events.2300 option china_events.2300.a"
+		name = china_events.2300.a #They'd be fools to try!
+		trigger = { tag = CHN }
+		ai_chance = { base = 100 }
+		if = {
+			limit = { can_declare_war_on = FROM }
+			create_wargoal = {
+				target = FROM
+				type = annex_everything
+			}
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.2300 option china_events.2300.b"
+		name = china_events.2300.b #Such is the state of the Warlord Era!
+		trigger = { NOT = { tag = CHN } }
+		ai_chance = { base = 100 }
+	}
+}
+
 ####################
 ### UNITED FRONT ###
 ####################
@@ -2490,16 +2789,19 @@ country_event = { #Chinese tag: FROM accepts ceasefire
 				limit = { owner = { is_ally_with = ROOT } }
 				transfer_state_to = FROM
 			}
-			white_peace_with_ROOT = yes
-			if = {
-				limit = {
-					OR = {
-						FROM = { tag = GXC }
-						ROOT = { tag = GXC }
-					}
+			ROOT = {
+				set_country_flag = {
+					flag = CHN_block_ships_from_being_transferred_flag #So when you White Peace someone it doesn't trigger the China unique effect to steal their ships.
+					days = 3
+					value = 1
 				}
-				log = "KR_Event_Logging;GXC CIVIL WAR WINNER - United Front Ceasefire"
 			}
+			set_country_flag = {
+				flag = CHN_block_ships_from_being_transferred_flag #So when you White Peace someone it doesn't trigger the China unique effect to steal their ships.
+				days = 3
+				value = 1
+			}
+			white_peace_with_ROOT = yes
 		}
 
 		#clean up isolated states
@@ -2892,8 +3194,50 @@ country_event = { #[ROOT.Capital.GetCapitalVictoryPointName]'s Growing Renown
 	}
 }
 
+country_event = { #A Provisional Capital?
+	id = china_events.52
+	title = china_events.52.t
+	desc = china_events.52.d
+	picture = GFX_report_event_GXC_guangzhou_government_gate
+
+	is_triggered_only = yes #Decision: china_provisional_capital
+
+	option = {
+		log = "[GetLogInfo]: event china_events.52 option china_events.52.a"
+		name = china_events.52.a #Beijing
+		trigger = {
+			controls_state = 608
+			NOT = { capital_scope = { state = 608 } }
+		}
+		set_capital = { state = 608 remember_old_capital = yes }
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.52 option china_events.52.b"
+		name = china_events.52.b #Wuhan
+		trigger = {
+			controls_state = 1048
+			NOT = { capital_scope = { state = 1048 } }
+		}
+		set_capital = { state = 1048 remember_old_capital = yes }
+		china_merges_wuhan = yes # Merges the tri-cities
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.52 option china_events.52.c"
+		name = china_events.52.c #Nanjing
+		trigger = {
+			controls_state = 613
+			NOT = { capital_scope = { state = 613 } }
+		}
+		set_capital = { state = 613 remember_old_capital = yes }
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.52 option china_events.52.e"
+		name = china_events.52.e #Let us remain in place in [ROOT.Capital.GetCapitalVictoryPointName]
+	}
+}
+
 ########################
-### Demanding Cities ###
+###### Other Stuff #####
 ########################
 country_event = { #The Central Government Demands Beijing
 	id = china_events.60
@@ -3023,6 +3367,211 @@ country_event = { #[FROM.GetNameDefCap] Yields Beijing
 	}
 }
 
+#Satellite Becoming a Challenger Warning
+country_event = { #[FROM.GetLeader] Challenges Our Legitimacy
+	id = china_events.62
+	title = china_events.62.t
+	desc = china_events.62.d
+
+	picture = GFX_report_event_SHX_yan_speech
+
+	is_triggered_only = yes #Triggered by effect CHN_add_to_civil_war_preparation_effect
+
+	option = {
+		log = "[GetLogInfo]: event china_events.62 option china_events.62.a"
+		name = china_events.62.a #We would be well served not to lower our guard.
+		custom_effect_tooltip = CHN_begin_civil_war_preparation_warning_tt
+	}
+}
+
+#Satellite Demanding Master Acts
+country_event = { #[FROM.GetLeader] Pressures Us To Act!
+	id = china_events.63
+	title = china_events.63.t
+	desc = china_events.63.d
+
+	picture = GFX_report_event_generic_beijing_map
+
+	is_triggered_only = yes #Triggered by decision
+	trigger = {
+		NOT = { has_global_flag = china_united }
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.63 option china_events.63.a"
+		name = china_events.63.a #All in due time...
+		add_to_variable = {
+			var = CHN_pressure_to_act_variable
+			value = 1
+		}
+		activate_mission = CHN_pressure_to_act_mission
+	}
+}
+
+country_event = { #[FROM.GetLeader] Adds Further Pressure
+	id = china_events.64
+	title = china_events.64.t
+	desc = china_events.64.d
+
+	picture = GFX_report_event_generic_beijing_map
+
+	is_triggered_only = yes #Triggered by decision
+	trigger = {
+		NOT = { has_global_flag = china_united }
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.64 option china_events.64.a"
+		name = china_events.64.a #We are getting to it!
+		add_to_variable = {
+			var = CHN_pressure_to_act_variable
+			value = 1
+			tooltip = CHN_pressure_to_act_tt
+		}
+	}
+}
+
+#########################
+######## Flavor #########
+#########################
+country_event = { #National Day of the Republic of China
+	id = china_events.70
+	title = china_events.70.t
+	desc = {
+		text = china_events.70.d.zhili_monarchy
+		trigger = {
+			OR = {
+				is_monarchy = yes
+				AND = {
+					is_subject_of = QIE
+					QIE = { is_monarchy = yes }
+				}
+			}
+			OR = {
+				china_alignment_northern_zhili = yes
+				china_alignment_southern_zhili = yes
+			}
+		}
+	}
+	desc = {
+		text = china_events.70.d.other_monarchy
+		trigger = {
+			OR = {
+				is_monarchy = yes
+				AND = {
+					is_subject_of = SHD
+					SHD = { is_monarchy = yes }
+				}
+			}
+			NOT = {
+				china_alignment_northern_zhili = yes
+				china_alignment_southern_zhili = yes
+			}
+		}
+	}
+	desc = {
+		text = china_events.70.d.kuomintang_republic
+		trigger = {
+			OR = {
+				china_alignment_right_kuomintang = yes
+				china_alignment_left_kuomintang = yes
+			}
+		}
+	}
+	desc = {
+		text = china_events.70.d.other_republic
+		trigger = {
+			NOT = {
+				is_monarchy = yes
+				OVERLORD = { is_monarchy = yes }
+			}
+			NOT = {
+				china_alignment_right_kuomintang = yes
+				china_alignment_left_kuomintang = yes
+				china_alignment_northern_zhili = yes
+				china_alignment_southern_zhili = yes
+			}
+		}
+	}
+
+	picture = GFX_report_event_CHI_military_parade
+
+	is_triggered_only = yes #Triggered by history files + yearly cycle.
+
+	immediate = {
+		hidden_effect = {
+			country_event = { id = china_events.70 days = 365 } #Yearly Holiday
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.70 option china_events.70.a"
+		name = china_events.70.a #Zhonghua Minguo Wansui!
+		trigger = {
+			NOT = {
+				is_monarchy = yes
+				AND = {
+					is_subject_of = QIE
+					QIE = { is_monarchy = yes }
+					NOT = { has_global_flag = china_united }
+				}
+			}
+		}
+		add_political_power = 10
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.70 option china_events.70.b"
+		name = china_events.70.b #Zhonghua Minguo Wansui...
+		trigger = {
+			OR = {
+				is_monarchy = yes
+				AND = {
+					is_subject_of = QIE
+					QIE = { is_monarchy = yes }
+				}
+			}
+			OR = {
+				china_alignment_northern_zhili = yes
+				china_alignment_southern_zhili = yes
+			}
+			NOT = {
+				has_global_flag = china_united
+			}
+		}
+		add_political_power = -5
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.70 option china_events.70.c"
+		name = china_events.70.c #Let October 10th fade from memory!
+		trigger = {
+			OR = {
+				is_monarchy = yes
+				AND = {
+					is_subject_of = QIE
+					QIE = { is_monarchy = yes }
+				}
+				AND = {
+					is_subject_of = SHD
+					SHD = { is_monarchy = yes }
+				}
+			}
+			NOT = {
+				china_alignment_northern_zhili = yes
+				china_alignment_southern_zhili = yes
+			}
+		}
+		if = {
+			limit = { has_global_flag = china_united }
+			add_political_power = 10
+		}
+		else = {
+			add_political_power = -10
+		}
+	}
+}
+
 ##############################
 ### DEALING WITH OUTSKIRTS ###
 ##############################
@@ -3073,6 +3622,10 @@ country_event = { #MON/TIB/ETS: China demands our annexation
 	picture = GFX_report_event_FNG_dairen
 
 	is_triggered_only = yes
+
+	trigger = {
+		FROM = { can_declare_war_on = ROOT }
+	}
 
 	immediate = {
 		hidden_effect = {
@@ -3163,6 +3716,7 @@ country_event = { #MON/TIB/ETS: China demands our annexation
 			NOT = { is_guaranteed_by = event_target:russia }
 			NOT = { is_guaranteed_by = event_target:india }
 		}
+		ai_chance = { base = 100 }
 		FROM = { country_event = { id = china_events.102 days = 1 } } #China: FROM demands autonomy
 		custom_effect_tooltip = if_they_accept_tt
 		effect_tooltip = {
@@ -3173,7 +3727,7 @@ country_event = { #MON/TIB/ETS: China demands our annexation
 				set_autonomy = {
 					target = ROOT
 					autonomy_state = chinese_suzerainty
-					end_wars = no
+					end_wars = yes
 				}
 			}
 		}
@@ -3377,7 +3931,7 @@ country_event = { #China: FROM demands autonomy
 			set_autonomy = {
 				target = FROM
 				autonomy_state = chinese_suzerainty
-				end_wars = no
+				end_wars = yes
 			}
 		}
 		FROM = { country_event = { id = china_events.103 days = 1 } } #MON/TIB/ETS: China accepts autonomy
@@ -3460,7 +4014,7 @@ country_event = { #MON/TIB/ETS: China accepts autonomy
 			set_autonomy = {
 				target = PREV
 				autonomy_state = chinese_suzerainty
-				end_wars = no
+				end_wars = yes
 			}
 		}
 		hidden_effect = { restore_previous_government_type = yes }
@@ -3493,7 +4047,7 @@ country_event = { #MON/TIB/ETS: China wants Han lands
 				set_autonomy = {
 					target = PREV
 					autonomy_state = chinese_suzerainty
-					end_wars = no
+					end_wars = yes
 				}
 			}
 			country_event = china_events.105 #China: FROM returns lands
@@ -3533,7 +4087,7 @@ country_event = { #China: FROM returns lands
 		set_autonomy = {
 			target = FROM
 			autonomy_state = chinese_suzerainty
-			end_wars = no
+			end_wars = yes
 		}
 		hidden_effect = {
 			FROM = { restore_previous_government_type = yes }
@@ -3561,7 +4115,7 @@ country_event = { #China: FROM refuses to return lands
 			set_autonomy = {
 				target = FROM
 				autonomy_state = chinese_suzerainty
-				end_wars = no
+				end_wars = yes
 			}
 		}
 		FROM = { country_event = { id = china_events.103 days = 1 } } #MON/TIB/ETS: China accepts autonomy
@@ -3814,7 +4368,7 @@ country_event = { #MON/TIB/ETS: repeating event to exhaust options
 				set_autonomy = {
 					target = ROOT
 					autonomy_state = chinese_suzerainty
-					end_wars = no
+					end_wars = yes
 				}
 			}
 		}
@@ -5266,8 +5820,9 @@ country_event = { #Establishing a Mongolian Administration
 					region = 222 #Inner Mongolia
 					state = 610 #Rehe
 					state = 715 #Liaobei
-					state = 884 #Xing'an
+					state = 996 #Barga
 				}
+				has_resistance = yes
 			}
 			add_compliance = -5
 			add_resistance = 5
@@ -5281,7 +5836,7 @@ country_event = { #Establishing a Mongolian Administration
 						region = 222 #Inner Mongolia
 						state = 610 #Rehe
 						state = 715 #Liaobei
-						state = 884 #Xing'an
+						state = 996 #Barga
 					}
 				}
 				ROOT = { activate_targeted_decision = { target = PREV decision = china_expand_autonomous_region } } #In case you acquire more territory. Broad in case you acquire inner Mongolia second.
@@ -5299,7 +5854,7 @@ country_event = { #Establishing a Mongolian Administration
 				612 #Chahar
 				610 #Rehe
 				715 #Liaobei
-				884 #Xing'an
+				996 #Barga
 			}
 		}
 		every_owned_state = {
@@ -5308,7 +5863,7 @@ country_event = { #Establishing a Mongolian Administration
 					is_mongolia = yes
 					state = 610 #Rehe
 					state = 715 #Liaobei
-					state = 884 #Xing'an
+					state = 996 #Barga
 				}
 			}
 			if = {
@@ -5327,7 +5882,7 @@ country_event = { #Establishing a Mongolian Administration
 							region = 222 #Inner Mongolia
 							state = 610 #Rehe
 							state = 715 #Liaobei
-							state = 884 #Xing'an
+							state = 996 #Barga
 						}
 					}
 					ROOT = { activate_targeted_decision = { target = PREV decision = china_expand_autonomous_region } } #In case you acquire more territory.
@@ -5353,7 +5908,7 @@ country_event = { #Establishing a Mongolian Administration
 					region = 222 #Inner Mongolia
 					state = 610 #Rehe
 					state = 715 #Liaobei
-					state = 884 #Xing'an
+					state = 996 #Barga
 				}
 				has_resistance = yes
 			}
@@ -5428,7 +5983,7 @@ country_event = { #Establishing a Tibetan Administration
 			}
 			if = {
 				limit = { has_resistance = yes }
-				add_compliance = 20
+				add_compliance = 10
 			}
 			add_dynamic_modifier = {
 				modifier = CHN_autonomous_region_modifier
@@ -5439,7 +5994,7 @@ country_event = { #Establishing a Tibetan Administration
 			limit = {
 				OR = {
 					state = 353 #Yushu
-					state = 604 #Xining
+					state = 604 #Babao
 					state = 601 #Xikang
 				}
 				has_resistance = yes
@@ -5453,7 +6008,7 @@ country_event = { #Establishing a Tibetan Administration
 					NOT = { is_owned_by = ROOT }
 					OR = {
 						is_tibet = yes
-						state = 604 #Xining
+						state = 604 #Babao
 						state = 601 #Xikang
 					}
 				}
@@ -5467,7 +6022,7 @@ country_event = { #Establishing a Tibetan Administration
 		trigger = {
 			owns_any_state_of = {
 				353 #Yushu
-				604 #Xining
+				604 #Babao
 				601 #Xikang
 			}
 		}
@@ -5476,13 +6031,13 @@ country_event = { #Establishing a Tibetan Administration
 				OR = {
 					is_tibet = yes
 					state = 353 #Yushu
-					state = 604 #Xining
+					state = 604 #Babao
 					state = 601 #Xikang
 				}
 			}
 			if = {
 				limit = { has_resistance = yes }
-				add_compliance = 10
+				add_compliance = 20
 			}
 			add_dynamic_modifier = {
 				modifier = CHN_autonomous_region_modifier
@@ -5495,7 +6050,7 @@ country_event = { #Establishing a Tibetan Administration
 					NOT = { is_owned_by = ROOT }
 					OR = {
 						is_tibet = yes
-						state = 604 #Xining
+						state = 604 #Babao
 						state = 601 #Xikang
 					}
 				}
@@ -5519,7 +6074,7 @@ country_event = { #Establishing a Tibetan Administration
 			limit = {
 				OR = {
 					state = 353 #Yushu
-					state = 604 #Xining
+					state = 604 #Babao
 					state = 601 #Xikang
 				}
 				has_resistance = yes
@@ -6962,6 +7517,16 @@ country_event = { #China: faction refuses to return the legations
 			leave_faction = yes
 		}
 		peace_out_non_neighbours_after_leaving_faction = yes
+		if = {
+			limit = { FROM = { tag = JAP } }
+			#Japan will get a war goal on you if you leave their faction.
+			JAP = {
+				create_wargoal = {
+					type = puppet_wargoal_focus
+					target = ROOT
+				}
+			}
+		}
 	}
 
 	option = {
@@ -8078,24 +8643,6 @@ news_event = {
 		name = china_events.311.a
 	}
 }
-#Federalist Sichuan unites China
-news_event = {
-	id = china_events.312
-	immediate = { log = "[GetLogInfo]: event china_events.312" }
-	title = china_events.312.t
-	desc = china_events.312.d
-	picture = GFX_news_event_GXC_federalist_government
-
-	trigger = { wants_world_news = yes } #Global news event
-
-	is_triggered_only = yes
-	fire_for_sender = no
-	major = yes
-
-	option = {
-		name = china_events.312.a
-	}
-}
 #Liu Xiang unites China
 news_event = {
 	id = china_events.313
@@ -8238,6 +8785,568 @@ news_event = {
 
 	option = {
 		name = china_events.343.a
+	}
+}
+
+news_event = { #Elders Clique
+	id = china_events.344
+	immediate = { log = "[GetLogInfo]: event china_events.344" }
+	title = china_events.344.t
+	desc = china_events.344.d
+	picture = GFX_news_event_GXC_hu_hanmin
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.344.a
+	}
+}
+
+news_event = { #New Guangdong
+	id = china_events.345
+	immediate = { log = "[GetLogInfo]: event china_events.345" }
+	title = china_events.345.t
+	desc = china_events.345.d
+	picture = GFX_news_event_GXC_chen_jitang
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.345.a
+	}
+}
+
+news_event = { #New Guangxi
+	id = china_events.346
+	immediate = { log = "[GetLogInfo]: event china_events.346" }
+	title = china_events.346.t
+	desc = china_events.346.d
+	picture = GFX_news_event_GXC_new_guangxi
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.346.a
+	}
+}
+
+news_event = { #Western Hills Clique
+	id = china_events.347
+	immediate = { log = "[GetLogInfo]: event china_events.347" }
+	title = china_events.347.t
+	desc = china_events.347.d
+	picture = GFX_news_event_GXC_western_hills_clique
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.347.a
+	}
+}
+
+news_event = { #Reconstruction Faction
+	id = china_events.348
+	immediate = { log = "[GetLogInfo]: event china_events.348" }
+	title = china_events.348.t
+	desc = china_events.348.d
+	picture = GFX_news_event_GXC_sun_fo
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.348.a
+	}
+}
+
+news_event = { #The Fourth Army Putsch in China
+	id = china_events.349
+	immediate = { log = "[GetLogInfo]: event china_events.349" }
+	title = china_events.349.t
+	desc = china_events.349.d
+	picture = GFX_news_event_GXC_fourth_army
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.349.a
+	}
+}
+news_event = { #Chinese Agrarians Topple KMT
+	id = china_events.350
+	immediate = { log = "[GetLogInfo]: event china_events.350" }
+	title = china_events.350.t
+	desc = china_events.350.d
+	picture = GFX_news_event_GXC_peasant_movement
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.350.a
+	}
+}
+
+news_event = { #The New Chinese Revolution
+	id = china_events.3500
+	immediate = { log = "[GetLogInfo]: event china_events.3500" }
+	title = china_events.3500.t
+	desc = china_events.3500.d
+	picture = GFX_news_event_GXC_tan_pingshan
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.3500.a
+	}
+}
+
+news_event = { #The Whampoa Clique Returns
+	id = china_events.351
+	immediate = { log = "[GetLogInfo]: event china_events.351" }
+	title = china_events.351.t
+	desc = china_events.351.d
+	picture = GFX_news_event_YUN_he_yingqin_unification
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.351.a
+	}
+}
+
+news_event = { #Rise of the Civil Engineering Clique
+	id = china_events.352
+	immediate = { log = "[GetLogInfo]: event china_events.352" }
+	title = china_events.352.t
+	desc = {
+		text = china_events.352.d_lkt
+		trigger = {
+			YUN = { china_is_aligned_with_left_kmt = yes }
+		}
+	}
+	desc = {
+		text = china_events.352.d_lkt
+		trigger = {
+			YUN = { china_is_aligned_with_right_kmt = yes }
+		}
+	}
+	picture = GFX_news_event_YUN_chen_cheng
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.352.a
+	}
+}
+
+news_event = { #The Blueshirt Revolution
+	id = china_events.353
+	immediate = { log = "[GetLogInfo]: event china_events.353" }
+	title = china_events.353.t
+	desc = china_events.353.d
+	picture = GFX_news_event_YUN_blueshirts
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.353.a
+	}
+}
+
+news_event = { #Zhejiang Revolutionaries Prevail
+	id = china_events.354
+	immediate = { log = "[GetLogInfo]: event china_events.354" }
+	title = china_events.354.t
+	desc = china_events.354.d
+	picture = GFX_news_event_YUN_dai_jitao
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.354.a
+	}
+}
+
+news_event = { #The Chinese Meiji Restoration
+	id = china_events.355
+	immediate = { log = "[GetLogInfo]: event china_events.355" }
+	title = china_events.355.t
+	desc = china_events.355.d
+	picture = GFX_news_event_YUN_zhang_qun
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.355.a
+	}
+}
+
+news_event = { #Rule of the Revolution's Most Loyal Soldier
+	id = china_events.356
+	immediate = { log = "[GetLogInfo]: event china_events.356" }
+	title = china_events.356.t
+	desc = china_events.356.d
+	picture = GFX_news_event_YUN_zhu_peide_takes_over
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.356.a
+	}
+}
+
+news_event = { #A Yunnan Thermidor?
+	id = china_events.357
+	immediate = { log = "[GetLogInfo]: event china_events.357" }
+	title = china_events.357.t
+	desc = china_events.357.d
+	picture = GFX_news_event_YUN_zhu_de_takes_over
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.357.a
+	}
+}
+
+news_event = { #Guangdong's Federalists Unite China
+	id = china_events.358
+	immediate = { log = "[GetLogInfo]: event china_events.358" }
+	title = china_events.358.t
+	desc = china_events.358.d
+	picture = GFX_news_event_GXC_federalist_unification
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.358.a
+	}
+}
+
+news_event = { #Chen Jiongming Unites China
+	id = china_events.359
+	immediate = { log = "[GetLogInfo]: event china_events.359" }
+	title = china_events.359.t
+	desc = china_events.359.d
+	picture = GFX_news_event_GXC_chen_jiongming
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.359.a
+	}
+}
+
+news_event = { #Yunnan Federalists Unite China
+	id = china_events.360
+	immediate = { log = "[GetLogInfo]: event china_events.360" }
+	title = china_events.360.t
+	desc = china_events.360.d
+	picture = GFX_news_event_YUN_tang_unifcation
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.360.a
+	}
+}
+
+news_event = { #Guangxi Warlords Unite China
+	id = china_events.361
+	immediate = { log = "[GetLogInfo]: event china_events.361" }
+	title = china_events.361.t
+	desc = china_events.361.d
+	picture = GFX_news_event_GXC_soldiers_guangzhou
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.361.a
+	}
+}
+
+news_event = { #Guangxi Warlords Unite China (Shen)
+	id = china_events.3610
+	immediate = { log = "[GetLogInfo]: event china_events.3610" }
+	title = china_events.3610.t
+	desc = china_events.3610.d
+	picture = GFX_news_event_GXC_li_yaohan
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.3610.a
+	}
+}
+
+news_event = { #Cantonese Merchants Unite China
+	id = china_events.362
+	immediate = { log = "[GetLogInfo]: event china_events.362" }
+	title = china_events.362.t
+	desc = china_events.362.d
+	picture = GFX_news_event_GXC_chen_lianbo
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.362.a
+	}
+}
+
+news_event = { #Yunnan Warlords Unite China
+	id = china_events.363
+	immediate = { log = "[GetLogInfo]: event china_events.363" }
+	title = china_events.363.t
+	desc = china_events.363.d
+	picture = GFX_news_event_YUN_yunnan_soldiers
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.363.a
+	}
+}
+
+news_event = { #Sichuan Democrats Unite China
+	id = china_events.364
+	immediate = { log = "[GetLogInfo]: event china_events.364" }
+	title = china_events.364.t
+	desc = china_events.364.d
+	picture = GFX_news_event_china_china_democratic_league
+
+	trigger = {
+		wants_world_news = yes
+	}
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		name = china_events.364.a
 	}
 }
 
@@ -8476,6 +9585,124 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event china_events.412 option china_events.412.a"
 		name = china_events.412.a #Boo
+		add_opinion_modifier = {
+			target = FROM
+			modifier = KR_disapproves_of_govt
+		}
+	}
+}
+
+country_event = {
+	id = china_events.413 #China seeks to join the Entente
+	title = china_events.413.t
+	desc = china_events.413.d
+	picture = GFX_report_event_CAN_king_army
+
+	is_triggered_only = yes #Fired from decision china_join_the_entente_decision
+
+	trigger = {
+		FROM = { is_in_faction = no }
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.413 option china_events.413.a"
+		name = china_events.413.a #Yes
+		ai_chance = { base = 100 }
+		faction_leader = { add_to_faction = FROM }
+		FROM = { country_event = china_events.414 }
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.413 option china_events.413.b"
+		name = china_events.413.b #No
+		ai_chance = { base = 0 }
+		FROM = { country_event = china_events.415 }
+	}
+}
+country_event = {
+	id = china_events.414 #China Joins the Entente
+	title = china_events.414.t
+	desc = china_events.414.d
+	picture = GFX_report_event_USA_victory_celebration
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event china_events.414 option china_events.414.a"
+		name = china_events.414.a #Yay
+	}
+}
+
+country_event = {
+	id = china_events.415 #Our Application Declined.
+	title = china_events.415.t
+	desc = china_events.415.d
+	picture = GFX_report_event_USA_capitol_hill
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event china_events.415 option china_events.415.a"
+		name = china_events.415.a #Boo
+		add_opinion_modifier = {
+			target = FROM
+			modifier = KR_disapproves_of_govt
+		}
+	}
+}
+
+country_event = {
+	id = china_events.416 #China seeks to join the American Faction
+	title = china_events.416.t
+	desc = china_events.416.d
+	picture = GFX_report_event_USA_artillery
+
+	is_triggered_only = yes #Fired from decision china_join_america_decision
+
+	trigger = {
+		FROM = { is_in_faction = no }
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.416 option china_events.416.a"
+		name = china_events.416.a #Yes
+		ai_chance = { base = 100 }
+		faction_leader = { add_to_faction = FROM }
+		FROM = { country_event = china_events.417 }
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.416 option china_events.416.b"
+		name = china_events.416.b #No
+		ai_chance = { base = 0 }
+		FROM = { country_event = china_events.418 }
+	}
+}
+country_event = {
+	id = china_events.417 #China Joins the American Faction
+	title = china_events.417.t
+	desc = china_events.417.d
+	picture = GFX_report_event_USA_victory_celebration
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event china_events.417 option china_events.417.a"
+		name = china_events.417.a #Yay
+	}
+}
+
+country_event = {
+	id = china_events.418 #Our Application Declined.
+	title = china_events.418.t
+	desc = china_events.418.d
+	picture = GFX_report_event_USA_capitol_hill
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event china_events.418 option china_events.418.a"
+		name = china_events.418.a #Boo
 		add_opinion_modifier = {
 			target = FROM
 			modifier = KR_disapproves_of_govt
@@ -8985,5 +10212,4209 @@ country_event = { #FROM refuses
 			target = FROM
 			modifier = KR_disapproves_of_govt
 		}
+	}
+}
+
+###########################
+### RKMT Zeal Mechanics ###
+###########################
+country_event = {
+	id = RKT.zealmechanic.001 #Three Principles Revised in [FROM.GetNameDef]!
+	title = RKT.zealmechanic.001.t
+	desc = RKT.zealmechanic.001.d
+	picture = GFX_report_event_CHI_sun_yat_sen
+
+	is_triggered_only = yes #Decision RKT_revising_the_three_principles_decision
+
+	option = {
+		log = "[GetLogInfo]: event RKT.zealmechanic.001 option RKT.zealmechanic.001.a"
+		name = RKT.zealmechanic.001.a #We must enforce party orthodoxy!
+		add_political_power = -30
+	}
+	option = {
+		log = "[GetLogInfo]: event RKT.zealmechanic.001 option RKT.zealmechanic.001.b"
+		name = RKT.zealmechanic.001.b #A little flexibility does us no harm...
+		RKT_sub_zeal_medium_effect = yes
+	}
+}
+
+country_event = {
+	id = RKT.zealmechanic.002 #[FROM.GetAdjective] Fidelity to the Three Principles
+	title = RKT.zealmechanic.002.t
+	desc = RKT.zealmechanic.002.d
+	picture = GFX_report_event_CHI_dr_sun_yat_sen_express_train
+
+	is_triggered_only = yes #Decision RKT_implementing_the_three_principles_decision
+
+	option = {
+		log = "[GetLogInfo]: event RKT.zealmechanic.002 option RKT.zealmechanic.002.a"
+		name = RKT.zealmechanic.002.a #An opportunity to bring them into the fold.
+		add_political_power = 30 #Does not include the 10 pp"tax"
+	}
+	option = {
+		log = "[GetLogInfo]: event RKT.zealmechanic.002 option RKT.zealmechanic.002.b"
+		name = RKT.zealmechanic.002.b #An example for all faithful to behold!
+		RKT_add_zeal_medium_effect = yes
+	}
+}
+
+country_event = {
+	id = RKT.zealmechanic.003 #Regional Insubordination in [FROM.GetNameDef]!
+	title = RKT.zealmechanic.003.t
+	desc = RKT.zealmechanic.003.d
+	picture = GFX_report_event_QIE_warlord_soldiers
+
+	is_triggered_only = yes #Decision RKT_defend_our_autonomy_decision
+
+	option = {
+		log = "[GetLogInfo]: event RKT.zealmechanic.003 option RKT.zealmechanic.003.a"
+		name = RKT.zealmechanic.003.a #We must bring them to heel.
+		add_stability = -0.03
+	}
+	option = {
+		log = "[GetLogInfo]: event RKT.zealmechanic.003 option RKT.zealmechanic.003.b"
+		name = RKT.zealmechanic.003.b #All will submit in the end.
+		RKT_sub_zeal_medium_effect = yes
+	}
+}
+
+country_event = {
+	id = RKT.zealmechanic.004 #[FROM.GetAdjective] Support for the National Cause!
+	title = RKT.zealmechanic.004.t
+	desc = RKT.zealmechanic.004.d
+	picture = GFX_report_event_CHI_trucks
+
+	is_triggered_only = yes #Decision RKT_express_our_loyalty_decision
+
+	option = {
+		log = "[GetLogInfo]: event RKT.zealmechanic.004 option RKT.zealmechanic.004.a"
+		name = RKT.zealmechanic.004.a #The reality is [ROOT.Capital.GetCapitalVictoryPointName] comes first."
+		add_stability = 0.03
+	}
+	option = {
+		log = "[GetLogInfo]: event RKT.zealmechanic.004 option RKT.zealmechanic.004.b"
+		name = RKT.zealmechanic.004.b #Their heroism helps all patriots.
+		RKT_add_zeal_medium_effect = yes
+	}
+}
+
+country_event = {
+	id = RKT.zealmechanic.005 #Stolen Party Legitimacy in [FROM.GetNameDef]!
+	title = RKT.zealmechanic.005.t
+	desc = RKT.zealmechanic.005.d
+	picture = GFX_report_event_CHI_successful_northern_expedition_flag
+
+	is_triggered_only = yes #Decision RKT_coopt_kuomintang_legitimacy_decision
+
+	option = {
+		log = "[GetLogInfo]: event RKT.zealmechanic.005 option RKT.zealmechanic.005.a"
+		name = RKT.zealmechanic.005.a #We must assure the people we are better than them.
+		add_war_support = -0.03
+	}
+	option = {
+		log = "[GetLogInfo]: event RKT.zealmechanic.005 option RKT.zealmechanic.005.b"
+		name = RKT.zealmechanic.005.b #The people will see through their charade on their own.
+		RKT_sub_zeal_medium_effect = yes
+	}
+}
+
+country_event = {
+	id = RKT.zealmechanic.006 #[FROM.GetAdjective] Patriots Rally!
+	title = RKT.zealmechanic.006.t
+	desc = RKT.zealmechanic.006.d
+	picture = GFX_report_event_CHN_victory_anniversary_parade
+
+	is_triggered_only = yes #Decision RKT_exhort_national_unity_decision
+
+	option = {
+		log = "[GetLogInfo]: event RKT.zealmechanic.006 option RKT.zealmechanic.006.a"
+		name = RKT.zealmechanic.006.a #The warlord and reactionary quake in our sight!
+		add_war_support = 0.03
+	}
+	option = {
+		log = "[GetLogInfo]: event RKT.zealmechanic.006 option RKT.zealmechanic.006.b"
+		name = RKT.zealmechanic.006.b #The foreign imperialists shall fear our wrath!
+		RKT_add_zeal_medium_effect = yes
+	}
+}
+
+####################################
+##### Kuomintang Flavour #####
+####################################
+
+country_event = {
+	id = china_events.800 #Saving the Country through Art
+	title = china_events.800.t
+	desc = china_events.800.d
+	picture = GFX_report_event_CHN_victory_anniversary_parade
+
+	is_triggered_only = yes #DecisionUnite China if RKMT aligned
+
+	option = {
+		log = "[GetLogInfo]: event china_events.800 option china_events.800.a"
+		name = china_events.800.a #A modern maestro!
+		add_war_support = 0.03
+	}
+}
+
+country_event = {
+	id = china_events.801 #The One Eyed Dragon
+	title = china_events.801.t
+	desc = china_events.801.d
+	picture = GFX_report_event_CHN_KMT_NRA_soldier_flag
+
+	is_triggered_only = yes #[ONACTION]: Completes Peace Conference while owning Chongqing, SZC doesn’t exist, LKT.
+	fire_only_once = yes
+
+	option = {
+		log = "[GetLogInfo]: event china_events.801 option china_events.801.a"
+		name = china_events.801.a #Our Revolution welcomes heroes such as him!
+		SZC = { SZC_liu_bocheng = { custom_effect_tooltip = character_becomes_a_general } }
+		if = {
+			limit = { tag = CHI }
+			CHI_PAC_small_effect = yes
+		}
+		else_if = {
+			limit = { tag = GXC }
+			GXC_GPA_small_effect = yes
+		}
+		else_if = {
+			limit = { tag = YUN }
+			YUN_CEC_small_effect = yes
+			YUN_3AL_small_effect = yes
+			YUN_YSP_small_effect = yes
+		}
+		hidden_effect = {
+			SZC = { SZC_liu_bocheng = { CHN_recruit_character_effect = yes } }
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.801 option china_events.801.b"
+		name = china_events.801.b #A well known trouble maker, we cannot tolerate his subversive attitude.
+		add_political_power = 15
+		if = {
+			limit = { tag = CHI }
+			CHI_RCA_medium_effect = yes
+		}
+		else_if = {
+			limit = { tag = GXC }
+			GXC_PPP_small_effect = yes
+		}
+		else_if = {
+			limit = { tag = YUN }
+			YUN_WPC_small_effect = yes
+			YUN_3AR_small_effect = yes
+			YUN_PSC_small_effect = yes
+		}
+	}
+}
+
+country_event = {
+	id = china_events.802 #Burning Timber in New Sichuan
+	title = china_events.802.t
+	desc = china_events.802.d
+	picture = GFX_report_event_CHN_KMT_NRA_soldier_flag
+
+	is_triggered_only = yes #[ONACTION]: Completes Peace Conference while owning Chongqing, SZC doesn’t exist, RKT.
+	fire_only_once = yes
+
+	option = {
+		log = "[GetLogInfo]: event china_events.802 option china_events.802.a"
+		name = china_events.802.a #The personal acclamation of the Guofu moves mountains!
+		SZC = { SZC_lu_chao = { custom_effect_tooltip = character_becomes_a_general } }
+		if = {
+			limit = { tag = GXC }
+			GXC_NGX_small_effect = yes
+			GXC_WHC_small_effect = yes
+		}
+		else_if = {
+			limit = { tag = YUN }
+			YUN_WPC_small_effect = yes
+			YUN_BSS_small_effect = yes
+		}
+		else_if = {
+			limit = { tag = HNN }
+			add_popularity = {
+				ideology = paternal_autocrat
+				popularity = 0.01
+			}
+		}
+		hidden_effect = {
+			SZC = { SZC_lu_chao = { CHN_recruit_character_effect = yes } }
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.802 option china_events.802.b"
+		name = china_events.802.b #Li has enough friends. Thank you, next.
+		add_political_power = 15
+		if = {
+			limit = { tag = GXC }
+			GXC_EDC_small_effect = yes
+			GXC_RCF_small_effect = yes
+		}
+		else_if = {
+			limit = { tag = YUN }
+			YUN_3AR_small_effect = yes
+			YUN_PSC_small_effect = yes
+		}
+		else_if = {
+			limit = { tag = HNN }
+			add_popularity = {
+				ideology = social_democrat
+				popularity = 0.01
+			}
+		}
+	}
+}
+
+####################################
+### Southern China War Mechanics ###
+####################################
+country_event = { #The Southern Standoff
+	id = china_events.450
+	title = china_events.450.t
+	desc = china_events.450.d
+	picture = GFX_report_event_YUN_army
+
+	is_triggered_only = yes ##Triggered by EVENT: league_collapse.106 #Hunan Secedes
+
+	option = {
+		log = "[GetLogInfo]: event china_events.450 option china_events.450.a"
+		name = china_events.450.a #Let us hope we can resolve things peacefully...
+		custom_effect_tooltip = china_events.450_tt
+	}
+}
+country_event = { #A War for the South? [GXC Variant]
+	id = china_events.451
+	title = china_events.451.t
+	desc = china_events.451.d
+	picture = GFX_report_event_YUN_KMT_march
+
+	is_triggered_only = yes ##Fired by [On Action] if HNN and YUN go to war and all three are independent.
+
+	immediate = {
+		hidden_effect = {
+			set_global_flag = CHN_south_china_war_started
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.451 option china_events.451.a"
+		name = china_events.451.a #We shall declare war on Hunan.
+		ai_chance = {
+			base = 20
+			modifier = {
+				factor = 0
+				OR = {
+					HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					NOT = {
+						#If HNN and YUN are not aligned with you, will steer AI to declare war on both or stay neutral.
+						HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+						YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					}
+				}
+			}
+		}
+		if = {
+			limit = { HNN = { ROOT = { china_same_alignment_as_PREV = yes } } }
+			add_political_power = -35
+			add_stability = -0.03
+			add_war_support = -0.03
+			custom_effect_tooltip = CHN_penalty_for_greater_alignment_tt
+		}
+		else = {
+			#Everyone else
+			add_political_power = -15
+			add_stability = -0.01
+			add_war_support = -0.01
+		}
+		declare_war_on = {
+			target = HNN
+			type = annex_everything
+		}
+		news_event = china_events.462 #The South China War [All Against HNN]
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.451 option china_events.451.b"
+		name = china_events.451.b #We shall declare war on Yunnan.
+		ai_chance = {
+			base = 20
+			modifier = {
+				factor = 0
+				OR = {
+					YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					NOT = {
+						#If HNN and YUN are not aligned with you, will steer AI to declare war on both or stay neutral.
+						HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+						YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					}
+				}
+			}
+		}
+		if = {
+			limit = { YUN = { ROOT = { china_same_alignment_as_PREV = yes } } }
+			add_political_power = -35
+			add_stability = -0.03
+			add_war_support = -0.03
+			custom_effect_tooltip = CHN_penalty_for_greater_alignment_tt
+		}
+		else = {
+			#Everyone else
+			add_political_power = -15
+			add_stability = -0.01
+			add_war_support = -0.01
+		}
+		declare_war_on = {
+			target = YUN
+			type = annex_everything
+		}
+		news_event = china_events.463 #The South China War [All Against YUN]
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.451 option china_events.451.c"
+		name = china_events.451.c #We shall declare war on both.
+		ai_chance = {
+			base = 50
+			modifier = {
+				factor = 0
+				OR = {
+					HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+				}
+			}
+		}
+		if = {
+			limit = {
+				HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+				YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+			}
+			add_political_power = -50
+			add_stability = -0.05
+			add_war_support = -0.05
+			custom_effect_tooltip = CHN_penalty_for_greater_alignment_tt
+		}
+		else_if = {
+			limit = {
+				OR = {
+					HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+				}
+			}
+			add_political_power = -35
+			add_stability = -0.03
+			add_war_support = -0.03
+			custom_effect_tooltip = CHN_penalty_for_greater_alignment_tt
+		}
+		else = {
+			#Everyone else
+			add_political_power = -15
+			add_stability = -0.01
+			add_war_support = -0.01
+		}
+		declare_war_on = {
+			target = HNN
+			type = annex_everything
+		}
+		declare_war_on = {
+			target = YUN
+			type = annex_everything
+		}
+		news_event = china_events.460 #The South China War [Three Way]
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.451 option china_events.451.e"
+		name = china_events.451.e #We shall declare our neutrality in this conflict.
+		ai_chance = {
+			base = 10
+			modifier = {
+				factor = 0 #Will never be neutral if one is aligned. May be neutral if both are.
+				OR = {
+					HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+				}
+				NOT = {
+					AND = {
+						HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+						YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					}
+				}
+			}
+		}
+	}
+}
+
+country_event = { #A War for the South? [HNN Variant]
+	id = china_events.452
+	title = china_events.452.t
+	desc = china_events.452.d
+	picture = GFX_report_event_YUN_KMT_march
+
+	is_triggered_only = yes ##Fired by [On Action] if GXC and YUN go to war and all three are independent.
+
+	immediate = {
+		hidden_effect = {
+			set_global_flag = CHN_south_china_war_started
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.452 option china_events.452.a"
+		name = china_events.452.a #We shall declare war on Liangguang.
+		ai_chance = {
+			base = 50
+			modifier = {
+				factor = 0
+				OR = {
+					GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+					NOT = {
+						#If HNN and YUN are not aligned with you, will steer AI to declare war on both or stay neutral.
+						GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+						YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					}
+				}
+			}
+		}
+		if = {
+			limit = { GXC = { ROOT = { china_same_alignment_as_PREV = yes } } }
+			add_political_power = -35
+			add_stability = -0.03
+			add_war_support = -0.03
+			custom_effect_tooltip = CHN_penalty_for_greater_alignment_tt
+		}
+		else = {
+			#Everyone else
+			add_political_power = -15
+			add_stability = -0.01
+			add_war_support = -0.01
+		}
+		declare_war_on = {
+			target = GXC
+			type = annex_everything
+		}
+		news_event = china_events.461 #The South China War [All Against GXC]
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.452 option china_events.452.b"
+		name = china_events.452.b #We shall declare war on Yunnan.
+		ai_chance = {
+			base = 25
+			modifier = {
+				factor = 0
+				OR = {
+					YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					NOT = {
+						#If HNN and YUN are not aligned with you, will steer AI to declare war on both or stay neutral.
+						GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+						YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					}
+				}
+			}
+		}
+		if = {
+			limit = { YUN = { ROOT = { china_same_alignment_as_PREV = yes } } }
+			add_political_power = -35
+			add_stability = -0.03
+			add_war_support = -0.03
+			custom_effect_tooltip = CHN_penalty_for_greater_alignment_tt
+		}
+		else = {
+			#Everyone else
+			add_political_power = -15
+			add_stability = -0.01
+			add_war_support = -0.01
+		}
+		declare_war_on = {
+			target = YUN
+			type = annex_everything
+		}
+		news_event = china_events.463 #The South China War [All Against YUN]
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.452 option china_events.452.c"
+		name = china_events.452.c #We shall declare war on both.
+		ai_chance = {
+			base = 15
+			modifier = {
+				factor = 0
+				OR = {
+					GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+					YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+				}
+			}
+		}
+		if = {
+			limit = {
+				GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+				YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+			}
+			add_political_power = -50
+			add_stability = -0.05
+			add_war_support = -0.05
+			custom_effect_tooltip = CHN_penalty_for_greater_alignment_tt
+		}
+		else_if = {
+			limit = {
+				OR = {
+					GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+					YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+				}
+			}
+			add_political_power = -35
+			add_stability = -0.03
+			add_war_support = -0.03
+			custom_effect_tooltip = CHN_penalty_for_greater_alignment_tt
+		}
+		else = {
+			#Everyone else
+			add_political_power = -15
+			add_stability = -0.01
+			add_war_support = -0.01
+		}
+		declare_war_on = {
+			target = GXC
+			type = annex_everything
+		}
+		declare_war_on = {
+			target = YUN
+			type = annex_everything
+		}
+		news_event = china_events.460 #The South China War [Three Way]
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.452 option china_events.452.e"
+		name = china_events.452.e #We shall declare our neutrality in this conflict.
+		ai_chance = {
+			base = 10
+			modifier = {
+				factor = 0 #Will never be neutral if one is aligned. May be neutral if both are.
+				OR = {
+					GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+					YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+				}
+				NOT = {
+					AND = {
+						GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+						YUN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					}
+				}
+			}
+		}
+	}
+}
+
+country_event = { #A War for the South? [YUN Variant]
+	id = china_events.453
+	title = china_events.453.t
+	desc = china_events.453.d
+	picture = GFX_report_event_YUN_KMT_march
+
+	is_triggered_only = yes ##Fired by [On Action] if GXC and HNN go to war and all three are independent.
+
+	immediate = {
+		hidden_effect = {
+			set_global_flag = CHN_south_china_war_started
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event china_events.453 option china_events.453.a"
+		name = china_events.453.a #We shall declare war on Liangguang.
+		ai_chance = {
+			base = 50
+			modifier = {
+				factor = 0
+				OR = {
+					GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+					NOT = {
+						#If HNN and YUN are not aligned with you, will steer AI to declare war on both or stay neutral.
+						GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+						HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					}
+				}
+			}
+		}
+		if = {
+			limit = { GXC = { ROOT = { china_same_alignment_as_PREV = yes } } }
+			add_political_power = -35
+			add_stability = -0.03
+			add_war_support = -0.03
+			custom_effect_tooltip = CHN_penalty_for_greater_alignment_tt
+		}
+		else = {
+			#Everyone else
+			add_political_power = -15
+			add_stability = -0.01
+			add_war_support = -0.01
+		}
+		declare_war_on = {
+			target = GXC
+			type = annex_everything
+		}
+		news_event = china_events.461 #The South China War [All Against GXC]
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.453 option china_events.453.b"
+		name = china_events.453.b #We shall declare war on Hunan.
+		ai_chance = {
+			base = 25
+			modifier = {
+				factor = 0
+				OR = {
+					HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					NOT = {
+						#If HNN and YUN are not aligned with you, will steer AI to declare war on both or stay neutral.
+						GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+						HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					}
+				}
+			}
+		}
+		if = {
+			limit = { HNN = { ROOT = { china_same_alignment_as_PREV = yes } } }
+			add_political_power = -35
+			add_stability = -0.03
+			add_war_support = -0.03
+			custom_effect_tooltip = CHN_penalty_for_greater_alignment_tt
+		}
+		else = {
+			#Everyone else
+			add_political_power = -15
+			add_stability = -0.01
+			add_war_support = -0.01
+		}
+		declare_war_on = {
+			target = HNN
+			type = annex_everything
+		}
+		news_event = china_events.463 #The South China War [All Against HNN]
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.453 option china_events.453.c"
+		name = china_events.453.c #We shall declare war on both.
+		ai_chance = {
+			base = 15
+			modifier = {
+				factor = 0
+				OR = {
+					GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+					HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+				}
+			}
+		}
+		if = {
+			limit = {
+				GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+				HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+			}
+			add_political_power = -50
+			add_stability = -0.05
+			add_war_support = -0.05
+			custom_effect_tooltip = CHN_penalty_for_greater_alignment_tt
+		}
+		else_if = {
+			limit = {
+				OR = {
+					GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+					HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+				}
+			}
+			add_political_power = -35
+			add_stability = -0.03
+			add_war_support = -0.03
+			custom_effect_tooltip = CHN_penalty_for_greater_alignment_tt
+		}
+		else = {
+			#Everyone else
+			add_political_power = -15
+			add_stability = -0.01
+			add_war_support = -0.01
+		}
+		declare_war_on = {
+			target = GXC
+			type = annex_everything
+		}
+		declare_war_on = {
+			target = HNN
+			type = annex_everything
+		}
+		news_event = china_events.460 #The South China War [Three Way]
+	}
+	option = {
+		log = "[GetLogInfo]: event china_events.453 option china_events.453.e"
+		name = china_events.453.e #We shall declare our neutrality in this conflict.
+		ai_chance = {
+			base = 10
+			modifier = {
+				factor = 0 #Will never be neutral if one is aligned. May be neutral if both are.
+				OR = {
+					GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+					HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+				}
+				NOT = {
+					AND = {
+						GXC = { ROOT = { china_same_alignment_as_PREV = yes } }
+						HNN = { ROOT = { china_same_alignment_as_PREV = yes } }
+					}
+				}
+			}
+		}
+	}
+}
+
+news_event = { #The South China War [Three Way]
+	id = china_events.460
+	immediate = { log = "[GetLogInfo]: event china_events.460" }
+	title = china_events.460.t
+	desc = china_events.460.d
+	picture = GFX_news_event_YUN_south_china_war
+
+	is_triggered_only = yes #Triggered by [EVENT] china_events.451.e, china_events.452.e, china_events.453.e
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_china_news = yes
+	}
+
+	option = {
+		name = china_events.460.a #We will emerge victorious.
+		log = "[GetLogInfo]: event china_events.460 option china_events.460.a"
+		trigger = {
+			OR = {
+				tag = GXC
+				tag = HNN
+				tag = YUN
+			}
+		}
+	}
+
+	option = {
+		name = china_events.460.b #Southern China falls to anarchy.
+		log = "[GetLogInfo]: event china_events.460 option china_events.460.b"
+		trigger = {
+			NOT = {
+				tag = GXC
+				tag = HNN
+				tag = YUN
+			}
+		}
+	}
+}
+
+news_event = { #The South China War [All Against GXC]
+	id = china_events.461
+	immediate = { log = "[GetLogInfo]: event china_events.461" }
+	title = china_events.461.t
+	desc = china_events.461.d
+	picture = GFX_news_event_YUN_south_china_war
+
+	is_triggered_only = yes #Triggered by [EVENT] china_events.452.a, china_events.453.a
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_china_news = yes
+	}
+
+	option = {
+		name = china_events.461.a #We will emerge victorious.
+		log = "[GetLogInfo]: event china_events.461 option china_events.461.a"
+		trigger = {
+			OR = {
+				tag = GXC
+				tag = HNN
+				tag = YUN
+			}
+		}
+	}
+
+	option = {
+		name = china_events.461.b #We will observe these developments carefully.
+		log = "[GetLogInfo]: event china_events.461 option china_events.461.b"
+		trigger = {
+			NOT = {
+				tag = GXC
+				tag = HNN
+				tag = YUN
+			}
+		}
+	}
+}
+
+news_event = { #The South China War [All Against HNN]
+	id = china_events.462
+	immediate = { log = "[GetLogInfo]: event china_events.462" }
+	title = china_events.462.t
+	desc = china_events.462.d
+	picture = GFX_news_event_YUN_south_china_war
+
+	is_triggered_only = yes #Triggered by [EVENT] china_events.451.a, china_events.453.b
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_china_news = yes
+	}
+
+	option = {
+		name = china_events.462.a #We will emerge victorious.
+		log = "[GetLogInfo]: event china_events.462 option china_events.462.a"
+		trigger = {
+			OR = {
+				tag = GXC
+				tag = HNN
+				tag = YUN
+			}
+		}
+	}
+
+	option = {
+		name = china_events.462.b #We will observe these developments carefully.
+		log = "[GetLogInfo]: event china_events.462 option china_events.462.b"
+		trigger = {
+			NOT = {
+				tag = GXC
+				tag = HNN
+				tag = YUN
+			}
+		}
+	}
+}
+
+news_event = { #The South China War [All Against YUN]
+	id = china_events.463
+	immediate = { log = "[GetLogInfo]: event china_events.463" }
+	title = china_events.463.t
+	desc = china_events.463.d
+	picture = GFX_news_event_YUN_south_china_war
+
+	is_triggered_only = yes #Triggered by [EVENT] china_events.451.b, china_events.452.b
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		regional_china_news = yes
+	}
+
+	option = {
+		name = china_events.463.a #We will emerge victorious.
+		log = "[GetLogInfo]: event china_events.463 option china_events.463.a"
+		trigger = {
+			OR = {
+				tag = GXC
+				tag = HNN
+				tag = YUN
+			}
+		}
+	}
+
+	option = {
+		name = china_events.463.b #We will observe these developments carefully.
+		log = "[GetLogInfo]: event china_events.463 option china_events.463.b"
+		trigger = {
+			NOT = {
+				tag = GXC
+				tag = HNN
+				tag = YUN
+			}
+		}
+	}
+}
+
+#####################
+### Foreign Policy ##
+#####################
+
+### KMT Foreign Policy (000-199):
+news_event = { #Foundation of the KMT Faction
+	id = CHN.foreignpolicy.001
+	immediate = { log = "[GetLogInfo]: event CHN.foreignpolicy.001" }
+	title = CHN.foreignpolicy.001.t
+	desc = {
+		text = CHN.foreignpolicy.001.d.internationale_of_the_east_standard
+		trigger = {
+			CHN_internationale_of_the_east_leaders_trigger = yes
+			NOT = {
+				has_country_leader = { character = CHI_chen_gongbo }
+				has_country_leader = { character = CHI_zeng_zhongming }
+			}
+		}
+	}
+	desc = {
+		text = CHN.foreignpolicy.001.d.sinopacific_friendship_association
+		trigger = { CHN_sino_pacific_friendship_association_leaders_trigger = yes }
+	}
+	desc = {
+		text = CHN.foreignpolicy.001.d.asian_peoples_antiimperialism_league
+		trigger = { CHN_asian_peoples_antiimperialism_league_leaders_trigger = yes }
+	}
+	desc = {
+		text = CHN.foreignpolicy.001.d.internationale_of_the_east_and_minshengpartnership
+		trigger = {
+			OR = {
+				has_country_leader = { character = CHI_chen_gongbo }
+				has_country_leader = { character = CHI_zeng_zhongming }
+			}
+		}
+	}
+	desc = {
+		text = CHN.foreignpolicy.001.d.asian_peoples_internationale
+		trigger = { CHN_asian_peoples_internationale_leaders_trigger = yes }
+	}
+	desc = {
+		text = CHN.foreignpolicy.001.d.new_asia_alliance
+		trigger = { CHN_new_asia_alliance_leaders_trigger = yes }
+	}
+	picture = GFX_news_event_CHI_kmt_victor
+
+	trigger = { wants_world_news = yes } #Global news event
+
+	is_triggered_only = yes
+	fire_for_sender = yes #Not sure why we had this disabled but gonna re-activate it.
+	major = yes
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.001 option CHN.foreignpolicy.001.a"
+		name = CHN.foreignpolicy.001.a #A menace in the East!
+		trigger = { has_war_with = FROM }
+	}
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.001 option CHN.foreignpolicy.001.b"
+		name = CHN.foreignpolicy.001.b #A force of liberation?
+		trigger = {
+			OR = {
+				tag = CHN
+				AND = {
+					FROM = { has_socialist_government = yes }
+					has_socialist_government = yes
+				}
+				KMT_FROM_has_compatible_government_trigger = yes
+			}
+			NOT = { has_war_with = FROM }
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.001 option CHN.foreignpolicy.001.c"
+		name = CHN.foreignpolicy.001.b #China flexes its muscles.
+		trigger = {
+			NOT = {
+				tag = CHN
+				AND = {
+					FROM = { has_socialist_government = yes }
+					has_socialist_government = yes
+				}
+				KMT_FROM_has_compatible_government_trigger = yes
+				has_war_with = FROM
+			}
+		}
+	}
+}
+
+country_event = { #invite from CHI
+	id = CHN.foreignpolicy.002
+	title = CHN.foreignpolicy.002.t
+	desc = CHN.foreignpolicy.002.d
+	picture = GFX_report_event_CHI_song_qingling_speech_world_peace
+	is_triggered_only = yes
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.002 option CHN.foreignpolicy.002.a"
+		name = CHN.foreignpolicy.002.a #Together for Pan-Asianism!
+		ai_chance = {
+			base = 50
+			modifier = {
+				factor = 0.5
+				has_opinion = { target = FROM value < 25 }
+			}
+			modifier = {
+				add = 100
+				JAP = { is_subject_of = FROM } #Add a bunch of bonus reasons to join if China fully defeated JAP
+			}
+			modifier = {
+				factor = 0
+				has_opinion = { target = FROM value < 0 }
+				if = {
+					limit = { tag = LKT }
+					NOT = { #Bypass the opinion requirement if a CHI forpol gamerule is set
+						AND = {
+							tag = ARM
+							has_game_rule = { rule = ARM_forpol option = ARM_FORPOL_PER }
+							PER = { is_in_faction_with = CHI }
+						}
+						AND = {
+							tag = BRM
+							has_game_rule = { rule = BRM_forpol option = BRM_FORPOL_CHI }
+						}
+						AND = {
+							tag = HAW
+							has_game_rule = { rule = HAW_forpol option = HAW_FORPOL_CHI }
+						}
+						AND = {
+							tag = HND
+							has_game_rule = { rule = HND_forpol option = HND_FORPOL_CHI }
+							NOT = { has_government = radical_socialist } #The Radsocs in HND are isolationists
+						}
+						AND = {
+							tag = INC
+							has_game_rule = { rule = INC_forpol option = INC_FORPOL_CHI }
+						}
+						AND = {
+							tag = INS
+							has_game_rule = { rule = INS_forpol option = INS_FORPOL_CHI }
+						}
+						AND = {
+							tag = PER
+							has_game_rule = { rule = PER_forpol option = PER_FORPOL_CHI }
+						}
+						AND = {
+							tag = PHI
+							has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_CHI }
+						}
+						AND = {
+							tag = SIA
+							has_game_rule = { rule = SIA_forpol option = SIA_FORPOL_CHI }
+						}
+						AND = {
+							tag = TUR
+							has_game_rule = { rule = TUR_forpol option = TUR_FORPOL_CHI }
+						}
+					}
+				}
+			}
+			modifier = {
+				add = 100 #Add a bunch of bonus reasons to join if a CHI forpol gamerule is set
+				FROM = { tag = LKT }
+				OR = {
+					AND = {
+						tag = ARM
+						has_game_rule = { rule = ARM_forpol option = ARM_FORPOL_PER }
+						PER = { is_in_faction_with = CHI }
+					}
+					AND = {
+						tag = BRM
+						has_game_rule = { rule = BRM_forpol option = BRM_FORPOL_CHI }
+					}
+					AND = {
+						tag = HAW
+						has_game_rule = { rule = HAW_forpol option = HAW_FORPOL_CHI }
+					}
+					AND = {
+						tag = HND
+						has_game_rule = { rule = HND_forpol option = HND_FORPOL_CHI }
+						NOT = { has_government = radical_socialist } #The Radsocs in HND are isolationists
+					}
+					AND = {
+						tag = INC
+						has_game_rule = { rule = INC_forpol option = INC_FORPOL_CHI }
+					}
+					AND = {
+						tag = INS
+						has_game_rule = { rule = INS_forpol option = INS_FORPOL_CHI }
+					}
+					AND = {
+						tag = PER
+						has_game_rule = { rule = PER_forpol option = PER_FORPOL_CHI }
+					}
+					AND = {
+						tag = PHI
+						has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_CHI }
+					}
+					AND = {
+						tag = SIA
+						has_game_rule = { rule = SIA_forpol option = SIA_FORPOL_CHI }
+					}
+					AND = {
+						tag = TUR
+						has_game_rule = { rule = TUR_forpol option = TUR_FORPOL_CHI }
+					}
+				}
+			}
+			modifier = {
+				factor = 0 #Give 0 reason to join if a tag has a non CHI forpol gamerule set
+				FROM = { tag = LKT }
+				OR = {
+					AND = {
+						tag = ARM
+						NOT = { has_game_rule = { rule = ARM_forpol option = DEFAULT } }
+						NOT = {
+							AND = {
+								has_game_rule = { rule = ARM_forpol option = ARM_FORPOL_PER }
+								PER = { is_in_faction_with = CHI }
+							}
+						}
+					}
+					AND = {
+						tag = BRM
+						NOT = { has_game_rule = { rule = BRM_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = BRM_forpol option = BRM_FORPOL_CHI } }
+					}
+					AND = {
+						tag = HAW
+						NOT = { has_game_rule = { rule = HAW_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = HAW_forpol option = HAW_FORPOL_CHI } }
+					}
+					AND = {
+						tag = HND
+						NOT = { has_game_rule = { rule = HND_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = HND_forpol option = HND_FORPOL_CHI } }
+					}
+					AND = {
+						tag = INC
+						NOT = { has_game_rule = { rule = INC_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = INC_forpol option = INC_FORPOL_CHI } }
+					}
+					AND = {
+						tag = INS
+						NOT = { has_game_rule = { rule = INS_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = INS_forpol option = INS_FORPOL_CHI } }
+					}
+					AND = {
+						tag = PER
+						NOT = { has_game_rule = { rule = PER_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = PER_forpol option = PER_FORPOL_CHI } }
+					}
+					AND = {
+						tag = PHI
+						NOT = { has_game_rule = { rule = PHI_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_CHI } }
+					}
+					AND = {
+						tag = SIA
+						NOT = { has_game_rule = { rule = SIA_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = SIA_forpol option = SIA_FORPOL_CHI } }
+					}
+					AND = {
+						tag = TUR
+						NOT = { has_game_rule = { rule = TUR_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = TUR_forpol option = TUR_FORPOL_CHI } }
+					}
+				}
+			}
+		}
+		FROM = {
+			country_event = { id = CHN.foreignpolicy.003 days = 3 } #FROM joins us
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.002 option CHN.foreignpolicy.002.b"
+		name = CHN.foreignpolicy.002.b #No, we have nothing to gain from this
+		ai_chance = {
+			base = 50
+			modifier = {
+				factor = 0.5
+				has_opinion = { target = FROM value > 75 }
+			}
+			modifier = {
+				factor = 0
+				JAP = { is_subject_of = FROM } #Give 0 reason to join if CHI fully defeated JAP
+			}
+			modifier = {
+				factor = 0
+				has_opinion = { target = FROM value > 95 }
+				if = {
+					limit = { tag = LKT }
+					NOT = { #Bypass +95 opinion making joining guaranteed if a non CHI forpol gamerule is set
+						AND = {
+							tag = ARM
+							NOT = { has_game_rule = { rule = ARM_forpol option = DEFAULT } }
+							NOT = {
+								AND = {
+									has_game_rule = { rule = ARM_forpol option = ARM_FORPOL_PER }
+									PER = { is_in_faction_with = FROM }
+								}
+							}
+						}
+						AND = {
+							tag = BRM
+							NOT = { has_game_rule = { rule = BRM_forpol option = DEFAULT } }
+							NOT = { has_game_rule = { rule = BRM_forpol option = BRM_FORPOL_CHI } }
+						}
+						AND = {
+							tag = HAW
+							NOT = { has_game_rule = { rule = HAW_forpol option = DEFAULT } }
+							NOT = { has_game_rule = { rule = HAW_forpol option = HAW_FORPOL_CHI } }
+						}
+						AND = {
+							tag = HND
+							NOT = { has_game_rule = { rule = HND_forpol option = DEFAULT } }
+							NOT = { has_game_rule = { rule = HND_forpol option = HND_FORPOL_CHI } }
+						}
+						AND = {
+							tag = INC
+							NOT = { has_game_rule = { rule = INC_forpol option = DEFAULT } }
+							NOT = { has_game_rule = { rule = INC_forpol option = INC_FORPOL_CHI } }
+						}
+						AND = {
+							tag = INS
+							NOT = { has_game_rule = { rule = INS_forpol option = DEFAULT } }
+							NOT = { has_game_rule = { rule = INS_forpol option = INS_FORPOL_CHI } }
+						}
+						AND = {
+							tag = PER
+							NOT = { has_game_rule = { rule = PER_forpol option = DEFAULT } }
+							NOT = { has_game_rule = { rule = PER_forpol option = PER_FORPOL_CHI } }
+						}
+						AND = {
+							tag = PHI
+							NOT = { has_game_rule = { rule = PHI_forpol option = DEFAULT } }
+							NOT = { has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_CHI } }
+						}
+						AND = {
+							tag = SIA
+							NOT = { has_game_rule = { rule = SIA_forpol option = DEFAULT } }
+							NOT = { has_game_rule = { rule = SIA_forpol option = SIA_FORPOL_CHI } }
+						}
+						AND = {
+							tag = TUR
+							NOT = { has_game_rule = { rule = TUR_forpol option = DEFAULT } }
+							NOT = { has_game_rule = { rule = TUR_forpol option = TUR_FORPOL_CHI } }
+						}
+					}
+				}
+			}
+			modifier = {
+				add = 100 #Add a bunch of bonus reasons to deny if a non CHI forpol gamerule is set
+				FROM = { tag = LKT }
+				OR = {
+					AND = {
+						tag = ARM
+						NOT = { has_game_rule = { rule = ARM_forpol option = DEFAULT } }
+						NOT = {
+							AND = {
+								has_game_rule = { rule = ARM_forpol option = ARM_FORPOL_PER }
+								PER = { is_in_faction_with = CHI }
+							}
+						}
+					}
+					AND = {
+						tag = BRM
+						NOT = { has_game_rule = { rule = BRM_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = BRM_forpol option = BRM_FORPOL_CHI } }
+					}
+					AND = {
+						tag = HAW
+						NOT = { has_game_rule = { rule = HAW_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = HAW_forpol option = HAW_FORPOL_CHI } }
+					}
+					AND = {
+						tag = HND
+						NOT = { has_game_rule = { rule = HND_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = HND_forpol option = HND_FORPOL_CHI } }
+					}
+					AND = {
+						tag = INC
+						NOT = { has_game_rule = { rule = INC_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = INC_forpol option = INC_FORPOL_CHI } }
+					}
+					AND = {
+						tag = INS
+						NOT = { has_game_rule = { rule = INS_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = INS_forpol option = INS_FORPOL_CHI } }
+					}
+					AND = {
+						tag = PER
+						NOT = { has_game_rule = { rule = PER_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = PER_forpol option = PER_FORPOL_CHI } }
+					}
+					AND = {
+						tag = PHI
+						NOT = { has_game_rule = { rule = PHI_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_CHI } }
+					}
+					AND = {
+						tag = SIA
+						NOT = { has_game_rule = { rule = SIA_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = SIA_forpol option = SIA_FORPOL_CHI } }
+					}
+					AND = {
+						tag = TUR
+						NOT = { has_game_rule = { rule = TUR_forpol option = DEFAULT } }
+						NOT = { has_game_rule = { rule = TUR_forpol option = TUR_FORPOL_CHI } }
+					}
+				}
+			}
+			modifier = {
+				factor = 0 #Give them 0 reason to deny if they have a pro CHI forpol gamerule
+				FROM = { tag = LKT }
+				OR = {
+					AND = {
+						tag = ARM
+						has_game_rule = { rule = ARM_forpol option = ARM_FORPOL_PER }
+						PER = { is_in_faction_with = CHI }
+					}
+					AND = {
+						tag = BRM
+						has_game_rule = { rule = BRM_forpol option = BRM_FORPOL_CHI }
+					}
+					AND = {
+						tag = HAW
+						has_game_rule = { rule = HAW_forpol option = HAW_FORPOL_CHI }
+					}
+					AND = {
+						tag = HND
+						has_game_rule = { rule = HND_forpol option = HND_FORPOL_CHI }
+						NOT = { has_government = radical_socialist } #The Radsocs in HND are isolationists
+					}
+					AND = {
+						tag = INC
+						has_game_rule = { rule = INC_forpol option = INC_FORPOL_CHI }
+					}
+					AND = {
+						tag = INS
+						has_game_rule = { rule = INS_forpol option = INS_FORPOL_CHI }
+					}
+					AND = {
+						tag = PER
+						has_game_rule = { rule = PER_forpol option = PER_FORPOL_CHI }
+					}
+					AND = {
+						tag = PHI
+						has_game_rule = { rule = PHI_forpol option = PHI_FORPOL_CHI }
+					}
+					AND = {
+						tag = SIA
+						has_game_rule = { rule = SIA_forpol option = SIA_FORPOL_CHI }
+					}
+					AND = {
+						tag = TUR
+						has_game_rule = { rule = TUR_forpol option = TUR_FORPOL_CHI }
+					}
+				}
+			}
+		}
+		FROM = {
+			country_event = { id = CHN.foreignpolicy.004 days = 3 } #Their loss
+		}
+	}
+}
+
+country_event = { #FROM accepts our invitation
+	id = CHN.foreignpolicy.003
+	title = CHN.foreignpolicy.003.t
+	desc = CHN.foreignpolicy.003.d
+	picture = GFX_report_event_CHN_ambassador_announcement
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.003 option CHN.foreignpolicy.003.a"
+		name = CHN.foreignpolicy.003.a #Together for Victory!
+		if = {
+			limit = {
+				FROM = {
+					original_tag = PER
+					is_faction_leader = yes
+					NOT = { is_in_faction_with = INT }
+				}
+			}
+			every_other_country = {
+				limit = {
+					is_in_faction_with = PER
+					has_socialist_government = yes
+					is_subject = no
+					is_faction_leader = no
+				}
+				set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
+				ROOT = { add_to_faction = PREV }
+			}
+			add_to_faction = FROM
+		}
+		else_if = {
+			limit = {
+				FROM = {
+					original_tag = HND
+					is_faction_leader = yes
+					NOT = { is_in_faction_with = INT }
+				}
+			}
+			every_other_country = {
+				limit = {
+					is_in_faction_with = PER
+					has_socialist_government = yes
+					is_subject = no
+					is_faction_leader = no
+				}
+				set_global_flag = TEMPORARY_DISABLED_FACTION_POPUP
+				ROOT = { add_to_faction = PREV }
+			}
+			add_to_faction = FROM
+		}
+		else_if = {
+			limit = {
+				FROM = {
+					original_tag = HAW
+					is_in_faction_with = INT
+				}
+			}
+			FROM = { leave_faction = yes }
+			add_to_faction = FROM
+		}
+		else_if = {
+			limit = {
+				FROM = {
+					original_tag = TUR
+				}
+			}
+			ROOT = { country_event = { id = CHI.endgame.048 days = 3 } } #TUR joins us
+			add_to_faction = FROM
+		}
+		else = {
+			add_to_faction = FROM
+		}
+		add_political_power = 20
+	}
+}
+country_event = { #FROM refuses
+	id = CHN.foreignpolicy.004
+	title = CHN.foreignpolicy.004.t
+	desc = CHN.foreignpolicy.004.d
+	picture = GFX_report_event_CHN_ambassador_announcement
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.004 option CHN.foreignpolicy.004.a"
+		name = CHN.foreignpolicy.004.a #Their loss
+		add_opinion_modifier = {
+			target = FROM
+			modifier = KR_disapproves_of_govt
+		}
+	}
+}
+
+country_event = {
+	id = CHN.foreignpolicy.005
+	title = CHN.foreignpolicy.005.t
+	desc = {
+		text = CHN.foreignpolicy.005.nomafcollapse.d
+		trigger = { CHI_asians_only_trigger = yes }
+	}
+	desc = {
+		text = CHN.foreignpolicy.005.mafcollapse.d
+		trigger = { CHI_afro_asian_trigger = yes }
+	}
+	picture = GFX_report_event_CHI_song_qingling_speech_world_peace
+	fire_only_once = yes
+	is_triggered_only = yes
+
+	major = yes
+	show_major = {
+		has_socialist_government = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.005 option CHN.foreignpolicy.005.a"
+		name = CHN.foreignpolicy.005.a #Cheers to a New Era!
+		trigger = {
+			NOT = {
+				num_of_controlled_factories > 50
+				tag = CHI
+			}
+		}
+		add_political_power = 10
+	}
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.005 option CHN.foreignpolicy.005.b"
+		name = CHN.foreignpolicy.005.b
+		trigger = { #A commendable initiative!
+			OR = {
+				tag = CHI
+				num_of_controlled_factories > 50
+			}
+		}
+		ai_chance = { base = 100 }
+		custom_effect_tooltip = CHI_invest_in_third_world_event_tt
+		CHI_invest_in_third_world_activation_effect = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.005 option CHN.foreignpolicy.005.c"
+		name = CHN.foreignpolicy.005.c #We have plans of our own.
+		trigger = {
+			NOT = { tag = CHI }
+			num_of_controlled_factories > 50
+		}
+		ai_chance = { base = 0 }
+		reverse_add_opinion_modifier = {
+			target = CHI
+			modifier = KR_displeased
+		}
+	}
+}
+
+country_event = {
+	id = CHN.foreignpolicy.0050
+	title = CHN.foreignpolicy.0050.t
+	desc = {
+		text = CHN.foreignpolicy.0050.nomafcollapse.d
+		trigger = { CHI_asians_only_trigger = yes }
+	}
+	desc = {
+		text = CHN.foreignpolicy.0050.mafcollapse.d
+		trigger = { CHI_afro_asian_trigger = yes }
+	}
+	picture = GFX_report_event_GXC_peng_pai_writing
+	fire_only_once = yes
+	is_triggered_only = yes
+
+	major = yes
+	show_major = {
+		has_socialist_government = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.0050 option CHN.foreignpolicy.0050.a"
+		name = CHN.foreignpolicy.0050.a #Cheers to a New Era!
+		trigger = {
+			NOT = {
+				num_of_controlled_factories > 50
+				tag = CHI
+			}
+		}
+		add_political_power = 10
+	}
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.0050 option CHN.foreignpolicy.0050.b"
+		name = CHN.foreignpolicy.0050.b
+		trigger = { #A commendable initiative!
+			OR = {
+				tag = CHI
+				num_of_controlled_factories > 50
+			}
+		}
+		ai_chance = { base = 100 }
+		custom_effect_tooltip = CHI_invest_in_third_world_event_tt
+		CHI_invest_in_third_world_activation_effect = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.0050 option CHN.foreignpolicy.0050.c"
+		name = CHN.foreignpolicy.0050.c #We have plans of our own.
+		trigger = {
+			NOT = { tag = CHI }
+			num_of_controlled_factories > 50
+		}
+		ai_chance = { base = 0 }
+		reverse_add_opinion_modifier = {
+			target = CHI
+			modifier = KR_displeased
+		}
+	}
+}
+
+country_event = {
+	id = CHN.foreignpolicy.006 #[FROM.GetNameDefCap] Offers Investment
+	title = CHN.foreignpolicy.006.t
+	desc = CHN.foreignpolicy.006.d
+	picture = GFX_report_event_FNG_industry2
+
+	is_triggered_only = yes #Fired from decision
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.006 option CHN.foreignpolicy.006.a"
+		name = CHN.foreignpolicy.006.a #We graciously accept.
+		ai_chance = { base = 100 }
+		hidden_effect = { FROM = { country_event = { id = CHN.foreignpolicy.007 days = 3 } } }
+		custom_effect_tooltip = CHI_chinese_investment_effect_tt
+		effect_tooltip = { add_timed_idea = { idea = CHI_third_world_investment_idea days = 720 } }
+	}
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.006 option CHN.foreignpolicy.006.b"
+		name = CHN.foreignpolicy.006.b #We politely decline
+		ai_chance = { base = 0 }
+		FROM = { country_event = { id = CHN.foreignpolicy.008 days = 3 } }
+		hidden_effect = { set_country_flag = CHI_refuse_foreign_investment_flag }
+	}
+}
+
+country_event = {
+	id = CHN.foreignpolicy.007 #[FROM.GetNameDefCap] Accepts Investment
+	title = CHN.foreignpolicy.007.t
+	desc = CHN.foreignpolicy.007.d
+	picture = GFX_report_event_generic_diplomacy3
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.007 option CHN.foreignpolicy.007.a"
+		name = CHN.foreignpolicy.007.a #The start of a fruitful partnership
+		add_opinion_modifier = {
+			target = FROM
+			modifier = KR_pleased
+		}
+	}
+}
+
+country_event = {
+	id = CHN.foreignpolicy.008 #[FROM.GetNameDefCap] Spurns Investment
+	title = CHN.foreignpolicy.008.t
+	desc = CHN.foreignpolicy.008.d
+	picture = GFX_report_event_CHN_ambassador_announcement
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.008 option CHN.foreignpolicy.008.a"
+		name = CHN.foreignpolicy.008.a #
+		add_opinion_modifier = {
+			target = FROM
+			modifier = KR_disapproves_of_govt
+		}
+	}
+}
+
+country_event = {
+	id = CHN.foreignpolicy.009 #CHI wants us [X Nation] to join the PMCEP
+	title = CHN.foreignpolicy.009.t
+	desc = CHN.foreignpolicy.009.d
+	picture = GFX_report_event_CHN_ambassador_announcement
+
+	is_triggered_only = yes #Fired from decision
+
+	option = { #Yes we agree
+		log = "[GetLogInfo]: event CHN.foreignpolicy.009 option CHN.foreignpolicy.009.a"
+		name = CHN.foreignpolicy.009.a #we accept
+		ai_chance = { base = 100 }
+		KMT_add_to_minsheng_partnership = yes
+		hidden_effect = { FROM = { country_event = { id = CHN.foreignpolicy.010 days = 4 } } }
+	}
+
+	option = { #hell no
+		log = "[GetLogInfo]: event CHN.foreignpolicy.009 option CHN.foreignpolicy.009.b"
+		name = CHN.foreignpolicy.009.b
+		ai_chance = { base = 0 }
+		hidden_effect = { FROM = { country_event = { id = CHN.foreignpolicy.011 days = 4 } } }
+	}
+}
+country_event = {
+	id = CHN.foreignpolicy.010 #X nation joins the PMCEP
+	title = CHN.foreignpolicy.010.t
+	desc = CHN.foreignpolicy.010.d
+	picture = GFX_report_event_generic_diplomacy3
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.010 option CHN.foreignpolicy.010.a"
+		name = CHN.foreignpolicy.010.a #yay!
+		FROM = { custom_effect_tooltip = CHI_member_of_minsheng_partnership }
+		custom_effect_tooltip = tooltip_white_line
+		ROOT = { custom_effect_tooltip = CHI_modify_minsheng_partnership }
+	}
+}
+
+country_event = { #X Nation rejects memberhsip to the PMCEP
+	id = CHN.foreignpolicy.011
+	title = CHN.foreignpolicy.011.t
+	desc = CHN.foreignpolicy.011.d
+	picture = GFX_report_event_CHN_ambassador_announcement
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.011 option CHN.foreignpolicy.011.a"
+		name = CHN.foreignpolicy.011.a #their loss
+		add_opinion_modifier = {
+			target = FROM
+			modifier = KR_disapproves_of_govt
+		}
+	}
+}
+
+### UPC Foreign Policy (200-399):
+news_event = { #Foundation of the Chinese Faction
+	id = CHN.foreignpolicy.200
+	immediate = { log = "[GetLogInfo]: event CHN.foreignpolicy.200" }
+	title = CHN.foreignpolicy.200.t
+	desc = {
+		text = CHN.foreignpolicy.200.d.wuxing_protocol
+		trigger = { tag = FNG }
+	}
+	desc = {
+		text = CHN.foreignpolicy.200.d.league_of_free_asian_states
+		trigger = { tag = QIE }
+	}
+	desc = {
+		text = CHN.foreignpolicy.200.d.SHX_yan_faction
+		trigger = { has_country_leader = { character = SHX_yan_xishan } }
+	}
+	desc = {
+		text = CHN.foreignpolicy.200.d.SHX_feng_faction
+		trigger = { has_country_leader = { character = SHX_feng_yuxiang } }
+	}
+	desc = {
+		text = CHN.foreignpolicy.200.d.asian_federation
+		trigger = { CHN_asia_federation_leaders_trigger = yes }
+	}
+	desc = {
+		text = CHN.foreignpolicy.200.d.asia_pacific_treaty_organisation
+		trigger = { CHN_asia_pacific_treaty_organisation_leaders_trigger = yes }
+	}
+	desc = {
+		text = CHN.foreignpolicy.200.d.asia_pacific_security_pact
+		trigger = {
+			NOT = {
+				tag = FNG
+				tag = QIE
+				has_country_leader = { character = SHX_yan_xishan }
+				has_country_leader = { character = SHX_feng_yuxiang }
+			}
+			CHN_asia_federation_leaders_trigger = no
+			CHN_asia_pacific_treaty_organisation_leaders_trigger = no
+		}
+	}
+	picture = GFX_news_event_china_unified
+
+	is_triggered_only = yes
+
+	major = yes
+	fire_for_sender = yes
+	show_major = {
+		always = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.200 option CHN.foreignpolicy.200.a"
+		name = CHN.foreignpolicy.200.a #An Eastern Peril!
+		trigger = { has_war_with = FROM }
+	}
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.200 option CHN.foreignpolicy.200.b"
+		name = CHN.foreignpolicy.200.b #The Dragon Roars!
+		trigger = {
+			OR = {
+				tag = CHN
+				is_ally_with = CHN
+			}
+		}
+	}
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.200 option CHN.foreignpolicy.200.c"
+		name = CHN.foreignpolicy.200.b #A new power rises in the East.
+		trigger = {
+			NOT = {
+				tag = CHN
+				is_ally_with = CHN
+				has_war_with = FROM
+			}
+		}
+	}
+}
+
+country_event = {
+	id = CHN.foreignpolicy.201
+	title = CHN.foreignpolicy.201.t
+	desc = CHN.foreignpolicy.201.d
+	picture = GFX_report_event_CHN_ambassador_announcement
+	fire_only_once = yes
+	is_triggered_only = yes
+
+	fire_for_sender = yes
+	major = yes
+	show_major = {
+		regional_asia_news = yes
+	}
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.201 option CHN.foreignpolicy.201.a"
+		name = CHN.foreignpolicy.201.a #We bring the continent closer together!
+		trigger = {
+			OR = {
+				tag = CHN
+				is_ally_with = CHN
+			}
+		}
+		add_political_power = 10
+	}
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.201 option CHN.foreignpolicy.201.b"
+		name = CHN.foreignpolicy.201.b
+		trigger = { #China seeks to rebuild its trade empire.
+			NOT = {
+				tag = CHN
+				is_ally_with = CHN
+			}
+		}
+		ai_chance = { base = 100 }
+	}
+}
+
+country_event = {
+	id = CHN.foreignpolicy.202 #[FROM.GetNameDefCap] Offers Investment
+	title = CHN.foreignpolicy.202.t
+	desc = CHN.foreignpolicy.202.d
+	picture = GFX_report_event_FNG_industry2
+
+	is_triggered_only = yes #Fired from decision
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.202 option CHN.foreignpolicy.202.a"
+		name = CHN.foreignpolicy.202.a #We graciously accept.
+		ai_chance = { base = 100 }
+		hidden_effect = { FROM = { country_event = { id = CHN.foreignpolicy.203 days = 3 } } }
+		custom_effect_tooltip = CHI_chinese_investment_effect_tt
+		effect_tooltip = { add_ideas = CHN_east_asian_community_member_idea }
+	}
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.202 option CHN.foreignpolicy.202.b"
+		name = CHN.foreignpolicy.202.b #We politely decline
+		ai_chance = { base = 0 }
+		trigger = {
+			NOT = { is_subject_of = CHN }
+		}
+		FROM = { country_event = { id = CHN.foreignpolicy.204 days = 3 } }
+		hidden_effect = { set_country_flag = CHN_refuse_foreign_investment_flag }
+	}
+}
+
+country_event = {
+	id = CHN.foreignpolicy.203 #[FROM.GetNameDefCap] Accepts Investment
+	title = CHN.foreignpolicy.203.t
+	desc = CHN.foreignpolicy.203.d
+	picture = GFX_report_event_generic_diplomacy3
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.203 option CHN.foreignpolicy.203.a"
+		name = CHN.foreignpolicy.203.a #The start of a fruitful partnership
+		add_opinion_modifier = {
+			target = FROM
+			modifier = KR_pleased
+		}
+	}
+}
+
+country_event = {
+	id = CHN.foreignpolicy.204 #[FROM.GetNameDefCap] Spurns Investment
+	title = CHN.foreignpolicy.204.t
+	desc = CHN.foreignpolicy.204.d
+	picture = GFX_report_event_CHN_ambassador_announcement
+
+	is_triggered_only = yes
+
+	option = {
+		log = "[GetLogInfo]: event CHN.foreignpolicy.204 option CHN.foreignpolicy.204.a"
+		name = CHN.foreignpolicy.204.a #
+		add_opinion_modifier = {
+			target = FROM
+			modifier = KR_disapproves_of_govt
+		}
+	}
+}
+
+country_event = { #Administering The People of Silver Herds
+	id = CHN.foreignpolicy.300
+	picture = GFX_report_event_MON_ardin_nam
+	title = CHN.foreignpolicy.300.t
+	desc = "[CHN_foreignpolicy_event_300_desc]"
+
+	is_triggered_only = yes #Triggered by onpeaceconference_ended
+	fire_only_once = yes
+
+	option = { #[CHN_mongolia_get_unique_governor]
+		log = "[GetLogInfo]: event CHN.foreignpolicy.300 option CHN.foreignpolicy.300.a"
+		name = CHN.foreignpolicy.300.a
+		add_political_power = 25
+		set_temp_variable = { ideology_change_var = 0.05 }
+		change_ruling_party_popularity = yes
+	}
+	option = { #The MTAC exists for a reason.
+		log = "[GetLogInfo]: event CHN.foreignpolicy.300 option CHN.foreignpolicy.300.b"
+		name = CHN.foreignpolicy.300.b
+		add_stability = 0.03
+		every_owned_state = {
+			limit = {
+				is_core_of = MON
+				is_controlled_by = ROOT
+				has_resistance = yes
+			}
+			add_compliance = 10
+		}
+	}
+	option = { #Maintain the rule of martial law.
+		log = "[GetLogInfo]: event CHN.foreignpolicy.300 option CHN.foreignpolicy.300.c"
+		name = CHN.foreignpolicy.300.c
+		add_war_support = 0.05
+		every_owned_state = {
+			limit = {
+				is_core_of = MON
+				is_controlled_by = ROOT
+				has_resistance = yes
+			}
+			add_resistance = -10
+		}
+	}
+	option = { #Play to the Nobles, its tried and true.
+		log = "[GetLogInfo]: event CHN.foreignpolicy.300 option CHN.foreignpolicy.300.e"
+		name = CHN.foreignpolicy.300.e
+		add_stability = -0.05
+		set_temp_variable = { ideology_change_var = -0.05 }
+		change_ruling_party_popularity = yes
+		every_owned_state = {
+			limit = {
+				is_core_of = MON
+				is_controlled_by = ROOT
+				has_resistance = yes
+			}
+			add_resistance = -10
+			add_compliance = 10
+		}
+	}
+}
+
+country_event = { #Stepping Foot Onto the Plateau
+	id = CHN.foreignpolicy.301
+	picture = GFX_report_event_TIB_lhasa
+	title = CHN.foreignpolicy.301.t
+	desc = "[CHN_foreignpolicy_event_301_desc]"
+
+	is_triggered_only = yes #Triggered by onpeaceconference_ended
+	fire_only_once = yes
+
+	option = { #[CHN_tibet_get_unique_governor]
+		log = "[GetLogInfo]: event CHN.foreignpolicy.301 option CHN.foreignpolicy.301.a"
+		name = CHN.foreignpolicy.301.a
+		add_political_power = 25
+		set_temp_variable = { ideology_change_var = 0.05 }
+		change_ruling_party_popularity = yes
+	}
+	option = { #Tibet is in dire need of true modernity.
+		log = "[GetLogInfo]: event CHN.foreignpolicy.301 option CHN.foreignpolicy.301.b"
+		name = CHN.foreignpolicy.301.b
+		add_stability = 0.03
+		every_owned_state = {
+			limit = {
+				is_core_of = TIB
+				is_controlled_by = ROOT
+				has_resistance = yes
+			}
+			add_compliance = 10
+		}
+	}
+	option = { #It takes hardly a full division to control Tibet...
+		log = "[GetLogInfo]: event CHN.foreignpolicy.301 option CHN.foreignpolicy.301.c"
+		name = CHN.foreignpolicy.301.c
+		add_war_support = 0.05
+		every_owned_state = {
+			limit = {
+				is_core_of = TIB
+				is_controlled_by = ROOT
+				has_resistance = yes
+			}
+			add_resistance = -10
+		}
+	}
+	option = { #The Sangha was here before us, let us work with them.
+		log = "[GetLogInfo]: event CHN.foreignpolicy.301 option CHN.foreignpolicy.301.e"
+		name = CHN.foreignpolicy.301.e
+		add_stability = -0.05
+		set_temp_variable = { ideology_change_var = -0.05 }
+		change_ruling_party_popularity = yes
+		every_owned_state = {
+			limit = {
+				is_core_of = TIB
+				is_controlled_by = ROOT
+				has_resistance = yes
+			}
+			add_resistance = -10
+			add_compliance = 10
+		}
+	}
+}
+
+country_event = { #Looking Towards the Frontier
+	id = CHN.foreignpolicy.302
+	picture = GFX_report_event_SIK_kumul_map
+	title = CHN.foreignpolicy.302.t
+	desc = "[CHN_foreignpolicy_event_302_desc]"
+
+	is_triggered_only = yes #Triggered by onpeaceconference_ended
+	fire_only_once = yes
+
+	option = { #[CHN_xinjiang_get_unique_governor]
+		log = "[GetLogInfo]: event CHN.foreignpolicy.302 option CHN.foreignpolicy.302.a"
+		name = CHN.foreignpolicy.302.a
+		add_political_power = 25
+		set_temp_variable = { ideology_change_var = 0.05 }
+		change_ruling_party_popularity = yes
+	}
+	option = { #
+		log = "[GetLogInfo]: event CHN.foreignpolicy.302 option CHN.foreignpolicy.302.b"
+		name = CHN.foreignpolicy.302.b
+		add_stability = 0.03
+		every_owned_state = {
+			limit = {
+				is_core_of = SIK
+				is_controlled_by = ROOT
+				has_resistance = yes
+			}
+			add_compliance = 10
+		}
+	}
+	option = { #
+		log = "[GetLogInfo]: event CHN.foreignpolicy.302 option CHN.foreignpolicy.302.c"
+		name = CHN.foreignpolicy.302.c
+		add_war_support = 0.05
+		every_owned_state = {
+			limit = {
+				is_core_of = SIK
+				is_controlled_by = ROOT
+				has_resistance = yes
+			}
+			add_resistance = -10
+		}
+	}
+	option = { #
+		log = "[GetLogInfo]: event CHN.foreignpolicy.302 option CHN.foreignpolicy.302.e"
+		name = CHN.foreignpolicy.302.e
+		add_stability = -0.05
+		set_temp_variable = { ideology_change_var = -0.05 }
+		change_ruling_party_popularity = yes
+		every_owned_state = {
+			limit = {
+				is_core_of = SIK
+				is_controlled_by = ROOT
+				has_resistance = yes
+			}
+			add_resistance = -10
+			add_compliance = 10
+		}
+	}
+}
+
+country_event = { #Affairs on Taiwan
+	id = CHN.foreignpolicy.303
+	picture = GFX_report_event_generic_east_china_map
+	title = CHN.foreignpolicy.303.t
+	desc = "[CHN_foreignpolicy_event_303_desc]"
+
+	is_triggered_only = yes #Triggered by onpeaceconference_ended
+	fire_only_once = yes
+
+	option = { #[CHN_taiwan_get_unique_governor]
+		log = "[GetLogInfo]: event CHN.foreignpolicy.303 option CHN.foreignpolicy.303.a"
+		name = CHN.foreignpolicy.303.a
+		add_political_power = 25
+		set_temp_variable = { ideology_change_var = 0.05 }
+		change_ruling_party_popularity = yes
+	}
+	option = { #Work with the various local progressive groups.
+		log = "[GetLogInfo]: event CHN.foreignpolicy.303 option CHN.foreignpolicy.303.b"
+		trigger = {
+			NOT = { china_is_aligned_with_manchu = yes }
+		}
+		name = CHN.foreignpolicy.303.b
+		add_stability = 0.03
+		every_owned_state = {
+			limit = {
+				is_core_of = TAI
+				is_controlled_by = ROOT
+				has_resistance = yes
+			}
+			add_compliance = 10
+		}
+	}
+	option = { #There is still the lingering presence of the Japanese on the island.
+		log = "[GetLogInfo]: event CHN.foreignpolicy.303 option CHN.foreignpolicy.303.c"
+		name = CHN.foreignpolicy.303.c
+		add_war_support = 0.05
+		every_owned_state = {
+			limit = {
+				is_core_of = TAI
+				is_controlled_by = ROOT
+				has_resistance = yes
+			}
+			add_resistance = -10
+		}
+	}
+	option = { #Court the TAHR, even with their reputation.
+		log = "[GetLogInfo]: event CHN.foreignpolicy.303 option CHN.foreignpolicy.303.e"
+		name = CHN.foreignpolicy.303.e
+		add_stability = -0.03
+		set_temp_variable = { ideology_change_var = -0.05 }
+		change_ruling_party_popularity = yes
+		every_owned_state = {
+			limit = {
+				is_core_of = TAI
+				is_controlled_by = ROOT
+				has_resistance = yes
+			}
+			add_resistance = -10
+			add_compliance = 10
+		}
+	}
+}
+
+### Other Foreign Policy (400-599):
+
+### Chinese Puppeting (600-799):
+
+## Shared (600-619)
+country_event = { #Sino-[ROOT.GetAdjective] Negotiations
+	id = CHN.foreignpolicy.600
+	picture = GFX_report_event_generic_east_china_map
+	title = CHN.foreignpolicy.600.t
+	desc = CHN.foreignpolicy.600.d
+
+	is_triggered_only = yes #Triggered by Fate of China-esque stuff
+
+	option = { #Qing Monarchy
+		log = "[GetLogInfo]: event CHN.foreignpolicy.600 option CHN.foreignpolicy.600.monarchy"
+		name = CHN.foreignpolicy.600.monarchy
+		trigger = {
+			CHN_puppet_has_potential_chinese_monarchist_allies_trigger = yes
+		}
+		ai_chance = {
+			base = 10
+			modifier = {
+				factor = 2.5
+				is_monarchy = yes
+				has_authoritarian_government = no
+			}
+			modifier = {
+				factor = 5
+				is_monarchy = yes
+				has_authoritarian_government = yes
+			}
+		}
+		country_event = CHN.foreignpolicy.620 #Talks with Chinese Monarchists
+	}
+	option = { #Pro-Japanese
+		log = "[GetLogInfo]: event CHN.foreignpolicy.600 option CHN.foreignpolicy.600.pro_japanese"
+		name = CHN.foreignpolicy.600.pro_japanese
+		trigger = {
+			CHN_puppet_has_potential_chinese_pro_japanese_allies_trigger = yes
+		}
+		ai_chance = { base = 100 } #Basically only applies if you're in Japan's faction so may as well put it at 100
+		country_event = CHN.foreignpolicy.640 #The Reformation of the Republic
+	}
+	option = { #Federalists
+		log = "[GetLogInfo]: event CHN.foreignpolicy.600 option CHN.foreignpolicy.600.federalists"
+		name = CHN.foreignpolicy.600.federalists
+		trigger = {
+			CHN_puppet_has_potential_chinese_federalist_allies_trigger = yes
+		}
+		ai_chance = {
+			base = 25
+
+			modifier = {
+				factor = 2
+				has_elected_government = yes
+			}
+		}
+		country_event = CHN.foreignpolicy.660 #Federalism in China?
+	}
+	option = { #Other Republicans
+		log = "[GetLogInfo]: event CHN.foreignpolicy.600 option CHN.foreignpolicy.600.republicans"
+		name = CHN.foreignpolicy.600.republicans
+		trigger = {
+			CHN_puppet_has_potential_chinese_republican_allies_trigger = yes
+		}
+		ai_chance = {
+			base = 50
+
+			modifier = {
+				factor = 0.5
+				is_monarchy = yes
+			}
+		}
+		country_event = CHN.foreignpolicy.680 #A New Republic?
+	}
+
+	option = { #Revolutionaries
+		log = "[GetLogInfo]: event CHN.foreignpolicy.600 option CHN.foreignpolicy.600.revolutionaries"
+		name = CHN.foreignpolicy.600.revolutionaries
+		trigger = {
+			CHN_puppet_has_potential_chinese_revolutionary_allies_trigger = yes
+		}
+		ai_chance = {
+			base = 15
+
+			modifier = {
+				factor = 10
+				has_socialist_government = yes #Really should be their only option anyway.
+			}
+		}
+		country_event = CHN.foreignpolicy.700 #A New Revolution in China?
+	}
+
+	option = { #Cancel
+		log = "[GetLogInfo]: event CHN.foreignpolicy.600 option CHN.foreignpolicy.600.cancel"
+		name = CHN.foreignpolicy.600.cancel
+		ai_chance = { base = 0 }
+	}
+}
+
+## Monarchy (620-639)
+country_event = { #Talks with Chinese Monarchists
+	id = CHN.foreignpolicy.620
+	picture = GFX_report_event_QIE_worship_puyi
+	title = CHN.foreignpolicy.620.t
+	desc = CHN.foreignpolicy.620.d
+
+	is_triggered_only = yes #Triggered by [EVENT] CHN.foreignpolicy.600
+
+	option = { #Qing Monarchy
+		log = "[GetLogInfo]: event CHN.foreignpolicy.620 option CHN.foreignpolicy.620.QIE"
+		name = CHN.foreignpolicy.620.QIE
+		trigger = {
+			CHN_monarchist_puppet_QIE_is_valid_ally_trigger = yes
+		}
+		ai_chance = { base = 100 }
+		if = {
+			limit = { QIE = { exists = yes } }
+			set_temp_variable = { tag_to_release = QIE }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = QIE }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				hidden_effect = { clear_potential_national_government = yes }
+				set_cosmetic_tag = united_china_qing
+				set_politics = {
+					ruling_party = social_conservative
+					elections_allowed = no
+				}
+				set_political_party = {
+					ideology = social_conservative
+					popularity = 60
+				}
+				QIE_aisin_gioro_puyi = {
+					set_nationality = PREV
+					for_each_loop = {
+						array = global.ideology_groups
+						meta_effect = {
+							text = {
+								if = {
+									limit = { has_ideology = [IDEOLOGY] }
+									promote_character = { ideology = [IDEOLOGY] }
+								}
+							}
+							TRAIT = "[?trait_token.GetTokenKey]"
+							IDEOLOGY = "[?v.GetTokenKey]_subtype"
+						}
+					}
+				}
+				QIE_enable_manchu_qing_alignment = yes
+				set_potential_national_government = yes
+			}
+		}
+	}
+
+	option = { #Cancel
+		log = "[GetLogInfo]: event CHN.foreignpolicy.620 option CHN.foreignpolicy.620.cancel"
+		name = CHN.foreignpolicy.620.cancel
+		ai_chance = { base = 0 }
+	}
+
+	#We could hypothetically include more options here but probably won't.
+}
+
+## Japan Aligned (640-659)
+country_event = { #The Reformation of the Republic
+	id = CHN.foreignpolicy.640
+	picture = GFX_report_event_FNG_collabaration_with_japan
+	title = CHN.foreignpolicy.640.t
+	desc = CHN.foreignpolicy.640.d
+
+	is_triggered_only = yes #Triggered by [EVENT] CHN.foreignpolicy.600
+
+	option = { #Fengtian
+		log = "[GetLogInfo]: event CHN.foreignpolicy.640 option CHN.foreignpolicy.640.FNG"
+		name = CHN.foreignpolicy.640.FNG
+		trigger = {
+			CHN_pro_japan_puppet_FNG_is_valid_ally_trigger = yes
+		}
+		ai_chance = {
+			base = 80
+			modifier = {
+				factor = 0.5
+				has_global_flag = FNG_relations_JAP_broke
+			}
+		}
+		if = {
+			limit = {
+				original_tag = JAP
+				has_global_flag = FNG_relations_JAP_broke
+			}
+			clr_global_flag = FNG_relations_JAP_broke
+		}
+		if = {
+			limit = { FNG = { exists = yes } }
+			set_temp_variable = { tag_to_release = FNG }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = FNG }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				set_cosmetic_tag = FNG_JAP
+				clear_global_event_target = AGJ_leader
+				save_global_event_target_as = RGC_leader
+				set_global_flag = FNG_projapan
+				if = {
+					limit = { has_character = FNG_zhang_zuolin }
+					retire_character = FNG_zhang_zuolin
+				}
+				if = {
+					limit = { has_character = FNG_zhang_xueliang }
+					retire_character = FNG_zhang_xueliang
+				}
+				if = {
+					limit = { has_character = FNG_wu_junsheng }
+					retire_character = FNG_wu_junsheng
+				}
+				FNG_tang_shaoyi = {
+					if = {
+						limit = { has_ideology = paternal_autocrat_subtype }
+						promote_character = paternal_autocrat_subtype
+					}
+					else = {
+						add_country_leader_role = {
+							country_leader = {
+								desc = FNG_tang_shaoyi_leader_desc
+								ideology = paternal_autocrat_subtype
+								traits = { CHN_geacps_aligned FNG_unwilling_participant }
+							}
+							promote_leader = yes
+						}
+					}
+				}
+				set_party_name = {
+					ideology = paternal_autocrat
+					name = FNG_new_peoples_society
+					long_name = FNG_new_peoples_society_tt
+				}
+				set_politics = {
+					ruling_party = paternal_autocrat
+					elections_allowed = no
+				}
+				add_popularity = {
+					ideology = paternal_autocrat
+					popularity = 0.2
+				}
+				add_popularity = {
+					ideology = social_conservative
+					popularity = 0.2
+				}
+				add_popularity = {
+					ideology = authoritarian_democrat
+					popularity = 0.2
+				}
+				activate_advisor = FNG_wang_yitang_sic
+				set_temp_variable = { coalition_partner_var = token:authoritarian_democrat }
+				add_to_coalition = yes
+				set_temp_variable = { coalition_partner_var = token:social_conservative }
+				add_to_coalition = yes
+				hidden_effect = {
+					set_party_name = {
+						ideology = paternal_autocrat
+						name = FNG_new_peoples_society
+						long_name = FNG_new_peoples_society_long
+					}
+					set_popularities = {
+						totalist = 1
+						radical_socialist = 5
+						syndicalist = 1
+						social_democrat = 5
+						social_liberal = 8
+						market_liberal = 10
+						social_conservative = 20
+						authoritarian_democrat = 20
+						paternal_autocrat = 20
+						national_populist = 10
+					}
+					set_party_name = {
+						ideology = social_liberal
+						long_name = CHN_republicans_party_long
+						name = CHN_republicans_party
+					}
+					set_party_name = {
+						ideology = social_democrat
+						long_name = CHN_FCDP_party_long
+						name = CHN_FCDP_party
+					}
+					set_party_name = {
+						ideology = market_liberal
+						long_name = CHN_CCP_party_long
+						name = CHN_CCP_party
+					}
+					promote_character = {
+						character = FNG_assorted_leaders
+						ideology = social_democrat_subtype
+					}
+					promote_character = {
+						character = FNG_assorted_leaders
+						ideology = market_liberal_subtype
+					}
+					remove_ideas = {
+						FNG_Disastrous_Governance
+						FNG_Plutocratic_Exploitation
+						FNG_Expel_the_Japanese_Bandits
+					}
+					add_ideas = {
+						FNG_an_army_of_traitors
+						FNG_hollowed_out_economy
+						FNG_collaboration_the_great_evil
+					}
+					# FNG_grand_marshals_favor_category
+					remove_targeted_decision = { target = THIS decision = FNG_favor_shikan_clique }
+					remove_targeted_decision = { target = THIS decision = FNG_favor_communications_clique }
+					remove_targeted_decision = { target = THIS decision = FNG_favor_recovery_league }
+					remove_targeted_decision = { target = THIS decision = FNG_favor_zhang_clique }
+					# FNG_fixing_the_economy_category
+					remove_targeted_decision = { target = THIS decision = FNG_Centralise_the_Banks }
+					remove_targeted_decision = { target = THIS decision = FNG_Re_Introduce_the_Fengtian_Dollar }
+					remove_targeted_decision = { target = THIS decision = FNG_Fill_the_Silver_Reserve }
+					remove_targeted_decision = { target = THIS decision = FNG_Encourage_Japanese_Investment }
+					remove_targeted_decision = { target = THIS decision = FNG_Encourage_Chinese_Investment }
+					# china_army_decisions
+					remove_targeted_decision = { target = THIS decision = FNG_Revise_our_Position_on_Looting }
+					remove_targeted_decision = { target = THIS decision = FNG_Rebuild_the_Second_Army }
+					remove_targeted_decision = { target = THIS decision = FNG_Raise_Independent_Brigades_in_Dezhou }
+					remove_targeted_decision = { target = THIS decision = FNG_Raise_Independent_Brigades_in_Kaifeng }
+					remove_targeted_decision = { target = THIS decision = FNG_Raise_Independent_Brigades_in_Ruyang }
+					remove_targeted_decision = { target = THIS decision = FNG_Raise_Independent_Brigades_in_Guanzhong }
+					remove_targeted_decision = { target = THIS decision = FNG_Raise_the_Baoding_Cadet_Corps }
+					# FNG_Preparing_For_The_Princes_Visit
+					remove_targeted_decision = { target = THIS decision = FNG_increase_security_in_shenyang }
+					remove_targeted_decision = { target = THIS decision = FNG_investigate_the_junior_officer_corps }
+					remove_targeted_decision = { target = THIS decision = FNG_reinforce_soldierly_discipline }
+					remove_targeted_decision = { target = THIS decision = FNG_present_chinese_modernity }
+					remove_targeted_decision = { target = THIS decision = FNG_Fortress_Manchuria }
+					# FNG_railways
+					remove_targeted_decision = { target = THIS decision = FNG_The_Jinhan_Railway }
+					remove_targeted_decision = { target = THIS decision = FNG_The_Jinpu_Railway }
+					remove_targeted_decision = { target = THIS decision = FNG_The_Yuehan_Railway }
+					remove_targeted_decision = { target = THIS decision = FNG_Railway_Construction_Jilin_Shenyang }
+					remove_targeted_decision = { target = THIS decision = FNG_Railway_Construction_Pingqi }
+					remove_targeted_decision = { target = THIS decision = FNG_Railway_Construction_Shenyang_Chengde }
+					# FNG_foreign_policy
+					remove_targeted_decision = { target = QIE decision = FNG_Denounce_Qing_Monarchism }
+					remove_targeted_decision = { target = GER decision = FNG_Denounce_German_Imperialism }
+					remove_targeted_decision = { target = THIS decision = FNG_National_Irredentism }
+					remove_targeted_decision = { target = THIS decision = FNG_Wu_Wang_Zai_Ju }
+					remove_targeted_decision = { target = THIS decision = FNG_Escalate_the_Propaganda_War }
+					remove_targeted_decision = { target = THIS decision = FNG_The_Yanshan_Plan }
+					remove_targeted_decision = { target = THIS decision = FNG_Shanhaiguan_Infiltration }
+					remove_targeted_decision = { target = SHD decision = FNG_Annex_Shandong_Anqing_Puppet }
+					# FNG_Commission_Japanese_Ships
+					remove_targeted_decision = { target = JAP decision = FNG_JAP_destroyers }
+					remove_targeted_decision = { target = JAP decision = FNG_JAP_subs }
+					remove_targeted_decision = { target = JAP decision = FNG_JAP_cruisers }
+					remove_targeted_decision = { target = JAP decision = FNG_JAP_convoys }
+
+					CHN_setup_economic_devastation_normal_effect = yes
+					set_potential_national_government = yes
+				}
+			}
+		}
+	}
+
+	option = { #Liangguang
+		log = "[GetLogInfo]: event CHN.foreignpolicy.640 option CHN.foreignpolicy.640.GXC"
+		name = CHN.foreignpolicy.640.GXC
+		trigger = {
+			CHN_pro_japan_puppet_GXC_is_valid_ally_trigger = yes
+		}
+		ai_chance = {
+			base = 10
+			modifier = {
+				factor = 3
+				has_global_flag = FNG_relations_JAP_broke
+			}
+		}
+		if = {
+			limit = { GXC = { exists = yes } }
+			set_temp_variable = { tag_to_release = GXC }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = GXC }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				hidden_effect = {
+					clear_potential_national_government = yes
+					GXC = {
+						GXC_chen_lianbo = { set_nationality = GXC }
+						GXC_chen_gongshou = { set_nationality = GXC }
+					}
+					set_party_name = {
+						ideology = social_conservative
+						long_name = GXC_aacsg_party_long
+						name = GXC_aacsg_party
+					}
+				}
+				set_politics = {
+					ruling_party = social_conservative
+					elections_allowed = no
+				}
+				set_political_party = {
+					ideology = social_conservative
+					popularity = 40
+				}
+				promote_character = {
+					character = GXC_chen_lianbo
+					ideology = social_conservative_subtype
+				}
+				activate_advisor = GXC_chen_gongshou_sic
+				hidden_effect = {
+					GXC_clear_phase2_debuffs = yes
+					GXC_clear_popular_support_effect = yes
+					add_ideas = GXC_NPA_popular_support_5
+					CHN_setup_economic_devastation_normal_effect = yes
+					set_potential_national_government = yes
+					set_country_flag = GXC_phase_4_begins_flag
+					mark_focus_tree_layout_dirty = yes
+				}
+			}
+		}
+	}
+
+	option = { #Shanxi
+		log = "[GetLogInfo]: event CHN.foreignpolicy.640 option CHN.foreignpolicy.640.SHX"
+		name = CHN.foreignpolicy.640.SHX
+		trigger = {
+			CHN_pro_japan_puppet_SHX_is_valid_ally_trigger = yes
+		}
+		ai_chance = {
+			base = 10
+			modifier = {
+				factor = 3
+				has_global_flag = FNG_relations_JAP_broke
+			}
+		}
+		if = {
+			limit = { SHX = { exists = yes } }
+			set_temp_variable = { tag_to_release = SHX }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = SHX }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				hidden_effect = {
+					clear_potential_national_government = yes
+
+					SHX = {
+						SHX_yan_xishan = { set_nationality = SHX }
+						SHX_komoto_daisaku = { set_nationality = SHX } #Literal Japanese agent
+					}
+
+					set_party_name = {
+						ideology = paternal_autocrat
+						long_name = SHX_yan_unification_party_long
+						name = SHX_yan_unification_party
+					}
+					set_party_name = {
+						ideology = national_populist
+						long_name = SHX_young_china_party_yan_long
+						name = SHX_young_china_party_yan
+					}
+				}
+
+				if = {
+					limit = {
+						ROOT = {
+							has_government = national_populist
+						}
+					}
+					set_politics = {
+						ruling_party = national_populist
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = national_populist
+						popularity = 40
+					}
+					promote_character = {
+						character = SHX_yan_xishan
+						ideology = national_populist_subtype
+					}
+					activate_advisor = SHX_komoto_daisaku_sic
+				}
+				else = {
+					#Yan defaults to Pat Aut
+					set_politics = {
+						ruling_party = paternal_autocrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = paternal_autocrat
+						popularity = 40
+					}
+					promote_character = {
+						character = SHX_yan_xishan
+						ideology = paternal_autocrat_subtype
+					}
+					activate_advisor = SHX_komoto_daisaku_sic
+				}
+
+				hidden_effect = {
+					SHX_lategame_transition_effect = yes
+
+					set_potential_national_government = yes
+					mark_focus_tree_layout_dirty = yes
+				}
+			}
+		}
+	}
+
+	#I would like SHD to be added here one day.
+
+	option = { #Cancel
+		log = "[GetLogInfo]: event CHN.foreignpolicy.640 option CHN.foreignpolicy.640.cancel"
+		name = CHN.foreignpolicy.640.cancel
+		ai_chance = { base = 0 }
+	}
+}
+
+## Federalists (660-679)
+country_event = { #Federalism In China?
+	id = CHN.foreignpolicy.660
+	picture = GFX_report_event_GXC_federalist_party_3
+	title = CHN.foreignpolicy.660.t
+	desc = CHN.foreignpolicy.660.d
+
+	is_triggered_only = yes #Triggered by [EVENT] CHN.foreignpolicy.600
+
+	option = { #Liangguang
+		log = "[GetLogInfo]: event CHN.foreignpolicy.660 option CHN.foreignpolicy.660.GXC"
+		name = CHN.foreignpolicy.660.GXC
+		trigger = {
+			CHN_federalist_puppet_GXC_is_valid_ally_trigger = yes
+		}
+		ai_chance = {
+			base = 60
+			modifier = {
+				factor = 0.5
+				#Penalty if Liangguang doesn't have a direct ideological analog
+				OR = {
+					has_government = market_liberal
+					has_government = social_conservative
+					has_government = national_populist
+				}
+			}
+		}
+		if = {
+			limit = { GXC = { exists = yes } }
+			set_temp_variable = { tag_to_release = GXC }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = GXC }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				hidden_effect = {
+					clear_potential_national_government = yes
+					GXC = {
+						GXC_chen_jiongming = { set_nationality = GXC }
+						GXC_chen_qiyou = { set_nationality = GXC }
+						GXC_ye_ju = { set_nationality = GXC }
+						GXC_ma_yuhang = { set_nationality = GXC }
+						GXC_zhang_junmai = { set_nationality = GXC }
+						GXC_zhang_dongsun = { set_nationality = GXC }
+					}
+					set_party_name = {
+						ideology = social_democrat
+						long_name = GXC_UPC_CDL_DSP_party_long
+						name = GXC_UPC_CDL_DSP_party
+					}
+					set_party_name = {
+						ideology = social_liberal
+						long_name = GXC_GRA_PIP_party_long
+						name = GXC_GRA_PIP_party
+					}
+					set_party_name = {
+						ideology = authoritarian_democrat
+						long_name = GXC_YUE_national_party_long
+						name = GXC_YUE_national_party
+					}
+					set_party_name = {
+						ideology = paternal_autocrat
+						long_name = GXC_YUE_national_party_long
+						name = GXC_YUE_national_party
+					}
+					if = {
+						limit = { has_country_flag = UPC_GRA_won_first_elections_flag }
+						clr_country_flag = UPC_GRA_won_first_elections_flag
+					}
+					if = {
+						limit = { has_country_flag = UPC_CDL_won_first_elections_flag }
+						clr_country_flag = UPC_CDL_won_first_elections_flag
+					}
+					if = {
+						limit = { has_country_flag = UPC_GRA_won_second_elections_flag }
+						clr_country_flag = UPC_GRA_won_second_elections_flag
+					}
+					if = {
+						limit = { has_country_flag = UPC_CDL_won_second_elections_flag }
+						clr_country_flag = UPC_CDL_won_second_elections_flag
+					}
+				}
+				if = {
+					limit = {
+						ROOT = {
+							has_government = social_democrat
+						}
+					}
+					set_politics = {
+						ruling_party = social_democrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = social_democrat
+						popularity = 40
+					}
+					promote_character = {
+						character = GXC_zhang_junmai
+						ideology = social_democrat_subtype
+					}
+					activate_advisor = GXC_zhang_dongsun_sic
+					set_country_flag = UPC_CDL_won_first_elections_flag
+					set_country_flag = UPC_CDL_won_second_elections_flag
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							OR = {
+								has_government = social_liberal
+								has_government = market_liberal
+								has_government = social_conservative
+							}
+						}
+					}
+					set_politics = {
+						ruling_party = social_liberal
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = social_liberal
+						popularity = 40
+					}
+					if = {
+						limit = { GXC_chen_jiongming = { has_character_flag = is_dead } }
+						promote_character = {
+							character = GXC_chen_qiyou
+							ideology = social_liberal_subtype
+						}
+					}
+					else = {
+						promote_character = {
+							character = GXC_chen_jiongming
+							ideology = social_liberal_subtype
+						}
+					}
+					activate_advisor = GXC_chen_yansheng_sic
+					set_country_flag = UPC_GRA_won_first_elections_flag
+					set_country_flag = UPC_GRA_won_second_elections_flag
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							has_government = authoritarian_democrat
+							NOT = { GXC_chen_jiongming = { has_character_flag = is_dead } }
+						}
+					}
+					set_politics = {
+						ruling_party = authoritarian_democrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = authoritarian_democrat
+						popularity = 40
+					}
+					promote_character = {
+						character = GXC_chen_jiongming
+						ideology = authoritarian_democrat_subtype
+					}
+					activate_advisor = GXC_ma_yuhang_sic
+				}
+				else = {
+					#Ye Ju is the default
+					set_politics = {
+						ruling_party = paternal_autocrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = paternal_autocrat
+						popularity = 40
+					}
+					promote_character = {
+						character = GXC_ye_ju
+						ideology = paternal_autocrat_subtype
+					}
+					activate_advisor = GXC_ma_yuhang_sic
+				}
+
+				hidden_effect = {
+					GXC_clear_phase2_debuffs = yes
+					GXC_clear_popular_support_effect = yes
+					add_ideas = GXC_UPC_popular_support_5
+					CHN_setup_economic_devastation_normal_effect = yes
+					set_potential_national_government = yes
+
+					set_country_flag = GXC_phase_4_begins_flag
+					mark_focus_tree_layout_dirty = yes
+				}
+			}
+		}
+	}
+
+	option = { #Yunnan
+		log = "[GetLogInfo]: event CHN.foreignpolicy.660 option CHN.foreignpolicy.660.YUN"
+		name = CHN.foreignpolicy.660.YUN
+		trigger = {
+			CHN_federalist_puppet_YUN_is_valid_ally_trigger = yes
+		}
+		ai_chance = {
+			base = 40
+			modifier = {
+				factor = 0.5
+				#Penalty if Yunnan doesn't have a direct ideological analog
+				OR = {
+					has_government = paternal_autocrat
+					has_government = national_populist
+				}
+			}
+		}
+		if = {
+			limit = { YUN = { exists = yes } }
+			set_temp_variable = { tag_to_release = YUN }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = YUN }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				hidden_effect = {
+					clear_potential_national_government = yes
+					YUN = {
+						YUN_tang_jiyao = { set_nationality = YUN }
+						YUN_tang_xiaoying = { set_nationality = YUN }
+						YUN_wang_dong = { set_nationality = YUN }
+						YUN_zhang_weihan = { set_nationality = YUN }
+
+						YUN_cun_shusheng = { set_nationality = YUN }
+						YUN_su_honggang = { set_nationality = YUN }
+						YUN_luo_longji = { set_nationality = YUN }
+						YUN_wen_yiduo = { set_nationality = YUN } #Can bring him from the dead if necessary just for ease.
+					}
+					set_party_name = {
+						ideology = social_democrat
+						long_name = YUN_YCD_party_long
+						name = YUN_YCD_party
+					}
+					set_party_name = {
+						ideology = social_liberal
+						long_name = UPC_CMS_party_long
+						name = UPC_CMS_party
+					}
+					set_party_name = {
+						ideology = market_liberal
+						long_name = UPC_PGP_party_long
+						name = UPC_PGP_party
+					}
+					set_party_name = {
+						ideology = social_conservative
+						long_name = UPC_PGP_party_long
+						name = UPC_PGP_party
+					}
+					set_party_name = {
+						ideology = paternal_autocrat
+						long_name = YUN_national_dian_clique_party_long
+						name = YUN_national_dian_clique_party
+					}
+					if = {
+						limit = { has_country_flag = UPC_GRA_won_first_elections_flag }
+						clr_country_flag = UPC_GRA_won_first_elections_flag
+					}
+					if = {
+						limit = { has_country_flag = UPC_CDL_won_first_elections_flag }
+						clr_country_flag = UPC_CDL_won_first_elections_flag
+					}
+					if = {
+						limit = { has_country_flag = UPC_GRA_won_second_elections_flag }
+						clr_country_flag = UPC_GRA_won_second_elections_flag
+					}
+					if = {
+						limit = { has_country_flag = UPC_CDL_won_second_elections_flag }
+						clr_country_flag = UPC_CDL_won_second_elections_flag
+					}
+				}
+				if = {
+					limit = {
+						ROOT = {
+							has_government = social_democrat
+						}
+					}
+					set_politics = {
+						ruling_party = social_democrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = social_democrat
+						popularity = 40
+					}
+					promote_character = {
+						character = YUN_cun_shusheng
+						ideology = social_democrat_subtype
+					}
+					activate_advisor = YUN_su_honggang_sic
+					set_country_flag = UPC_CDL_won_first_elections_flag
+					set_country_flag = UPC_CDL_won_second_elections_flag
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							has_government = social_liberal
+						}
+					}
+					set_politics = {
+						ruling_party = social_liberal
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = social_liberal
+						popularity = 40
+					}
+					promote_character = {
+						character = YUN_luo_longji
+						ideology = social_liberal_subtype
+					}
+					activate_advisor = YUN_wen_yiduo_sic
+					set_country_flag = UPC_CDL_won_first_elections_flag
+					set_country_flag = UPC_CDL_won_second_elections_flag
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							OR = {
+								has_government = market_liberal
+								AND = {
+									has_government = social_conservative
+									YUN_tang_jiyao = { has_character_flag = is_dead }
+								}
+							}
+						}
+					}
+					set_politics = {
+						ruling_party = market_liberal
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = market_liberal
+						popularity = 40
+					}
+					promote_character = {
+						character = YUN_tang_xiaoying
+						ideology = market_liberal_subtype
+					}
+					activate_advisor = YUN_wang_dong_sic
+					set_country_flag = UPC_GRA_won_first_elections_flag
+					set_country_flag = UPC_GRA_won_second_elections_flag
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							has_government = social_conservative
+						}
+					}
+					set_politics = {
+						ruling_party = social_conservative
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = social_conservative
+						popularity = 40
+					}
+					promote_character = {
+						character = YUN_tang_jiyao
+						ideology = social_conservative_subtype
+					}
+					activate_advisor = YUN_wang_dong_sic
+					set_country_flag = UPC_GRA_won_first_elections_flag
+					set_country_flag = UPC_GRA_won_second_elections_flag
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							OR = {
+								has_government = authoritarian_democrat
+								has_government = paternal_autocrat
+								has_government = national_populist
+							}
+						}
+					}
+					set_politics = {
+						ruling_party = authoritarian_democrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = authoritarian_democrat
+						popularity = 40
+					}
+					if = {
+						limit = {
+							YUN_tang_jiyao = { has_character_flag = is_dead }
+						}
+						promote_character = {
+							character = YUN_tang_xiaoying
+							ideology = authoritarian_democrat_subtype
+						}
+					}
+					else = {
+						promote_character = {
+							character = YUN_tang_jiyao
+							ideology = authoritarian_democrat_subtype
+						}
+					}
+					activate_advisor = YUN_zhang_weihan_sic
+				}
+
+				hidden_effect = {
+					YUN_transition_economy_effect = yes
+					YUN_clear_popular_support_ideas = yes
+					add_ideas = YUN_UPC_popular_support_5
+					CHN_setup_economic_devastation_normal_effect = yes
+					set_potential_national_government = yes
+
+					set_country_flag = YUN_phase_4_begins_flag
+					mark_focus_tree_layout_dirty = yes
+				}
+			}
+		}
+	}
+
+	#I would like SZC and HNN to be added here one day.
+
+	option = { #Cancel
+		log = "[GetLogInfo]: event CHN.foreignpolicy.660 option CHN.foreignpolicy.660.cancel"
+		name = CHN.foreignpolicy.660.cancel
+		ai_chance = { base = 0 }
+	}
+}
+
+## Release Republic (680-699)
+country_event = { #The Reformation of the Republic
+	id = CHN.foreignpolicy.680
+	picture = GFX_report_event_QIE_beiyang_assembly
+	title = CHN.foreignpolicy.680.t
+	desc = CHN.foreignpolicy.680.d
+
+	is_triggered_only = yes #Triggered by [EVENT] CHN.foreignpolicy.600
+
+	option = { #QIE
+		log = "[GetLogInfo]: event CHN.foreignpolicy.680 option CHN.foreignpolicy.680.QIE"
+		name = CHN.foreignpolicy.680.QIE
+		trigger = {
+			CHN_republican_puppet_QIE_is_valid_ally_trigger = yes
+		}
+		ai_chance = {
+			base = 60
+
+			modifier = {
+				factor = 0.5
+				OR = {
+					has_government = paternal_autocrat
+					has_government = national_populist
+				}
+			}
+		}
+		if = {
+			limit = { QIE = { exists = yes } }
+			set_temp_variable = { tag_to_release = QIE }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = QIE }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				hidden_effect = { clear_potential_national_government = yes }
+				set_politics = {
+					ruling_party = authoritarian_democrat
+					elections_allowed = no
+				}
+				set_political_party = {
+					ideology = authoritarian_democrat
+					popularity = 60
+				}
+				hidden_effect = {
+					QIE_aisin_gioro_puyi = { retire = yes }
+					if = {
+						limit = { has_character = QIE_gao_lingwei }
+						QIE_gao_lingwei = { promote_character = authoritarian_democrat_subtype }
+					}
+					else = {
+						random_list = {
+							1 = {
+								QIE_wellington_koo = {
+									set_nationality = PREV
+									promote_character = yes
+								}
+							}
+							1 = {
+								QIE_hu_shih = {
+									set_nationality = PREV
+									promote_character = yes
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	option = { #LEP
+		log = "[GetLogInfo]: event CHN.foreignpolicy.680 option CHN.foreignpolicy.680.LEP"
+		name = CHN.foreignpolicy.680.LEP
+		trigger = {
+			CHN_republican_puppet_LEP_is_valid_ally_trigger = yes
+		}
+		ai_chance = {
+			base = 30
+
+			modifier = {
+				factor = 2
+				has_government = paternal_autocrat
+			}
+
+			modifier = {
+				factor = 5
+				OR = {
+					tag = GER
+					tag = GEA
+					tag = GEX
+				}
+			}
+		}
+		if = {
+			limit = { LEP = { exists = yes } }
+			set_temp_variable = { tag_to_release = LEP }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = LEP }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				set_politics = {
+					ruling_party = paternal_autocrat
+					elections_allowed = no
+				}
+				set_political_party = {
+					ideology = paternal_autocrat
+					popularity = 20
+				}
+				set_political_party = {
+					ideology = market_liberal
+					popularity = 60
+				}
+				set_temp_variable = { coalition_partner_var = token:market_liberal }
+				add_to_coalition = yes
+				###GEA gets back its AOG bonus if it or GER released it
+				if = {
+					limit = {
+						ROOT = {
+							OR = {
+								tag = GER
+								tag = GEA
+							}
+						}
+					}
+					GEA = { country_event = german_east_asia_events.214 }
+				}
+			}
+		}
+	}
+
+	option = { #Shanxi
+		log = "[GetLogInfo]: event CHN.foreignpolicy.680 option CHN.foreignpolicy.680.SHX"
+		name = CHN.foreignpolicy.680.SHX
+		trigger = {
+			CHN_republican_puppet_SHX_is_valid_ally_trigger = yes
+		}
+		ai_chance = {
+			base = 20
+
+			modifier = {
+				factor = 3
+				OR = {
+					has_government = paternal_autocrat
+					has_government = national_populist
+				}
+			}
+		}
+		if = {
+			limit = { SHX = { exists = yes } }
+			set_temp_variable = { tag_to_release = SHX }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = SHX }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				hidden_effect = {
+					clear_potential_national_government = yes
+
+					SHX = {
+						SHX_yan_xishan = { set_nationality = SHX }
+						SHX_wang_xiang = { set_nationality = SHX } #Foreign sellout
+						SHX_liang_huazhi = { set_nationality = SHX } #Nephew
+					}
+
+					set_party_name = {
+						ideology = paternal_autocrat
+						long_name = SHX_yan_unification_party_long
+						name = SHX_yan_unification_party
+					}
+
+					set_party_name = {
+						ideology = national_populist
+						long_name = SHX_young_china_party_yan_long
+						name = SHX_young_china_party_yan
+					}
+				}
+
+				if = {
+					limit = {
+						ROOT = {
+							has_government = national_populist
+						}
+					}
+					set_politics = {
+						ruling_party = national_populist
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = national_populist
+						popularity = 40
+					}
+					promote_character = {
+						character = SHX_yan_xishan
+						ideology = national_populist_subtype
+					}
+					activate_advisor = SHX_liang_huazhi_sic
+				}
+				else = {
+					#Yan defaults to Pat Aut
+					set_politics = {
+						ruling_party = paternal_autocrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = paternal_autocrat
+						popularity = 40
+					}
+					promote_character = {
+						character = SHX_yan_xishan
+						ideology = paternal_autocrat_subtype
+					}
+					activate_advisor = SHX_wang_xiang_sic
+				}
+
+				hidden_effect = {
+					SHX_lategame_transition_effect = yes
+
+					set_potential_national_government = yes
+					mark_focus_tree_layout_dirty = yes
+				}
+			}
+		}
+	}
+
+	#I would like SHD to be added here one day.
+
+	option = { #Cancel
+		log = "[GetLogInfo]: event CHN.foreignpolicy.680 option CHN.foreignpolicy.680.cancel"
+		name = CHN.foreignpolicy.680.cancel
+	}
+}
+
+## Release Revolutionaries (700-719)
+country_event = { #A New Revolution in China?
+	id = CHN.foreignpolicy.700
+	picture = GFX_report_event_CHN_KMT_NRA_soldier_flag
+	title = CHN.foreignpolicy.700.t
+	desc = CHN.foreignpolicy.700.d
+
+	is_triggered_only = yes #Triggered by [EVENT] CHN.foreignpolicy.600
+
+	option = { #MinGan
+		log = "[GetLogInfo]: event CHN.foreignpolicy.700 option CHN.foreignpolicy.700.CHI"
+		name = CHN.foreignpolicy.700.CHI
+		trigger = {
+			CHN_revolutionary_puppet_CHI_is_valid_ally_trigger = yes
+		}
+		ai_chance = {
+			base = 50
+
+			#Literally has every socialist ideology so will just keep it base
+		}
+		if = {
+			limit = { CHI = { exists = yes } }
+			set_temp_variable = { tag_to_release = CHI }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = CHI }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				hidden_effect = {
+					clear_potential_national_government = yes
+				}
+				CHI_puppet_setup_effect = yes
+
+				hidden_effect = {
+					set_potential_national_government = yes
+					mark_focus_tree_layout_dirty = yes
+				}
+			}
+		}
+	}
+
+	option = { #Liangguang
+		log = "[GetLogInfo]: event CHN.foreignpolicy.700 option CHN.foreignpolicy.700.GXC"
+		name = CHN.foreignpolicy.700.GXC
+		trigger = {
+			CHN_revolutionary_puppet_GXC_is_valid_ally_trigger = yes
+		}
+		ai_chance = {
+			base = 30
+
+			modifier = {
+				factor = 0.20
+				#Less likely to take if doesn't have compatible ideology
+				OR = {
+					has_government = totalist
+					has_government = market_liberal
+					has_government = national_populist
+				}
+			}
+		}
+		if = {
+			limit = { GXC = { exists = yes } }
+			set_temp_variable = { tag_to_release = GXC }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = GXC }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				hidden_effect = {
+					clear_potential_national_government = yes
+					CHI = {
+						CHI_sun_fo = { set_nationality = GXC }
+					}
+					GXC = {
+						GXC_tan_pingshan = { set_nationality = GXC }
+						GXC_deng_zhongxia = { set_nationality = GXC }
+
+						GXC_peng_pai = { set_nationality = GXC }
+						GXC_gu_dacun = { set_nationality = GXC }
+
+						GXC_chen_mingshu = { set_nationality = GXC }
+						GXC_jiang_guangnai = { set_nationality = GXC }
+
+						GXC_liang_hancao = { set_nationality = GXC }
+
+						GXC_ju_zheng = { set_nationality = GXC }
+						GXC_zou_lu = { set_nationality = GXC }
+
+						GXC_hu_hanmin = { set_nationality = GXC }
+						GXC_gu_yingfen = { set_nationality = GXC }
+						GXC_li_wenfan = { set_nationality = GXC }
+
+						GXC_li_zongren = { set_nationality = GXC }
+						GXC_huang_shaohong = { set_nationality = GXC }
+
+						set_party_name = {
+							ideology = syndicalist
+							long_name = GXC_chinese_revolutionary_party_long
+							name = GXC_chinese_revolutionary_party
+						}
+						set_party_name = {
+							ideology = radical_socialist
+							long_name = GXC_chinese_peasants_party_long
+							name = GXC_chinese_peasants_party
+						}
+						set_party_name = {
+							ideology = social_democrat
+							long_name = GXC_productive_peoples_party_long
+							name = GXC_productive_peoples_party
+						}
+						set_party_name = {
+							ideology = social_liberal
+							long_name = GXC_reconstruction_faction_full_party_long
+							name = GXC_reconstruction_faction_full_party
+						}
+						set_party_name = {
+							ideology = social_conservative
+							long_name = GXC_western_hills_clique_party_long
+							name = GXC_western_hills_clique_party
+						}
+						set_party_name = {
+							ideology = authoritarian_democrat
+							long_name = GXC_elders_clique_party_long
+							name = GXC_elders_clique_party
+						}
+						set_party_name = {
+							ideology = paternal_autocrat
+							long_name = GXC_new_guangxi_clique_party_long
+							name = GXC_new_guangxi_clique_party
+						}
+					}
+				}
+				if = {
+					limit = {
+						ROOT = {
+							OR = {
+								has_government = totalist
+								has_government = syndicalist
+							}
+						}
+					}
+					set_politics = {
+						ruling_party = syndicalist
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = syndicalist
+						popularity = 40
+					}
+					promote_character = {
+						character = GXC_tan_pingshan
+						ideology = syndicalist_subtype
+					}
+					activate_advisor = GXC_deng_zhongxia_sic
+					complete_national_focus = GXC_a_red_liangguang
+					complete_national_focus = GXC_fallout_of_the_baise_uprising
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							has_government = radical_socialist
+						}
+					}
+					set_politics = {
+						ruling_party = radical_socialist
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = radical_socialist
+						popularity = 40
+					}
+					promote_character = {
+						character = GXC_peng_pai
+						ideology = radical_socialist_subtype
+					}
+					activate_advisor = GXC_gu_dacun_sic
+					complete_national_focus = GXC_a_red_liangguang
+					complete_national_focus = GXC_fallout_of_the_baise_uprising
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							has_government = social_democrat
+						}
+					}
+					set_politics = {
+						ruling_party = social_democrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = social_democrat
+						popularity = 40
+					}
+					promote_character = {
+						character = GXC_chen_mingshu
+						ideology = social_democrat_subtype
+					}
+					activate_advisor = GXC_jiang_guangnai_sic
+					complete_national_focus = GXC_a_red_liangguang
+					complete_national_focus = GXC_fallout_of_the_baise_uprising
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							OR = {
+								has_government = social_liberal
+								has_government = market_liberal
+							}
+						}
+					}
+					set_politics = {
+						ruling_party = social_liberal
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = social_liberal
+						popularity = 40
+					}
+					promote_character = {
+						character = CHI_sun_fo
+						ideology = social_liberal_subtype
+					}
+					activate_advisor = GXC_liang_hancao_sic
+					complete_national_focus = GXC_a_red_liangguang
+					complete_national_focus = GXC_fallout_of_the_baise_uprising
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							has_government = social_conservative
+						}
+					}
+					set_politics = {
+						ruling_party = social_conservative
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = social_conservative
+						popularity = 40
+					}
+					promote_character = {
+						character = GXC_ju_zheng
+						ideology = social_conservative_subtype
+					}
+					activate_advisor = GXC_zou_lu_sic
+					complete_national_focus = GXC_return_of_the_moscow_committee
+					complete_national_focus = GXC_begin_national_reconstruction
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							has_government = paternal_autocrat
+						}
+					}
+					set_politics = {
+						ruling_party = paternal_autocrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = paternal_autocrat
+						popularity = 40
+					}
+					promote_character = {
+						character = GXC_li_zongren
+						ideology = paternal_autocrat_subtype
+					}
+					activate_advisor = GXC_huang_shaohong_sic
+					complete_national_focus = GXC_return_of_the_moscow_committee
+					complete_national_focus = GXC_begin_national_reconstruction
+				}
+				else = {
+					#Hu Hanmin is the top dog/default
+					set_politics = {
+						ruling_party = authoritarian_democrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = authoritarian_democrat
+						popularity = 40
+					}
+					if = {
+						limit = {
+							GXC = { GXC_hu_hanmin = { has_character_flag = is_dead } }
+						}
+						promote_character = {
+							character = GXC_gu_yingfen
+							ideology = authoritarian_democrat_subtype
+						}
+					}
+					else = {
+						promote_character = {
+							character = GXC_hu_hanmin
+							ideology = authoritarian_democrat_subtype
+						}
+					}
+					activate_advisor = GXC_li_wenfan_sic
+					complete_national_focus = GXC_return_of_the_moscow_committee
+					complete_national_focus = GXC_begin_national_reconstruction
+				}
+
+				hidden_effect = {
+					GXC_clear_phase2_debuffs = yes
+					GXC_clear_popular_support_effect = yes
+					add_ideas = GXC_KMT_popular_support_5
+					CHN_setup_economic_devastation_normal_effect = yes
+					set_potential_national_government = yes
+
+					set_country_flag = GXC_phase_4_begins_flag
+					mark_focus_tree_layout_dirty = yes
+				}
+			}
+		}
+	}
+
+	option = { #Shanxi
+		log = "[GetLogInfo]: event CHN.foreignpolicy.700 option CHN.foreignpolicy.700.SHX"
+		name = CHN.foreignpolicy.700.SHX
+		trigger = {
+			CHN_revolutionary_puppet_SHX_is_valid_ally_trigger = yes
+		}
+		ai_chance = {
+			base = 10
+
+			modifier = {
+				factor = 0.25
+				#Less likely to take if doesn't have compatible ideology
+				NOT = {
+					has_government = radical_socialist
+					has_government = authoritarian_democrat
+				}
+			}
+		}
+		if = {
+			limit = { SHX = { exists = yes } }
+			set_temp_variable = { tag_to_release = SHX }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = SHX }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				hidden_effect = {
+					clear_potential_national_government = yes
+
+					SHX = {
+						SHX_feng_yuxiang = { set_nationality = SHX }
+						SHX_yu_xinqing = { set_nationality = SHX } #Red Priest, reasonably flexible I think
+						SHX_sun_yue = { set_nationality = SHX }
+					}
+
+					set_party_name = {
+						ideology = radical_socialist
+						long_name = SHX_kuomintang_feng_long
+						name = SHX_kuomintang_feng
+					}
+					set_party_name = {
+						ideology = authoritarian_democrat
+						long_name = SHX_feng_unification_party_long
+						name = SHX_feng_unification_party
+					}
+				}
+
+				if = {
+					limit = {
+						ROOT = {
+							has_socialist_government = yes
+						}
+					}
+					set_politics = {
+						ruling_party = radical_socialist
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = radical_socialist
+						popularity = 40
+					}
+					promote_character = {
+						character = SHX_feng_yuxiang
+						ideology = radical_socialist_subtype
+					}
+					activate_advisor = SHX_yu_xinqing_sic
+				}
+				else = {
+					#Feng defaults to Auth Dem
+					set_politics = {
+						ruling_party = authoritarian_democrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = authoritarian_democrat
+						popularity = 40
+					}
+					promote_character = {
+						character = SHX_feng_yuxiang
+						ideology = authoritarian_democrat_subtype
+					}
+					activate_advisor = SHX_sun_yue_sic
+				}
+
+				hidden_effect = {
+					SHX_lategame_transition_effect = yes
+
+					set_potential_national_government = yes
+					mark_focus_tree_layout_dirty = yes
+				}
+			}
+		}
+	}
+
+	option = { #Yunnan
+		log = "[GetLogInfo]: event CHN.foreignpolicy.700 option CHN.foreignpolicy.700.YUN"
+		name = CHN.foreignpolicy.700.YUN
+		trigger = {
+			CHN_revolutionary_puppet_YUN_is_valid_ally_trigger = yes
+		}
+		ai_chance = {
+			base = 10
+
+			modifier = {
+				factor = 0.25
+				#Less likely to take if doesn't have compatible ideology
+				OR = {
+					has_government = totalist
+					has_government = syndicalist
+					has_government = social_liberal
+				}
+			}
+		}
+		if = {
+			limit = { YUN = { exists = yes } }
+			set_temp_variable = { tag_to_release = YUN }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				CHN_hand_over_manchurian_territory_to_TARGET_effect = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				CHN_hand_over_non_LEC_territory_to_TARGET_effect = yes
+			}
+		}
+		else = {
+			set_temp_variable = { tag_to_release = YUN }
+			if = {
+				limit = {
+					has_country_flag = CHN_releasing_in_manchuria_flag
+				}
+				release_chinese_government_in_manchuria = yes
+				clr_country_flag = CHN_releasing_in_manchuria_flag
+			}
+			else = {
+				release_chinese_government = yes
+			}
+			var:tag_to_release = {
+				hidden_effect = {
+					clear_potential_national_government = yes
+					CHI = {
+						CHI_zhang_bojun = { set_nationality = YUN }
+					}
+					YUN = {
+						YUN_zhu_de = { set_nationality = YUN }
+
+						YUN_chen_cheng = { set_nationality = YUN }
+						YUN_luo_zhuoying = { set_nationality = YUN }
+
+						YUN_zhang_qun = { set_nationality = YUN }
+						YUN_yang_yongtai = { set_nationality = YUN }
+
+						YUN_zhu_peide = { set_nationality = YUN }
+						YUN_li_genyuan = { set_nationality = YUN }
+
+						YUN_chen_lifu = { set_nationality = YUN }
+						YUN_chen_bulei = { set_nationality = YUN }
+
+						YUN_he_yingqin = { set_nationality = YUN }
+						YUN_dai_jitao = { set_nationality = YUN }
+
+						YUN_teng_jie = { set_nationality = YUN }
+						YUN_liu_jianqun = { set_nationality = YUN }
+					}
+					set_party_name = {
+						ideology = radical_socialist
+						long_name = YUN_chinese_peasants_and_workers_democratic_party_long
+						name = YUN_chinese_peasants_and_workers_democratic_party
+					}
+					set_party_name = {
+						ideology = social_democrat
+						long_name = YUN_KMT_CEC_party_long
+						name = YUN_KMT_CEC_party
+					}
+					set_party_name = {
+						ideology = market_liberal
+						long_name = YUN_KMT_PSC_party_long
+						name = YUN_KMT_PSC_party
+					}
+					set_party_name = {
+						ideology = social_conservative
+						long_name = YUN_KMT_3AR_party_long
+						name = YUN_KMT_3AR_party
+					}
+					set_party_name = {
+						ideology = authoritarian_democrat
+						long_name = YUN_KMT_CCC_party_long
+						name = YUN_KMT_CCC_party
+					}
+					set_party_name = {
+						ideology = paternal_autocrat
+						long_name = YUN_KMT_WPC_party_long
+						name = YUN_KMT_WPC_party
+					}
+					set_party_name = {
+						ideology = national_populist
+						long_name = YUN_KMT_BSS_party_long
+						name = YUN_KMT_BSS_party
+					}
+				}
+				if = {
+					limit = {
+						ROOT = {
+							has_socialist_government = yes
+						}
+					}
+					set_politics = {
+						ruling_party = radical_socialist
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = radical_socialist
+						popularity = 40
+					}
+					promote_character = {
+						character = CHI_zhang_bojun
+						ideology = radical_socialist_subtype
+					}
+					activate_advisor = YUN_zhu_de_sic
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							OR = {
+								has_government = social_liberal
+								has_government = market_liberal
+							}
+						}
+					}
+					set_politics = {
+						ruling_party = market_liberal
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = market_liberal
+						popularity = 40
+					}
+					promote_character = {
+						character = YUN_zhang_qun
+						ideology = market_liberal_subtype
+					}
+					activate_advisor = YUN_yang_yongtai_sic
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							has_government = social_conservative
+						}
+					}
+					set_politics = {
+						ruling_party = social_conservative
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = social_conservative
+						popularity = 40
+					}
+					promote_character = {
+						character = YUN_zhu_peide
+						ideology = social_conservative_subtype
+					}
+					activate_advisor = YUN_li_genyuan_sic #Yeah old PSC and 3AR need to share a puppet sorry
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							has_government = authoritarian_democrat
+						}
+					}
+					set_politics = {
+						ruling_party = authoritarian_democrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = authoritarian_democrat
+						popularity = 40
+					}
+					promote_character = {
+						character = YUN_chen_lifu
+						ideology = authoritarian_democrat_subtype
+					}
+					activate_advisor = YUN_chen_bulei_sic
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							has_government = paternal_autocrat
+						}
+					}
+					set_politics = {
+						ruling_party = paternal_autocrat
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = paternal_autocrat
+						popularity = 40
+					}
+					promote_character = {
+						character = YUN_he_yingqin
+						ideology = paternal_autocrat_subtype
+					}
+					activate_advisor = YUN_dai_jitao_sic
+				}
+				else_if = {
+					limit = {
+						ROOT = {
+							has_government = national_populist
+						}
+					}
+					set_politics = {
+						ruling_party = national_populist
+						elections_allowed = no
+					}
+					set_political_party = {
+						ideology = national_populist
+						popularity = 40
+					}
+					promote_character = {
+						character = YUN_teng_jie
+						ideology = national_populist_subtype
+					}
+					activate_advisor = YUN_liu_jianqun_sic
+				}
+
+				hidden_effect = {
+					YUN_transition_economy_effect = yes
+					YUN_clear_popular_support_ideas = yes
+					add_ideas = YUN_KMT_popular_support_5
+					CHN_setup_economic_devastation_normal_effect = yes
+					set_potential_national_government = yes
+
+					set_country_flag = YUN_phase_4_begins_flag
+					mark_focus_tree_layout_dirty = yes
+				}
+			}
+		}
+	}
+
+	#I would like SZC and HNN to be added here one day.
+
+	option = { #Cancel
+		log = "[GetLogInfo]: event CHN.foreignpolicy.700 option CHN.foreignpolicy.700.cancel"
+		name = CHN.foreignpolicy.700.cancel
+		ai_chance = { base = 0 }
 	}
 }

@@ -150,7 +150,6 @@ special_project_id = {
 				add_scientist_level = INT
 
 				add_scientist_trait = scientist_trait_id
-
 			}
 
 			# Loops through the scientists arrray in the project and applies effects - Works like other every_X
@@ -365,7 +364,6 @@ special_project_id = {
 					add_scientist_level = INT
 
 					add_scientist_trait = scientist_trait_id
-
 				}
 
 				# Loops through the scientists arrray in the project and applies effects - Works like other every_X
@@ -480,7 +478,6 @@ special_project_id = {
 		option = {
 			...
 		}
-
 	}
 
 	unique_reward_2 = {
@@ -528,14 +525,12 @@ special_project_specialization_<name> = {
 
 			# MANDATORY - Default facility render image - (overriden if sub-specialization or the individual project has one defined)
 			facility_model = special_project_specialization_<name>_<sub_specialization 1>_entity # maybe "_render" instead of "_entity"
-
 		}
 
 		special_project_specialization_<name>_<sub_specialization 2> = {
 			...
 		}
 	}
-
 }
 
 # Example:
@@ -613,7 +608,6 @@ scientist = {
 			has_ideology = communism
 		}
 	}
-
 }
 
 
@@ -686,7 +680,6 @@ special_project_facility = {
 		bonus = -0.5
 		ROOT = { has_country_leader_ideology = monarchism }  # ROOT/owner should allow us to scope to country building the facility
 	}
-
 }
 
 

@@ -167,7 +167,6 @@ foreign_politics = {
 }
 
 india_reintegration_category = {
-
 	india_tackle_resistance_decision = {
 		icon = GFX_decision_generic_arrest
 
@@ -239,20 +238,12 @@ india_reintegration_category = {
 		ai_will_do = { base = 50 }
 		fixed_random_seed = no
 	}
-
 }
 
 operations = {
 	NEP_hold_out_vs_india = {
 		icon = generic_ignite_civil_war
-
-		allowed = { tag = NEP }
-
-		activation = {
-			has_war_with = FROM
-			is_valid_peace_target = yes
-			has_capitulated = no
-		}
+		allowed = { always = no } #manually activated
 
 		available = {
 			has_capitulated = yes
@@ -261,47 +252,33 @@ operations = {
 		cancel_trigger = {
 			OR = {
 				is_valid_peace_target = no
-				NOT = { has_war_with = FROM }
+				NOT = { has_war_with = var:NEP_indian_attacker }
 			}
 		}
-
-		is_good = yes
-		fire_only_once = no
-		days_mission_timeout = 180
-
-		targets = { HND PRF RAJ BHU }
-		target_trigger = {
-			has_war_with = FROM
+		cancel_effect = {
+			log = "[GetLogRoot]: Decision cancel NEP_hold_out_vs_india"
+			hidden_effect = { remove_targeted_decision = { target = var:NEP_indian_attacker decision = NEP_defeat_india } }
 		}
+
+		selectable_mission = no
+		is_good = no
+		days_mission_timeout = 180
+		priority = 100
+		fire_only_once = yes
 
 		timeout_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision timeout NEP_hold_out_vs_india"
+			log = "[GetLogRoot]: Decision timeout NEP_hold_out_vs_india"
 			effect_tooltip = {
-				FROM = { country_event = nepal_events.20 }
+				var:NEP_indian_attacker = { country_event = nepal_war_events.20 }
 			}
+			hidden_effect = { remove_targeted_decision = { target = var:NEP_indian_attacker decision = NEP_defeat_india } }
 		}
 		fixed_random_seed = no
 	}
 
 	NEP_defeat_nepal = {
 		icon = generic_ignite_civil_war
-
-		allowed = {
-			OR = {
-				tag = HND
-				tag = RAJ
-				tag = PRF
-				tag = BHU
-			}
-		}
-
-		activation = {
-			has_war_with = NEP
-			NEP = {
-				is_valid_peace_target = yes
-				has_capitulated = no
-			}
-		}
+		allowed = { always = no } #manually activated
 
 		available = {
 			NEP = { has_capitulated = yes }
@@ -313,22 +290,32 @@ operations = {
 				NOT = { has_war_with = NEP }
 			}
 		}
+		cancel_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision cancel NEP_defeat_nepal"
+			hidden_effect = { remove_targeted_decision = { target = FROM decision = NEP_defeat_india } }
+		}
 
+		selectable_mission = no
 		is_good = no
-		fire_only_once = no
 		days_mission_timeout = 180
+		priority = 100
+		fire_only_once = yes
 
 		timeout_effect = {
-			log = "[GetLogRoot]: Decision timeout NEP_defeat_nepal"
-			country_event = nepal_events.20
+			log = "[GetLogRoot][GetLogFrom]: Decision timeout NEP_defeat_nepal"
+			country_event = nepal_war_events.20
+			hidden_effect = {
+				NEP = {
+					remove_targeted_decision = { target = FROM decision = NEP_defeat_india }
+				}
+			}
 		}
 		fixed_random_seed = no
 	}
 
 	NEP_defeat_india = {
 		icon = generic_ignite_civil_war
-
-		allowed = { tag = NEP }
+		allowed = { always = no } #manually activated
 
 		available = {
 			surrender_progress < 0.20
@@ -354,8 +341,12 @@ operations = {
 			log = "[GetLogRoot][GetLogFrom]: Decision complete NEP_defeat_india"
 			add_political_power = 100
 			add_stability = 0.10
-			FROM = { select_correct_peace_event_receiver = yes }
-			var:target = { country_event = nepal_events.10 }
+			country_event = nepal_war_events.9
+			remove_mission = NEP_hold_out_vs_india
+			hidden_effect = {
+				remove_targeted_decision = { target = FROM decision = NEP_defeat_india }
+				FROM = { remove_mission = NEP_defeat_nepal }
+			}
 		}
 		fixed_random_seed = no
 	}
