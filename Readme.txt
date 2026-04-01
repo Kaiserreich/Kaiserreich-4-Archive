@@ -1,5 +1,5 @@
 ########################################
-### Kaiserreich for HOI4 patch 1.6.2 ###
+### Kaiserreich for HOI4 patch 1.6.7 ###
 ########################################
 
 Thank you for downloading Kaiserreich for Hearts of Iron IV.
