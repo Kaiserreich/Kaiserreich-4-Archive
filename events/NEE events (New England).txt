@@ -2532,25 +2532,16 @@ country_event = { # New England receives request
 	is_triggered_only = yes
 
 	immediate = {
+		save_event_target_as = war_country
 		FROM = {
 			save_event_target_as = requester
 		}
 		if = {
-			limit = {
-				FROM = {
-					has_elected_government = yes
-				}
-			}
-			set_variable = {
-				var = NEE_threshold
-				value = 40
-			}
-			else = {
-				set_variable = {
-					var = NEE_threshold
-					value = 20
-				}
-			}
+			limit = { FROM = { has_elected_government = yes } }
+			set_variable = { NEE_threshold = 40 }
+		}
+		else = {
+			set_variable = { NEE_threshold = 20 }
 		}
 	}
 
@@ -2574,12 +2565,8 @@ country_event = { # New England receives request
 		}
 		else = {
 			if = {
-				limit = {
-					is_ai = no
-				}
-				FROM = {
-					change_tag_from = NEE
-				}
+				limit = { is_ai = no }
+				FROM = { change_tag_from = NEE }
 			}
 			FROM = {
 				country_event = { id = new_england_events.93 hours = 8 }
@@ -2625,12 +2612,8 @@ country_event = { # New England receives request
 		}
 		else = {
 			if = {
-				limit = {
-					is_ai = no
-				}
-				FROM = {
-					change_tag_from = NEE
-				}
+				limit = { is_ai = no }
+				FROM = { change_tag_from = NEE }
 			}
 			FROM = {
 				country_event = { id = new_england_events.93 hours = 8 }
@@ -2667,6 +2650,10 @@ country_event = { # New England receives request
 		add_stability = -0.05
 		add_political_power = 100
 		set_country_flag = CAN_refused_rejoin_usa
+		custom_effect_tooltip = {
+			localization_key = will_lead_to_war_with
+			COUNTRY = "[requester.GetNameDef]"
+		}
 		FROM = {
 			set_country_flag = CAN_refused_new_england
 			country_event = { id = new_england_events.99 hours = 8 }
@@ -2709,6 +2696,7 @@ country_event = { # Canada asked for permission
 		log = "[GetLogInfo]: event new_england_events.91 option new_england_events.91.b"
 		name = new_england_events.91.b #If they join the Entente, then OK
 		trigger = {
+			event_target:requester = { has_socialist_government = no }
 			is_in_faction = yes
 			NOT = {
 				is_in_faction_with = event_target:requester
@@ -2747,6 +2735,10 @@ country_event = { # Canada asked for permission
 		event_target:requester = {
 			set_country_flag = USA_refused_nee_rejoin
 		}
+		custom_effect_tooltip = {
+			localization_key = will_lead_to_war_with
+			COUNTRY = "[requester.GetNameDef]"
+		}
 		add_political_power = 50
 		NEE = {
 			country_event = { id = new_england_events.97 hours = 8 }
@@ -2775,9 +2767,7 @@ country_event = { # Canada gave permission
 			country_event = { id = new_england_events.93 hours = 8 }
 		}
 		if = {
-			limit = {
-				is_ai = no
-			}
+			limit = { is_ai = no }
 			event_target:requester = {
 				change_tag_from = NEE
 			}
@@ -2800,6 +2790,23 @@ country_event = { # New England peacefully reuniting
 		}
 	}
 
+	immediate = {
+		hidden_effect = {
+			add_to_temp_array = { CAN_neighbour_states = 276.id } #Southern Ontario
+			add_to_temp_array = { CAN_neighbour_states = 465.id } #New Brunswick
+			add_to_temp_array = { CAN_neighbour_states = 468.id } #Saint Lawrence
+			add_to_temp_array = { CAN_neighbour_states = 739.id } #Ottawa
+			NEE = {
+				every_owned_state = {
+					teleport_armies = {
+						limit = { tag = CAN }
+						to_state_array = CAN_neighbour_states
+					}
+				}
+			}
+		}
+	}
+
 	option = {
 		log = "[GetLogInfo]: event new_england_events.93 option new_england_events.93.a"
 		name = new_england_events.93.a
@@ -2815,7 +2822,6 @@ country_event = { # New England peacefully reuniting
 			}
 		}
 		hidden_effect = {
-			NEE_winner_logging = yes
 			every_state = { remove_claim_by = NEE }
 		}
 		annex_country = {
@@ -2823,12 +2829,20 @@ country_event = { # New England peacefully reuniting
 			transfer_troops = yes
 		}
 		if = {
-			limit = {
-				CAN = { has_country_flag = CAN_nee_disobeyed }
+			limit = { CAN = { has_country_flag = CAN_nee_disobeyed } }
+			custom_effect_tooltip = {
+				localization_key = may_lead_to_war_with
+				COUNTRY = "[CAN.GetNameDef]"
 			}
 			CAN = {
 				clr_country_flag = CAN_nee_disobeyed
 				country_event = { id = new_england_events.100 days = 1 }
+			}
+		}
+		else = {
+			hidden_effect = {
+				clr_global_flag = USA_negotiations_with_NEE_in_progress
+				country_event = { id = american_civil_war_events.2400 hours = 8 }
 			}
 		}
 	}
@@ -2864,15 +2878,11 @@ country_event = { # Canada demanded they join the Entente
 		}
 		ai_chance = { base = 75 }
 		if = {
-			limit = {
-				is_faction_leader = yes
-			}
+			limit = { is_faction_leader = yes }
 			dismantle_faction = yes
 		}
 		else_if = {
-			limit = {
-				is_in_faction = yes
-			}
+			limit = { is_in_faction = yes }
 			leave_faction = yes
 		}
 		CAN = {
@@ -2888,30 +2898,26 @@ country_event = { # Canada demanded they join the Entente
 		}
 		NEE = { separate_peace_all_wars = yes }
 		NEE_move_generals = yes
-		ROOT = {
-			add_stability = 0.05
-			add_political_power = 100
-			NEE = {
-				every_core_state = {
-					hidden_effect = { remove_claim_by = ROOT }
-					add_core_of = ROOT
-					remove_core_of = NEE
-				}
-			}
-			hidden_effect = {
-				NEE_winner_logging = yes
-				every_state = { remove_claim_by = NEE }
-			}
-			annex_country = {
-				target = NEE
-				transfer_troops = yes
-			}
-			annex_country = {
-				target = NEE
-				transfer_troops = yes
+		add_stability = 0.05
+		add_political_power = 100
+		NEE = {
+			every_core_state = {
+				hidden_effect = { remove_claim_by = ROOT }
+				add_core_of = ROOT
+				remove_core_of = NEE
 			}
 		}
-		hidden_effect = { NEE_winner_logging = yes }
+		hidden_effect = {
+			every_state = { remove_claim_by = NEE }
+		}
+		annex_country = {
+			target = NEE
+			transfer_troops = yes
+		}
+		hidden_effect = {
+			clr_global_flag = USA_negotiations_with_NEE_in_progress
+			country_event = { id = american_civil_war_events.2400 hours = 20 }
+		}
 	}
 	option = {
 		log = "[GetLogInfo]: event new_england_events.94 option new_england_events.94.c"
@@ -3041,6 +3047,10 @@ country_event = { # They refused to join the Entente
 		event_target:requester = {
 			set_country_flag = USA_refused_nee_rejoin
 		}
+		custom_effect_tooltip = {
+			localization_key = will_lead_to_war_with
+			COUNTRY = "[requester.GetNameDef]"
+		}
 		add_political_power = 50
 		NEE = {
 			country_event = { id = new_england_events.97 hours = 8 }
@@ -3074,6 +3084,10 @@ country_event = { # New England has been refused permission
 		}
 	}
 
+	immediate = {
+		save_event_target_as = war_country
+	}
+
 	option = {
 		log = "[GetLogInfo]: event new_england_events.97 option new_england_events.97.a"
 		name = new_england_events.97.a #then fuck it
@@ -3081,6 +3095,7 @@ country_event = { # New England has been refused permission
 			check_variable = { NEE_legitimacy < 40 }
 		}
 		CAN = {
+			save_event_target_as = war_country
 			effect_tooltip = {
 				annex_country = { target = NEE }
 			}
@@ -3121,9 +3136,7 @@ country_event = { # New England has been refused permission
 			set_country_flag = CAN_nee_disobeyed
 		}
 		if = {
-			limit = {
-				is_ai = no
-			}
+			limit = { is_ai = no }
 			event_target:requester = {
 				change_tag_from = NEE
 			}
@@ -3184,6 +3197,10 @@ country_event = { # New England has folded
 			}
 		}
 		hidden_effect = { CAN_setup_NEE_suppression_decisions = yes }
+		custom_effect_tooltip = {
+			localization_key = will_lead_to_war_with
+			COUNTRY = "[requester.GetNameDef]"
+		}
 		event_target:requester = {
 			set_country_flag = CAN_refused_new_england
 			country_event = { id = new_england_events.99 days = 3 }
@@ -3225,19 +3242,6 @@ country_event = { # New England refused to join
 
 	immediate = {
 		hidden_effect = {
-			if = {
-				limit = {
-					country_exists = NEE
-				}
-				NEE = {
-					save_event_target_as = war_country
-				}
-			}
-			else = {
-				CAN = {
-					save_event_target_as = war_country
-				}
-			}
 			every_state = {
 				limit = {
 					is_claim_or_core_of_ROOT = no
@@ -3251,40 +3255,26 @@ country_event = { # New England refused to join
 	option = {
 		log = "[GetLogInfo]: event new_england_events.99 option new_england_events.99.a"
 		name = new_england_events.99.a #Then it's war!
-		trigger = {
-			can_declare_war_on = event_target:war_country
-		}
-		ai_chance = {
-			base = 50
-			modifier = {
-				factor = 2
-				has_elected_government = no
-			}
-		}
-		create_wargoal = {
+		#trigger = {
+		#	can_declare_war_on = event_target:war_country
+		#}
+		declare_war_on = {
 			target = event_target:war_country
 			type = annex_everything
 		}
-	}
-	option = {
-		log = "[GetLogInfo]: event new_england_events.99 option new_england_events.99.b"
-		name = new_england_events.99.b #We'll deal with this later
-		ai_chance = {
-			base = 50
-			modifier = {
-				factor = 0
-				FROM = { default_attack_AI_trigger = no }
+		if = {
+			limit = {
+				event_target:war_country = {
+					tag = NEE
+					is_ally_with = CAN
+				}
 			}
-			modifier = {
-				factor = 2
-				has_elected_government = yes
+			declare_war_on = {
+				target = CAN
+				type = annex_everything
 			}
 		}
-		add_political_power = -100
-		add_opinion_modifier = {
-			target = event_target:war_country
-			modifier = KR_outraged
-		}
+		clr_global_flag = USA_negotiations_with_NEE_in_progress
 	}
 }
 
@@ -3362,6 +3352,14 @@ country_event = { # New England has joined anyhow
 			}
 			remove_claim_by = ROOT
 		}
+		hidden_effect = {
+			event_target:requester = {
+				country_event = { id = american_civil_war_events.2400 hours = 8 }
+			}
+		}
+	}
+	after = {
+		clr_global_flag = USA_negotiations_with_NEE_in_progress
 	}
 }
 
@@ -11540,7 +11538,14 @@ country_event = { #ACC speaks to NEE
 country_event = { #Integrating Armed Forces
 	id = new_england_events.402
 	title = new_england_events.402.t
-	desc = new_england_events.402.d
+	desc = {
+		trigger = { NOT = { is_in_faction_with = ENT } }
+		text = new_england_events.402.joint_pacific_atlantic_command
+	}
+	desc = {
+		trigger = { is_in_faction_with = ENT }
+		text = new_england_events.402.aligned_with_canada
+	}
 	picture = GFX_report_event_generic_diplomacy3
 
 	is_triggered_only = yes
@@ -11552,20 +11557,9 @@ country_event = { #Integrating Armed Forces
 			tag = NEE
 		}
 		army_experience = 50
-		if = {
-			limit = { #Skip this event if they are in the Entente
-				is_in_faction_with = ENT
-			}
-			hidden_effect = {
-				country_event = { id = new_england_events.404 days = 3 }
-				ACC = { country_event = { id = new_england_events.404 days = 3 } }
-			}
-		}
-		else = {
-			hidden_effect = {
-				country_event = { id = new_england_events.403 days = 3 }
-				ACC = { country_event = { id = new_england_events.403 days = 3 } }
-			}
+		hidden_effect = {
+			country_event = { id = new_england_events.403 days = 3 }
+			ACC = { country_event = { id = new_england_events.403 days = 3 } }
 		}
 	}
 	option = {
@@ -11580,7 +11574,14 @@ country_event = { #Integrating Armed Forces
 country_event = { #Commitment to Democracy
 	id = new_england_events.403
 	title = new_england_events.403.t
-	desc = new_england_events.403.d
+	desc = {
+		trigger = { NOT = { is_in_faction_with = ENT } }
+		text = new_england_events.403.joint_pacific_atlantic_command
+	}
+	desc = {
+		trigger = { is_in_faction_with = ENT }
+		text = new_england_events.403.aligned_with_canada
+	}
 	picture = GFX_report_event_generic_diplomacy3
 
 	is_triggered_only = yes

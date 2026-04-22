@@ -23,6 +23,14 @@ inlay_window_id = {
             gfx_name = selection_trigger_or_yes
         }
     }
+    scripted_buttons = { # List of scriptable buttons
+        button_name = { # Name of a button. The same name can be defined in scripted_images to select gfx. If the name does not exist in scripted_iamges, it will use the default gfx set in the .gui file
+            available = { # Trigger effect if the button should be clickable or not
+            }
+            click_effect = { # The effect that should be executed on click. Country scope
+            }
+        }
+    }
 }
 ```
 

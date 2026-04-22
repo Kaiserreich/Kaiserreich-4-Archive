@@ -1823,9 +1823,25 @@ incoming_war_notification_effect = {
 }
 
 calculate_days_since_game_start = {
-	add_to_temp_variable = { days_to_event = 706640 }
-	subtract_from_temp_variable = { days_to_event = global.num_days }
-	clamp_temp_variable = { var = days_to_event min = 1 }
+	# NOTE: set_temp_variable 'days_to_event' as number of days needed for event to fire from 1 January 1936
+
+	# Note: 706640 is the value of global.num_days in 1 January 1936. Every ingame day global.num_days is appended by 1.
+	# So calculating the difference between global.num_days and 706640 gives us the total number of days elapsed since 1 January 1936
+	# Then we get the difference between days_to_event and days_elapsed to determine remaining number of days for event to fire.
+	# As formula:
+	# (global.num_days in 1936) = 706640
+	# days_elapsed = (global.num_days on current date) - (global.num_days on 1 January 1936)
+	# days_to_event = (number of days needed from 1 January 1936) - days_elapsed
+
+	set_temp_variable = { days_since_game_start = global.num_days }
+	subtract_from_temp_variable = { days_since_game_start = 706640 }
+	log = "Days since game start: [?days_since_game_start]"
+	subtract_from_temp_variable = { days_to_event = days_since_game_start }
+	if = {
+		limit = { NOT = { check_variable = { disable_days_to_event_clamping = 1 } } }
+		clamp_temp_variable = { var = days_to_event min = 0 }
+	}
+	log = "Days to event: [?days_to_event]"
 }
 
 # Starts at Wednesday, since Jan 1, 1936 (Day 0) is a Wednesday

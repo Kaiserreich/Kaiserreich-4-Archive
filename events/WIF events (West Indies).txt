@@ -1146,18 +1146,88 @@ country_event = { #red revolt
 				limit = { is_in_faction_with = CAN }
 				CAN = { country_event = { id = west_indies_federation_politics_events.3100 days = 2 } }
 			}
+			faction_leader = { set_temp_variable = { WIF_former_overlord = THIS } }
 			leave_faction = yes
 			peace_out_non_neighbours_after_leaving_faction = yes
 		}
 		else_if = {
 			limit = { is_subject = yes }
 			overlord = {
+				set_temp_variable = { WIF_former_overlord = THIS }
 				set_autonomy = {
 					target = WIF
 					autonomy_state = autonomy_free
 				}
 			}
 			peace_out_non_neighbours_after_leaving_faction = yes
+		}
+
+		# Peace setup if was at war with CEN on ENT side
+		CEN = {
+			if = {
+				limit = {
+					has_war_with = ROOT
+					is_in_faction = no
+					is_subject = no
+				}
+				## Transfer Belize to CEN if currently at war with them
+				311 = { # Belize
+					if = {
+						limit = {
+							is_owned_by = ROOT
+							PREV = { has_socialist_government = no }
+						}
+						teleport_armies = {
+							limit = { is_ally_with = ROOT }
+							to_state = var:capital
+						}
+						transfer_state_to = PREV
+					}
+				}
+				white_peace_with_ROOT = yes
+				## Transfer event target to former overlord; used for CEN-ENT scripted peace
+				var:WIF_former_overlord = { save_event_target_as = CEN_scripted_peace_target }
+				hidden_effect = {
+					country_event = { id = central_america_socialist_events.050 days = 15 }
+				}
+			}
+			hidden_effect = {
+				if = {
+					limit = {
+						has_completed_focus = CEN_into_world
+						NOT = {
+							has_country_flag = CEN_negotiated_belize_claims
+							owns_state = 311 # Belize
+						}
+					}
+					activate_targeted_decision = { target = WIF decision = CEN_settle_the_belize_issue }
+				}
+			}
+		}
+
+		# Peace out MEX if both at war early game
+		MEX = {
+			if = {
+				limit = {
+					has_war_with = ROOT
+					is_valid_peace_target = yes
+				}
+				311 = { # Belize
+					if = {
+						limit = {
+							is_owned_by = ROOT
+							is_claimed_by = PREV
+							is_controlled_by = PREV
+						}
+						teleport_armies = {
+							limit = { is_ally_with = ROOT }
+							to_state = var:capital
+						}
+						transfer_state_to = PREV
+					}
+				}
+				white_peace_with_ROOT = yes
+			}
 		}
 
 		set_politics = {

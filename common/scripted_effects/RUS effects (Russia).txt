@@ -272,6 +272,7 @@ RUS_change_military_anger = {
 						has_completed_focus = RUS_third_russia
 					}
 				}
+				set_country_flag = { flag = RUS_looming_coup days = 30 value = 1 }
 				country_event = { id = russia_events.914 days = 4 random_days = 4 }
 			}
 			else_if = {
@@ -2343,18 +2344,12 @@ RUS_initialise_socrus = {
 			limit = { has_template = "Diviziya MVD" }
 			delete_unit_template_and_units = { division_template = "Diviziya MVD" disband = yes }
 		}
-		every_other_country = {
-			limit = {
-				is_in_faction_with = ROOT
-				NOT = { is_subject_of = ROOT }
-			}
+		every_allied_country = {
+			limit = { NOT = { is_subject_of = ROOT } }
 			leave_faction = yes
 		}
-		every_other_country = {
-			limit = {
-				is_subject_of = ROOT
-				NOT = { tag = BUK }
-			}
+		every_subject_country = {
+			limit = { NOT = { tag = BUK } }
 			if = {
 				limit = { ROOT = { has_government = syndicalist } }
 				set_politics = {
@@ -4267,6 +4262,15 @@ RUS_fire_economy_event = {
 	}
 }
 
+RUS_decrease_german_economic_influence_cost = {
+	subtract_from_variable = { RUS_influence_cost_low = RUS_influence_cost_change_var }
+	clamp_variable = { var = RUS_influence_cost_low min = 0 }
+	subtract_from_variable = { RUS_influence_cost_normal = RUS_influence_cost_change_var }
+	clamp_variable = { var = RUS_influence_cost_normal min = 0 }
+	subtract_from_variable = { RUS_influence_cost_increased = RUS_influence_cost_change_var }
+	clamp_variable = { var = RUS_influence_cost_increased min = 0 }
+}
+
 RUS_check_voskhod_events = {
 	hidden_effect = {
 		if = {
@@ -4338,9 +4342,28 @@ RUS_set_default_industry_costs = {
 	set_variable = { RUS_ic_cost_high = 60 } #High industry decision cost
 	if = {
 		limit = { has_soclib_or_socdem_government = yes }
-		add_to_variable = { RUS_ic_cost_med = 10 }
-		add_to_variable = { RUS_ic_cost_high = 10 }
+		set_temp_variable = { RUS_ic_cost_med_change_var = 10 }
+		set_temp_variable = { RUS_ic_cost_high_change_var = 10 }
+		RUS_increase_industry_costs = yes
 	}
+}
+
+RUS_decrease_industry_costs = {
+	subtract_from_variable = { RUS_ic_cost_low = RUS_ic_cost_low_change_var }
+	clamp_variable = { var = RUS_ic_cost_low min = 0 }
+	subtract_from_variable = { RUS_ic_cost_med = RUS_ic_cost_med_change_var }
+	clamp_variable = { var = RUS_ic_cost_med min = 0 }
+	subtract_from_variable = { RUS_ic_cost_high = RUS_ic_cost_high_change_var }
+	clamp_variable = { var = RUS_ic_cost_high min = 0 }
+}
+
+RUS_increase_industry_costs = {
+	add_to_variable = { RUS_ic_cost_low = RUS_ic_cost_low_change_var }
+	clamp_variable = { var = RUS_ic_cost_low min = 0 }
+	add_to_variable = { RUS_ic_cost_med = RUS_ic_cost_med_change_var }
+	clamp_variable = { var = RUS_ic_cost_med min = 0 }
+	add_to_variable = { RUS_ic_cost_high = RUS_ic_cost_high_change_var }
+	clamp_variable = { var = RUS_ic_cost_high min = 0 }
 }
 
 RUS_industry_effect = {
@@ -7534,9 +7557,11 @@ RUS_set_up_peace_conference_with_germany = {
 						OR = {
 							is_claimed_by = BAT
 							is_claimed_by = BLR
+							is_claimed_by = LIT
 							is_claimed_by = UKR
 							has_variable = ambition_area_@BAT
 							has_variable = ambition_area_@BLR
+							has_variable = ambition_area_@LIT
 							has_variable = ambition_area_@UKR
 						}
 						NOT = { has_state_flag = RSA_claimed_state } #RSA_counter_claims block third party annexations

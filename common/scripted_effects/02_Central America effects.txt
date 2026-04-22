@@ -54,7 +54,6 @@ CEN_initiate_unification = {
 				remove_core_of = CEN
 				remove_claim_by = CEN
 			}
-			311 = { disable_state_integration = yes } # Belize
 			474 = { disable_state_integration = yes } # Yucatan
 		}
 
@@ -84,6 +83,7 @@ CEN_initiate_unification = {
 				limit = { has_country_leader = { character = NIC_augusto_cesar_sandino } }
 				CEN = { set_cosmetic_tag = CEN_sandino }
 			}
+			474 = { set_variable = { ambition_area_@ROOT = 1 } } # Yucatan
 		}
 		else_if = {
 			limit = { has_authoritarian_government = yes }
@@ -250,22 +250,31 @@ CEN_initiate_unification = {
 CEN_complete_unification = {
 	# Second part of independent CEN formation effect; fired in the unifier tag scope, initiated by decision CEN_unite_central_america
 	# This is fired after any effect to transfer or disband the unifier's faction
-	# Adds CEN claims and cores, annexes all relevant countries, then switches tags
+	# Transfer GUA claim on Belize, annexes all relevant countries, then switches tags
 	# Effects must be processed in a specific order; shuffling code around can cause these effects to break
 	# Needs to be split in order to avoid CTD from COS faction transfer which requires buffering different effect blocks
 
-	# Add CEN claims and cores and disable the decision for everyone else
+	# CEN inherits GUA claim on Belize; can return to GUA through partition event
 	hidden_effect = {
-		CEN = {
+		GUA = {
 			311 = { #Belize
 				if = {
-					limit = { is_claim_or_core_of_PREV = no }
-					add_claim_by = PREV
+					limit = {
+						### Avoids unintended loss of claim from releasing GUA as puppet before forming
+						OR = {
+							is_claim_or_core_of_PREV = yes
+							PREV = { is_subject = yes }
+						}
+						## Account for multiple CEN formation after losing claims
+						NOT = {
+							is_core_of = CEN
+							CEN = { has_country_flag = CEN_negotiated_belize_claims }
+						}
+					}
+					remove_claim_by = PREV
+					add_claim_by = CEN
 				}
-				remove_claim_by = GUA # CEN inherits claim; can return to GUA when partitioned
 			}
-		}
-		GUA = {
 			remove_targeted_decision = { decision = CEN_unite_central_america target = THIS }
 			set_variable = { country_guide_page_count = 0 }
 			every_core_state = { add_core_of = CEN }
@@ -1215,6 +1224,7 @@ CEN_reset_ideas = {
 		CEN_paying_MEX_low
 		CEN_paying_MEX_mid
 		CEN_paying_MEX_high
+		CEN_WIF_trade_agreement_idea
 		CEN_heavy_prod_idea
 		CEN_heavy_prod_idea2
 		CEN_light_prod_idea
@@ -1232,6 +1242,7 @@ CEN_reset_ideas = {
 			CEN_MEX_fees_high
 		}
 	}
+	WIF = { remove_ideas = CEN_WIF_trade_agreement_idea }
 }
 
 CEN_add_mexican_infrastructure_effect = {
@@ -1326,6 +1337,140 @@ CEN_remove_targeted_decisions = {
 	remove_targeted_decision = { target = RUS decision = CENmil_buy_artillery }
 	remove_targeted_decision = { target = NFA decision = CENmil_buy_tanks }
 	remove_targeted_decision = { target = ENT decision = CENmil_buy_planes }
+
+	remove_targeted_decision = { target = 311 decision = CEN_core_british_honduras }
+	remove_targeted_decision = { target = WIF decision = CEN_settle_the_belize_issue }
+
+	CEN_remove_guarantee_decisions = yes
+	CEN_remove_faction_decisions = yes
+}
+
+CEN_activate_guarantee_decisions = {
+	# Activate Military CEN guarantee decisions; can join guarantor faction later
+	# America guarantee activated here if ACW is over, otherwise via USA_civil_war_ends effect
+	if = {
+		limit = { GER = { is_faction_leader = yes } }
+		activate_targeted_decision = { target = GER decision = CENmil_request_foreign_protection }
+	}
+	if = {
+		limit = {
+			country_exists = ENT
+			NOT = { has_country_flag = CEN_demanded_belize_from_entente }
+		}
+		activate_targeted_decision = { target = ENT decision = CENmil_request_foreign_protection }
+	}
+	if = {
+		limit = {
+			any_country_of = {
+				target = constant:country_groups.usa_non_socialist
+				exists = yes
+				is_subject = no
+			}
+		}
+		if = {
+			limit = { has_global_flag = USA_civil_war_over_flag }
+			hidden_effect = {
+				random_other_country = {
+					limit = { is_american_tag = yes }
+					ROOT = { activate_targeted_decision = { target = PREV decision = CENmil_request_foreign_protection } }
+				}
+			}
+		}
+		else = {
+			custom_effect_tooltip = CENmil_can_seek_american_protection_tt
+			set_country_flag = CENmil_foreign_policy_open
+		}
+		custom_effect_tooltip = {
+			localization_key = EFFECT_ACTIVATE_TARGETED_DECISION
+			NAME = CENmil_request_american_protection_name_tt
+		}
+	}
+
+	# AI decides its alignment through hidden event with weighted chances
+	if = {
+		limit = { is_ai = yes }
+		hidden_effect = { country_event = central_america_dictatorship_events.500 }
+	}
+}
+
+CEN_remove_guarantee_decisions = {
+	# Removes all guarantee decisions, and future ACW winner guarantee decision
+	hidden_effect = {
+		CEN = {
+			remove_targeted_decision = { target = GER decision = CENmil_request_foreign_protection }
+			remove_targeted_decision = { target = ENT decision = CENmil_request_foreign_protection }
+			remove_targeted_decision = { target = IMP decision = CENmil_request_foreign_protection }
+			remove_targeted_decision = { target = USA decision = CENmil_request_foreign_protection }
+			remove_targeted_decision = { target = ACC decision = CENmil_request_foreign_protection }
+			remove_targeted_decision = { target = APG decision = CENmil_request_foreign_protection }
+			remove_targeted_decision = { target = NEE decision = CENmil_request_foreign_protection }
+			clr_country_flag = CENmil_foreign_policy_open
+			clr_country_flag = CENmil_forpol_ENT
+			clr_country_flag = CENmil_forpol_GER
+			clr_country_flag = CENmil_forpol_USA
+		}
+	}
+}
+
+CEN_guarantee_decision_effect = {
+	FROM = { give_guarantee = ROOT }
+	if = {
+		limit = {
+			FROM = {
+				is_american_tag = yes
+				is_in_faction = no
+			}
+		}
+		custom_effect_tooltip = CENmil_can_join_american_faction_tt
+		hidden_effect = { activate_targeted_decision = { decision = CEN_join_faction target = FROM } }
+	}
+	else = {
+		activate_targeted_decision = { decision = CEN_join_faction target = FROM }
+	}
+	if = {
+		limit = {
+			FROM = { is_ally_with = 311.owner }
+			NOT = { owns_state = 311 } # Belize
+		}
+		custom_effect_tooltip = {
+			localization_key = EFFECT_REMOVE_TARGETED_DECISION
+			NAME = CEN_demand_belize
+		}
+	}
+	CEN_remove_guarantee_decisions = yes
+}
+
+CEN_remove_faction_decisions = {
+	hidden_effect = {
+		CEN = {
+			remove_targeted_decision = { target = GER decision = CEN_join_faction }
+			remove_targeted_decision = { target = ENT decision = CEN_join_faction }
+			remove_targeted_decision = { target = USA decision = CEN_join_faction }
+			remove_targeted_decision = { target = ACC decision = CEN_join_faction }
+			remove_targeted_decision = { target = APG decision = CEN_join_faction }
+			remove_targeted_decision = { target = NEE decision = CEN_join_faction }
+			remove_targeted_decision = { target = THIS decision = CENdem_form_faction }
+		}
+	}
+}
+
+CEN_join_faction_decision_effect = {
+	var:FROM.faction_leader = { add_to_faction = ROOT }
+	if = {
+		limit = {
+			has_democratic_government = yes
+			NOT = {
+				owns_state = 311 # Belize
+				has_completed_focus = CENdem_approach_the_entente
+			}
+		}
+		custom_effect_tooltip = {
+			localization_key = EFFECT_REMOVE_TARGETED_DECISION
+			NAME = CEN_demand_belize
+		}
+	}
+	clr_country_flag = CEN_ongoing_diplomatic_efforts
+	CEN_remove_faction_decisions = yes
 }
 
 CEN_puppet_setup = {
@@ -1370,7 +1515,120 @@ CEN_puppet_setup = {
 		NIC = { remove_targeted_decision = { decision = CEN_unite_central_america target = THIS } }
 		COS = { remove_targeted_decision = { decision = CEN_unite_central_america target = THIS } }
 		PAN = { remove_targeted_decision = { decision = CEN_unite_central_america target = THIS } }
+		474 = { clear_variable = ambition_area_@PREV } # Yucatan
 	}
+}
+
+CEN_demand_belize_effect = {
+	# Fire ultimatum event over Belize; target is Belize state owner
+	# Fires for player overlord of AI puppet; otherwise fires for target
+	if = {
+		limit = {
+			FROM = {
+				is_subject = yes
+				is_ai = yes
+				overlord = { is_ai = no }
+			}
+		}
+		var:FROM.overlord = { country_event = { id = central_america_socialist_events.040 days = 3 } } # Ultimatum Over British Honduras
+	}
+	else = {
+		FROM = { country_event = { id = central_america_socialist_events.040 days = 3 } }
+	}
+	if = {
+		limit = {
+			has_socialist_government = no
+			FROM = { is_ally_with = ENT }
+		}
+		custom_effect_tooltip = CEN_can_no_longer_align_with_entente
+		set_country_flag = CEN_demanded_belize_from_entente
+		hidden_effect = {
+			remove_targeted_decision = { target = ENT decision = CEN_join_faction }
+			remove_targeted_decision = { target = ENT decision = CENmil_request_foreign_protection }
+		}
+	}
+	custom_effect_tooltip = if_they_accept_tt
+	effect_tooltip = { transfer_state = 311 } # Belize
+	set_country_flag = { flag = CEN_ongoing_diplomatic_efforts days = 25 value = 1 }
+}
+
+CEN_belize_scripted_peace_effect = {
+	# Peace effect for CEN war against Belize owner
+	# Can start over DoW for the state, but also over attacking its allies; priority over peace against COS
+	# Can only happen for a free and factionless CEN
+	# Recipient can be independent Belize owner; faction leader of Belize owner; overlord of Belize owner
+
+	CEN = {
+		## Process capitulated countries through regular peace deal
+		every_enemy_country = {
+			limit = {
+				is_ally_with = event_target:CEN_scripted_peace_target
+				OR = {
+					is_owner_neighbor_of = ROOT
+					original_tag = PAN
+				}
+				has_capitulated = yes
+			}
+			remove_puppet_and_leave_faction = yes
+			custom_effect_tooltip = tooltip_white_line
+		}
+		## If VEN ally is at war for their claims, transfer states to them
+		if = {
+			limit = {
+				is_ally_with = VEN
+				var:1078.owner = {
+					is_ally_with = event_target:CEN_scripted_peace_target
+					has_capitulated = no
+				}
+			}
+			1078 = { transfer_state_to = VEN } # Barima
+			1079 = { transfer_state_to = VEN } # Essequibo
+		}
+		## If Belize is controlled and not owned by CEN, transfer to CEN
+		if = {
+			limit = {
+				var:311.owner = {
+					is_ally_with = event_target:CEN_scripted_peace_target
+					has_capitulated = no
+				}
+			}
+			311 = { transfer_state_to = PREV } # Belize
+		}
+		## If Panama Canal is controlled by CEN and owned by IMP, USA, etc., give to CEN
+		if = {
+			limit = {
+				controls_state = 685 # Panama Canal
+				var:685.owner = {
+					is_ally_with = event_target:CEN_scripted_peace_target
+					has_capitulated = no
+				}
+			}
+			685 = { transfer_state_to = PREV } # Panama Canal
+		}
+		## If Yucatan is controlled by Socialist CEN, give to CEN
+		if = {
+			limit = {
+				controls_state = 474 # Yucatan
+				has_socialist_government = yes
+				var:474.owner = {
+					is_ally_with = event_target:CEN_scripted_peace_target
+					has_capitulated = no
+				}
+			}
+			474 = { transfer_state_to = PREV } # Yucatan
+		}
+		## Peace out with the rest of the faction
+		custom_effect_tooltip = tooltip_white_line
+		event_target:CEN_scripted_peace_target = {
+			white_peace_with_PREV = yes
+			diplomatic_relation = {
+				country = PREV
+				relation = non_aggression_pact
+			}
+			set_truce = { target = PREV days = 365 }
+		}
+	}
+	set_global_flag = CEN_belize_scripted_peace_fired
 }
 
 #################
@@ -1414,7 +1672,10 @@ GUA_restore_missing_characters = {
 			}
 		}
 		if = {
-			limit = { NOT = { has_character = GUA_jose_maria_orellana } }
+			limit = {
+				GUA_jose_maria_orellana = { is_dead = no }
+				NOT = { has_character = GUA_jose_maria_orellana }
+			}
 			GUA_jose_maria_orellana = {
 				set_nationality = PREV
 				promote_character = authoritarian_democrat_subtype
@@ -1600,7 +1861,10 @@ GUA_remove_liberal_generals = {
 
 GUA_add_reactionary_generals = {
 	if = {
-		limit = { NOT = { has_character = GUA_jose_maria_orellana } }
+		limit = {
+			GUA_jose_maria_orellana = { is_dead = no }
+			NOT = { has_character = GUA_jose_maria_orellana }
+		}
 		GUA_jose_maria_orellana = {
 			set_nationality = PREV
 			promote_character = authoritarian_democrat_subtype

@@ -444,13 +444,15 @@ country_event = {
 	id = american_civil_war_events.2400 #system event to end the civil war
 	hidden = yes
 
-	fire_only_once = yes
 	is_triggered_only = yes
 
 	trigger = {
 		exists = yes
 		has_global_flag = USA_civil_war_begun_flag
 		NOT = {
+			has_global_flag = USA_civil_war_over_flag
+			has_global_flag = USA_fire_once_at_a_time
+			has_global_flag = USA_negotiations_with_NEE_in_progress
 			has_war_with = CAN
 			has_war_with = NEE
 			has_country_flag = ACW_has_deal_with_devil
@@ -480,8 +482,41 @@ country_event = {
 		}
 	}
 
+	immediate = {
+		set_global_flag = { flag = USA_fire_once_at_a_time days = 3 value = 1 }
+	}
+
 	option = {
 		log = "[GetLogInfo]: event american_civil_war_events.2400 option 1"
+		trigger = {
+			# NEE and another contender are left
+			is_american_tag_except_new_england = yes
+			country_exists = NEE
+			NOT = { is_in_faction_with = NEE }
+		}
+		country_event = { id = american_civil_war_events.25 days = 2 }
+	}
+
+	option = {
+		log = "[GetLogInfo]: event american_civil_war_events.2400 option 2"
+		trigger = {
+			OR = {
+				# ACC-NEE alignment
+				AND = {
+					is_in_faction_with = ACC
+					is_in_faction_with = NEE
+				}
+				# One american tag left or America fallen
+				count_triggers = {
+					amount = 4
+					NOT = { country_exists = WCA }
+					NOT = { country_exists = USA }
+					NOT = { country_exists = APG }
+					NOT = { country_exists = ACC }
+					NOT = { country_exists = NEE }
+				}
+			}
+		}
 		USA_civil_war_ends = yes
 		USA_demobilize_forces = yes
 		remove_ACW_claims = yes
@@ -491,39 +526,20 @@ country_event = {
 		HAI = { country_event = { id = haiti_events.21 days = 5 random_days = 5 } }
 
 		if = {
+			### Joint Pacific Atlantic Command Wins ACW or ACC and NEE were in ENT when war was won. ###
 			limit = {
-				OR = {
-					country_exists = USA
-					country_exists = WCA
-					country_exists = APG
-					country_exists = ACC
-					NEE = {
-						exists = yes
-						has_country_flag = NEE_claimed_america
-					}
-				}
+				is_in_faction_with = ACC
+				is_in_faction_with = NEE
 			}
-			every_country = {
-				limit = {
-					OR = {
-						tag = USA
-						tag = WCA
-						tag = ACC
-						tag = APG
-						AND = {
-							tag = NEE
-							has_country_flag = NEE_claimed_america
-						}
-					}
-				}
-				country_event = american_civil_war_events.24
-			}
-		}
-		else_if = {
-			limit = { country_exists = NEE }
 			NEE = { country_event = american_civil_war_events.24 }
 		}
+		else_if = {
+			# Only one American tag left standing
+			limit = { is_american_tag = yes }
+			country_event = american_civil_war_events.24
+		}
 		else = {
+			# America has fallen
 			var:361.owner = { country_event = american_civil_war_events.24 }
 		}
 	}
@@ -559,6 +575,7 @@ country_event = {
 		trigger = { is_american_tag = no }
 	}
 
+	fire_only_once = yes
 	is_triggered_only = yes
 
 	immediate = {
@@ -782,16 +799,19 @@ country_event = {
 			country_event = { id = american_civil_war_events.600 days = 2 }
 			country_event = { id = new_england_events.189 days = 600 random_days = 200 }
 			if = {
+				# See NEE_Determine_Legitimacy effect for how logging is determined in below event chain
 				limit = { is_in_faction_with = ACC }
 				country_event = { id = new_england_events.400 days = 3 }
 				ACC = { country_event = { id = new_england_events.400 days = 3 } }
+			}
+			else = {
+				log = "KR_Event_Logging;NEE WINS ACW"
 			}
 			if = {
 				limit = { is_ai = no }
 				set_country_flag = sons_of_liberty_achievement_condition
 			}
 		}
-		log = "KR_Event_Logging;NEE WINS ACW"
 	}
 
 	option = {
@@ -799,6 +819,74 @@ country_event = {
 		name = american_civil_war_events.24.e
 		trigger = {
 			is_american_tag = no
+		}
+	}
+}
+
+country_event = {
+	id = american_civil_war_events.25
+	title = american_civil_war_events.25.t
+	desc = {
+		text = american_civil_war_events.25.d.WCA
+		trigger = { tag = WCA }
+	}
+	desc = {
+		text = american_civil_war_events.25.d.APG
+		trigger = { tag = APG }
+	}
+	desc = {
+		text = american_civil_war_events.25.d.USA
+		trigger = { tag = USA }
+	}
+	desc = {
+		text = american_civil_war_events.25.d.ACC
+		trigger = { tag = ACC }
+	}
+	picture = GFX_report_event_generic_diplomacy4
+
+	is_triggered_only = yes
+	fire_only_once = yes
+
+	trigger = {
+		NOT = {
+			has_war_with = NEE
+			has_war_with = CAN
+		}
+	}
+
+	option = {
+		log = "[GetLogInfo]: event american_civil_war_events.25 option american_civil_war_events.25.a"
+		name = american_civil_war_events.25.a
+		set_global_flag = USA_negotiations_with_NEE_in_progress
+		if = {
+			limit = { NEE = { is_subject = yes } }
+			var:NEE.overlord = { country_event = { id = united_states_events.270 days = 2 } }
+			custom_effect_tooltip = {
+				localization_key = may_lead_to_war_with
+				COUNTRY = "[?var:NEE.overlord.GetNameDef]"
+			}
+		}
+		else = {
+			NEE = { country_event = { id = new_england_events.90 days = 2 } }
+		}
+		custom_effect_tooltip = {
+			localization_key = may_lead_to_war_with
+			COUNTRY = "[NEE.GetNameDef]"
+		}
+		every_neighbor_country = {
+			limit = { is_ally_with = NEE }
+			ROOT = {
+				add_ai_strategy = {
+					type = prepare_for_war
+					id = PREV
+					value = 100
+				}
+			}
+			add_ai_strategy = {
+				type = prepare_for_war
+				id = ROOT
+				value = 100
+			}
 		}
 	}
 }
@@ -3303,9 +3391,8 @@ country_event = { # Canada receives peace request
 			}
 		}
 
-		every_other_country = {
+		every_allied_country = {
 			limit = {
-				is_ally_with = ROOT
 				OR = {
 					is_american_tag = yes
 					original_tag = HAW

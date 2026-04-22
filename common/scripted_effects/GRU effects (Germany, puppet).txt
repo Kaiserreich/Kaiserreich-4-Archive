@@ -7,10 +7,16 @@ generate_new_german_puppet = {
 		}
 		every_state = {
 			limit = { is_germany = yes }
-			add_core_of = var:tag_to_release
+			custom_override_tooltip = {
+				tooltip = {
+					localization_key = EFFECT_ADD_CORE_OF
+					COUNTRY = "[GetGRUCountryName]"
+				}
+				add_core_of = var:tag_to_release
+			}
 		}
-		release_targeted_tag = yes
 		hidden_effect = {
+			release_targeted_tag = yes
 			var:tag_to_release = {
 				GRU_reset_focus_tree_and_ideas = yes
 				german_puppet_set_best_capital = yes
@@ -18,22 +24,36 @@ generate_new_german_puppet = {
 		}
 	}
 	else = {
-		set_temp_variable = { target = GRU }
-		create_dynamic_country = {
-			original_tag = GRU
-			germany_create_puppet_templates = yes
-			set_temp_variable = { tag_to_release = THIS }
-			hidden_effect = {
-				GER = { var:tag_to_release = { copy_laws_of_PREV = yes } }
-			}
-			ROOT = {
-				every_owned_state = {
-					limit = { is_core_of = GRU }
-					transfer_state_without_overriding_occupation = yes
+		effect_tooltip = {
+			every_owned_state = {
+				limit = { is_core_of = GRU }
+				if = {
+					limit = { is_fully_controlled_by = owner }
+					custom_effect_tooltip = {
+						localization_key = EFFECT_TRANSFER_STATE_TO
+						COUNTRY = "[GetGRUCountryName]"
+					}
+				}
+				else = {
+					custom_effect_tooltip = {
+						localization_key = EFFECT_SET_STATE_OWNER_TO
+						COUNTRY = "[GetGRUCountryName]"
+					}
 				}
 			}
-			hidden_effect = {
-				copy_integration_of_TARGET = yes
+		}
+		hidden_effect = {
+			create_dynamic_country = {
+				original_tag = GRU
+				germany_create_puppet_templates = yes
+				set_temp_variable = { tag_to_release = THIS }
+				GER = { var:tag_to_release = { copy_laws_of_PREV = yes } }
+				ROOT = {
+					every_owned_state = {
+						limit = { is_core_of = GRU }
+						transfer_state_without_overriding_occupation = yes
+					}
+				}
 				generate_generic_sics = yes
 				generate_all_generic_advisors = yes
 				load_focus_tree = {
@@ -43,31 +63,39 @@ generate_new_german_puppet = {
 				GRU_reset_focus_completion = yes
 				german_puppet_set_best_capital = yes
 			}
+			var:tag_to_release = {
+				set_temp_variable = { target = var:original_tag }
+				copy_integration_of_TARGET = yes
+			}
+			puppet_released_tag = yes
 		}
-		puppet_released_tag = yes
+	}
+	custom_effect_tooltip = {
+		localization_key = EFFECT_MAKE_PUPPET
+		TARGET = "[GetGRUCountryName]" COUNTRY = "[ROOT.GetName]"
 	}
 }
 
 german_puppet_setup = {
-	if = {
-		limit = { has_socialist_government = yes }
-		hidden_effect = {
-			set_cosmetic_tag = GRU_socialist
-			GRU_create_socialist_occupation_leader = yes
-			GRU_create_socialist_military_roster = yes
-			create_socialist_german_government = yes
-		}
-	}
-	else_if = {
-		limit = { is_monarchy = yes }
-		set_cosmetic_tag = GRU_empire
-		hidden_effect = { create_non_socialist_german_government = yes }
-	}
-	else = {
-		set_cosmetic_tag = GRU_republic
-		hidden_effect = {
-			GRU_move_german_republican_leaders = yes
-			create_non_socialist_german_government = yes
+	hidden_effect = {
+		var:tag_to_release = {
+			if = {
+				limit = { has_socialist_government = yes }
+				set_cosmetic_tag = GRU_socialist
+				GRU_create_socialist_occupation_leader = yes
+				GRU_create_socialist_military_roster = yes
+				create_socialist_german_government = yes
+			}
+			else_if = {
+				limit = { has_variable = GER_monarchy_released }
+				set_cosmetic_tag = GRU_empire
+				create_non_socialist_german_government = yes
+			}
+			else = {
+				set_cosmetic_tag = GRU_republic
+				GRU_move_german_republican_leaders = yes
+				create_non_socialist_german_government = yes
+			}
 		}
 	}
 }

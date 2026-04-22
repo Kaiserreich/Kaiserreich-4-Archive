@@ -1591,6 +1591,20 @@ shared_focus = {
 			limit = { 897 = { NOT = { is_claimed_by = CHI } } } #Askai Chin
 			add_state_claim = 897
 		}
+		if = {
+			limit = {
+				var:858.owner = {
+					NOT = {
+						owns_state = 897
+					}
+				}
+			}
+			activate_targeted_decision = { target = 858.owner decision = himalaya_border_conflict_decision } #There is an option to ultimately have a war at the end of the border conflict
+			activate_targeted_decision = { target = 897.owner decision = himalaya_border_conflict_decision } #There is an option to ultimately have a war at the end of the border conflict
+		}
+		else = {
+			activate_targeted_decision = { target = 858.owner decision = himalaya_border_conflict_decision } #There is an option to ultimately have a war at the end of the border conflict
+		}
 		activate_targeted_decision = { target = HND decision = KMT_liberation_war_decision }
 		activate_targeted_decision = { target = RAJ decision = KMT_liberation_war_decision }
 		activate_targeted_decision = { target = PRF decision = KMT_liberation_war_decision }
@@ -1928,6 +1942,19 @@ shared_focus = {
 		activate_targeted_decision = { target = DEI decision = KMT_liberation_war_decision }
 		activate_targeted_decision = { target = INS decision = KMT_liberation_war_decision }
 		activate_targeted_decision = { target = PNG decision = KMT_liberation_war_decision }
+		if = {
+			limit = {
+				var:1020.owner = {
+					#In case HOL annexed DEI directly, which apparently can happen.
+					NOT = {
+						tag = INS
+						tag = DEI
+						tag = ROOT #In case CHI took it, don't want the goofiness of being able to liberate from yourself
+					}
+				}
+			}
+			activate_targeted_decision = { target = var:1020.owner decision = KMT_liberation_war_decision } #Batavia
+		}
 		if = {
 			limit = {
 				var:721.owner = {
@@ -2664,7 +2691,7 @@ shared_focus = {
 					days = 730
 				}
 			}
-			CHI = {
+			ROOT = {
 				add_timed_idea = {
 					idea = CHI_invite_foreign_investment_idea
 					days = 730
@@ -2864,7 +2891,57 @@ shared_focus = {
 		log = "[GetLogRoot]: Focus Completed KMT_revolutionary_diplomacy"
 		add_war_support = 0.10
 		custom_effect_tooltip = CHI_founder_of_minsheng_partnership
-		KMT_add_to_minsheng_partnership = yes
+		hidden_effect = {
+			if = {
+				limit = {
+					is_economic_sphere_leader = no
+					is_in_economic_sphere = yes #Remove you from any economic spheres you are currently in.
+				}
+				if = {
+					limit = { FRA_is_phalanstere_member = yes }
+					FRA_remove_from_phalanstere = yes
+				}
+				else_if = {
+					limit = { RUS_is_in_moscow_economic_council = yes }
+					RUS_remove_from_economic_treaty = yes
+				}
+				else = {
+					# Failsafe that should not happen
+					log = "ERROR - [ROOT.GetName] left an economic sphere without sphere specific effect running"
+					remove_from_economic_sphere = yes
+				}
+			}
+		}
+		create_economic_sphere = yes
+		var:economic_sphere = {
+			set_character_name = KMT_minsheng_partnership_full_name
+			set_character_flag = has_custom_script_handle
+			var:icon = { set_character_name = "GFX_goal_CHI_revive_china" }
+			var:desc = { set_character_name = KR_minsheng_partnership_desc_CHI }
+			if = {
+				limit = { ROOT = { china_alignment_right_kuomintang = yes } }
+				#It turns out that the way it works is its a 0-1 scale rather than 0-255 scale so convert 0 65 146 into 0-1.
+				#PLACEHOLDER - Figure out later
+				set_variable = { red = 0 }
+				set_variable = { green = 0.255 }
+				set_variable = { blue = 0.573 }
+			}
+			else = {
+				#It turns out that the way it works is its a 0-1 scale rather than 0-255 scale so convert 222 41 16 into 0-1.
+				set_variable = { red = 0.870 }
+				set_variable = { green = 0.161 }
+				set_variable = { blue = 0.062 }
+			}
+		}
+		hidden_effect = {
+			add_dynamic_modifier = { modifier = KR_minsheng_partnership_leader_dynamic_mod }
+			add_to_variable = { KMT_minsheng_number_of_members_var = 1 }
+			KMT_recalculate_founder_minsheng_partnership_effects = yes
+			if = {
+				limit = { NOT = { is_in_tech_sharing_group = minsheng_partnership_research } }
+				add_to_tech_sharing_group = minsheng_partnership_research
+			}
+		}
 	}
 	search_filters = { FOCUS_FILTER_POLITICAL }
 }
@@ -2994,7 +3071,7 @@ shared_focus = {
 			localization_key = tooltip_modify_dynmod
 			DYNMOD = KMT_minsheng_partnership_full_name
 		}
-		add_to_variable = { minsheng_partnership_research_var = 0.05 tooltip = research_speed_factor_tooltip }
+		add_to_variable = { global.minsheng_partnership_research_var = 0.05 tooltip = research_speed_factor_tooltip }
 		KMT_recalculate_founder_minsheng_partnership_effects = yes
 	}
 	search_filters = { FOCUS_FILTER_RESEARCH }

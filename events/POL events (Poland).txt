@@ -5298,11 +5298,6 @@ country_event = { #Pro-German Military Government
 
 	is_triggered_only = yes
 
-	immediate = {
-		hidden_effect = {
-			POL_clear_economy = yes
-		}
-	}
 	option = {
 		log = "[GetLogInfo]: event poland_events.228 option poland_events.228.a"
 		name = poland_events.228.a
@@ -5341,7 +5336,15 @@ country_event = { #Pro-German Military Government
 				uncomplete_children = yes
 			}
 		}
-		add_ideas = POL_german_hegemony
+		if = {
+			limit = { has_country_flag = POL_trade_finished }
+			hidden_effect = { POL_clear_economy = yes }
+			add_ideas = POL_german_hegemony
+		}
+		else = {
+			set_temp_variable = { POL_influence_change = 40 }
+			POL_add_german_influence = yes
+		}
 		add_ideas = POL_martial_law
 		hidden_effect = {
 			POL_update_military = yes
@@ -5622,6 +5625,13 @@ country_event = {
 			swap_ideas = {
 				remove_idea = POL_polish_control
 				add_idea = POL_austrian_cooperation
+			}
+		}
+		else_if = {
+			limit = { has_idea = POL_german_hegemony }
+			swap_ideas = {
+				remove_idea = POL_german_hegemony
+				add_idea = POL_austro_german_condominium
 			}
 		}
 		else_if = {
@@ -6092,7 +6102,10 @@ country_event = {
 		hidden_effect = {
 			for_each_scope_loop = {
 				array = POL_polish_lands
-				add_claim_by = ROOT
+				if = {
+					limit = { is_claim_or_core_of_ROOT = no }
+					add_claim_by = ROOT
+				}
 			}
 		}
 		FROM = { country_event = poland_events.245 }
@@ -7138,7 +7151,10 @@ country_event = {
 			add_to_coalition = yes
 			for_each_scope_loop = {
 				array = POL_polish_lands
-				add_claim_by = ROOT
+				if = {
+					limit = { is_claim_or_core_of_ROOT = no }
+					add_claim_by = ROOT
+				}
 			}
 			country_event = { id = poland_events.561 days = 14 }  #Economic crash
 			if = {
@@ -9398,7 +9414,7 @@ country_event = { #Food Relief to Germany/Austria
 					GER = { has_authoritarian_government = no }
 					has_government = market_liberal
 					check_variable = { POL_royal_influence > 40 }
-					has_stability > 50
+					has_stability > 0.5
 				}
 			}
 			modifier = {
@@ -9995,6 +10011,10 @@ country_event = {
 				is_faction_leader = yes
 			}
 			dismantle_faction = yes
+		}
+		else_if = {
+			limit = { is_in_faction = yes }
+			leave_faction = yes
 		}
 		POL = { add_to_faction = ROOT }
 	}
@@ -10772,7 +10792,6 @@ country_event = {
 				POL_create_rydz = yes
 				POL_edward_rydz_smigly = {
 					promote_leader = yes
-					remove_unit_leader_trait = old_guard
 					add_max_trait = 1
 				}
 			}
@@ -11082,10 +11101,6 @@ country_event = {
 		add_war_support = 0.15
 		add_stability = -0.06
 		add_manpower = 53200
-		random_owned_state = {
-			limit = { NOT = { has_state_flag = POL_nationalist_stronghold } }
-			set_state_flag = POL_nationalist_stronghold
-		}
 		hidden_effect = {
 			country_event = { id = poland_events.544 days = 7 } #infighting
 		}
@@ -11387,6 +11402,10 @@ country_event = {
 			ruling_party = paternal_autocrat
 			elections_allowed = no
 		}
+		if = {
+			limit = { NOT = { has_completed_focus = POL_Cement_The_Churchs_Status } }
+			complete_national_focus = POL_Cement_The_Churchs_Status
+		}
 		complete_national_focus = POL_The_Marshal
 		activate_advisor = POL_adam_koc_sic
 		add_popularity = { ideology = paternal_autocrat popularity = 0.1 }
@@ -11436,6 +11455,9 @@ country_event = {
 					has_game_rule = { rule = POL_revolts option = POL_REVOLTS_RADSOC }
 				}
 			}
+		}
+		hidden_effect = {
+			end_coalition = yes
 		}
 		set_country_flag = POL_zakrzewski_dictator
 		add_country_leader_trait = POL_dictator_of_revolution
@@ -12069,6 +12091,7 @@ country_event = {
 			hold_election = ROOT
 		}
 		set_country_flag = POL_had_first_syndie_election
+		end_coalition = yes
 	}
 	trigger = {
 		NOT = { has_government = totalist }
@@ -12253,6 +12276,9 @@ country_event = {#second syndie elections
 	picture = GFX_report_event_POL_sejm
 	is_triggered_only = yes
 
+	immediate = {
+		end_coalition = yes
+	}
 	trigger = {
 		has_socialist_government = yes
 		NOT = { has_government = totalist }

@@ -638,38 +638,53 @@ KMT_recalculate_founder_minsheng_partnership_effects = {
 KMT_add_to_minsheng_partnership = {
 	if = {
 		limit = {
+			is_economic_sphere_leader = no
+			is_in_economic_sphere = yes #Remove you from any economic spheres you are currently in.
+		}
+		remove_from_economic_sphere = yes
+	}
+	if = {
+		limit = {
+			#The only way to take these focuses is to unite China so CHN should work as the alias for both LKT and RKT.
+			CHN = {
+				is_economic_sphere_leader = yes
+				is_leader_of_economic_sphere_of_ROOT = no
+			}
 			NOT = { has_country_flag = KMT_minsheng_partnership_flag }
 		}
+		set_country_flag = KMT_minsheng_partnership_flag
+		#Tooltip explaining what's going on.
 		if = {
 			limit = { NOT = { is_faction_leader = yes } }
 			custom_effect_tooltip = CHI_member_of_minsheng_partnership
 		}
-		set_country_flag = KMT_minsheng_partnership_flag
-		add_to_array = { global.KMT_minsheng_partnership_members = THIS }
-		hidden_effect = {
-			faction_leader = {
+		#Actually add them into the sphere + remove any negative modifiers.
+		set_temp_variable = { sphere_target = THIS }
+		CHN = {
+			add_to_economic_sphere = yes
+			hidden_effect = {
 				remove_opinion_modifier = { target = PREV modifier = KR_disapproves_of_govt }
 				remove_opinion_modifier = { target = PREV modifier = KR_hates_govt }
 				remove_opinion_modifier = { target = PREV modifier = KR_outraged }
 				add_to_variable = { KMT_minsheng_number_of_members_var = 1 }
 				KMT_recalculate_founder_minsheng_partnership_effects = yes
 			}
+		}
+		# Add Modifiers
+		hidden_effect = {
 			if = {
 				limit = {
-					is_faction_leader = yes
-					NOT = { has_dynamic_modifier = { modifier = KR_minsheng_partnership_leader_dynamic_mod } }
-				}
-				add_dynamic_modifier = { modifier = KR_minsheng_partnership_leader_dynamic_mod }
-			}
-			else_if = {
-				limit = {
 					NOT = {
-						is_faction_leader = yes
 						has_dynamic_modifier = { modifier = KR_minsheng_partnership_member_dynamic_mod }
 					}
 				}
 				add_dynamic_modifier = { modifier = KR_minsheng_partnership_member_dynamic_mod }
 			}
+		}
+		# Add to Research Group
+		if = {
+			limit = { NOT = { is_in_tech_sharing_group = minsheng_partnership_research } }
+			add_to_tech_sharing_group = minsheng_partnership_research
 		}
 	}
 }
@@ -713,16 +728,21 @@ KMT_remove_from_economic_sphere = {
 	if = {
 		limit = { has_country_flag = KMT_minsheng_partnership_flag }
 		custom_effect_tooltip = KMT_withdraws_from_sphere
+		leave_economic_sphere = yes
 		clr_country_flag = KMT_minsheng_partnership_flag
-		remove_from_array = { global.KMT_minsheng_partnership_members = THIS }
 		if = {
-			limit = { has_dynamic_modifier = { modifier = KR_minsheng_partnership_member_dynamic_mod scope = THIS } }
+			limit = { has_dynamic_modifier = { modifier = KR_minsheng_partnership_member_dynamic_mod } }
 			remove_dynamic_modifier = { modifier = KR_minsheng_partnership_member_dynamic_mod }
 		}
 		hidden_effect = {
-			subtract_from_variable = { KMT_minsheng_number_of_members_var = 1 }
-			LKT = { KMT_recalculate_founder_minsheng_partnership_effects = yes }
-			RKT = { KMT_recalculate_founder_minsheng_partnership_effects = yes }
+			CHN = {
+				subtract_from_variable = { KMT_minsheng_number_of_members_var = 1 }
+				KMT_recalculate_founder_minsheng_partnership_effects = yes
+			}
+		}
+		if = {
+			limit = { is_in_tech_sharing_group = minsheng_partnership_research }
+			remove_from_tech_sharing_group = minsheng_partnership_research
 		}
 	}
 }

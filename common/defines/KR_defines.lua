@@ -10,8 +10,8 @@ NDefines.NCareerProfile.MOD_STATISTICS_GROUP = "kaiserreich_career_profile"
 NDefines.NCareerProfile.MOD_STATISTICS_GROUP_NAME = "KAISERREICH_CAREER_PROFILE"
 
 -- Game
-NDefines.NGame.SAVE_VERSION = 162											-- Vanilla is 30
-NDefines.NGame.MINOR_SAVE_VERSION = 162										-- Vanilla is 1
+NDefines.NGame.SAVE_VERSION = 163											-- Vanilla is 30
+NDefines.NGame.MINOR_SAVE_VERSION = 163										-- Vanilla is 1
 NDefines.NGame.END_DATE = "1959.1.1.1"										-- Vanilla is 1949.1.1.1
 NDefines.NGame.HANDS_OFF_START_TAG = "BHU"									-- Vanilla is URG
 NDefines.NGame.DECISION_ALERT_TIMEOUT_DAYS = 60								-- Vanilla is 30
@@ -117,8 +117,18 @@ NDefines.NAI.NUM_SILOS_PER_CIVILIAN_FACTORIES = 0							-- Vanilla is 0.0025
 NDefines.NAI.NUM_SILOS_PER_MILITARY_FACTORIES = 0							-- Vanilla is 0.012
 NDefines.NAI.NUM_SILOS_PER_DOCKYARDS = 0									-- Vanilla is 0.02
 
-NDefines.NAI.CALL_ALLY_NEUTRAL_DESIRE = 75									-- Vanilla is 25
-NDefines.NAI.JOIN_ALLY_NEUTRAL_DESIRE = 75									-- Vanilla is 25
+NDefines.NAI.CALL_ALLY_BASE_DESIRE = 1000									-- Vanilla is 20
+NDefines.NAI.CALL_ALLY_DEMOCRATIC_DESIRE = 0								-- Vanilla is 50
+NDefines.NAI.CALL_ALLY_NEUTRAL_DESIRE = 0									-- Vanilla is 25
+NDefines.NAI.CALL_ALLY_FASCIST_DESIRE = 0									-- Vanilla is -10
+NDefines.NAI.CALL_ALLY_COMMUNIST_DESIRE = 0									-- Vanilla is 75
+NDefines.NAI.CALL_ALLY_OVERLORD_INVITE_PUPPET = 1000						-- Vanilla is 20
+
+NDefines.NAI.JOIN_ALLY_BASE_DESIRE = 1000									-- Vanilla is 20
+NDefines.NAI.JOIN_ALLY_DEMOCRATIC_DESIRE = 0								-- Vanilla is 50
+NDefines.NAI.JOIN_ALLY_NEUTRAL_DESIRE = 0									-- Vanilla is 25
+NDefines.NAI.JOIN_ALLY_FASCIST_DESIRE = 0									-- Vanilla is -10
+NDefines.NAI.JOIN_ALLY_COMMUNIST_DESIRE = 0									-- Vanilla is 75
 
 NDefines.NAI.FASCISTS_BEFRIEND_FASCISTS = 0									-- Vanilla is 10
 NDefines.NAI.FASCISTS_ALLY_FASCISTS = 0										-- Vanilla is 0
