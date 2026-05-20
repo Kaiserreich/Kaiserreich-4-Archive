@@ -94,5 +94,5 @@ tags = {
 }
 picture = "KR.jpg"
 version = "1.6.3"
-supported_version = "1.18.1.*"
+supported_version = "1.18.2.*"
 remote_file_id = "1521695605"
