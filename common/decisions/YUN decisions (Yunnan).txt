@@ -673,7 +673,6 @@ RKT_zeal_decision_category = {
 		days_remove = 180
 		modifier = {
 			consumer_goods_factor = 0.15
-			skill_bonus_factor = 0.15
 		}
 		remove_effect = {
 			log = "[GetLogRoot]: Decision remove YUN_rallying_the_veterans_of_revolution"
@@ -1258,6 +1257,16 @@ YUN_GXC_war_decision_category = {
 					controls_province = 10413 #Jinghong
 				}
 				has_game_rule = { rule = YUN_NPA_path option = DEFAULT }
+				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NZH } }
+				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_AGJ } }
+				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA } }
+			}
+			modifier = {
+				factor = 0
+				OR = {
+					var:594.owner = { tag = MCU }
+					var:594.owner = { overlord = { tag = MCU } }
+				}
 				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NZH } }
 				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_AGJ } }
 				NOT = { has_game_rule = { rule = YUN_forpol option = YUN_FORPOL_NPA } }
@@ -3100,8 +3109,8 @@ YUN_provisional_constitution_crisis_decisions = {
 			}
 			else = {
 				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_PSC_phase_2_tt
-				set_temp_variable = { YUN_PSC_delegate_change_temp_var = ROOT.party_popularity@market_liberal }
-				multiply_temp_variable = { YUN_PSC_delegate_change_temp_var = 0.20 } #1/5 of party popularity, so 20% = 4% (or 20 delegates).
+				set_temp_variable = { YUN_PSC_delegate_change_temp_var = { value = ROOT.party_popularity@market_liberal multiply = 0.20 } }
+				#1/5 of party popularity, so 20% = 4% (or 20 delegates).
 				YUN_KMT_hu_hanmin_crisis_PSC_delegates_effect = yes
 			}
 		}
@@ -3342,8 +3351,8 @@ YUN_provisional_constitution_crisis_decisions = {
 			}
 			else = {
 				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_CCC_phase_2_tt
-				set_temp_variable = { YUN_CCC_delegate_change_temp_var = ROOT.party_popularity@authoritarian_democrat }
-				multiply_temp_variable = { YUN_CCC_delegate_change_temp_var = 0.20 } #1/5 of party popularity, so 20% = 4% (or 20 delegates).
+				set_temp_variable = { YUN_CCC_delegate_change_temp_var = { value = ROOT.party_popularity@authoritarian_democrat multiply = 0.20 } }
+				#1/5 of party popularity, so 20% = 4% (or 20 delegates).
 				YUN_KMT_hu_hanmin_crisis_CCC_delegates_effect = yes
 			}
 		}
@@ -3592,11 +3601,11 @@ YUN_provisional_constitution_crisis_decisions = {
 			}
 			else = {
 				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_WPC_phase_2_tt
-				set_temp_variable = { YUN_PSC_delegate_change_temp_var = ROOT.party_popularity@paternal_autocrat }
-				multiply_temp_variable = { YUN_PSC_delegate_change_temp_var = -0.10 } #1/10 of party popularity, so 10% = 2% (or 10 delegates).
+				set_temp_variable = { YUN_PSC_delegate_change_temp_var = { value = ROOT.party_popularity@paternal_autocrat multiply = -0.10 } }
+				#1/10 of party popularity, so 10% = 2% (or 10 delegates).
 				YUN_KMT_hu_hanmin_crisis_PSC_delegates_effect = yes
-				set_temp_variable = { YUN_CCC_delegate_change_temp_var = ROOT.party_popularity@paternal_autocrat }
-				multiply_temp_variable = { YUN_CCC_delegate_change_temp_var = -0.10 } #1/10 of party popularity, so 10% = 2% (or 10 delegates).
+				set_temp_variable = { YUN_CCC_delegate_change_temp_var = { value = ROOT.party_popularity@paternal_autocrat multiply = -0.10 } }
+				#1/10 of party popularity, so 10% = 2% (or 10 delegates).
 				YUN_KMT_hu_hanmin_crisis_CCC_delegates_effect = yes
 			}
 		}
@@ -3678,13 +3687,13 @@ YUN_provisional_constitution_crisis_decisions = {
 			}
 			else = {
 				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_BSS_phase_2_tt
-				set_temp_variable = { YUN_whampoa_coup_mission_timer_change_temp_var = ROOT.party_popularity@national_populist } #Range from 0-1
-				multiply_temp_variable = { YUN_whampoa_coup_mission_timer_change_temp_var = -100 } #Range from 0-100
-				round_temp_variable = YUN_whampoa_coup_mission_timer_change_temp_var
-				clamp_temp_variable = {
-					var = YUN_whampoa_coup_mission_timer_change_temp_var
-					min = -50
-					max = -10
+				set_temp_variable = {
+					YUN_whampoa_coup_mission_timer_change_temp_var = {
+						value = party_popularity_100@national_populist #Range from 0-100
+						multiply = -1
+						round = yes
+						clamp = { min = -50 max = -10 }
+					}
 				}
 				add_days_mission_timeout = {
 					mission = YUN_The_Whampoa_Coup_mission
@@ -3846,6 +3855,9 @@ YUN_provisional_constitution_crisis_decisions = {
 	YUN_Handle_the_Leftist_Bloc_decision = {
 		icon = GFX_decision_generic_political_address
 		allowed = { always = no } #manually activated
+		available = {
+			NOT = { country_exists = LKT }
+		}
 
 		custom_cost_text = CP_50
 		custom_cost_trigger = {
@@ -3956,23 +3968,24 @@ YUN_provisional_constitution_crisis_decisions = {
 			else = {
 				custom_effect_tooltip = YUN_KMT_hu_hanmin_crisis_CEC_phase_2_tt
 				#Stronger Bonus because it requires a prior decision to unlock.
-				set_temp_variable = { YUN_whampoa_coup_mission_timer_change_temp_var = ROOT.party_popularity@social_democrat } #Range from 0-1
-				multiply_temp_variable = { YUN_whampoa_coup_mission_timer_change_temp_var = -100 } #Range from 0-100
-				round_temp_variable = YUN_whampoa_coup_mission_timer_change_temp_var
-				clamp_temp_variable = {
-					var = YUN_whampoa_coup_mission_timer_change_temp_var
-					min = -50
-					max = -10
+				set_temp_variable = {
+					YUN_whampoa_coup_mission_timer_change_temp_var = {
+						value = party_popularity_100@social_democrat #Range from 0-100
+						multiply = -1
+						round = yes
+						clamp = { min = -50 max = -10 }
+					}
 				}
 				add_days_mission_timeout = {
 					mission = YUN_The_Whampoa_Coup_mission
 					days = YUN_whampoa_coup_mission_timer_change_temp_var
 				}
-				set_temp_variable = { YUN_PSC_delegate_change_temp_var = ROOT.party_popularity@social_democrat }
-				multiply_temp_variable = { YUN_PSC_delegate_change_temp_var = -0.20 } #1/10 of party popularity, so 10% = 2% (or 10 delegates).
+
+				set_temp_variable = { YUN_PSC_delegate_change_temp_var = { value = ROOT.party_popularity@social_democrat multiply = -0.20 } }
+				#1/10 of party popularity, so 10% = 2% (or 10 delegates).
 				YUN_KMT_hu_hanmin_crisis_PSC_delegates_effect = yes
-				set_temp_variable = { YUN_CCC_delegate_change_temp_var = ROOT.party_popularity@social_democrat }
-				multiply_temp_variable = { YUN_CCC_delegate_change_temp_var = -0.20 } #1/10 of party popularity, so 10% = 2% (or 10 delegates).
+				set_temp_variable = { YUN_CCC_delegate_change_temp_var = { value = ROOT.party_popularity@social_democrat multiply = -0.20 } }
+				#1/10 of party popularity, so 10% = 2% (or 10 delegates)
 				YUN_KMT_hu_hanmin_crisis_CCC_delegates_effect = yes
 			}
 		}

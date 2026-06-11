@@ -73,6 +73,15 @@ clear_all_relations = {
 	}
 	else_if = {
 		limit = { is_in_faction = yes }
+		if = {
+			limit = { is_exile_host = yes } #THIS MUST BE DONE BEFORE LEAVING A FACTION OR ELSE EXILE GOV LEAVES FACTION TOO
+			var:faction_leader = {
+				for_each_scope_loop = {
+					array = PREV.exiles
+					become_exiled_in = { target = PREV }
+				}
+			}
+		}
 		leave_faction = yes
 	}
 	if = {
@@ -186,14 +195,14 @@ clear_all_relations = {
 		}
 		else = {
 			every_other_country = {
-				limit = { has_country_flag = embargoed_@PREV }
+				limit = { has_variable = embargoed_@PREV }
 				remove_opinion_modifier = {
 					modifier = embargo
 					target = PREV
 				}
 			}
 			every_other_country = {
-				limit = { PREV = { has_country_flag = embargoed_@PREV } }
+				limit = { PREV = { has_variable = embargoed_@PREV } }
 				PREV = {
 					remove_opinion_modifier = {
 						modifier = embargo
@@ -264,6 +273,14 @@ clear_all_relations = {
 		limit = { is_in_tech_sharing_group = austrian_research }
 		remove_from_tech_sharing_group = austrian_research
 	}
+	if = {
+		limit = { is_in_tech_sharing_group = russian_research }
+		remove_from_tech_sharing_group = russian_research
+	}
+	if = {
+		limit = { is_in_tech_sharing_group = japan_research }
+		remove_from_tech_sharing_group = japan_research
+	}
 }
 
 # clears all relations with a specific country and its allies, does not end wars
@@ -300,6 +317,20 @@ clear_all_relations_with_TARGET = {
 			remove_from_tech_sharing_group = austrian_research
 		}
 	}
+	else_if = {
+		limit = { var:target = { is_ally_with = RUS } }
+		if = {
+			limit = { is_in_tech_sharing_group = russian_research }
+			remove_from_tech_sharing_group = russian_research
+		}
+	}
+	else_if = {
+		limit = { var:target = { is_ally_with = JAP } }
+		if = {
+			limit = { is_in_tech_sharing_group = japan_research }
+			remove_from_tech_sharing_group = japan_research
+		}
+	}
 	if = {
 		limit = { has_subject = var:target }
 		set_autonomy = {
@@ -320,6 +351,15 @@ clear_all_relations_with_TARGET = {
 	}
 	else_if = {
 		limit = { is_in_faction_with = var:target }
+		if = {
+			limit = { is_exile_host = yes } #THIS MUST BE DONE BEFORE LEAVING A FACTION OR ELSE EXILE GOV LEAVES FACTION TOO
+			var:faction_leader = {
+				for_each_scope_loop = {
+					array = PREV.exiles
+					become_exiled_in = { target = PREV }
+				}
+			}
+		}
 		leave_faction = yes
 	}
 	effect_tooltip = {
@@ -426,7 +466,7 @@ clear_all_relations_with_TARGET = {
 			every_other_country = {
 				limit = {
 					is_ally_with = var:target
-					has_country_flag = embargoed_@PREV
+					has_variable = embargoed_@PREV
 				}
 				remove_opinion_modifier = {
 					modifier = embargo
@@ -436,7 +476,7 @@ clear_all_relations_with_TARGET = {
 			every_other_country = {
 				limit = {
 					is_ally_with = var:target
-					PREV = { has_country_flag = embargoed_@PREV }
+					PREV = { has_variable = embargoed_@PREV }
 				}
 				PREV = {
 					remove_opinion_modifier = {
@@ -517,6 +557,18 @@ clear_relations_with_PREV = {
 			OR = {
 				is_faction_leader = yes
 				PREV = { is_faction_leader = yes }
+			}
+		}
+		if = {
+			limit = {
+				is_exile_host = yes #THIS MUST BE DONE BEFORE LEAVING A FACTION OR ELSE EXILE GOV LEAVES FACTION TOO
+				PREV = { is_faction_leader = yes }
+			}
+			var:faction_leader = {
+				for_each_scope_loop = {
+					array = PREV.exiles
+					become_exiled_in = { target = PREV }
+				}
 			}
 		}
 		leave_faction = yes
@@ -824,7 +876,7 @@ get_current_government_type = {
 
 	if = {
 		limit = { has_coalition = yes }
-		resize_array = { original_coalitions = global.ideology_groups^num }
+		resize_array = { array = original_coalitions value = constant:party_pop.party.none size = global.ideology_groups^num }
 		resize_array = { original_coalitions_stability = global.ideology_groups^num }
 		for_each_loop = {
 			array = coalitions_array
@@ -925,7 +977,7 @@ restore_previous_government_type = {
 			for_each_loop = {
 				array = original_coalitions
 				if = {
-					limit = { check_variable = { v = 2 } }
+					limit = { check_variable = { v = constant:party_pop.party.coalition_partner } }
 					set_temp_variable = { coalition_partner_var = i }
 					add_to_coalition = yes
 				}
@@ -951,45 +1003,57 @@ embargo_TARGET = {
 	if = {
 		limit = {
 			var:target = {
-				NOT = { has_country_flag = embargoed_@PREV }
+				NOT = { has_variable = embargoed_@PREV }
 				is_in_same_economic_sphere_as_PREV = no
 				NOT = { tag = PREV } #sanity check
 			}
 		}
 		hidden_effect = {
 			var:target = {
-				set_country_flag = embargoed_@PREV
-				PREV = { set_country_flag = embargoed_@PREV }
-				if = {
-					limit = { has_dlc_bba = yes }
+				add_to_temp_array = { embargo_target_and_subjects = THIS }
+				every_subject_country = { add_to_temp_array = { embargo_target_and_subjects = THIS } }
+			}
+			add_to_temp_array = { embargo_target_and_subjects_reverse = THIS }
+			every_subject_country = { add_to_temp_array = { embargo_target_and_subjects_reverse = THIS } }
+			for_each_scope_loop = {
+				array = embargo_target_and_subjects
+				for_each_scope_loop = {
+					array = embargo_target_and_subjects_reverse
+					set_variable = { embargoed_@PREV = 1 }
+					PREV = { set_variable = { embargoed_@PREV = 1 } }
 					if = {
-						limit = { NOT = { is_embargoing = PREV } }
-						diplomatic_relation = {
-							country = PREV
-							relation = embargo
-						}
-					}
-					if = {
-						limit = { NOT = { is_embargoed_by = PREV } }
-						PREV = {
+						limit = { has_dlc_bba = yes }
+						if = {
+							limit = { NOT = { is_embargoing = PREV } }
 							diplomatic_relation = {
 								country = PREV
 								relation = embargo
 							}
 						}
+						if = {
+							limit = { NOT = { is_embargoed_by = PREV } }
+							PREV = {
+								diplomatic_relation = {
+									country = PREV
+									relation = embargo
+								}
+							}
+						}
 					}
-				}
-				else = {
-					add_opinion_modifier = {
-						modifier = embargo
-						target = PREV
-					}
-					reverse_add_opinion_modifier = {
-						modifier = embargo
-						target = PREV
+					else = {
+						add_opinion_modifier = {
+							modifier = embargo
+							target = PREV
+						}
+						reverse_add_opinion_modifier = {
+							modifier = embargo
+							target = PREV
+						}
 					}
 				}
 			}
+			clear_temp_array = embargo_target_and_subjects
+			clear_temp_array = embargo_target_and_subjects_reverse
 		}
 		effect_tooltip = {
 			meta_effect = {
@@ -1033,21 +1097,26 @@ embargo_TARGET = {
 #requires a temp variable target
 clear_embargo_TARGET = {
 	if = {
-		limit = { var:target = { PREV = { has_country_flag = embargoed_@PREV } } }
+		limit = {
+			var:target = {
+				OR = {
+					PREV = { has_variable = embargoed_@PREV }
+					has_variable = embargoed_@PREV
+				}
+			}
+		}
 		hidden_effect = {
 			var:target = {
-				clr_country_flag = embargoed_@PREV
-				diplomatic_relation = {
-					country = PREV
-					relation = embargo
-					active = no
-				}
-				remove_opinion_modifier = {
-					modifier = embargo
-					target = PREV
-				}
-				PREV = {
-					clr_country_flag = embargoed_@PREV
+				add_to_temp_array = { embargo_target_and_subjects = THIS }
+				every_subject_country = { add_to_temp_array = { embargo_target_and_subjects = THIS } }
+			}
+			add_to_temp_array = { embargo_target_and_subjects_reverse = THIS }
+			every_subject_country = { add_to_temp_array = { embargo_target_and_subjects_reverse = THIS } }
+			for_each_scope_loop = {
+				array = embargo_target_and_subjects
+				for_each_scope_loop = {
+					array = embargo_target_and_subjects_reverse
+					clear_variable = embargoed_@PREV
 					diplomatic_relation = {
 						country = PREV
 						relation = embargo
@@ -1057,8 +1126,22 @@ clear_embargo_TARGET = {
 						modifier = embargo
 						target = PREV
 					}
+					PREV = {
+						clear_variable = embargoed_@PREV
+						diplomatic_relation = {
+							country = PREV
+							relation = embargo
+							active = no
+						}
+						remove_opinion_modifier = {
+							modifier = embargo
+							target = PREV
+						}
+					}
 				}
 			}
+			clear_temp_array = embargo_target_and_subjects
+			clear_temp_array = embargo_target_and_subjects_reverse
 		}
 		effect_tooltip = {
 			meta_effect = {
@@ -1833,15 +1916,30 @@ calculate_days_since_game_start = {
 	# days_elapsed = (global.num_days on current date) - (global.num_days on 1 January 1936)
 	# days_to_event = (number of days needed from 1 January 1936) - days_elapsed
 
-	set_temp_variable = { days_since_game_start = global.num_days }
-	subtract_from_temp_variable = { days_since_game_start = 706640 }
-	log = "Days since game start: [?days_since_game_start]"
-	subtract_from_temp_variable = { days_to_event = days_since_game_start }
+	subtract_from_temp_variable = {
+		days_to_event = {
+			#days_since_game_start
+			value = global.num_days
+			subtract = 706640
+		}
+	}
 	if = {
 		limit = { NOT = { check_variable = { disable_days_to_event_clamping = 1 } } }
 		clamp_temp_variable = { var = days_to_event min = 0 }
 	}
 	log = "Days to event: [?days_to_event]"
+}
+
+get_month_of_year_effect = {
+	if = {
+		limit = {
+			hidden_trigger = {
+				tooltip_evaluation = eval
+				get_month_of_year_trigger = yes
+			}
+		}
+		hidden_effect = {} #placeholder
+	}
 }
 
 # Starts at Wednesday, since Jan 1, 1936 (Day 0) is a Wednesday
@@ -1878,8 +1976,7 @@ day_of_week_flag = {
 
 leap_year_check = {
 	# Set a temporary variable to check how many leap years have passed
-	set_temp_variable = { days_passed_leap_check = days_passed }
-	subtract_from_temp_variable = { days_passed_leap_check = 58 } #subtract the 58 days of 1936 until the first leap year
+	set_temp_variable = { days_passed_leap_check = { value = days_passed subtract = 58 } } #subtract the 58 days of 1936 until the first leap year
 	if = {
 		limit = { check_variable = { days_passed_leap_check > 0 } } #if that turns the value negative, no leap years have occurred, so skip ahead
 		# But if the number of days is still positive, subtract 4 years of days (365x4), and increment the days_passed variable to account for the missing leap day that hoi4 doesn't add
@@ -1911,10 +2008,14 @@ modulo_date_check = {
 		day_of_week_flag = yes
 	}
 	else = {
-		set_temp_variable = { date_check = days_passed } #check the current date
-		add_to_temp_variable = { date_check = 7 } # add one week to avoid negative numbers when subtracting the increment
 		add_to_temp_variable = { increment = 1 } #increment the day of the week by 1
-		subtract_from_temp_variable = { date_check = increment } #increment the date by the date_increment
+		set_temp_variable = {
+			date_check = {
+				value = days_passed #check the current date
+				add = 7 #add one week to avoid negative numbers when subtracting the increment
+				subtract = increment #increment the date by the date_increment
+			}
+		}
 	}
 }
 
@@ -1925,8 +2026,7 @@ modulo_date_check = {
 
 get_day_of_week = {
 	# Determine how many days have passed since Wednesday Jan 1, 1936
-	set_temp_variable = { days_passed = global.num_days }
-	subtract_from_temp_variable = { days_passed = 706640 } #number of days to get to Jan 1, 1936
+	set_temp_variable = { days_passed = global.num_days subtract = 706640 } #number of days to get to Jan 1, 1936
 	leap_year_check = yes #check how many leap years have passed and adjust the date accordingly
 
 	set_temp_variable = { date_check = days_passed } #check the current date
@@ -1974,8 +2074,8 @@ invite_decision_target_to_faction = {
 open_intro_screen = {
 	if = {
 		limit = { is_ai = no }
-		set_variable = { KR_welcome_splash_variable = 1 }
-		set_variable_to_random = KR_welcome_splash_refresh
+		set_variable = { kr_intro_screen_variable = 1 }
+		set_variable_to_random = kr_intro_screen_refresh
 	}
 }
 

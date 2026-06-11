@@ -161,12 +161,95 @@ CEN_initiate_unification = {
 			clear_global_event_target = CEN_military_leader
 		}
 
-		## Transfer characters, laws and technologies to CEN
+		## Transfer attributes from unifier to CEN
+		### Partially refund advisors hired by unifier: 1 advisor = 50 PP
+		every_character = {
+			limit = {
+				is_hired_as_advisor = yes
+				is_second_in_command = no
+			}
+			add_to_temp_variable = { CEN_government_ideas_refund_value = 50 }
+		}
+
+		### Partially refund companies hired by unifier: 1 company = 75 PP
+		if = {
+			limit = { amount_taken_ideas = { amount > 0 slots = { industrial_concern } } }
+			add_to_temp_variable = { CEN_government_ideas_refund_value = 75 }
+		}
+		if = {
+			limit = { has_dlc_aat = no }
+			if = {
+				limit = { amount_taken_ideas = { amount > 0 slots = { tank_manufacturer } } }
+				add_to_temp_variable = { CEN_government_ideas_refund_value = 75 }
+			}
+			if = {
+				limit = { amount_taken_ideas = { amount > 0 slots = { naval_manufacturer } } }
+				add_to_temp_variable = { CEN_government_ideas_refund_value = 75 }
+			}
+			if = {
+				limit = { amount_taken_ideas = { amount > 0 slots = { aircraft_manufacturer } } }
+				add_to_temp_variable = { CEN_government_ideas_refund_value = 75 }
+			}
+			if = {
+				limit = { amount_taken_ideas = { amount > 0 slots = { materiel_manufacturer } } }
+				add_to_temp_variable = { CEN_government_ideas_refund_value = 75 }
+			}
+		}
+
+		### Move characters from every involved tag to CEN
 		CEN_move_characters = yes
+
 		CEN = {
+			### Refund PP sum of advisors and companies hired
+			add_political_power = CEN_government_ideas_refund_value
+
+			### Transfer army, navy, air experience
+			army_experience = PREV.army_experience
+			navy_experience = PREV.navy_experience
+			air_experience = PREV.air_experience
+
+			### Transfer laws, technology, LaR agency upgrades
 			copy_laws_of_PREV = yes
 			transfer_technology = yes
 			transfer_int_upgrade = yes
+
+			### Transfers MIO size and funds
+			if = {
+				limit = { has_dlc_aat = yes }
+				CEN_MIO_size_and_funds_transfer = yes
+			}
+
+			### Transfer some basic tech likely to be used by AI templates from non-unifier tag
+			if = {
+				limit = {
+					NOT = { has_tech = tech_support }
+					any_country_of = {
+						target = { GUA HON ELS NIC }
+						has_tech = tech_support
+					}
+				}
+				set_technology = { tech_support = 1 popup = no }
+			}
+			if = {
+				limit = {
+					NOT = { has_tech = tech_engineers }
+					any_country_of = {
+						target = { GUA HON ELS NIC }
+						has_tech = tech_engineers
+					}
+				}
+				set_technology = { tech_engineers = 1 popup = no }
+			}
+			if = {
+				limit = {
+					NOT = { has_tech = interwar_antiair }
+					any_country_of = {
+						target = { GUA HON ELS NIC }
+						has_tech = interwar_antiair
+					}
+				}
+				set_technology = { interwar_antiair = 1 popup = no }
+			}
 		}
 
 		## Failsafe to clear volunteers and transfer subject countries
@@ -279,6 +362,7 @@ CEN_complete_unification = {
 			set_variable = { country_guide_page_count = 0 }
 			every_core_state = { add_core_of = CEN }
 			every_subject_country = {
+				limit = { is_central_american_tag = no }
 				set_temp_variable = { target = THIS }
 				CEN = { puppet_country_without_changing_government = yes }
 			}
@@ -288,6 +372,7 @@ CEN_complete_unification = {
 			set_variable = { country_guide_page_count = 0 }
 			every_core_state = { add_core_of = CEN }
 			every_subject_country = {
+				limit = { is_central_american_tag = no }
 				set_temp_variable = { target = THIS }
 				CEN = { puppet_country_without_changing_government = yes }
 			}
@@ -297,6 +382,7 @@ CEN_complete_unification = {
 			set_variable = { country_guide_page_count = 0 }
 			every_core_state = { add_core_of = CEN }
 			every_subject_country = {
+				limit = { is_central_american_tag = no }
 				set_temp_variable = { target = THIS }
 				CEN = { puppet_country_without_changing_government = yes }
 			}
@@ -306,6 +392,7 @@ CEN_complete_unification = {
 			set_variable = { country_guide_page_count = 0 }
 			every_core_state = { add_core_of = CEN }
 			every_subject_country = {
+				limit = { is_central_american_tag = no }
 				set_temp_variable = { target = THIS }
 				CEN = { puppet_country_without_changing_government = yes }
 			}
@@ -317,6 +404,7 @@ CEN_complete_unification = {
 				limit = { has_event_target = costa_rica_will_join }
 				every_core_state = { add_core_of = CEN }
 				every_subject_country = {
+					limit = { is_central_american_tag = no }
 					set_temp_variable = { target = THIS }
 					CEN = { puppet_country_without_changing_government = yes }
 				}
@@ -329,6 +417,7 @@ CEN_complete_unification = {
 				limit = { has_event_target = panama_will_join }
 				every_core_state = { add_core_of = CEN }
 				every_subject_country = {
+					limit = { is_central_american_tag = no }
 					set_temp_variable = { target = THIS }
 					CEN = { puppet_country_without_changing_government = yes }
 				}
@@ -526,6 +615,10 @@ CEN_move_characters = {
 				if = {
 					limit = { NOT = { has_government = national_populist } }
 					retire_character = ELS_maximiliano_hernandez_martinez
+					if = {
+						limit = { has_government = authoritarian_democrat }
+						ELS_salvador_castaneda_castro = { set_nationality = ROOT }
+					}
 				}
 				every_character = {
 					limit = {
@@ -598,7 +691,7 @@ CEN_move_characters = {
 				}
 			}
 			ELS = {
-				ELS_add_liberal_generals = yes
+				ELS_add_democratic_generals = yes
 				every_character = {
 					limit = {
 						CEN_character_should_transfer_liberal = yes
@@ -929,20 +1022,19 @@ CENdem_increase_radical_land_reform_idea = {
 CEN_transfer_manpower = {
 	## Give CEN manpower based on the difference between recruitable and max population upon unification
 	CEN = {
-		set_temp_variable = { CEN_maximum_manpower = max_available_manpower_k }
-
-		# Calculate the amount to subtract based on free and deployed manpower
-		add_to_temp_variable = { CEN_free_manpower = manpower_k }
-		add_to_temp_variable = { CEN_free_manpower = deployed_army_manpower_k }
-		add_to_temp_variable = { CEN_free_manpower = deployed_navy_manpower_k }
-		add_to_temp_variable = { CEN_free_manpower = deployed_airforce_manpower_k }
-
-		# Calculate difference
-		subtract_from_temp_variable = { CEN_maximum_manpower = CEN_free_manpower }
-
-		# Get manpower value in thousands
-		multiply_temp_variable = { CEN_maximum_manpower = 1000 }
-		clamp_temp_variable = { var = CEN_maximum_manpower min = 0 max = 100000 }
+		set_temp_variable = {
+			CEN_maximum_manpower = {
+				value = max_available_manpower_k
+				# Calculate the amount to subtract based on free and deployed manpower
+				subtract = manpower_k
+				subtract = deployed_army_manpower_k
+				subtract = deployed_navy_manpower_k
+				subtract = deployed_airforce_manpower_k
+				# Get manpower value in thousands
+				multiply = 1000
+				clamp = { min = 0 max = 100000 }
+			}
+		}
 
 		# Add final result to manpower pool
 		add_manpower = CEN_maximum_manpower
@@ -951,6 +1043,40 @@ CEN_transfer_manpower = {
 		add_manpower = CEN_lose_manpower_var
 		clear_variable = CEN_lose_manpower_var
 	}
+}
+
+CEN_MIO_size_and_funds_transfer = {
+	log = "[PREV.GetName]"
+	PREV = {
+		every_military_industrial_organization = {
+			add_to_array = { PREV.current_mio_sizes = THIS.size }
+			add_to_array = { PREV.current_mio_funds = THIS.funds }
+			log = "MIO: [THIS.GetName]| size = [?THIS.size]| funds = [?THIS.funds]"
+		}
+	}
+
+	log = "[THIS.GetName]"
+	every_military_industrial_organization = {
+		add_to_temp_array = { PREV.all_mios = THIS }
+	}
+
+	for_loop_effect = {
+		end = all_mios^num
+		compare = less_than
+
+		set_temp_variable = { current_mio = all_mios^v }
+		set_temp_variable = { current_mio_size = PREV.current_mio_sizes^v }
+		set_temp_variable = { current_mio_funds = PREV.current_mio_funds^v }
+		log = "MIO: [?current_mio.GetName]| size = [?current_mio_size]| funds = [?current_mio_funds]"
+		var:current_mio = {
+			add_mio_size = current_mio_size
+			add_mio_funds = current_mio_funds
+		}
+	}
+	clear_temp_array = all_mios
+
+	clear_array = PREV.current_mio_sizes
+	clear_array = PREV.current_mio_funds
 }
 
 CEN_reset_ideas = {
@@ -2024,10 +2150,7 @@ ELS_add_socialist_generals = {
 		}
 	}
 	ELS_remove_reactionary_generals = yes
-	if = {
-		limit = { has_character = ELS_salvador_castaneda_castro }
-		retire_character = ELS_salvador_castaneda_castro
-	}
+	ELS_remove_democratic_generals = yes
 }
 
 ELS_remove_socialist_generals = {
@@ -2042,7 +2165,6 @@ ELS_remove_socialist_generals = {
 }
 
 ELS_add_democratic_generals = {
-	ELS_add_socialist_generals = yes
 	if = {
 		limit = { NOT = { has_character = ELS_salvador_castaneda_castro } }
 		ELS_salvador_castaneda_castro = {
@@ -2053,37 +2175,26 @@ ELS_add_democratic_generals = {
 	if = {
 		limit = {
 			NOT = { has_character = ELS_andres_ignacio_menendez }
-			has_country_flag = ELS_keep_menendez_as_democracy
-		}
-		ELS_andres_ignacio_menendez = { set_nationality = PREV }
-	}
-}
-
-ELS_remove_democratic_generals = {
-	ELS_remove_socialist_generals = yes
-	if = {
-		limit = { has_character = ELS_salvador_castaneda_castro }
-		retire_character = ELS_salvador_castaneda_castro
-	}
-}
-
-ELS_add_liberal_generals = {
-	if = {
-		limit = { NOT = { has_character = ELS_salvador_castaneda_castro } }
-		ELS_salvador_castaneda_castro = {
-			set_nationality = PREV
-			promote_character = authoritarian_democrat_subtype
-		}
-	}
-	if = {
-		limit = {
-			NOT = { has_character = ELS_andres_ignacio_menendez }
-			has_government = authoritarian_democrat
+			ELS_andres_ignacio_menendez = { has_character_flag = ELS_keep_menendez }
 		}
 		ELS_andres_ignacio_menendez = { set_nationality = PREV }
 	}
 	ELS_remove_socialist_generals = yes
 	ELS_remove_reactionary_generals = yes
+}
+
+ELS_remove_democratic_generals = {
+	if = {
+		limit = { has_character = ELS_salvador_castaneda_castro }
+		retire_character = ELS_salvador_castaneda_castro
+	}
+	if = {
+		limit = {
+			has_character = ELS_andres_ignacio_menendez
+			has_authoritarian_government = no
+		}
+		retire_character = ELS_andres_ignacio_menendez
+	}
 }
 
 ELS_add_reactionary_generals = {
@@ -2105,6 +2216,7 @@ ELS_add_reactionary_generals = {
 		limit = { NOT = { has_character = ELS_andres_ignacio_menendez } }
 		ELS_andres_ignacio_menendez = { set_nationality = PREV }
 	}
+	ELS_remove_socialist_generals = yes
 	ELS_remove_democratic_generals = yes
 }
 
@@ -2120,13 +2232,7 @@ ELS_remove_reactionary_generals = {
 	if = {
 		limit = {
 			has_character = ELS_andres_ignacio_menendez
-			NOT = {
-				has_government = authoritarian_democrat
-				AND = {
-					has_elected_government = yes
-					NOT = { has_country_flag = ELS_keep_menendez_as_democracy }
-				}
-			}
+			ELS_andres_ignacio_menendez = { NOT = { has_character_flag = ELS_keep_menendez } }
 		}
 		retire_character = ELS_andres_ignacio_menendez
 	}
@@ -2214,7 +2320,10 @@ HON_restore_missing_characters = {
 			}
 		}
 		if = {
-			limit = { NOT = { has_character = HON_jose_leon_castro } }
+			limit = {
+				has_socialist_government = no
+				NOT = { has_character = HON_jose_leon_castro }
+			}
 			HON_jose_leon_castro = {
 				set_nationality = PREV
 				promote_character = paternal_autocrat_subtype
@@ -2283,11 +2392,20 @@ HON_remove_non_socialist_generals = {
 
 HON_add_autdem_PNH = {
 	save_current_party_popularities = yes
-	set_temp_variable = { HON_new_autdem_value = saved_popularities^7 } #autdem
-	add_to_temp_variable = { HON_new_autdem_value = saved_popularities^6 } #soccon
-	set_temp_variable = { HON_new_soccon_value = HON_new_autdem_value }
-	divide_temp_variable = { HON_new_autdem_value = 4 }
-	subtract_from_temp_variable = { HON_new_soccon_value = HON_new_autdem_value }
+	set_temp_variable = {
+		HON_new_autdem_value = {
+			value = saved_popularities^6
+			add = saved_popularities^7
+			multiply = 0.25
+		}
+	}
+	set_temp_variable = {
+		HON_new_soccon_value = {
+			value = saved_popularities^6
+			add = saved_popularities^7
+			subtract = HON_new_autdem_value
+		}
+	}
 	set_popularities = {
 		totalist = saved_popularities^0
 		syndicalist = saved_popularities^1
@@ -2621,6 +2739,7 @@ NIC_add_liberal_generals = {
 		retire_character = NIC_francisco_sequeira_moreno
 	}
 	NIC_remove_socialist_generals = yes
+	NIC_remove_reactionary_generals = yes
 }
 
 NIC_remove_liberal_generals = {
@@ -2911,9 +3030,7 @@ COS_puppet_setup = {
 			remove_ideas = COS_influence_of_the_UFC_idea
 			if = {
 				limit = { has_idea = COS_UFC_Profit_idea }
-				set_temp_variable = { cos_delete_profit = cos_profit_factor }
-				multiply_temp_variable = { cos_delete_profit = -1 }
-				set_temp_variable = { cos_profit_change = cos_delete_profit }
+				set_temp_variable = { cos_profit_change = { value = cos_profit_factor multiply = -1 } }
 				update_UFC_profits = yes
 				remove_ideas = COS_UFC_Profit_idea
 			}

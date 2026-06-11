@@ -366,7 +366,13 @@ JAP_land_reform = {
 		days_remove = JAP_land_reform_cost_1
 		fire_only_once = yes
 
-		ai_will_do = { base = 2000 }
+		ai_will_do = {
+			base = 2000
+			modifier = {
+				factor = 0.01
+				has_war = yes
+			}
+		}
 
 		priority = 100
 
@@ -409,7 +415,13 @@ JAP_land_reform = {
 		days_remove = JAP_land_reform_cost_2
 		fire_only_once = yes
 
-		ai_will_do = { base = 2000 }
+		ai_will_do = {
+			base = 2000
+			modifier = {
+				factor = 0.01
+				has_war = yes
+			}
+		}
 
 		priority = 100
 
@@ -452,7 +464,13 @@ JAP_land_reform = {
 		days_remove = JAP_land_reform_cost_3
 		fire_only_once = yes
 
-		ai_will_do = { base = 2000 }
+		ai_will_do = {
+			base = 2000
+			modifier = {
+				factor = 0.01
+				has_war = yes
+			}
+		}
 
 		priority = 100
 
@@ -489,7 +507,7 @@ JAP_land_reform = {
 		days_remove = JAP_land_reform_cost_4
 		fire_only_once = yes
 
-		ai_will_do = { factor = 100 }
+		ai_will_do = { factor = 1 }
 
 		priority = 100
 
@@ -556,10 +574,10 @@ JAP_land_reform = {
 		fire_only_once = yes
 
 		ai_will_do = {
-			base = 0
+			base = 2000
 			modifier = {
-				add = 2000
-				has_country_flag = JAP_dem_ai
+				factor = 0.01
+				has_war = no
 			}
 		}
 
@@ -597,13 +615,11 @@ JAP_land_reform = {
 			base = 0
 			modifier = {
 				add = 2000
-				NOT = { has_country_flag = JAP_dem_ai }
-				check_variable = { JAP_land_reform_variable > 6 }
-			}
-			modifier = {
-				add = 2000
-				has_country_flag = JAP_dem_ai
-				check_variable = { JAP_land_reform_variable > 7 }
+				OR = {
+					has_war = yes
+					has_stability > 0.75
+					check_variable = { JAP_land_reform_variable > 5 }
+				}
 			}
 		}
 
@@ -1009,6 +1025,76 @@ JAP_influence_china = {
 				value = 1
 			}
 			FNG = { country_event = { id = fengtian_japan_mechanic_events.204 days = 1 } } #Japanese Reinforcements Arrive
+		}
+		fixed_random_seed = no
+	}
+	FNG_JAP_attaches_to_the_continent = {
+		allowed = { tag = JAP }
+		visible = {
+			has_active_mission = JAP_faith_in_zhang_runs_out_mission
+			FNG = { has_war = yes }
+			NOT = {
+				FNG = { has_attache_from = JAP }
+			}
+		}
+		available = {
+			#Can do any time basically
+		}
+		icon = GFX_decision_decision_generic_chinese_officers
+		priority = 100
+		ai_will_do = {
+			base = 500 #Japan should basically always take this focus when its available.
+			#modifier = {
+			#	factor = 0
+			#	has_country_flag = JAP_is_playing_FNG_JAP_minigame_flag
+			#}
+			modifier = {
+				factor = 0
+				check_variable = { FNG.FNG_JAP_influence_variable > 0.30 } #avoid causing massive penalty on Fengtian
+			}
+		}
+		custom_cost_trigger = {
+			NOT = { command_power < 15 }
+		}
+		custom_cost_text = CP_15
+		days_re_enable = 20 #Ensure the events play out correctly
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete FNG_JAP_attaches_to_the_continent"
+			hidden_effect = {
+				add_command_power = -15
+			}
+			if = {
+				limit = {
+					NOT = { has_country_flag = JAP_has_sent_military_attache_to_the_continent }
+				}
+				FNG = { country_event = { id = fengtian_japan_mechanic_events.205 days = 1 } } #Attaches from Tokyo
+				effect_tooltip = {
+					diplomatic_relation = {
+						country = FNG
+						relation = send_attache
+						active = yes
+					}
+				}
+				custom_effect_tooltip = if_they_accept_tt
+				effect_tooltip = {
+					FNG_JAP_investment_mega = yes
+				}
+				custom_effect_tooltip = if_they_refuse_tt
+				effect_tooltip = {
+					FNG_JAP_mech_sub_time_mega_effect = yes
+				}
+				set_country_flag = JAP_has_sent_military_attache_to_the_continent
+			}
+			else_if = {
+				limit = {
+					has_country_flag = JAP_has_sent_military_attache_to_the_continent
+				}
+				diplomatic_relation = {
+					country = FNG
+					relation = send_attache
+					active = yes
+				}
+			}
 		}
 		fixed_random_seed = no
 	}
@@ -1667,6 +1753,105 @@ JAP_influence_china = {
 
 		remove_effect = {
 			log = "[GetLogRoot][GetLogFrom]: Decision remove JAP_finish_off_stragglers"
+			clear_decision_attack_AI = yes
+			create_wargoal = {
+				target = FROM
+				type = annex_everything
+			}
+		}
+		fixed_random_seed = no
+	}
+	JAP_campaign_into_frontier = {
+		icon = GFX_decision_jap_conquer_china
+
+		allowed = { always = no } #activated by focus JAP_continental_warfare
+
+		available = {
+			second_weltkrieg_has_begun = yes
+			NOT = {
+				has_non_aggression_pact_with = FROM
+				has_guaranteed = FROM
+				is_guaranteed_by = FROM
+				is_ally_with = FROM
+			}
+			if = {
+				limit = {
+					FNG = {
+						exists = yes
+						is_working_with_JAP = yes
+					}
+				}
+				OR = {
+					#This decision exists basically because faction rules prevent non-leaders from declaring war.
+					FNG = { has_wargoal_against = FROM } #if FNG is independent, try to funnel decisions through them and their demand outskirts decisions.
+					FNG = {
+						has_global_flag = china_united
+						is_subject_of = JAP
+					}
+				}
+			}
+			else = {
+				has_global_flag = china_united
+				var:608.owner = { #Beijing
+					is_subject_of = ROOT
+				}
+			}
+		}
+
+		visible = {
+			can_declare_war_on = FROM
+			NOT = { has_wargoal_against = FROM }
+			NOT = { has_global_flag = JAP_defeated_by_china }
+		}
+
+		cancel_trigger = {
+			OR = {
+				NOT = { can_declare_war_on = FROM }
+				has_wargoal_against = FROM
+				has_global_flag = JAP_defeated_by_china
+				has_non_aggression_pact_with = FROM
+				has_guaranteed = FROM
+				is_guaranteed_by = FROM
+				is_ally_with = FROM
+			}
+		}
+
+		target_trigger = {
+			can_declare_war_on = FROM
+			NOT = { has_wargoal_against = FROM }
+			NOT = { has_global_flag = JAP_defeated_by_china }
+		}
+
+		cost = 35
+		days_remove = 30
+		war_with_target_on_remove = yes
+
+		ai_will_do = {
+			factor = 100
+			modifier = {
+				factor = 0
+				country_is_in_dangerous_war = yes
+			}
+			modifier = {
+				factor = 0
+				FROM = { default_attack_AI_trigger_consider_naval_strength = yes }
+			}
+		}
+
+		cancel_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision cancel JAP_campaign_into_frontier"
+			clear_decision_attack_AI = yes
+			hidden_effect = { add_political_power = 35 }
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete JAP_campaign_into_frontier"
+			FROM = { incoming_war_notification_effect = yes }
+			setup_decision_attack_AI = yes
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision remove JAP_campaign_into_frontier"
 			clear_decision_attack_AI = yes
 			create_wargoal = {
 				target = FROM
@@ -2955,7 +3140,18 @@ JAP_co_prosperity_decisions = {
 			}
 		}
 
-		ai_will_do = { factor = 10 }
+		ai_will_do = {
+			factor = 10
+			modifier = {
+				factor = 0
+				INC = { exists = no }
+				FROM = {
+					tag = SIA
+					num_divisions < 31
+					has_war = no
+				}
+			}
+		}
 
 		complete_effect = {
 			log = "[GetLogRoot][GetLogFrom]: Decision complete JAP_invite_into_faction"
@@ -3009,7 +3205,7 @@ JAP_co_prosperity_decisions = {
 		}
 
 		ai_will_do = {
-			factor = 10
+			factor = 25
 			modifier = {
 				factor = 0
 				FROM = {
@@ -3024,14 +3220,14 @@ JAP_co_prosperity_decisions = {
 				NOT = { is_in_faction_with = FROM }
 			}
 			modifier = {
-				factor = 2
+				factor = 5
 				FROM = {
 					NOT = { is_subject_of = ROOT }
 					is_in_faction_with = ROOT
 				}
 			}
 			modifier = {
-				factor = 5
+				factor = 100
 				FROM = {
 					OR = {
 						is_subject_of = ROOT
@@ -3046,6 +3242,10 @@ JAP_co_prosperity_decisions = {
 			modifier = {
 				factor = 3
 				FROM = { num_of_civilian_factories > 6 }
+			}
+			modifier = {
+				factor = 5
+				FROM = { num_of_military_factories > 9 }
 			}
 			modifier = {
 				add = 2000
@@ -3143,8 +3343,7 @@ JAP_co_prosperity_decisions = {
 		allowed = { tag = JAP }
 
 		available = {
-			set_temp_variable = { JAP_factory_comparison = FROM.num_of_owned_factories }
-			multiply_temp_variable = { JAP_factory_comparison = 3 }
+			set_temp_variable = { JAP_factory_comparison = { value = FROM.num_of_owned_factories multiply = 3 } }
 			num_of_controlled_factories > JAP_factory_comparison
 			surrender_progress < 0.30
 			FROM = { surrender_progress < 0.30 }
@@ -4292,59 +4491,6 @@ JAP_short_war_cat = { # Short war decisions
 }
 
 JAP_co_prosperity_member_decisions = {
-	JAP_join_rikagaku_kenkyusho = {
-		icon = generic_research
-
-		allowed = {
-			NOT = {
-				tag = JAP
-				tag = GER #always hostile
-				tag = MAF
-				tag = GEA
-				tag = BAT
-				tag = RUS
-				tag = FRA
-				tag = ENG
-				tag = WCA
-				tag = SRI
-				tag = SWF
-				tag = FOP
-				tag = HND
-				tag = USA #can't join
-				tag = APG
-				tag = NEE
-				tag = RAJ
-				tag = DEI
-			}
-			OR = {
-				tag = FNG
-				original_tag = GXC
-				tag = SHD
-				is_chinese_tag = no #others can't join
-			}
-		}
-
-		targets = { JAP }
-		target_trigger = {
-			OR = {
-				is_in_faction_with = FROM
-				is_in_economic_sphere_led_by_FROM = yes
-			}
-			NOT = { is_in_tech_sharing_group = japan_research }
-			FROM = { is_in_tech_sharing_group = japan_research }
-		}
-
-		fire_only_once = yes
-		cost = 0
-
-		ai_will_do = { factor = 100 }
-
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete JAP_join_rikagaku_kenkyusho"
-			add_to_tech_sharing_group = japan_research
-		}
-		fixed_random_seed = no
-	}
 
 	JAP_request_nav_advisors = {
 		icon = generic_research
@@ -4369,12 +4515,13 @@ JAP_co_prosperity_member_decisions = {
 				tag = NEE
 				tag = RAJ
 				tag = DEI
+				tag = TAI
 			}
 			OR = {
 				tag = FNG
 				original_tag = GXC
 				tag = SHD
-				is_chinese_tag = no #others can't join
+				is_chinese_or_potential_chinese_tag = no #others can't join
 			}
 		}
 
@@ -4781,7 +4928,7 @@ JAP_foreign_policy_decisions = {
 		}
 
 		visible = {
-			var:577.owner = { is_russian_tag = yes } #North Sakhalin
+			var:FROM.owner = { is_russian_tag = yes } #North Sakhalin
 			537 = { is_owned_and_controlled_by = ROOT } #South Sakhalin
 		}
 
@@ -4793,9 +4940,10 @@ JAP_foreign_policy_decisions = {
 
 		complete_effect = {
 			log = "[GetLogRoot][GetLogFrom]: Decision complete JAP_take_over_sakhalin"
-			FROM = { transfer_state_to = JAP }
+			FROM = { transfer_state_to = ROOT }
 			hidden_effect = {
-				JAP = { add_state_claim = FROM }
+				add_state_claim = FROM
+				FROM = { enable_state_integration_50_compliance = yes }
 				FER = { country_event = russia_far_east_events.51 } #Japanese invade Sakhalin
 			}
 		}

@@ -144,6 +144,16 @@ country_event = {
 		GER = {
 			country_event = capitulation_events.3
 		}
+
+		remove_relation_rule_override = {
+			trigger = MAF_can_send_volunteers_to_target
+			can_send_volunteers = yes
+		}
+		set_rule = { can_send_volunteers = yes }
+		if = {
+			limit = { has_dlc_aat = yes }
+			set_rule = { can_access_market = yes }
+		}
 	}
 
 	option = {
@@ -800,19 +810,6 @@ country_event = {
 			}
 			NFA = {
 				transfer_state = PREV
-				if = {
-					limit = {
-						has_completed_focus = NATFRA_Colonial_Extraction
-					}
-					PREV = {
-						set_state_flag = nfa_state_colonial_exploitation_flag
-					}
-				}
-				else = {
-					PREV = {
-						set_state_flag = nfa_state_colonial_resistance_flag
-					}
-				}
 				NFA_Resistance_Policy_on_colony_states = yes
 			}
 			clear_variable = ambition_area_MAF
@@ -899,7 +896,12 @@ country_event = { # GER: peace with INT?
 			}
 			else_if = {
 				limit = { is_ally_with = ENG }
-				ENG = { surrender_progress < 0.1 }
+				ENG = {
+					OR = {
+						has_capitulated = yes
+						NOT = { any_home_area_neighbor_country = { has_war_with = PREV } } #being invaded
+					}
+				}
 			}
 			NOT = {
 				any_allied_country = {
@@ -1014,16 +1016,6 @@ country_event = { # INT: Germany offers peace
 			}
 			leave_faction = yes
 		}
-		effect_tooltip = {
-			every_country = {
-				limit = { FRA_is_phalanstere_member = yes }
-				FRA_remove_from_phalanstere = yes
-			}
-			every_country = {
-				limit = { is_in_tech_sharing_group = phalanstere_research }
-				remove_from_tech_sharing_group = phalanstere_research
-			}
-		}
 		FROM = {
 			effect_tooltip = { white_peace_with_ROOT = yes }
 			country_event = capitulation_events.32
@@ -1041,10 +1033,6 @@ country_event = { # INT: Germany offers peace
 		}
 		hidden_effect = {
 			set_global_flag = INT_treaty_of_london
-			every_country = {
-				FRA_remove_from_phalanstere = yes
-				remove_from_tech_sharing_group = phalanstere_research
-			}
 			if = {
 				limit = { SPK = { has_country_flag = SPA_GER_gibraltar_lease } }
 				GER = { country_event = { id = spain_foreign_policy_events.15 hours = 5 } }
@@ -1246,83 +1234,55 @@ country_event = {
 		# first state transferred
 		if = {
 			limit = {
-				any_state = {
-					is_owned_by = FRA
-					is_core_of = FRA
-					region = 20 #Southern France
-					is_controlled_by = GER
-					any_neighbor_state = { is_controlled_by = NFA }
-					is_coastal = yes
-				}
-			}
-			add_to_variable = { var = ROOT.cof_states_given value = 1 }
-			random_state = {
-				limit = {
-					is_owned_by = FRA
-					is_core_of = FRA
-					region = 20 #Southern France
-					is_controlled_by = GER
-					any_neighbor_state = { is_controlled_by = NFA }
-					is_coastal = yes
-				}
-				set_state_controller_to = ROOT
-			}
-		}
-		else_if = {
-			limit = {
-				any_state = {
-					is_owned_by = FRA
-					is_core_of = FRA
-					region = 20 #Southern France
-					is_controlled_by = GER
-					any_neighbor_state = {
-						is_controlled_by = NFA
-						any_neighbor_state = {
-							NOT = { state = PREV.PREV }
-							is_controlled_by = NFA
-						}
+				FRA = {
+					any_owned_state = {
+						is_core_of = PREV
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = { is_controlled_by = NFA }
+						is_coastal = yes
+						set_temp_variable = { state_target = THIS }
 					}
 				}
 			}
 			add_to_variable = { var = ROOT.cof_states_given value = 1 }
-			random_state = {
-				limit = {
-					is_owned_by = FRA
-					is_core_of = FRA
-					region = 20 #Southern France
-					is_controlled_by = GER
-					any_neighbor_state = {
-						is_controlled_by = NFA
-						any_neighbor_state = {
-							NOT = { state = PREV.PREV }
-							is_controlled_by = NFA
-						}
-					}
-				}
-				set_state_controller_to = ROOT
-			}
+			var:state_target = { set_state_controller_to = ROOT }
 		}
 		else_if = {
 			limit = {
-				any_state = {
-					is_owned_by = FRA
-					is_core_of = FRA
-					region = 20 #Southern France
-					is_controlled_by = GER
-					any_neighbor_state = { is_controlled_by = NFA }
+				FRA = {
+					any_owned_state = {
+						is_core_of = PREV
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = {
+							is_controlled_by = NFA
+							any_neighbor_state = {
+								NOT = { state = PREV.PREV }
+								is_controlled_by = NFA
+							}
+						}
+						set_temp_variable = { state_target = THIS }
+					}
 				}
 			}
 			add_to_variable = { var = ROOT.cof_states_given value = 1 }
-			random_state = {
-				limit = {
-					is_owned_by = FRA
-					is_core_of = FRA
-					region = 20 #Southern France
-					is_controlled_by = GER
-					any_neighbor_state = { is_controlled_by = NFA }
+			var:state_target = { set_state_controller_to = ROOT }
+		}
+		else_if = {
+			limit = {
+				FRA = {
+					any_owned_state = {
+						is_core_of = PREV
+						region = 20 #Southern France
+						is_controlled_by = GER
+						any_neighbor_state = { is_controlled_by = NFA }
+						set_temp_variable = { state_target = THIS }
+					}
 				}
-				set_state_controller_to = ROOT
 			}
+			add_to_variable = { var = ROOT.cof_states_given value = 1 }
+			var:state_target = { set_state_controller_to = ROOT }
 		}
 		else_if = {
 			limit = {
@@ -1333,37 +1293,32 @@ country_event = {
 		}
 		else_if = {
 			limit = {
-				any_state = {
-					is_owned_by = FRA
-					is_core_of = FRA
-					region = 20 #Southern France
-					is_controlled_by = GER
-					is_coastal = yes
+				FRA = {
+					any_owned_state = {
+						is_core_of = PREV
+						region = 20 #Southern France
+						is_controlled_by = GER
+						is_coastal = yes
+						set_temp_variable = { state_target = THIS }
+					}
 				}
 			}
 			add_to_variable = { var = ROOT.cof_states_given value = 1 }
-			random_state = {
-				limit = {
-					is_owned_by = FRA
-					is_core_of = FRA
-					region = 20 #Southern France
-					is_controlled_by = GER
-					is_coastal = yes
-				}
-				set_state_controller_to = ROOT
-			}
+			var:state_target = { set_state_controller_to = ROOT }
 		}
-		else = {
-			add_to_variable = { var = ROOT.cof_states_given value = 1 }
-			random_state = {
-				limit = {
-					is_owned_by = FRA
-					is_core_of = FRA
-					region = 20 #Southern France
-					is_controlled_by = GER
+		else_if = {
+			limit = {
+				FRA = {
+					any_owned_state = {
+						is_core_of = PREV
+						region = 20 #Southern France
+						is_controlled_by = GER
+						set_temp_variable = { state_target = THIS }
+					}
 				}
-				set_state_controller_to = ROOT
 			}
+			add_to_variable = { var = ROOT.cof_states_given value = 1 }
+			var:state_target = { set_state_controller_to = ROOT }
 		}
 
 		# second state transferred
@@ -1374,125 +1329,84 @@ country_event = {
 			}
 			if = {
 				limit = {
-					any_state = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						any_neighbor_state = { is_controlled_by = NFA }
-						is_coastal = yes
-					}
-				}
-				add_to_variable = { var = ROOT.cof_states_given value = 1 }
-				random_state = {
-					limit = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						any_neighbor_state = { is_controlled_by = NFA }
-						is_coastal = yes
-					}
-					set_state_controller_to = ROOT
-				}
-			}
-			else_if = {
-				limit = {
-					any_state = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						any_neighbor_state = {
-							is_controlled_by = NFA
-							any_neighbor_state = {
-								NOT = { state = PREV.PREV }
-								is_controlled_by = NFA
-							}
+					FRA = {
+						any_owned_state = {
+							is_core_of = PREV
+							region = 20 #Southern France
+							is_controlled_by = GER
+							any_neighbor_state = { is_controlled_by = NFA }
+							is_coastal = yes
+							set_temp_variable = { state_target = THIS }
 						}
 					}
 				}
 				add_to_variable = { var = ROOT.cof_states_given value = 1 }
-				random_state = {
-					limit = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						any_neighbor_state = {
-							is_controlled_by = NFA
+				var:state_target = { set_state_controller_to = ROOT }
+			}
+			else_if = {
+				limit = {
+					FRA = {
+						any_owned_state = {
+							is_core_of = PREV
+							region = 20 #Southern France
+							is_controlled_by = GER
 							any_neighbor_state = {
-								NOT = { state = PREV.PREV }
 								is_controlled_by = NFA
+								any_neighbor_state = {
+									NOT = { state = PREV.PREV }
+									is_controlled_by = NFA
+								}
 							}
+							set_temp_variable = { state_target = THIS }
 						}
 					}
-					set_state_controller_to = ROOT
 				}
+				add_to_variable = { var = ROOT.cof_states_given value = 1 }
+				var:state_target = { set_state_controller_to = ROOT }
 			}
 			else_if = {
 				limit = {
-					any_state = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						any_neighbor_state = { is_controlled_by = NFA }
+					FRA = {
+						any_owned_state = {
+							is_core_of = PREV
+							region = 20 #Southern France
+							is_controlled_by = GER
+							any_neighbor_state = { is_controlled_by = NFA }
+							set_temp_variable = { state_target = THIS }
+						}
 					}
 				}
 				add_to_variable = { var = ROOT.cof_states_given value = 1 }
-				random_state = {
-					limit = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						any_neighbor_state = { is_controlled_by = NFA }
-					}
-					set_state_controller_to = ROOT
-				}
+				var:state_target = { set_state_controller_to = ROOT }
 			}
 			else_if = {
 				limit = {
-					any_state = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						is_coastal = yes
+					FRA = {
+						any_owned_state = {
+							is_core_of = PREV
+							region = 20 #Southern France
+							is_controlled_by = GER
+							is_coastal = yes
+							set_temp_variable = { state_target = THIS }
+						}
 					}
 				}
 				add_to_variable = { var = ROOT.cof_states_given value = 1 }
-				random_state = {
-					limit = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						is_coastal = yes
-					}
-					set_state_controller_to = ROOT
-				}
+				var:state_target = { set_state_controller_to = ROOT }
 			}
 			else_if = {
 				limit = {
-					any_state = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
+					FRA = {
+						any_owned_state = {
+							is_core_of = PREV
+							region = 20 #Southern France
+							is_controlled_by = GER
+							set_temp_variable = { state_target = THIS }
+						}
 					}
 				}
 				add_to_variable = { var = ROOT.cof_states_given value = 1 }
-				random_state = {
-					limit = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-					}
-					set_state_controller_to = ROOT
-				}
+				var:state_target = { set_state_controller_to = ROOT }
 			}
 		}
 
@@ -1504,125 +1418,84 @@ country_event = {
 			}
 			if = {
 				limit = {
-					any_state = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						any_neighbor_state = { is_controlled_by = NFA }
-						is_coastal = yes
-					}
-				}
-				add_to_variable = { var = ROOT.cof_states_given value = 1 }
-				random_state = {
-					limit = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						any_neighbor_state = { is_controlled_by = NFA }
-						is_coastal = yes
-					}
-					set_state_controller_to = ROOT
-				}
-			}
-			else_if = {
-				limit = {
-					any_state = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						any_neighbor_state = {
-							is_controlled_by = NFA
-							any_neighbor_state = {
-								NOT = { state = PREV.PREV }
-								is_controlled_by = NFA
-							}
+					FRA = {
+						any_owned_state = {
+							is_core_of = PREV
+							region = 20 #Southern France
+							is_controlled_by = GER
+							any_neighbor_state = { is_controlled_by = NFA }
+							is_coastal = yes
+							set_temp_variable = { state_target = THIS }
 						}
 					}
 				}
 				add_to_variable = { var = ROOT.cof_states_given value = 1 }
-				random_state = {
-					limit = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						any_neighbor_state = {
-							is_controlled_by = NFA
+				var:state_target = { set_state_controller_to = ROOT }
+			}
+			else_if = {
+				limit = {
+					FRA = {
+						any_owned_state = {
+							is_core_of = PREV
+							region = 20 #Southern France
+							is_controlled_by = GER
 							any_neighbor_state = {
-								NOT = { state = PREV.PREV }
 								is_controlled_by = NFA
+								any_neighbor_state = {
+									NOT = { state = PREV.PREV }
+									is_controlled_by = NFA
+								}
 							}
+							set_temp_variable = { state_target = THIS }
 						}
 					}
-					set_state_controller_to = ROOT
 				}
+				add_to_variable = { var = ROOT.cof_states_given value = 1 }
+				var:state_target = { set_state_controller_to = ROOT }
 			}
 			else_if = {
 				limit = {
-					any_state = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						any_neighbor_state = { is_controlled_by = NFA }
+					FRA = {
+						any_owned_state = {
+							is_core_of = PREV
+							region = 20 #Southern France
+							is_controlled_by = GER
+							any_neighbor_state = { is_controlled_by = NFA }
+							set_temp_variable = { state_target = THIS }
+						}
 					}
 				}
 				add_to_variable = { var = ROOT.cof_states_given value = 1 }
-				random_state = {
-					limit = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						any_neighbor_state = { is_controlled_by = NFA }
-					}
-					set_state_controller_to = ROOT
-				}
+				var:state_target = { set_state_controller_to = ROOT }
 			}
 			else_if = {
 				limit = {
-					any_state = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						is_coastal = yes
+					FRA = {
+						any_owned_state = {
+							is_core_of = PREV
+							region = 20 #Southern France
+							is_controlled_by = GER
+							is_coastal = yes
+							set_temp_variable = { state_target = THIS }
+						}
 					}
 				}
 				add_to_variable = { var = ROOT.cof_states_given value = 1 }
-				random_state = {
-					limit = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-						is_coastal = yes
-					}
-					set_state_controller_to = ROOT
-				}
+				var:state_target = { set_state_controller_to = ROOT }
 			}
 			else_if = {
 				limit = {
-					any_state = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
+					FRA = {
+						any_owned_state = {
+							is_core_of = PREV
+							region = 20 #Southern France
+							is_controlled_by = GER
+							set_temp_variable = { state_target = THIS }
+						}
 					}
 				}
 				add_to_variable = { var = ROOT.cof_states_given value = 1 }
-				random_state = {
-					limit = {
-						is_owned_by = FRA
-						is_core_of = FRA
-						region = 20 #Southern France
-						is_controlled_by = GER
-					}
-					set_state_controller_to = ROOT
-				}
+				var:state_target = { set_state_controller_to = ROOT }
 			}
 		}
 		clear_variable = cof_states_given

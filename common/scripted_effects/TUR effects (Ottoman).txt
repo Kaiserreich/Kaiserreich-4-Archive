@@ -535,7 +535,7 @@ OTT_evaluate_centralisation = {
 				}
 				add_to_variable = { OTT.OTT_centralisation = 1 }
 			}
-			divide_variable = { OTT_centralisation = 100 }
+			multiply_variable = { OTT_centralisation = 0.01 }
 			force_update_dynamic_modifier = yes
 		}
 		else = {
@@ -548,10 +548,14 @@ OTT_evaluate_parliament_support = {
 	OTT = {
 		if = {
 			limit = { has_dynamic_modifier = { modifier = OTT_parliament_modifier } }
-			set_variable = { OTT_parliament = representatives_support }
-			divide_variable = { OTT_parliament = 20 }
-			round_variable = OTT_parliament
-			divide_variable = { OTT_parliament = 100 }
+			set_variable = {
+				OTT_parliament = {
+					value = representatives_support
+					multiply = 0.05
+					round = yes
+					multiply = 0.01
+				}
+			}
 			force_update_dynamic_modifier = yes
 			if = {
 				limit = {
@@ -575,14 +579,14 @@ OTT_recalc_congress_icon_frames = {
 	OTT = {
 		if = {
 			limit = { has_dynamic_modifier = { modifier = OTT_parliament_modifier } }
-			set_variable = { current_house_icon_frame = representatives_support }
-			divide_variable = { current_house_icon_frame = representatives_total }
-			multiply_variable = { current_house_icon_frame = 21 }
-			round_variable = current_house_icon_frame
-			clamp_variable = {
-				var = current_house_icon_frame
-				min = 1
-				max = 21
+			set_variable = {
+				current_house_icon_frame = {
+					value = representatives_support
+					divide = representatives_total
+					multiply = 21
+					round = yes
+					clamp = { min = 1 max = 21 }
+				}
 			}
 		}
 		else = {
@@ -660,14 +664,22 @@ OTT_parliament_low_support_penalty = {
 		limit = { check_variable = { representatives_support < 250 } }
 		custom_effect_tooltip = ott_plurality_congress_deficit_tt
 
-		set_temp_variable = { OTT_pp_loss = 250 }
-		subtract_from_temp_variable = { OTT_pp_loss = representatives_support }
-		multiply_temp_variable = { OTT_pp_loss = -1 }
+		set_temp_variable = {
+			OTT_pp_loss = {
+				value = 250
+				subtract = representatives_support
+				multiply = -1
+			}
+		}
 		add_political_power = OTT_pp_loss
 
-		set_temp_variable = { OTT_stab_loss = 250 }
-		subtract_from_temp_variable = { OTT_stab_loss = representatives_support }
-		multiply_temp_variable = { OTT_stab_loss = -0.003 }
+		set_temp_variable = {
+			OTT_stab_loss = {
+				value = 250
+				subtract = representatives_support
+				multiply = -0.003
+			}
+		}
 		add_stability = OTT_stab_loss
 
 		custom_effect_tooltip = tooltip_white_line
@@ -679,17 +691,32 @@ OTT_parliament_very_low_support_penalty = {
 		limit = { check_variable = { representatives_support < 125 } }
 		custom_effect_tooltip = ott_small_support_congress_deficit_tt
 
-		set_temp_variable = { OTT_pp_loss = 125 }
-		subtract_from_temp_variable = { OTT_pp_loss = representatives_support }
-		multiply_temp_variable = { OTT_pp_loss = -1 }
+		set_temp_variable = {
+			OTT_pp_loss = {
+				value = 125
+				subtract = representatives_support
+				multiply = -1
+			}
+		}
 		add_political_power = OTT_pp_loss
 
-		set_temp_variable = { OTT_stab_loss = 125 }
-		subtract_from_temp_variable = { OTT_stab_loss = representatives_support }
-		multiply_temp_variable = { OTT_stab_loss = -0.003 }
+		set_temp_variable = {
+			OTT_stab_loss = {
+				value = 125
+				subtract = representatives_support
+				multiply = -0.003
+			}
+		}
 		add_stability = OTT_stab_loss
 
 		custom_effect_tooltip = tooltip_white_line
+	}
+}
+
+TUR_calculate_deputy_change_effect = {
+	if = {
+		limit = { TUR_calculate_deputy_change_trigger = yes }
+		set_temp_variable = { OTT_deputy_pp_cost = { value = OTT_deputy_change multiply = -1 } }
 	}
 }
 
@@ -1310,7 +1337,6 @@ OTT_post_defeat_setup = {
 			remove_ideas = {
 				OTT_Ottoman_Stand
 				OTT_Mobilisation
-				OTT_Ottoman_Reinvigoration
 				OTT_national_defense_organization
 				OTT_cypriot_invasion
 				ott_armed_neutrality
@@ -2176,8 +2202,7 @@ OTT_wins_levantine_war = {
 
 TUR_modify_literacy_effect = {
 	## set up temp var to check whether modified value crosses zero
-	set_temp_variable = { TUR_illiteracy_compare_temp = TUR_literacy_research_speed }
-	multiply_temp_variable = { TUR_illiteracy_compare_temp = -1 }
+	set_temp_variable = { TUR_illiteracy_compare_temp = { value = TUR_literacy_research_speed multiply = -1 } }
 
 	if = {
 		limit = { has_dynamic_modifier = { modifier = OTT_literacy_negative_dynamic_modifier } }
@@ -2318,8 +2343,7 @@ OTT_change_egyptian_anger_level = {
 	if = {
 		limit = { has_variable = OTT.OTT_egyptian_anger }
 		OTT = {
-			set_temp_variable = { OTT_new_anger_level = OTT_egyptian_anger }
-			add_to_temp_variable = { OTT_new_anger_level = OTT_anger_change?1 }
+			set_temp_variable = { OTT_new_anger_level = { value = OTT_egyptian_anger add = OTT_anger_change?1 } }
 
 			# apply threshold-based effects
 			if = {
@@ -2433,14 +2457,12 @@ OTT_change_egyptian_monopolies_level = {
 	if = {
 		limit = { has_variable = OTT.OTT_egyptian_monopolies }
 		EGY = {
-			set_temp_variable = { OTT_new_monopoly_level = OTT.OTT_egyptian_monopolies }
-			add_to_temp_variable = { OTT_new_monopoly_level = OTT_monopoly_change?1 }
-
-			# avoid going < 0 or > 5
-			clamp_temp_variable = {
-				var = OTT_new_monopoly_level
-				min = 0
-				max = 5
+			set_temp_variable = {
+				OTT_new_monopoly_level = {
+					value = OTT.OTT_egyptian_monopolies
+					add = OTT_monopoly_change?1
+					clamp = { min = 0 max = 5 } # avoid going < 0 or > 5
+				}
 			}
 
 			if = {

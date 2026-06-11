@@ -173,6 +173,10 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 		}
 
 		targets = { ENT }
+
+		target_root_trigger = {
+			NOT = { has_country_flag = ENT_joined_faction_once }
+		}
 		target_trigger = {
 			has_socialist_government = no
 			FROM = {
@@ -202,6 +206,7 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 			log = "[GetLogRoot][GetLogFrom]: Decision complete SRD_join_entente"
 			italy_break_balance = yes
 			FROM = { ask_to_join_faction = yes }
+			set_country_flag = ENT_joined_faction_once
 		}
 		fixed_random_seed = no
 	}
@@ -486,8 +491,7 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 				FROM = {
 					is_ai = no
 					is_major = yes
-					set_temp_variable = { manpower_threshold = deployed_army_manpower_k }
-					multiply_temp_variable = { manpower_threshold = 1000 }
+					set_temp_variable = { manpower_threshold = { value = deployed_army_manpower_k multiply = 1000 } }
 					amount_manpower_in_deployment_queue > manpower_threshold
 					has_civil_war = no
 					has_war_with_major = no
@@ -498,8 +502,7 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 			modifier = {
 				factor = 0
 				FROM = {
-					set_temp_variable = { strength = num_divisions }
-					clamp_temp_variable = { var = strength min = 1 }
+					set_temp_variable = { strength = { value = num_divisions clamp = { min = 1 max = 1000 } } }
 					if = {
 						limit = { HUN = { is_ally_with = FROM } }
 						add_to_temp_variable = { strength = HUN.num_divisions }
@@ -516,10 +519,12 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 						limit = { CRO = { is_ally_with = FROM } }
 						add_to_temp_variable = { strength = CRO.num_divisions }
 					}
-					set_temp_variable = { my_strength = ROOT.num_divisions }
-					clamp_temp_variable = { var = my_strength min = 1 }
-					divide_temp_variable = { strength = my_strength }
-					check_variable = { strength > 0.9 }
+					set_temp_variable = { my_strength = { value = ROOT.num_divisions clamp = { min = 1 max = 1000 } } }
+					check_expr = {
+						value = strength
+						divide = my_strength
+						greater_than = { value = 0.9 }
+					}
 					NOT = {
 						surrender_progress > 0.10
 						has_war_with_major = yes
@@ -1538,6 +1543,7 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 		}
 
 		available = {
+			second_weltkrieg_has_begun = yes
 			NOT = { has_non_aggression_pact_with = FROM }
 			NOT = { has_guaranteed = FROM }
 		}
@@ -1635,17 +1641,16 @@ ITA_foreign_policy = {# Foreign Policy Stuff
 		}
 
 		available = {
+			second_weltkrieg_has_begun = yes
 			OR = {
-				448 = { is_owned_and_controlled_by = FROM }
-				450 = { is_owned_and_controlled_by = FROM }
-				451 = { is_owned_and_controlled_by = FROM }
-				AND = {
-					has_subject = LBA
-					LBA = { has_capitulated = no }
+				any_state_of = {
+					target = { 448 450 451 } #Tripoli, Benghazi, Ajdabiya
+					is_owned_and_controlled_by = FROM
 				}
-				AND = {
-					has_subject = TRP
-					TRP = { has_capitulated = no }
+				any_country_of = {
+					target = { LBA TRP }
+					is_subject_of = ROOT
+					has_capitulated = no
 				}
 			}
 			NOT = { has_non_aggression_pact_with = FROM }
@@ -3375,11 +3380,10 @@ ITA_resorgimento_decisions = {
 					}
 				}
 				else = {
-					count_triggers = {
-						amount = 2
-						158 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Piedmont
-						1004 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Emilia
-						162 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Tuscany
+					any_state_of = {
+						count = 2
+						target = { 158 162 1004 } #Piedmont, Tuscany, Emilia
+						is_owned_and_controlled_by_ROOT_or_subject = yes
 					}
 				}
 				FROM = {
@@ -3466,12 +3470,10 @@ ITA_resorgimento_decisions = {
 				}
 			}
 			else = {
-				count_triggers = {
-					amount = 2
-					2 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Latium
-					158 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Piedmont
-					162 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Tuscany
-					1004 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Emilia
+				any_state_of = {
+					count = 2
+					target = { 2 158 162 1004 } #Latium, Piedmont, Tuscany, Emilia
+					is_owned_and_controlled_by_ROOT_or_subject = yes
 				}
 			}
 			custom_override_tooltip = {
@@ -3523,7 +3525,7 @@ ITA_resorgimento_decisions = {
 		}
 
 		fire_only_once = no
-		cost = 100
+		cost = 0
 
 		ai_will_do = {
 			factor = 10000
@@ -3661,12 +3663,10 @@ ITA_resorgimento_decisions = {
 					}
 				}
 				else = {
-					count_triggers = {
-						amount = 2
-						159 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
-						160 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
-						1004 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
-						162 = { is_owned_and_controlled_by_ROOT_or_subject = yes }
+					any_state_of = {
+						count = 2
+						target = { 159 160 162 1004 } #Lombardy, Venetia, Tuscany, Emilia
+						is_owned_and_controlled_by_ROOT_or_subject = yes
 					}
 				}
 				FROM = {
@@ -3806,15 +3806,10 @@ ITA_resorgimento_decisions = {
 				NOT = { country_exists = SIC }
 				SIC = { has_capitulated = yes }
 			}
-			count_triggers = {
-				amount = 6
-				2 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Latium
-				117 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Campania
-				158 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Piedmont
-				159 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Lombardy
-				160 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Venice
-				161 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Romagna
-				162 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Tuscany
+			any_state_of = {
+				count = 6
+				target = { 2 117 158 159 160 161 162 } #Latium, Campania, Piedmont, Lombardy, Venice, Romagna, Tuscany
+				is_owned_and_controlled_by_ROOT_or_subject = yes
 			}
 		}
 		fire_only_once = yes
@@ -3871,12 +3866,10 @@ ITA_resorgimento_decisions = {
 				}
 			}
 			else = {
-				count_triggers = {
-					amount = 2
-					159 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Lombardy
-					160 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Venetia
-					162 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Tuscany
-					1004 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Emilia
+				any_state_of = {
+					count = 2
+					target = { 159 160 162 1004 } #Lombardy, Venetia, Tuscany, Emilia
+					is_owned_and_controlled_by_ROOT_or_subject = yes
 				}
 			}
 			custom_override_tooltip = {
@@ -3911,7 +3904,7 @@ ITA_resorgimento_decisions = {
 			}
 		}
 
-		cost = 100
+		cost = 0
 		fire_only_once = no
 
 		targets = { ITA SIC PAP VNC EMI TUS LOM }
@@ -3965,45 +3958,15 @@ ITA_resorgimento_decisions = {
 		fixed_random_seed = no
 	}
 
-	SIC_declare_italian_empire = {
+	SIC_choose_to_form_italian_empire = {
 		icon = italy_flag
-
 		allowed = { always = no }
-
-		available = {
-			OR = {
-				NOT = { country_exists = ITA }
-				ITA = { has_capitulated = yes }
-			}
-			OR = {
-				NOT = { country_exists = SRI }
-				SRI = { has_capitulated = yes }
-			}
-			count_triggers = {
-				amount = 4
-				2 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Latium
-				117 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Campania
-				158 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Piedmont
-				159 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Lombardy
-				160 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Venice
-				161 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Romagna
-				162 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Tuscany
-			}
-		}
 
 		fire_only_once = yes
 		cost = 0
 		priority = 5
 		ai_will_do = {
-			factor = 80
-			modifier = {
-				factor = 0
-				any_subject_country = {
-					is_ai = no
-					is_italian_tag = yes
-				}
-				NOT = { has_game_rule = { rule = SIC_unified option = SIC_UNIFIED_EMPIRE } }
-			}
+			base = 80
 			modifier = {
 				factor = 0
 				has_game_rule = { rule = SIC_unified option = SIC_UNIFIED_CONFED }
@@ -4011,51 +3974,56 @@ ITA_resorgimento_decisions = {
 		}
 
 		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete SIC_declare_italian_empire"
-			log = "KR_Event_Logging;Two Sicilies UNIFIES ITALY"
-			FROM = { italy_break_balance = yes }
+			log = "[GetLogRoot]: Decision complete SIC_choose_to_form_italian_empire"
 			set_country_flag = SIC_empire
-			set_country_flag = italian_unifier
-			hidden_effect = {
-				SIC_unlock_italian_annexations = yes
-				remove_targeted_decision = { target = THIS decision = SIC_form_italian_confed }
-				italy_enable_integration = yes
-			}
-			country_event = two_sicilies_events.40
-			set_cosmetic_tag = SIC_ITA
+			activate_targeted_decision = { decision = SIC_declare_italian_empire target = ROOT }
+			remove_targeted_decision = { decision = SIC_choose_to_form_italian_confed target = ROOT }
 			custom_effect_tooltip = SIC_may_now_acquire_cores
 			effect_tooltip = {
 				every_state = {
 					limit = {
 						is_italy = yes
-						owner = {
-							is_italian_tag = yes
-							is_subject_of = ROOT
-						}
+						owner = { is_italian_tag = yes }
 					}
-					hidden_effect = { remove_claim_by = SIC }
-					add_core_of = SIC
+					add_claim_by = SIC
 				}
 			}
 			hidden_effect = {
+				SIC_unlock_italian_annexations = yes
+				italy_enable_integration = yes
 				every_state = {
-					limit = { is_italy = yes }
-					if = {
-						limit = {
-							owner = {
-								is_italian_tag = yes
-								is_subject_of = ROOT
-							}
-						}
-						remove_claim_by = SIC
-						add_core_of = SIC
+					limit = {
+						is_italy = yes
+						owner = { is_italian_tag = yes }
 					}
-					else_if = {
-						limit = { NOT = { is_core_of = SIC } }
-						add_claim_by = SIC
-					}
+					add_claim_by = SIC
 				}
 			}
+		}
+		fixed_random_seed = no
+	}
+
+	SIC_declare_italian_empire = {
+		icon = italy_flag
+
+		allowed = { always = no }
+
+		available = {
+			italy_non_socialist_can_reunite = yes
+		}
+
+		fire_only_once = yes
+		cost = 0
+		priority = 5
+		ai_will_do = { base = 80 }
+
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete SIC_declare_italian_empire"
+			log = "KR_Event_Logging;Two Sicilies UNIFIES ITALY"
+			FROM = { italy_break_balance = yes }
+			set_country_flag = italian_unifier
+			country_event = two_sicilies_events.40
+			set_cosmetic_tag = SIC_ITA
 			every_subject_country = {
 				limit = { is_italian_tag = yes }
 				Italy_general_transfer_effect = yes
@@ -4063,6 +4031,9 @@ ITA_resorgimento_decisions = {
 			}
 			hidden_effect = {
 				news_event = two_sicilies_events.141
+				country_event = { id = two_sicilies_events.43 days = 180 random_days = 180 }
+				country_event = { id = two_sicilies_events.44 days = 200 random_days = 180 }
+				country_event = { id = two_sicilies_events.45 days = 220 random_days = 180 }
 				SWI = { country_event = { id = switzerland_events.211 days = 4 random_days = 8 } } #Campione
 				ROM = {
 					if = {
@@ -4070,15 +4041,6 @@ ITA_resorgimento_decisions = {
 						country_event = { id = romania_events.53 days = 14 } #Volunteers return
 					}
 				}
-			}
-			hidden_effect = {
-				activate_targeted_decision = { target = ITA decision = SIC_invite_into_empire }
-				activate_targeted_decision = { target = SRD decision = SIC_invite_into_empire }
-				activate_targeted_decision = { target = PAP decision = SIC_invite_into_empire }
-				activate_targeted_decision = { target = VNC decision = SIC_invite_into_empire }
-				activate_targeted_decision = { target = EMI decision = SIC_invite_into_empire }
-				activate_targeted_decision = { target = TUS decision = SIC_invite_into_empire }
-				activate_targeted_decision = { target = LOM decision = SIC_invite_into_empire }
 			}
 		}
 		fixed_random_seed = no
@@ -4125,22 +4087,13 @@ ITA_resorgimento_decisions = {
 		}
 
 		fire_only_once = no
-		cost = 100
+		cost = 0
 
 		ai_will_do = {
 			factor = 10000
 			modifier = {
 				factor = 0.1
 				NOT = { is_neighbor_of = FROM }
-			}
-			modifier = {
-				factor = 0.1
-				OR = {
-					tag = ITA
-					tag = SIC
-					tag = SRD
-					tag = PAP
-				}
 			}
 		}
 
@@ -4158,30 +4111,37 @@ ITA_resorgimento_decisions = {
 		fixed_random_seed = no
 	}
 
+	SIC_choose_to_form_italian_confed = {
+		icon = italy_flag
+		allowed = { always = no }
+
+		fire_only_once = yes
+		cost = 0
+		priority = 5
+		ai_will_do = {
+			base = 20
+			modifier = {
+				factor = 0
+				has_game_rule = { rule = SIC_unified option = SIC_UNIFIED_EMPIRE }
+			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot]: Decision complete SIC_choose_to_form_italian_confed"
+			set_country_flag = SIC_confed
+			activate_targeted_decision = { decision = SIC_form_italian_confed target = ROOT }
+			remove_targeted_decision = { decision = SIC_choose_to_form_italian_empire target = ROOT }
+		}
+		fixed_random_seed = no
+	}
+
 	SIC_form_italian_confed = {
 		icon = italy_flag
 
 		allowed = { always = no }
 
 		available = {
-			OR = {
-				NOT = { country_exists = SRI }
-				SRI = { has_capitulated = yes }
-			}
-			OR = {
-				NOT = { country_exists = ITA }
-				ITA = { has_capitulated = yes }
-			}
-			count_triggers = {
-				amount = 4
-				2 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Latium
-				117 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Campania
-				158 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Piedmont
-				159 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Lombardy
-				160 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Venice
-				161 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Romagna
-				162 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Tuscany
-			}
+			italy_non_socialist_can_reunite = yes
 		}
 
 		visible = {
@@ -4191,21 +4151,13 @@ ITA_resorgimento_decisions = {
 		fire_only_once = yes
 		cost = 0
 		priority = 5
-		ai_will_do = {
-			factor = 20
-			modifier = {
-				factor = 0
-				has_game_rule = { rule = SIC_unified option = SIC_UNIFIED_EMPIRE }
-			}
-		}
+		ai_will_do = { base = 80 }
 
 		complete_effect = {
 			log = "[GetLogRoot][GetLogFrom]: Decision complete SIC_form_italian_confed"
 			log = "KR_Event_Logging;Two Sicilies UNIFIES ITALY"
 			FROM = { italy_break_balance = yes }
-			set_country_flag = SIC_confed
 			set_country_flag = italian_unifier
-			hidden_effect = { remove_targeted_decision = { target = THIS decision = SIC_declare_italian_empire } }
 			effect_tooltip = {
 				every_core_state = {
 					limit = {
@@ -4239,13 +4191,6 @@ ITA_resorgimento_decisions = {
 					clear_variable = ambition_area_@ROOT
 				}
 				SIC_unlock_italian_annexations = yes
-				activate_targeted_decision = { target = ITA decision = SIC_invite_into_confed }
-				activate_targeted_decision = { target = SRD decision = SIC_invite_into_confed }
-				activate_targeted_decision = { target = PAP decision = SIC_invite_into_confed }
-				activate_targeted_decision = { target = VNC decision = SIC_invite_into_confed }
-				activate_targeted_decision = { target = EMI decision = SIC_invite_into_confed }
-				activate_targeted_decision = { target = TUS decision = SIC_invite_into_confed }
-				activate_targeted_decision = { target = LOM decision = SIC_invite_into_confed }
 			}
 			hidden_effect = {
 				every_subject_country = {
@@ -4283,148 +4228,6 @@ ITA_resorgimento_decisions = {
 				save_event_target_as = uniter
 				news_event = { id = two_sicilies_events.142 days = 1 }
 			}
-		}
-		fixed_random_seed = no
-	}
-
-	SIC_invite_into_confed = {
-		icon = italy_flag
-
-		allowed = { always = no }
-
-		available = {
-			is_subject = no
-			custom_override_tooltip = {
-				tooltip = ITA_busy_inviting
-				NOT = { has_country_flag = { flag = ITA_currently_inviting value > 0 } }
-			}
-			controls_all_owned_states = yes
-			strength_ratio = { tag = FROM ratio > 1 }
-			ic_ratio = { tag = FROM ratio > 1 }
-			FROM = {
-				if = {
-					limit = { has_country_flag = ITA_ask_after_war_@ROOT }
-					has_war = no
-				}
-				else = {
-					controls_all_owned_states = yes
-				}
-				NOT = { has_wargoal_against = ROOT }
-				NOT = { is_justifying_wargoal_against = ROOT }
-			}
-		}
-
-		visible = {
-			NOT = { country_exists = SRI }
-			if = {
-				limit = { FROM = { tag = SRD } }
-				OR = {
-					NOT = { owns_state = 158 }
-					NOT = { owns_state = 838 }
-				}
-			}
-			FROM = {
-				exists = yes
-				is_subject = no
-				NOT = {
-					has_country_flag = ITA_refuse_join_@ROOT
-					has_country_flag = { flag = ITA_considering_invite_@FROM value > 0 }	# ROOT cannot invite FROM if it is doing so already
-					has_war_with_italian_tag = yes
-				}
-			}
-		}
-
-		fire_only_once = no
-		cost = 100
-
-		ai_will_do = {
-			factor = 10000
-			modifier = {
-				factor = 0.1
-				NOT = { is_neighbor_of = FROM }
-			}
-			modifier = {
-				factor = 0.1
-				OR = {
-					tag = ITA
-					tag = SIC
-					tag = SRD
-					tag = PAP
-				}
-			}
-		}
-
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete SIC_invite_into_confed"
-			set_country_flag = { flag = ITA_currently_inviting days = 30 value = 1 }
-			country_event = two_sicilies_events.109
-			FROM = {
-				set_country_flag = { flag = ITA_considering_invite_@FROM days = 30 value = 1 }
-				hidden_effect = {
-					country_event = two_sicilies_events.110
-				}
-			}
-		}
-		fixed_random_seed = no
-	}
-
-	SIC_offer_piedmont_to_SRD = {
-		icon = generic_agreement
-		allowed = { tag = SIC }
-
-		available = {
-			controls_all_owned_states = yes
-			FROM = {
-				if = {
-					limit = { has_country_flag = ITA_ask_after_war_@ROOT }
-					has_war = no
-				}
-				else = {
-					controls_all_owned_states = yes
-				}
-			}
-		}
-
-		visible = {
-			158 = { #Piedmont
-				is_owned_by = ROOT
-				is_valid_annexation_state = yes
-			}
-			838 = { #Liguria
-				is_owned_by = ROOT
-				is_valid_annexation_state = yes
-			}
-			FROM = {
-				exists = yes
-				is_subject = no
-				NOT = { has_war_with = ROOT }
-				NOT = { has_country_flag = ITA_refuse_join_@ROOT }
-			}
-		}
-
-		target_root_trigger = {
-			NOT = { has_country_flag = SIC_empire }
-		}
-
-		targets = { SRD }
-		target_trigger = {
-			FROM = {
-				is_subject = no
-				NOT = { has_war_with = ROOT }
-				NOT = { has_country_flag = ITA_refuse_join_@ROOT }
-			}
-		}
-
-		cost = 0
-		fire_only_once = no
-
-		ai_will_do = { factor = 200 }
-
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete SIC_offer_piedmont_to_SRD"
-			158 = { temporarily_disable_annexation = yes } #Piedmont
-			838 = { temporarily_disable_annexation = yes } #Liguria
-			SRD = { country_event = two_sicilies_events.100 }
 		}
 		fixed_random_seed = no
 	}
@@ -4491,11 +4294,10 @@ ITA_resorgimento_decisions = {
 					}
 				}
 				else = {
-					count_triggers = {
-						amount = 2
-						158 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Piedmont
-						1004 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Emilia
-						162 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Tuscany
+					any_state_of = {
+						count = 2
+						target = { 158 162 1004 } #Piedmont, Tuscany, Emilia
+						is_owned_and_controlled_by_ROOT_or_subject = yes
 					}
 				}
 				FROM = {
@@ -4819,12 +4621,10 @@ ITA_resorgimento_decisions = {
 				}
 			}
 			else = {
-				count_triggers = {
-					amount = 2
-					2 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Latium
-					158 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Piedmont
-					162 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Tuscany
-					1004 = { is_owned_and_controlled_by_ROOT_or_subject = yes } #Emilia
+				any_state_of = {
+					count = 2
+					target = { 2 158 162 1004 } #Latium, Piedmont, Tuscany, Emilia
+					is_owned_and_controlled_by_ROOT_or_subject = yes
 				}
 			}
 			custom_override_tooltip = {
@@ -6531,6 +6331,7 @@ SRI_balance_of_power_category = {
 		days_re_enable = 180
 		complete_effect = {
 			log = "[GetLogRoot]: Decision complete SRI_abuse_the_presidency_bop_decision"
+			add_political_power = 50
 			hidden_effect = {
 				add_stability = -0.05
 			}
@@ -6629,6 +6430,7 @@ SRI_balance_of_power_category = {
 		}
 		days_remove = 180
 		modifier = {
+			political_power_factor = 0.1
 			stability_weekly = -0.001
 			power_balance_weekly = 0.01
 			weekly_manpower = 100

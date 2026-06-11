@@ -199,11 +199,10 @@ country_event = {
 		has_war = no
 		NOT = {
 			any_allied_country = { is_subject = no }
-			count_triggers = {
-				amount = 2
-				is_in_faction_with = SER
-				is_in_faction_with = ROM
-				is_in_faction_with = GRE
+			any_country_of = {
+				count = 2
+				target = { SER ROM GRE }
+				is_in_faction_with = ROOT
 			}
 		}
 	}
@@ -441,8 +440,8 @@ country_event = {
 		log = "[GetLogInfo]: event belgrade_pact_events.28 option belgrade_pact_events.28.a"
 		name = belgrade_pact_events.28.a # We are triumphant!
 		add_stability = 0.1
-		set_global_flag = balkan_war_ended
 		BUL = {
+			set_country_flag = BUL_balkan_peace_loss
 			if = { #Remove Bulgarian-Albanian Alliance/Anti-Belgrade Pact if it exists
 				limit = { is_faction_leader = yes }
 				dismantle_faction = yes
@@ -450,6 +449,7 @@ country_event = {
 			white_peace_with_ROOT = yes
 			remove_ideas = has_scripted_peace
 		}
+		set_global_flag = balkan_war_ended
 
 		# separate peace for Ottomans if they joined the war
 		hidden_effect = {
@@ -616,13 +616,27 @@ country_event = {
 		tag = BUL
 		has_war_with = BPL
 		is_valid_peace_target = yes
-		surrender_progress > 0.5
 		SER = { has_country_flag = SER_founded_belgradepact }
 		NOT = { has_global_flag = balkan_war_ended }
+		if = {
+			limit = {
+				has_global_flag = balkan_war_first_year
+			}
+			surrender_progress > 0.5
+		}
+		else = {
+			surrender_progress > 0.4
+		}
 	}
 
 	immediate = {
-		hidden_effect = { add_ideas = has_scripted_peace }
+		hidden_effect = {
+			add_ideas = has_scripted_peace
+			if = {
+				limit = { SER = { is_faction_leader = no } }
+				SER = { set_faction_leader = yes }
+			}
+		}
 	}
 
 	option = {
@@ -691,7 +705,6 @@ country_event = {
 	option = {
 		log = "[GetLogInfo]: event belgrade_pact_events.37 option belgrade_pact_events.37.a"
 		name = belgrade_pact_events.37.a # At least we exist!
-		set_country_flag = BUL_balkan_peace_loss
 		if = {
 			limit = { has_idea = GER_mil_support_idea }
 			remove_ideas = GER_mil_support_idea
@@ -1006,7 +1019,7 @@ country_event = {
 		has_country_flag = OTT_war_for_thrace
 		is_valid_peace_target = yes
 		BUL = { is_valid_peace_target = yes }
-		184 = {
+		184 = { #Komotini
 			is_owned_by = BUL
 			OR = {
 				is_controlled_by = TUR
@@ -1014,9 +1027,9 @@ country_event = {
 			}
 		}
 		if = {
-			limit = { controls_state = 48 }
-			BUL = { surrender_progress > 0.35 }
-			1089 = {
+			limit = { controls_state = 48 } #Sofia
+			BUL = { surrender_progress > 0.3 }
+			1089 = { #Kardzhali
 				OR = {
 					is_controlled_by = TUR
 					is_controlled_by = BUL
@@ -1025,13 +1038,13 @@ country_event = {
 			}
 		}
 		else = {
-			184 = {
+			184 = { #Komotini
 				OR = {
 					is_controlled_by = TUR
 					NOT = { is_owned_by = BUL }
 				}
 			}
-			1089 = {
+			1089 = { #Kardzhali
 				OR = {
 					is_controlled_by = TUR
 					NOT = { is_owned_by = BUL }
@@ -1383,46 +1396,80 @@ country_event = {
 		NOT = { has_global_flag = balkan_war_ended }
 		BUL = { is_valid_peace_target = yes }
 		OR = {
-			AND = {
-				BUL = { surrender_progress < 0.4 }
+			if = {
+				limit = {
+					has_global_flag = balkan_war_first_year
+				}
+				AND = {
+					BUL = { surrender_progress < 0.5 } # If both sides fulfill their victory conditions at the same time, default to BPL victory
 
-				# All members have to be in a bad shape
-				OR = {
-					count_triggers = {
-						amount = 2
-						SER = {
+					# All members have to be in a bad shape
+					OR = {
+						any_country_of = {
+							count = 2
+							target = { SER ROM GRE }
 							has_capitulated = yes
 							has_war_with = BUL
 						}
-						ROM = {
-							has_capitulated = yes
-							has_war_with = BUL
-						}
-						GRE = {
-							has_capitulated = yes
-							has_war_with = BUL
+						AND = {
+							if = {
+								limit = { SER = { has_war_with = BUL } }
+								OR = {
+									SER = { num_of_controlled_states < 2 }
+									SER = { has_capitulated = yes }
+								}
+							}
+							if = {
+								limit = { ROM = { has_war_with = BUL } }
+								OR = {
+									ROM = { surrender_progress > 0.60 }
+									ROM = { has_capitulated = yes }
+								}
+							}
+							if = {
+								limit = { GRE = { has_war_with = BUL } }
+								OR = {
+									GRE = { num_of_controlled_states < 4 }
+									GRE = { has_capitulated = yes }
+								}
+							}
 						}
 					}
-					AND = {
-						if = {
-							limit = { SER = { has_war_with = BUL } }
-							OR = {
-								SER = { num_of_controlled_states < 2 }
-								SER = { has_capitulated = yes }
-							}
+				}
+			}
+			else = {
+				AND = {
+					BUL = { surrender_progress < 0.4 } # If both sides fulfill their victory conditions at the same time, default to BPL victory
+
+					# Some members have to be in a bad shape
+					OR = {
+						any_country_of = {
+							target = { SER ROM GRE }
+							has_capitulated = yes
+							has_war_with = BUL
 						}
-						if = {
-							limit = { ROM = { has_war_with = BUL } }
-							OR = {
-								ROM = { surrender_progress > 0.60 }
-								ROM = { has_capitulated = yes }
+						count_triggers = {
+							amount = 2
+							if = {
+								limit = { SER = { has_war_with = BUL } }
+								OR = {
+									SER = { num_of_controlled_states < 2 }
+									SER = { has_capitulated = yes }
+								}
 							}
-						}
-						if = {
-							limit = { GRE = { has_war_with = BUL } }
-							OR = {
-								GRE = { num_of_controlled_states < 4 }
-								GRE = { has_capitulated = yes }
+							if = {
+								limit = { ROM = { has_war_with = BUL } }
+								OR = {
+									ROM = { surrender_progress > 0.60 }
+									ROM = { has_capitulated = yes }
+								}
+							}
+							if = {
+								limit = { GRE = { has_war_with = BUL } }
+								OR = {
+									GRE = { num_of_controlled_states < 4 }
+									GRE = { has_capitulated = yes }
+								}
 							}
 						}
 					}
@@ -1922,10 +1969,7 @@ country_event = {
 				}
 				841 = { transfer_state_to = 163.owner } #Kotor -> Dalmatia
 				every_owned_state = {
-					limit = {
-						is_slovenia = yes
-						NOT = { state = 1109 } #Mura
-					}
+					limit = { is_slovenia = yes }
 					transfer_state_to = SLV
 				}
 				hidden_effect = {
@@ -1945,10 +1989,6 @@ country_event = {
 				if = {
 					limit = { owns_state = 875 } #West Banat
 					875 = { transfer_state_to = 82.owner } #West Banat -> Banat
-				}
-				if = {
-					limit = { owns_state = 1109 } #Mura
-					1109 = { transfer_state_to = 43.owner } #Mura -> Central Hungary
 				}
 				if = {
 					limit = { owns_state = 488 } #Trieste
@@ -2420,11 +2460,15 @@ country_event = {
 	is_triggered_only = yes
 
 	trigger = {
+		OR = {
+			original_tag = GER
+			original_tag = AUS
+		}
 		has_global_flag = balkan_war_started
 		NOT = { has_global_flag = balkan_war_ended }
 		BUL = { has_war_with = BPL }
 		BUL = { is_valid_peace_target = yes }
-		BUL = { surrender_progress < 0.6 }
+		BUL = { surrender_progress < 0.5 }
 		SER = { has_country_flag = SER_founded_belgradepact }
 		BPL = { is_valid_peace_target = yes }
 		BPL = {
@@ -2435,10 +2479,6 @@ country_event = {
 				}
 			}
 		}
-		OR = {
-			has_completed_focus = GER_master_of_the_world
-			has_completed_focus = AUS_protector_of_the_balkans
-		}
 		is_major = yes
 		is_faction_leader = yes
 		can_declare_war_on = BPL
@@ -2448,6 +2488,8 @@ country_event = {
 		NOT = { has_war_with = BUL }
 		NOT = { has_war_with = INT }
 		NOT = { has_war_with = RUS }
+		NOT = { has_war_with = AUS }
+		NOT = { has_war_with = GER }
 		if = {
 			limit = {
 				TUR = { has_war_with = BUL }
@@ -2474,7 +2516,6 @@ country_event = {
 			NOT = { has_war_with = CZE }
 			NOT = { has_war_with = GAL }
 			NOT = { has_war_with = CRO }
-			NOT = { has_war_with = GER }
 		}
 		if = {
 			limit = {
@@ -2508,9 +2549,8 @@ country_event = {
 		}
 		if = {
 			limit = {
-				BUL = { surrender_progress < 0.4 }
+				BUL = { surrender_progress < 0.3 }
 				OR = {
-					GRE = { has_capitulated = yes }
 					NOT = { GRE = { controls_state = 47 } } #Central Greece
 					NOT = { GRE = { controls_state = 989 } } #Chalcidce
 				}
@@ -2519,7 +2559,7 @@ country_event = {
 		}
 		else_if = {
 			limit = {
-				BUL = { surrender_progress > 0.4 }
+				BUL = { surrender_progress > 0.3 }
 			}
 			BUL = { save_event_target_as = balkan_war_limited_bpl_victory }
 		}
@@ -2768,7 +2808,15 @@ country_event = {
 				exists = no
 				is_subject = yes
 				NOT = { has_war_with = SER }
-				surrender_progress > 0.40
+				if = {
+					limit = {
+						has_global_flag = balkan_war_first_year
+					}
+					surrender_progress > 0.40
+				}
+				else = {
+					surrender_progress > 0.30
+				}
 			}
 		}
 		BPL = { is_faction_leader = yes }
@@ -3160,9 +3208,8 @@ country_event = { # looping hidden event to move the Pact leader to another memb
 				is_faction_leader = yes
 				is_ai = yes #Only do this for ai BPL
 			}
-			random_other_country = {
+			random_allied_country = {
 				limit = {
-					is_in_faction_with = BPL
 					has_capitulated = no
 					is_subject = no
 					surrender_progress < BPL.surrender_progress
@@ -3220,6 +3267,7 @@ country_event = {
 
 	trigger = {
 		can_declare_war_on = AUS
+		is_subject = no
 	}
 
 	is_triggered_only = yes
@@ -3948,13 +3996,7 @@ country_event = {#Kicked out of the Economic Council
 		hidden_effect = {
 			if = {
 				limit = { SER = { has_war_with = ROM } } #Break up Pact of Organisation
-				every_country = {
-					limit = {
-						is_in_array = { global.balkan_economic_union = THIS }
-					}
-					remove_dynamic_modifier = { modifier = BPL_pact_of_organisation }
-					remove_from_array = { global.balkan_economic_union = THIS }
-				}
+				belgrade_pact_dissolve_pact_of_organisation = yes
 			}
 			else_if = {
 				limit = { is_in_array = { global.balkan_economic_union = ROOT } }

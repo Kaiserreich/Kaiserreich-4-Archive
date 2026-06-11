@@ -567,8 +567,7 @@ MIT_budget_quota_idea_effect = {
 			set_global_flag = MIT_budget_quota_in_effect
 			GER = {
 				add_to_variable = { MIT_mitteleuropa_investment_cost = 0.75 }
-				multiply_variable = { MIT_agenda_investment = 4 }
-				divide_variable = { MIT_agenda_investment = 3 }
+				multiply_variable = { MIT_agenda_investment = { value = 4 divide = 3 } }
 				MIT_budget_quota = { remove_from_array = { global.MIT_agendas = THIS } }
 			}
 		}
@@ -616,8 +615,7 @@ MIT_enforcement_directorate_idea_effect = {
 			set_global_flag = MIT_enforcement_directorate_in_effect
 			GER = {
 				add_to_variable = { MIT_mitteleuropa_investment_cost = 0.75 }
-				multiply_variable = { MIT_agenda_investment = 4 }
-				divide_variable = { MIT_agenda_investment = 3 }
+				multiply_variable = { MIT_agenda_investment = { value = 4 divide = 3 } }
 				MIT_enforcement_directorate = { remove_from_array = { global.MIT_agendas = THIS } }
 			}
 		}
@@ -829,42 +827,48 @@ MIT_update_gui = {
 }
 
 MIT_add_agenda_score = {
+	set_temp_variable = { MIT_value_tooltip = MIT_value } #for tooltip
 	add_to_variable = { MIT_agenda_investment = MIT_value }
 
-	set_temp_variable = { MIT_cost_multiplier = 1 }
-	add_to_temp_variable = { MIT_cost_multiplier = modifier@mitteleuropa_investment_cost }
-	clamp_temp_variable = { var = MIT_cost_multiplier min = 0.1 }
-
-	set_temp_variable = { MIT_cost = MIT_value }
-	multiply_temp_variable = { MIT_cost = -1 }
-	multiply_temp_variable = { MIT_cost = MIT_cost_multiplier }
-	add_political_power = var:MIT_cost
+	set_temp_variable = {
+		MIT_cost = {
+			value = MIT_value
+			multiply = -1
+			multiply = { #MIT_cost_multiplier
+				value = 1
+				add = modifier@mitteleuropa_investment_cost
+				clamp = { min = 0.1 max = 2 }
+			}
+		}
+	}
+	hidden_effect = { add_political_power = var:MIT_cost }
 
 	MIT_update_gui = yes
+	custom_effect_tooltip = MIT_add_agenda_score_tooltip
 }
 
 MIT_subtract_agenda_score = {
+	set_temp_variable = { MIT_value_tooltip = MIT_value } #for tooltip
 	multiply_temp_variable = { MIT_value = -1 }
+	add_to_variable = { MIT_agenda_investment = MIT_value }
+	clamp_variable = { var = MIT_agenda_investment min = 0 }
 
-	set_temp_variable = { MIT_cost_multiplier = 1 }
-	add_to_temp_variable = { MIT_cost_multiplier = modifier@mitteleuropa_investment_cost }
-	clamp_temp_variable = { var = MIT_cost_multiplier min = 0.1 }
-
-	if = {
-		limit = { check_variable = { MIT_agenda_investment < MIT_value } }
-		set_temp_variable = { MIT_value = MIT_agenda_investment }
-		clear_variable = MIT_agenda_investment
+	set_temp_variable = {
+		MIT_cost = {
+			value = MIT_value
+			multiply = -1
+			multiply = { #MIT_cost_multiplier
+				value = 1
+				add = modifier@mitteleuropa_investment_cost
+				clamp = { min = 0.1 max = 2 }
+			}
+		}
 	}
-	else = {
-		add_to_variable = { MIT_agenda_investment = MIT_value }
-	}
-
-	set_temp_variable = { MIT_cost = MIT_value }
-	multiply_temp_variable = { MIT_cost = -1 }
-	multiply_temp_variable = { MIT_cost = MIT_cost_multiplier }
-	add_political_power = var:MIT_cost
+	hidden_effect = { add_political_power = var:MIT_cost }
 
 	MIT_update_gui = yes
+
+	custom_effect_tooltip = MIT_subtract_agenda_score_tooltip
 }
 
 MIT_recalculate_agenda_score_if_appropriate = {

@@ -829,6 +829,14 @@ on_actions = {
 					else = {
 						set_variable = { global.russia = RUS }
 					}
+					every_state = {
+						limit = { has_dynamic_modifier = { modifier = RUS_USNS_rebels } }
+						remove_dynamic_modifier = { modifier = RUS_USNS_rebels }
+					}
+					every_state = {
+						limit = { has_dynamic_modifier = { modifier = RUS_generic_rebels } }
+						remove_dynamic_modifier = { modifier = RUS_generic_rebels }
+					}
 				}
 				if = {
 					limit = { original_tag = RSA }
@@ -1057,28 +1065,48 @@ on_actions = {
 
 	on_capitulation_immediate = {
 		effect = {
+			# IMPORTANT: has_capitulated TRIGGER RETURNS FALSE FOR ROOT WHEN on_capitulation_immediate/on_capitulation_immediate FIRES
 			if = {
 				limit = {
 					FROM = {
 						tag = RUS
-						has_country_flag = { flag = RUS_national_committee days < 250 }
+						OR = {
+							has_country_flag = RUS_national_committee
+							has_country_flag = RUS_revolutionary_committee
+						}
 					}
 					POL = { is_ai = yes }
 					OR = {
-						tag = BLR
-						tag = UKR
+						AND = {
+							original_tag = BLR
+							UKR = { has_capitulated = yes }
+						}
+						AND = {
+							original_tag = UKR
+							any_country_with_original_tag = {
+								original_tag_to_check = BLR
+								has_capitulated = yes
+							}
+						}
 					}
-					BLR = { has_capitulated = yes }
-					UKR = { has_capitulated = yes }
 				}
 				POL = {
 					if = {
+						limit = {
+							RUS = { has_country_flag = RUS_revolutionary_committee }
+							has_socialist_government = no
+						}
+						country_event = poland_events.412
+						RUS = { clr_country_flag = RUS_revolutionary_committee }
+					}
+					else_if = {
 						limit = { has_government = social_conservative }
 						country_event = poland_events.259
 					}
 					else_if = {
 						limit = { has_democratic_government = yes } #Should also include AuthDem
 						country_event = poland_events.410
+						RUS = { clr_country_flag = RUS_national_committee }
 					}
 				}
 			}
@@ -1446,8 +1474,17 @@ on_actions = {
 				if = {
 					limit = { RUS = { has_country_flag = RUS_national_committee } }
 					RUS = {
+						country_event = { id = russia_foreign_policy_events.111 days = 250 } #Failure
 						clr_country_flag = RUS_national_committee
-						set_country_flag = RUS_national_committee #starts 250 day timer for capitulating UKR+BLR
+						set_country_flag = { flag = RUS_national_committee days = 250 value = 1 } #starts 250 day timer for capitulating UKR+BLR
+					}
+				}
+				else_if = {
+					limit = { RUS = { has_country_flag = RUS_revolutionary_committee } }
+					RUS = {
+						country_event = { id = russia_foreign_policy_events.111 days = 250 } #Failure
+						clr_country_flag = RUS_revolutionary_committee
+						set_country_flag = { flag = RUS_revolutionary_committee days = 250 value = 1 } #starts 250 day timer for capitulating UKR+BLR
 					}
 				}
 			}

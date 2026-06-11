@@ -146,9 +146,13 @@ GRE_join_faction_decisions = {
 			}
 			modifier = {
 				has_game_rule = { rule = GRE_forpol option = DEFAULT }
-				set_temp_variable = { opinion_factor = opinion@ENT }
-				divide_temp_variable = { opinion_factor = 100 }
-				add_to_temp_variable = { opinion_factor = 1 }
+				set_temp_variable = {
+					opinion_factor = {
+						value = opinion@ENT
+						multiply = 0.01
+						add = 1
+					}
+				}
 				factor = opinion_factor
 			}
 			modifier = {
@@ -296,9 +300,13 @@ GRE_join_faction_decisions = {
 			}
 			modifier = {
 				has_game_rule = { rule = GRE_forpol option = DEFAULT }
-				set_temp_variable = { opinion_factor = opinion@GER }
-				divide_temp_variable = { opinion_factor = 100 }
-				add_to_temp_variable = { opinion_factor = 1 }
+				set_temp_variable = {
+					opinion_factor = {
+						value = opinion@GER
+						multiply = 0.01
+						add = 1
+					}
+				}
 				factor = opinion_factor
 			}
 			modifier = {
@@ -453,9 +461,13 @@ GRE_join_faction_decisions = {
 			}
 			modifier = {
 				has_game_rule = { rule = GRE_forpol option = DEFAULT }
-				set_temp_variable = { opinion_factor = opinion@AUS }
-				divide_temp_variable = { opinion_factor = 100 }
-				add_to_temp_variable = { opinion_factor = 1 }
+				set_temp_variable = {
+					opinion_factor = {
+						value = opinion@AUS
+						multiply = 0.01
+						add = 1
+					}
+				}
 				factor = opinion_factor
 			}
 			modifier = {
@@ -580,9 +592,13 @@ GRE_join_faction_decisions = {
 			}
 			modifier = {
 				has_game_rule = { rule = GRE_forpol option = DEFAULT }
-				set_temp_variable = { opinion_factor = opinion@RUS }
-				divide_temp_variable = { opinion_factor = 100 }
-				add_to_temp_variable = { opinion_factor = 1 }
+				set_temp_variable = {
+					opinion_factor = {
+						value = opinion@RUS
+						multiply = 0.01
+						add = 1
+					}
+				}
 				factor = opinion_factor
 			}
 			modifier = {
@@ -857,6 +873,18 @@ political_actions = {
 		fire_only_once = yes
 		cost = 50
 
+		ai_will_do = {
+			factor = 1
+			modifier = {
+				factor = 20
+				is_in_faction_with = FROM
+			}
+			modifier = {
+				factor = 0
+				FROM = { any_owned_state = { is_claim_or_core_of_ROOT = yes } }
+			}
+		}
+
 		complete_effect = {
 			log = "[GetLogRoot][GetLogFrom]: Decision complete GRE_balkans_mission"
 			set_country_flag = GRE_recent_mission
@@ -868,18 +896,6 @@ political_actions = {
 		remove_effect = {
 			log = "[GetLogRoot][GetLogFrom]: Decision remove GRE_balkans_mission"
 			clr_country_flag = GRE_recent_mission
-		}
-
-		ai_will_do = {
-			factor = 1
-			modifier = {
-				factor = 20
-				is_in_faction_with = FROM
-			}
-			modifier = {
-				factor = 0
-				FROM = { any_owned_state = { is_claim_or_core_of_ROOT = yes } }
-			}
 		}
 		fixed_random_seed = no
 	}
@@ -931,23 +947,6 @@ GRE_regaining_greece = {
 			clear_decision_attack_AI = yes
 		}
 
-		complete_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision complete GRE_fight_for_macedonia"
-			add_war_support = 0.05
-			setup_decision_attack_AI = yes
-			FROM = { incoming_war_notification_effect = yes }
-		}
-
-		remove_effect = {
-			log = "[GetLogRoot][GetLogFrom]: Decision remove GRE_fight_for_macedonia"
-			clear_decision_attack_AI = yes
-			declare_war_on = {
-				target = FROM
-				type = annex_everything
-			}
-			add_to_array = { GRE_megali_enemies = FROM }
-		}
-
 		ai_will_do = {
 			factor = 100
 			modifier = {
@@ -992,6 +991,23 @@ GRE_regaining_greece = {
 					}
 				}
 			}
+		}
+
+		complete_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision complete GRE_fight_for_macedonia"
+			add_war_support = 0.05
+			setup_decision_attack_AI = yes
+			FROM = { incoming_war_notification_effect = yes }
+		}
+
+		remove_effect = {
+			log = "[GetLogRoot][GetLogFrom]: Decision remove GRE_fight_for_macedonia"
+			clear_decision_attack_AI = yes
+			declare_war_on = {
+				target = FROM
+				type = annex_everything
+			}
+			add_to_array = { GRE_megali_enemies = FROM }
 		}
 		fixed_random_seed = no
 	}
@@ -1060,17 +1076,39 @@ GRE_regaining_greece = {
 			clear_decision_attack_AI = yes
 		}
 
+		ai_will_do = {
+			factor = 10
+			modifier = {
+				factor = 0
+				OR = {
+					country_has_any_active_threat = yes
+					FROM = { dont_start_major_faction_wars = yes }
+					FROM = { default_attack_AI_trigger = yes }
+				}
+			}
+			modifier = {	# Greece won't try to make a Megali war when in the middle of, or preparing for, another one
+				factor = 0
+				OR = {
+					has_country_flag = GRE_about_to_attack_TUR
+					has_country_flag = GRE_about_to_attack_ALB
+					has_war_with = TUR
+					has_war_with = ALB
+				}
+			}
+			modifier = {	# Northern Epirus from factionless Albania is easy pickings before Ottoman lands
+				factor = 0
+				FROM = { tag = TUR }
+				NOT = { owns_state = 776 }
+				var:766.owner = { is_in_faction = no }
+			}
+		}
+
 		complete_effect = {
 			log = "[GetLogRoot][GetLogFrom]: Decision complete GRE_megali_war"
 			add_war_support = 0.10
 			setup_decision_attack_AI = yes
 			FROM = { incoming_war_notification_effect = yes }
-			if = {
-				limit = {
-					FROM = { tag = TUR }
-				}
-				set_country_flag = { flag = GRE_about_to_attack_TUR days = 30 value = 1 }
-			}
+			set_country_flag = { flag = GRE_about_to_attack_@FROM days = 30 value = 1 }
 		}
 
 		remove_effect = {
@@ -1092,22 +1130,6 @@ GRE_regaining_greece = {
 				hidden_effect = {
 					BUL = { country_event = { id = bulgaria_foreign_events.39 days = 1 } }
 				}
-			}
-		}
-
-		ai_will_do = {
-			factor = 10
-			modifier = {
-				factor = 0
-				OR = {
-					country_has_any_active_threat = yes
-					FROM = { dont_start_major_faction_wars = yes }
-					FROM = { default_attack_AI_trigger = yes }
-				}
-			}
-			modifier = {
-				factor = 0.1
-				NOT = { FROM = { tag = TUR } }
 			}
 		}
 		fixed_random_seed = no
@@ -1254,6 +1276,8 @@ GRE_regaining_greece = {
 		cost = 0
 		fire_only_once = no
 
+		ai_will_do = { factor = 20 }
+
 		complete_effect = {
 			log = "[GetLogRoot][GetLogFrom]: Decision complete GRE_megali_make_peace"
 			FROM = {
@@ -1274,8 +1298,6 @@ GRE_regaining_greece = {
 				}
 			}
 		}
-
-		ai_will_do = { factor = 20 }
 		fixed_random_seed = no
 	}
 }

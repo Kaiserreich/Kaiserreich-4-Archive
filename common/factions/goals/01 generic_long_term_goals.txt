@@ -49,6 +49,7 @@ faction_goal_rule_the_waves = {
 		}
 		custom_effect_tooltip = ALL_FACTION_MEMBERS
 		every_faction_member = {
+			limit = { NOT = { has_completed_goal = faction_goal_rule_the_waves } }
 			random_character = {
 				tooltip = ONE_ADMIRAL
 				visible_when_empty = yes
@@ -137,20 +138,37 @@ faction_goal_strategic_bombing_campaign = {
 		#	unit = strategic_bomber
 		#	size > 199
 		#}
-		collection_size = {
-			input = {
-				input = game:all_states
-				operators = {
-					limit = {
-						owner = { has_war_with = ROOT }
-						is_core_of = owner
-						days_since_last_strategic_bombing < 30
+		hidden_trigger = {
+			tooltip_evaluation = eval
+			set_temp_variable = { enemy_faction_states_bombed = 0 }
+			all_enemy_country = {
+				all_owned_state = {
+					if = {
+						limit = {
+							is_core_of = PREV
+							days_since_last_strategic_bombing < 30
+						}
+						add_to_temp_variable = { enemy_faction_states_bombed = 1 }
 					}
 				}
-				name = ENEMY_FACTION_STATES_BOMBED
 			}
-			value > 2
 		}
+		check_variable = { enemy_faction_states_bombed > 2 tooltip = faction_get_enemy_faction_states_bombed_workaround_tooltip }
+		# TODO: Fix for collection triggers crashes. Revert if fixed
+		#collection_size = {
+		#	input = {
+		#		input = game:all_states
+		#		operators = {
+		#			limit = {
+		#				owner = { has_war_with = ROOT }
+		#				is_core_of = owner
+		#				days_since_last_strategic_bombing < 30
+		#			}
+		#		}
+		#		name = ENEMY_FACTION_STATES_BOMBED
+		#	}
+		#	value > 2
+		#}
 	}
 	complete_effect = {
 		add_faction_power_projection = 100
@@ -170,11 +188,14 @@ faction_goal_strategic_bombing_campaign = {
 				name = ALL_FACTION_MEMBERS_WITH_50_BOMBERS
 			}
 			add_faction_initiative = 1
-			add_war_support = 0.1
-			air_experience = 50
-			add_mastery = {
-				amount = 100
-				track = heavy_aircraft
+			if = {
+				limit = { NOT = { has_completed_goal = faction_goal_strategic_bombing_campaign } }
+				add_war_support = 0.1
+				air_experience = 50
+				add_mastery = {
+					amount = 100
+					track = heavy_aircraft
+				}
 			}
 		}
 	}
@@ -186,15 +207,25 @@ faction_goal_strategic_bombing_campaign = {
 		}
 		modifier = {
 			add = 1 # Factions with decent number of military factories should probably start caring more about strat bombing - because they can
-			count_in_collection = {
-				collection = {
-					input = game:scope
-					operators = { faction_members }
-					name = FACTION_NAME
+			hidden_trigger = {
+				tooltip_evaluation = eval
+				set_temp_variable = { faction_arms_factories = 0 }
+				all_of_scopes = {
+					array = faction_members
+					add_to_temp_variable = { faction_arms_factories = num_of_military_factories }
 				}
-				buildings = { arms_factory }
-				size > 149
 			}
+			check_variable = { faction_arms_factories > 149 }
+			# TODO: Fix for collection triggers crashes. Revert if fixed
+			#count_in_collection = {
+			#	collection = {
+			#		input = game:scope
+			#		operators = { faction_members }
+			#		name = FACTION_NAME
+			#	}
+			#	buildings = { arms_factory }
+			#	size > 149
+			#}
 		}
 	}
 }
@@ -207,32 +238,38 @@ faction_goal_liberate_territory = {
 	category = long_term
 	group = FOCUS_FILTER_ANNEXATION
 	visible = {
-		collection_size = {
-			input = {
-				input = collection:faction_owned_core_states
-				operators = {
-					limit = {
-						NOT = { is_fully_controlled_by = OWNER }
-					}
-				}
-				name = FACTION_CORE_STATES_NOT_FULLY_CONTROLLED
-			}
-			value > 0
-		}
+		faction_get_core_states_not_fully_controlled = yes
+		check_variable = { faction_core_states_not_fully_controlled > 0 }
+		# TODO: Fix for collection triggers crashes. Revert if fixed
+		#collection_size = {
+		#	input = {
+		#		input = collection:faction_owned_core_states
+		#		operators = {
+		#			limit = {
+		#				NOT = { is_fully_controlled_by = OWNER }
+		#			}
+		#		}
+		#		name = FACTION_CORE_STATES_NOT_FULLY_CONTROLLED
+		#	}
+		#	value > 0
+		#}
 	}
 	completed = {
-		collection_size = {
-			input = {
-				input = collection:faction_owned_core_states
-				operators = {
-					limit = {
-						NOT = { is_fully_controlled_by = OWNER }
-					}
-				}
-				name = FACTION_CORE_STATES_NOT_FULLY_CONTROLLED
-			}
-			value < 1
-		}
+		faction_get_core_states_not_fully_controlled = yes
+		check_variable = { faction_core_states_not_fully_controlled < 1 tooltip = faction_get_core_states_not_fully_controlled_workaround_tooltip }
+		# TODO: Fix for collection triggers crashes. Revert if fixed
+		#collection_size = {
+		#	input = {
+		#		input = collection:faction_owned_core_states
+		#		operators = {
+		#			limit = {
+		#				NOT = { is_fully_controlled_by = OWNER }
+		#			}
+		#		}
+		#		name = FACTION_CORE_STATES_NOT_FULLY_CONTROLLED
+		#	}
+		#	value < 1
+		#}
 	}
 	complete_effect = {
 		add_faction_power_projection = 100
@@ -242,6 +279,7 @@ faction_goal_liberate_territory = {
 		custom_effect_tooltip = tooltip_white_line
 		custom_effect_tooltip = ALL_FACTION_MEMBERS
 		every_faction_member = {
+			limit = { NOT = { has_completed_goal = faction_goal_liberate_territory } }
 			add_stability = 0.1
 		}
 	}
@@ -249,33 +287,39 @@ faction_goal_liberate_territory = {
 		base = 1
 		modifier = {
 			add = 4 # If lots of territory, prioritize this
-			collection_size = {
-				input = {
-					input = collection:faction_owned_core_states
-					operators = {
-						limit = {
-							NOT = { is_fully_controlled_by = OWNER }
-						}
-					}
-					name = FACTION_CORE_STATES_NOT_FULLY_CONTROLLED
-				}
-				value > 4
-			}
+			faction_get_core_states_not_fully_controlled = yes
+			check_variable = { faction_core_states_not_fully_controlled > 4 }
+			# TODO: Fix for collection triggers crashes. Revert if fixed
+			#collection_size = {
+			#	input = {
+			#		input = collection:faction_owned_core_states
+			#		operators = {
+			#			limit = {
+			#				NOT = { is_fully_controlled_by = OWNER }
+			#			}
+			#		}
+			#		name = FACTION_CORE_STATES_NOT_FULLY_CONTROLLED
+			#	}
+			#	value > 4
+			#}
 		}
 		modifier = {
 			add = 5 # If even more territory, prioritize this A LOT
-			collection_size = {
-				input = {
-					input = collection:faction_owned_core_states
-					operators = {
-						limit = {
-							NOT = { is_fully_controlled_by = OWNER }
-						}
-					}
-					name = FACTION_CORE_STATES_NOT_FULLY_CONTROLLED
-				}
-				value > 10
-			}
+			faction_get_core_states_not_fully_controlled = yes
+			check_variable = { faction_core_states_not_fully_controlled > 10 }
+			# TODO: Fix for collection triggers crashes. Revert if fixed
+			#collection_size = {
+			#	input = {
+			#		input = collection:faction_owned_core_states
+			#		operators = {
+			#			limit = {
+			#				NOT = { is_fully_controlled_by = OWNER }
+			#			}
+			#		}
+			#		name = FACTION_CORE_STATES_NOT_FULLY_CONTROLLED
+			#	}
+			#	value > 10
+			#}
 		}
 	}
 }
@@ -287,44 +331,51 @@ faction_goal_great_offensive = {
 	group = FOCUS_FILTER_ANNEXATION
 	visible = {
 		FROM = { has_war = yes }
-		collection_size = {
-			input = {
-				input = game:scope
-				operators = {
-					faction_members
-					controlled_states
-					limit = {
-						owner = { has_war_with = ROOT }
-						is_core_of = owner
-					}
-				}
-				name = ENEMY_FACTION_CORE_STATES_CONTROLLED_BY_US
-			}
-			value < 1
-		}
+		faction_get_enemy_core_states_controlled_by_us = yes
+		check_variable = { faction_enemy_core_states_controlled_by_us < 1 }
+		# TODO: Fix for collection triggers crashes. Revert if fixed
+		#collection_size = {
+		#	input = {
+		#		input = game:scope
+		#		operators = {
+		#			faction_members
+		#			controlled_states
+		#			limit = {
+		#				owner = { has_war_with = ROOT }
+		#				is_core_of = owner
+		#			}
+		#		}
+		#		name = ENEMY_FACTION_CORE_STATES_CONTROLLED_BY_US
+		#	}
+		#	value < 1
+		#}
 	}
 	completed = {
-		collection_size = {
-			input = {
-				input = game:scope
-				operators = {
-					faction_members
-					controlled_states
-					limit = {
-						owner = { has_war_with = ROOT }
-						is_core_of = owner
-					}
-				}
-				name = ENEMY_FACTION_CORE_STATES_CONTROLLED_BY_US
-			}
-			value > 0
-		}
+		faction_get_enemy_core_states_controlled_by_us = yes
+		check_variable = { faction_enemy_core_states_controlled_by_us > 0 tooltip = faction_get_enemy_core_states_controlled_by_us_workaround_tooltip }
+		# TODO: Fix for collection triggers crashes. Revert if fixed
+		#collection_size = {
+		#	input = {
+		#		input = game:scope
+		#		operators = {
+		#			faction_members
+		#			controlled_states
+		#			limit = {
+		#				owner = { has_war_with = ROOT }
+		#				is_core_of = owner
+		#			}
+		#		}
+		#		name = ENEMY_FACTION_CORE_STATES_CONTROLLED_BY_US
+		#	}
+		#	value > 0
+		#}
 	}
 	complete_effect = {
 		add_faction_power_projection = 100
 		custom_effect_tooltip = tooltip_white_line
 		custom_effect_tooltip = ALL_FACTION_MEMBERS
 		every_faction_member = {
+			limit = { NOT = { has_completed_goal = faction_goal_great_offensive } }
 			add_war_support = 0.1
 		}
 		custom_effect_tooltip = tooltip_white_line
@@ -355,21 +406,6 @@ faction_goal_great_offensive = {
 				ratio > 1
 			}
 		}
-		#modifier = {
-		#	add = 1 # If we're in a secure position we can probably push
-		#	collection_size = {
-		#		input = {
-		#			input = collection:faction_owned_core_states
-		#			operators = {
-		#				limit = {
-		#					NOT = { is_fully_controlled_by = OWNER }
-		#				}
-		#			}
-		#			name = FACTION_CORE_STATES_NOT_FULLY_CONTROLLED
-		#		}
-		#		value < 1
-		#	}
-		#}
 	}
 }
 
@@ -405,11 +441,11 @@ faction_goal_industrial_domination = {
 	complete_effect = {
 		add_faction_power_projection = 200
 		custom_effect_tooltip = tooltip_white_line
+		custom_effect_tooltip = AT_LEAST_500_FACTORIES
 		every_faction_member = {
-			tooltip = AT_LEAST_500_FACTORIES
 			visible_when_empty = yes
 			limit = {
-				num_of_controlled_factories > 500
+				num_of_controlled_factories > 499
 			}
 			add_faction_initiative = 1
 		}

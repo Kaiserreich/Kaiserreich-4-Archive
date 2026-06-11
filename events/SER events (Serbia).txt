@@ -1112,7 +1112,7 @@ country_event = { #Putsch succeeds
 		activate_advisor = SER_aleksandar_cincar_markovic_sic
 		hidden_effect = {
 			end_coalition = yes
-			drop_cosmetic_tag = yes
+			set_cosmetic_tag = SER_monarchy
 			BUL = {
 				country_event = serbia_flavour_events.2
 			}
@@ -1308,9 +1308,7 @@ country_event = { #Post-1936 Elections
 	trigger = {
 		has_country_flag = SER_has_completed_1936_elc
 		has_elected_government = yes
-		NOT = {
-			has_country_leader = { character = SER_petar_ii }
-		}
+		is_monarchy = no
 		SER_has_founded_yugoslavia = no
 	}
 
@@ -3507,7 +3505,7 @@ country_event = { # Final step
 			}
 		}
 		hidden_effect = {
-			drop_cosmetic_tag = yes
+			set_cosmetic_tag = SER_monarchy
 		}
 	}
 	after = {
@@ -3691,7 +3689,6 @@ country_event = { # Collapse of the SRP
 				}
 				promote_leader = yes
 			}
-			set_cosmetic_tag = SER_republic
 			clr_country_flag = SER_curbed_konspiracija_control_flag
 			set_party_name = {
 				ideology = social_democrat
@@ -4164,7 +4161,7 @@ country_event = { #Kingdom Elections
 	trigger = {
 		has_country_flag = SER_has_completed_1936_elc
 		has_elected_government = yes
-		has_country_leader = { character = SER_petar_ii }
+		is_monarchy = yes
 		SER_has_founded_yugoslavia = no
 	}
 
@@ -4513,6 +4510,12 @@ country_event = { # Nedić Brothers Coup
 	is_triggered_only = yes
 	fire_only_once = yes
 
+	immediate = {
+		hidden_effect = {
+			end_coalition = yes
+		}
+	}
+
 	option = {
 		log = "[GetLogInfo]: event serbia_events.73 option serbia_events.73.a"
 		name = serbia_events.73.a
@@ -4542,7 +4545,14 @@ country_event = { # Nedić Brothers Coup
 		add_to_coalition = yes
 		add_stability = -0.25
 		remove_ideas = SER_konspiracija_idea
-		remove_ideas = SER_the_dream_of_yugoslavia
+		if = {
+			limit = { has_idea = SER_the_dream_of_yugoslavia }
+			remove_ideas = SER_the_dream_of_yugoslavia
+		}
+		else_if = {
+			limit = { has_idea = SER_the_dream_of_yugoslavia_no_AUS }
+			remove_ideas = SER_the_dream_of_yugoslavia_no_AUS
+		}
 		remove_dynamic_modifier = { modifier = YUG_serbia_dynamic_modifier }
 		remove_dynamic_modifier = { modifier = YUG_croatia_dynamic_modifier }
 		remove_dynamic_modifier = { modifier = YUG_bosnia_dynamic_modifier }
@@ -4582,7 +4592,6 @@ country_event = { # Nedić Brothers Coup
 				}
 				promote_leader = yes
 			}
-			end_coalition = yes
 			drop_cosmetic_tag = yes
 			SER_remove_revolut_socialist_ideas = yes
 			SER_remove_radical_ideas = yes
@@ -4648,9 +4657,10 @@ country_event = { # Rebellions in the North
 			}
 		}
 		hidden_effect = {
-			add_state_claim = 104
-			add_state_claim = 163
-			add_state_claim = 794
+			add_state_claim = 104 #Bosnia
+			add_state_claim = 163 #Dalmatia
+			add_state_claim = 794 #Syrmia
+			add_state_claim = 1109 #Herzegovina
 			country_event = { id = serbia_events.75 days = 7 }
 			division_template = {
 				name = "Srpsko domobranstvo"
@@ -5599,35 +5609,23 @@ country_event = { #The Serbian Monarchy
 		}
 		else = {
 			SER = { add_ideas = SER_Petar_II_regency }
+			hidden_effect = {
+				set_temp_variable = { days_to_event = 2073 }
+				calculate_days_since_game_start = yes
+				clamp_temp_variable = { var = days_to_event min = 10 }
+				country_event = { id = serbia_puppet_events.101 days = days_to_event } #Coronation of King Petar of Serbia
+				SER = { set_country_leader_as_regent = yes }
+			}
+		}
+		hidden_effect = {
+			SER = { set_cosmetic_tag = SER_monarchy }
+		}
+	}
+	after = {
+		hidden_effect = {
 			if = {
-				limit = { date < 1936.09.06 }
-				#Will need 6 years to guarantee Peter will be 18.
-				country_event = { id = serbia_puppet_events.101 days = 2190 } #Coronation of King Petar of Serbia
-			}
-			else_if = {
-				limit = { date < 1937.09.06 }
-				#Will need 5 years to guarantee Peter will be 18.
-				country_event = { id = serbia_puppet_events.101 days = 1825 } #Coronation of King Petar of Serbia
-			}
-			else_if = {
-				limit = { date < 1938.09.06 }
-				#Will need 4 years to guarantee Peter will be 18.
-				country_event = { id = serbia_puppet_events.101 days = 1460 } #Coronation of King Petar of Serbia
-			}
-			else_if = {
-				limit = { date < 1939.09.06 }
-				#Will need 3 years to guarantee Peter will be 18.
-				country_event = { id = serbia_puppet_events.101 days = 1095 } #Coronation of King Petar of Serbia
-			}
-			else_if = {
-				limit = { date < 1940.09.06 }
-				#Will need 2 years to guarantee Peter will be 18.
-				country_event = { id = serbia_puppet_events.101 days = 730 } #Coronation of King Petar of Serbia
-			}
-			else_if = {
-				limit = { date < 1941.09.06 }
-				#Will need 1 year to guarantee Peter will be 18.
-				country_event = { id = serbia_puppet_events.101 days = 365 } #Coronation of King Petar of Serbia
+				limit = { has_event_target = SER_yugoslavia_puppet_chosen }
+				SER = { activate_decision = SER_Form_Yugoslavia }
 			}
 		}
 	}
@@ -5640,6 +5638,7 @@ country_event = { #Coronation of King Petar of Serbia
 	picture = GFX_report_event_yugoslavian_king_peter
 
 	is_triggered_only = yes #Triggered by EVENT serbia_puppet_events.100
+	fire_only_once = yes
 
 	trigger = {
 		SER = {
@@ -5653,6 +5652,7 @@ country_event = { #Coronation of King Petar of Serbia
 		name = serbia_puppet_events.101.a #May he rule well.
 
 		SER = {
+			set_country_leader_as_republican = yes
 			hidden_effect = { remove_ideas = SER_Petar_II_regency }
 			SER_puppet_crown_petar_effect = yes
 		}
@@ -6928,13 +6928,8 @@ country_event = { # Petar wants to return
 	is_triggered_only = yes
 	fire_only_once = yes
 	trigger = {
-		NOT = {
-			OR = {
-				has_socialist_government = yes
-				has_country_leader = { character = SER_petar_ii }
-				has_country_leader = { character = SER_petar_zivkovic }
-			}
-		}
+		has_socialist_government = no
+		is_monarchy = no
 	}
 
 	option = {
@@ -7217,7 +7212,7 @@ country_event = { #Yugoslavia Elections
 				limit = { has_character = SER_temporary_national_representation }
 				retire_character = SER_temporary_national_representation
 				if = {
-					limit = { NOT = { has_completed_focus = SER_November_Sixth_Dictatorship } }
+					limit = { is_monarchy = no }
 					if = {
 						limit = { has_country_flag = YUG_grol_leads_republicans }
 						promote_character = SER_milan_grol
@@ -7317,9 +7312,7 @@ country_event = { #Yugoslavia Elections
 	option = {
 		log = "[GetLogInfo]: event yugoslavia_events.1 option yugoslavia_events.1.a"
 		name = yugoslavia_events.1.a #Republican Party
-		trigger = {
-			NOT = { has_country_leader = { character = SER_petar_ii } }
-		}
+		trigger = { is_monarchy = no }
 		ai_chance = {
 			base = 50
 			modifier = {
@@ -7363,9 +7356,7 @@ country_event = { #Yugoslavia Elections
 	option = {
 		log = "[GetLogInfo]: event yugoslavia_events.1 option yugoslavia_events.1.b"
 		name = yugoslavia_events.1.b #People's Radical Party
-		trigger = {
-			NOT = { has_country_leader = { character = SER_petar_ii } }
-		}
+		trigger = { is_monarchy = no }
 		ai_chance = {
 			base = 50
 			modifier = {
@@ -7415,7 +7406,7 @@ country_event = { #Yugoslavia Elections
 		log = "[GetLogInfo]: event yugoslavia_events.1 option yugoslavia_events.1.c"
 		name = yugoslavia_events.1.c #Socialist Party
 		trigger = {
-			NOT = { has_country_leader = { character = SER_petar_ii } }
+			is_monarchy = no
 			has_country_flag = YUG_usy_formed
 		}
 		ai_chance = {
@@ -7456,9 +7447,7 @@ country_event = { #Yugoslavia Elections
 	option = {
 		log = "[GetLogInfo]: event yugoslavia_events.1 option yugoslavia_events.1.e"
 		name = yugoslavia_events.1.e # Democratic Party
-		trigger = {
-			has_country_leader = { character = SER_petar_ii }
-		}
+		trigger = { is_monarchy = yes }
 		ai_chance = {
 			base = 50
 			modifier = {
@@ -7485,9 +7474,7 @@ country_event = { #Yugoslavia Elections
 	option = {
 		log = "[GetLogInfo]: event yugoslavia_events.1 option yugoslavia_events.1.b"
 		name = yugoslavia_events.1.b
-		trigger = {
-			has_country_leader = { character = SER_petar_ii }
-		}
+		trigger = { is_monarchy = yes }
 		ai_chance = {
 			base = 50
 			modifier = {
@@ -7519,39 +7506,27 @@ country_event = { # The (Republican-)Democratic Party
 	id = yugoslavia_events.2
 	title = {
 		text = yugoslavia_events.2.t1
-		trigger = {
-			has_country_leader = { character = SER_petar_ii }
-		}
+		trigger = { is_monarchy = yes }
 	}
 	title = {
 		text = yugoslavia_events.2.t2
-		trigger = {
-			NOT = {
-				has_country_leader = { character = SER_petar_ii }
-			}
-		}
+		trigger = { is_monarchy = no }
 	}
 	desc = {
 		text = yugoslavia_events.2.d1
-		trigger = {
-			has_country_leader = { character = SER_petar_ii }
-		}
+		trigger = { is_monarchy = yes }
 	}
 	desc = {
 		text = yugoslavia_events.2.d2
 		trigger = {
-			NOT = {
-				has_country_leader = { character = SER_petar_ii }
-			}
+			is_monarchy = no
 			has_elected_government = yes
 		}
 	}
 	desc = {
 		text = yugoslavia_events.2.d3
 		trigger = {
-			NOT = {
-				has_country_leader = { character = SER_petar_ii }
-			}
+			is_monarchy = no
 			has_elected_government = no
 		}
 	}
@@ -7564,9 +7539,7 @@ country_event = { # The (Republican-)Democratic Party
 		log = "[GetLogInfo]: event yugoslavia_events.2 option yugoslavia_events.2.a"
 		name = yugoslavia_events.2.a
 		if = {
-			limit = {
-				has_country_leader = { character = SER_petar_ii }
-			}
+			limit = { is_monarchy = yes }
 			set_party_name = {
 				ideology = social_liberal
 				long_name = SER_YUG_democratic_party_long
@@ -7608,9 +7581,7 @@ country_event = { # The Radicals Radicalize
 
 	is_triggered_only = yes
 	trigger = {
-		NOT = {
-			has_country_leader = { character = SER_petar_ii }
-		}
+		is_monarchy = no
 		has_democratic_government = yes
 	}
 	fire_only_once = yes
@@ -7695,9 +7666,8 @@ country_event = { # Fate of the Konspiracija
 				NOT = { check_variable = { natpop_popularity > 0.1 } }
 			}
 			add_ideas = SER_YUG_constitutionalist_military
-			set_temp_variable = { pp_gain = 2 }
-			custom_effect_tooltip = YUG_pp_gain_tt
-			add_to_variable = { YUG_political_capital = pp_gain }
+			set_temp_variable = { YUG_political_capital_change = 2 }
+			SER_increase_political_capital = yes
 			retire_character = SER_serbian_cultural_club
 		}
 		else_if = {
@@ -7844,9 +7814,8 @@ country_event = { # ORJUNA
 			popularity = 0.02
 		}
 		set_country_flag = YUG_orjuna_is_established
-		set_temp_variable = { pp_gain = 1 }
-		custom_effect_tooltip = YUG_pp_gain_tt
-		add_to_variable = { YUG_political_capital = pp_gain }
+		set_temp_variable = { YUG_political_capital_change = 1 }
+		SER_increase_political_capital = yes
 		custom_effect_tooltip = YUG_orjuna_is_established_tt
 	}
 }
@@ -8288,10 +8257,8 @@ country_event = { # Yugoslavia random event
 		}
 		add_stability = -0.08
 		add_political_power = -60
-		set_temp_variable = { pp_loss = -2 }
-		custom_effect_tooltip = YUG_pp_loss_tt
-		add_to_variable = { YUG_political_capital = pp_loss }
-		clamp_variable = { var = YUG_political_capital min = 0 }
+		set_temp_variable = { YUG_political_capital_change = 2 }
+		SER_decrease_political_capital = yes
 	}
 	option = {
 		log = "[GetLogInfo]: event yugoslavia_events.16 option yugoslavia_events.16.b"
@@ -8423,10 +8390,8 @@ country_event = { # Yugoslavia random event
 		}
 		add_political_power = -25
 		add_stability = -0.02
-		set_temp_variable = { pp_loss = -2 }
-		custom_effect_tooltip = YUG_pp_loss_tt
-		add_to_variable = { YUG_political_capital = pp_loss }
-		clamp_variable = { var = YUG_political_capital min = 0 }
+		set_temp_variable = { YUG_political_capital_change = 2 }
+		SER_decrease_political_capital = yes
 	}
 	option = {
 		log = "[GetLogInfo]: event yugoslavia_events.16 option yugoslavia_events.16.f"
@@ -8435,9 +8400,8 @@ country_event = { # Yugoslavia random event
 			has_country_flag = YUG_flavor_event_4
 		}
 		add_political_power = -50
-		set_temp_variable = { pp_gain = 1 }
-		custom_effect_tooltip = YUG_pp_gain_tt
-		add_to_variable = { YUG_political_capital = pp_gain }
+		set_temp_variable = { YUG_political_capital_change = 1 }
+		SER_increase_political_capital = yes
 	}
 	option = {
 		log = "[GetLogInfo]: event yugoslavia_events.16 option yugoslavia_events.16.g"
@@ -8470,10 +8434,8 @@ country_event = { # Yugoslavia random event
 		trigger = {
 			has_country_flag = YUG_flavor_event_6
 		}
-		set_temp_variable = { pp_loss = -2 }
-		custom_effect_tooltip = YUG_pp_loss_tt
-		add_to_variable = { YUG_political_capital = pp_loss }
-		clamp_variable = { var = YUG_political_capital min = 0 }
+		set_temp_variable = { YUG_political_capital_change = 2 }
+		SER_decrease_political_capital = yes
 	}
 	option = {
 		log = "[GetLogInfo]: event yugoslavia_events.16 option yugoslavia_events.16.j"

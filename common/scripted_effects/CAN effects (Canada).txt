@@ -85,8 +85,7 @@ CAN_remove_from_iedc_effect = {
 		limit = { check_variable = { iedc_civ_factories > 0 } }
 		custom_effect_tooltip = CAN_remove_iedc_civ
 		hidden_effect = {
-			set_temp_variable = { tempvar1 = iedc_mil_factories }
-			multiply_temp_variable = { tempvar1 = -1 }
+			set_temp_variable = { tempvar1 = { value = iedc_civ_factories multiply = -1 } }
 			add_offsite_building = { type = industrial_complex level = var:tempvar1 }
 		}
 	}
@@ -94,8 +93,7 @@ CAN_remove_from_iedc_effect = {
 		limit = { check_variable = { iedc_mil_factories > 0 } }
 		custom_effect_tooltip = CAN_remove_iedc_mil
 		hidden_effect = {
-			set_temp_variable = { tempvar3 = iedc_mil_factories }
-			multiply_temp_variable = { tempvar3 = -1 }
+			set_temp_variable = { tempvar2 = { value = iedc_mil_factories multiply = -1 } }
 			add_offsite_building = { type = arms_factory level = var:tempvar2 }
 		}
 	}
@@ -103,8 +101,7 @@ CAN_remove_from_iedc_effect = {
 		limit = { check_variable = { iedc_nav_factories > 0 } }
 		custom_effect_tooltip = CAN_remove_iedc_nav
 		hidden_effect = {
-			set_temp_variable = { tempvar3 = iedc_nav_factories }
-			multiply_temp_variable = { tempvar3 = -1 }
+			set_temp_variable = { tempvar3 = { value = iedc_nav_factories multiply = -1 } }
 			add_offsite_building = { type = dockyard level = var:tempvar3 }
 		}
 	}
@@ -182,9 +179,8 @@ CAN_find_entente_leader = {
 				}
 			}
 		}
-		random_other_country = {
+		random_allied_country = {
 			limit = {
-				is_in_faction_with = ROOT
 				is_subject = no
 				is_actual_major = yes
 				surrender_progress < 0.40
@@ -289,9 +285,94 @@ CAN_entente_collapses = {
 	}
 	dismantle_faction = yes
 	GBR = { save_global_event_target_as = KR_entente_leader }
+}
+
+CAN_find_next_king_base = {
 	if = {
-		limit = { has_event_target = KR_king_base_no_commonwealth }
-		clear_global_event_target = KR_king_base_no_commonwealth
+		limit = {
+			NOT = { tag = GBR }
+			GBR = {
+				is_in_faction_with = PREV
+				surrender_progress < 0.30
+			}
+		}
+		GBR = { save_event_target_as = king_flees_to }
+	}
+	else_if = {
+		limit = {
+			NOT = { tag = CAN }
+			CAN = {
+				is_in_faction_with = PREV
+				surrender_progress < 0.30
+			}
+		}
+		CAN = { save_event_target_as = king_flees_to }
+	}
+	else_if = {
+		limit = {
+			NOT = { original_tag = AST }
+			AST = {
+				is_in_faction_with = PREV
+				surrender_progress < 0.30
+				NOT = { has_government = paternal_autocrat }
+			}
+		}
+		AST = { save_event_target_as = king_flees_to }
+	}
+	else_if = {
+		limit = {
+			NOT = { original_tag = RAJ }
+			RAJ = {
+				is_in_faction_with = PREV
+				surrender_progress < 0.30
+				NOT = { has_government = social_democrat }
+			}
+		}
+		RAJ = { save_event_target_as = king_flees_to }
+	}
+	else_if = {
+		limit = {
+			NOT = { original_tag = SAF }
+			SAF = {
+				is_in_faction_with = PREV
+				surrender_progress < 0.30
+				has_dictatorship_government = no
+			}
+		}
+		SAF = { save_event_target_as = king_flees_to }
+	}
+	else_if = { #ENT leader is always last resort of KR_king_base
+		limit = { has_event_target = entente_transfer_to }
+		event_target:entente_transfer_to = { save_event_target_as = king_flees_to }
+	}
+	else_if = {
+		limit = {
+			NOT = { has_event_target = entente_collapses }
+			is_in_faction_with = ENT
+		}
+		ENT = { save_event_target_as = king_flees_to }
+	}
+
+	# first have the king flee to another country
+	if = {
+		limit = { has_event_target = king_flees_to }
+		# King Flees
+		event_target:king_flees_to = { CAN_transfer_king_base = yes }
+		if = {
+			limit = { has_variable = CAN_king_may_be_captured }
+			hidden_effect = { event_target:king_flees_to = { news_event = entente_events.259 } }
+		}
+		event_target:king_flees_to = { country_event = { id = entente_events.252 days = 2 } } #Inform of King's arrival
+		#TODO: Longer term, adding loc for all possible cases of king fleeing would be good
+	}
+	else = {
+		#King Captured
+		GBR = { CAN_transfer_king_base = yes }
+		if = {
+			limit = { has_variable = CAN_king_may_be_captured }
+			hidden_effect = { news_event = entente_events.260 }
+		}
+		#TODO: Longer term, adding events for king being captured when cause was not king base capitulation would be good
 	}
 }
 
@@ -436,6 +517,7 @@ CAN_transfer_king_base = {
 			clr_country_flag = CAN_exile_inc_influence
 			clr_country_flag = CAN_exile_inc_industry
 			clr_country_flag = CAN_exile_inc_popularity
+			clr_country_flag = CAN_non_commonwealth_king_base
 			if = {
 				limit = { tag = CAN }
 				set_variable = { CAN_was_king_popularity = king_popularity }
@@ -463,16 +545,23 @@ CAN_transfer_king_base = {
 			limit = { tag = CAN }
 			CAN_enable_returning_home_decisions = yes
 		}
-		hidden_effect = {
-			country_event = { id = entente_events.50 days = 90 random_days = 60 } #restart random royal events
+		if = {
+			limit = {
+				OR = {
+					tag = GBR
+					tag = CAN
+					tag = AST
+					tag = RAJ
+					tag = SAF
+				}
+			}
+			hidden_effect = {
+				country_event = { id = entente_events.50 days = 90 random_days = 60 } #restart random royal events
+			}
 		}
-	}
-	if = {
-		limit = {
-			has_event_target = KR_king_base_no_commonwealth
-			exists = yes
+		else = {
+			set_country_flag = CAN_non_commonwealth_king_base #Crucial for identifying king base as non commonwealth tag
 		}
-		clear_global_event_target = KR_king_base_no_commonwealth
 	}
 }
 
@@ -2227,6 +2316,77 @@ CAN_set_republic_party_names = {
 			ideology = market_liberal
 			long_name = CAN_market_liberal_party_long
 			name = CAN_market_liberal_party
+		}
+	}
+}
+
+CAN_add_to_ISAC = {
+	country_event = entente_events.15
+	hidden_effect = {
+		# adding to Entente Air Training Program
+		if = {
+			limit = {
+				ENT = { has_idea = CAN_air_training_plan_idea }
+			}
+			country_event = entente_events.211
+		}
+		# adding to GBR Five Eyes program
+		if = {
+			limit = {
+				GBR = {
+					exists = yes
+					has_completed_focus = GBR_five_eyes_program
+				}
+				num_of_civilian_factories > 5
+			}
+			country_event = united_kingdom_events.62
+		}
+		# adding to GBR Imperial Preference program
+		if = {
+			limit = {
+				GBR = {
+					exists = yes
+					has_completed_focus = GBR_imperial_preference
+				}
+				OR = {
+					CAN_is_commonwealth_tag = yes
+					is_subject_of = GBR
+				}
+			}
+			country_event = united_kingdom_events.64
+		}
+	}
+}
+
+CAN_temporarily_disable_annexations_britain_france = {
+	if = {
+		limit = {
+			FROM = { original_tag = FRA }
+			is_ally_with = GER
+			has_global_flag = GER_stay_out_france_uk
+			country_exists = ENT
+		}
+		every_owned_state = {
+			limit = {
+				is_mainland_france = yes
+				is_claim_or_core_of_ROOT = no
+			}
+			temporarily_disable_annexation = yes
+		}
+	}
+	if = {
+		limit = {
+			FROM = { original_tag = ENG }
+			is_ally_with = GER
+			has_global_flag = GER_stay_out_france_uk
+			country_exists = ENT
+		}
+		every_owned_state = {
+			limit = {
+				is_great_britain = yes
+				is_claim_or_core_of_ROOT = no
+			}
+			temporarily_disable_annexation = yes
 		}
 	}
 }

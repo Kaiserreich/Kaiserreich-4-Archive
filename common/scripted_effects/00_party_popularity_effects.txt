@@ -25,22 +25,23 @@ default_party_popularity_PP_gain = {
 	hidden_effect = {
 		for_each_loop = {
 			array = coalitions_array
+			break = default_pp_gain_break
 			if = {
 				limit = {
-					check_variable = { v = 3 }
+					check_variable = { v = constant:party_pop.party.ruling_party }
 					NOT = { has_government = var:global.ideology_groups^i }
 				}
-				set_variable = { coalitions_array^i = 1 }
+				set_variable = { coalitions_array^i = constant:party_pop.party.none }
 			}
 			else_if = {
 				limit = { has_government = var:global.ideology_groups^i }
 				# To remove coalitions dynmod if ruling party was coalition partner
 				if = {
-					limit = { check_variable = { v = 2 } }
+					limit = { check_variable = { v = constant:party_pop.party.coalition_partner } }
 					set_temp_variable = { coalition_partner_var = global.ideology_groups^i }
 					remove_from_coalition = yes
 				}
-				set_variable = { coalitions_array^i = 3 }
+				set_variable = { coalitions_array^i = constant:party_pop.party.ruling_party }
 			}
 		}
 		clear_variable = political_power_ideology
@@ -63,10 +64,11 @@ map_party_popularity_PP_gain_to_ideology = {
 		limit = { NOT = { check_variable = { ideology_temp < global.ideology_groups^num } } }
 		for_each_loop = {
 			array = global.ideology_groups
+			break = convert_to_index
 			if = {
 				limit = { check_variable = { ideology_temp = v } }
 				set_temp_variable = { ideology_temp = i }
-				set_temp_variable = { break = 1 }
+				set_temp_variable = { convert_to_index = 1 }
 			}
 		}
 	}
@@ -74,11 +76,11 @@ map_party_popularity_PP_gain_to_ideology = {
 	for_each_loop = {
 		array = coalitions_array
 		if = {
-			limit = { check_variable = { v = 3 } }
-			set_variable = { coalitions_array^i = 1 }
+			limit = { check_variable = { v = constant:party_pop.party.ruling_party } }
+			set_variable = { coalitions_array^i = constant:party_pop.party.none }
 		}
 	}
-	set_variable = { coalitions_array^ideology_temp = 3 }
+	set_variable = { coalitions_array^ideology_temp = constant:party_pop.party.ruling_party }
 
 	set_variable = { political_power_ideology = ideology_temp }
 
@@ -107,8 +109,8 @@ disable_party_popularity_PP_gain = {
 		for_each_loop = {
 			array = coalitions_array
 			if = {
-				limit = { check_variable = { v = 3 } }
-				set_variable = { coalitions_array^i = 1 }
+				limit = { check_variable = { v = constant:party_pop.party.ruling_party } }
+				set_variable = { coalitions_array^i = constant:party_pop.party.none }
 			}
 		}
 		clear_variable = political_power_ideology
@@ -128,13 +130,14 @@ disable_party_popularity_PP_gain = {
 create_coalitions_array_if_missing = {
 	if = {
 		limit = { NOT = { check_variable = { coalitions_array^num = global.ideology_groups^num } } }
-		resize_array = { coalitions_array = global.ideology_groups^num }
+		resize_array = { array = coalitions_array value = constant:party_pop.party.none size = global.ideology_groups^num }
 		for_each_loop = {
 			array = coalitions_array
+			break = create_coalitions
 			if = {
 				limit = { has_government = var:global.ideology_groups^i }
-				set_variable = { coalitions_array^i = 3 }
-				set_temp_variable = { break = 1 }
+				set_variable = { coalitions_array^i = constant:party_pop.party.ruling_party }
+				set_temp_variable = { create_coalitions = 1 }
 			}
 		}
 	}
@@ -146,10 +149,11 @@ convert_coalition_partner_var_into_index = {
 		limit = { NOT = { check_variable = { coalition_partner_var < global.ideology_groups^num } } }
 		for_each_loop = {
 			array = global.ideology_groups
+			break = convert_to_index
 			if = {
 				limit = { check_variable = { coalition_partner_var = v } }
 				set_temp_variable = { coalition_partner_var = i }
-				set_temp_variable = { break = 1 }
+				set_temp_variable = { convert_to_index = 1 }
 			}
 		}
 	}
@@ -166,7 +170,7 @@ add_to_coalition = {
 		convert_coalition_partner_var_into_index = yes
 		if = {
 			limit = {
-				check_variable = { coalitions_array^coalition_partner_var < 2 }
+				check_variable = { coalitions_array^coalition_partner_var < constant:party_pop.party.coalition_partner }
 				NOT = {
 					AND = {
 						has_variable = political_power_ideology
@@ -178,17 +182,15 @@ add_to_coalition = {
 					}
 				}
 			}
-			set_variable = { coalitions_array^coalition_partner_var = 2 }
+			set_variable = { coalitions_array^coalition_partner_var = constant:party_pop.party.coalition_partner }
 			set_temp_variable = { temp = global.ideology_groups^coalition_partner_var }
-			set_temp_variable = { temp = party_popularity@var:temp }
-			if = {
-				limit = { NOT = { check_variable = { coalition_stability_array^coalition_partner_var = 0 } } }
-				multiply_temp_variable = { temp = coalition_stability_array^coalition_partner_var }
+			add_to_variable = {
+				coalition_pp_gain = {
+					value = party_popularity@var:temp
+					if = { limit = { value = coalition_stability_array^coalition_partner_var not_equals = 0 } multiply = coalition_stability_array^coalition_partner_var }
+					else = { multiply = coalition_stability?0.5 }
+				}
 			}
-			else = {
-				multiply_temp_variable = { temp = coalition_stability?0.5 }
-			}
-			add_to_variable = { coalition_pp_gain = temp }
 			hidden_effect = {
 				if = {
 					limit = { NOT = { has_dynamic_modifier = { modifier = party_popularity_dynamic_modifier_coalition } } }
@@ -210,23 +212,21 @@ remove_from_coalition = {
 		custom_effect_tooltip = remove_from_coalition
 		convert_coalition_partner_var_into_index = yes
 		if = {
-			limit = { check_variable = { coalitions_array^coalition_partner_var = 2 } }
-			set_variable = { coalitions_array^coalition_partner_var = 0 }
+			limit = { check_variable = { coalitions_array^coalition_partner_var = constant:party_pop.party.coalition_partner } }
+			set_variable = { coalitions_array^coalition_partner_var = constant:party_pop.party.none }
 			set_temp_variable = { temp = global.ideology_groups^coalition_partner_var }
-			set_temp_variable = { temp = party_popularity@var:temp }
-			if = {
-				limit = { NOT = { check_variable = { coalition_stability_array^coalition_partner_var = 0 } } }
-				multiply_temp_variable = { temp = coalition_stability_array^coalition_partner_var }
+			subtract_from_variable = {
+				coalition_pp_gain = {
+					value = party_popularity@var:temp
+					if = { limit = { value = coalition_stability_array^coalition_partner_var not_equals = 0 } multiply = coalition_stability_array^coalition_partner_var }
+					else = { multiply = coalition_stability?0.5 }
+				}
 			}
-			else = {
-				multiply_temp_variable = { temp = coalition_stability?0.5 }
-			}
-			subtract_from_variable = { coalition_pp_gain = temp }
 			hidden_effect = {
 				if = {
 					limit = {
 						has_dynamic_modifier = { modifier = party_popularity_dynamic_modifier_coalition }
-						NOT = { is_in_array = { coalitions_array = 2 } }
+						NOT = { is_in_array = { coalitions_array = constant:party_pop.party.coalition_partner } }
 					}
 					clear_variable = coalition_pp_gain
 					remove_dynamic_modifier = { modifier = party_popularity_dynamic_modifier_coalition }
@@ -244,8 +244,8 @@ end_coalition = {
 		for_each_loop = {
 			array = coalitions_array
 			if = {
-				limit = { check_variable = { v = 2 } }
-				set_variable = { coalitions_array^i = 1 }
+				limit = { check_variable = { v = constant:party_pop.party.coalition_partner } }
+				set_variable = { coalitions_array^i = constant:party_pop.party.none }
 			}
 		}
 		clear_array = coalition_stability_array

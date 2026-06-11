@@ -313,6 +313,14 @@ country_event = {
 	fire_only_once = yes
 	is_triggered_only = yes
 
+	immediate = {
+		hidden_effect = {
+			activate_mission = BUL_buklovi_bankruptcy_fallout
+			country_event = { id = bulgaria_events.21 days = 21 }
+			clr_country_flag = BUL_AI_wait_until_mission_start
+		}
+	}
+
 	option = {
 		log = "[GetLogInfo]: event bulgaria_events.10 option bulgaria_events.10.a"
 		name = bulgaria_events.10.a
@@ -320,11 +328,7 @@ country_event = {
 			remove_idea = BUL_ailing_economy_idea
 			add_idea = BUL_black_monday_idea
 		}
-		activate_mission = BUL_buklovi_bankruptcy_fallout
-		hidden_effect = {
-			country_event = { id = bulgaria_events.21 days = 21 }
-		}
-		clr_country_flag = BUL_AI_wait_until_mission_start
+		effect_tooltip = { activate_mission = BUL_buklovi_bankruptcy_fallout }
 	}
 }
 #We return to your scheduled programming (various events to fire during the fallout)
@@ -527,6 +531,28 @@ country_event = { # Zveno coup - You are allied with Zveno
 	}
 	is_triggered_only = yes
 
+	immediate = {
+		hidden_effect = {
+			if = {
+				limit = { has_country_flag = BUL_coup_success }
+				remove_mission = BUL_operation_nishava_fallout
+			}
+			else_if = {
+				# To prevent the ultimate edge case and funny exploit
+				limit = {
+					focus_progress = { focus = BUL_abolish_state_protection_act progress > 0.84 }
+					is_ai = no
+				}
+				reduce_focus_completion_cost = {
+					focus = BUL_abolish_state_protection_act
+					cost = -4
+				}
+			}
+		}
+	}
+
+	timeout_days = 3
+
 	option = {
 		log = "[GetLogInfo]: event bulgaria_events.16 option bulgaria_events.16.a"
 		name = bulgaria_events.16.a
@@ -542,9 +568,13 @@ country_event = { # Zveno coup - You are allied with Zveno
 			elections_allowed = no
 		}
 		add_stability = -0.1
-		remove_mission = BUL_operation_nishava_fallout
+		effect_tooltip = { remove_mission = BUL_operation_nishava_fallout }
 		clear_variable = BUL_curtail_focus_amount_var #clear the var as the focus isn't relevent anymore
 		remove_ideas = BUL_angry_military
+		if = {
+			limit = { NOT = { has_idea = BUL_state_protection_act } }
+			add_ideas = BUL_state_protection_act
+		}
 		hidden_effect = {
 			end_coalition = yes
 			set_party_name = {
@@ -608,6 +638,10 @@ country_event = { # Zveno coup - You are allied with Zveno
 		remove_mission = BUL_operation_nishava_fallout
 		clear_variable = BUL_curtail_focus_amount_var #clear the var as the focus isn't relevent anymore
 		remove_ideas = BUL_angry_military
+		if = {
+			limit = { NOT = { has_idea = BUL_state_protection_act } }
+			add_ideas = BUL_state_protection_act
+		}
 		hidden_effect = {
 			end_coalition = yes
 			set_party_name = {
@@ -651,6 +685,17 @@ country_event = { # Zveno coup - You are not allied with Zveno
 	}
 	is_triggered_only = yes
 
+	immediate = {
+		hidden_effect = {
+			if = {
+				limit = { has_country_flag = BUL_coup_success }
+				remove_mission = BUL_operation_nishava_fallout
+			}
+		}
+	}
+
+	timeout_days = 3
+
 	option = {
 		log = "[GetLogInfo]: event bulgaria_events.17 option bulgaria_events.17.a"
 		name = bulgaria_events.17.a
@@ -666,11 +711,15 @@ country_event = { # Zveno coup - You are not allied with Zveno
 			elections_allowed = no
 		}
 		add_stability = -0.2
-		remove_mission = BUL_operation_nishava_fallout
+		effect_tooltip = { remove_mission = BUL_operation_nishava_fallout }
 		clear_variable = BUL_curtail_focus_amount_var #clear the var as the focus isn't relevent anymore
 		clr_country_flag = BUL_stands_with_opposition
 		clr_country_flag = BUL_stands_with_prince
 		remove_ideas = BUL_angry_military
+		if = {
+			limit = { NOT = { has_idea = BUL_state_protection_act } }
+			add_ideas = BUL_state_protection_act
+		}
 		hidden_effect = {
 			end_coalition = yes
 			activate_advisor = BUL_petur_todorov_sic
@@ -1021,7 +1070,7 @@ country_event = { # Georgiev's ultimatum
 	trigger = {
 		has_active_mission = BUL_operation_nishava_fallout
 	}
-	timeout_days = 5
+	timeout_days = 3
 
 	option = {
 		log = "[GetLogInfo]: event bulgaria_events.24 option bulgaria_events.24.a"
@@ -2872,6 +2921,7 @@ country_event = { # Royalist resistance is defeated, now get some stability
 
 	trigger = {
 		is_monarchy = no
+		is_subject = no
 	}
 
 	option = {
@@ -4871,6 +4921,7 @@ country_event = {
 		show_unit_leaders_tooltip = BUL_vladimir_vazov
 		hidden_effect = {
 			BUL_vladimir_vazov = { set_nationality = ROOT }
+			country_event = { id = bulgaria_flavour_events.280 days = 150 random_days = 30 }
 		}
 	}
 	option = {
@@ -4890,26 +4941,36 @@ country_event = {
 	desc = bulgaria_flavour_events.28.d
 	picture = GFX_report_event_BUL_oldguard
 
-	fire_only_once = yes
-
-	trigger = {
-		tag = BUL
-		has_character = BUL_vladimir_vazov
-		has_war = no
-	}
-
-	mean_time_to_happen = {
-		months = 6
-		modifier = {
-			factor = 0.1
-			date > 1940.1.1
-		}
-	}
+	is_triggered_only = yes
 
 	option = {
 		log = "[GetLogInfo]: event bulgaria_flavour_events.28 option bulgaria_flavour_events.28.a"
 		name = bulgaria_flavour_events.28.a # He served his country well
 		retire_character = BUL_vladimir_vazov
+	}
+}
+
+country_event = {
+	id = bulgaria_flavour_events.280
+	hidden = yes
+	is_triggered_only = yes
+
+	trigger = {
+		has_character = BUL_vladimir_vazov
+	}
+
+	immediate = {
+		if = {
+			limit = { has_war = no }
+			country_event = bulgaria_flavour_events.28
+		}
+		else_if = {
+			limit = { date > 1940.1.1 }
+			country_event = { id = bulgaria_flavour_events.280 days = 20 random_days = 10 }
+		}
+		else = {
+			country_event = { id = bulgaria_flavour_events.280 days = 150 random_days = 30 }
+		}
 	}
 }
 

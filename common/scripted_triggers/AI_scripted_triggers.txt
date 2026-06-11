@@ -15,21 +15,24 @@ willing_to_send_volunteers_to_PREV = {
 	NOT = { has_war_with = PREV }
 	NOT = { is_ally_with = PREV }
 	OR = {
-		is_neighbor_of = PREV
-		naval_base > 0
-	}
-	OR = {
-		spanish_civil_war_volunteers = yes
-		american_civil_war_volunteers = yes
+		AND = {
+			OR = {
+				spanish_civil_war_volunteers = yes
+				american_civil_war_volunteers = yes
+				chilean_argentinian_war_volunteers = yes
+				south_african_civil_war_volunteers = yes
+				indian_civil_war_volunteers = yes
+				greek_civil_war_volunteers = yes
+				levantine_war_volunteers = yes
+			}
+			## Socialist tags withhold volunteers during domestic conflicts
+			AI_socialist_resolved_domestic_conflicts = yes
+		}
 		fourth_balkan_war_volunteers = yes
 		second_weltkrieg_volunteers = yes
-		chilean_argentinian_war_volunteers = yes
-		south_african_civil_war_volunteers = yes
-		indian_civil_war_volunteers = yes
 		sichuan_volunteers = yes
 		venetian_rebellion_volunteers = yes
 		italian_civil_war_volunteers = yes
-		greek_civil_war_volunteers = yes
 		german_austrian_volunteers = yes
 		WCA_internationale_volunteers = yes
 		league_collapse_volunteers = yes
@@ -42,7 +45,6 @@ willing_to_send_volunteers_to_PREV = {
 		indonesian_revolution_volunteers = yes
 		siamese_civil_war_volunteers = yes
 		maf_collapse_volunteers = yes
-		levantine_war_volunteers = yes
 		winter_war_volunteers = yes
 		indochinese_revolution_volunteers = yes
 		arab_war_of_unification_volunteers = yes
@@ -87,7 +89,10 @@ spanish_civil_war_volunteers = {
 					is_ally_with = GER
 					NOT = { is_subject_of = GER }
 				}
-				is_ally_with = AUS
+				AND = {
+					is_ally_with = AUS
+					NOT = { is_subject_of = AUS }
+				}
 				AND = {
 					original_tag = IRE
 					NOT = { has_country_flag = IRE_forpolpath_ent }
@@ -157,7 +162,10 @@ fourth_balkan_war_volunteers = {
 					is_ally_with = INT
 					PREV = { has_socialist_government = yes }
 				}
-				is_ally_with = RUS
+				AND = {
+					is_ally_with = RUS
+					NOT = { is_subject_of = RUS }
+				}
 			}
 		}
 		AND = {
@@ -170,6 +178,7 @@ fourth_balkan_war_volunteers = {
 				original_tag = GRE
 				AND = {
 					is_ally_with = RUS
+					NOT = { is_subject_of = RUS }
 					PREV = { both_socialist_or_both_not_socialist = yes }
 				}
 			}
@@ -244,13 +253,12 @@ chilean_argentinian_war_volunteers = {
 			PREV = { is_ally_with = FOP }
 			has_socialist_government = yes
 			OR = {
-				tag = SRI
+				tag = SWF
 				tag = MEX
 				AND = {
 					OR = {
 						is_in_europe = yes
-						is_in_north_america = yes
-						is_in_south_america = yes
+						is_in_americas = yes
 						is_in_faction_with = INT
 					}
 					num_of_military_factories > 8
@@ -394,6 +402,11 @@ italian_civil_war_volunteers = {
 		AND = {
 			PREV = { tag = SRI }
 			has_socialist_government = yes
+			OR = {
+				is_ally_with = INT
+				is_ally_with = RUS
+				tag = SWF
+			}
 			is_in_europe = yes
 		}
 		AND = {
@@ -467,11 +480,12 @@ greek_civil_war_volunteers = {
 		original_tag = GRE
 		both_socialist_or_both_not_socialist = yes
 	}
-	is_in_europe = yes
 	OR = {
-		is_major = yes
+		original_tag = FRA
+		original_tag = ENG
+		original_tag = GER
+		original_tag = RUS
 		original_tag = SER
-		original_tag = ROM
 	}
 	log = "willing_to_send_volunteers_to_PREV -- greek_civil_war_volunteers --- THIS = [THIS.GetName] PREV = [PREV.GetName]"
 }
@@ -791,8 +805,16 @@ siamese_civil_war_volunteers = {
 	}
 	PREV = { original_tag = SIA }
 	if = {
-		limit = { has_socialist_government = yes }
-		PREV = { has_socialist_government = yes }
+		limit = { PREV = { has_socialist_government = yes } }
+		has_socialist_government = yes
+		OR = {
+			original_tag = ENG
+			original_tag = FRA
+			original_tag = RUS
+			original_tag = BRM
+			original_tag = CHI
+			original_tag = HND
+		}
 	}
 	else = {
 		PREV = { has_socialist_government = no }
@@ -935,6 +957,84 @@ assyrian_volunteers = {
 	log = "willing_to_send_volunteers_to_PREV -- assyrian_volunteers --- THIS = [THIS.GetName] PREV = [PREV.GetName]"
 }
 
+AI_socialist_resolved_domestic_conflicts = {
+	## Socialist tags withhold volunteers during domestic conflicts
+	if = {
+		limit = {
+			has_socialist_government = yes
+			is_subject = no
+		}
+
+		## BUL lost Balkan war, then reclaimed territory or reconciled with SER
+		if = {
+			limit = { original_tag = BUL }
+			OR = {
+				owns_state = 106
+				has_completed_focus = BUL_path_to_peace
+			}
+		}
+
+		## FOP has defeated or peacefully reunited with ARG
+		else_if = {
+			limit = {
+				OR = {
+					original_tag = CHL
+					original_tag = FOP
+				}
+			}
+			NOT = {
+				AND = {
+					country_exists = ARG
+					country_exists = FOP
+				}
+			}
+		}
+
+		## HND has unified India
+		else_if = {
+			limit = { original_tag = HND }
+			has_global_flag = india_united
+		}
+
+		## PER has defeated the Ottoman Empire
+		else_if = {
+			limit = { original_tag = PER }
+			has_global_flag = OTT_cairo_pact_war
+			NOT = { has_global_flag = OTT_cairo_pact_war_ongoing }
+		}
+
+		## SER has unified Yugoslavia
+		else_if = {
+			limit = { original_tag = SER }
+			has_cosmetic_tag = YUG_fed
+		}
+
+		## SRI has unified Italy
+		else_if = {
+			limit = { original_tag = SRI }
+			NOT = { has_idea = SRI_italy_balance_idea }
+		}
+
+		## WCA has started Second American Civil War
+		else_if = {
+			limit = { original_tag = WCA }
+			has_global_flag = USA_civil_war_begun_flag
+		}
+
+		## WIF has started their socialist revolution
+		else_if = {
+			limit = { original_tag = WIF }
+			has_completed_focus = WIF_join_internationale
+		}
+
+		## China has unified
+		else_if = {
+			limit = { china_alignment_left_kuomintang = yes }
+			has_global_flag = china_united
+		}
+	}
+}
+
 ##############################
 ### TECHNOLOGY AI TRIGGERS ###
 ##############################
@@ -961,7 +1061,7 @@ country_has_any_active_threat = {
 	OR = {
 		has_war = yes
 		any_claim = yes
-		has_country_flag = imminent_war
+		has_imminent_war = yes
 	}
 }
 
@@ -971,7 +1071,7 @@ country_is_in_dangerous_war = {
 		any_claim = yes
 		alliance_strength_ratio < 1.25
 		surrender_progress > 0.05
-		has_country_flag = imminent_war
+		has_imminent_war = yes
 	}
 }
 

@@ -42,8 +42,7 @@ update_operation_ai = {
 	}
 
 	# if we have too few of operatives clear operative target
-	set_temp_variable = { t = min_needed_operative_for_operations }
-	subtract_from_temp_variable = { t = 2 }
+	set_temp_variable = { t = { value = min_needed_operative_for_operations subtract = 2 } }
 	if = {
 		limit = { num_of_operatives < t }
 		set_variable = { generic_operation_target = 0 }
@@ -80,18 +79,26 @@ update_operation_ai = {
 			add_to_temp_array = { operation_types_scores = score }
 
 			# army infiltration
-			set_temp_variable = { score = 50 }
-			add_to_temp_variable = { score = num_armies }
-			clamp_temp_variable = { var = score max = 180 }
+			set_temp_variable = {
+				score = {
+					value = 50
+					add = num_armies
+					clamp = { min = 0 max = 180 }
+				}
+			}
 			add_to_temp_array = { operation_types = token:operation_infiltrate_armed_forces_army }
 			add_to_temp_array = { operation_types_scores = score }
 
 			# air infiltration
-			set_temp_variable = { score = 50 }
 			add_to_temp_variable = { t = num_deployed_planes }
-			divide_temp_variable = { t = 10 }
-			add_to_temp_variable = { score = t }
-			clamp_temp_variable = { var = score max = 180 }
+			multiply_temp_variable = { t = 0.1 }
+			set_temp_variable = {
+				score = {
+					value = 50
+					add = t
+					clamp = { min = 0 max = 180 }
+				}
+			}
 			add_to_temp_array = { operation_types = token:operation_infiltrate_armed_forces_airforce }
 			add_to_temp_array = { operation_types_scores = score }
 
@@ -104,17 +111,15 @@ update_operation_ai = {
 							has_navy_size = { size > 0 }
 						}
 					}
-					set_temp_variable = { score = num_ships }
 
-					set_temp_variable = { t = num_ships_with_type@carrier }
-					multiply_temp_variable = { t = 20 }
-					add_to_temp_variable = { score = t }
-
-					set_temp_variable = { t = num_ships_with_type@capital }
-					multiply_temp_variable = { t = 10 }
-					add_to_temp_variable = { score = t }
-
-					clamp_temp_variable = { var = score max = 180 }
+					set_temp_variable = {
+						score = {
+							value = num_ships
+							add = { value = num_ships_with_type@carrier multiply = 20 }
+							add = { value = num_ships_with_type@capital multiply = 10 }
+							clamp = { min = 0 max = 180 }
+						}
+					}
 
 					add_to_temp_array = { operation_types = token:operation_infiltrate_armed_forces_navy }
 					add_to_temp_array = { operation_types_scores = score }
@@ -137,10 +142,13 @@ update_operation_ai = {
 				array = operation_types
 
 				# randomisation by half
-				set_temp_variable = { t = random }
-				multiply_temp_variable = { t = 0.5 }
-				add_to_temp_variable = { t = 0.5 }
-				multiply_temp_variable = { operation_types_scores^i = t }
+				multiply_temp_variable = {
+					operation_types_scores^i = {
+						value = random
+						multiply = 0.5
+						add = 0.5
+					}
+				}
 
 				if = {
 					limit = {

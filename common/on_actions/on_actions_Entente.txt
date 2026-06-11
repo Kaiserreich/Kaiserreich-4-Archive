@@ -30,10 +30,7 @@ on_actions = {
 			FROM = {
 				if = {
 					limit = { tag = event_target:KR_king_base }
-					GBR = {
-						save_event_target_as = king_flees_to
-						CAN_transfer_king_base = yes
-					}
+					GBR = { CAN_transfer_king_base = yes }
 				}
 				if = {
 					limit = { tag = ENT }
@@ -52,10 +49,6 @@ on_actions = {
 						every_possible_country = { remove_from_tech_sharing_group = entente_research }
 					}
 					GBR = { save_global_event_target_as = KR_entente_leader }
-					if = {
-						limit = { has_event_target = KR_king_base_no_commonwealth }
-						clear_global_event_target = KR_king_base_no_commonwealth
-					}
 				}
 				else = {
 					clr_country_flag = CAN_refused_iedc
@@ -63,6 +56,14 @@ on_actions = {
 					remove_from_tech_sharing_group = entente_research
 				}
 			}
+			CAN_temporarily_disable_annexations_britain_france = yes
+		}
+	}
+
+	#ROOT is winner #FROM is loser
+	on_peaceconference_ended = {
+		effect = {
+			CAN_temporarily_disable_annexations_britain_france = yes
 		}
 	}
 
@@ -95,71 +96,11 @@ on_actions = {
 						OR = {
 							surrender_progress > 0.8
 							NOT = { is_in_faction_with = ROOT }
+							CAN_is_king_base_and_commonwealth = no
 						}
 					}
 				}
-				if = {
-					limit = {
-						NOT = { FROM = { tag = GBR } }
-						GBR = {
-							is_in_faction_with = FROM
-							surrender_progress < 0.30
-						}
-					}
-					GBR = { save_event_target_as = king_flees_to }
-				}
-				else_if = {
-					limit = {
-						NOT = { FROM = { tag = CAN } }
-						CAN = {
-							is_in_faction_with = FROM
-							surrender_progress < 0.30
-						}
-					}
-					CAN = { save_event_target_as = king_flees_to }
-				}
-				else_if = {
-					limit = {
-						NOT = { FROM = { original_tag = AST } }
-						AST = {
-							is_in_faction_with = FROM
-							surrender_progress < 0.30
-							NOT = { has_government = paternal_autocrat }
-						}
-					}
-					AST = { save_event_target_as = king_flees_to }
-				}
-				else_if = {
-					limit = {
-						NOT = { FROM = { original_tag = RAJ } }
-						RAJ = {
-							is_in_faction_with = FROM
-							surrender_progress < 0.30
-							NOT = { has_government = social_democrat }
-						}
-					}
-					RAJ = { save_event_target_as = king_flees_to }
-				}
-				else_if = {
-					limit = {
-						NOT = { FROM = { original_tag = SAF } }
-						SAF = {
-							is_in_faction_with = FROM
-							surrender_progress < 0.30
-						}
-					}
-					SAF = { save_event_target_as = king_flees_to }
-				}
-				if = {
-					limit = { has_event_target = king_flees_to }
-					event_target:king_flees_to = { CAN_transfer_king_base = yes }
-				}
-				else = {
-					GBR = {
-						save_event_target_as = king_flees_to
-						CAN_transfer_king_base = yes
-					}
-				}
+				FROM = { CAN_find_next_king_base = yes }
 			}
 		}
 	}
@@ -289,6 +230,45 @@ on_actions = {
 		}
 	}
 
+	on_peace = {
+		effect = {
+			if = {
+				limit = { country_exists = ENT }
+				if = {
+					limit = { has_socialist_government = yes }
+					every_country = {
+						limit = { is_ally_with = ENT }
+						embargo_ROOT = yes
+						add_opinion_modifier = {
+							target = ROOT
+							modifier = KR_hostile
+						}
+						reverse_add_opinion_modifier = {
+							target = ROOT
+							modifier = KR_hostile
+						}
+					}
+				}
+				else = {
+					every_country = {
+						limit = { is_ally_with = ENT }
+						clear_embargo_ROOT = yes
+						remove_opinion_modifier = {
+							target = ROOT
+							modifier = KR_hostile
+						}
+						ROOT = {
+							remove_opinion_modifier = {
+								target = PREV
+								modifier = KR_hostile
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	on_new_term_election = {
 		effect = {
 			### Australasia ###
@@ -320,7 +300,7 @@ on_actions = {
 		}
 	}
 
-	on_ruling_party_change_immediate = {
+	on_ruling_party_change = {
 		effect = {
 			if = {
 				limit = { country_exists = ENT }
@@ -452,4 +432,5 @@ on_actions = {
 			}
 		}
 	}
+
 }

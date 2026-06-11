@@ -3708,10 +3708,7 @@ country_event = { #FROM refuses to follow faction leader
 		log = "[GetLogInfo]: event siam_events.69 option siam_events.69.a"
 		name = siam_events.69.a
 		trigger = { has_country_flag = SIA_accepts_peace }
-		clr_country_flag = SIA_accepts_peace
-		set_country_flag = SIA_refuses_peace
-		every_other_country = {
-			limit = { is_ally_with = ROOT }
+		every_faction_member = {
 			clr_country_flag = SIA_accepts_peace
 			set_country_flag = SIA_refuses_peace
 		}
@@ -3721,10 +3718,7 @@ country_event = { #FROM refuses to follow faction leader
 		log = "[GetLogInfo]: event siam_events.69 option siam_events.69.b"
 		name = siam_events.69.b
 		trigger = { has_country_flag = SIA_refuses_peace }
-		clr_country_flag = SIA_refuses_peace
-		set_country_flag = SIA_accepts_peace
-		every_other_country = {
-			limit = { is_ally_with = ROOT }
+		every_faction_member = {
 			clr_country_flag = SIA_refuses_peace
 			set_country_flag = SIA_accepts_peace
 		}
@@ -3798,15 +3792,10 @@ country_event = { #Unconditional Surrender Goes into Effect
 			### deal with the Indochinese puppets
 			if = {
 				limit = {
-					OR = {
-						INC = {
-							has_war_with = ROOT
-							has_country_flag = SIA_accepts_peace
-						}
-						GEA = {
-							has_war_with = ROOT
-							has_country_flag = SIA_accepts_peace
-						}
+					any_country_of = {
+						target = { INC GEA }
+						has_war_with = ROOT
+						has_country_flag = SIA_accepts_peace
 					}
 				}
 				if = {
@@ -3844,25 +3833,6 @@ country_event = { #Unconditional Surrender Goes into Effect
 						limit = { is_core_of = VIN }
 						transfer_state_during_war = yes
 					}
-				}
-			}
-
-			### Yunnanese claims
-			if = {
-				limit = {
-					YUN = {
-						has_war_with = ROOT
-						has_country_flag = SIA_accepts_peace
-					}
-				}
-				every_owned_state = {
-					limit = {
-						OR = {
-							is_core_of = YUN
-							is_claimed_by = YUN
-						}
-					}
-					transfer_state_to = YUN
 				}
 			}
 
@@ -4133,11 +4103,8 @@ country_event = { #Unconditional Surrender Goes into Effect
 			if = {
 				limit = {
 					OR = {
-						RAJ = {
-							has_war_with = ROOT
-							has_country_flag = SIA_accepts_peace
-						}
-						HND = {
+						any_country_of = {
+							target = { RAJ HND PRF }
 							has_war_with = ROOT
 							has_country_flag = SIA_accepts_peace
 						}
@@ -4165,6 +4132,15 @@ country_event = { #Unconditional Surrender Goes into Effect
 						}
 					}
 					HND = { save_event_target_as = SIA_india }
+				}
+				else_if = {
+					limit = {
+						PRF = {
+							has_war_with = ROOT
+							has_country_flag = SIA_accepts_peace
+						}
+					}
+					PRF = { save_event_target_as = SIA_india }
 				}
 				else = {
 					var:431.owner = { save_event_target_as = SIA_india }
@@ -4241,21 +4217,9 @@ country_event = { #Unconditional Surrender Goes into Effect
 						}
 					}
 				}
-				var:289.controller = {
-					if = {
-						limit = { is_subject = yes }
-						overlord = { save_event_target_as = SIA_main_enemy }
-					}
-					else = {
-						save_event_target_as = SIA_main_enemy
-					}
-				}
-
 				### Surrender any Chinese territories
 				if = {
-					limit = {
-						any_subject_country = { is_chinese_tag = yes }
-					}
+					limit = { any_subject_country = { is_chinese_tag = yes } }
 					random_subject_country = {
 						limit = { is_chinese_tag = yes }
 						set_temp_variable = { target = THIS }
@@ -4266,16 +4230,49 @@ country_event = { #Unconditional Surrender Goes into Effect
 					}
 				}
 				else_if = {
-					limit = {
-						any_owned_state = { is_china_claim_area = yes }
+					limit = { any_owned_state = { is_china_claim_area = yes } }
+					if = {
+						limit = {
+							any_neighbor_country = {
+								is_chinese_tag = yes
+								owns_state = 816 #Dali
+							}
+						}
+						random_neighbor_country = {
+							limit = {
+								is_chinese_tag = yes
+								owns_state = 816 #Dali
+							}
+							set_temp_variable = { target = THIS }
+						}
 					}
-					set_temp_variable = { target = event_target:SIA_main_enemy }
+					else_if = {
+						limit = {
+							any_neighbor_country = {
+								is_chinese_tag = yes
+								set_temp_variable = { target = THIS }
+							}
+						}
+						random_neighbor_country = {
+							limit = { is_chinese_tag = yes }
+							set_temp_variable = { target = THIS }
+						}
+					}
+					else_if = {
+						limit = { country_exists = CHN }
+						set_temp_variable = { target = CHN }
+					}
+					else = {
+						random_other_country = {
+							limit = { is_chinese_tag = yes }
+							set_temp_variable = { target = THIS }
+						}
+					}
 					every_owned_state = {
 						limit = { is_china_claim_area = yes }
 						transfer_state_during_war = yes
 					}
 				}
-
 				### Surrender any Burmese territories
 				if = {
 					limit = { is_ally_with = BRM }
@@ -4291,13 +4288,8 @@ country_event = { #Unconditional Surrender Goes into Effect
 					}
 				}
 				else_if = {
-					limit = {
-						OR = {
-							owns_state = 288 #Rangoon
-							event_target:SIA_main_enemy = { owns_state = 288 } #Rangoon
-						}
-					}
-					set_temp_variable = { target = event_target:SIA_main_enemy }
+					limit = { any_owned_state = { is_core_of = BRM } }
+					set_temp_variable = { target = BRM }
 					every_owned_state = {
 						limit = {
 							OR = {
@@ -4308,7 +4300,6 @@ country_event = { #Unconditional Surrender Goes into Effect
 						transfer_state_during_war = yes
 					}
 				}
-
 				### Surrender any Cambodian territories
 				if = {
 					limit = { is_ally_with = CAM }
@@ -4319,19 +4310,13 @@ country_event = { #Unconditional Surrender Goes into Effect
 					}
 				}
 				else_if = {
-					limit = {
-						OR = {
-							owns_state = 750 #Phnom Penh
-							event_target:SIA_main_enemy = { owns_state = 750 } #Phnom Penh
-						}
-					}
-					set_temp_variable = { target = event_target:SIA_main_enemy }
+					limit = { any_owned_state = { is_core_of = CAM } }
+					set_temp_variable = { target = CAM }
 					every_owned_state = {
 						limit = { is_core_of = CAM }
 						transfer_state_during_war = yes
 					}
 				}
-
 				### Surrender any Laotian territories
 				if = {
 					limit = { is_ally_with = LAO }
@@ -4342,19 +4327,23 @@ country_event = { #Unconditional Surrender Goes into Effect
 					}
 				}
 				else_if = {
-					limit = {
-						OR = {
-							owns_state = 670 #Laos
-							event_target:SIA_main_enemy = { owns_state = 670 } #Laos
+					limit = { any_owned_state = { is_core_of = LAO } }
+					if = {
+						limit = { #Prevent tiny laos appearing in Samabuli
+							owns_state = 882 #Samabuli
+							NOT = { owns_state = 670 } #Laos
+						}
+						set_temp_variable = { target = var:670.owner }
+						882 = { transfer_state_during_war = yes }
+					}
+					else = {
+						set_temp_variable = { target = LAO }
+						every_owned_state = {
+							limit = { is_core_of = LAO }
+							transfer_state_during_war = yes
 						}
 					}
-					set_temp_variable = { target = event_target:SIA_main_enemy }
-					every_owned_state = {
-						limit = { is_core_of = LAO }
-						transfer_state_during_war = yes
-					}
 				}
-
 				### Surrender any Indochinese territories
 				if = {
 					limit = { is_ally_with = INC }
@@ -4380,36 +4369,13 @@ country_event = { #Unconditional Surrender Goes into Effect
 					}
 				}
 				else_if = {
-					limit = {
-						OR = {
-							owns_any_state_of = {
-								286 #Cochinchina
-								671 #Tonkin
-								827 #Annam
-							}
-							event_target:SIA_main_enemy = {
-								owns_any_state_of = {
-									286 #Cochinchina
-									671 #Tonkin
-									827 #Annam
-								}
-							}
-						}
-					}
-					set_temp_variable = { target = event_target:SIA_main_enemy }
+					limit = { any_owned_state = { is_core_of = VIN } }
+					set_temp_variable = { target = VIN }
 					every_owned_state = {
-						limit = {
-							OR = {
-								region = 196 #Indochina
-								is_core_of = VIN
-								is_core_of = CAM
-								is_core_of = LAO
-							}
-						}
+						limit = { is_core_of = VIN }
 						transfer_state_during_war = yes
 					}
 				}
-
 				### Surrender any Malaysian territories
 				if = {
 					limit = { is_ally_with = MAL }
@@ -4420,29 +4386,13 @@ country_event = { #Unconditional Surrender Goes into Effect
 					}
 				}
 				else_if = {
-					limit = {
-						OR = {
-							owns_any_state_of = {
-								336 #Singapore
-								846 #Johore
-								963 #Perak
-							}
-							event_target:SIA_main_enemy = {
-								owns_any_state_of = {
-									336 #Singapore
-									846 #Johore
-									963 #Perak
-								}
-							}
-						}
-					}
-					set_temp_variable = { target = event_target:SIA_main_enemy }
+					limit = { any_owned_state = { is_core_of = MAL } }
+					set_temp_variable = { target = var:963.owner } #Perak-Selangor
 					every_owned_state = {
 						limit = { is_core_of = MAL }
 						transfer_state_during_war = yes
 					}
 				}
-
 				### Remove all puppets
 				if = {
 					limit = { num_subjects > 0 }

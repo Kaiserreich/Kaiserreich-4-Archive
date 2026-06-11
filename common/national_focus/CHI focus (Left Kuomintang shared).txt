@@ -951,10 +951,9 @@ focus_tree = {
 			log = "[GetLogRoot]: Focus Completed CHI_strike_quick_strike_fast"
 			army_experience = 50
 			every_army_leader = {
-				add_temporary_buff_to_units = {
-					combat_offense = 0.1
-					org_damage_multiplier = -0.25
-					days = 120
+				add_timed_unit_leader_trait = {
+					trait = offensive_mindset_temp_trait
+					days = 100
 				}
 			}
 		}
@@ -1540,7 +1539,8 @@ focus_tree = {
 			log = "[GetLogRoot]: Focus Completed CHI_commissars"
 			add_war_support = 0.05
 			if = {
-				limit = { NOT = { has_tech = tech_militias } }
+				limit = { NOT = { has_country_flag = unlocked_subunit_militia }  }
+				set_country_flag = unlocked_subunit_militia
 				enable_tech_militias = yes
 				custom_effect_tooltip = tooltip_white_line
 			}
@@ -1699,8 +1699,9 @@ focus_tree = {
 				has_war = yes
 			}
 			modifier = {
-				factor = 0.5
+				factor = 0
 				has_war = no
+				CHI_is_phase_two_trigger = yes
 			}
 		}
 		completion_reward = {
@@ -1734,14 +1735,10 @@ focus_tree = {
 		prerequisite = { focus = CHI_renovate_jinling_arsenal }
 		prerequisite = { focus = CHI_dare_to_die }
 		ai_will_do = {
-			base = 100
+			base = 50
 			modifier = {
 				factor = 2
 				has_war = yes
-			}
-			modifier = {
-				factor = 0.5
-				has_war = no
 			}
 		}
 		completion_reward = {
@@ -1792,17 +1789,21 @@ focus_tree = {
 		}
 		prerequisite = { focus = CHI_first_congress_focus }
 		ai_will_do = {
-			base = 500
+			base = 1000
+			modifier = {
+				factor = 0
+				NOT = { has_completed_focus = CHI_rebuild_league }
+				HNN = { has_war = no }
+				GXC = { has_war = no }
+				YUN = { has_war = no }
+				date < 1938.1.1
+			}
 			modifier = {
 				factor = 0.5
 				has_war = yes
 			}
 			modifier = {
-				factor = 2
-				has_war = no
-			}
-			modifier = {
-				factor = 2
+				factor = 4
 				QIE = { has_war = yes }
 			}
 			modifier = {
@@ -1864,19 +1865,18 @@ focus_tree = {
 			}
 		}
 		prerequisite = { focus = CHI_political_department }
-		available = { OR = { has_completed_focus = CHI_legacy_of_jiangfu has_completed_focus = CHI_look_to_the_west } }
+		available = {
+			OR = { has_completed_focus = CHI_legacy_of_jiangfu has_completed_focus = CHI_look_to_the_west }
+			date > 1938.1.1
+		}
 		ai_will_do = {
-			base = 500
+			base = 1000
 			modifier = {
-				factor = 0.5
+				factor = 0
 				has_war = yes
 			}
 			modifier = {
-				factor = 2
-				has_war = no
-			}
-			modifier = {
-				factor = 2
+				factor = 4
 				QIE = { has_war = yes }
 			}
 			modifier = {
@@ -1898,10 +1898,6 @@ focus_tree = {
 				has_army_size = {
 					size > 50
 				}
-			}
-			modifier = {
-				factor = 0
-				has_war = yes
 			}
 
 			modifier = {
@@ -1954,7 +1950,7 @@ focus_tree = {
 				has_war = no
 			}
 			modifier = {
-				factor = 2
+				factor = 4
 				QIE = { has_war = yes }
 			}
 			modifier = {
@@ -2022,7 +2018,7 @@ focus_tree = {
 				has_war = no
 			}
 			modifier = {
-				factor = 2
+				factor = 4
 				QIE = { has_war = yes }
 			}
 			modifier = {
@@ -2064,11 +2060,10 @@ focus_tree = {
 	focus = {
 		id = CHI_second_northern_expedition
 		icon = {
-			trigger = { QIE = { is_monarchy = yes } }
-			value = GFX_goal_generic_attack_qing
-		}
-		icon = {
-			value = GFX_goal_generic_attack_zhili
+			GFX_goal_generic_attack_qing = {
+				QIE = { is_monarchy = yes }
+			}
+			GFX_goal_generic_attack_zhili = yes
 		}
 		dynamic = yes
 		cost = 7
@@ -2093,12 +2088,12 @@ focus_tree = {
 
 		bypass = {
 			OR = {
-				has_war_with = QIE
+				has_war_with = 608.owner
 				owns_state = 608 # Beijing
 			}
 		}
 		ai_will_do = {
-			base = 250
+			base = 500
 			modifier = {
 				factor = 0
 				OR = {
@@ -2111,12 +2106,12 @@ focus_tree = {
 				has_war = yes
 			}
 			modifier = {
-				factor = 2
-				has_war = no
+				factor = 4
+				var:608.owner = { has_war = yes }
 			}
 			modifier = {
 				factor = 2
-				QIE = { has_war = yes }
+				var:608.owner = { surrender_progress > 0.20 }
 			}
 			modifier = {
 				factor = 2
@@ -2138,10 +2133,18 @@ focus_tree = {
 					size > 50
 				}
 			}
-
 			modifier = {
 				factor = 5
 				CHN_ai_factor_pressure_to_act_trigger = yes
+			}
+			modifier = {
+				factor = 2
+				FNG = {
+					OR = {
+						focus_progress = { focus = FNG_Begin_the_War_of_National_Reclamation progress > 0 }
+						has_war_with = 608.owner
+					}
+				}
 			}
 		}
 		select_effect = {
@@ -2150,15 +2153,9 @@ focus_tree = {
 		}
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed CHI_second_northern_expedition"
-			608 = { #Beijing
-				owner = {
-					CHI = {
-						create_wargoal = {
-							target = PREV
-							type = annex_everything
-						}
-					}
-				}
+			create_wargoal = {
+				target = 608.owner #Beijing
+				type = annex_everything
 			}
 			unlock_decision_tooltip = CHN_conquer_beijing_fallback_decision
 			unlock_decision_tooltip = CHN_demand_control_of_beijing
@@ -3425,17 +3422,13 @@ focus_tree = {
 		}
 		prerequisite = { focus = CHI_second_national_congress }
 		ai_will_do = {
-			base = 500
+			base = 1000
 			modifier = {
 				factor = 0.5
 				has_war = yes
 			}
 			modifier = {
-				factor = 2
-				has_war = no
-			}
-			modifier = {
-				factor = 10
+				factor = 15
 				has_global_flag = china_united
 			}
 
@@ -3496,7 +3489,7 @@ focus_tree = {
 				has_war = no
 			}
 			modifier = {
-				factor = 10
+				factor = 15
 				has_global_flag = china_united
 			}
 		}
@@ -3657,7 +3650,7 @@ focus_tree = {
 		ai_will_do = {
 			base = 500
 			modifier = {
-				factor = 10
+				factor = 15
 				has_global_flag = china_united
 			}
 		}
@@ -5275,7 +5268,7 @@ focus_tree = {
 			log = "[GetLogRoot]: Focus Completed CHI_war_of_resistance"
 			add_timed_idea = {
 				idea = CHI_march_of_the_volunteers_idea
-				days = 365
+				days = 700
 			}
 			hidden_effect = {
 				if = {
@@ -5323,7 +5316,7 @@ focus_tree = {
 			log = "[GetLogRoot]: Focus Completed CHI_prepare_stay_behind_cells"
 			add_timed_idea = {
 				idea = CHI_war_of_resistance_idea
-				days = 400
+				days = 700
 			}
 		}
 		search_filters = { FOCUS_FILTER_ARMY_BONUS }
@@ -5367,7 +5360,8 @@ focus_tree = {
 			}
 			custom_effect_tooltip = tooltip_white_line
 			if = {
-				limit = { NOT = { has_tech = tech_militias } }
+				limit = { NOT = { has_country_flag = unlocked_subunit_militia }  }
+				set_country_flag = unlocked_subunit_militia
 				enable_tech_militias = yes
 				custom_effect_tooltip = tooltip_white_line
 			}
@@ -5480,7 +5474,7 @@ focus_tree = {
 			custom_effect_tooltip = tooltip_white_line
 			add_timed_idea = {
 				idea = CHI_harness_peoples_will_idea
-				days = 365
+				days = 700
 			}
 			hidden_effect = { country_event = { id = CHI.lategame.601 days = 15 random_days = 10 } } #Molding China's Future
 		}
@@ -5591,11 +5585,17 @@ focus_tree = {
 		}
 		completion_reward = {
 			log = "[GetLogRoot]: Focus Completed CHI_prepare_the_garrisons"
-			add_tech_bonus = {
-				name = CHI_prepare_the_garrisons
-				bonus = 0.5
-				uses = 2
-				category = radar_tech
+			if = {
+				limit = { NOT = { is_special_project_completed = sp:sp_air_radar } }
+				complete_special_project = sp:sp_air_radar
+			}
+			else = {
+				add_tech_bonus = {
+					name = CHI_prepare_the_garrisons
+					bonus = 0.5
+					uses = 2
+					category = radar_tech
+				}
 			}
 			custom_effect_tooltip = CHI_coastal_defense_stratagems_tt
 			every_owned_state = {
